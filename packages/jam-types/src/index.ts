@@ -15,7 +15,7 @@ export interface JamHeader {
    */
   extrinsicHash: string;
   /**
-   * **Ht:** The block's timestamp.
+   * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
   timeSlotIndex: number; // Ht
   epoch: number; // He
@@ -23,5 +23,8 @@ export interface JamHeader {
   judgementsMarkers: string; // Hj
   blockAuthorKey: string; // Hk Bandersnatch
   entropySignature: string; // Hv
+  /**
+   * The signature of the block. Must be signed by the validator associated to this time slot.
+   */
   blockSeal: string; // Hs
 }
