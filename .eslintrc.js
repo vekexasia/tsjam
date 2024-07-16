@@ -8,7 +8,8 @@ module.exports = {
   "ignorePatterns": ["**/dist/**/*"],
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "@vue/eslint-config-typescript/recommended",
+    "@vue/eslint-config-prettier",
   ],
   "overrides": [
     {

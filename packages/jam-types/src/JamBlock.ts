@@ -1,4 +1,4 @@
-import {JamHeader} from "@/index";
+import { JamHeader } from "@/index";
 
 export interface JamBlock {
   header: JamHeader;

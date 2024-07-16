@@ -1,4 +1,4 @@
-console.log("yo")
+console.log("yo");
 export type yo = {
-  a: string
-}
+  a: string;
+};
