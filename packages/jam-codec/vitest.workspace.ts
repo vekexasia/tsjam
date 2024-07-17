@@ -1,13 +1,13 @@
-import { defineWorkspace } from 'vitest/config'
-import path from 'path'
+import { defineWorkspace } from "vitest/config";
+import path from "path";
 
 export default defineWorkspace([
   {
-    extends: path.join(__dirname, 'vitest.config.mts'),
+    extends: path.join(__dirname, "vitest.config.mts"),
     test: {
-      include: ['test/*.test.ts'],
-      environment: 'node',
-      name: 'node-polyfill'
-    }
-  }
-])
+      include: ["test/*.test.ts"],
+      environment: "node",
+      name: "codec",
+    },
+  },
+]);

@@ -14,7 +14,8 @@
     "baseUrl": "./",
     /* Specify the base directory to resolve non-relative module names. */
     "types": [
-      "node"
+      "node",
+      "vitest/importMeta"
     ],
     "lib": ["es2020"],
 
