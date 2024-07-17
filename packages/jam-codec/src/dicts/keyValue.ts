@@ -13,13 +13,17 @@ export interface KeyOrderableDictionary<T, V> {
  * @see buildKeyValueCodec
  * @private
  */
-class KeyValue<T, V, X extends KeyOrderableDictionary<T, V>>
-  implements JamCodec<X>
+class KeyValue<
+  T extends never[],
+  V extends never[],
+  X extends KeyOrderableDictionary<T, V>,
+> implements JamCodec<X>
 {
   constructor(
     private keyCodec: JamCodec<T>,
     private valueCodec: JamCodec<V>,
-    private xBuilder: (orderedKeys: T[], orderedValues: V[]) => X,
+    private orderedKeys: readonly [...T],
+    private xBuilder: (orderedValues: V[]) => X,
   ) {}
 
   encode(value: X, bytes: Uint8Array): number {
@@ -47,7 +51,7 @@ class KeyValue<T, V, X extends KeyOrderableDictionary<T, V>>
       orderedValues.push(value.value);
     }
     return {
-      value: this.xBuilder(orderedKeys, orderedValues),
+      value: this.xBuilder(orderedValues),
       readBytes: offset,
     };
   }
@@ -68,18 +72,22 @@ class KeyValue<T, V, X extends KeyOrderableDictionary<T, V>>
  * graypaper reference is 279
  * @param keyCodec the codec to use to encode the keys
  * @param valueCodec the codec to use to encode the values
+ * @param orderedKeys the keys in the order they should be encoded
  * @param xBuilder the constructor to use when decoding
  */
 export function buildKeyValueCodec<
-  T,
-  V,
+  T extends never[],
+  V extends never[],
   X extends KeyOrderableDictionary<T, V>,
 >(
   keyCodec: JamCodec<T>,
   valueCodec: JamCodec<V>,
-  xBuilder: (orderedKeys: T[], orderedValues: V[]) => X,
+  orderedKeys: readonly [...T],
+  xBuilder: (orderedValues: readonly [...V]) => X,
 ): JamCodec<X> {
-  return new LengthDiscriminator(new KeyValue(keyCodec, valueCodec, xBuilder));
+  return new LengthDiscriminator(
+    new KeyValue(keyCodec, valueCodec, orderedKeys, xBuilder),
+  );
 }
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
