@@ -37,3 +37,25 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
     return x + E.encodedSize(BigInt(x));
   }
 }
+
+if (import.meta.vitest) {
+  const { E } = await import("@/ints/e.js");
+  const { describe, expect, it } = import.meta.vitest;
+  describe("LengthDiscriminator", () => {
+    it("should encode and decode a value", () => {
+      const bytes = new Uint8Array(10);
+      const a = new LengthDiscriminator(E);
+      const encodedLength = a.encode(2n, bytes);
+      expect(a.decode(bytes.subarray(0, encodedLength)).value).toBe(2n);
+    });
+    it("should encode the length of the encoded value", () => {
+      const bytes = new Uint8Array(12);
+      const a = new LengthDiscriminator(E);
+      const value = 2n ** (7n * 8n);
+      const encodedLength = a.encode(value, bytes);
+      const encodedEL = E.encodedSize(BigInt(encodedLength));
+      expect(encodedLength).toBe(E.encodedSize(value) + encodedEL);
+      E.decode(bytes.subarray(0, encodedEL));
+    });
+  });
+}
