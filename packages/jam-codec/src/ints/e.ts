@@ -60,7 +60,20 @@ export const E: JamCodec<bigint> = {
     }
   },
   encodedSize: (value: bigint): number => {
-    throw new Error("Not implemented");
+    assert.ok(value >= 0, "value must be positive");
+    if (value < 2 ** (7 * 9)) {
+      let l = 0;
+      for (let i = 1; i < 9; i++) {
+        if (value >= 2n ** (7n * BigInt(i))) {
+          l = i;
+        } else {
+          break; // i dont like the break here but it's efficient
+        }
+      }
+      return 1 + l;
+    } else {
+      return 9;
+    }
   },
 };
 if (import.meta.vitest) {
@@ -86,6 +99,12 @@ if (import.meta.vitest) {
         const { value: decoded, readBytes } = E.decode(bytes);
         expect(decoded).toBe(value.v);
         expect(readBytes, "read-bytes").toBe(value.bytes);
+      });
+      it(`should calculate encoded size for ${value.v} equal to encodedSize`, () => {
+        const bytes = new Uint8Array(10);
+        const written = E.encode(value.v, bytes);
+        expect(written, "written-bytes").toBe(value.bytes);
+        expect(E.encodedSize(value.v), "encodedSize").toBe(value.bytes);
       });
     }
     it("fails for 2^64", () => {
