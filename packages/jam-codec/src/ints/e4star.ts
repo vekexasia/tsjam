@@ -28,7 +28,7 @@ export const E4star: JamCodec<bigint> = {
     } else {
       const remainder = first - (2 ** 8 - 2 ** 5);
       const decoded = LittleEndian.decode(bytes.subarray(1, 4));
-      const value = decoded.value + BigInt(remainder);
+      const value = decoded.value + BigInt(remainder) * 2n ** 24n;
       return {
         value,
         readBytes: decoded.readBytes + 1,
@@ -43,20 +43,30 @@ export const E4star: JamCodec<bigint> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("E4Star", () => {
-    it("");
     const cases: { v: bigint; bytes: number }[] = [
-      // { v: 0n, bytes: 1 },
-      // { v: 1n, bytes: 1 },
-      // { v: 2n ** 29n - 1n, bytes: 4 },
+      { v: 0n, bytes: 1 },
+      { v: 1n, bytes: 1 },
+      { v: 2n ** (7n * 3n), bytes: 4 },
+      { v: 2n ** 29n - 1n, bytes: 4 },
     ];
     for (const value of cases) {
       it(`should encode and decode ${value.v} - in ${value.bytes} bytes`, () => {
         const bytes = new Uint8Array(value.bytes);
-        E4star.encode(value.v, bytes);
+        const used = E4star.encode(value.v, bytes);
+        expect(used, "used-bytes").toBe(value.bytes);
         const { value: decoded, readBytes } = E4star.decode(bytes);
         expect(decoded).toBe(value.v);
         expect(readBytes).toBe(value.bytes);
       });
     }
+    it("should fail for 2^29 (and above)", () => {
+      const bytes = new Uint8Array(5);
+      expect(() => E4star.encode(2n ** 29n, bytes)).toThrow(
+        "value is too large",
+      );
+      expect(() => E4star.encode(2n ** 29n + 1n, bytes)).toThrow(
+        "value is too large",
+      );
+    });
   });
 }
