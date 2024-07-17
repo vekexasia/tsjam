@@ -5,7 +5,7 @@ import { E } from "@/ints/e.js";
  * Length discriminator provides a way to encode variable length stuff
  * by prepending the length
  */
-export class LengthDiscriminatorCodec<T> implements JamCodec<T> {
+export class LengthDiscriminator<T> implements JamCodec<T> {
   constructor(private subCodec: JamCodec<T>) {}
 
   encode(value: T, bytes: Uint8Array): number {
