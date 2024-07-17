@@ -8,23 +8,53 @@ export class Optional<T> implements JamCodec<T | undefined> {
   constructor(private codec: JamCodec<T>) {}
 
   encode(value: T | undefined, bytes: Uint8Array): number {
-    if (value === undefined) {
-      return 0;
+    if (typeof value === "undefined") {
+      bytes[0] = 0;
+    } else {
+      bytes[0] = 1;
+      this.codec.encode(value, bytes.subarray(1));
     }
-    return this.codec.encode(value, bytes);
+    return this.encodedSize(value) + 1;
   }
 
   decode(bytes: Uint8Array): { value: T | undefined; readBytes: number } {
-    if (bytes.length === 0) {
-      return { value: undefined, readBytes: 0 };
+    if (bytes[0] === 0) {
+      return { value: undefined, readBytes: 1 };
+    } else {
+      const decoded = this.codec.decode(bytes.subarray(1));
+      return { value: decoded.value, readBytes: decoded.readBytes + 1 };
     }
-    return this.codec.decode(bytes);
   }
 
   encodedSize(value: T | undefined): number {
     if (value === undefined) {
-      return 0;
+      return 1;
     }
-    return this.codec.encodedSize(value);
+    return this.codec.encodedSize(value) + 1;
   }
+}
+if (import.meta.vitest) {
+  const { E } = await import("@/ints/e.js");
+  const { describe, expect, it } = import.meta.vitest;
+  describe("Optional", () => {
+    it("should encode and decode a value", () => {
+      const bytes = new Uint8Array(10);
+      const a = new Optional(E);
+      const encodedLength = a.encode(2n, bytes);
+      expect(a.decode(bytes.subarray(0, encodedLength)).value).toBe(2n);
+    });
+    it("should add one byte to encoded value", () => {
+      const a = new Optional(E);
+      expect(a.encodedSize(2n)).toBe(E.encodedSize(2n) + 1);
+      expect(a.encodedSize(undefined)).toBe(1);
+    });
+    it("should encode/decode nil value", () => {
+      const bytes = new Uint8Array(1);
+      bytes[0] = 255; // force set byte to check if it's reset
+      const a = new Optional(E);
+      const encodedLength = a.encode(undefined, bytes);
+      expect(bytes[0]).toBe(0);
+      expect(a.decode(bytes.subarray(0, encodedLength)).value).toBe(undefined);
+    });
+  });
 }
