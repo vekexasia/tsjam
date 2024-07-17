@@ -4,7 +4,7 @@ import { JamCodec } from "@/codec.js";
  * OptCodec is a codec that allows for optional values
  * it is defined in 277 in graypaper and identified with ¿x
  */
-export class OptCodec<T> implements JamCodec<T | undefined> {
+export class Optional<T> implements JamCodec<T | undefined> {
   constructor(private codec: JamCodec<T>) {}
 
   encode(value: T | undefined, bytes: Uint8Array): number {
