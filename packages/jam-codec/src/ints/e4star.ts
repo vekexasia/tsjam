@@ -17,7 +17,7 @@ export const E4star: JamCodec<bigint> = {
     } else {
       assert.ok(value < 2n ** 29n, "value is too large");
       bytes[0] = Number(2n ** 8n - 2n ** 5n + value / 2n ** 24n);
-      LittleEndian.encode(value % 2n ** 24n, bytes.slice(1, 4));
+      LittleEndian.encode(value % 2n ** 24n, bytes.subarray(1, 4));
       return 4;
     }
   },
@@ -27,7 +27,7 @@ export const E4star: JamCodec<bigint> = {
       return E.decode(bytes);
     } else {
       const remainder = first - (2 ** 8 - 2 ** 5);
-      const decoded = LittleEndian.decode(bytes.slice(1, 4));
+      const decoded = LittleEndian.decode(bytes.subarray(1, 4));
       const value = decoded.value + BigInt(remainder);
       return {
         value,
