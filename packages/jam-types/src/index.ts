@@ -5,15 +5,15 @@ export interface JamHeader {
    * **Hp:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
-  previousHash: string;
+  previousHash: Uint8Array;
   /**
    * **Hr:** The hash of the state root.
    */
-  priorStateRoot: string; // Hr
+  priorStateRoot: Uint8Array; // Hr
   /**
    * **Hx:** The hash of the block's extrinsic data.
    */
-  extrinsicHash: string;
+  extrinsicHash: Uint8Array;
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
@@ -28,3 +28,5 @@ export interface JamHeader {
    */
   blockSeal: string; // Hs
 }
+
+export * from "./JamBlock.js";
