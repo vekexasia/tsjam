@@ -1,11 +1,15 @@
 import { JamCodec } from "@/codec.js";
 import { LengthDiscriminator } from "@/lengthDiscriminator.js";
 
-export interface KeyOrderableDictionary<T, V> {
-  get orderedKeys(): T[];
-  valueOf(key: T): V;
+export interface KeyOrderableDictionary<
+  T extends readonly unknown[],
+  V extends readonly unknown[],
+> {
+  valueOf(key: T[number]): V[number];
 }
-
+type WrappedCodec<T> = {
+  [k in keyof T]: { key: JamCodec<T[k]>; value: JamCodec<T[k]> };
+};
 /**
  * Base keyvalue codec.
  * It encodes a dictionary with orderable keys into key value pairs.
@@ -14,23 +18,22 @@ export interface KeyOrderableDictionary<T, V> {
  * @private
  */
 class KeyValue<
-  T extends never[],
-  V extends never[],
+  T extends readonly unknown[],
+  V extends { [K in keyof T]: unknown },
   X extends KeyOrderableDictionary<T, V>,
 > implements JamCodec<X>
 {
   constructor(
-    private keyCodec: JamCodec<T>,
-    private valueCodec: JamCodec<V>,
+    private codecs: WrappedCodec<readonly [...T]>,
     private orderedKeys: readonly [...T],
-    private xBuilder: (orderedValues: V[]) => X,
+    private xBuilder: (orderedValues: V) => X,
   ) {}
 
   encode(value: X, bytes: Uint8Array): number {
     let offset = 0;
-    for (const key of value.orderedKeys) {
-      offset += this.keyCodec.encode(key, bytes.subarray(offset));
-      offset += this.valueCodec.encode(
+    for (const key of this.orderedKeys) {
+      offset += this.codecs[key].key.encode(key, bytes.subarray(offset));
+      offset += this.codecs[key].value.encode(
         value.valueOf(key),
         bytes.subarray(offset),
       );
@@ -39,9 +42,15 @@ class KeyValue<
   }
 
   decode(bytes: Uint8Array): { value: X; readBytes: number } {
-    const orderedKeys: T[] = [];
-    const orderedValues: V[] = [];
+    const orderedValues: V[number][] = [];
     let offset = 0;
+    for (const key of this.orderedKeys) {
+      const decodedKey = this.codecs[key].decode(bytes.subarray(offset));
+      offset += decodedKey.readBytes;
+      const value = this.codecs[key].decode(bytes.subarray(offset));
+      offset += value.readBytes;
+      orderedValues.push(value.value);
+    }
     while (offset < bytes.length) {
       const key = this.keyCodec.decode(bytes.subarray(offset));
       offset += key.readBytes;
@@ -51,7 +60,7 @@ class KeyValue<
       orderedValues.push(value.value);
     }
     return {
-      value: this.xBuilder(orderedValues),
+      value: this.xBuilder(orderedValues as unknown as V),
       readBytes: offset,
     };
   }
@@ -76,27 +85,30 @@ class KeyValue<
  * @param xBuilder the constructor to use when decoding
  */
 export function buildKeyValueCodec<
-  T extends never[],
-  V extends never[],
+  T extends readonly unknown[],
+  V extends { [K in keyof T]: unknown },
   X extends KeyOrderableDictionary<T, V>,
 >(
-  keyCodec: JamCodec<T>,
-  valueCodec: JamCodec<V>,
+  codecs: {
+    [K in keyof T]: { key: JamCodec<T[K]>; value: JamCodec<V[K]> };
+  },
   orderedKeys: readonly [...T],
-  xBuilder: (orderedValues: readonly [...V]) => X,
+  xBuilder: (orderedValues: V) => X,
 ): JamCodec<X> {
-  return new LengthDiscriminator(
-    new KeyValue(keyCodec, valueCodec, orderedKeys, xBuilder),
-  );
+  return new LengthDiscriminator(new KeyValue(codecs, orderedKeys, xBuilder));
 }
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
+  const { BitSequenceCodec } = await import("@/bitSequence.js");
+  type bit = 0 | 1;
   const { describe, expect, it } = import.meta.vitest;
   describe("keyValue", () => {
-    class B implements KeyOrderableDictionary<bigint, bigint> {
+    type Keys = readonly [bigint, bigint];
+    type Values = readonly [bigint, bigint];
+    class B implements KeyOrderableDictionary<Keys, Values> {
       constructor(
-        public orderedKeys: bigint[],
-        public orderedValues: bigint[],
+        public readonly orderedKeys: readonly [bigint, bigint],
+        public readonly orderedValues: readonly [bigint, bigint],
       ) {}
 
       valueOf(key: bigint): bigint {
@@ -105,21 +117,42 @@ if (import.meta.vitest) {
     }
 
     it("should encode and decode a value", () => {
-      const codec = buildKeyValueCodec(
+      const codec = buildKeyValueCodec<Keys, Values, B>(
         E,
         E,
-        (keys, values) => new B(keys, values),
+        [1n, 2n],
+        (values) => new B([1n, 2n], values),
       );
       const bytes = new Uint8Array(10);
       codec.encode(new B([1n, 2n], [3n, 4n]), bytes);
       expect(codec.decode(bytes).value).toEqual(new B([1n, 2n], [3n, 4n]));
     });
-    it.skip("should allow for different key and value types", () => {});
+    it("should allow for different key and value types", () => {
+      type Keys = readonly [bigint, bigint];
+      type Values = readonly [bigint, bit[]];
+      class Multi implements KeyOrderableDictionary<Keys, Values> {
+        constructor(
+          public readonly orderedKeys: readonly [bigint, bigint],
+          public readonly orderedValues: readonly [bigint, bit[]],
+        ) {}
+
+        valueOf(key: bigint): bigint | bit[] {
+          return this.orderedValues[this.orderedKeys.indexOf(key)];
+        }
+      }
+      const codec = buildKeyValueCodec<Keys, Values, Multi>(
+        E,
+        E,
+        [1n, 2n],
+        (values) => new B([1n, 2n], values),
+      );
+    });
     it("should provide proper size for encoded value", () => {
-      const codec = buildKeyValueCodec(
+      const codec = buildKeyValueCodec<Keys, Values, B>(
         E,
         E,
-        (keys, values) => new B(keys, values),
+        [1n, 2n],
+        (values) => new B([1n, 2n], values),
       );
       expect(codec.encodedSize(new B([1n, 2n], [3n, 4n]))).toBe(
         1 + // length discriminator
