@@ -36,3 +36,4 @@ export const HashCodec: JamCodec<Uint8Array> = {
 // todo: eventually reimplement or find another clever way to handle this
 // they share the same properties but the errors are different
 export const PublicKeyCodec = HashCodec;
+export const BandersnatchCodec = HashCodec;

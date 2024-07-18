@@ -18,7 +18,17 @@ export interface JamHeader {
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
   timeSlotIndex: number; // Ht
-  epoch: number; // He
+  /**
+   * **He:** The epoch marker of the block.
+   * @see section 5.1
+   */
+  epochMarker?: {
+    // 4 byte see (65) on section 6.5
+    entropy: bigint;
+    // 32 byte bandersnatch
+    validatorKeys: Uint8Array[];
+  };
+
   winningTicket: string; // Hw
   judgementsMarkers: string; // Hj
   blockAuthorKey: string; // Hk Bandersnatch

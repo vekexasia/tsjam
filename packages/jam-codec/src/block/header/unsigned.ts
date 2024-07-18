@@ -2,7 +2,7 @@ import { JamCodec } from "@/codec.js";
 import { JamHeader } from "@vekexasia/jam-types";
 import { LittleEndian } from "@/ints/littleEndian.js";
 import { Optional } from "@/optional.js";
-import { HashCodec } from "@/identity.js";
+import { BandersnatchCodec, HashCodec } from "@/identity.js";
 const opthashcodec = new Optional(HashCodec);
 export class UnsignedHeaderCodec implements JamCodec<JamHeader> {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
@@ -29,10 +29,13 @@ export class UnsignedHeaderCodec implements JamCodec<JamHeader> {
       bytes.subarray(offset, offset + 4),
     );
 
-    opthashcodec.encode(
-      value.extrinsicRoot,
+    offset += opthashcodec.encode(
+      value.epochMarker,
       bytes.subarray(offset, offset + 32),
     );
+    offset += BandersnatchCodec.encode();
+
+    return offset;
   }
 
   encodedSize(value: JamHeader): number {
