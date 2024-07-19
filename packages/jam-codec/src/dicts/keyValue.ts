@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { LengthDiscriminator } from "@/lengthDiscriminator.js";
+import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
 
 export interface KeyOrderableDictionary<T, V> {
   get orderedKeys(): T[];
