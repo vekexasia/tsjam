@@ -29,14 +29,17 @@ export interface JamHeader {
     validatorKeys: Uint8Array[];
   };
 
-  winningTicket: string; // Hw
-  judgementsMarkers: string; // Hj
-  blockAuthorKey: string; // Hk Bandersnatch
-  entropySignature: string; // Hv
+  winningTicket?: Uint8Array; // Hw
+  // section 10
+  judgementsMarkers: Uint8Array[]; // Hj
+  // todo: section 5 says it's a 32 byte hash
+  // but later Hk E Nv. so its a natural number
+  blockAuthorKey: number;
+  entropySignature: Uint8Array; // Hv
   /**
    * The signature of the block. Must be signed by the validator associated to this time slot.
    */
-  blockSeal: string; // Hs
+  blockSeal?: Uint8Array; // Hs
 }
 
 export * from "./JamBlock.js";
