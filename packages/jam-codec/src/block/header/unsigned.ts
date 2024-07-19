@@ -104,9 +104,13 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       },
       readBytes: offset + 32,
     };
-  }
+  },
 
   encode(value: JamHeader, bytes: Uint8Array): number {
+    assert.ok(
+      bytes.length >= this.encodedSize(value),
+      `UnsignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
+    );
     let offset = 0;
     offset += HashCodec.encode(
       value.previousHash,
@@ -151,7 +155,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
 
     return offset;
-  }
+  },
 
   encodedSize(value: JamHeader): number {
     return (
@@ -165,5 +169,5 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       2 + // blockAuthorKey
       BandersnatchCodec.encodedSize(value.entropySignature)
     );
-  }
-}
+  },
+};

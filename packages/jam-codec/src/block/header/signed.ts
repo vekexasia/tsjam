@@ -1,6 +1,7 @@
 import { JamCodec } from "@/codec.js";
 import { SignedJamHeader } from "@vekexasia/jam-types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
+import assert from "node:assert";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -21,6 +22,10 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
     };
   },
   encode(value: SignedJamHeader, bytes: Uint8Array): number {
+    assert.ok(
+      bytes.length >= this.encodedSize(value),
+      `SignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
+    );
     const consumedBytes = UnsignedHeaderCodec.encode(value, bytes);
     bytes.set(value.blockSeal, consumedBytes);
     return consumedBytes + 32;
