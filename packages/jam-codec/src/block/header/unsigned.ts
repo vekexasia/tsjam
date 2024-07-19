@@ -2,9 +2,9 @@ import { JamCodec } from "@/codec.js";
 import { JamHeader } from "@vekexasia/jam-types";
 import { LittleEndian } from "@/ints/littleEndian.js";
 import { Optional } from "@/optional.js";
-import { BandersnatchCodec, HashCodec, PublicKeyCodec } from "@/identity.js";
+import { BandersnatchCodec, HashCodec } from "@/identity.js";
 import assert from "node:assert";
-import { ArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 const opthashcodec = new Optional(HashCodec);
 
 const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
@@ -53,9 +53,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   },
 };
 const optHeCodec = new Optional(epochMarkerCodec);
-const judgementMarkerCodec = new ArrayLengthDiscriminator<Uint8Array>(
-  BandersnatchCodec,
-);
+const judgementMarkerCodec = createArrayLengthDiscriminator(BandersnatchCodec);
 export class UnsignedHeaderCodec implements JamCodec<JamHeader> {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
     let offset = 0;
@@ -156,6 +154,16 @@ export class UnsignedHeaderCodec implements JamCodec<JamHeader> {
   }
 
   encodedSize(value: JamHeader): number {
-    return 0;
+    return (
+      HashCodec.encodedSize(value.previousHash) +
+      HashCodec.encodedSize(value.priorStateRoot) +
+      HashCodec.encodedSize(value.extrinsicHash) +
+      4 + // timeSlotIndex
+      optHeCodec.encodedSize(value.epochMarker) +
+      opthashcodec.encodedSize(value.winningTicket) +
+      judgementMarkerCodec.encodedSize(value.judgementsMarkers) +
+      2 + // blockAuthorKey
+      BandersnatchCodec.encodedSize(value.entropySignature)
+    );
   }
 }
