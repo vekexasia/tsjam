@@ -54,7 +54,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
 };
 const optHeCodec = new Optional(epochMarkerCodec);
 const judgementMarkerCodec = createArrayLengthDiscriminator(BandersnatchCodec);
-export class UnsignedHeaderCodec implements JamCodec<JamHeader> {
+export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
     let offset = 0;
     const previousHash = HashCodec.decode(bytes.subarray(offset, offset + 32));

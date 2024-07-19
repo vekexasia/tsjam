@@ -36,10 +36,13 @@ export interface JamHeader {
   // but later Hk E Nv. so its a natural number
   blockAuthorKey: number;
   entropySignature: Uint8Array; // Hv
+}
+
+export interface SignedJamHeader extends JamHeader {
   /**
    * The signature of the block. Must be signed by the validator associated to this time slot.
    */
-  blockSeal?: Uint8Array; // Hs
+  blockSeal: Uint8Array; // Hs
 }
 
 export * from "./JamBlock.js";
