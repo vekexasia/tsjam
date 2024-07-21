@@ -7,6 +7,7 @@ export type Tagged<
   [tags]: { [K in Tag]: Metadata };
 };
 export type u32 = Tagged<number, "u32">;
+export type u8 = Tagged<number, "u8">;
 
 export type ByteArrayOfLength<T extends number> = Tagged<
   Uint8Array,
