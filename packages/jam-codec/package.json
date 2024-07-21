@@ -1,7 +1,7 @@
 {
   "name": "@vekexasia/jam-codec",
   "version": "1.0.0",
-  "description": "A library to convert back and forth according appendix C of graypaper",
+  "description": "A library to convert back and forth according appendix C of graypaper. Also called SCALE",
   "scripts": {
     "build": "rm -rf dist/; rollup --config rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",

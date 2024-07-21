@@ -30,6 +30,8 @@ export interface ValidatorData {
   /**
    * km: validator key bls.
    * 128 octects
+   * first 16 bytes: ipv6 address
+   * next 2 bytes: LE encoded port
    */
   metadata: ByteArrayOfLength<128>;
 }
