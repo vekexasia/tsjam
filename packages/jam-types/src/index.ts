@@ -47,3 +47,4 @@ export interface SignedJamHeader extends JamHeader {
 
 export * from "./JamBlock.js";
 export * from "./genericTypes.js";
+export * from "./ValidatorData.js";

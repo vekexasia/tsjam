@@ -9,7 +9,7 @@ import {
  * 336 octects
  * K ≡ Y336
  */
-export interface ValidatorKey {
+export interface ValidatorData {
   /**
    * kb: validator key k.
    * equivalent to the first 32 octects
