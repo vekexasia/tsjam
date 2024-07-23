@@ -1,7 +1,7 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 export type bit = 0 | 1;
-export const BitSequenceCodec: JamCodec<bit[]> = {
+export const BitSequence: JamCodec<bit[]> = {
   encode: function (value: bit[], bytes: Uint8Array): number {
     const nB = this.encodedSize(value);
     assert.ok(bytes.length >= nB, "bytes not long enough");
@@ -31,20 +31,19 @@ export const BitSequenceCodec: JamCodec<bit[]> = {
   },
 };
 if (import.meta.vitest) {
-  const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;
-  describe("BitSequenceCodec", () => {
+  describe("BitSequence", () => {
     describe("encode/decode", () => {
       it("should encode and decode a value", () => {
         const bytes = new Uint8Array(10);
-        const a = BitSequenceCodec;
+        const a = BitSequence;
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1];
         const encodedLength = a.encode(value, bytes);
         expect(a.decode(bytes.subarray(0, encodedLength)).value).toEqual(value);
       });
       it("should encode and decode a value with 9 elements", () => {
         const bytes = new Uint8Array(10);
-        const a = BitSequenceCodec;
+        const a = BitSequence;
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1, 1];
         const encodedLength = a.encode(value, bytes);
         expect(
@@ -58,17 +57,17 @@ if (import.meta.vitest) {
     });
     describe("encodedSize", () => {
       it("should return 1 for up to 8 bits", () => {
-        expect(BitSequenceCodec.encodedSize([1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1, 1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1, 1, 1, 1])).toBe(1);
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1, 1, 1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1, 1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1, 1, 1, 1, 1])).toBe(1);
+        expect(BitSequence.encodedSize([1, 1, 1, 1, 1, 1, 1, 1])).toBe(1);
       });
       it("should return 2 for 9 bits", () => {
-        expect(BitSequenceCodec.encodedSize([1, 1, 1, 1, 1, 1, 1, 1, 1])).toBe(
+        expect(BitSequence.encodedSize([1, 1, 1, 1, 1, 1, 1, 1, 1])).toBe(
           2,
         );
       });
