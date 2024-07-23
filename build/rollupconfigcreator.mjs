@@ -2,6 +2,7 @@ import replace from '@rollup/plugin-replace'
 import typescript from '@rollup/plugin-typescript'
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import {replaceTscAliasPaths} from "tsc-alias";
 
 /**
  *
@@ -79,6 +80,12 @@ export const rollupTypes= () => {
       delete bundle['node.cjs.js']
     }
   });
+  base.plugins.push({
+    name: 'tscAlias',
+    async writeBundle(options, bundle) {
+      return replaceTscAliasPaths({configFile: './tsconfig.json', outDir: 'dist/types', rootDir: 'src'})
+    }
+  })
   return base
 }
 

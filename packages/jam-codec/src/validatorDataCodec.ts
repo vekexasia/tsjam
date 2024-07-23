@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec";
-import { type ValidatorData } from "@vekexasia/jam-types";
+import {BandersnatchKey, BLSKey, ByteArrayOfLength, ED25519PublicKey, type ValidatorData} from "@vekexasia/jam-types";
 import assert from "node:assert";
 
 export const ValidatorDataCodec: JamCodec<ValidatorData> = {
@@ -20,10 +20,10 @@ export const ValidatorDataCodec: JamCodec<ValidatorData> = {
     value: ValidatorData;
     readBytes: number;
   } {
-    const banderSnatch: Uint8Array = bytes.slice(0, 32);
-    const ed25519 = bytes.slice(32, 64);
-    const blsKey = bytes.slice(64, 208);
-    const metadata = bytes.slice(208, 336);
+    const banderSnatch = bytes.slice(0, 32) as BandersnatchKey;
+    const ed25519 = bytes.slice(32, 64) as ED25519PublicKey;
+    const blsKey = bytes.slice(64, 208) as BLSKey;
+    const metadata = bytes.slice(208, 336) as ByteArrayOfLength<128>;
     const v: ValidatorData = {
       banderSnatch,
       ed25519,
