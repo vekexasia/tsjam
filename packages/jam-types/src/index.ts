@@ -1,5 +1,7 @@
 // H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
 
+import { Hash } from "@/genericTypes.js";
+
 export interface JamHeader {
   /**
    * **Hp:** The hash of the parent header.
@@ -31,7 +33,8 @@ export interface JamHeader {
 
   winningTicket?: Uint8Array; // Hw
   // section 10
-  judgementsMarkers: Uint8Array[]; // Hj
+  // must contain exactly the sequence of report hashes of only bad and wonky verdicts
+  judgementsMarkers: Hash[]; // Hj
   // todo: section 5 says it's a 32 byte hash
   // but later Hk E Nv. so its a natural number
   blockAuthorKey: number;
