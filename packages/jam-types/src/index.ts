@@ -45,6 +45,9 @@ export interface JamHeader {
     >;
   };
 
+  // set on after end of the lottery
+  // and the lottery accumulator (gamma_a) is saturated (epoch-length)
+  // and we're not changing epoch
   winningTicket?: Uint8Array; // Hw
   // section 10
   // must contain exactly the sequence of report hashes of only bad and wonky verdicts
