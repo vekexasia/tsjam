@@ -8,7 +8,13 @@ import {
   OpaqueHash,
   Tagged,
 } from "@/genericTypes.js";
-
+// TODo: this is specific to safrole?
+export type TicketIdentifier = {
+  // opaque 32-byte hash
+  id: OpaqueHash;
+  // either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
+  attempt: 0 | 1;
+};
 export interface JamHeader {
   /**
    * **Hp:** The hash of the parent header.
@@ -48,7 +54,7 @@ export interface JamHeader {
   // set on after end of the lottery
   // and the lottery accumulator (gamma_a) is saturated (epoch-length)
   // and we're not changing epoch
-  winningTicket?: Uint8Array; // Hw
+  winningTickets?: Tagged<TicketIdentifier[], "Hw", { length: "epoch-length" }>; // Hw
   // section 10
   // must contain exactly the sequence of report hashes of only bad and wonky verdicts
   // does not nneed to be included in the serialization. this is here for convenience
