@@ -1,6 +1,7 @@
 /**
  * The analogous to a Smart Contract in ETH.
  *
+ * It's identified as δ or delta in the graypaper
  */
 export interface ServiceAccount {
   // should be a Dictionary in the form of Hash => Uint8Array
