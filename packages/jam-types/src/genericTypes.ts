@@ -23,3 +23,4 @@ export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type ED25519PublicKey = Tagged<ByteArray32, "ED25519PublicKey">;
 export type ED25519Signature = Tagged<ByteArray64, "ED25519Signature">;
 export type BLSKey = Tagged<ByteArrayOfLength<144>, "BLSKey">;
+export type RingVRFProof = Tagged<ByteArrayOfLength<784>, "RingVRFProof">;
