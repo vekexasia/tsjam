@@ -5,6 +5,8 @@ import {
   ED25519Signature,
   Hash,
   MerkeTreeRoot,
+  OpaqueHash,
+  Tagged,
 } from "@/genericTypes.js";
 
 export interface JamHeader {
@@ -27,13 +29,20 @@ export interface JamHeader {
   timeSlotIndex: number; // Ht
   /**
    * **He:** The epoch marker of the block.
+   * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
+   * hence the length of kb or validatorKeys is `epoch-length`
    * @see section 5.1
    */
   epochMarker?: {
     // 4 byte see (65) on section 6.5
-    entropy: bigint;
-    // 32 byte bandersnatch
-    validatorKeys: BandersnatchKey[];
+    // coming from eta
+    entropy: OpaqueHash;
+    // 32 byte bandersnatch sequence (ordered) coming from gamma_k
+    validatorKeys: Tagged<
+      BandersnatchKey[],
+      "validatorKeys",
+      { length: "epoch-length" }
+    >;
   };
 
   winningTicket?: Uint8Array; // Hw

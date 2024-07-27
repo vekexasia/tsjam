@@ -40,8 +40,9 @@ export interface SafroleBasicState {
    * full complement of E tickets or, in the case of a fallback
    * mode, a series of E Bandersnatch keys
    */
-  gamma_s: Tagged<TicketIdentifier[], "gamma_s", { maxLength: "epoch-length"}>
-         | Tagged<BandersnatchKey[], "gamma_s", { length: "epoch-length" }>;
+  gamma_s:
+    | Tagged<TicketIdentifier[], "gamma_s", { maxLength: "epoch-length" }>
+    | Tagged<BandersnatchKey[], "gamma_s", { length: "epoch-length" }>;
 
   /**
    * γk
@@ -70,7 +71,7 @@ export interface SafroleInput {
   slot: u32;
   entropy: OpaqueHash; // generated from the entropy accumulator?
   extrinsic: Array<{
-    attempt: u8;
+    attempt: 0 | 1;
     signature: ByteArrayOfLength<784>;
   }>;
 }
