@@ -12,7 +12,8 @@ import {
 export type TicketIdentifier = {
   // opaque 32-byte hash
   id: OpaqueHash;
-  attempt: u8;
+  // either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
+  attempt: 0 | 1;
 };
 
 /**
