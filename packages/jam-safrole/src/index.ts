@@ -41,7 +41,7 @@ export interface SafroleBasicState {
    * mode, a series of E Bandersnatch keys
    */
   gamma_s:
-    | Tagged<TicketIdentifier[], "gamma_s", { maxLength: "epoch-length" }>
+    | Tagged<TicketIdentifier[], "gamma_s", { length: "epoch-length" }>
     | Tagged<BandersnatchKey[], "gamma_s", { length: "epoch-length" }>;
 
   /**
