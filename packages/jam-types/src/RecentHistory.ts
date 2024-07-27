@@ -1,4 +1,4 @@
-import { Hash, Tagged } from "@/genericTypes.js";
+import { Hash, UpToSeq } from "@/genericTypes.js";
 /*
  * @see section 7
  */
@@ -10,7 +10,7 @@ export interface RecentHistoryItem {
    * the hash of each work report that made into the block. there is no more than the number of
    * cores C which is 341
    */
-  workReports: Tagged<Hash[], "workReports", { maxLength: 341 }>;
+  workReports: UpToSeq<Hash, 341>;
 }
 
 /**
@@ -19,8 +19,4 @@ export interface RecentHistoryItem {
  * @see section 7
  * they're ordered so that entry 0 is the most recent
  */
-export type RecentHistory = Tagged<
-  RecentHistoryItem[],
-  "RecentHistory",
-  { maxLength: 8 }
->;
+export type RecentHistory = UpToSeq<RecentHistoryItem, 8>;
