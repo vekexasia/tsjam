@@ -2,6 +2,7 @@ import {
   ByteArrayOfLength,
   Tagged,
   ValidatorData,
+  BandersnatchKey,
   OpaqueHash,
   u32,
   u8,
@@ -30,7 +31,7 @@ export interface SafroleBasicState {
    * length is up to epoch length
    * Sealing-key contest ticket acccumulator
    */
-  gamma_a: Tagged<TicketIdentifier[], "gamma_a", { length: "epoch-length" }>;
+  gamma_a: Tagged<TicketIdentifier[], "gamma_a", { maxLength: "epoch-length" }>;
 
   /**
    * γs
@@ -38,11 +39,8 @@ export interface SafroleBasicState {
    * full complement of E tickets or, in the case of a fallback
    * mode, a series of E Bandersnatch keys
    */
-  gamma_s: Tagged<
-    TicketIdentifier[] | Uint8Array[],
-    "gamma_s",
-    { length: "epoch-length" }
-  >;
+  gamma_s: Tagged<TicketIdentifier[], "gamma_s", { maxLength: "epoch-length"}>
+         | Tagged<BandersnatchKey[], "gamma_s", { length: "epoch-length" }>;
 
   /**
    * γk
