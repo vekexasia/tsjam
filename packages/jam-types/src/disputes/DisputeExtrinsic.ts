@@ -5,6 +5,7 @@ import {
   MinSeqLength,
   SeqOfLength,
   u32,
+  ValidatorIndex,
 } from "@/genericTypes.js";
 import { MINIMUM_VALIDATORS } from "@/consts.js";
 /**
@@ -37,7 +38,7 @@ export interface DisputeExtrinsic {
           /**
            * the index of the validator in the validator set for the specified epoch
            */
-          validatorIndex: u32;
+          validatorIndex: ValidatorIndex;
           /**
            * the signature of the validator
            */

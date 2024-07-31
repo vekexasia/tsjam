@@ -1,4 +1,4 @@
-import { CORES } from "@/consts.js";
+import { CORES, NUMBER_OF_VALIDATORS } from "@/consts.js";
 
 declare const tags: unique symbol;
 export type Tagged<
@@ -61,3 +61,8 @@ export type BoundedSeq<
 > = Tagged<T[], Tag, { minLength: Min; maxLength: Max }>;
 
 export type CoreIndex = Tagged<number, "CoreIndex", { maxValue: typeof CORES }>;
+export type ValidatorIndex = Tagged<
+  number,
+  "ValidatorIndex",
+  { maxValue: typeof NUMBER_OF_VALIDATORS }
+>;
