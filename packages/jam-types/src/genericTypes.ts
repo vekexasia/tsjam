@@ -1,3 +1,5 @@
+import { CORES } from "@/consts.js";
+
 declare const tags: unique symbol;
 export type Tagged<
   BaseType,
@@ -6,8 +8,9 @@ export type Tagged<
 > = BaseType & {
   [tags]: { [K in Tag]: Metadata };
 };
-export type u32 = Tagged<number, "u32">;
-export type u8 = Tagged<number, "u8">;
+export type u32 = Tagged<number, "u32", { maxValue: 4294967296 }>;
+export type u64 = Tagged<bigint, "u64", { maxValue: 1844674407370955161n }>;
+export type u8 = Tagged<number, "u8", { maxValue: 256 }>;
 
 export type ByteArrayOfLength<T extends number> = Tagged<
   Uint8Array,
@@ -43,3 +46,18 @@ export type SeqOfLength<
   L extends number,
   Tag extends string = `UpToSeq${L}`,
 > = Tagged<T[], Tag, { length: L }>;
+
+export type MinSeqLength<
+  T,
+  L extends number,
+  Tag extends string = `UpToSeq${L}`,
+> = Tagged<T[], Tag, { minLength: L }>;
+
+export type BoundedSeq<
+  T,
+  Min extends number,
+  Max extends number,
+  Tag extends string = `BoundedSeq${Min}-${Max}`,
+> = Tagged<T[], Tag, { minLength: Min; maxLength: Max }>;
+
+export type CoreIndex = Tagged<number, "CoreIndex", { maxValue: typeof CORES }>;

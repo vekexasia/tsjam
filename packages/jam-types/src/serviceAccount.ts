@@ -5,10 +5,16 @@ import { Hash, Tagged, u32, UpToSeq } from "@/genericTypes.js";
  *
  */
 export interface ServiceAccount {
-  // should be a Dictionary in the form of Hash => Uint8Array
+  /**
+   * should be a storage Dictionary in the form of Hash => Uint8Array
+   */
   storage: Map<Hash, Uint8Array>;
-  // preimage lookup dictionaries in the form of Hash => Uint8Array
+
+  /**
+   * preimage lookup dictionaries in the form of Hash => Uint8Array
+   */
   preimage_p: Map<Hash, Uint8Array>;
+
   /**
    * preimage lookup dictionaries (hash, preimageLength) => Array of up to 3 timeslot indexes<br>
    * if there is no item for a given hash, it means that the preimage is not known<br>

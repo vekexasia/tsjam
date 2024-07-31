@@ -59,6 +59,10 @@ export interface JamHeader {
   // must contain exactly the sequence of report hashes of only bad and wonky verdicts
   // does not nneed to be included in the serialization. this is here for convenience
   // but it's just the result of other variables
+  /**
+   * @see DisputesState.psi_w
+   * @see DisputesState.psi_b
+   */
   judgementsMarkers: Hash[]; // Hj
   // todo: section 5 says it's a 32 byte hash
   // but later Hk E Nv. so its a natural number
