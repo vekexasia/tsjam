@@ -1,0 +1,26 @@
+{
+  "name": "@vekexasia/jam-pvm",
+  "version": "1.0.0",
+  "description": "Base Types for JAM",
+  "scripts": {
+    "build": "rm -rf dist/; rollup --config rollup.config.mjs",
+    "lint": "npx eslint --ext .ts src test",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && vitest run"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "license": "MIT"
+}
