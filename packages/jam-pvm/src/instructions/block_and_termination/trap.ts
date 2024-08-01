@@ -1,0 +1,12 @@
+import { RegularPVMExitReason } from "@/exitReason";
+import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { u8 } from "@vekexasia/jam-types";
+
+export const TrapIx: GenericPVMInstruction<[]> = {
+  identifier: 0 as u8,
+  name: "trap",
+  byteSize: 1 as u8,
+  evaluate() {
+    return { exitReason: RegularPVMExitReason.Panic };
+  },
+};
