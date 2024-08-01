@@ -2,7 +2,7 @@ import { u32, u8 } from "@vekexasia/jam-types";
 import { PVMExitReason } from "@/exitReason.js";
 import { EvaluationContext } from "@/evaluationContext.js";
 
-export interface GenericPVMInstruction<Arg1 = unknown, Arg2 = unknown> {
+export interface GenericPVMInstruction<Args extends unknown[]> {
   /**
    * the identifier of the instruction
    */
@@ -12,16 +12,16 @@ export interface GenericPVMInstruction<Arg1 = unknown, Arg2 = unknown> {
    */
   readonly name: string;
 
-  decode(
-    context: EvaluationContext,
-    data: Uint8Array,
-    offset: u32,
-  ): { args: [Arg1, Arg2]; nextOffset: u32 };
+  /**
+   * decode the full instruction from the bytes.
+   * the byte array is chunked to include only the bytes of the instruction (included opcode)
+   * @param bytes
+   */
+  decode(bytes: Uint8Array): Args;
 
   evaluate(
     context: EvaluationContext,
-    a1: Arg1,
-    a2: Arg2,
+    ...args: Args
   ): {
     exitReason?: PVMExitReason;
     nextInstructionPointer?: u32;

@@ -9,6 +9,7 @@ export type Tagged<
   [tags]: { [K in Tag]: Metadata };
 };
 export type u8 = Tagged<number, "u8", { minValue: 0; maxValue: 255 }>;
+export type u16 = Tagged<number, "u16", { minValue: 0; maxValue: 65535 }>;
 export type u32 = Tagged<number, "u32", { minValue: 0; maxValue: 4294967295 }>;
 export type u64 = Tagged<
   bigint,
