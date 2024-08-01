@@ -8,9 +8,13 @@ export type Tagged<
 > = BaseType & {
   [tags]: { [K in Tag]: Metadata };
 };
-export type u32 = Tagged<number, "u32", { maxValue: 4294967296 }>;
-export type u64 = Tagged<bigint, "u64", { maxValue: 1844674407370955161n }>;
-export type u8 = Tagged<number, "u8", { maxValue: 256 }>;
+export type u8 = Tagged<number, "u8", { minValue: 0; maxValue: 255 }>;
+export type u32 = Tagged<number, "u32", { minValue: 0; maxValue: 4294967295 }>;
+export type u64 = Tagged<
+  bigint,
+  "u64",
+  { minValue: 0n; maxValue: 1844674407370955161n }
+>;
 
 export type ByteArrayOfLength<T extends number> = Tagged<
   Uint8Array,
