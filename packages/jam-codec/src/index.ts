@@ -6,3 +6,4 @@ export { BitSequence } from "@/bitSequence.js";
 export { Optional } from "@/optional.js";
 export { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 export { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
+export type { JamCodec } from "@/codec.js";
