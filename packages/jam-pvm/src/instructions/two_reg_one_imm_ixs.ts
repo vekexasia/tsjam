@@ -2,7 +2,6 @@ import { u16, u32, u8 } from "@vekexasia/jam-types";
 import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
 import assert from "node:assert";
-import { decode1Reg2iMM } from "@/utils/decoders.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { Z, Z_inv } from "@/utils/zed.js";

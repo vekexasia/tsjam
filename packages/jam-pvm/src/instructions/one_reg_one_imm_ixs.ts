@@ -6,6 +6,7 @@ import { decode1Reg1IMM } from "@/utils/decoders.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { RegularPVMExitReason } from "@/exitReason.js";
 import { Z, Z_inv } from "@/utils/zed.js";
+import { djump } from "@/utils/djump.js";
 const create1Reg1IMMIx = (
   identifier: u8,
   name: string,
@@ -25,31 +26,13 @@ const create1Reg1IMMIx = (
   };
 };
 
-const ZA = 4;
 export const JumpIndIx = create1Reg1IMMIx(
   19 as u8,
   "jump_ind",
   (context, ri, vx) => {
     const wa = context.registers[ri];
     const jumpLocation = ((wa + vx) % 2 ** 32) as u32;
-
-    // first branch of djump(a)
-    if (jumpLocation == 2 ** 32 - 2 ** 16) {
-      return { exitReason: RegularPVMExitReason.Halt };
-    } else if (
-      jumpLocation === 0 ||
-      jumpLocation > context.program.j.length * ZA ||
-      jumpLocation % ZA != 0 ||
-      false /* TODO check if start of block context.program.j[jumpLocation / ZA] !== 1*/
-    ) {
-      return { exitReason: RegularPVMExitReason.Panic };
-    }
-
-    return {
-      nextInstructionPointer: (context.program.j[
-        Math.floor(jumpLocation / ZA)
-      ] - 1) as u32,
-    };
+    return djump(context, jumpLocation);
   },
 );
 
