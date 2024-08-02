@@ -34,3 +34,14 @@ export const decode1Reg1IMM = (
   const vx = readVarIntFromBuffer(bytes.subarray(2), lx as u8);
   return [ra, vx];
 };
+
+export const decode1Reg2iMM = (
+  bytes: Uint8Array,
+): [register: RegisterIdentifier, value1: u32, value2: u32] => {
+  const ra = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
+  const lx = Math.min(4, Math.floor(bytes[1] / 16) % 8);
+  const ly = Math.min(4, Math.max(0, bytes.length - 2 - lx));
+  const vx = readVarIntFromBuffer(bytes.subarray(2, 2 + lx), lx as u8);
+  const vy = readVarIntFromBuffer(bytes.subarray(2 + lx), ly as u8);
+  return [ra, vx, vy];
+};
