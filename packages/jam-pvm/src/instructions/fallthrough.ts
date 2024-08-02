@@ -4,7 +4,6 @@ import { u8 } from "@vekexasia/jam-types";
 export const FallthroughIx: GenericPVMInstruction<[]> = {
   identifier: 17 as u8,
   name: "fallthrough",
-  byteSize: 1 as u8,
   evaluate() {
     // TODO: implement this is not specified in the paper. most likely its a useless instruction
     return {};

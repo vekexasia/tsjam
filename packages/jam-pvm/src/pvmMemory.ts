@@ -3,16 +3,35 @@ import { PVMExitReason } from "@/exitReason.js";
 
 const innerMemory = new Uint8Array(0x10000);
 export const PVMMemory = {
-  set(offset: number, value: u8): PVMExitReason | void {
+  /**
+   * @throws in case there is an issue accessing the memory
+   * @param offset
+   * @param value
+   */
+  set(offset: number, value: u8): void {
     innerMemory[offset] = value;
   },
-  setBytes(offset: number, bytes: Uint8Array): PVMExitReason | void {
+  /**
+   * @throws in case there is an issue accessing the memory
+   * @param offset
+   * @param bytes
+   */
+  setBytes(offset: number, bytes: Uint8Array): void {
     innerMemory.set(bytes, offset);
   },
-  get(offset: number): u8 | PVMExitReason {
+  /**
+   * @throws in case there is an issue accessing the memory
+   * @param offset
+   */
+  get(offset: number): u8 {
     return innerMemory[offset] as u8;
   },
-  getBytes(offset: number, length: number): Uint8Array | PVMExitReason {
+  /**
+   * @throws in case there is an issue accessing the memory
+   * @param offset
+   * @param length
+   */
+  getBytes(offset: number, length: number): Uint8Array {
     return innerMemory.subarray(offset, offset + length);
   },
 };

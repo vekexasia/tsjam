@@ -4,7 +4,6 @@ import assert from "node:assert";
 import { RegisterIdentifier } from "@/types.js";
 import { decode1Reg1IMM } from "@/utils/decoders.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
-import { RegularPVMExitReason } from "@/exitReason.js";
 import { Z, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
 const create1Reg1IMMIx = (
@@ -26,7 +25,7 @@ const create1Reg1IMMIx = (
   };
 };
 
-export const JumpIndIx = create1Reg1IMMIx(
+export const jump_ind = create1Reg1IMMIx(
   19 as u8,
   "jump_ind",
   (context, ri, vx) => {
@@ -37,7 +36,7 @@ export const JumpIndIx = create1Reg1IMMIx(
 );
 
 // ### Load unsigned
-export const LoadImmIx = create1Reg1IMMIx(
+export const load_imm = create1Reg1IMMIx(
   4 as u8,
   "load_imm",
   (context, ri, vx) => {
@@ -45,7 +44,7 @@ export const LoadImmIx = create1Reg1IMMIx(
   },
 );
 
-export const LoadU8Ix = create1Reg1IMMIx(
+export const load_u8 = create1Reg1IMMIx(
   60 as u8,
   "load_u8",
   (context, ri, vx) => {
@@ -53,7 +52,7 @@ export const LoadU8Ix = create1Reg1IMMIx(
   },
 );
 
-export const LoadU16Ix = create1Reg1IMMIx(
+export const load_u16 = create1Reg1IMMIx(
   76 as u8,
   "load_u16",
   (context, ri, vx) => {
@@ -63,7 +62,7 @@ export const LoadU16Ix = create1Reg1IMMIx(
   },
 );
 
-export const LoadU32Ix = create1Reg1IMMIx(
+export const load_u32 = create1Reg1IMMIx(
   10 as u8,
   "load_u32",
   (context, ri, vx) => {
@@ -74,14 +73,14 @@ export const LoadU32Ix = create1Reg1IMMIx(
 );
 
 // ### Load signed
-export const LoadI8Ix = create1Reg1IMMIx(
+export const load_i8 = create1Reg1IMMIx(
   74 as u8,
   "load_i8",
   (context, ri, vx) => {
     context.registers[ri] = Z_inv(4, Z(1, context.memory.get(vx)));
   },
 );
-export const LoadI16Ix = create1Reg1IMMIx(
+export const load_i16 = create1Reg1IMMIx(
   76 as u8,
   "load_i16",
   (context, ri, vx) => {
@@ -94,7 +93,7 @@ export const LoadI16Ix = create1Reg1IMMIx(
 
 // ### Store
 
-export const StoreU8Ix = create1Reg1IMMIx(
+export const store_u8 = create1Reg1IMMIx(
   71 as u8,
   "store_u8",
   (context, ri, vx) => {
@@ -102,7 +101,7 @@ export const StoreU8Ix = create1Reg1IMMIx(
     context.memory.set(vx, wa);
   },
 );
-export const StoreU16Ix = create1Reg1IMMIx(
+export const store_u16 = create1Reg1IMMIx(
   69 as u8,
   "store_u16",
   (context, ri, vx) => {
@@ -112,7 +111,7 @@ export const StoreU16Ix = create1Reg1IMMIx(
     context.memory.setBytes(vx, tmp);
   },
 );
-export const StoreU32Ix = create1Reg1IMMIx(
+export const store_u32 = create1Reg1IMMIx(
   22 as u8,
   "store_u32",
   (context, ri, vx) => {
