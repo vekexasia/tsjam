@@ -29,7 +29,6 @@ export const StoreImmIndU8Ix = create1Reg2IMMIx(
   "store_imm_ind_u8",
   (context, ri, vx, vy) => {
     context.memory.set(context.registers[ri] + vx, (vy % 0xff) as u8);
-    return {};
   },
 );
 export const StoreImmIndU16Ix = create1Reg2IMMIx(
@@ -40,7 +39,6 @@ export const StoreImmIndU16Ix = create1Reg2IMMIx(
     const tmp = new Uint8Array(2);
     LittleEndian.encode(BigInt(value), tmp);
     context.memory.setBytes(context.registers[ri] + vx, tmp);
-    return {};
   },
 );
 export const StoreImmIndU32Ix = create1Reg2IMMIx(
@@ -51,6 +49,5 @@ export const StoreImmIndU32Ix = create1Reg2IMMIx(
     const tmp = new Uint8Array(4);
     LittleEndian.encode(BigInt(value), tmp);
     context.memory.setBytes(context.registers[ri] + vx, tmp);
-    return {};
   },
 );

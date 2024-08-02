@@ -17,7 +17,7 @@ export const branch = (
   condition: boolean | 0 | 1,
 ): ReturnType<GenericPVMInstruction<never>["evaluate"]> => {
   if (!condition) {
-    return {};
+    return;
   }
 
   assert(

@@ -59,7 +59,6 @@ export const LoadImmIx = create1Reg1IMMIx(
   "load_imm",
   (context, ri, vx) => {
     context.registers[ri] = vx;
-    return {};
   },
 );
 
@@ -68,7 +67,6 @@ export const LoadU8Ix = create1Reg1IMMIx(
   "load_u8",
   (context, ri, vx) => {
     context.registers[ri] = context.memory.get(vx) as number as u32;
-    return {};
   },
 );
 
@@ -79,7 +77,6 @@ export const LoadU16Ix = create1Reg1IMMIx(
     context.registers[ri] = Number(
       LittleEndian.decode(context.memory.getBytes(vx, 2)),
     ) as u32;
-    return {};
   },
 );
 
@@ -90,7 +87,6 @@ export const LoadU32Ix = create1Reg1IMMIx(
     context.registers[ri] = Number(
       LittleEndian.decode(context.memory.getBytes(vx, 4)),
     ) as u32;
-    return {};
   },
 );
 
@@ -100,7 +96,6 @@ export const LoadI8Ix = create1Reg1IMMIx(
   "load_i8",
   (context, ri, vx) => {
     context.registers[ri] = Z_inv(4, Z(1, context.memory.get(vx)));
-    return {};
   },
 );
 export const LoadI16Ix = create1Reg1IMMIx(
@@ -111,7 +106,6 @@ export const LoadI16Ix = create1Reg1IMMIx(
       4,
       Z(2, Number(LittleEndian.decode(context.memory.getBytes(vx, 2)))),
     );
-    return {};
   },
 );
 
@@ -123,7 +117,6 @@ export const StoreU8Ix = create1Reg1IMMIx(
   (context, ri, vx) => {
     const wa = (context.registers[ri] % 256) as u8;
     context.memory.set(vx, wa);
-    return {};
   },
 );
 export const StoreU16Ix = create1Reg1IMMIx(
@@ -134,7 +127,6 @@ export const StoreU16Ix = create1Reg1IMMIx(
     const tmp = new Uint8Array(2);
     LittleEndian.encode(BigInt(wa), tmp);
     context.memory.setBytes(vx, tmp);
-    return {};
   },
 );
 export const StoreU32Ix = create1Reg1IMMIx(
@@ -145,6 +137,5 @@ export const StoreU32Ix = create1Reg1IMMIx(
     const tmp = new Uint8Array(4);
     LittleEndian.encode(BigInt(wa), tmp);
     context.memory.setBytes(vx, tmp);
-    return {};
   },
 );

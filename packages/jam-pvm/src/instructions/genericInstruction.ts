@@ -25,5 +25,5 @@ export interface GenericPVMInstruction<Args extends unknown[]> {
   ): {
     exitReason?: PVMExitReason;
     nextInstructionPointer?: u32;
-  };
+  } | void;
 }
