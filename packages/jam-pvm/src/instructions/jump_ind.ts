@@ -1,4 +1,4 @@
-import { RegularPVMExitReason } from "@/exitReason";
+import { RegularPVMExitReason } from "@/exitReason.js";
 import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
 import { u32, u8 } from "@vekexasia/jam-types";
 import assert from "node:assert";
