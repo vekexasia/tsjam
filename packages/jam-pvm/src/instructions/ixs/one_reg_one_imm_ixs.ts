@@ -1,15 +1,17 @@
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import {
+  EvaluateFunction,
+  GenericPVMInstruction,
+} from "@/instructions/genericInstruction.js";
 import { u16, u32, u8 } from "@vekexasia/jam-types";
-import assert from "node:assert";
 import { RegisterIdentifier } from "@/types.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { Z, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
+import { regIx } from "@/instructions/ixdb.js";
 
-export const decode1Reg1IMM = (
-  bytes: Uint8Array,
-): [register: RegisterIdentifier, value: u32] => {
+type InputType = [register: RegisterIdentifier, value: u32];
+const decode1Reg1IMM = (bytes: Uint8Array): InputType => {
   const ra = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.max(0, bytes.length - 2));
   const vx = readVarIntFromBuffer(bytes.subarray(2), lx as u8);
@@ -17,22 +19,22 @@ export const decode1Reg1IMM = (
 };
 
 const create1Reg1IMMIx = (
-  identifier: u8,
-  name: string,
-  evaluate: GenericPVMInstruction<[RegisterIdentifier, u32]>["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, u32]> => {
-  return {
+  opCode: u8,
+  identifier: string,
+  evaluate: EvaluateFunction<InputType>,
+  blockTermination?: true,
+) => {
+  return regIx({
+    opCode,
     identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      return decode1Reg1IMM(bytes);
+    blockTermination,
+    ix: {
+      decode(bytes) {
+        return decode1Reg1IMM(bytes);
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 export const jump_ind = create1Reg1IMMIx(
@@ -43,6 +45,7 @@ export const jump_ind = create1Reg1IMMIx(
     const jumpLocation = ((wa + vx) % 2 ** 32) as u32;
     return djump(context, jumpLocation);
   },
+  true,
 );
 
 // ### Load unsigned

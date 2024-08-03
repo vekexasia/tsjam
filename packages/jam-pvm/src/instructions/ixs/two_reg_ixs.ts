@@ -1,29 +1,25 @@
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
-import { u16, u32, u8 } from "@vekexasia/jam-types";
-import assert from "node:assert";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
+import { u8 } from "@vekexasia/jam-types";
 import { RegisterIdentifier } from "@/types.js";
+import { regIx } from "@/instructions/ixdb.js";
 
 const create2RegIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<
-    [RegisterIdentifier, RegisterIdentifier]
-  >["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, RegisterIdentifier]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      const rd = Math.min(12, bytes[1] % 16);
-      const ra = Math.min(12, Math.floor(bytes[1] / 16));
-      return [rd as RegisterIdentifier, ra as RegisterIdentifier];
+  evaluate: EvaluateFunction<[RegisterIdentifier, RegisterIdentifier]>,
+) => {
+  return regIx<[RegisterIdentifier, RegisterIdentifier]>({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        const rd = Math.min(12, bytes[1] % 16);
+        const ra = Math.min(12, Math.floor(bytes[1] / 16));
+        return [rd as RegisterIdentifier, ra as RegisterIdentifier];
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 export const MoveRegIx = create2RegIx(

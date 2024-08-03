@@ -1,8 +1,8 @@
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { u32, u8 } from "@vekexasia/jam-types";
-import assert from "node:assert";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
+import { regIx } from "@/instructions/ixdb.js";
 
 /**
  * decode the full instruction from the bytes.
@@ -31,20 +31,18 @@ export const decode2IMM = (bytes: Uint8Array): [offset: u32, value: u32] => {
 const create2ImmIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<[vX: u32, vY: u32]>["evaluate"],
-): GenericPVMInstruction<[u32, u32]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      return decode2IMM(bytes);
+  evaluate: EvaluateFunction<[vX: u32, vY: u32]>,
+) => {
+  return regIx({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        return decode2IMM(bytes);
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 export const store_imm_u8 = create2ImmIx(

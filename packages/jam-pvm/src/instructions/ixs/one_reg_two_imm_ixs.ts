@@ -1,9 +1,9 @@
 import { u32, u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import assert from "node:assert";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
+import { regIx } from "@/instructions/ixdb.js";
 
 export const decode1Reg2iMM = (
   bytes: Uint8Array,
@@ -19,20 +19,18 @@ export const decode1Reg2iMM = (
 const create1Reg2IMMIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<[RegisterIdentifier, u32, u32]>["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, u32, u32]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      return decode1Reg2iMM(bytes);
+  evaluate: EvaluateFunction<[RegisterIdentifier, u32, u32]>,
+) => {
+  return regIx<[RegisterIdentifier, u32, u32]>({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        return decode1Reg2iMM(bytes);
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 export const StoreImmIndU8Ix = create1Reg2IMMIx(

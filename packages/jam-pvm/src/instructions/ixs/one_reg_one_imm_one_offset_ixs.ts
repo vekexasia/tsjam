@@ -1,11 +1,11 @@
 import { u32, u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import assert from "node:assert";
 import { branch } from "@/utils/branch.js";
 import { Z } from "@/utils/zed.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
+import { regIx } from "@/instructions/ixdb.js";
 
 export const decode1Reg1IMM1Offset = (
   bytes: Uint8Array,
@@ -26,24 +26,24 @@ export const decode1Reg1IMM1Offset = (
 const create1Reg1IMM1OffsetIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<[RegisterIdentifier, u32, u32]>["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, u32, u32]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      return decode1Reg1IMM1Offset(bytes);
+  evaluate: EvaluateFunction<[RegisterIdentifier, u32, u32]>,
+  blockTermination?: true,
+) => {
+  return regIx<[RegisterIdentifier, u32, u32]>({
+    opCode: identifier,
+    identifier: name,
+    blockTermination,
+    ix: {
+      decode(bytes) {
+        return decode1Reg1IMM1Offset(bytes);
+      },
+      evaluate(context, ri, vx, offset) {
+        // in reality here offset is i32.
+        const vy = (context.instructionPointer + offset) as u32;
+        return evaluate(context, ri, vx, vy);
+      },
     },
-    evaluate(context, ri, vx, offset) {
-      // in reality here offset is i32.
-      const vy = (context.instructionPointer + offset) as u32;
-      return evaluate(context, ri, vx, vy);
-    },
-  };
+  });
 };
 
 export const loadIMMJumpIx = create1Reg1IMM1OffsetIx(
@@ -53,6 +53,7 @@ export const loadIMMJumpIx = create1Reg1IMM1OffsetIx(
     context.registers[ri] = vx;
     return branch(context, vy, true);
   },
+  true,
 );
 
 export const BranchEqImm = create1Reg1IMM1OffsetIx(
@@ -61,6 +62,7 @@ export const BranchEqImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] === vx);
   },
+  true,
 );
 
 export const BranchNeImm = create1Reg1IMM1OffsetIx(
@@ -69,6 +71,7 @@ export const BranchNeImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] != vx);
   },
+  true,
 );
 
 export const BranchLTUImm = create1Reg1IMM1OffsetIx(
@@ -77,6 +80,7 @@ export const BranchLTUImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] < vx);
   },
+  true,
 );
 
 export const BranchLEUImm = create1Reg1IMM1OffsetIx(
@@ -85,6 +89,7 @@ export const BranchLEUImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] <= vx);
   },
+  true,
 );
 
 export const BranchGEUImm = create1Reg1IMM1OffsetIx(
@@ -93,6 +98,7 @@ export const BranchGEUImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] >= vx);
   },
+  true,
 );
 
 export const BranchGTUImm = create1Reg1IMM1OffsetIx(
@@ -101,6 +107,7 @@ export const BranchGTUImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, context.registers[ri] > vx);
   },
+  true,
 );
 
 export const BranchLTSImm = create1Reg1IMM1OffsetIx(
@@ -109,6 +116,7 @@ export const BranchLTSImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, Z(4, context.registers[ri]) < Z(4, vx));
   },
+  true,
 );
 
 export const BranchLESImm = create1Reg1IMM1OffsetIx(
@@ -117,6 +125,7 @@ export const BranchLESImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, Z(4, context.registers[ri]) <= Z(4, vx));
   },
+  true,
 );
 
 export const BranchGESImm = create1Reg1IMM1OffsetIx(
@@ -125,6 +134,7 @@ export const BranchGESImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, Z(4, context.registers[ri]) >= Z(4, vx));
   },
+  true,
 );
 
 export const BranchGTSImm = create1Reg1IMM1OffsetIx(
@@ -133,4 +143,5 @@ export const BranchGTSImm = create1Reg1IMM1OffsetIx(
   (context, ri, vx, vy) => {
     return branch(context, vy, Z(4, context.registers[ri]) > Z(4, vx));
   },
+  true,
 );

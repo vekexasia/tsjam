@@ -1,42 +1,40 @@
 import { u32, u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import assert from "node:assert";
-import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { djump } from "@/utils/djump.js";
 import { Z, Z_inv } from "@/utils/zed.js";
+import { regIx } from "@/instructions/ixdb.js";
+
+type EvaluateType = [wA: u32, wB: u32, rD: RegisterIdentifier];
+type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
 
 const create3RegIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<
-    [wA: u32, wB: u32, rD: RegisterIdentifier]
-  >["evaluate"],
-): GenericPVMInstruction<
-  [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier]
-> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
-      const rB = Math.min(12, Math.floor(bytes[1] / 16)) as RegisterIdentifier;
-      const rD = Math.min(12, bytes[2]) as RegisterIdentifier;
-      return [rA, rB, rD];
+  evaluate: EvaluateFunction<EvaluateType>,
+) => {
+  return regIx<InputType>({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
+        const rB = Math.min(
+          12,
+          Math.floor(bytes[1] / 16),
+        ) as RegisterIdentifier;
+        const rD = Math.min(12, bytes[2]) as RegisterIdentifier;
+        return [rA, rB, rD];
+      },
+      evaluate(context, rA, rB, rD) {
+        return evaluate(
+          context,
+          context.registers[rA],
+          context.registers[rB],
+          rD,
+        );
+      },
     },
-    evaluate(context, rA, rB, rD) {
-      return evaluate(
-        context,
-        context.registers[rA],
-        context.registers[rB],
-        rD,
-      );
-    },
-  };
+  });
 };
 
 export const add = create3RegIx(8 as u8, "add", (context, wA, wB, rD) => {

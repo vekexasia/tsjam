@@ -1,34 +1,35 @@
-import { u16, u32, u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { u32, u8 } from "@vekexasia/jam-types";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import assert from "node:assert";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { Z, Z_inv } from "@/utils/zed.js";
+import { regIx } from "@/instructions/ixdb.js";
 
 const create2Reg1IMMIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<
+  evaluate: EvaluateFunction<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, vX: u32]
-  >["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, RegisterIdentifier, u32]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
-      const rB = Math.min(12, Math.floor(bytes[1] / 16)) as RegisterIdentifier;
-      const lX = Math.min(4, Math.max(0, bytes.length - 2));
-      const imm = readVarIntFromBuffer(bytes.subarray(2), lX as u8);
-      return [rA, rB, imm];
+  >,
+) => {
+  return regIx<[rA: RegisterIdentifier, rB: RegisterIdentifier, vX: u32]>({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
+        const rB = Math.min(
+          12,
+          Math.floor(bytes[1] / 16),
+        ) as RegisterIdentifier;
+        const lX = Math.min(4, Math.max(0, bytes.length - 2));
+        const imm = readVarIntFromBuffer(bytes.subarray(2), lX as u8);
+        return [rA, rB, imm];
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 // # store
@@ -37,13 +38,10 @@ export const store_ind_u8 = create2Reg1IMMIx(
   16 as u8,
   "store_ind_u8",
   (context, rA, rB, vX) => {
-    const e = context.memory.set(
+    context.memory.set(
       context.registers[rB] + vX,
       (context.registers[rA] % 0xff) as u8,
     );
-    if (e) {
-      return { exitReason: e };
-    }
   },
 );
 
@@ -53,10 +51,7 @@ export const store_ind_u16 = create2Reg1IMMIx(
   (context, rA, rB, vX) => {
     const tmp = new Uint8Array(2);
     LittleEndian.encode(BigInt(context.registers[rA] % 0xffff), tmp);
-    const e = context.memory.setBytes(context.registers[rB] + vX, tmp);
-    if (e) {
-      return { exitReason: e };
-    }
+    context.memory.setBytes(context.registers[rB] + vX, tmp);
   },
 );
 
@@ -66,10 +61,7 @@ export const store_ind_u32 = create2Reg1IMMIx(
   (context, rA, rB, vX) => {
     const tmp = new Uint8Array(4);
     LittleEndian.encode(BigInt(context.registers[rA]), tmp);
-    const e = context.memory.setBytes(context.registers[rB] + vX, tmp);
-    if (e) {
-      return { exitReason: e };
-    }
+    context.memory.setBytes(context.registers[rB] + vX, tmp);
   },
 );
 

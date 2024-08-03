@@ -1,37 +1,38 @@
 import { u32, u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import assert from "node:assert";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { Z } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
+import { regIx } from "@/instructions/ixdb.js";
 
 const create2Reg1OffsetIx = (
   identifier: u8,
   name: string,
-  evaluate: GenericPVMInstruction<
+  evaluate: EvaluateFunction<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32]
-  >["evaluate"],
-): GenericPVMInstruction<[RegisterIdentifier, RegisterIdentifier, u32]> => {
-  return {
-    identifier,
-    name,
-    decode(bytes) {
-      assert(
-        bytes[0] === this.identifier,
-        `invalid identifier expected ${name}`,
-      );
-      const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
-      const rB = Math.min(12, Math.floor(bytes[1] / 16)) as RegisterIdentifier;
-      const lX = Math.min(4, Math.max(0, bytes.length - 2));
-      const offset: u32 = Z(
-        lX,
-        Number(LittleEndian.decode(bytes.subarray(2, 2 + lX))),
-      );
-      return [rA, rB, offset];
+  >,
+) => {
+  return regIx<[rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32]>({
+    opCode: identifier,
+    identifier: name,
+    ix: {
+      decode(bytes) {
+        const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
+        const rB = Math.min(
+          12,
+          Math.floor(bytes[1] / 16),
+        ) as RegisterIdentifier;
+        const lX = Math.min(4, Math.max(0, bytes.length - 2));
+        const offset: u32 = Z(
+          lX,
+          Number(LittleEndian.decode(bytes.subarray(2, 2 + lX))),
+        );
+        return [rA, rB, offset];
+      },
+      evaluate,
     },
-    evaluate,
-  };
+  });
 };
 
 export const branch_eq = create2Reg1OffsetIx(
