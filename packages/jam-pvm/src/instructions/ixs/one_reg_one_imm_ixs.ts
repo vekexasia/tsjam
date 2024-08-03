@@ -1,7 +1,4 @@
-import {
-  EvaluateFunction,
-  GenericPVMInstruction,
-} from "@/instructions/genericInstruction.js";
+import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { u16, u32, u8 } from "@vekexasia/jam-types";
 import { RegisterIdentifier } from "@/types.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
@@ -134,3 +131,19 @@ export const store_u32 = create1Reg1IMMIx(
     context.memory.setBytes(vx, tmp);
   },
 );
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("one_reg_one_imm_ixs", () => {
+    it.skip("jump_ind", () => {});
+    it.skip("load_imm", () => {});
+    it.skip("load_u8", () => {});
+    it.skip("load_u16", () => {});
+    it.skip("load_u32", () => {});
+    it.skip("load_i8", () => {});
+    it.skip("load_i16", () => {});
+    it.skip("store_u8", () => {});
+    it.skip("store_u16", () => {});
+    it.skip("store_u32", () => {});
+  });
+}

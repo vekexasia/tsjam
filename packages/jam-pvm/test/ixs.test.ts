@@ -1,4 +1,4 @@
-import "@/instructions/ixs/all.js";
+import "@/instructions/index.js";
 import { describe, it, expect } from "vitest";
 import { Ixdb } from "@/instructions/ixdb.js";
 describe("allixs", () => {

@@ -7,6 +7,7 @@
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
+      "@/test/*": ["./test/*"],
       "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
       "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"]
     }
