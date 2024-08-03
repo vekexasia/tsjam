@@ -102,7 +102,7 @@ export const load_ind_u32 = create2Reg1IMMIx(
 
 // # load signed
 export const load_ind_i8 = create2Reg1IMMIx(
-  56 as u8,
+  21 as u8,
   "load_ind_i8",
   (context, rA, rB, vX) => {
     const val = context.memory.get(context.registers[rB] + vX);
@@ -127,33 +127,33 @@ export const load_ind_i16 = create2Reg1IMMIx(
 );
 
 // math
-export const add_ind = create2Reg1IMMIx(
+export const add_imm = create2Reg1IMMIx(
   2 as u8,
-  "add_ind",
+  "add_imm",
   (context, rA, rB, vX) => {
     context.registers[rB] = ((context.registers[rA] + vX) % 2 ** 32) as u32;
   },
 );
 
-export const and_ind = create2Reg1IMMIx(
+export const and_imm = create2Reg1IMMIx(
   18 as u8,
-  "and_ind",
+  "and_imm",
   (context, rA, rB, vX) => {
     context.registers[rB] = (context.registers[rA] & vX) as u32;
   },
 );
 
-export const xor_ind = create2Reg1IMMIx(
-  18 as u8,
-  "xor_ind",
+export const xor_imm = create2Reg1IMMIx(
+  31 as u8,
+  "xor_imm",
   (context, rA, rB, vX) => {
     context.registers[rB] = (context.registers[rA] ^ vX) as u32;
   },
 );
 
-export const or_ind = create2Reg1IMMIx(
+export const or_imm = create2Reg1IMMIx(
   49 as u8,
-  "or_ind",
+  "or_imm",
   (context, rA, rB, vX) => {
     context.registers[rB] = (context.registers[rA] | vX) as u32;
   },

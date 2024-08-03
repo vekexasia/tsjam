@@ -94,7 +94,7 @@ export const load_i8 = create1Reg1IMMIx(
   },
 );
 export const load_i16 = create1Reg1IMMIx(
-  76 as u8,
+  66 as u8,
   "load_i16",
   (context, ri, vx) => {
     context.registers[ri] = Z_inv(

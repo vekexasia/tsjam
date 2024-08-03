@@ -57,7 +57,7 @@ export const or = create3RegIx(12 as u8, "or", (context, wA, wB, rD) => {
   context.registers[rD] = (wA | wB) as u32;
 });
 
-export const mul = create3RegIx(23 as u8, "and", (context, wA, wB, rD) => {
+export const mul = create3RegIx(34 as u8, "mul", (context, wA, wB, rD) => {
   context.registers[rD] = ((wA * wB) % 2 ** 32) as u32;
 });
 
@@ -163,7 +163,7 @@ export const shlo_r = create3RegIx(
 );
 
 export const shar_r = create3RegIx(
-  36 as u8,
+  77 as u8,
   "shar_r",
   (context, wA, wB, rD) => {
     const z4a = Z(4, wA);
@@ -182,8 +182,8 @@ export const cmov_iz = create3RegIx(
 );
 
 export const cmov_nz = create3RegIx(
-  83 as u8,
-  "cmov_iz",
+  84 as u8,
+  "cmov_nz",
   (context, wA, wB, rD) => {
     if (wB !== 0) {
       context.registers[rD] = wA;

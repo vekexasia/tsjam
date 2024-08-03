@@ -27,6 +27,12 @@ export const regIx = <T extends unknown[]>(conf: {
 
   ix: GenericPVMInstruction<T>;
 }): GenericPVMInstruction<T> => {
+  if (Ixdb.byCode.has(conf.opCode)) {
+    throw new Error(`duplicate opCode ${conf.opCode}`);
+  }
+  if (Ixdb.byIdentifier.has(conf.identifier)) {
+    throw new Error(`duplicate identifier ${conf.identifier}`);
+  }
   Ixdb.byCode.set(conf.opCode, conf.ix);
   Ixdb.byIdentifier.set(conf.identifier, conf.ix);
   if (conf.blockTermination) {
@@ -34,3 +40,104 @@ export const regIx = <T extends unknown[]>(conf: {
   }
   return conf.ix;
 };
+
+// test
+if (import.meta.vitest) {
+  const { describe, expect, it, beforeEach } = import.meta.vitest;
+  describe("regIx", () => {
+    beforeEach(() => {
+      Ixdb.byCode.clear();
+      Ixdb.byIdentifier.clear();
+      Ixdb.blockTerminators.clear();
+    });
+    it("register an ix", () => {
+      const ix = regIx({
+        opCode: 0 as u8,
+        identifier: "test",
+        blockTermination: true,
+        ix: {
+          decode() {
+            return [];
+          },
+          evaluate() {
+            return {};
+          },
+        },
+      });
+      expect(Ixdb.byCode.get(0 as u8)).toBe(ix);
+      expect(Ixdb.byIdentifier.get("test")).toBe(ix);
+      expect(Ixdb.blockTerminators.has(0 as u8)).toBe(true);
+    });
+    it("throws on duplicate opCode", () => {
+      regIx({
+        opCode: 0 as u8,
+        identifier: "test",
+        ix: {
+          decode() {
+            return [];
+          },
+          evaluate() {
+            return {};
+          },
+        },
+      });
+      expect(() =>
+        regIx({
+          opCode: 0 as u8,
+          identifier: "test2",
+          ix: {
+            decode() {
+              return [];
+            },
+            evaluate() {
+              return {};
+            },
+          },
+        }),
+      ).toThrow();
+    });
+    it("throws on duplicate identifier", () => {
+      regIx({
+        opCode: 0 as u8,
+        identifier: "test",
+        ix: {
+          decode() {
+            return [];
+          },
+          evaluate() {
+            return {};
+          },
+        },
+      });
+      expect(() =>
+        regIx({
+          opCode: 1 as u8,
+          identifier: "test",
+          ix: {
+            decode() {
+              return [];
+            },
+            evaluate() {
+              return {};
+            },
+          },
+        }),
+      ).toThrow();
+    });
+    it("does not register blockTermination", () => {
+      regIx({
+        opCode: 0 as u8,
+        identifier: "test",
+        ix: {
+          decode() {
+            return [];
+          },
+          evaluate() {
+            return {};
+          },
+        },
+      });
+      expect(Ixdb.blockTerminators.has(0 as u8)).toBe(false);
+    });
+  });
+}

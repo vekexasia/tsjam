@@ -12,10 +12,12 @@ const create2Reg1OffsetIx = (
   evaluate: EvaluateFunction<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32]
   >,
+  blockTermination?: true,
 ) => {
   return regIx<[rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32]>({
     opCode: identifier,
     identifier: name,
+    blockTermination,
     ix: {
       decode(bytes) {
         const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
@@ -45,6 +47,7 @@ export const branch_eq = create2Reg1OffsetIx(
       context.registers[rA] === context.registers[rB],
     );
   },
+  true,
 );
 
 export const branch_ne = create2Reg1OffsetIx(
@@ -57,6 +60,7 @@ export const branch_ne = create2Reg1OffsetIx(
       context.registers[rA] !== context.registers[rB],
     );
   },
+  true,
 );
 
 export const branch_lt_u = create2Reg1OffsetIx(
@@ -69,6 +73,7 @@ export const branch_lt_u = create2Reg1OffsetIx(
       context.registers[rA] < context.registers[rB],
     );
   },
+  true,
 );
 
 export const branch_lt_s = create2Reg1OffsetIx(
@@ -81,6 +86,7 @@ export const branch_lt_s = create2Reg1OffsetIx(
       Z(4, context.registers[rA]) < Z(4, context.registers[rB]),
     );
   },
+  true,
 );
 
 export const branch_ge_u = create2Reg1OffsetIx(
@@ -93,6 +99,7 @@ export const branch_ge_u = create2Reg1OffsetIx(
       context.registers[rA] >= context.registers[rB],
     );
   },
+  true,
 );
 
 export const branch_ge_s = create2Reg1OffsetIx(
@@ -105,4 +112,5 @@ export const branch_ge_s = create2Reg1OffsetIx(
       Z(4, context.registers[rA]) < Z(4, context.registers[rB]),
     );
   },
+  true,
 );

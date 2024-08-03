@@ -11,12 +11,14 @@ const create2Reg2ImmIx = (
   evaluate: EvaluateFunction<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32]
   >,
+  blockTermination?: true,
 ) => {
   return regIx<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32]
   >({
     opCode: identifier,
     identifier: name,
+    blockTermination,
     ix: {
       decode(bytes) {
         const rA = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
@@ -46,4 +48,5 @@ export const load_imm_jump_ind = create2Reg2ImmIx(
     context.registers[rA] = vx;
     return djump(context, ((context.registers[rB] + vy) % 2 ** 32) as u32);
   },
+  true,
 );
