@@ -2,10 +2,20 @@ import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
 import { u16, u32, u8 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { RegisterIdentifier } from "@/types.js";
-import { decode1Reg1IMM } from "@/utils/decoders.js";
 import { LittleEndian } from "@vekexasia/jam-codec";
 import { Z, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
+import { readVarIntFromBuffer } from "@/utils/varint.js";
+
+export const decode1Reg1IMM = (
+  bytes: Uint8Array,
+): [register: RegisterIdentifier, value: u32] => {
+  const ra = Math.min(12, bytes[1] % 16) as RegisterIdentifier;
+  const lx = Math.min(4, Math.max(0, bytes.length - 2));
+  const vx = readVarIntFromBuffer(bytes.subarray(2), lx as u8);
+  return [ra, vx];
+};
+
 const create1Reg1IMMIx = (
   identifier: u8,
   name: string,
