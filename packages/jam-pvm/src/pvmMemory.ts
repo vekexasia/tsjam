@@ -1,5 +1,4 @@
 import { u8 } from "@vekexasia/jam-types";
-import { PVMExitReason } from "@/exitReason.js";
 
 const innerMemory = new Uint8Array(0x10000);
 export const PVMMemory = {
