@@ -238,8 +238,6 @@ if (import.meta.vitest) {
           1 as RegisterIdentifier,
           0x01 as u32,
         );
-        console.log((48).toString(2));
-        console.log((32).toString(2));
         expect((context.memory.set as Mock).mock.calls).toEqual([
           [0x1011, 0x20],
         ]);

@@ -137,7 +137,6 @@ if (import.meta.vitest) {
       const decoded = PVMProgramCodec.decode(bytes);
       expect(decoded.readBytes).toEqual(bytes.length);
       expect(decoded.value).toEqual(p);
-      console.log(bytes);
     });
     it("should encode/decode a single instruction program", () => {
       const p: PVMProgram = {
@@ -152,7 +151,6 @@ if (import.meta.vitest) {
       const decoded = PVMProgramCodec.decode(bytes);
       expect(decoded.readBytes).toEqual(bytes.length);
       expect(decoded.value).toEqual(p);
-      console.log(bytes);
     });
     it("should error when k and c have different lengths", () => {
       const p: PVMProgram = {
