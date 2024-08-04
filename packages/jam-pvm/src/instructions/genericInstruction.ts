@@ -2,6 +2,10 @@ import { u32 } from "@vekexasia/jam-types";
 import { PVMExitReason } from "@/exitReason.js";
 import { EvaluationContext } from "@/evaluationContext.js";
 
+/**
+ * A generic PVM instruction that can take any number of arguments
+ * A single instruction needs to implement this interface
+ */
 export interface GenericPVMInstruction<Args extends unknown[]> {
   /**
    * decode the full instruction from the bytes.
