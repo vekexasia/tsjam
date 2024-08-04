@@ -21,12 +21,16 @@ export const branch = (
   }
 
   assert(address >= 0, "branch address is negative");
+
   assert(
     context.program.k[address] !== 1,
     "branch target is not an instruction",
   );
 
-  //TODO check if address is not a start of a new block
+  assert(
+    context.meta.blockBeginnings.has(address),
+    "branch target is not a block beginning",
+  );
 
   return {
     nextInstructionPointer: address,

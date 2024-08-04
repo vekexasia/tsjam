@@ -30,7 +30,10 @@ export type EvaluationContext = {
   };
   registers: SeqOfLength<u32, 13>;
 };
-
+/**
+ * Instantiate a new evaluation context given the PVM Program
+ * @param program - the PVM Program
+ */
 export const instantiateContext = (program: PVMProgram): EvaluationContext => {
   const meta: EvaluationContext["meta"] = {
     blockBeginnings: new Set<u32>(),

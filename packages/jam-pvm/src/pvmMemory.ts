@@ -1,6 +1,6 @@
 import { u8 } from "@vekexasia/jam-types";
 
-const innerMemory = new Uint8Array(0x10000);
+const innerMemory = new Uint8Array(2 ** 32);
 export const PVMMemory = {
   /**
    * @throws in case there is an issue accessing the memory
