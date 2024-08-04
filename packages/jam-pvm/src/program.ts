@@ -8,6 +8,7 @@ export interface PVMProgram {
   j: u32[];
   /**
    * Number of bytes to read for each jump table entry.
+   * useful when encoding/decoding the program as every entry in `j` is of the same length
    * @see j
    */
   z: u8;
