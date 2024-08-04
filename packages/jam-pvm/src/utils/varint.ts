@@ -7,25 +7,22 @@ import { u32, u8 } from "@vekexasia/jam-types";
  * @param length - length of the varint
  */
 export const readVarIntFromBuffer = (buf: Uint8Array, length: u8) => {
-  assert(length <= 4, "length must be <= 4");
-  assert(length >= 0, "length must be >= 0");
+  assert(length <= 4 && length >= 0, "length must be <= 4 and >= 0");
   let result = 0n;
   const lengthN = BigInt(length);
   for (let i = 0n; i < lengthN; i++) {
     result += BigInt(buf[Number(i)]) << (8n * (lengthN - i - 1n));
   }
-
-  // reconstruct with the missing
-  result = result << (32n - 8n * lengthN);
-  assert(result < 2 ** 32, "result must be < 2**32");
-  assert(result >= 0, "result must be >= 0");
-
-  // if msb is 1 then we need to fill with 1s
-  if (result & (1n << 31n)) {
-    // we may optimize by precomputing the amount of bytes to fill
-    for (let i = 0n; i < 4 - length; i++) {
-      result = result + (0xffn << (8n * i));
+  if (result & (1n << (8n * lengthN - 1n))) {
+    // prepend 1s
+    for (let i = 3n; i >= lengthN; i--) {
+      result += 0xffn << (8n * i);
     }
+  } else {
+    // fill the rest with 0s
+    result = result << (32n - 8n * lengthN);
+    assert(result < 2 ** 32, "result must be < 2**32");
+    assert(result >= 0, "result must be >= 0");
   }
   return Number(result) as u32;
 };
@@ -69,10 +66,16 @@ if (import.meta.vitest) {
       );
     });
     it("should read a 3 byte varint with leading 1s", () => {
-      const buffer = new Uint8Array([0b11111111, 0b11111110, 0b11111101]);
+      const buffer = new Uint8Array([0b10001111, 0b11111110, 0b11111101]);
+      console.log(readVarIntFromBuffer(buffer, 3 as u8).toString(2));
       expect(readVarIntFromBuffer(buffer, 3 as u8)).toBe(
-        0b11111111_11111110_11111101_11111111,
+        0b11111111_10001111_11111110_11111101,
       );
+    });
+    it("should read 1 byte varint with leading 1s", () => {
+      const buffer = new Uint8Array([0xf6]);
+
+      expect(readVarIntFromBuffer(buffer, 1 as u8)).toBe(0xfffffff6);
     });
   });
 }

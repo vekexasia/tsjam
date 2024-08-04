@@ -7,7 +7,7 @@ import { Ixdb } from "@/instructions/ixdb.js";
  * This is the context passed to instructions for evaluation.
  *
  */
-export type EvaluationContext = {
+export interface EvaluationContext {
   instructionPointer: u32;
   memory: typeof PVMMemory;
   program: PVMProgram;
@@ -29,7 +29,7 @@ export type EvaluationContext = {
     blockLengths: Map<u32, u32>;
   };
   registers: SeqOfLength<u32, 13>;
-};
+}
 /**
  * Instantiate a new evaluation context given the PVM Program
  * @param program - the PVM Program
@@ -62,3 +62,41 @@ export const instantiateContext = (program: PVMProgram): EvaluationContext => {
     registers: new Array(13).fill(0) as SeqOfLength<u32, 13>,
   };
 };
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("instantiateContext", () => {
+    it("should instantiate the context", () => {
+      const program: PVMProgram = {
+        c: new Uint8Array([
+          0x04,
+          0x07,
+          0x0a, // a0 = 0x0a
+          0x04,
+          0x08,
+          0xf6, // a1 = 0xfffffff6
+          0x2b,
+          0x87,
+          0x04, // jump 10 if a0 >=signed a1 - branch_ge_s
+          0x00, // trap,
+          0x04,
+          0x07,
+          0xef,
+          0xbe,
+          0xad,
+          0xde, // load_imm a0 0xdeadbeef
+        ]),
+        j: [] as any,
+        k: [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+        z: 0 as u8,
+      };
+      const context = instantiateContext(program);
+      expect(context.instructionPointer).toBe(0);
+      expect(context.memory).toBe(PVMMemory);
+      expect(context.program).toBe(program);
+      expect(context.meta.blockBeginnings.size).toBe(0);
+      expect(context.meta.blockLengths.size).toBe(0);
+      expect(context.registers.length).toBe(13);
+    });
+  });
+}
