@@ -8,6 +8,7 @@ import { beforeEach } from "vitest";
 
 type EvaluateType = [wA: u32, wB: u32, rD: RegisterIdentifier];
 type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
+
 const decode = (bytes: Uint8Array): InputType => {
   assert(bytes.length >= 2, "Not enough bytes");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
@@ -15,7 +16,8 @@ const decode = (bytes: Uint8Array): InputType => {
   const rD = Math.min(12, bytes[1]) as RegisterIdentifier;
   return [rA, rB, rD];
 };
-const create3RegIx = (
+
+const create = (
   identifier: u8,
   name: string,
   evaluate: EvaluateFunction<EvaluateType>,
@@ -37,31 +39,31 @@ const create3RegIx = (
   });
 };
 
-export const add = create3RegIx(8 as u8, "add", (context, wA, wB, rD) => {
+const add = create(8 as u8, "add", (context, wA, wB, rD) => {
   context.registers[rD] = ((wA + wB) % 2 ** 32) as u32;
 });
 
-export const sub = create3RegIx(20 as u8, "sub", (context, wA, wB, rD) => {
+const sub = create(20 as u8, "sub", (context, wA, wB, rD) => {
   context.registers[rD] = ((wA + 2 ** 32 - wB) % 2 ** 32) as u32;
 });
 
-export const and = create3RegIx(23 as u8, "and", (context, wA, wB, rD) => {
+const and = create(23 as u8, "and", (context, wA, wB, rD) => {
   context.registers[rD] = (wA & wB) as u32;
 });
 
-export const xor = create3RegIx(28 as u8, "xor", (context, wA, wB, rD) => {
+const xor = create(28 as u8, "xor", (context, wA, wB, rD) => {
   context.registers[rD] = (wA ^ wB) as u32;
 });
 
-export const or = create3RegIx(12 as u8, "or", (context, wA, wB, rD) => {
+const or = create(12 as u8, "or", (context, wA, wB, rD) => {
   context.registers[rD] = (wA | wB) as u32;
 });
 
-export const mul = create3RegIx(34 as u8, "mul", (context, wA, wB, rD) => {
+const mul = create(34 as u8, "mul", (context, wA, wB, rD) => {
   context.registers[rD] = ((wA * wB) % 2 ** 32) as u32;
 });
 
-export const mul_upper_s_s = create3RegIx(
+const mul_upper_s_s = create(
   67 as u8,
   "mul_upper_s_s",
   (context, wA, wB, rD) => {
@@ -69,7 +71,7 @@ export const mul_upper_s_s = create3RegIx(
   },
 );
 
-export const mul_upper_u_u = create3RegIx(
+const mul_upper_u_u = create(
   57 as u8,
   "mul_upper_u_u",
   (context, wA, wB, rD) => {
@@ -77,7 +79,7 @@ export const mul_upper_u_u = create3RegIx(
   },
 );
 
-export const mul_upper_s_u = create3RegIx(
+const mul_upper_s_u = create(
   81 as u8,
   "mul_upper_s_u",
   (context, wA, wB, rD) => {
@@ -85,7 +87,7 @@ export const mul_upper_s_u = create3RegIx(
   },
 );
 
-export const div_u = create3RegIx(68 as u8, "div", (context, wA, wB, rD) => {
+const div_u = create(68 as u8, "div", (context, wA, wB, rD) => {
   if (wB === 0) {
     context.registers[rD] = (2 ** 32 - 1) as u32;
   } else {
@@ -93,7 +95,7 @@ export const div_u = create3RegIx(68 as u8, "div", (context, wA, wB, rD) => {
   }
 });
 
-export const div_s = create3RegIx(64 as u8, "div_s", (context, wA, wB, rD) => {
+const div_s = create(64 as u8, "div_s", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
   const z4b = Z4(wB);
   if (wB === 0) {
@@ -105,7 +107,7 @@ export const div_s = create3RegIx(64 as u8, "div_s", (context, wA, wB, rD) => {
   }
 });
 
-export const rem_u = create3RegIx(73 as u8, "rem_u", (context, wA, wB, rD) => {
+const rem_u = create(73 as u8, "rem_u", (context, wA, wB, rD) => {
   if (wB === 0) {
     context.registers[rD] = wA;
   } else {
@@ -113,7 +115,7 @@ export const rem_u = create3RegIx(73 as u8, "rem_u", (context, wA, wB, rD) => {
   }
 });
 
-export const rem_s = create3RegIx(70 as u8, "rem_s", (context, wA, wB, rD) => {
+const rem_s = create(70 as u8, "rem_s", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
   const z4b = Z4(wB);
   if (wB === 0) {
@@ -125,68 +127,40 @@ export const rem_s = create3RegIx(70 as u8, "rem_s", (context, wA, wB, rD) => {
   }
 });
 
-export const set_lt_u = create3RegIx(
-  36 as u8,
-  "set_lt_u",
-  (context, wA, wB, rD) => {
-    context.registers[rD] = (wA < wB ? 1 : 0) as u32;
-  },
-);
+const set_lt_u = create(36 as u8, "set_lt_u", (context, wA, wB, rD) => {
+  context.registers[rD] = (wA < wB ? 1 : 0) as u32;
+});
 
-export const set_lt_s = create3RegIx(
-  58 as u8,
-  "set_lt_s",
-  (context, wA, wB, rD) => {
-    const z4a = Z4(wA);
-    const z4b = Z4(wB);
-    context.registers[rD] = (z4a < z4b ? 1 : 0) as u32;
-  },
-);
+const set_lt_s = create(58 as u8, "set_lt_s", (context, wA, wB, rD) => {
+  const z4a = Z4(wA);
+  const z4b = Z4(wB);
+  context.registers[rD] = (z4a < z4b ? 1 : 0) as u32;
+});
 
-export const shlo_l = create3RegIx(
-  55 as u8,
-  "shlo_l",
-  (context, wA, wB, rD) => {
-    context.registers[rD] = ((wA << wB % 32) % 2 ** 32) as u32;
-  },
-);
+const shlo_l = create(55 as u8, "shlo_l", (context, wA, wB, rD) => {
+  context.registers[rD] = ((wA << wB % 32) % 2 ** 32) as u32;
+});
 
-export const shlo_r = create3RegIx(
-  51 as u8,
-  "shlo_r",
-  (context, wA, wB, rD) => {
-    context.registers[rD] = (wA >> wB % 32) as u32;
-  },
-);
+const shlo_r = create(51 as u8, "shlo_r", (context, wA, wB, rD) => {
+  context.registers[rD] = (wA >> wB % 32) as u32;
+});
 
-export const shar_r = create3RegIx(
-  77 as u8,
-  "shar_r",
-  (context, wA, wB, rD) => {
-    const z4a = Z4(wA);
-    context.registers[rD] = Z4_inv(Math.floor(z4a / 2 ** (wB % 32)));
-  },
-);
+const shar_r = create(77 as u8, "shar_r", (context, wA, wB, rD) => {
+  const z4a = Z4(wA);
+  context.registers[rD] = Z4_inv(Math.floor(z4a / 2 ** (wB % 32)));
+});
 
-export const cmov_iz = create3RegIx(
-  83 as u8,
-  "cmov_iz",
-  (context, wA, wB, rD) => {
-    if (wB === 0) {
-      context.registers[rD] = wA;
-    }
-  },
-);
+const cmov_iz = create(83 as u8, "cmov_iz", (context, wA, wB, rD) => {
+  if (wB === 0) {
+    context.registers[rD] = wA;
+  }
+});
 
-export const cmov_nz = create3RegIx(
-  84 as u8,
-  "cmov_nz",
-  (context, wA, wB, rD) => {
-    if (wB !== 0) {
-      context.registers[rD] = wA;
-    }
-  },
-);
+const cmov_nz = create(84 as u8, "cmov_nz", (context, wA, wB, rD) => {
+  if (wB !== 0) {
+    context.registers[rD] = wA;
+  }
+});
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
