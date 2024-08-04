@@ -1,7 +1,7 @@
 import { JamCodec, LittleEndian, E } from "@vekexasia/jam-codec";
 import { u32, u8 } from "@vekexasia/jam-types";
 
-export type PVMProgram = {
+export interface PVMProgram {
   /**
    * Dynamic jump table.
    */
@@ -21,7 +21,7 @@ export type PVMProgram = {
    * @see c
    */
   k: Array<0 | 1>;
-};
+}
 
 export const PVMProgramCodec: JamCodec<PVMProgram> = {
   encode(value: PVMProgram, bytes: Uint8Array): number {
