@@ -11,7 +11,6 @@ export const FallthroughIx = regIx<[]>({
     },
     evaluate() {
       // TODO: implement this is not specified in the paper. most likely its a useless instruction
-      return {};
     },
   },
 });

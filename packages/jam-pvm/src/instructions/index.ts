@@ -1,7 +1,7 @@
 // importing registers all in the ixdb
 import "./ixs/ecalli.js";
 import "./ixs/fallthrough.js";
-import "./ixs/jump.js";
+import "./ixs/one_offset_ixs.js";
 import "./ixs/one_reg_one_imm_ixs.js";
 import "./ixs/one_reg_one_imm_one_offset_ixs.js";
 import "./ixs/one_reg_two_imm_ixs.js";

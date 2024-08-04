@@ -17,6 +17,12 @@ export type u64 = Tagged<
   { minValue: 0n; maxValue: 1844674407370955161n }
 >;
 
+export type i32 = Tagged<
+  number,
+  "i32",
+  { minValue: -2147483648; maxValue: 2147483648 }
+>;
+
 export type ByteArrayOfLength<T extends number> = Tagged<
   Uint8Array,
   `ByteArrayOfLength${T}`,

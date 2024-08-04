@@ -20,6 +20,7 @@ export const branch = (
     return;
   }
 
+  assert(address >= 0, "branch address is negative");
   assert(
     context.program.k[address] !== 1,
     "branch target is not an instruction",

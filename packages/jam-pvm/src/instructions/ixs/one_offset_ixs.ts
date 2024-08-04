@@ -1,0 +1,67 @@
+import { i32, u32, u8 } from "@vekexasia/jam-types";
+import { LittleEndian } from "@vekexasia/jam-codec";
+import { branch } from "@/utils/branch.js";
+import { regIx } from "@/instructions/ixdb.js";
+import { Z } from "@/utils/zed.js";
+import assert from "node:assert";
+
+const decode = (bytes: Uint8Array): [offset: i32] => {
+  const lx = Math.min(4, bytes.length);
+  const vx = LittleEndian.decode(bytes.subarray(0, lx)).value;
+  return [Z(lx, Number(vx))];
+};
+
+const jump = regIx<[offset: i32]>({
+  opCode: 5 as u8,
+  identifier: "jump",
+  blockTermination: true,
+  ix: {
+    decode,
+    evaluate(context, vx) {
+      const addr = context.instructionPointer + vx;
+      assert(addr >= 0, "address must be >= 0");
+      return branch(context, addr as u32, true);
+    },
+  },
+});
+
+if (import.meta.vitest) {
+  const { vi, describe, expect, it } = import.meta.vitest;
+  vi.mock("@/utils/branch.js", () => ({
+    branch: vi.fn(),
+  }));
+  const { createEvContext } = await import("../../../test/mocks.js");
+  describe("one_offset_ixs", () => {
+    describe("decode", () => {
+      it("should decode to 0 if no bytes provided", () => {
+        expect(decode(new Uint8Array([]))).toEqual([0]);
+      });
+      it("should decode to -1", () => {
+        expect(decode(new Uint8Array([255]))).toEqual([-1]);
+      });
+      it("should decode to 1", () => {
+        expect(decode(new Uint8Array([1]))).toEqual([1]);
+      });
+      it("should decode to 256", () => {
+        expect(decode(new Uint8Array([0, 1]))).toEqual([256]);
+      });
+    });
+    describe("jump", () => {
+      it("should propagate value to branch", () => {
+        const context = createEvContext();
+        context.instructionPointer = 10;
+        jump.evaluate(context, 1 as i32);
+        expect(branch).toHaveBeenCalledWith(context, 11, true);
+        jump.evaluate(context, -1 as i32);
+        expect(branch).toHaveBeenCalledWith(context, 9, true);
+      });
+      it("should throw if address is negative", () => {
+        const context = createEvContext();
+        context.instructionPointer = 10;
+        expect(() => jump.evaluate(context, -11 as i32)).toThrow(
+          "address must be >= 0",
+        );
+      });
+    });
+  });
+}
