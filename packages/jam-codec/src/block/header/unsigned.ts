@@ -1,27 +1,43 @@
 import { JamCodec } from "@/codec.js";
-import { JamHeader } from "@vekexasia/jam-types";
+import {
+  EPOCH_LENGTH,
+  JamHeader,
+  NUMBER_OF_VALIDATORS,
+  TicketIdentifier,
+  u32,
+} from "@vekexasia/jam-types";
 import { LittleEndian } from "@/ints/littleEndian.js";
 import { Optional } from "@/optional.js";
-import { BandersnatchCodec, HashCodec } from "@/identity.js";
+import {
+  BandersnatchCodec,
+  Ed25519SignatureCodec,
+  HashCodec,
+  MerkleTreeRootCodec,
+} from "@/identity.js";
 import assert from "node:assert";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-const opthashcodec = new Optional(HashCodec);
+import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
+import { createSequenceCodec } from "@/sequenceCodec.js";
 
 const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   decode(bytes: Uint8Array): {
     value: NonNullable<JamHeader["epochMarker"]>;
     readBytes: number;
   } {
-    // todo: i did not understand how many validator keys are there
-    const numValidators = 60;
+    const numValidators = NUMBER_OF_VALIDATORS;
     const entropy = LittleEndian.decode(bytes.subarray(0, 4));
-    const validatorKeys: Uint8Array[] = [];
+    const validatorKeys = [] as unknown as NonNullable<
+      JamHeader["epochMarker"]
+    >["validatorKeys"];
     for (let i = 0; i < numValidators; i++) {
-      validatorKeys.push(bytes.subarray(4 + i * 32, 4 + (i + 1) * 32));
+      validatorKeys.push(
+        BandersnatchCodec.decode(bytes.subarray(4 + i * 32, 4 + (i + 1) * 32))
+          .value,
+      );
     }
     return {
       value: {
-        entropy: entropy.value,
+        entropy: Number(entropy.value) as u32,
         validatorKeys,
       },
       readBytes: 4 + numValidators * 32,
@@ -41,7 +57,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     );
 
     offset += value.validatorKeys.reduce((acc, key) => {
-      bytes.set(key, acc);
+      BandersnatchCodec.encode(key, bytes.subarray(acc, acc + 32));
       return acc + 32;
     }, offset);
     return offset;
@@ -53,13 +69,19 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   },
 };
 const optHeCodec = new Optional(epochMarkerCodec);
-const judgementMarkerCodec = createArrayLengthDiscriminator(BandersnatchCodec);
+const judgementMarkerCodec = createArrayLengthDiscriminator(HashCodec);
+const winningTicketsCodec = new Optional(
+  createSequenceCodec<TicketIdentifier, typeof EPOCH_LENGTH>(
+    EPOCH_LENGTH,
+    TicketIdentifierCodec,
+  ),
+);
 export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
     let offset = 0;
     const previousHash = HashCodec.decode(bytes.subarray(offset, offset + 32));
     offset += previousHash.readBytes;
-    const priorStateRoot = HashCodec.decode(
+    const priorStateRoot = MerkleTreeRootCodec.decode(
       bytes.subarray(offset, offset + 32),
     );
     offset += priorStateRoot.readBytes;
@@ -75,8 +97,8 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     const epochMarker = optHeCodec.decode(bytes.subarray(offset));
     offset += epochMarker.readBytes;
 
-    const winningTicket = opthashcodec.decode(bytes.subarray(offset));
-    offset += winningTicket.readBytes;
+    const winningTickets = winningTicketsCodec.decode(bytes.subarray(offset));
+    offset += winningTickets.readBytes;
 
     const judgementMarker = judgementMarkerCodec.decode(bytes.subarray(offset));
     offset += judgementMarker.readBytes;
@@ -86,8 +108,8 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
     offset += blockAuthorKey.readBytes;
 
-    const entropySignature = BandersnatchCodec.decode(
-      bytes.subarray(offset, offset + 32),
+    const entropySignature = Ed25519SignatureCodec.decode(
+      bytes.subarray(offset, offset + 64),
     );
     offset += entropySignature.readBytes;
     return {
@@ -97,7 +119,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
         extrinsicHash: extrinsicHash.value,
         timeSlotIndex: Number(timeSlotIndex.value),
         epochMarker: epochMarker.value,
-        winningTicket: winningTicket.value,
+        winningTickets: winningTickets.value, // FIXME
         judgementsMarkers: judgementMarker.value,
         blockAuthorKey: Number(blockAuthorKey.value),
         entropySignature: entropySignature.value,
@@ -116,7 +138,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       value.previousHash,
       bytes.subarray(offset, offset + 32),
     );
-    offset += HashCodec.encode(
+    offset += MerkleTreeRootCodec.encode(
       value.priorStateRoot,
       bytes.subarray(offset, offset + 32),
     );
@@ -134,7 +156,10 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     offset += optHeCodec.encode(value.epochMarker, bytes.subarray(offset));
 
     // Hw
-    offset += opthashcodec.encode(value.winningTicket, bytes.subarray(offset));
+    offset += winningTicketsCodec.encode(
+      value.winningTickets,
+      bytes.subarray(offset),
+    );
 
     // Hj
 
@@ -149,9 +174,9 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       bytes.subarray(offset, offset + 2),
     );
 
-    offset += BandersnatchCodec.encode(
+    offset += Ed25519SignatureCodec.encode(
       value.entropySignature,
-      bytes.subarray(offset, offset + 32),
+      bytes.subarray(offset, offset + 64),
     );
 
     return offset;
@@ -160,14 +185,14 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   encodedSize(value: JamHeader): number {
     return (
       HashCodec.encodedSize(value.previousHash) +
-      HashCodec.encodedSize(value.priorStateRoot) +
+      MerkleTreeRootCodec.encodedSize(value.priorStateRoot) +
       HashCodec.encodedSize(value.extrinsicHash) +
       4 + // timeSlotIndex
       optHeCodec.encodedSize(value.epochMarker) +
-      opthashcodec.encodedSize(value.winningTicket) +
+      winningTicketsCodec.encodedSize(value.winningTickets) +
       judgementMarkerCodec.encodedSize(value.judgementsMarkers) +
       2 + // blockAuthorKey
-      BandersnatchCodec.encodedSize(value.entropySignature)
+      Ed25519SignatureCodec.encodedSize(value.entropySignature)
     );
   },
 };

@@ -29,14 +29,18 @@ export type ByteArrayOfLength<T extends number> = Tagged<
   { byteLength: T }
 >;
 
-export type ByteArray32 = ByteArrayOfLength<32>;
-export type ByteArray64 = ByteArrayOfLength<64>;
-export type BandersnatchKey = Tagged<ByteArray32, "BandersnatchKey">;
-export type Hash = Tagged<ByteArray32, "Hash">;
-export type MerkeTreeRoot = Tagged<ByteArray32, "MerkleTreeRoot">;
+/**
+ * Define a bigint whose max value is 2^(8*T) - 1 (if unsigned)
+ * it's used for all the keys (as they can literally be a number) and hashes
+ **/
+export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
+
+export type BandersnatchKey = Tagged<BigIntBytes<32>, "BandersnatchKey">;
+export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+export type MerkeTreeRoot = Tagged<BigIntBytes<32>, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
-export type ED25519PublicKey = Tagged<ByteArray32, "ED25519PublicKey">;
-export type ED25519Signature = Tagged<ByteArray64, "ED25519Signature">;
+export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
+export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;
 export type BLSKey = Tagged<ByteArrayOfLength<144>, "BLSKey">;
 export type RingVRFProof = Tagged<ByteArrayOfLength<784>, "RingVRFProof">;
 

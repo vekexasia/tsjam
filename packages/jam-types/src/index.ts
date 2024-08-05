@@ -6,8 +6,11 @@ import {
   Hash,
   MerkeTreeRoot,
   OpaqueHash,
+  SeqOfLength,
   Tagged,
+  u32,
 } from "@/genericTypes.js";
+import { EPOCH_LENGTH } from "@/consts.js";
 // TODo: this is specific to safrole?
 export type TicketIdentifier = {
   // opaque 32-byte hash
@@ -20,7 +23,7 @@ export interface JamHeader {
    * **Hp:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
-  previousHash: Uint8Array;
+  previousHash: Hash;
   /**
    * **Hr:** The hash of the state root.
    */
@@ -28,7 +31,7 @@ export interface JamHeader {
   /**
    * **Hx:** The hash of the block's extrinsic data.
    */
-  extrinsicHash: Uint8Array;
+  extrinsicHash: Hash;
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
@@ -42,7 +45,7 @@ export interface JamHeader {
   epochMarker?: {
     // 4 byte see (65) on section 6.5
     // coming from eta
-    entropy: OpaqueHash;
+    entropy: u32;
     // 32 byte bandersnatch sequence (ordered) coming from gamma_k
     validatorKeys: Tagged<
       BandersnatchKey[],
@@ -54,7 +57,7 @@ export interface JamHeader {
   // set on after end of the lottery
   // and the lottery accumulator (gamma_a) is saturated (epoch-length)
   // and we're not changing epoch
-  winningTickets?: Tagged<TicketIdentifier[], "Hw", { length: "epoch-length" }>; // Hw
+  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>; // Hw
   // section 10
   // must contain exactly the sequence of report hashes of only bad and wonky verdicts
   // does not nneed to be included in the serialization. this is here for convenience
@@ -80,3 +83,4 @@ export interface SignedJamHeader extends JamHeader {
 export * from "./JamBlock.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
+export * from "./consts.js";

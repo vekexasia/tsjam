@@ -133,7 +133,7 @@ const compareUint8Array = (a: Uint8Array, b: Uint8Array): -1 | 0 | 1 => {
   }
   return 0; // a === b
 };
-
+/**
 export const checkDisputeExtrinsic = (
   extrinsic: DisputeExtrinsic,
   currState: DisputesState,
@@ -173,3 +173,4 @@ export const checkDisputeExtrinsic = (
     }
   });
 };
+*/

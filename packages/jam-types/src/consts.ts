@@ -5,6 +5,7 @@ export const JAM_COMMON_ERA = 1704110400;
 export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
 export const CORES = 381;
+export const EPOCH_LENGTH = 600;
 /**
  * referred as capital i in the paper
  */

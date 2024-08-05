@@ -2,6 +2,8 @@ import { JamCodec } from "@/codec.js";
 import { SignedJamHeader } from "@vekexasia/jam-types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
+import { bigintToBytes } from "@/bigint_bytes.js";
+import { Ed25519SignatureCodec } from "@/identity.js";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -13,12 +15,11 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
     return {
       value: {
         ...unsignedHeader.value,
-        blockSeal: bytes.slice(
-          unsignedHeader.readBytes,
-          unsignedHeader.readBytes + 32,
-        ),
+        blockSeal: Ed25519SignatureCodec.decode(
+          bytes.slice(unsignedHeader.readBytes, unsignedHeader.readBytes + 64),
+        ).value,
       },
-      readBytes: unsignedHeader.readBytes + 32,
+      readBytes: unsignedHeader.readBytes + 64,
     };
   },
   encode(value: SignedJamHeader, bytes: Uint8Array): number {
@@ -27,10 +28,13 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
       `SignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
     );
     const consumedBytes = UnsignedHeaderCodec.encode(value, bytes);
-    bytes.set(value.blockSeal, consumedBytes);
-    return consumedBytes + 32;
+    Ed25519SignatureCodec.encode(
+      value.blockSeal,
+      bytes.subarray(consumedBytes),
+    );
+    return consumedBytes + 64;
   },
   encodedSize(value: SignedJamHeader): number {
-    return UnsignedHeaderCodec.encodedSize(value) + 32;
+    return UnsignedHeaderCodec.encodedSize(value) + 64;
   },
 };

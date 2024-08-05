@@ -7,3 +7,4 @@ export { Optional } from "@/optional.js";
 export { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 export { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
 export type { JamCodec } from "@/codec.js";
+export { bytesToBigInt, bigintToBytes } from "@/bigint_bytes.js";
