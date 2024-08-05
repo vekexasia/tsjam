@@ -1,4 +1,4 @@
-import {
+import type {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
@@ -6,8 +6,8 @@ import {
   SeqOfLength,
   u32,
   ValidatorIndex,
-} from "@/genericTypes.js";
-import { MINIMUM_VALIDATORS } from "@/consts.js";
+} from "@vekexasia/jam-types";
+import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
 import { DisputesState } from "@/disputes/DisputesState.js";
 /**
  * Identified ad E<sub>d</sub> in the paper
@@ -122,55 +122,45 @@ export interface DisputeExtrinsic {
   }>;
 }
 
-const compareUint8Array = (a: Uint8Array, b: Uint8Array): -1 | 0 | 1 => {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] < b[i]) {
-      return -1;
-    }
-    if (a[i] > b[i]) {
-      return 1;
-    }
-  }
-  return 0; // a === b
-};
-/**
-export const checkDisputeExtrinsic = (
+export const assertDisputeExtrinsicValid = (
   extrinsic: DisputeExtrinsic,
   currState: DisputesState,
 ): void => {
+  // enforce verdicts are ordered by hash
   extrinsic.verdicts.reduce((prev, curr) => {
-    if (compareUint8Array(prev.hash, curr.hash) !== -1) {
+    if (prev.hash >= curr.hash) {
       throw new Error("verdicts must be ordered by .hash");
     }
     return curr;
   });
+  // enforce culprit are ordered by hash
   extrinsic.culprit.reduce((prev, curr) => {
-    const cmp = compareUint8Array(prev.ed25519PublicKey, curr.ed25519PublicKey);
-    if (cmp !== -1) {
+    if (prev.hash >= curr.hash) {
       throw new Error(
         "culprit must be ordered/not duplicated by .ed25519PublicKey",
       );
     }
     return curr;
   });
+  // enforce faults are ordered by ed25519PublicKey
   extrinsic.faults.reduce((prev, curr) => {
-    const cmp = compareUint8Array(prev.ed25519PublicKey, curr.ed25519PublicKey);
-    if (cmp !== -1) {
+    if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
       throw new Error(
         "faults must be ordered/not duplicated by .ed25519PublicKey",
       );
     }
     return curr;
   });
+  // enforce culprit keys are not in psi_o
   extrinsic.culprit.forEach((culprit) => {
     if (currState.psi_o.has(culprit.ed25519PublicKey)) {
       throw new Error("culprit.ed25519PublicKey must not be in psi_o");
     }
   });
+  // enforce faults keys are not in psi_o
   extrinsic.faults.forEach((fault) => {
     if (currState.psi_o.has(fault.ed25519PublicKey)) {
       throw new Error("fault.ed25519PublicKey must not be in psi_o");
     }
   });
 };
-*/

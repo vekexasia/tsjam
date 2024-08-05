@@ -1,4 +1,4 @@
-import { ED25519PublicKey, Hash } from "@/genericTypes.js";
+import { ED25519PublicKey, Hash } from "@vekexasia/jam-types";
 
 /**
  * Section 10 of graypaper
