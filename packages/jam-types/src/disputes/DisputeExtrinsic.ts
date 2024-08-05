@@ -8,6 +8,7 @@ import {
   ValidatorIndex,
 } from "@/genericTypes.js";
 import { MINIMUM_VALIDATORS } from "@/consts.js";
+import { DisputesState } from "@/disputes/DisputesState.js";
 /**
  * Identified ad E<sub>d</sub> in the paper
  */
@@ -41,6 +42,9 @@ export interface DisputeExtrinsic {
           validatorIndex: ValidatorIndex;
           /**
            * the signature of the validator
+           * the signature must be either
+           *  - $jam_valid + workReportHash
+           *  - $jam_invalid + workReportHash
            */
           signature: ED25519Signature;
         },
@@ -54,21 +58,28 @@ export interface DisputeExtrinsic {
    * proofs of misbehaviour of one or more validators to befound invalid
    * they must be ordered by .ed25519PublicKey
    *
-   * There are 2x entried in the culprit array for ea
+   * There are 2x entried in the culprit array for each in verdicts
+   * because when a verdict happen there are always 2 validators involved
    */
   culprit: Array<{
     /**
      * the hash of the work report
+     * this will alter DisputesState.psi_b by making sure that the work report is in the set
+     * @see DisputesState.psi_b
      */
     hash: Hash;
 
     /**
      * the validator public key
+     * This must be either in the current or prev set of validators
+     * it must not be inside DisputesState.psi_o
+     * @see DisputesState.psi_o
      */
     ed25519PublicKey: ED25519PublicKey;
 
     /**
      * the signature of the garantor payload
+     * the payload needs to be $jam_guarantee + workReportHash
      */
     signature: ED25519Signature;
   }>;
@@ -84,6 +95,10 @@ export interface DisputeExtrinsic {
   faults: Array<{
     /**
      * the hash of the work report
+     * - if (validity === 0) then the work report must be in posterior `psi_g` and **NOT** in posterior `psi_b`
+     * - if (validity === 1) then the work report must **NOT** be in posterior `psi_g` and in posterior `psi_b`
+     * @see DisputesState.psi_b
+     * @see DisputesState.psi_g
      */
     hash: Hash;
 
@@ -94,11 +109,14 @@ export interface DisputeExtrinsic {
 
     /**
      * the validator public key
+     * This must be either in the current or prev set of validators
+     * and it must not be inside DisputesState.psi_o
+     * @see DisputesState.psi_o
      */
     ed25519PublicKey: ED25519PublicKey;
 
     /**
-     * judgement pauload
+     * payload should be $jam_valid + workReportHash or $jam_invalid + workReportHash
      */
     signature: ED25519Signature;
   }>;
