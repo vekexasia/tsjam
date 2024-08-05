@@ -23,6 +23,7 @@ export interface DisputesState {
   psi_w: Set<Hash>;
   /**
    * set of validator keys found to have misjudged a work report
+   * aka: they voted for a work report to be valid when it was not (in psi_b) or vice versa
    */
-  psi_p: Set<ED25519PublicKey>;
+  psi_o: Set<ED25519PublicKey>;
 }

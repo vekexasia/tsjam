@@ -103,3 +103,55 @@ export interface DisputeExtrinsic {
     signature: ED25519Signature;
   }>;
 }
+
+const compareUint8Array = (a: Uint8Array, b: Uint8Array): -1 | 0 | 1 => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) {
+      return -1;
+    }
+    if (a[i] > b[i]) {
+      return 1;
+    }
+  }
+  return 0; // a === b
+};
+
+export const checkDisputeExtrinsic = (
+  extrinsic: DisputeExtrinsic,
+  currState: DisputesState,
+): void => {
+  extrinsic.verdicts.reduce((prev, curr) => {
+    if (compareUint8Array(prev.hash, curr.hash) !== -1) {
+      throw new Error("verdicts must be ordered by .hash");
+    }
+    return curr;
+  });
+  extrinsic.culprit.reduce((prev, curr) => {
+    const cmp = compareUint8Array(prev.ed25519PublicKey, curr.ed25519PublicKey);
+    if (cmp !== -1) {
+      throw new Error(
+        "culprit must be ordered/not duplicated by .ed25519PublicKey",
+      );
+    }
+    return curr;
+  });
+  extrinsic.faults.reduce((prev, curr) => {
+    const cmp = compareUint8Array(prev.ed25519PublicKey, curr.ed25519PublicKey);
+    if (cmp !== -1) {
+      throw new Error(
+        "faults must be ordered/not duplicated by .ed25519PublicKey",
+      );
+    }
+    return curr;
+  });
+  extrinsic.culprit.forEach((culprit) => {
+    if (currState.psi_o.has(culprit.ed25519PublicKey)) {
+      throw new Error("culprit.ed25519PublicKey must not be in psi_o");
+    }
+  });
+  extrinsic.faults.forEach((fault) => {
+    if (currState.psi_o.has(fault.ed25519PublicKey)) {
+      throw new Error("fault.ed25519PublicKey must not be in psi_o");
+    }
+  });
+};
