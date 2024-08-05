@@ -1,15 +1,25 @@
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
+export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
+  /**
+   * Returns the length to store in the length discriminator
+   * if not present then @see encodedSize is used
+   * @param value - the value to encode
+   * @see encodedSize
+   */
+  length?(value: T): number;
+  decode(bytes: Uint8Array, length: number): { value: T; readBytes: number };
+};
 
 /**
  * Length discriminator provides a way to encode variable length stuff
  * by prepending the length
  */
 export class LengthDiscriminator<T> implements JamCodec<T> {
-  constructor(private subCodec: JamCodec<T>) {}
+  constructor(private subCodec: LengthDiscSubCodec<T>) {}
 
   encode(value: T, bytes: Uint8Array): number {
-    const size = this.subCodec.encodedSize(value);
+    const size = (this.subCodec.length ?? this.subCodec.encodedSize)(value);
     const sizeBN = BigInt(size);
     const lengthSize = E.encodedSize(sizeBN);
     E.encode(sizeBN, bytes.subarray(0, lengthSize));
@@ -25,6 +35,7 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
         encodedLength.readBytes,
         encodedLength.readBytes + Number(encodedLength.value),
       ),
+      Number(encodedLength.value),
     );
     return {
       value: encodedValue.value,
@@ -34,7 +45,12 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
 
   encodedSize(value: T): number {
     const x = this.subCodec.encodedSize(value);
-    return x + E.encodedSize(BigInt(x));
+    return (
+      x +
+      E.encodedSize(
+        BigInt((this.subCodec.length ?? this.subCodec.encodedSize)(value)),
+      )
+    );
   }
 }
 

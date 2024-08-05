@@ -14,15 +14,18 @@ export const createArrayLengthDiscriminator = <T>(
         0,
       );
     },
-    decode: (bytes) => {
+    decode: (bytes, length: number) => {
       const values: T[] = [];
       let offset = 0;
-      while (offset < bytes.length) {
+      for (let i = 0; i < length; i++) {
         const decoded = singleItemCodec.decode(bytes.subarray(offset));
         values.push(decoded.value);
         offset += decoded.readBytes;
       }
       return { value: values, readBytes: offset };
+    },
+    length(value: T[]): number {
+      return value.length;
     },
     encodedSize: (value) => {
       return value.reduce(
