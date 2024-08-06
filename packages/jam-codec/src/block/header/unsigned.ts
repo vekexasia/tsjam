@@ -6,7 +6,6 @@ import {
   TicketIdentifier,
   u32,
 } from "@vekexasia/jam-types";
-import { LittleEndian } from "@/ints/littleEndian.js";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
@@ -18,6 +17,7 @@ import assert from "node:assert";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
 import { createSequenceCodec } from "@/sequenceCodec.js";
+import { E_2, E_4 } from "@/ints/E_subscr.js";
 
 const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   decode(bytes: Uint8Array): {
@@ -25,7 +25,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     readBytes: number;
   } {
     const numValidators = NUMBER_OF_VALIDATORS;
-    const entropy = LittleEndian.decode(bytes.subarray(0, 4));
+    const entropy = E_4.decode(bytes.subarray(0, 4));
     const validatorKeys = [] as unknown as NonNullable<
       JamHeader["epochMarker"]
     >["validatorKeys"];
@@ -51,7 +51,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     const numValidators = 60;
     assert.ok(value.validatorKeys.length === numValidators);
     let offset = 0;
-    offset += LittleEndian.encode(
+    offset += E_4.encode(
       BigInt(value.entropy),
       bytes.subarray(offset, offset + 4),
     );
@@ -89,9 +89,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     const extrinsicHash = HashCodec.decode(bytes.subarray(offset, offset + 32));
     offset += extrinsicHash.readBytes;
 
-    const timeSlotIndex = LittleEndian.decode(
-      bytes.subarray(offset, offset + 4),
-    );
+    const timeSlotIndex = E_4.decode(bytes.subarray(offset, offset + 4));
     offset += timeSlotIndex.readBytes;
 
     const epochMarker = optHeCodec.decode(bytes.subarray(offset));
@@ -103,9 +101,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     const judgementMarker = judgementMarkerCodec.decode(bytes.subarray(offset));
     offset += judgementMarker.readBytes;
 
-    const blockAuthorKey = LittleEndian.decode(
-      bytes.subarray(offset, offset + 2),
-    );
+    const blockAuthorKey = E_2.decode(bytes.subarray(offset, offset + 2));
     offset += blockAuthorKey.readBytes;
 
     const entropySignature = Ed25519SignatureCodec.decode(
@@ -147,7 +143,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       bytes.subarray(offset, offset + 32),
     );
 
-    offset += LittleEndian.encode(
+    offset += E_4.encode(
       BigInt(value.timeSlotIndex),
       bytes.subarray(offset, offset + 4),
     );
@@ -169,7 +165,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
 
     // Hk
-    offset += LittleEndian.encode(
+    offset += E_2.encode(
       BigInt(value.blockAuthorKey),
       bytes.subarray(offset, offset + 2),
     );
