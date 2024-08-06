@@ -1,4 +1,6 @@
 import { JamCodec } from "@/codec.js";
+import { BigIntBytes, Hash } from "@vekexasia/jam-types";
+import { HashCodec } from "@/identity.js";
 
 /**
  * OptCodec is a codec that allows for optional values
@@ -33,6 +35,14 @@ export class Optional<T> implements JamCodec<T | undefined> {
     return this.codec.encodedSize(value) + 1;
   }
 }
+// utility codecs
+export const OptBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
+  k: JamCodec<K>,
+): JamCodec<K | undefined> => {
+  return new Optional(k);
+};
+export const OptHashCodec = OptBytesBigIntCodec<Hash, 32>(HashCodec);
+
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;

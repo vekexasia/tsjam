@@ -1,5 +1,6 @@
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
+import { IdentityCodec } from "@/identity.js";
 export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
   /**
    * Returns the length to store in the length discriminator
@@ -54,6 +55,12 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
   }
 }
 
+/**
+ * Utility to encode/decode a byteArray with a length discriminator
+ */
+export const LengthDiscrimantedIdentity = new LengthDiscriminator(
+  IdentityCodec,
+);
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;
