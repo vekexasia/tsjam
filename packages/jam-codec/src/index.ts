@@ -14,3 +14,4 @@ export {
   bigintToExistingBytes,
 } from "@/bigint_bytes.js";
 export { createSequenceCodec } from "@/sequenceCodec.js";
+export { IdentityCodec } from "@/identity.js";

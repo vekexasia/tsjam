@@ -1,5 +1,5 @@
 /**
- * #### WARNING ####
+ * # WARNING #
  * This is not working code, but a sketch of what a codec builder might look like
  */
 import { JamCodec } from "@/codec.js";
