@@ -1,5 +1,6 @@
 export { E } from "@/ints/e.js";
 export { E4star } from "@/ints/e4star.js";
+export { E_sub } from "@/ints/E_subscr.js";
 export { LittleEndian } from "@/ints/littleEndian.js";
 export { ValidatorDataCodec } from "@/validatorDataCodec.js";
 export { BitSequence } from "@/bitSequence.js";

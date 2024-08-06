@@ -3,10 +3,10 @@ import {
   bytesToBigInt,
   createArrayLengthDiscriminator,
   E,
+  E_sub,
   JamCodec,
-  LittleEndian,
 } from "@vekexasia/jam-codec";
-import { DisputeExtrinsic } from "@/disputes/DisputeExtrinsic.js";
+import { DisputeExtrinsic } from "@/disputes/extrinsic.js";
 import {
   ED25519PublicKey,
   ED25519Signature,
@@ -24,7 +24,7 @@ const singleJudgementCodec: JamCodec<
     bytes: Uint8Array,
   ): number {
     let offset = E.encode(BigInt(value.validity), bytes);
-    offset += LittleEndian.encode(
+    offset += E_sub(2).encode(
       BigInt(value.validatorIndex),
       bytes.subarray(offset, offset + 2),
     );
@@ -33,7 +33,7 @@ const singleJudgementCodec: JamCodec<
   },
   decode(bytes: Uint8Array) {
     const validity = E.decode(bytes);
-    const validatorIndex = LittleEndian.decode(
+    const validatorIndex = E_sub(2).decode(
       bytes.subarray(validity.readBytes, validity.readBytes + 2),
     );
     const signature = bytesToBigInt<64, ED25519Signature>(
@@ -65,6 +65,7 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
         bytes.subarray(offset),
       );
     }
+    return offset;
   },
   decode(bytes: Uint8Array): {
     value: DisputeExtrinsic["verdicts"][0];
