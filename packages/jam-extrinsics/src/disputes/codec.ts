@@ -1,9 +1,11 @@
 import {
-  bigintToExistingBytes,
   bytesToBigInt,
   createArrayLengthDiscriminator,
   E,
   E_sub,
+  Ed25519PubkeyCodec,
+  Ed25519SignatureCodec,
+  HashCodec,
   JamCodec,
 } from "@vekexasia/jam-codec";
 import { DisputeExtrinsic } from "@/disputes/extrinsic.js";
@@ -28,7 +30,10 @@ const singleJudgementCodec: JamCodec<
       BigInt(value.validatorIndex),
       bytes.subarray(offset, offset + 2),
     );
-    bigintToExistingBytes(value.signature, bytes.subarray(offset, offset + 64));
+    Ed25519SignatureCodec.encode(
+      value.signature,
+      bytes.subarray(offset, offset + 64),
+    );
     return offset + 64;
   },
   decode(bytes: Uint8Array) {
@@ -36,7 +41,7 @@ const singleJudgementCodec: JamCodec<
     const validatorIndex = E_sub(2).decode(
       bytes.subarray(validity.readBytes, validity.readBytes + 2),
     );
-    const signature = bytesToBigInt<64, ED25519Signature>(
+    const signature = Ed25519SignatureCodec.decode(
       bytes.subarray(validity.readBytes + 2, validity.readBytes + 66),
     );
 
@@ -44,7 +49,7 @@ const singleJudgementCodec: JamCodec<
       value: {
         validity: Number(validity.value) as 0 | 1,
         validatorIndex: Number(validatorIndex.value) as ValidatorIndex,
-        signature,
+        signature: signature.value,
       },
       readBytes: validity.readBytes + 66,
     };
@@ -55,8 +60,7 @@ const singleJudgementCodec: JamCodec<
 };
 const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
   encode(value: DisputeExtrinsic["verdicts"][0], bytes: Uint8Array): number {
-    bigintToExistingBytes(value.hash, bytes.subarray(0, 32));
-    let offset = 32;
+    let offset = HashCodec.encode(value.hash, bytes.subarray(0, 32));
 
     offset += E.encode(BigInt(value.epochIndex), bytes.subarray(offset));
     for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
@@ -71,8 +75,8 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
     value: DisputeExtrinsic["verdicts"][0];
     readBytes: number;
   } {
-    const hash: Hash = bytesToBigInt(bytes);
-    let offset = 32;
+    const hash = HashCodec.decode(bytes);
+    let offset = hash.readBytes;
     const epochIndex = E.decode(bytes.subarray(offset));
     offset += epochIndex.readBytes;
     const judgements = [];
@@ -83,7 +87,7 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
     }
     return {
       value: {
-        hash,
+        hash: hash.value,
         epochIndex: Number(epochIndex.value) as u32,
         judgements: judgements as DisputeExtrinsic["verdicts"][0]["judgements"],
       },
@@ -113,10 +117,16 @@ const cCodec = createArrayLengthDiscriminator<DisputeExtrinsic["culprit"][0]>({
     };
   },
   encode(value: DisputeExtrinsic["culprit"][0], bytes: Uint8Array): number {
-    bigintToExistingBytes(value.hash, bytes.subarray(0, 32));
-    bigintToExistingBytes(value.ed25519PublicKey, bytes.subarray(32, 64));
-    bigintToExistingBytes(value.signature, bytes.subarray(64, 128));
-    return 128;
+    let offset = HashCodec.encode(value.hash, bytes.subarray(0, 32));
+    offset += Ed25519PubkeyCodec.encode(
+      value.ed25519PublicKey,
+      bytes.subarray(32, 64),
+    );
+    offset += Ed25519SignatureCodec.encode(
+      value.signature,
+      bytes.subarray(64, 128),
+    );
+    return offset;
   },
   encodedSize(): number {
     return 128;
@@ -124,35 +134,36 @@ const cCodec = createArrayLengthDiscriminator<DisputeExtrinsic["culprit"][0]>({
 });
 const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"][0]>({
   decode(bytes: Uint8Array) {
-    const hash: Hash = bytesToBigInt(bytes.subarray(0, 32));
+    const hash = HashCodec.decode(bytes.subarray(0, 32));
     const validity = E.decode(bytes.subarray(32));
-    const ed25519PublicKey: ED25519PublicKey = bytesToBigInt(
+    const ed25519PublicKey = Ed25519PubkeyCodec.decode(
       bytes.subarray(32 + validity.readBytes, 64 + validity.readBytes),
     );
-    const signature: ED25519Signature = bytesToBigInt(
+    const signature = Ed25519SignatureCodec.decode(
       bytes.subarray(64 + validity.readBytes, 128 + validity.readBytes),
     );
     return {
       value: {
-        hash,
+        hash: hash.value,
         validity: Number(validity.value) as 0 | 1,
-        ed25519PublicKey,
-        signature,
+        ed25519PublicKey: ed25519PublicKey.value,
+        signature: signature.value,
       },
       readBytes: 128 + validity.readBytes,
     };
   },
   encode(value: DisputeExtrinsic["faults"][0], bytes: Uint8Array): number {
-    bigintToExistingBytes(value.hash, bytes.subarray(0, 32));
-    let offset = 32;
+    let offset = HashCodec.encode(value.hash, bytes.subarray(0, 32));
     offset += E.encode(BigInt(value.validity), bytes.subarray(offset));
-    bigintToExistingBytes(
+    offset += Ed25519PubkeyCodec.encode(
       value.ed25519PublicKey,
       bytes.subarray(offset, offset + 32),
     );
-    offset += 32;
-    bigintToExistingBytes(value.signature, bytes.subarray(offset, offset + 64));
-    return offset + 64;
+    offset += Ed25519SignatureCodec.encode(
+      value.signature,
+      bytes.subarray(offset, offset + 64),
+    );
+    return offset;
   },
   encodedSize(value: DisputeExtrinsic["faults"][0]): number {
     return 32 + E.encodedSize(BigInt(value.validity)) + 32 + 64;

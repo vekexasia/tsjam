@@ -4,10 +4,11 @@ import {
   JamCodec,
   BitSequence,
   E,
-  bytesToBigInt,
+  HashCodec,
   createArrayLengthDiscriminator,
+  Ed25519SignatureCodec,
 } from "@vekexasia/jam-codec";
-import { ED25519Signature, Hash, ValidatorIndex } from "@vekexasia/jam-types";
+import { ValidatorIndex } from "@vekexasia/jam-types";
 
 const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   encode(value: AssuranceExtrinsic, bytes: Uint8Array): number {
@@ -31,22 +32,25 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
     value: AssuranceExtrinsic;
     readBytes: number;
   } {
-    const anchorHash: Hash = bytesToBigInt(bytes.subarray(0, 32));
-    const bitstring = BitSequence.decode(bytes.subarray(32));
+    const anchorHash = HashCodec.decode(bytes.subarray(0, 32));
+    const bitstring = BitSequence.decode(bytes.subarray(anchorHash.readBytes));
     const validatorIndex = Number(
       E.decode(
-        bytes.subarray(32 + bitstring.readBytes, 34 + bitstring.readBytes),
+        bytes.subarray(
+          anchorHash.readBytes + bitstring.readBytes,
+          2 + anchorHash.readBytes + bitstring.readBytes,
+        ),
       ).value,
     ) as ValidatorIndex;
-    const signature: ED25519Signature = bytesToBigInt(
+    const signature = Ed25519SignatureCodec.decode(
       bytes.subarray(34 + bitstring.readBytes),
     );
     return {
       value: {
-        anchorHash,
+        anchorHash: anchorHash.value,
         bitstring: bitstring.value as AssuranceExtrinsic["bitstring"],
         validatorIndex,
-        signature,
+        signature: signature.value,
       },
       readBytes: 98 + BitSequence.encodedSize(bitstring.value),
     };
@@ -56,5 +60,6 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   },
 };
 
-export const codecEa: JamCodec<EA_Extrinsic> =
-  createArrayLengthDiscriminator(singleExtrinsicCodec);
+export const codecEa = createArrayLengthDiscriminator(
+  singleExtrinsicCodec,
+) as unknown as JamCodec<EA_Extrinsic>;
