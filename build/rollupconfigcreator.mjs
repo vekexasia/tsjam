@@ -69,6 +69,7 @@ export const rollupTypes= () => {
       declaration: true,
       rootDir: './src',
       emitDeclarationOnly: true,
+      removeComments: false,
       outDir: 'dist/types',
     },
     include: ['../../../build/types/globals.d.ts', './**/*.ts']
