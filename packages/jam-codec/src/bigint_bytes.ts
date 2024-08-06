@@ -16,9 +16,10 @@ export const bigintToBytes = <T extends number>(
 export const bigintToExistingBytes = <T extends number>(
   value: BigIntBytes<T>,
   bytes: Uint8Array,
-): void => {
+): T => {
   // note: we do not check if the length of the array is enough
   uncheckedConverter.bigEndianToArray(value, bytes);
+  return bytes.length as T;
 };
 
 /**
