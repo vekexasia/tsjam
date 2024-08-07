@@ -1,9 +1,7 @@
 import { JamCodec } from "@/codec";
 import {
-  BandersnatchKey,
   BLSKey,
   ByteArrayOfLength,
-  ED25519PublicKey,
   type ValidatorData,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
@@ -17,6 +15,7 @@ export const ValidatorDataCodec: JamCodec<ValidatorData> = {
       "Buffer for validator data is too small",
     );
     let offset = 0;
+    //todo: change to proper codecs
     bytes.set(bigintToBytes(value.banderSnatch, 32), offset);
     offset += 32;
     bytes.set(bigintToBytes(value.ed25519, 32), offset);

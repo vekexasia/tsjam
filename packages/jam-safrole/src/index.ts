@@ -1,12 +1,13 @@
 import {
+  BandersnatchRingRoot,
   ByteArrayOfLength,
   Tagged,
   ValidatorData,
   BandersnatchKey,
   OpaqueHash,
   u32,
-  u8,
-  ByteArray32,
+  NUMBER_OF_VALIDATORS,
+  SeqOfLength, UpToSeq, EPOCH_LENGTH,
 } from "@vekexasia/jam-types";
 
 export type TicketIdentifier = {
@@ -25,14 +26,14 @@ export interface SafroleBasicState {
    * epochs root, a Bandersnatch ring root composed with the one Bandersnatch key of each of the next
    * epoch’s validators, defined in gamma_k
    */
-  gamma_z: Tagged<ByteArrayOfLength<144>, "gamma_z">;
+  gamma_z: Tagged<BandersnatchRingRoot, "gamma_z">;
 
   /**
    * Finally, γa is the ticket accumulator, a series of highestscoring ticket identifiers to be used for the next epoch
    * length is up to epoch length
    * Sealing-key contest ticket acccumulator
    */
-  gamma_a: Tagged<TicketIdentifier[], "gamma_a", { maxLength: "epoch-length" }>;
+  gamma_a: UpToSeq<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_a">;
 
   /**
    * γs
@@ -41,27 +42,32 @@ export interface SafroleBasicState {
    * mode, a series of E Bandersnatch keys
    */
   gamma_s:
-    | Tagged<TicketIdentifier[], "gamma_s", { length: "epoch-length" }>
-    | Tagged<BandersnatchKey[], "gamma_s", { length: "epoch-length" }>;
+    | SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
+    | SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
 
   /**
    * γk
    * pending set of validator that will be active in the next epoch and that determines
    * gamma_z (bandersnatch ring root)
    */
-  gamma_k: Tagged<ValidatorData[], "gamma_k", { length: "nvalidators" }>;
+  gamma_k: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "gamma_k">;
 }
+
+/**
+ * Denoted with gamma (y) in the Greek alphabet.
+ * This is the basic state of the Safrole state machine.
+ */
 export interface SafroleState extends SafroleBasicState {
   tau: u32;
   // entropy accumulator of randomness
   // (65) in graypaper
   eta: [OpaqueHash, OpaqueHash, OpaqueHash, OpaqueHash];
   // Validator keys and metadata which were active in the prior epoch.
-  lambda: Tagged<ValidatorData[], "lambda", { length: "nvalidators" }>;
+  lambda: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "lambda">;
   // Validator data for the current epoch.
-  kappa: Tagged<ValidatorData[], "kappa", { length: "nvalidators" }>;
+  kappa: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
   // Validator data for the next epoch.
-  iota: Tagged<ValidatorData[], "iota", { length: "nvalidators" }>;
+  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
 }
 
 /**
@@ -78,7 +84,7 @@ export interface SafroleInput {
 export interface SafroleOutput {
   epochMark?: {
     entropy: ByteArray32;
-    validatorKeys: Tagged<
+    validatorKeys: SeqOfLength<Tagged<
       ByteArray32[],
       "validatorKeys",
       { length: "nvalidators" }
