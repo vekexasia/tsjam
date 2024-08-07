@@ -1,7 +1,7 @@
 // H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
-
 import {
   BandersnatchKey,
+  BandersnatchSignature,
   ED25519Signature,
   Hash,
   MerkeTreeRoot,
@@ -76,8 +76,9 @@ export interface JamHeader {
 export interface SignedJamHeader extends JamHeader {
   /**
    * The signature of the block. Must be signed by the validator associated to this time slot.
+   * da
    */
-  blockSeal: ED25519Signature; // Hs
+  blockSeal: BandersnatchSignature; // Hs
 }
 
 export * from "./JamBlock.js";

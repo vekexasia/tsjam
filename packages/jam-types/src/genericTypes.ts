@@ -41,6 +41,10 @@ export type MerkeTreeRoot = Tagged<BigIntBytes<32>, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
 export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;
+export type BandersnatchSignature = Tagged<
+  BigIntBytes<64>,
+  "BandersnatchSignature"
+>;
 export type BandersnatchRingRoot = Tagged<
   BigIntBytes<144>,
   "BandersnatchRingRoot"

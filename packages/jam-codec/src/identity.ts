@@ -2,6 +2,7 @@ import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import {
   BandersnatchKey,
+  BandersnatchSignature,
   BigIntBytes,
   ED25519PublicKey,
   ED25519Signature,
@@ -49,14 +50,17 @@ export const MerkleTreeRootCodec = GenericBytesBigIntCodec<MerkeTreeRoot, 32>(
   32,
 );
 // they share the same properties but the errors are different
-export const PublicKeyCodec = GenericBytesBigIntCodec<ED25519PublicKey, 32>(32);
-export const Ed25519SignatureCodec = GenericBytesBigIntCodec<
-  ED25519Signature,
-  64
->(64);
 export const Ed25519PubkeyCodec = GenericBytesBigIntCodec<ED25519PublicKey, 32>(
   32,
 );
 export const BandersnatchCodec = GenericBytesBigIntCodec<BandersnatchKey, 32>(
   32,
 );
+export const BandersnatchSignatureCodec = GenericBytesBigIntCodec<
+  BandersnatchSignature,
+  64
+>(64);
+export const Ed25519SignatureCodec = GenericBytesBigIntCodec<
+  ED25519Signature,
+  64
+>(64);
