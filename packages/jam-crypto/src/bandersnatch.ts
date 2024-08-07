@@ -2,8 +2,8 @@ import {
   BandersnatchKey,
   BandersnatchPrivKey,
   BandersnatchSignature,
+  OpaqueHash,
 } from "@vekexasia/jam-types";
-import { bytesToBigInt } from "@vekexasia/jam-codec";
 
 export const Bandersnatch = {
   /**
@@ -32,6 +32,10 @@ export const Bandersnatch = {
     message: Uint8Array,
     privkey: BandersnatchPrivKey,
   ): BandersnatchSignature {
-    return bytesToBigInt(new Uint8Array(64)); // TODO: implement
+    return 0n as BandersnatchSignature;
+  },
+
+  vrfOutput(signature: BandersnatchSignature): OpaqueHash {
+    return 1n as OpaqueHash; // TODO: implement
   },
 };

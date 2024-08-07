@@ -26,6 +26,6 @@ export const Ed25519 = {
    * @param privkey
    */
   sign(message: Uint8Array, privkey: ED25519PrivateKey): ED25519Signature {
-    return bytesToBigInt(new Uint8Array(64)); // TODO: implement
+    return 0n as ED25519Signature; // TODO: implement
   },
 };
