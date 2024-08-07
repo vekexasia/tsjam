@@ -11,3 +11,5 @@ export * from "@/bigint_bytes.js";
 export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
 export * from "./setelements/index.js";
+export * from "./block/header/unsigned.js";
+export * from "./block/header/signed.js";
