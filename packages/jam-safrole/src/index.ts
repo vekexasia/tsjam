@@ -54,20 +54,26 @@ export interface SafroleBasicState {
 }
 
 /**
- * Denoted with gamma (y) in the Greek alphabet.
- * This is the basic state of the Safrole state machine.
+ *
+ *
  */
 export interface SafroleState extends SafroleBasicState {
   tau: u32;
   // entropy accumulator of randomness
   // (65) in graypaper
   eta: [OpaqueHash, OpaqueHash, OpaqueHash, OpaqueHash];
-  // Validator keys and metadata which were active in the prior epoch.
+  /**
+   * `λ` Validator keys and metadata which were active in the prior epoch.
+   */
   lambda: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "lambda">;
-  // Validator data for the current epoch.
+  /**
+   * `κ` Validator keys and metadata which are active in the current epoch.
+   */
   kappa: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
-  // Validator data for the next epoch.
-  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
+  /**
+   * `ι` Validator keys and metadata which will be active in the next epoch.
+   */
+  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "iota">;
 }
 
 /**
