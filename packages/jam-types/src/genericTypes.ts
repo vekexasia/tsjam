@@ -36,10 +36,15 @@ export type ByteArrayOfLength<T extends number> = Tagged<
 export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
 
 export type BandersnatchKey = Tagged<BigIntBytes<32>, "BandersnatchKey">;
+export type BandersnatchPrivKey = Tagged<
+  BigIntBytes<64>,
+  "BandersnatchPrivKey"
+>;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
 export type MerkeTreeRoot = Tagged<BigIntBytes<32>, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
+export type ED25519PrivateKey = Tagged<BigIntBytes<64>, "ED25519PrivateKey">;
 export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;
 export type BandersnatchSignature = Tagged<
   BigIntBytes<64>,
