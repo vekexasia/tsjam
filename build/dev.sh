@@ -15,6 +15,7 @@ ordered_packages=("jam-types" "jam-codec" "jam-extrinsics" "jam-crypto")
 for package in "${ordered_packages[@]}"; do
   cd "$package"
   npm run build
+  npm run build -- --watch --watch.onEnd "echo $package" &
   pids+=($!)
   cd ..
 done
