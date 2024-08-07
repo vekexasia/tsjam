@@ -1,8 +1,8 @@
 import { SafroleState } from "@/index.js";
 import {
   BandersnatchKey,
-  BandersnatchSignature,
   EPOCH_LENGTH,
+  JamHeader,
   OpaqueHash,
   SeqOfLength,
   TicketIdentifier,
@@ -18,6 +18,32 @@ export const isFallbackMode = (
   gamma_s: SafroleState["gamma_s"],
 ): gamma_s is SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s"> => {
   return typeof gamma_s[0] === "bigint";
+};
+/**
+ * `Ha` in the graypaper
+ * @param header - the header of the blockj
+ * @param state - the state of the safrole state machine
+ */
+export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
+  if (isFallbackMode(state.gamma_s)) {
+    return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+  } else {
+    //return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH].id;
+    // TODO: implment how to get key - see (43) in the graypaper
+    // return state.kappa[header.timeSlotIndex];
+    return null as unknown as BandersnatchKey;
+  }
+};
+
+/**
+ * check if the header is the first block of a new era
+ * @param header
+ */
+export const isNewEra = (newHeader: JamHeader, lastHeader) => {
+  return (
+    Math.floor(newHeader.timeSlotIndex / EPOCH_LENGTH) >
+    lastHeader.timeSlotIndex / EPOCH_LENGTH
+  );
 };
 
 if (import.meta.vitest) {

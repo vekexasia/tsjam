@@ -1,30 +1,30 @@
 import {
-  BandersnatchKey,
-  BandersnatchSignature,
+  EPOCH_LENGTH,
+  JAM_ENTROPY,
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
-  JamHeader,
-  NUMBER_OF_VALIDATORS,
+  SignedJamHeader,
 } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
-import { isFallbackMode } from "@/utils.js";
+import { getBlockAuthorKey, isFallbackMode } from "@/utils.js";
 import { bigintToBytes, UnsignedHeaderCodec } from "@vekexasia/jam-codec";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
+import assert from "node:assert";
 
 export const verifySeal = (
-  header: JamHeader,
+  header: SignedJamHeader,
   state: SafroleState,
-  signature: BandersnatchSignature,
 ): boolean => {
   // TODO: precompute max size and allocate temp buffer
   const tmpArray = new Uint8Array(1024 * 1024);
 
   const size = UnsignedHeaderCodec.encode(header, tmpArray);
+
+  const blockAuthorKey = getBlockAuthorKey(header, state);
   if (isFallbackMode(state.gamma_s)) {
-    const k = state.gamma_s[header.timeSlotIndex % NUMBER_OF_VALIDATORS];
     return Bandersnatch.verifySignature(
-      signature,
-      k,
+      header.blockSeal,
+      blockAuthorKey,
       tmpArray.subarray(0, size), // message,
       new Uint8Array([
         ...JAM_FALLBACK_SEAL,
@@ -32,19 +32,43 @@ export const verifySeal = (
       ]), // context
     );
   } else {
-    const k = state.gamma_s[header.timeSlotIndex % NUMBER_OF_VALIDATORS];
-    // TODO: implment how to get key asd
+    const i = state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+    // verify ticket identity. if it fails, it means validator is not allowed to produce block
+    assert(
+      i.id === Bandersnatch.vrfOutput(header.blockSeal),
+      "invalid ticket identity",
+    );
 
     return Bandersnatch.verifySignature(
-      signature,
-      null as unknown as BandersnatchKey,
+      header.blockSeal,
+      blockAuthorKey,
       tmpArray.subarray(0, size), // message,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
         ...bigintToBytes(state.eta[3], 32),
-        k.attempt, // i_r
+        i.attempt, // i_r
       ]), // context
     );
     //
   }
+};
+/**
+ * verify `Hv`
+ * @param header
+ * @param state
+ */
+export const verifyEntropySignature = (
+  header: SignedJamHeader,
+  state: SafroleState,
+): boolean => {
+  const blockAuthorKey = getBlockAuthorKey(header, state);
+  return Bandersnatch.verifySignature(
+    header.entropySignature,
+    blockAuthorKey,
+    new Uint8Array([]), // message - empty to not bias the entropy
+    new Uint8Array([
+      ...JAM_ENTROPY,
+      ...bigintToBytes(Bandersnatch.vrfOutput(header.blockSeal), 32),
+    ]),
+  );
 };

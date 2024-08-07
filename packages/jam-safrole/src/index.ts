@@ -11,6 +11,7 @@ import {
   UpToSeq,
   EPOCH_LENGTH,
   TicketIdentifier,
+  Blake2bHash,
 } from "@vekexasia/jam-types";
 
 /**
@@ -57,7 +58,7 @@ export interface SafroleState extends SafroleBasicState {
   tau: u32;
   // entropy accumulator of randomness
   // (65) in graypaper
-  eta: [OpaqueHash, OpaqueHash, OpaqueHash, OpaqueHash];
+  eta: [_0: Blake2bHash, _1: Blake2bHash, _2: Blake2bHash, _3: Blake2bHash];
   /**
    * `λ` Validator keys and metadata which were active in the prior epoch.
    */
