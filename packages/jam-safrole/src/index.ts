@@ -10,14 +10,8 @@ import {
   SeqOfLength,
   UpToSeq,
   EPOCH_LENGTH,
+  TicketIdentifier,
 } from "@vekexasia/jam-types";
-
-export type TicketIdentifier = {
-  // opaque 32-byte hash
-  id: OpaqueHash;
-  // either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
-  attempt: 0 | 1;
-};
 
 /**
  * Denoted with gamma (y) in the Greek alphabet.

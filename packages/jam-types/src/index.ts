@@ -11,13 +11,19 @@ import {
   u32,
 } from "@/genericTypes.js";
 import { EPOCH_LENGTH } from "@/consts.js";
-// TODo: this is specific to safrole?
+
 export type TicketIdentifier = {
-  // opaque 32-byte hash
+  /**
+   * `y`
+   */
   id: OpaqueHash;
-  // either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
+  /**
+   * `r`
+   * either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
+   */
   attempt: 0 | 1;
 };
+
 export interface JamHeader {
   /**
    * **Hp:** The hash of the parent header.
