@@ -4,7 +4,8 @@
   "scripts": {
     "lint": "eslint --fix packages/*/src/**/*.ts",
     "test": "vitest",
-    "build": "./build/build.sh"
+    "build": "./build/build.sh",
+    "dev": "./build/dev.sh"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.0",
