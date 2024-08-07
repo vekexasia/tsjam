@@ -116,7 +116,7 @@ export enum WorkError {
 export type WorkOutput = Uint8Array | WorkError;
 
 /**
- * Identified by `W` set
+ * Identified by `L` set
  *
  * @see section 11.1.4
  */

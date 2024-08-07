@@ -47,9 +47,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     value: NonNullable<JamHeader["epochMarker"]>,
     bytes: Uint8Array,
   ): number {
-    // todo: i did not understand how many validator keys are there
-    const numValidators = 60;
-    assert.ok(value.validatorKeys.length === numValidators);
+    assert.ok(value.validatorKeys.length === NUMBER_OF_VALIDATORS);
     let offset = 0;
     offset += E_4.encode(
       BigInt(value.entropy),
@@ -63,9 +61,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     return offset;
   },
   encodedSize(value: Required<JamHeader["epochMarker"]>): number {
-    // todo: i did not understand how many validator keys are there
-    const numValidators = 60;
-    return 4 + numValidators * 32;
+    return 4 + NUMBER_OF_VALIDATORS * 32;
   },
 };
 const optHeCodec = new Optional(epochMarkerCodec);
