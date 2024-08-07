@@ -5,7 +5,7 @@ import {
 } from "@vekexasia/jam-types";
 import { bytesToBigInt } from "@vekexasia/jam-codec";
 
-export const Bandersnatch = {
+export const Ed25519 = {
   /**
    * `E_{pubkey}(message) `
    * @param bytes

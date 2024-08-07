@@ -14,7 +14,7 @@ export const Bandersnatch = {
    * @param context
    */
   verifySignature(
-    bytes: Uint8Array,
+    signature: BandersnatchSignature,
     pubkey: BandersnatchKey,
     message: Uint8Array,
     context: Uint8Array,
