@@ -76,7 +76,11 @@ export interface JamHeader {
   // todo: section 5 says it's a 32 byte hash
   // but later Hk E Nv. so its a natural number
   blockAuthorKey: number; // < V or < number of validators
-  entropySignature: ED25519Signature; // Hv
+  /**
+   * `Hv` -
+   * @see (62) in section 6.4
+   */
+  entropySignature: BandersnatchSignature; // Hv
 }
 
 export interface SignedJamHeader extends JamHeader {

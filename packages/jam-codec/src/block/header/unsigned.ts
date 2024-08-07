@@ -9,6 +9,7 @@ import {
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
+  BandersnatchSignatureCodec,
   Ed25519SignatureCodec,
   HashCodec,
   MerkleTreeRootCodec,
@@ -100,7 +101,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     const blockAuthorKey = E_2.decode(bytes.subarray(offset, offset + 2));
     offset += blockAuthorKey.readBytes;
 
-    const entropySignature = Ed25519SignatureCodec.decode(
+    const entropySignature = BandersnatchSignatureCodec.decode(
       bytes.subarray(offset, offset + 64),
     );
     offset += entropySignature.readBytes;
@@ -166,7 +167,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       bytes.subarray(offset, offset + 2),
     );
 
-    offset += Ed25519SignatureCodec.encode(
+    offset += BandersnatchSignatureCodec.encode(
       value.entropySignature,
       bytes.subarray(offset, offset + 64),
     );
@@ -184,7 +185,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       winningTicketsCodec.encodedSize(value.winningTickets) +
       judgementMarkerCodec.encodedSize(value.judgementsMarkers) +
       2 + // blockAuthorKey
-      Ed25519SignatureCodec.encodedSize(value.entropySignature)
+      BandersnatchSignatureCodec.encodedSize(value.entropySignature)
     );
   },
 };
