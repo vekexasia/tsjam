@@ -41,6 +41,7 @@ export type BandersnatchPrivKey = Tagged<
   "BandersnatchPrivKey"
 >;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+export type Blake2bHash = Tagged<BigIntBytes<32>, "Blake2bHash">;
 export type MerkeTreeRoot = Tagged<BigIntBytes<32>, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
