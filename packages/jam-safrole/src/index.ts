@@ -7,7 +7,9 @@ import {
   OpaqueHash,
   u32,
   NUMBER_OF_VALIDATORS,
-  SeqOfLength, UpToSeq, EPOCH_LENGTH,
+  SeqOfLength,
+  UpToSeq,
+  EPOCH_LENGTH,
 } from "@vekexasia/jam-types";
 
 export type TicketIdentifier = {
@@ -43,7 +45,7 @@ export interface SafroleBasicState {
    */
   gamma_s:
     | SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
-    | SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
+    | SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
 
   /**
    * γk
@@ -89,11 +91,11 @@ export interface SafroleInput {
 }
 export interface SafroleOutput {
   epochMark?: {
-    entropy: ByteArray32;
-    validatorKeys: SeqOfLength<Tagged<
-      ByteArray32[],
-      "validatorKeys",
-      { length: "nvalidators" }
+    entropy: ByteArrayOfLength<32>; // todo fix type
+    validatorKeys: SeqOfLength<
+      ByteArrayOfLength<32>, // todo fix type
+      typeof NUMBER_OF_VALIDATORS,
+      "validatorkeys"
     >;
   };
   ticketsMark?: SafroleBasicState["gamma_a"];

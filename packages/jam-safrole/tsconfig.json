@@ -8,7 +8,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
-      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"]
+      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"]
     }
   },
   "include": [
