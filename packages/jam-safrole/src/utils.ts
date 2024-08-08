@@ -4,9 +4,25 @@ import {
   EPOCH_LENGTH,
   JamHeader,
   OpaqueHash,
+  Posterior,
   SeqOfLength,
   TicketIdentifier,
 } from "@vekexasia/jam-types";
+
+/**
+ * `m` in the graypaper
+ * @param timeSlot - the time slot or `Ht` in the graypaper
+ * @see section 6.1 - Timekeeping
+ */
+export const slotIndex = (timeSlot: number) => timeSlot % EPOCH_LENGTH;
+
+/**
+ * `r` in the graypaper
+ * @param timeSlot - the time slot or `Ht` in the graypaper
+ * @see section 6.1 - Timekeeping
+ */
+export const epochIndex = (timeSlot: number) =>
+  Math.floor(timeSlot / EPOCH_LENGTH);
 
 /**
  * Check if the current epoch is in fallback mode.
@@ -37,12 +53,29 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
 
 /**
  * check if the header is the first block of a new era
- * @param header
+ * Note: this returns true even in the case of a skipped era
  */
-export const isNewEra = (newHeader: JamHeader, lastHeader: JamHeader) => {
+export const isNewEra = (
+  newHeader: Posterior<JamHeader>,
+  lastHeader: JamHeader,
+) => {
   return (
-    Math.floor(newHeader.timeSlotIndex / EPOCH_LENGTH) >
-    lastHeader.timeSlotIndex / EPOCH_LENGTH
+    epochIndex(newHeader.timeSlotIndex) > epochIndex(lastHeader.timeSlotIndex)
+  );
+};
+
+/**
+ * check if the header is the first block of a new **next** era
+ * Similar to {@link isNewEra} but checks if the new era is the next era
+ * @see isNewEra
+ */
+export const isNewNextEra = (
+  newHeader: Posterior<JamHeader>,
+  lastHeader: JamHeader,
+) => {
+  return (
+    epochIndex(newHeader.timeSlotIndex) ===
+    epochIndex(lastHeader.timeSlotIndex) + 1
   );
 };
 

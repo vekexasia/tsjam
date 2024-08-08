@@ -9,6 +9,10 @@ export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
 export const CORES = 381;
 /**
+ * referred as constant `Y` in the paper
+ */
+export const LOTTERY_MAX_SLOT = 500;
+/**
  * referred as constant `E` in the paper
  */
 export const EPOCH_LENGTH = 600;
