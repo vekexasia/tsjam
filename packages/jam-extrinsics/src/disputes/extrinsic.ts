@@ -8,7 +8,7 @@ import type {
   ValidatorIndex,
 } from "@vekexasia/jam-types";
 import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
-import { DisputesState } from "@/disputes/state.js";
+import { IDisputesState } from "@/disputes/state.js";
 /**
  * Identified ad E<sub>d</sub> in the paper
  */
@@ -124,7 +124,7 @@ export interface DisputeExtrinsic {
 
 export const assertDisputeExtrinsicValid = (
   extrinsic: DisputeExtrinsic,
-  currState: DisputesState,
+  currState: IDisputesState,
 ): void => {
   // enforce verdicts are ordered by hash
   extrinsic.verdicts.reduce((prev, curr) => {

@@ -3,7 +3,7 @@ import { ED25519PublicKey, Hash } from "@vekexasia/jam-types";
 /**
  * Section 10 of graypaper
  */
-export interface DisputesState {
+export interface IDisputesState {
   /**
    * the set of hash of work reports
    * that were judged to be **valid**.
@@ -27,3 +27,10 @@ export interface DisputesState {
    */
   psi_o: Set<ED25519PublicKey>;
 }
+
+export const DisputeState: IDisputesState = {
+  psi_g: new Set(),
+  psi_b: new Set(),
+  psi_w: new Set(),
+  psi_o: new Set(),
+};
