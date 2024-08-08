@@ -1,24 +1,25 @@
-import { Blake2bHash, JamHeader } from "@vekexasia/jam-types";
+import { JamHeader, Posterior } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
-import { isNewEra } from "@/utils.js";
 
 /**
  * Calculates posterior `eta_0`
- * @param header
- * @param state
+ * @param header - the header to be applied
+ * @param state - the current state
+ * @returns the new modified eta_0
+ * @see (68) in the graypaper
  */
 export const entropyUpdateWithHeader = (
-  header: JamHeader,
+  header: Posterior<JamHeader>,
   state: SafroleState,
-): Blake2bHash => {
+): Posterior<SafroleState["eta"][0]> => {
   return Hashing.blake2b(
     new Uint8Array([
       ...bigintToBytes(state.eta[0], 32), // eta_0
       ...bigintToBytes(Bandersnatch.vrfOutput(header.entropySignature), 32), // Hv
     ]),
-  );
+  ) as Posterior<SafroleState["eta"][0]>;
 };
 
 /**
@@ -26,12 +27,9 @@ export const entropyUpdateWithHeader = (
  * @see isNewEra
  */
 export const rotateEntropy = (
-  header: JamHeader,
-  currentHeader: JamHeader,
   state: SafroleState,
-): SafroleState["eta"] => {
-  if (isNewEra(header, currentHeader)) {
-    return [state.eta[0], state.eta[0], state.eta[1], state.eta[2]];
-  }
-  return state.eta;
+): Posterior<SafroleState["eta"]> => {
+  return [state.eta[0], state.eta[0], state.eta[1], state.eta[2]] as Posterior<
+    SafroleState["eta"]
+  >;
 };

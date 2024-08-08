@@ -1,4 +1,4 @@
-import { JamHeader, ValidatorData } from "@vekexasia/jam-types";
+import { JamHeader, Posterior, ValidatorData } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { IDisputesState } from "@vekexasia/jam-extrinsics";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
@@ -11,27 +11,34 @@ const emptyValidatorKeys: ValidatorData = {
 /**
  * Must be called when a new era starts.
  *
- * @param firstEpochHeader
+ * @param header
  * @param state
- * @param posteriorDisputesState
+ * @param disputeState
  * @see 58 and 59 in the graypaper
  */
 export const rotateValidatorKeys = (
-  firstEpochHeader: JamHeader,
+  header: Posterior<JamHeader>,
   state: SafroleState,
-  posteriorDisputesState: IDisputesState,
-) => {
-  state.lambda = state.kappa as unknown as SafroleState["lambda"];
-  state.kappa = state.gamma_k as unknown as SafroleState["kappa"];
+  disputeState: Posterior<IDisputesState>,
+): Posterior<SafroleState> => {
+  const lambda = state.kappa as unknown as SafroleState["lambda"];
+  const kappa = state.gamma_k as unknown as SafroleState["kappa"];
   // we empty the validator keys which are in ψo
-  state.gamma_k = state.iota.map((v) => {
-    if (posteriorDisputesState.psi_o.has(v.ed25519)) {
+  const gamma_k = state.iota.map((v) => {
+    if (disputeState.psi_o.has(v.ed25519)) {
       return emptyValidatorKeys;
     }
     return v;
   }) as unknown as SafroleState["gamma_k"];
   // gamma_z is the ring root of the posterior gamma k
-  state.gamma_z = Bandersnatch.ringRoot(
-    state.gamma_k.map((v) => v.banderSnatch),
+  const gamma_z: SafroleState["gamma_z"] = Bandersnatch.ringRoot(
+    gamma_k.map((v) => v.banderSnatch),
   );
+  return {
+    ...state,
+    lambda,
+    kappa,
+    gamma_k,
+    gamma_z,
+  } as Posterior<SafroleState>;
 };
