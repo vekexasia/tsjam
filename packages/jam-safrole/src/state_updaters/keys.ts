@@ -1,7 +1,7 @@
 import { JamHeader, Posterior, ValidatorData } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
-import { IDisputesState } from "@vekexasia/jam-extrinsics";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
+import { IDisputesState } from "@/extrinsics/index.js";
 const emptyValidatorKeys: ValidatorData = {
   banderSnatch: 0n as unknown as ValidatorData["banderSnatch"],
   ed25519: 0n as unknown as ValidatorData["ed25519"],

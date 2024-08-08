@@ -17,7 +17,10 @@ export const entropyUpdateWithHeader = (
   return Hashing.blake2b(
     new Uint8Array([
       ...bigintToBytes(state.eta[0], 32), // eta_0
-      ...bigintToBytes(Bandersnatch.vrfOutput(header.entropySignature), 32), // Hv
+      ...bigintToBytes(
+        Bandersnatch.vrfOutputSignature(header.entropySignature),
+        32,
+      ), // Hv
     ]),
   ) as Posterior<SafroleState["eta"][0]>;
 };
