@@ -1,6 +1,7 @@
 import {
   BandersnatchKey,
   BandersnatchPrivKey,
+  BandersnatchRingRoot,
   BandersnatchSignature,
   OpaqueHash,
 } from "@vekexasia/jam-types";
@@ -37,5 +38,9 @@ export const Bandersnatch = {
 
   vrfOutput(signature: BandersnatchSignature): OpaqueHash {
     return 1n as OpaqueHash; // TODO: implement
+  },
+
+  ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
+    return 0n as T; // TODO: implement
   },
 };
