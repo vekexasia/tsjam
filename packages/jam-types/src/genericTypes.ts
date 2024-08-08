@@ -56,6 +56,10 @@ export type BandersnatchRingRoot = Tagged<
   "BandersnatchRingRoot"
 >;
 export type BLSKey = Tagged<ByteArrayOfLength<144>, "BLSKey">;
+/**
+ * defined in section 3.8.2 and appendix G
+ * set is `F` in the graypaper
+ */
 export type RingVRFProof = Tagged<ByteArrayOfLength<784>, "RingVRFProof">;
 
 // Sequences

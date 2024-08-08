@@ -5,7 +5,7 @@ import {
   JamCodec,
   WMemberCodec,
 } from "@vekexasia/jam-codec";
-import { EG_Extrinsic } from "@/guarantees/extrinsic.js";
+import { EG_Extrinsic } from "@/extrinsics/guarantees/extrinsic.js";
 import { u32, ValidatorIndex } from "@vekexasia/jam-types";
 
 const signaturesCodec = createArrayLengthDiscriminator<

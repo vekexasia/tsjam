@@ -8,7 +8,7 @@ import type {
   ValidatorIndex,
 } from "@vekexasia/jam-types";
 import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
-import { IDisputesState } from "@/disputes/state.js";
+import { IDisputesState } from "@/extrinsics/disputes/state.js";
 /**
  * Identified ad E<sub>d</sub> in the paper
  */

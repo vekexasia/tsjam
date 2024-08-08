@@ -35,7 +35,7 @@ export const verifySeal = (
     const i = state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
     assert(
-      i.id === Bandersnatch.vrfOutput(header.blockSeal),
+      i.id === Bandersnatch.vrfOutputSignature(header.blockSeal),
       "invalid ticket identity",
     );
 
@@ -68,7 +68,7 @@ export const verifyEntropySignature = (
     new Uint8Array([]), // message - empty to not bias the entropy
     new Uint8Array([
       ...JAM_ENTROPY,
-      ...bigintToBytes(Bandersnatch.vrfOutput(header.blockSeal), 32),
+      ...bigintToBytes(Bandersnatch.vrfOutputSignature(header.blockSeal), 32),
     ]),
   );
 };

@@ -1,4 +1,4 @@
-import { EA_Extrinsic } from "@/assurances/extrinsic.js";
+import { EA_Extrinsic } from "@/extrinsics/assurances/extrinsic.js";
 import { CORES, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-types";
 import assert from "node:assert";
 

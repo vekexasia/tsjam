@@ -8,7 +8,13 @@ import { RingVRFProof, UpToSeq } from "@vekexasia/jam-types";
  */
 export type TicketExtrinsics = UpToSeq<
   {
+    /**
+     * `r`
+     */
     entryIndex: 0 | 1;
+    /**
+     * `p`
+     */
     proof: RingVRFProof;
   },
   16

@@ -17,6 +17,10 @@ export const LOTTERY_MAX_SLOT = 500;
  */
 export const EPOCH_LENGTH = 600;
 /**
+ * referred as constant `K` in the paper
+ */
+export const MAX_TICKETS_PER_BLOCK = 16;
+/**
  * referred as capital i in the paper
  */
 export const MAXIMUM_WORK_ITEMS = 4;

@@ -1,4 +1,7 @@
-import { AssuranceExtrinsic, EA_Extrinsic } from "@/assurances/extrinsic.js";
+import {
+  AssuranceExtrinsic,
+  EA_Extrinsic,
+} from "@/extrinsics/assurances/extrinsic.js";
 import {
   bigintToExistingBytes,
   JamCodec,

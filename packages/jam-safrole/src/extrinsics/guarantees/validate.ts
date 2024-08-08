@@ -1,4 +1,4 @@
-import { EG_Extrinsic } from "@/guarantees/extrinsic.js";
+import { EG_Extrinsic } from "@/extrinsics/guarantees/extrinsic.js";
 import { CORES } from "@vekexasia/jam-types";
 import assert from "node:assert";
 

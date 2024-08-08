@@ -1,4 +1,4 @@
-import { TicketExtrinsics } from "@/tickets/extrinsic.js";
+import { TicketExtrinsics } from "@/extrinsics/tickets/extrinsic.js";
 import { createArrayLengthDiscriminator } from "@vekexasia/jam-codec";
 import { RingVRFProof } from "@vekexasia/jam-types";
 

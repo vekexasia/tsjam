@@ -8,7 +8,7 @@ import {
   HashCodec,
   JamCodec,
 } from "@vekexasia/jam-codec";
-import { DisputeExtrinsic } from "@/disputes/extrinsic.js";
+import { DisputeExtrinsic } from "@/extrinsics/disputes/extrinsic.js";
 import {
   ED25519PublicKey,
   ED25519Signature,
