@@ -39,7 +39,7 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
  * check if the header is the first block of a new era
  * @param header
  */
-export const isNewEra = (newHeader: JamHeader, lastHeader) => {
+export const isNewEra = (newHeader: JamHeader, lastHeader: JamHeader) => {
   return (
     Math.floor(newHeader.timeSlotIndex / EPOCH_LENGTH) >
     lastHeader.timeSlotIndex / EPOCH_LENGTH
