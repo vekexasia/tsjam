@@ -17,6 +17,7 @@ import { Hashing } from "@vekexasia/jam-crypto";
  * it computes the posterior value of `gamma_s`
  * it must be called {@link isNewNextEra} is true
  * @see (69) and (70) in the graypaper
+ * @see rotateEntropy
  */
 export const computePosteriorSlotKey = (
   header: JamHeader,
@@ -24,6 +25,7 @@ export const computePosteriorSlotKey = (
   state: SafroleState,
   // used in fallbacdk
   posteriorKappa: Posterior<SafroleState["kappa"]>,
+  // it means that the entropy is updates to the perspective of a new epoch
   posteriorEntropy: Posterior<SafroleState["eta"]>,
 ): Posterior<SafroleState["gamma_s"]> => {
   assert(isNewNextEra(posteriorHeader, header), "must be a new era");
