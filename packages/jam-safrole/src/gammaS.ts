@@ -52,9 +52,11 @@ export const computePosteriorSlotKey = (
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const e4Buf = new Uint8Array(4);
       E_4.encode(BigInt(i), e4Buf);
-      const h_4 = Hashing.blake2b(new Uint8Array([...p_eta2, ...e4Buf]));
-      const index =
-        E.decode(bigintToBytes(h_4, 32)).value % BigInt(EPOCH_LENGTH);
+      const h_4 = bigintToBytes(
+        Hashing.blake2b(new Uint8Array([...p_eta2, ...e4Buf])),
+        32,
+      ).subarray(0, 4);
+      const index = E.decode(h_4).value % BigInt(EPOCH_LENGTH);
       newGammaS.push(posteriorKappa[Number(index)].banderSnatch);
     }
     return newGammaS;
