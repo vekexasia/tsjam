@@ -102,3 +102,12 @@ export type ValidatorIndex = Tagged<
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;
+
+/**
+ * simple utility function to go from untagged to tagged
+ */
+export const toTagged = <K, Tag extends PropertyKey, Metadata = void>(
+  value: K,
+): Tagged<K, Tag, Metadata> => {
+  return value as Tagged<K, Tag, Metadata>;
+};
