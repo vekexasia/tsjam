@@ -1,6 +1,6 @@
 import {
-  BandersnatchRingRoot,
-  JamHeader,
+  BandersnatchRingRoot, EPOCH_LENGTH,
+  JamHeader, NUMBER_OF_VALIDATORS,
   TicketIdentifier,
   toTagged,
   UnTaggedObject,
@@ -32,13 +32,13 @@ export const mockState = (
     toTagged(0n),
     toTagged(0n),
   ]) as unknown as SafroleState["eta"],
-  lambda: toTagged(opts.lambda ?? []),
-  kappa: toTagged(opts.kappa ?? []),
-  iota: toTagged(opts.iota ?? []),
+  lambda: toTagged(opts.lambda ?? new Array(NUMBER_OF_VALIDATORS)),
+  kappa: toTagged(opts.kappa ?? new Array(NUMBER_OF_VALIDATORS)),
+  iota: toTagged(opts.iota ?? new Array(NUMBER_OF_VALIDATORS)),
   gamma_z: toTagged(0n as BandersnatchRingRoot),
-  gamma_a: toTagged(opts.gamma_a ?? []),
-  gamma_s: toTagged(opts.gamma_s ?? []),
-  gamma_k: toTagged(opts.gamma_k ?? []),
+  gamma_a: toTagged(opts.gamma_a ?? new Array(EPOCH_LENGTH)),
+  gamma_s: toTagged(opts.gamma_s ?? new Array(EPOCH_LENGTH)),
+  gamma_k: toTagged(opts.gamma_k ?? new Array(NUMBER_OF_VALIDATORS)),
 });
 
 export const mockValidatorData = (

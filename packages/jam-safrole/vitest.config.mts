@@ -7,6 +7,8 @@ export default defineConfig({
     include: ["vitest > @vitest/expect > chai"]
   },
   test: {
+    globals: true,
+    clearMocks: true,
     includeSource: ['src/**/*.{js,ts}'],
     benchmark: {
       include: ['test/benchmark/**/*.test.ts'],
@@ -18,6 +20,9 @@ export default defineConfig({
     },
     alias: {
       "@/": new URL('./src/', import.meta.url).pathname,
+      "@vekexasia/jam-types": new URL('../jam-types/', import.meta.url).pathname,
+      "@vekexasia/jam-codec": new URL('../jam-codec/', import.meta.url).pathname,
+      "@vekexasia/jam-crypto": new URL('../jam-crypto/', import.meta.url).pathname,
     }
   }
 });

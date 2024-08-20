@@ -8,11 +8,14 @@ import {
   Posterior,
   SeqOfLength,
   TicketIdentifier,
-  UpToSeq,
-  ValidatorData,
+  toTagged,
 } from "@vekexasia/jam-types";
-import assert from "node:assert";
-import { epochIndex, isNewNextEra, slotIndex } from "@/utils.js";
+import {
+  epochIndex,
+  isFallbackMode,
+  isNewNextEra,
+  slotIndex,
+} from "@/utils.js";
 import { bigintToBytes, E, E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 
@@ -50,6 +53,7 @@ export const computePosteriorSlotKey = (
     epochIndex(header.timeSlotIndex) ===
     epochIndex(posteriorHeader.timeSlotIndex)
   ) {
+    console.log("meow2");
     return state.gamma_s as Posterior<SafroleState["gamma_s"]>;
   } else {
     // we're in fallback mode
@@ -62,9 +66,8 @@ export const computePosteriorSlotKey = (
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const e4Buf = new Uint8Array(4);
       E_4.encode(BigInt(i), e4Buf);
-      const h_4 = bigintToBytes(
-        Hashing.blake2b(new Uint8Array([...p_eta2, ...e4Buf])),
-        32,
+      const h_4 = Hashing.blake2bBuf(
+        new Uint8Array([...p_eta2, ...e4Buf]),
       ).subarray(0, 4);
       const index = E.decode(h_4).value % BigInt(NUMBER_OF_VALIDATORS);
       newGammaS.push(posteriorKappa[Number(index)].banderSnatch);
@@ -73,80 +76,105 @@ export const computePosteriorSlotKey = (
   }
 };
 
-// TODO implement tests
 if (import.meta.vitest) {
-  const { describe, beforeEach, expect, it } = import.meta.vitest;
+  const { vi, describe, beforeEach, expect, it } = import.meta.vitest;
+  const { mockState, mockTicketIdentifier, mockValidatorData, mockHeader } =
+    await import("../../test/mocks.js");
+
+  vi.mock("@vekexasia/jam-crypto", () => ({
+    Hashing: {
+      blake2bBuf: vi.fn((buf: Uint8Array) => buf),
+    },
+  }));
+
   describe("computePosteriorSlotKey", () => {
     let state: SafroleState;
     beforeEach(() => {
-      state = {
-        gamma_a: [] as unknown as UpToSeq<
-          TicketIdentifier,
-          typeof EPOCH_LENGTH,
-          "gamma_a"
-        >,
-        gamma_k: [] as unknown as SeqOfLength<
-          ValidatorData,
-          typeof NUMBER_OF_VALIDATORS,
-          "gamma_k"
-        >,
-        gamma_s: [] as unknown as SeqOfLength<
-          TicketIdentifier,
-          typeof EPOCH_LENGTH,
-          "gamma_s"
-        >,
-        gamma_z: {
-          id: BigInt(0),
-          signature: BigInt(0),
-        } as unknown as SafroleState["gamma_z"],
-        eta: [
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-        ] as unknown as SafroleState["eta"],
-        iota: [] as unknown as SafroleState["iota"],
-        kappa: [] as unknown as SafroleState["kappa"],
-        lambda: [] as unknown as SafroleState["lambda"],
-        tau: 0 as unknown as SafroleState["tau"],
-      };
+      state = mockState({});
     });
     describe("fallback", () => {
+      let header: JamHeader;
+      let posteriorKappa: Posterior<SafroleState["kappa"]>;
+      let posteriorHeader: Posterior<JamHeader>;
       beforeEach(() => {
-        state.gamma_a = new Array(EPOCH_LENGTH).fill({
-          id: BigInt(0),
-          attempt: 0,
-        }) as unknown as UpToSeq<
-          TicketIdentifier,
-          typeof EPOCH_LENGTH,
-          "gamma_a"
-        >;
-
-        const h: JamHeader = {
-          timeSlotIndex: 0,
-          blockSeal: BigInt(0),
-        };
+        state.gamma_a = toTagged(
+          new Array(EPOCH_LENGTH).fill(mockTicketIdentifier({})),
+        );
+        header = mockHeader({});
+        posteriorKappa = toTagged(
+          new Array(NUMBER_OF_VALIDATORS).fill(0).map((_, idx) => {
+            return mockValidatorData({
+              banderSnatch: toTagged(BigInt(idx) as BandersnatchKey),
+            });
+          }),
+        ) as Posterior<SafroleState["kappa"]>;
+        posteriorHeader = toTagged(
+          mockHeader({ timeSlotIndex: EPOCH_LENGTH + LOTTERY_MAX_SLOT }),
+        );
       });
       it("fallsback if gamma a is not `EPOCH_LENGTH` long", () => {
-        state.gamma_a = [
-          { id: 1n as TicketIdentifier, attempt: 0 },
-          { id: 2n as TicketIdentifier, attempt: 0 },
-        ] as unknown as UpToSeq<
-          TicketIdentifier,
-          typeof EPOCH_LENGTH,
-          "gamma_a"
-        >;
+        state.gamma_a = toTagged([]);
         const posterior = computePosteriorSlotKey(
-          { timeSlotIndex: 0 },
-          { timeSlotIndex: 1 },
+          header,
+          posteriorHeader,
           state,
-          { kappa: state.kappa, timeSlotIndex: 0 },
-          { eta: state.eta, timeSlotIndex: 0 },
+          posteriorKappa,
+          toTagged([0n, 0n, 0n, 0n]) as any,
         );
-        expect(posterior).toEqual(state.gamma_s);
+        expect(isFallbackMode(posterior)).toBeTruthy();
+        expect(posterior.length).toEqual(EPOCH_LENGTH);
+        expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
       });
-      it("fallsback if epoch skipped");
-      it("fallsback if epoch slot index is less than `LOTTERY_MAX_SLOT`");
+      it("fallsback if epoch skipped", () => {
+        posteriorHeader = toTagged(
+          mockHeader({ timeSlotIndex: EPOCH_LENGTH * 2 }),
+        );
+        const posterior = computePosteriorSlotKey(
+          header,
+          posteriorHeader,
+          state,
+          posteriorKappa,
+          toTagged([0n, 0n, 0n, 0n]) as any,
+        );
+        expect(isFallbackMode(posterior)).toBeTruthy();
+        expect(posterior.length).toEqual(EPOCH_LENGTH);
+        expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
+      });
+      it("fallsback if epoch slot index is less than `LOTTERY_MAX_SLOT`", () => {
+        posteriorHeader.timeSlotIndex = EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1;
+        const posterior = computePosteriorSlotKey(
+          header,
+          posteriorHeader,
+          state,
+          posteriorKappa,
+          toTagged([0n, 0n, 0n, 0n]) as any,
+        );
+        expect(isFallbackMode(posterior)).toBeTruthy();
+        expect(posterior.length).toEqual(EPOCH_LENGTH);
+        expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
+      });
+    });
+    describe("normal", () => {
+      it("should return ticketidentifiers if not in fallback mode", () => {
+        const posterior = computePosteriorSlotKey(
+          mockHeader({ timeSlotIndex: LOTTERY_MAX_SLOT }),
+          mockHeader({ timeSlotIndex: EPOCH_LENGTH }) as Posterior<JamHeader>,
+          mockState({
+            gamma_a: new Array(EPOCH_LENGTH)
+              .fill(0)
+              .map((_, idx) => mockTicketIdentifier({ id: BigInt(idx) })),
+          }),
+          toTagged([]) as any,
+          toTagged([]) as any,
+        );
+        expect(posterior.length).toEqual(EPOCH_LENGTH);
+        expect(isFallbackMode(posterior)).toBeFalsy();
+        expect((posterior[0] as TicketIdentifier).id).toEqual(0n);
+        expect((posterior[1] as TicketIdentifier).id).toEqual(599n);
+        expect((posterior[2] as TicketIdentifier).id).toEqual(1n);
+        expect((posterior[3] as TicketIdentifier).id).toEqual(598n);
+        // todo: find abetter way to test this
+      });
     });
   });
 }
