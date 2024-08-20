@@ -5,8 +5,42 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@vekexasia/jam-extrinsics@workspace:.":
+"@types/blake2b-wasm@npm:^2":
+  version: 2.4.3
+  resolution: "@types/blake2b-wasm@npm:2.4.3"
+  checksum: 10c0/9981b9d7b4718369fe7c8d9123c982e49fa376e9da31a3a338b623ee2c422c18500c665b4dea3217a30c31dd96919e9f361134a792bbc552be24cc2428682f47
+  languageName: node
+  linkType: hard
+
+"@vekexasia/jam-crypto@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-extrinsics@workspace:."
+  resolution: "@vekexasia/jam-crypto@workspace:."
+  dependencies:
+    "@types/blake2b-wasm": "npm:^2"
+    blake2b-wasm: "npm:^2.4.0"
   languageName: unknown
   linkType: soft
+
+"b4a@npm:^1.0.1":
+  version: 1.6.6
+  resolution: "b4a@npm:1.6.6"
+  checksum: 10c0/56f30277666cb511a15829e38d369b114df7dc8cec4cedc09cc5d685bc0f27cb63c7bcfb58e09a19a1b3c4f2541069ab078b5328542e85d74a39620327709a38
+  languageName: node
+  linkType: hard
+
+"blake2b-wasm@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "blake2b-wasm@npm:2.4.0"
+  dependencies:
+    b4a: "npm:^1.0.1"
+    nanoassert: "npm:^2.0.0"
+  checksum: 10c0/0905a47ece466c44541c8abbc94a5441ecb24a3b2622bf1f2e285c1f0f82e2b1899c7bbd70294583cfd99e1276047dd80d7afc7408f3a7c5ebf426b2f2a42f6f
+  languageName: node
+  linkType: hard
+
+"nanoassert@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "nanoassert@npm:2.0.0"
+  checksum: 10c0/fb21ce924a1ec8e8fac415a00fdd1c086c08bc185d0377e675b1d379347340fbf4a1523d8d2330e5328a542400cd7122599b6c6e21ce2ea40a9f11d68dfbfa1b
+  languageName: node
+  linkType: hard

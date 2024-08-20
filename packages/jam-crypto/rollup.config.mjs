@@ -3,7 +3,8 @@ import {rollupCreate, rollupTypes} from "../../build/rollupconfigcreator.mjs";
 
 const tsOptions = {compilerOptions: {rootDir: '.'}};
 
-const external = ['@vekexasia/jam-types'];
+const external = ['@vekexasia/jam-types', 'blake2'];
+
 /**
  * @type {import('rollup').RollupOptions[]}
  */

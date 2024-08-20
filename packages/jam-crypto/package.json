@@ -11,7 +11,11 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/types/index.d.ts",
+      "node": {
+        "import": "./dist/node.esm.mjs",
+        "default": "./dist/node.cjs.js"
+      }
     }
   },
   "engines": {
@@ -22,5 +26,11 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "blake2b-wasm": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/blake2b-wasm": "^2"
+  }
 }
