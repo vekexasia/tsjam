@@ -103,6 +103,25 @@ export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;
 
+export type UnTagged<T> =
+  T extends Tagged<number, never, never>
+    ? number
+    : T extends Tagged<bigint, never, never>
+      ? bigint
+      : T extends Tagged<(infer El)[], never, never>
+        ? El[]
+        : T extends Tagged<infer X, never, never>
+          ? Omit<X, typeof tags>
+          : T;
+export type UnTaggedObject<T> = {
+  [K in keyof UnTagged<T>]: UnTagged<T>[K] extends Tagged<
+    infer X,
+    infer name,
+    infer meta
+  >
+    ? UnTagged<X>
+    : UnTagged<T>[K];
+};
 /**
  * simple utility function to go from untagged to tagged
  */
