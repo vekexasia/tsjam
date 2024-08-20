@@ -125,7 +125,7 @@ export type UnTaggedObject<T> = {
 /**
  * simple utility function to go from untagged to tagged
  */
-export const toTagged = <K, Tag extends PropertyKey, Metadata = void>(
+export const toTagged = <K, Tag extends PropertyKey, Metadata>(
   value: K,
 ): Tagged<K, Tag, Metadata> => {
   return value as Tagged<K, Tag, Metadata>;
