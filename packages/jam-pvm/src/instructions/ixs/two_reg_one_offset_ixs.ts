@@ -1,11 +1,11 @@
 import { u32, u8 } from "@vekexasia/jam-types";
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { EvaluationContext } from "@/evaluationContext.js";
+import { E_sub } from "@vekexasia/jam-codec";
 const decode = (
   bytes: Uint8Array,
 ): [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32] => {
@@ -14,7 +14,7 @@ const decode = (
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
   const offset: u32 = Z(
     lX,
-    Number(LittleEndian.decode(bytes.subarray(1, 1 + lX)).value),
+    Number(E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
   );
   return [rA, rB, offset];
 };
@@ -120,7 +120,7 @@ if (import.meta.vitest) {
   vi.mock("@/utils/branch.js", () => ({
     branch: vi.fn(),
   }));
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   type Mock = import("@vitest/spy").Mock;
   describe("two_reg_one_offset_ixs", () => {
     describe("decode", () => {

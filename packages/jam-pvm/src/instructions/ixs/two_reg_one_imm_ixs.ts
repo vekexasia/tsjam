@@ -1,10 +1,10 @@
 import { u32, u8 } from "@vekexasia/jam-types";
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
+import { E_2, E_4 } from "@vekexasia/jam-codec";
 
 const decode = (
   bytes: Uint8Array,
@@ -47,7 +47,7 @@ const store_ind_u16 = create(
   "store_ind_u16",
   (context, rA, rB, vX) => {
     const tmp = new Uint8Array(2);
-    LittleEndian.encode(BigInt(context.registers[rA] & 0xffff), tmp);
+    E_2.encode(BigInt(context.registers[rA] & 0xffff), tmp);
     context.memory.setBytes(context.registers[rB] + vX, tmp);
   },
 );
@@ -57,7 +57,7 @@ const store_ind_u32 = create(
   "store_ind_u32",
   (context, rA, rB, vX) => {
     const tmp = new Uint8Array(4);
-    LittleEndian.encode(BigInt(context.registers[rA]), tmp);
+    E_4.encode(BigInt(context.registers[rA]), tmp);
     context.memory.setBytes(context.registers[rB] + vX, tmp);
   },
 );
@@ -71,12 +71,12 @@ const load_ind_u8 = create(11 as u8, "load_ind_u8", (context, rA, rB, vX) => {
 
 const load_ind_u16 = create(37 as u8, "load_ind_u16", (context, rA, rB, vX) => {
   const r = context.memory.getBytes(context.registers[rB] + vX, 2);
-  context.registers[rA] = Number(LittleEndian.decode(r).value) as u32;
+  context.registers[rA] = Number(E_2.decode(r).value) as u32;
 });
 
 const load_ind_u32 = create(1 as u8, "load_ind_u32", (context, rA, rB, vX) => {
   const r = context.memory.getBytes(context.registers[rB] + vX, 4);
-  context.registers[rA] = Number(LittleEndian.decode(r).value) as u32;
+  context.registers[rA] = Number(E_4.decode(r).value) as u32;
 });
 
 // # load signed
@@ -87,7 +87,7 @@ const load_ind_i8 = create(21 as u8, "load_ind_i8", (context, rA, rB, vX) => {
 
 const load_ind_i16 = create(33 as u8, "load_ind_i16", (context, rA, rB, vX) => {
   const val = context.memory.getBytes(context.registers[rB] + vX, 2);
-  const num = Number(LittleEndian.decode(val).value);
+  const num = Number(E_2.decode(val).value);
   context.registers[rA] = Z4_inv(Z(2, num));
 });
 
@@ -205,7 +205,7 @@ const cmov_nz_imm = create(86 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   type Mock = import("@vitest/spy").Mock;
   describe("two_reg_one_imm_ixs", () => {
     describe("decode", () => {

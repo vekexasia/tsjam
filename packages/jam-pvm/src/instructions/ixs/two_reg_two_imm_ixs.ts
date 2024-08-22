@@ -60,7 +60,7 @@ if (import.meta.vitest) {
   vi.mock("@/utils/djump.js", () => ({
     djump: vi.fn(),
   }));
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   describe("two_reg_two_imm_ixs", () => {
     describe("decode", () => {
       it("should fail if not enough bytes", () => {

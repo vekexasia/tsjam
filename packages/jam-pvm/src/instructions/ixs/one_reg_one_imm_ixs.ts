@@ -1,12 +1,12 @@
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { u16, u32, u8 } from "@vekexasia/jam-types";
 import { RegisterIdentifier } from "@/types.js";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
+import { E_2, E_4 } from "@vekexasia/jam-codec";
 
 type InputType = [register: RegisterIdentifier, value: u32];
 const decode = (bytes: Uint8Array): InputType => {
@@ -56,13 +56,13 @@ const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
 
 const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
   context.registers[ri] = Number(
-    LittleEndian.decode(context.memory.getBytes(vx, 2)).value,
+    E_2.decode(context.memory.getBytes(vx, 2)).value,
   ) as u32;
 });
 
 const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
   context.registers[ri] = Number(
-    LittleEndian.decode(context.memory.getBytes(vx, 4)).value,
+    E_4.decode(context.memory.getBytes(vx, 4)).value,
   ) as u32;
 });
 
@@ -72,7 +72,7 @@ const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
 });
 const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
   context.registers[ri] = Z4_inv(
-    Z(2, Number(LittleEndian.decode(context.memory.getBytes(vx, 2)).value)),
+    Z(2, Number(E_2.decode(context.memory.getBytes(vx, 2)).value)),
   );
 });
 
@@ -85,20 +85,20 @@ const store_u8 = create1Reg1IMMIx(71 as u8, "store_u8", (context, ri, vx) => {
 const store_u16 = create1Reg1IMMIx(69 as u8, "store_u16", (context, ri, vx) => {
   const wa = (context.registers[ri] % 2 ** 16) as u16;
   const tmp = new Uint8Array(2);
-  LittleEndian.encode(BigInt(wa), tmp);
+  E_2.encode(BigInt(wa), tmp);
   context.memory.setBytes(vx, tmp);
 });
 const store_u32 = create1Reg1IMMIx(22 as u8, "store_u32", (context, ri, vx) => {
   const wa = (context.registers[ri] % 2 ** 32) as u32;
   const tmp = new Uint8Array(4);
-  LittleEndian.encode(BigInt(wa), tmp);
+  E_4.encode(BigInt(wa), tmp);
   context.memory.setBytes(vx, tmp);
 });
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   type Mock = import("@vitest/spy").Mock;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   describe("one_reg_one_imm_ixs", () => {
     describe("decode", () => {
       it("should fail if no input bytes", () => {

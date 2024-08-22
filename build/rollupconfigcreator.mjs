@@ -2,6 +2,9 @@ import replace from '@rollup/plugin-replace'
 import typescript from '@rollup/plugin-typescript'
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import mv from "rollup-plugin-mv";
+import del from "rollup-plugin-delete";
+import {move, remove} from "fs-extra";
 import {replaceTscAliasPaths} from "tsc-alias";
 
 /**
@@ -24,6 +27,12 @@ export const rollupCreate = (conf, typescriptOptions= null) => {
       inlineDynamicImports: false
     }],
     plugins: [
+      replace({
+        values: {
+          "import.meta.vitest": `false`,
+        },
+        preventAssignment: true
+      }),
       replace({
         values: {
           IS_BROWSER: `${isBrowser}`,
@@ -67,13 +76,23 @@ export const rollupTypes= () => {
   const base = rollupCreate({isBrowser: false, isEsm: false}, {
     compilerOptions: {
       declaration: true,
-      rootDir: './src',
+      rootDir: './',
       emitDeclarationOnly: true,
       removeComments: false,
-      outDir: 'dist/types',
+      skipLibCheck: true,
+      noEmit: true,
+      outDir: 'dist/types_tmp',
+      allowUnreachableCode: false,
     },
-    include: ['../../../build/types/globals.d.ts', './**/*.ts']
+    include: ['../../../build/types/globals.d.ts', './src/**/*.ts'],
+    exclude: ['../test/*.ts']
   });
+  base.plugins.push({
+    name: 'tscAlias',
+    async writeBundle(options, bundle) {
+      return replaceTscAliasPaths({configFile: './tsconfig.json', outDir: 'dist/types_tmp/src', rootDir: './src'})
+    }
+  })
   base.plugins.push({
     name: 'remove-transpiled',
     generateBundle: async (options,
@@ -82,9 +101,11 @@ export const rollupTypes= () => {
     }
   });
   base.plugins.push({
-    name: 'tscAlias',
+    name: "mv-and-delete",
     async writeBundle(options, bundle) {
-      return replaceTscAliasPaths({configFile: './tsconfig.json', outDir: 'dist/types', rootDir: 'src'})
+
+      await move('dist/types_tmp/src', 'dist/types', {overwrite: true})
+      await remove('dist/types_tmp')
     }
   })
   return base

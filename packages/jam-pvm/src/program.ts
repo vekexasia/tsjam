@@ -1,4 +1,4 @@
-import { JamCodec, LittleEndian, E } from "@vekexasia/jam-codec";
+import { JamCodec, E, E_1 } from "@vekexasia/jam-codec";
 import { u32, u8 } from "@vekexasia/jam-types";
 
 export interface PVMProgram {
@@ -32,10 +32,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     let offset = 0;
     offset += E.encode(BigInt(value.j.length), bytes.subarray(offset));
     // E_1(z)
-    offset += LittleEndian.encode(
-      BigInt(value.z),
-      bytes.subarray(offset, offset + 1),
-    );
+    offset += E_1.encode(BigInt(value.z), bytes.subarray(offset, offset + 1));
 
     // E(|c|)
     offset += E.encode(BigInt(value.c.length), bytes.subarray(offset));
@@ -74,7 +71,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     offset += jCard.readBytes;
 
     // E_1(z)
-    const z = LittleEndian.decode(bytes.subarray(offset, offset + 1));
+    const z = E_1.decode(bytes.subarray(offset, offset + 1));
     offset += z.readBytes;
     obj.z = Number(z.value) as u8;
 

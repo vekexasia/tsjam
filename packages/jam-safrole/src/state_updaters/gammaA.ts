@@ -31,9 +31,11 @@ export const computePosteriorGammaA = (
 
 // TESTS
 if (import.meta.vitest) {
-  const { vi, describe, beforeEach, expect, it } = import.meta.vitest;
-  const { mockState, mockTicketIdentifier, mockValidatorData, mockHeader } =
-    await import("../../test/mocks.js");
+  const { vi, describe, expect, it } = import.meta.vitest;
+  const { mockState, mockTicketIdentifier, mockHeader } = await import(
+    "../../test/mocks.js"
+  );
+  // aaa
 
   vi.mock("@vekexasia/jam-crypto", () => ({
     Hashing: {

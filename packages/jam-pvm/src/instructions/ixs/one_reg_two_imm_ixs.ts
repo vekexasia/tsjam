@@ -1,10 +1,10 @@
 import { u32, u8 } from "@vekexasia/jam-types";
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { RegisterIdentifier } from "@/types.js";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
+import { E_2, E_4 } from "@vekexasia/jam-codec";
 
 export const decode = (
   bytes: Uint8Array,
@@ -48,7 +48,7 @@ const store_imm_ind_u16 = create(
   (context, ri, vx, vy) => {
     const value = vy % 0xffff;
     const tmp = new Uint8Array(2);
-    LittleEndian.encode(BigInt(value), tmp);
+    E_2.encode(BigInt(value), tmp);
     context.memory.setBytes(context.registers[ri] + vx, tmp);
   },
 );
@@ -59,7 +59,7 @@ const store_imm_ind_u32 = create(
   (context, ri, vx, vy) => {
     const value = vy % 0xffffffff;
     const tmp = new Uint8Array(4);
-    LittleEndian.encode(BigInt(value), tmp);
+    E_4.encode(BigInt(value), tmp);
     context.memory.setBytes(context.registers[ri] + vx, tmp);
   },
 );
@@ -67,7 +67,7 @@ const store_imm_ind_u32 = create(
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   type Mock = import("@vitest/spy").Mock;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   describe("one_reg_two_imm_ixs", () => {
     describe("decode", () => {
       it("should mod 16 for rA", () => {

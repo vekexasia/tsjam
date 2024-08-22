@@ -39,7 +39,7 @@ const sbrk = create(87 as u8, "sbrk", (context, rd, ra) => {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   type Mock = import("@vitest/spy").Mock;
   describe("two_reg_ixs", () => {
     describe("decode", () => {

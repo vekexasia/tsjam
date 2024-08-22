@@ -1,9 +1,9 @@
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { u32, u8 } from "@vekexasia/jam-types";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
+import { E_2, E_4 } from "@vekexasia/jam-codec";
 
 /**
  * decode the full instruction from the bytes.
@@ -58,7 +58,7 @@ const store_imm_u16 = create(
   "store_imm_u16",
   (context, offset, value) => {
     const tmp = new Uint8Array(2);
-    LittleEndian.encode(BigInt(value % 2 ** 16), tmp);
+    E_2.encode(BigInt(value % 2 ** 16), tmp);
     context.memory.setBytes(offset, tmp);
   },
 );
@@ -68,14 +68,14 @@ const store_imm_u32 = create(
   "store_imm_u32",
   (context, offset, value) => {
     const tmp = new Uint8Array(4);
-    LittleEndian.encode(BigInt(value), tmp);
+    E_4.encode(BigInt(value), tmp);
     context.memory.setBytes(offset, tmp);
   },
 );
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   type Mock = import("@vitest/spy").Mock;
   describe("two_imm_ixs", () => {
     describe("decode", () => {

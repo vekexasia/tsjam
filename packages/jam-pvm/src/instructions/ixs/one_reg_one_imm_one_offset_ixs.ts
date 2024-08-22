@@ -4,9 +4,9 @@ import { RegisterIdentifier } from "@/types.js";
 import { branch } from "@/utils/branch.js";
 import { Z } from "@/utils/zed.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { LittleEndian } from "@vekexasia/jam-codec";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
+import { E_sub } from "@vekexasia/jam-codec";
 
 const decode = (
   bytes: Uint8Array,
@@ -21,7 +21,7 @@ const decode = (
   // at this stage. to get vy = ip + offset
   const offset = Z(
     ly,
-    Number(LittleEndian.decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
+    Number(E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
   ) as u32;
   return [ra, vx, offset];
 };
@@ -149,7 +149,6 @@ export const branch_gt_s_imm = create1Reg1IMM1OffsetIx(
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   type Mock = import("@vitest/spy").Mock;
-  const { createEvContext } = await import("../../../test/mocks.js");
   describe("decode", () => {
     const encodeRaLx = (ra: number, lx: number) => {
       return ra + lx * 16;

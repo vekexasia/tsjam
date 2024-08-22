@@ -164,7 +164,7 @@ const cmov_nz = create(84 as u8, "cmov_nz", (context, wA, wB, rD) => {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
 
   describe("three_reg_ixs", () => {
     describe("decoding", () => {

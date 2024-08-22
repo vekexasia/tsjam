@@ -7,7 +7,7 @@ export default defineWorkspace([
     test: {
       include: ["test/*.test.ts"],
       environment: "node",
-      name: "codec",
+      name: "safrole",
     },
   },
 ]);

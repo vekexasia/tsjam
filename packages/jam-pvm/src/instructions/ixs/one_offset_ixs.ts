@@ -1,13 +1,13 @@
-import { i32, u32, u8 } from "@vekexasia/jam-types";
-import { LittleEndian } from "@vekexasia/jam-codec";
+import { i32, toTagged, u32, u8 } from "@vekexasia/jam-types";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Z } from "@/utils/zed.js";
 import assert from "node:assert";
+import { E_sub } from "@vekexasia/jam-codec";
 
 const decode = (bytes: Uint8Array): [offset: i32] => {
   const lx = Math.min(4, bytes.length);
-  const vx = LittleEndian.decode(bytes.subarray(0, lx)).value;
+  const vx = E_sub(lx).decode(bytes.subarray(0, lx)).value;
   return [Z(lx, Number(vx))];
 };
 
@@ -30,7 +30,7 @@ if (import.meta.vitest) {
   vi.mock("@/utils/branch.js", () => ({
     branch: vi.fn(),
   }));
-  const { createEvContext } = await import("../../../test/mocks.js");
+  const { createEvContext } = await import("@/test/mocks.js");
   describe("one_offset_ixs", () => {
     describe("decode", () => {
       it("should decode to 0 if no bytes provided", () => {
@@ -49,7 +49,7 @@ if (import.meta.vitest) {
     describe("jump", () => {
       it("should propagate value to branch", () => {
         const context = createEvContext();
-        context.instructionPointer = 10;
+        context.instructionPointer = toTagged(10);
         jump.evaluate(context, 1 as i32);
         expect(branch).toHaveBeenCalledWith(context, 11, true);
         jump.evaluate(context, -1 as i32);
@@ -57,7 +57,7 @@ if (import.meta.vitest) {
       });
       it("should throw if address is negative", () => {
         const context = createEvContext();
-        context.instructionPointer = 10;
+        context.instructionPointer = toTagged(10);
         expect(() => jump.evaluate(context, -11 as i32)).toThrow(
           "address must be >= 0",
         );
