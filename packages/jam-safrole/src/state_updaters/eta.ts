@@ -1,4 +1,9 @@
-import { JamHeader, Posterior } from "@vekexasia/jam-types";
+import {
+  BandersnatchSignature,
+  JamHeader,
+  Posterior,
+  toTagged,
+} from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
@@ -8,21 +13,40 @@ import { bigintToBytes } from "@vekexasia/jam-codec";
  * @param header - the header to be applied
  * @param state - the current state
  * @returns the new modified eta_0
- * @see (68) in the graypaper
+ * @see (67) in the graypaper
  */
 export const entropyUpdateWithHeader = (
   header: Posterior<JamHeader>,
   state: SafroleState,
 ): Posterior<SafroleState["eta"][0]> => {
-  return Hashing.blake2b(
-    new Uint8Array([
-      ...bigintToBytes(state.eta[0], 32), // eta_0
-      ...bigintToBytes(
-        Bandersnatch.vrfOutputSignature(header.entropySignature),
-        32,
-      ), // Hv
-    ]),
-  ) as Posterior<SafroleState["eta"][0]>;
+  return computePosteriorEta0WithSignature(
+    state.eta[0],
+    header.entropySignature,
+  );
+};
+
+export const computePosteriorEta0WithSignature = (
+  eta0: SafroleState["eta"][0],
+  Hv: BandersnatchSignature,
+): Posterior<SafroleState["eta"][0]> => {
+  return computePosteriorEta0WithVRFOutput(
+    eta0,
+    Bandersnatch.vrfOutputSignature(Hv),
+  );
+};
+
+export const computePosteriorEta0WithVRFOutput = (
+  eta0: SafroleState["eta"][0],
+  vrfOutput: ReturnType<typeof Bandersnatch.vrfOutputSignature>,
+): Posterior<SafroleState["eta"][0]> => {
+  return toTagged(
+    Hashing.blake2b(
+      new Uint8Array([
+        ...bigintToBytes(eta0, 32),
+        ...bigintToBytes(vrfOutput, 32),
+      ]),
+    ),
+  );
 };
 
 /**
@@ -30,9 +54,7 @@ export const entropyUpdateWithHeader = (
  * @see isNewEra
  */
 export const rotateEntropy = (
-  state: SafroleState,
+  eta: SafroleState["eta"],
 ): Posterior<SafroleState["eta"]> => {
-  return [state.eta[0], state.eta[0], state.eta[1], state.eta[2]] as Posterior<
-    SafroleState["eta"]
-  >;
+  return [eta[0], eta[0], eta[1], eta[2]] as Posterior<SafroleState["eta"]>;
 };

@@ -4,11 +4,11 @@ import {
   EPOCH_LENGTH,
   JamHeader,
   OpaqueHash,
-  Posterior,
   SeqOfLength,
   TicketIdentifier,
 } from "@vekexasia/jam-types";
 
+console.log("ciao", EPOCH_LENGTH);
 /**
  * `m` in the graypaper
  * @param timeSlot - the time slot or `Ht` in the graypaper
@@ -55,13 +55,8 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
  * check if the header is the first block of a new era
  * Note: this returns true even in the case of a skipped era
  */
-export const isNewEra = (
-  newHeader: Posterior<JamHeader>,
-  lastHeader: JamHeader,
-) => {
-  return (
-    epochIndex(newHeader.timeSlotIndex) > epochIndex(lastHeader.timeSlotIndex)
-  );
+export const isNewEra = (newSlotIndex: number, curSlotIndex: number) => {
+  return epochIndex(newSlotIndex) > epochIndex(curSlotIndex);
 };
 
 /**
@@ -69,14 +64,8 @@ export const isNewEra = (
  * Similar to {@link isNewEra} but checks if the new era is the next era
  * @see isNewEra
  */
-export const isNewNextEra = (
-  newHeader: Posterior<JamHeader>,
-  lastHeader: JamHeader,
-) => {
-  return (
-    epochIndex(newHeader.timeSlotIndex) ===
-    epochIndex(lastHeader.timeSlotIndex) + 1
-  );
+export const isNewNextEra = (newSlotIndex: number, curSlotIndex: number) => {
+  return epochIndex(newSlotIndex) === epochIndex(curSlotIndex) + 1;
 };
 
 if (import.meta.vitest) {

@@ -1,9 +1,4 @@
-import {
-  JamHeader,
-  Posterior,
-  toTagged,
-  ValidatorData,
-} from "@vekexasia/jam-types";
+import { Posterior, toTagged, ValidatorData } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
@@ -19,8 +14,6 @@ const emptyValidatorKeys: ValidatorData = {
  * @see 58 and 59 in the graypaper
  */
 export const rotateValidatorKeys = (
-  header: JamHeader,
-  p_header: Posterior<JamHeader>,
   state: SafroleState,
   disputeState: Posterior<IDisputesState>,
 ): [
@@ -29,14 +22,6 @@ export const rotateValidatorKeys = (
   lambda: Posterior<SafroleState["lambda"]>,
   gamma_z: SafroleState["gamma_z"],
 ] => {
-  if (!isNewEra(p_header, header)) {
-    return [
-      state.gamma_k as Posterior<SafroleState["gamma_k"]>,
-      state.kappa as Posterior<SafroleState["kappa"]>,
-      state.lambda as Posterior<SafroleState["lambda"]>,
-      state.gamma_z as Posterior<SafroleState["gamma_z"]>,
-    ];
-  }
   const lambda = state.kappa as unknown as Posterior<SafroleState["lambda"]>;
   const kappa = state.gamma_k as unknown as Posterior<SafroleState["kappa"]>;
   // we empty the validator keys which are in ψo
@@ -54,43 +39,21 @@ export const rotateValidatorKeys = (
 };
 
 if (import.meta.vitest) {
-  const { vi, describe, beforeEach, expect, it } = import.meta.vitest;
-  const { mockState, mockDisputesState, mockValidatorData, mockHeader } =
-    await import("../../test/mocks.js");
+  const { vi, describe, expect, it } = import.meta.vitest;
+  const { mockState, mockDisputesState, mockValidatorData } = await import(
+    "../../test/mocks.js"
+  );
   type Mock = import("@vitest/spy").Mock;
 
-  vi.mock("@/utils.js", () => ({
-    isNewEra: vi.fn().mockReturnValue(false),
-  }));
   vi.mock("@vekexasia/jam-crypto", () => ({
     Bandersnatch: {
       ringRoot: vi.fn(),
     },
   }));
   describe("rotateValidatorKeys", () => {
-    it("should not rotate if not new Era", () => {
-      const r = rotateValidatorKeys(
-        mockHeader(),
-        mockHeader() as Posterior<JamHeader>,
-        mockState({
-          gamma_k: [mockValidatorData({ ed25519: 1n })],
-          kappa: [mockValidatorData({ ed25519: 2n })],
-          lambda: [mockValidatorData({ ed25519: 3n })],
-          gamma_z: 0n as unknown as SafroleState["gamma_z"],
-        }),
-        mockDisputesState({}) as Posterior<IDisputesState>,
-      );
-      expect(r[0]).toEqual([mockValidatorData({ ed25519: 1n })]);
-      expect(r[1]).toEqual([mockValidatorData({ ed25519: 2n })]);
-      expect(r[2]).toEqual([mockValidatorData({ ed25519: 3n })]);
-      expect(r[3]).toEqual(0n);
-    });
     describe("rotation", () => {
       it("should assign yk to k'", () => {
-        (isNewEra as Mock).mockReturnValue(true);
         const r = rotateValidatorKeys(
-          mockHeader(),
-          mockHeader() as Posterior<JamHeader>,
           mockState({
             gamma_k: [mockValidatorData({ ed25519: 1n })],
             kappa: [mockValidatorData({ ed25519: 2n })],
@@ -104,10 +67,7 @@ if (import.meta.vitest) {
         expect(r[1]).toEqual([mockValidatorData({ ed25519: 1n })]);
       });
       it("should assign k to lambda'", () => {
-        (isNewEra as Mock).mockReturnValue(true);
         const r = rotateValidatorKeys(
-          mockHeader(),
-          mockHeader() as Posterior<JamHeader>,
           mockState({
             gamma_k: [mockValidatorData({ ed25519: 1n })],
             kappa: [mockValidatorData({ ed25519: 2n })],
@@ -122,10 +82,7 @@ if (import.meta.vitest) {
       });
       it("should assign ringroot (of gamma k ) to gamma_z'", () => {
         (Bandersnatch.ringRoot as Mock).mockReturnValue(42n);
-        (isNewEra as Mock).mockReturnValue(true);
         const r = rotateValidatorKeys(
-          mockHeader(),
-          mockHeader() as Posterior<JamHeader>,
           mockState({
             gamma_k: [mockValidatorData({ banderSnatch: 1n })],
             kappa: [mockValidatorData({ banderSnatch: 2n })],

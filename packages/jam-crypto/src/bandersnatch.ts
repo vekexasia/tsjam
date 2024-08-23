@@ -40,7 +40,7 @@ export const Bandersnatch = {
   /**
    * `Y` function in the graypaper
    * The alias/output/entropy function of a Bandersnatch vrf signature/proof. See section 3.8 and appendix
-   * (310)
+   * (312)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
     return 1n as OpaqueHash; // TODO: implement
@@ -63,6 +63,10 @@ export const Bandersnatch = {
     return true; // TODO: implement
   },
 
+  /**
+   * `O` function in the graypaper
+   * @see (310) in the graypaper
+   */
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
     return 0n as T; // TODO: implement
   },
