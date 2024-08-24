@@ -7,13 +7,20 @@ import {
 } from "@/state_updaters/eta.js";
 import { isNewEra } from "@/utils.js";
 import { rotateValidatorKeys } from "@/state_updaters/keys.js";
-import { IDisputesState } from "@/extrinsics/index.js";
+import {
+  computeTicketIdentifiers,
+  IDisputesState,
+  TicketExtrinsics,
+  validateTicketExtrinsic,
+} from "@/extrinsics/index.js";
 import { computePosteriorSlotKey } from "@/state_updaters/gammaS.js";
+import { computePosteriorGammaA } from "@/state_updaters/gammaA.js";
 
 export const computeNewSafroleState = (
   curState: SafroleState,
   newSlot: u32,
   entropy: ReturnType<typeof Bandersnatch.vrfOutputSignature>,
+  ticketExtrinsics: TicketExtrinsics,
 ): Posterior<SafroleState> => {
   if (curState.tau >= newSlot) {
     throw new Error("Invalid slot");
@@ -48,6 +55,22 @@ export const computeNewSafroleState = (
     kappa,
     p_eta,
   );
+
+  // Tickets and gamma A
+  const identifiers = computeTicketIdentifiers(ticketExtrinsics);
+  const p_gamma_a = computePosteriorGammaA(
+    curState,
+    newSlot,
+    curState.tau,
+    identifiers,
+  );
+  validateTicketExtrinsic(
+    ticketExtrinsics,
+    identifiers,
+    curState,
+    p_eta,
+    p_gamma_a,
+  );
   const p_state: SafroleState = {
     ...curState,
     eta: p_eta,
@@ -56,6 +79,7 @@ export const computeNewSafroleState = (
     kappa,
     lambda,
     gamma_z,
+    gamma_a: p_gamma_a,
     gamma_s,
   };
   return p_state as unknown as Posterior<SafroleState>;

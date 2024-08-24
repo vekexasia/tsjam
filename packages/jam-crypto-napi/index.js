@@ -310,9 +310,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { sum, greet, vrfoutput, ringRoot } = nativeBinding
+const { vrfOutputHash, vrfVerify, ringRoot } = nativeBinding
 
-module.exports.sum = sum
-module.exports.greet = greet
-module.exports.vrfoutput = vrfoutput
+module.exports.vrfOutputHash = vrfOutputHash
+module.exports.vrfVerify = vrfVerify
 module.exports.ringRoot = ringRoot

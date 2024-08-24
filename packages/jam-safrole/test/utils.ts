@@ -66,7 +66,7 @@ export const safroleStateToTestData = (state: SafroleState) => {
   return {
     eta: state.eta.map((entry) => `0x${entry.toString(16).padStart(64, "0")}`),
     gamma_a: state.gamma_a.map((entry) => ({
-      id: entry.id.toString(16),
+      id: `0x${Buffer.from(bigintToBytes(entry.id, 32)).toString("hex")}`,
       attempt: entry.attempt,
     })),
     gamma_k: state.gamma_k.map(validatorEntryHexMap),

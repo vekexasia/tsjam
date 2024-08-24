@@ -3,10 +3,12 @@ import {
   BandersnatchPrivKey,
   BandersnatchRingRoot,
   BandersnatchSignature,
+  NUMBER_OF_VALIDATORS,
   OpaqueHash,
   RingVRFProof,
+  toTagged,
 } from "@vekexasia/jam-types";
-import { ringRoot } from "@vekexasia/jam-crypto-napi";
+import { ringRoot, vrfOutputHash, vrfVerify } from "@vekexasia/jam-crypto-napi";
 import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 
 export const Bandersnatch = {
@@ -54,7 +56,7 @@ export const Bandersnatch = {
    * @param ringRoot
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
-    return 1n as OpaqueHash; // TODO: implement
+    return bytesToBigInt(vrfOutputHash(ringProof));
   },
 
   verifyVrfProof(
@@ -62,7 +64,13 @@ export const Bandersnatch = {
     ringRoot: BandersnatchRingRoot,
     context: Uint8Array,
   ): boolean {
-    return true; // TODO: implement
+    return vrfVerify(
+      proof,
+      context,
+      new Uint8Array(0),
+      Buffer.from(bigintToBytes(ringRoot, 144)),
+      NUMBER_OF_VALIDATORS,
+    );
   },
 
   /**
