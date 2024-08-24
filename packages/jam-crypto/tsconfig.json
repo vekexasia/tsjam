@@ -8,6 +8,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto-napi": ["../jam-crypto-napi/index.d.ts"],
       "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"]
     }
   },

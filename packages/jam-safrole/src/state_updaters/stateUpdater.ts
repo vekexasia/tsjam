@@ -6,6 +6,9 @@ import {
   rotateEntropy,
 } from "@/state_updaters/eta.js";
 import { isNewEra } from "@/utils.js";
+import { rotateValidatorKeys } from "@/state_updaters/keys.js";
+import { IDisputesState } from "@/extrinsics/index.js";
+import { computePosteriorSlotKey } from "@/state_updaters/gammaS.js";
 
 export const computeNewSafroleState = (
   curState: SafroleState,
@@ -16,22 +19,40 @@ export const computeNewSafroleState = (
     throw new Error("Invalid slot");
   }
 
-  let p_eta: SafroleState["eta"] = [
+  let p_eta = [
     curState.eta[0],
     curState.eta[1],
     curState.eta[2],
     curState.eta[3],
-  ];
+  ] as Posterior<SafroleState["eta"]>;
   if (isNewEra(newSlot, curState.tau)) {
     p_eta = rotateEntropy(p_eta);
   }
 
   p_eta[0] = computePosteriorEta0WithVRFOutput(curState.eta[0], entropy);
+  const [gamma_k, kappa, lambda, gamma_z] = rotateValidatorKeys(curState, {
+    psi_g: new Set(),
+    psi_b: new Set(),
+    psi_w: new Set(),
+    psi_o: new Set(),
+  } as Posterior<IDisputesState>);
 
+  const gamma_s = computePosteriorSlotKey(
+    newSlot,
+    curState.tau,
+    curState,
+    kappa,
+    p_eta,
+  );
   const p_state: SafroleState = {
     ...curState,
     eta: p_eta,
     tau: newSlot,
+    gamma_k,
+    kappa,
+    lambda,
+    gamma_z,
+    gamma_s,
   };
   return p_state as unknown as Posterior<SafroleState>;
 };

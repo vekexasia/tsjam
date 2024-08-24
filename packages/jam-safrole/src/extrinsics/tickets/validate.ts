@@ -67,9 +67,12 @@ export const validateTicketExtrinsic = (
 
   // we need to checj (80) so that the extrinsic does not contain any ticket that would not end up
   // in posterior gamma_a
-  const p_gamma_a_ids = computePosteriorGammaA(state, header, p_header, n).map(
-    (x) => x.id,
-  );
+  const p_gamma_a_ids = computePosteriorGammaA(
+    state,
+    p_header.timeSlotIndex,
+    header.timeSlotIndex,
+    n,
+  ).map((x) => x.id);
   for (const x of n) {
     assert(!p_gamma_a_ids.includes(x.id), "Ticket not in posterior gamma_a");
   }

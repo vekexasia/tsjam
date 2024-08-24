@@ -23,6 +23,7 @@ export default defineConfig({
       "@vekexasia/jam-types": new URL('../jam-types/', import.meta.url).pathname,
       "@vekexasia/jam-codec": new URL('../jam-codec/', import.meta.url).pathname,
       "@vekexasia/jam-crypto": new URL('../jam-crypto/', import.meta.url).pathname,
+      "@vekexasia/jam-crypto-napi": new URL('../jam-crypto-napi/', import.meta.url).pathname,
     }
   }
 });

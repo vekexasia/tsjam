@@ -9,7 +9,7 @@ import {
 } from "@vekexasia/jam-types";
 
 export const hexToBytes = (hex: string): Uint8Array => {
-  return new Buffer(hex.slice(2), "hex");
+  return Buffer.from(hex.slice(2), "hex");
 };
 export const hextToBigInt = (hex: string): bigint => {
   return bytesToBigInt(hexToBytes(hex));
@@ -41,7 +41,6 @@ export const mapTestDataToSafroleState = (testData: any): SafroleState => {
       if ("keys" in testData.gamma_s) {
         return testData.gamma_s.keys.map((key: string) => hextToBigInt(key));
       }
-      console.log("gamma_s", testData.gamma_s);
       return testData.gamma_s;
     })(),
     gamma_z: hextToBigInt(testData.gamma_z) as Tagged<

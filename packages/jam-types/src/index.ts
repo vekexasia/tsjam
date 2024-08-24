@@ -41,7 +41,7 @@ export interface JamHeader {
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  timeSlotIndex: number; // Ht
+  timeSlotIndex: u32; // Ht
   /**
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode

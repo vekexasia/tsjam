@@ -4,13 +4,13 @@ import {
   JamHeader,
   NUMBER_OF_VALIDATORS,
   TicketIdentifier,
+  toTagged,
   u32,
 } from "@vekexasia/jam-types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
   BandersnatchSignatureCodec,
-  Ed25519SignatureCodec,
   HashCodec,
   MerkleTreeRootCodec,
 } from "@/identity.js";
@@ -110,7 +110,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
         previousHash: previousHash.value,
         priorStateRoot: priorStateRoot.value,
         extrinsicHash: extrinsicHash.value,
-        timeSlotIndex: Number(timeSlotIndex.value),
+        timeSlotIndex: toTagged(Number(timeSlotIndex.value)),
         epochMarker: epochMarker.value,
         winningTickets: winningTickets.value, // FIXME
         judgementsMarkers: judgementMarker.value,

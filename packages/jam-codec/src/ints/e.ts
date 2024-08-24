@@ -1,17 +1,22 @@
 import { JamCodec } from "@/codec";
 import assert from "node:assert";
 import { LittleEndian } from "@/ints/littleEndian";
+import { E_8, E_sub } from "@/ints/E_subscr.js";
 
 /**
  * E encoding allows for variable size encoding for numbers up to 2^64
+ * @see (274) appendix C of the spec
  */
 export const E: JamCodec<bigint> = {
   encode: (value: bigint, bytes: Uint8Array): number => {
     assert.ok(value >= 0, "value must be positive");
-    if (value < 2 ** (7 * 9)) {
-      // 2 ** (7 * 9) = 2 ** 63
+    if (value == 0n) {
+      bytes[0] = 0;
+      return 1;
+    } else if (value < 2 ** (7 * 8)) {
+      // 2 ** (7 * 8) = 2 ** 56
       let l = 0;
-      for (let i = 1; i < 9; i++) {
+      for (let i = 1; i < 8; i++) {
         if (value >= 2n ** (7n * BigInt(i))) {
           l = i;
         } else {
@@ -20,28 +25,24 @@ export const E: JamCodec<bigint> = {
       }
       const ln = BigInt(l);
       bytes[0] = Number(2n ** 8n - 2n ** (8n - ln) + value / 2n ** (8n * ln));
-      const e = LittleEndian.encode(
+      const e = E_sub(l).encode(
         value % 2n ** (8n * ln),
         bytes.subarray(1, l + 1),
       );
       return e + 1;
     } else {
-      // encoding from 2 ** 63 to 2 ** 64 - 1 - inclusive
+      // encoding from 2 ** 56 to 2 ** 64 - 1 - inclusive
       assert.ok(value < 2n ** 64n, "value is too large");
       bytes[0] = 2 ** 8 - 1; // 255
-      LittleEndian.encode(value, bytes.subarray(1, 9));
+      E_8.encode(value, bytes.subarray(1, 9));
       return 9; // 1 + 8
     }
   },
   decode: (bytes: Uint8Array): { value: bigint; readBytes: number } => {
     const first = bytes[0];
-    if (first === 255) {
-      const decoded = LittleEndian.decode(bytes.subarray(1, 9));
-      return {
-        value: decoded.value,
-        readBytes: decoded.readBytes + 1,
-      };
-    } else {
+    if (first == 0) {
+      return { value: 0n, readBytes: 1 };
+    } else if (first < 255) {
       let l = 0;
       for (let i = 0; i < 8; i++) {
         if (first >= 2 ** 8 - 2 ** (8 - i)) {
@@ -50,18 +51,32 @@ export const E: JamCodec<bigint> = {
           break; // i dont like the break here but it's efficient
         }
       }
-      const quotient = BigInt(first - (2 ** 8 - 2 ** (8 - l)));
-      const decoded = LittleEndian.decode(bytes.subarray(1, l + 1));
-      const value = quotient * 2n ** (8n * BigInt(l)) + decoded.value;
+
+      const remainder = first - (2 ** 8 - 2 ** (8 - l));
+      const xMod2Pow8l = E_sub(l).decode(bytes.subarray(1, l + 1)).value;
+
+      console.log({
+        xMod2Pow8l,
+        remainder,
+        l,
+        res: xMod2Pow8l + 2n ** (8n * BigInt(l)) * BigInt(remainder),
+      });
       return {
-        value,
-        readBytes: decoded.readBytes + 1,
+        value: xMod2Pow8l + 2n ** (8n * BigInt(l)) * BigInt(remainder),
+        readBytes: l + 1,
+      };
+    } else {
+      // 255
+      return {
+        value: E_8.decode(bytes.subarray(1, 9)).value,
+        readBytes: 9,
       };
     }
   },
+
   encodedSize: (value: bigint): number => {
     assert.ok(value >= 0, "value must be positive");
-    if (value < 2 ** (7 * 9)) {
+    if (value < 2 ** (7 * 8)) {
       let l = 0;
       for (let i = 1; i < 9; i++) {
         if (value >= 2n ** (7n * BigInt(i))) {
@@ -79,6 +94,19 @@ export const E: JamCodec<bigint> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("E", () => {
+    it("some tests", () => {
+      const b = new Uint8Array([181, 178, 44]);
+      const { value, readBytes } = E.decode(b);
+      console.log({ value, readBytes });
+    });
+    it("should encode from 0 to 255", () => {
+      for (let i = 0; i < 256; i++) {
+        const bytes = new Uint8Array(10);
+        E.encode(BigInt(i), bytes);
+        const { value: decoded, readBytes } = E.decode(bytes);
+        expect(decoded).toBe(BigInt(i));
+      }
+    });
     const cases = [
       { v: 0n, bytes: 1 },
       { v: 1n, bytes: 1 },

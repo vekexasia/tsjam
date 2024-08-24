@@ -6,3 +6,4 @@
 export declare function sum(a: number, b: number): number
 export declare function greet(): string
 export declare function vrfoutput(input: Uint8Array): number[]
+export declare function ringRoot(input: Uint8Array): Array<number>

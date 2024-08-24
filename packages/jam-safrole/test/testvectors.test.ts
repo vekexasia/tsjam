@@ -76,12 +76,20 @@ describe("enact-epoch-change", () => {
       ),
     );
     const preState = mapTestDataToSafroleState(test.pre_state);
+    expect(test.pre_state).toEqual(safroleStateToTestData(preState));
     const postState = computeNewSafroleState(
       preState,
       test.input.slot,
       toTagged(hextToBigInt(test.input.entropy)),
     );
 
+    const normalizedPostState = safroleStateToTestData(postState);
+
+    Object.keys(normalizedPostState).forEach((key) => {
+      expect((normalizedPostState as any)[key], `${key}`).toEqual(
+        test.post_state[key],
+      );
+    });
     expect(safroleStateToTestData(postState)).toEqual(test.post_state);
   });
 });

@@ -1,5 +1,5 @@
 {
-  "name": "jam-crypto-napi",
+  "name": "@vekexasia/jam-crypto-napi",
   "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",

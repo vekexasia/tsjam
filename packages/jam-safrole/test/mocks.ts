@@ -17,7 +17,7 @@ export const mockHeader = (
   previousHash: toTagged(opts.previousHash || 0n),
   priorStateRoot: toTagged(opts.priorStateRoot || 0n),
   extrinsicHash: toTagged(opts.extrinsicHash || 0n),
-  timeSlotIndex: opts.timeSlotIndex || 0,
+  timeSlotIndex: toTagged(opts.timeSlotIndex || 0),
   judgementsMarkers: toTagged(
     opts.judgementsMarkers || [],
   ) as unknown as JamHeader["judgementsMarkers"],

@@ -6,6 +6,8 @@ import {
   OpaqueHash,
   RingVRFProof,
 } from "@vekexasia/jam-types";
+import { ringRoot } from "@vekexasia/jam-crypto-napi";
+import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 
 export const Bandersnatch = {
   /**
@@ -68,6 +70,12 @@ export const Bandersnatch = {
    * @see (310) in the graypaper
    */
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
-    return 0n as T; // TODO: implement
+    const inputBuf = Buffer.alloc(input.length * 32);
+    input.forEach((key, idx) => {
+      inputBuf.set(bigintToBytes(key, 32), idx * 32);
+    });
+
+    const root = Buffer.from(ringRoot(inputBuf));
+    return bytesToBigInt(root) as T;
   },
 };

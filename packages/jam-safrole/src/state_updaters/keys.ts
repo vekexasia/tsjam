@@ -2,7 +2,6 @@ import { Posterior, toTagged, ValidatorData } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
-import { isNewEra } from "@/utils";
 const emptyValidatorKeys: ValidatorData = {
   banderSnatch: toTagged(0n),
   ed25519: toTagged(0n),
@@ -45,11 +44,11 @@ if (import.meta.vitest) {
   );
   type Mock = import("@vitest/spy").Mock;
 
-  vi.mock("@vekexasia/jam-crypto", () => ({
-    Bandersnatch: {
-      ringRoot: vi.fn(),
-    },
-  }));
+  // vi.mock("@vekexasia/jam-crypto", () => ({
+  //   Bandersnatch: {
+  //     ringRoot: vi.fn(),
+  //   },
+  // }));
   describe("rotateValidatorKeys", () => {
     describe("rotation", () => {
       it("should assign yk to k'", () => {

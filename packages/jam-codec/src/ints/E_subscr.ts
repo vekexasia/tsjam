@@ -1,5 +1,6 @@
 import { JamCodec } from "@/codec";
 import { LittleEndian } from "@/ints/littleEndian";
+import assert from "node:assert";
 
 /**
  * @see (273) appendix C of the spec
@@ -7,9 +8,26 @@ import { LittleEndian } from "@/ints/littleEndian";
  */
 export const E_sub = (sub: number): JamCodec<bigint> => ({
   encode: (value: bigint, bytes: Uint8Array): number => {
+    assert(
+      bytes.length === sub,
+      `bytes length=${bytes.length} must match sub=${sub}`,
+    );
     return LittleEndian.encode(value, bytes.subarray(0, sub));
   },
   decode: (bytes: Uint8Array): { value: bigint; readBytes: number } => {
+    console.log("bytes", bytes, "sub", sub);
+    if (bytes.length < sub) {
+      const padded = new Uint8Array(sub).fill(0);
+      padded.set(bytes);
+      console.log("padded", padded, LittleEndian.decode(padded));
+      return LittleEndian.decode(padded);
+    } else if (bytes.length > sub) {
+      console.log(
+        "truncated",
+        bytes.subarray(0, sub),
+        LittleEndian.decode(bytes.subarray(0, sub)),
+      );
+    }
     return LittleEndian.decode(bytes.subarray(0, sub));
   },
   encodedSize: (): number => {

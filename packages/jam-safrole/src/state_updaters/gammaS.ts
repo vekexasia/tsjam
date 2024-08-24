@@ -9,6 +9,7 @@ import {
   SeqOfLength,
   TicketIdentifier,
   toTagged,
+  u32,
 } from "@vekexasia/jam-types";
 import {
   epochIndex,
@@ -25,8 +26,8 @@ import { Hashing } from "@vekexasia/jam-crypto";
  * @see rotateEntropy
  */
 export const computePosteriorSlotKey = (
-  header: JamHeader,
-  posteriorHeader: Posterior<JamHeader>,
+  newSlotIndex: u32,
+  curSlotIndex: u32,
   state: SafroleState,
   // used in fallbacdk
   posteriorKappa: Posterior<SafroleState["kappa"]>,
@@ -34,9 +35,9 @@ export const computePosteriorSlotKey = (
   posteriorEntropy: Posterior<SafroleState["eta"]>,
 ): Posterior<SafroleState["gamma_s"]> => {
   if (
-    isNewNextEra(posteriorHeader, header) &&
+    isNewNextEra(newSlotIndex, curSlotIndex) &&
     state.gamma_a.length === EPOCH_LENGTH &&
-    slotIndex(header.timeSlotIndex) >= LOTTERY_MAX_SLOT
+    slotIndex(curSlotIndex) >= LOTTERY_MAX_SLOT
   ) {
     // we've accumulated enough tickets
     // we can now compute the new posterior `gamma_s`
@@ -49,11 +50,7 @@ export const computePosteriorSlotKey = (
       newGammaS.push(state.gamma_a[EPOCH_LENGTH - i - 1]);
     }
     return newGammaS;
-  } else if (
-    epochIndex(header.timeSlotIndex) ===
-    epochIndex(posteriorHeader.timeSlotIndex)
-  ) {
-    console.log("meow2");
+  } else if (epochIndex(curSlotIndex) === epochIndex(newSlotIndex)) {
     return state.gamma_s as Posterior<SafroleState["gamma_s"]>;
   } else {
     // we're in fallback mode
@@ -69,7 +66,7 @@ export const computePosteriorSlotKey = (
       const h_4 = Hashing.blake2bBuf(
         new Uint8Array([...p_eta2, ...e4Buf]),
       ).subarray(0, 4);
-      const index = E.decode(h_4).value % BigInt(NUMBER_OF_VALIDATORS);
+      const index = E_4.decode(h_4).value % BigInt(posteriorKappa.length);
       newGammaS.push(posteriorKappa[Number(index)].banderSnatch);
     }
     return newGammaS;
@@ -81,11 +78,7 @@ if (import.meta.vitest) {
   const { mockState, mockTicketIdentifier, mockValidatorData, mockHeader } =
     await import("../../test/mocks.js");
 
-  vi.mock("@vekexasia/jam-crypto", () => ({
-    Hashing: {
-      blake2bBuf: vi.fn((buf: Uint8Array) => buf),
-    },
-  }));
+  vi.spyOn(Hashing, "blake2bBuf");
 
   describe("computePosteriorSlotKey", () => {
     let state: SafroleState;
@@ -115,8 +108,8 @@ if (import.meta.vitest) {
       it("fallsback if gamma a is not `EPOCH_LENGTH` long", () => {
         state.gamma_a = toTagged([]);
         const posterior = computePosteriorSlotKey(
-          header,
-          posteriorHeader,
+          posteriorHeader.timeSlotIndex,
+          header.timeSlotIndex,
           state,
           posteriorKappa,
           toTagged([0n, 0n, 0n, 0n]) as any,
@@ -126,12 +119,9 @@ if (import.meta.vitest) {
         expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
       });
       it("fallsback if epoch skipped", () => {
-        posteriorHeader = toTagged(
-          mockHeader({ timeSlotIndex: EPOCH_LENGTH * 2 }),
-        );
         const posterior = computePosteriorSlotKey(
-          header,
-          posteriorHeader,
+          (EPOCH_LENGTH * 2) as u32,
+          header.timeSlotIndex as u32,
           state,
           posteriorKappa,
           toTagged([0n, 0n, 0n, 0n]) as any,
@@ -141,10 +131,9 @@ if (import.meta.vitest) {
         expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
       });
       it("fallsback if epoch slot index is less than `LOTTERY_MAX_SLOT`", () => {
-        posteriorHeader.timeSlotIndex = EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1;
         const posterior = computePosteriorSlotKey(
-          header,
-          posteriorHeader,
+          (EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1) as u32,
+          header.timeSlotIndex as u32,
           state,
           posteriorKappa,
           toTagged([0n, 0n, 0n, 0n]) as any,
@@ -157,8 +146,8 @@ if (import.meta.vitest) {
     describe("normal", () => {
       it("should return ticketidentifiers if not in fallback mode", () => {
         const posterior = computePosteriorSlotKey(
-          mockHeader({ timeSlotIndex: LOTTERY_MAX_SLOT }),
-          mockHeader({ timeSlotIndex: EPOCH_LENGTH }) as Posterior<JamHeader>,
+          EPOCH_LENGTH as u32,
+          LOTTERY_MAX_SLOT as u32,
           mockState({
             gamma_a: new Array(EPOCH_LENGTH)
               .fill(0)

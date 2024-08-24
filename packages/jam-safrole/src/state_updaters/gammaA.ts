@@ -4,6 +4,7 @@ import {
   JamHeader,
   Posterior,
   TicketIdentifier,
+  u32,
 } from "@vekexasia/jam-types";
 import { isNewEra } from "@/utils.js";
 
@@ -12,14 +13,14 @@ import { isNewEra } from "@/utils.js";
  */
 export const computePosteriorGammaA = (
   state: SafroleState,
-  header: JamHeader,
-  p_header: Posterior<JamHeader>,
+  newSlot: u32,
+  curSlot: u32,
   newIdentifiers: TicketIdentifier[],
 ): Posterior<SafroleState["gamma_a"]> => {
   return [
     ...newIdentifiers,
     ...(() => {
-      if (isNewEra(p_header, header)) {
+      if (isNewEra(newSlot, curSlot)) {
         return [];
       }
       return state.gamma_a;
@@ -48,8 +49,8 @@ if (import.meta.vitest) {
         mockState({
           gamma_a: [mockTicketIdentifier({ id: 0n })],
         }),
-        mockHeader(),
-        mockHeader() as Posterior<JamHeader>,
+        0 as u32,
+        0 as u32,
         [mockTicketIdentifier({ id: 1n })],
       );
       expect(pga).toEqual([
@@ -67,8 +68,9 @@ if (import.meta.vitest) {
             mockTicketIdentifier({ id: 2n }),
           ],
         }),
-        mockHeader(),
-        mockHeader() as Posterior<JamHeader>,
+
+        0 as u32,
+        0 as u32,
         [mockTicketIdentifier({ id: 1n })],
       );
       expect(pga).toEqual([
@@ -85,8 +87,8 @@ if (import.meta.vitest) {
             ),
           ],
         }),
-        mockHeader(),
-        mockHeader({ timeSlotIndex: EPOCH_LENGTH }) as Posterior<JamHeader>,
+        0 as u32,
+        EPOCH_LENGTH as u32,
         [mockTicketIdentifier({ id: 1n })],
       );
       expect(pga).toEqual([mockTicketIdentifier({ id: 1n })]);
