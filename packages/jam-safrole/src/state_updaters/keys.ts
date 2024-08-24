@@ -2,6 +2,7 @@ import { Posterior, toTagged, ValidatorData } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
+import { isNewEra } from "@/utils.js";
 const emptyValidatorKeys: ValidatorData = {
   banderSnatch: toTagged(0n),
   ed25519: toTagged(0n),
@@ -19,7 +20,7 @@ export const rotateValidatorKeys = (
   gamma_k: Posterior<SafroleState["gamma_k"]>,
   kappa: Posterior<SafroleState["kappa"]>,
   lambda: Posterior<SafroleState["lambda"]>,
-  gamma_z: SafroleState["gamma_z"],
+  gamma_z: Posterior<SafroleState["gamma_z"]>,
 ] => {
   const lambda = state.kappa as unknown as Posterior<SafroleState["lambda"]>;
   const kappa = state.gamma_k as unknown as Posterior<SafroleState["kappa"]>;

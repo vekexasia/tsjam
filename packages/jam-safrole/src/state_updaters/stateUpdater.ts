@@ -25,17 +25,21 @@ export const computeNewSafroleState = (
     curState.eta[2],
     curState.eta[3],
   ] as Posterior<SafroleState["eta"]>;
+  let gamma_k = curState.gamma_k as Posterior<SafroleState["gamma_k"]>;
+  let kappa = curState.kappa as Posterior<SafroleState["kappa"]>;
+  let lambda = curState.lambda as Posterior<SafroleState["lambda"]>;
+  let gamma_z = curState.gamma_z as Posterior<SafroleState["gamma_z"]>;
   if (isNewEra(newSlot, curState.tau)) {
     p_eta = rotateEntropy(p_eta);
+    [gamma_k, kappa, lambda, gamma_z] = rotateValidatorKeys(curState, {
+      psi_g: new Set(),
+      psi_b: new Set(),
+      psi_w: new Set(),
+      psi_o: new Set(),
+    } as Posterior<IDisputesState>);
   }
 
   p_eta[0] = computePosteriorEta0WithVRFOutput(curState.eta[0], entropy);
-  const [gamma_k, kappa, lambda, gamma_z] = rotateValidatorKeys(curState, {
-    psi_g: new Set(),
-    psi_b: new Set(),
-    psi_w: new Set(),
-    psi_o: new Set(),
-  } as Posterior<IDisputesState>);
 
   const gamma_s = computePosteriorSlotKey(
     newSlot,
