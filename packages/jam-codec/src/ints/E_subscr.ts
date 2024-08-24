@@ -15,18 +15,11 @@ export const E_sub = (sub: number): JamCodec<bigint> => ({
     return LittleEndian.encode(value, bytes.subarray(0, sub));
   },
   decode: (bytes: Uint8Array): { value: bigint; readBytes: number } => {
-    console.log("bytes", bytes, "sub", sub);
     if (bytes.length < sub) {
       const padded = new Uint8Array(sub).fill(0);
       padded.set(bytes);
       console.log("padded", padded, LittleEndian.decode(padded));
       return LittleEndian.decode(padded);
-    } else if (bytes.length > sub) {
-      console.log(
-        "truncated",
-        bytes.subarray(0, sub),
-        LittleEndian.decode(bytes.subarray(0, sub)),
-      );
     }
     return LittleEndian.decode(bytes.subarray(0, sub));
   },
