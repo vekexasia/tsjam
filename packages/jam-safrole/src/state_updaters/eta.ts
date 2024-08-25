@@ -1,60 +1,37 @@
-import {
-  BandersnatchSignature,
-  JamHeader,
-  Posterior,
-  toTagged,
-} from "@vekexasia/jam-types";
+import { Posterior, toTagged, newSTF } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
+import { isNewEra } from "@/utils.js";
+import { TauTransition } from "@/state_updaters/types.js";
 
-/**
- * Calculates posterior `eta_0`
- * @param header - the header to be applied
- * @param state - the current state
- * @returns the new modified eta_0
- * @see (67) in the graypaper
- */
-export const entropyUpdateWithHeader = (
-  header: Posterior<JamHeader>,
-  state: SafroleState,
-): Posterior<SafroleState["eta"][0]> => {
-  return computePosteriorEta0WithSignature(
-    state.eta[0],
-    header.entropySignature,
-  );
-};
+export const eta0STF = newSTF<
+  SafroleState["eta"][0],
+  ReturnType<typeof Bandersnatch.vrfOutputSignature>
+>(
+  (
+    input: ReturnType<typeof Bandersnatch.vrfOutputSignature>,
+    curState: SafroleState["eta"][0],
+  ): Posterior<SafroleState["eta"][0]> => {
+    return toTagged(
+      Hashing.blake2b(
+        new Uint8Array([
+          ...bigintToBytes(curState, 32),
+          ...bigintToBytes(input, 32),
+        ]),
+      ),
+    );
+  },
+);
 
-export const computePosteriorEta0WithSignature = (
-  eta0: SafroleState["eta"][0],
-  Hv: BandersnatchSignature,
-): Posterior<SafroleState["eta"][0]> => {
-  return computePosteriorEta0WithVRFOutput(
-    eta0,
-    Bandersnatch.vrfOutputSignature(Hv),
-  );
-};
-
-export const computePosteriorEta0WithVRFOutput = (
-  eta0: SafroleState["eta"][0],
-  vrfOutput: ReturnType<typeof Bandersnatch.vrfOutputSignature>,
-): Posterior<SafroleState["eta"][0]> => {
-  return toTagged(
-    Hashing.blake2b(
-      new Uint8Array([
-        ...bigintToBytes(eta0, 32),
-        ...bigintToBytes(vrfOutput, 32),
-      ]),
-    ),
-  );
-};
-
-/**
- * when `e'` > `e`, rotate entropy
- * @see isNewEra
- */
-export const rotateEntropy = (
-  eta: SafroleState["eta"],
-): Posterior<SafroleState["eta"]> => {
-  return [eta[0], eta[0], eta[1], eta[2]] as Posterior<SafroleState["eta"]>;
-};
+export const entropyRotationSTF = newSTF<SafroleState["eta"], TauTransition>(
+  (
+    input: TauTransition,
+    eta: SafroleState["eta"],
+  ): Posterior<SafroleState["eta"]> => {
+    if (isNewEra(input.nextTau, input.curTau)) {
+      return [eta[0], eta[0], eta[1], eta[2]] as Posterior<SafroleState["eta"]>;
+    }
+    return eta as Posterior<SafroleState["eta"]>;
+  },
+);

@@ -100,3 +100,4 @@ export * from "./ReportingAndAvailabilityState.js";
 export * from "./workItem.js";
 export * from "./workPackage.js";
 export * from "./Ticket.js";
+export * from "./STF.js";

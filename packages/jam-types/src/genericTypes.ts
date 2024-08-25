@@ -130,3 +130,7 @@ export const toTagged = <K, Tag extends PropertyKey, Metadata>(
 ): Tagged<K, Tag, Metadata> => {
   return value as Tagged<K, Tag, Metadata>;
 };
+
+export const toPosterior = <T>(value: T): Posterior<T> => {
+  return toTagged(value);
+};

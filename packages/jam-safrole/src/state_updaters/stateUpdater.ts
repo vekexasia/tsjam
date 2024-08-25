@@ -1,12 +1,8 @@
 import { SafroleState } from "@/index.js";
 import { Posterior, u32 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
-import {
-  computePosteriorEta0WithVRFOutput,
-  rotateEntropy,
-} from "@/state_updaters/eta.js";
-import { isNewEra } from "@/utils.js";
-import { rotateValidatorKeys } from "@/state_updaters/keys.js";
+import { entropyRotationSTF, eta0STF } from "@/state_updaters/eta.js";
+import { rotateKeys } from "@/state_updaters/keys.js";
 import {
   computeTicketIdentifiers,
   IDisputesState,
@@ -26,33 +22,33 @@ export const computeNewSafroleState = (
     throw new Error("Invalid slot");
   }
 
-  let p_eta = [
-    curState.eta[0],
-    curState.eta[1],
-    curState.eta[2],
-    curState.eta[3],
-  ] as Posterior<SafroleState["eta"]>;
-  let gamma_k = curState.gamma_k as Posterior<SafroleState["gamma_k"]>;
-  let kappa = curState.kappa as Posterior<SafroleState["kappa"]>;
-  let lambda = curState.lambda as Posterior<SafroleState["lambda"]>;
-  let gamma_z = curState.gamma_z as Posterior<SafroleState["gamma_z"]>;
-  if (isNewEra(newSlot, curState.tau)) {
-    p_eta = rotateEntropy(p_eta);
-    [gamma_k, kappa, lambda, gamma_z] = rotateValidatorKeys(curState, {
-      psi_g: new Set(),
-      psi_b: new Set(),
-      psi_w: new Set(),
-      psi_o: new Set(),
-    } as Posterior<IDisputesState>);
-  }
+  const tauTransition = {
+    curTau: curState.tau,
+    nextTau: newSlot,
+  };
 
-  p_eta[0] = computePosteriorEta0WithVRFOutput(curState.eta[0], entropy);
+  const p_eta = entropyRotationSTF.apply(tauTransition, curState.eta);
+  const [p_lambda, p_kappa, p_gamma_k, p_gamma_z] = rotateKeys.apply(
+    {
+      p_disputes: {
+        psi_g: new Set(),
+        psi_o: new Set(),
+        psi_w: new Set(),
+        psi_b: new Set(),
+      } as Posterior<IDisputesState>,
+      iota: curState.iota,
+      tau: tauTransition,
+    },
+    [curState.lambda, curState.kappa, curState.gamma_k, curState.gamma_z],
+  );
 
-  const gamma_s = computePosteriorSlotKey(
+  p_eta[0] = eta0STF.apply(entropy, curState.eta[0]);
+
+  const p_gamma_s = computePosteriorSlotKey(
     newSlot,
     curState.tau,
     curState,
-    kappa,
+    p_kappa,
     p_eta,
   );
 
@@ -76,12 +72,12 @@ export const computeNewSafroleState = (
     ...curState,
     eta: p_eta,
     tau: newSlot,
-    gamma_k,
-    kappa,
-    lambda,
-    gamma_z,
+    gamma_k: p_gamma_k,
+    kappa: p_kappa,
+    lambda: p_lambda,
+    gamma_z: p_gamma_z,
     gamma_a: p_gamma_a,
-    gamma_s,
+    gamma_s: p_gamma_s,
   };
   return p_state as unknown as Posterior<SafroleState>;
 };

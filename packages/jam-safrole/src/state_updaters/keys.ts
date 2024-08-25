@@ -1,46 +1,92 @@
-import { Posterior, toTagged, ValidatorData } from "@vekexasia/jam-types";
+import {
+  Posterior,
+  toTagged,
+  toPosterior,
+  ValidatorData,
+  newSTF,
+} from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
-import { isNewEra } from "@/utils.js";
 import { afterAll, beforeEach } from "vitest";
+import { TauTransition } from "@/state_updaters/types.js";
+import { isNewEra } from "@/utils.js";
 const emptyValidatorKeys: ValidatorData = {
   banderSnatch: toTagged(0n),
   ed25519: toTagged(0n),
   blsKey: 0n as unknown as ValidatorData["blsKey"],
   metadata: new Uint8Array(128) as unknown as ValidatorData["metadata"],
 };
-/**
- *
- * @see 58 and 59 in the graypaper
- */
-export const rotateValidatorKeys = (
-  state: SafroleState,
-  disputeState: Posterior<IDisputesState>,
-): [
-  gamma_k: Posterior<SafroleState["gamma_k"]>,
-  kappa: Posterior<SafroleState["kappa"]>,
-  lambda: Posterior<SafroleState["lambda"]>,
-  gamma_z: Posterior<SafroleState["gamma_z"]>,
-] => {
-  const lambda = state.kappa as unknown as Posterior<SafroleState["lambda"]>;
-  const kappa = state.gamma_k as unknown as Posterior<SafroleState["kappa"]>;
-  // we empty the validator keys which are in ψo
-  const gamma_k = state.iota.map((v) => {
-    if (disputeState.psi_o.has(v.ed25519)) {
-      return emptyValidatorKeys;
-    }
-    return v;
-  }) as unknown as Posterior<SafroleState["gamma_k"]>;
 
-  // gamma_z is the ring root of the posterior gamma k
-  const gamma_z: Posterior<SafroleState["gamma_z"]> = Bandersnatch.ringRoot(
-    gamma_k.map((v) => v.banderSnatch),
-  );
+// 58 and 59 in the graypaper
+export const rotateLambdaSTF = newSTF<
+  SafroleState["lambda"],
+  SafroleState["kappa"]
+>(
+  (kappa): Posterior<SafroleState["lambda"]> =>
+    [...kappa] as unknown as Posterior<SafroleState["lambda"]>,
+);
 
-  return [gamma_k, kappa, lambda, gamma_z];
-};
-
+export const rotateKappaSTF = newSTF<
+  SafroleState["kappa"],
+  SafroleState["gamma_k"]
+>(
+  (input): Posterior<SafroleState["kappa"]> =>
+    [...input] as unknown as Posterior<SafroleState["kappa"]>,
+);
+export const rotateGammaKSTF = newSTF<
+  SafroleState["gamma_k"],
+  { iota: SafroleState["iota"]; p_disputes: Posterior<IDisputesState> }
+>(
+  (input): Posterior<SafroleState["gamma_k"]> =>
+    // we empty the validator keys which are in ψo
+    input.iota.map((v) => {
+      if (input.p_disputes.psi_o.has(v.ed25519)) {
+        return emptyValidatorKeys;
+      }
+      return v;
+    }) as unknown as Posterior<SafroleState["gamma_k"]>,
+);
+export const rotateGammaZSTF = newSTF<
+  SafroleState["gamma_z"],
+  Posterior<SafroleState["gamma_k"]>
+>((p_gamma_k): Posterior<SafroleState["gamma_z"]> => {
+  // gamma_z is the ring root of the posterior gamma
+  return Bandersnatch.ringRoot(p_gamma_k.map((v) => v.banderSnatch));
+});
+export const rotateKeys = newSTF<
+  [
+    SafroleState["lambda"],
+    SafroleState["kappa"],
+    SafroleState["gamma_k"],
+    SafroleState["gamma_z"],
+  ],
+  {
+    p_disputes: Posterior<IDisputesState>;
+    iota: SafroleState["iota"];
+    tau: TauTransition;
+  },
+  [
+    Posterior<SafroleState["lambda"]>,
+    Posterior<SafroleState["kappa"]>,
+    Posterior<SafroleState["gamma_k"]>,
+    Posterior<SafroleState["gamma_z"]>,
+  ]
+>(({ p_disputes, iota, tau }, [lambda, kappa, gamma_k, gamma_z]) => {
+  if (isNewEra(tau.nextTau, tau.curTau)) {
+    const p_gamma_k = rotateGammaKSTF.apply({ iota, p_disputes }, gamma_k);
+    const p_kappa = rotateKappaSTF.apply(gamma_k, kappa);
+    const p_lambda = rotateLambdaSTF.apply(kappa, lambda);
+    const p_gamma_z = rotateGammaZSTF.apply(p_gamma_k, gamma_z);
+    return [p_lambda, p_kappa, p_gamma_k, p_gamma_z];
+  }
+  return [
+    toPosterior(lambda),
+    toPosterior(kappa),
+    toPosterior(gamma_k),
+    toPosterior(gamma_z),
+  ];
+});
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;
   const { mockState, mockDisputesState, mockValidatorData } = await import(
@@ -56,48 +102,48 @@ if (import.meta.vitest) {
     });
     describe("rotation", () => {
       it("should assign yk to k'", () => {
-        const r = rotateValidatorKeys(
-          mockState({
-            gamma_k: [mockValidatorData({ ed25519: 1n })],
-            kappa: [mockValidatorData({ ed25519: 2n })],
-            lambda: [mockValidatorData({ ed25519: 3n })],
-            gamma_z: 0n as unknown as SafroleState["gamma_z"],
-            iota: [mockValidatorData({ ed25519: 1n })],
-          }),
-          mockDisputesState({}) as Posterior<IDisputesState>,
-        );
-        // r[1] is kappa'
-        expect(r[1]).toEqual([mockValidatorData({ ed25519: 1n })]);
+        const state = mockState({
+          gamma_k: [mockValidatorData({ ed25519: 1n })],
+          kappa: [mockValidatorData({ ed25519: 2n })],
+        });
+        const r = rotateKappaSTF.apply(state.gamma_k, state.kappa);
+        expect(r).toEqual(state.gamma_k);
       });
       it("should assign k to lambda'", () => {
-        const r = rotateValidatorKeys(
-          mockState({
-            gamma_k: [mockValidatorData({ ed25519: 1n })],
-            kappa: [mockValidatorData({ ed25519: 2n })],
-            lambda: [mockValidatorData({ ed25519: 3n })],
-            gamma_z: 0n as unknown as SafroleState["gamma_z"],
-            iota: [mockValidatorData({ ed25519: 1n })],
-          }),
-          mockDisputesState({}) as Posterior<IDisputesState>,
+        const state = mockState({
+          kappa: [mockValidatorData({ ed25519: 1n })],
+        });
+        const r = rotateLambdaSTF.apply(state.kappa, state.lambda);
+
+        expect(r).toEqual(state.kappa);
+      });
+      it("should assign iota minus disputes to gamma_k'", () => {
+        const state = mockState({
+          iota: [
+            mockValidatorData({ ed25519: 1n }),
+            mockValidatorData({ ed25519: 2n }),
+          ],
+        });
+        const p_disputes = mockDisputesState({
+          psi_o: new Set([1n]) as unknown as IDisputesState["psi_o"],
+        }) as unknown as Posterior<IDisputesState>;
+        const r = rotateGammaKSTF.apply(
+          { iota: state.iota, p_disputes },
+          state.gamma_k,
         );
-        // r[2] is lambda'
-        expect(r[2]).toEqual([mockValidatorData({ ed25519: 2n })]);
+        expect(r).toEqual([
+          emptyValidatorKeys,
+          mockValidatorData({ ed25519: 2n }),
+        ]);
       });
       it("should assign ringroot (of gamma k ) to gamma_z'", () => {
         vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() => 42n);
-        const r = rotateValidatorKeys(
-          mockState({
-            gamma_k: [mockValidatorData({ banderSnatch: 1n })],
-            kappa: [mockValidatorData({ banderSnatch: 2n })],
-            lambda: [mockValidatorData({ banderSnatch: 3n })],
-            gamma_z: 0n as unknown as SafroleState["gamma_z"],
-            iota: [mockValidatorData({ banderSnatch: 1n })],
-          }),
-          mockDisputesState({}) as Posterior<IDisputesState>,
-        );
-        // r[3] is gamma_z'
-        expect(r[3]).toEqual(42n);
-        expect(Bandersnatch.ringRoot).toHaveBeenCalledWith([1n]);
+        const state = mockState({
+          gamma_k: [mockValidatorData({ banderSnatch: 1n })],
+        });
+        const p_gamma_k = state.gamma_k as Posterior<SafroleState["gamma_k"]>;
+        const r = rotateGammaZSTF.apply(p_gamma_k, state.gamma_z);
+        expect(r).toEqual(42n);
       });
     });
   });

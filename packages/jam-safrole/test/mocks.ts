@@ -21,7 +21,7 @@ export const mockHeader = (
   judgementsMarkers: toTagged(
     opts.judgementsMarkers || [],
   ) as unknown as JamHeader["judgementsMarkers"],
-  blockAuthorKey: opts.blockAuthorKey || 0,
+  blockAuthorKeyIndex: toTagged(opts.blockAuthorKeyIndex || 0),
   entropySignature: toTagged(opts.entropySignature || 0n),
 });
 
