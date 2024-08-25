@@ -14,7 +14,7 @@ export const Ed25519 = {
    * @param context
    */
   verifySignature(
-    bytes: Uint8Array,
+    signature: ED25519Signature,
     pubkey: ED25519PublicKey,
     message: Uint8Array,
   ): boolean {

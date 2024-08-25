@@ -2,6 +2,9 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
+  JAM_GUARANTEE,
+  JAM_INVALID,
+  JAM_VALID,
   MinSeqLength,
   NUMBER_OF_VALIDATORS,
   SeqOfLength,
@@ -10,6 +13,9 @@ import {
 } from "@vekexasia/jam-types";
 import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
 import { IDisputesState } from "@/extrinsics/disputes/state.js";
+import { SafroleState } from "@/index.js";
+import { Ed25519 } from "@vekexasia/jam-crypto";
+import { bigintToBytes } from "@vekexasia/jam-codec";
 /**
  * Identified ad E<sub>d</sub> in the paper
  */
@@ -139,6 +145,7 @@ export interface DisputeExtrinsic {
  * @throws {Error} if the extrinsic is not valid
  */
 export const assertDisputeExtrinsicValid = (
+  safroleState: SafroleState,
   extrinsic: DisputeExtrinsic,
   currState: IDisputesState,
 ): Array<{ reportHash: Hash; votes: number }> => {
@@ -261,6 +268,70 @@ export const assertDisputeExtrinsicValid = (
       throw new Error("negative verdicts must have at least 2 in culprit");
     }
   });
+
+  // verify all signatures
+  extrinsic.verdicts.forEach((verdict) => {
+    verdict.judgements.forEach((judgement) => {
+      const validatorPubKey =
+        safroleState.kappa[judgement.validatorIndex].ed25519;
+      let message: Uint8Array;
+      if (judgement.validity === 0) {
+        message = new Uint8Array([
+          ...JAM_VALID,
+          ...bigintToBytes(verdict.hash, 32),
+        ]);
+      } else {
+        message = new Uint8Array([
+          ...JAM_INVALID,
+          ...bigintToBytes(verdict.hash, 32),
+        ]);
+      }
+      const signatureVerified = Ed25519.verifySignature(
+        judgement.signature,
+        validatorPubKey,
+        message,
+      );
+      if (!signatureVerified) {
+        throw new Error("judgement signature is invalid");
+      }
+    });
+  });
+  extrinsic.culprit.forEach((culprit) => {
+    const message = new Uint8Array([
+      ...JAM_GUARANTEE,
+      ...bigintToBytes(culprit.hash, 32),
+    ]);
+    const signatureVerified = Ed25519.verifySignature(
+      culprit.signature,
+      culprit.ed25519PublicKey,
+      message,
+    );
+    if (!signatureVerified) {
+      throw new Error("culprit signature is invalid");
+    }
+  });
+  extrinsic.faults.forEach((fault) => {
+    let message: Uint8Array;
+    if (fault.validity === 1) {
+      message = new Uint8Array([
+        ...JAM_VALID,
+        ...bigintToBytes(fault.hash, 32),
+      ]);
+    } else
+      message = new Uint8Array([
+        ...JAM_INVALID,
+        ...bigintToBytes(fault.hash, 32),
+      ]);
+    const signatureVerified = Ed25519.verifySignature(
+      fault.signature,
+      fault.ed25519PublicKey,
+      message,
+    );
+    if (!signatureVerified) {
+      throw new Error("fault signature is invalid");
+    }
+  });
+
   return V;
 };
 // todo: missing 111

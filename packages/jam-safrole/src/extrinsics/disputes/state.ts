@@ -8,6 +8,8 @@ import {
   assertDisputeExtrinsicValid,
   DisputeExtrinsic,
 } from "@/extrinsics/index.js";
+import { Ed25519 } from "@vekexasia/jam-crypto";
+import { SafroleState } from "@/index.js";
 
 /**
  * Section 10 of graypaper
@@ -45,10 +47,11 @@ export const DisputeState: IDisputesState = {
 };
 
 export const disputesSTF = (
+  safroleState: SafroleState,
   state: IDisputesState,
   extrinsic: DisputeExtrinsic,
 ): Posterior<IDisputesState> => {
-  const V = assertDisputeExtrinsicValid(extrinsic, state);
+  const V = assertDisputeExtrinsicValid(safroleState, extrinsic, state);
 
   const newState = {
     // (112) of the graypaper
@@ -109,6 +112,5 @@ export const disputesSTF = (
       throw new Error("culprit must be in psi_b'");
     }
   });
-  // TODO: ed25519 validate signatures of (100), (101) and (102)
   return newState;
 };
