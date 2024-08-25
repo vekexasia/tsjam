@@ -239,7 +239,6 @@ export const assertDisputeExtrinsicValid = (
         case NUMBER_OF_VALIDATORS / 3:
         case (2 * NUMBER_OF_VALIDATORS) / 3 + 1:
           return true;
-          break;
         default:
           return false;
       }
