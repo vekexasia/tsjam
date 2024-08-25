@@ -95,7 +95,9 @@ if (import.meta.vitest) {
 
   describe("rotateValidatorKeys", () => {
     beforeEach(() => {
-      vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() => 0n);
+      vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() =>
+        toTagged(0n),
+      );
     });
     afterAll(() => {
       vi.restoreAllMocks();
@@ -137,7 +139,9 @@ if (import.meta.vitest) {
         ]);
       });
       it("should assign ringroot (of gamma k ) to gamma_z'", () => {
-        vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() => 42n);
+        vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() =>
+          toTagged(42n),
+        );
         const state = mockState({
           gamma_k: [mockValidatorData({ banderSnatch: 1n })],
         });

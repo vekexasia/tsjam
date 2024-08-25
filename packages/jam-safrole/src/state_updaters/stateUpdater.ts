@@ -1,16 +1,12 @@
 import { SafroleState } from "@/index.js";
-import { Posterior, u32 } from "@vekexasia/jam-types";
+import { Posterior, toPosterior, u32 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { entropyRotationSTF, eta0STF } from "@/state_updaters/eta.js";
 import { rotateKeys } from "@/state_updaters/keys.js";
-import {
-  computeTicketIdentifiers,
-  IDisputesState,
-  TicketExtrinsics,
-  validateTicketExtrinsic,
-} from "@/extrinsics/index.js";
+import { IDisputesState, TicketExtrinsics } from "@/extrinsics/index.js";
 import { gamma_sSTF } from "@/state_updaters/gammaS.js";
-import { computePosteriorGammaA } from "@/state_updaters/gammaA.js";
+import { gamma_aSTF } from "@/state_updaters/gammaA.js";
+import { ticketExtrinsicToIdentifiersSTF } from "@/extrinsics/tickets/index.js";
 
 export const computeNewSafroleState = (
   curState: SafroleState,
@@ -55,22 +51,24 @@ export const computeNewSafroleState = (
     curState.gamma_s,
   );
 
-  // Tickets and gamma A
-  const identifiers = computeTicketIdentifiers(ticketExtrinsics);
-  const p_gamma_a = computePosteriorGammaA(
-    curState,
-    newSlot,
-    curState.tau,
-    identifiers,
+  const ticketIdentifiers = ticketExtrinsicToIdentifiersSTF.apply(
+    {
+      extrinsic: ticketExtrinsics,
+      gamma_z: curState.gamma_z,
+      gamma_a: curState.gamma_a,
+      nextTau: tauTransition.nextTau,
+      p_eta,
+    },
+    null,
   );
-  validateTicketExtrinsic(
-    ticketExtrinsics,
-    identifiers,
-    curState,
-    newSlot,
-    p_eta,
-    p_gamma_a,
+  const p_gamma_a = gamma_aSTF.apply(
+    {
+      tauTransition,
+      newIdentifiers: ticketIdentifiers,
+    },
+    curState.gamma_a,
   );
+
   const p_state: SafroleState = {
     ...curState,
     eta: p_eta,
@@ -82,5 +80,5 @@ export const computeNewSafroleState = (
     gamma_a: p_gamma_a,
     gamma_s: p_gamma_s,
   };
-  return p_state as unknown as Posterior<SafroleState>;
+  return toPosterior(p_state);
 };
