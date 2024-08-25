@@ -1,6 +1,7 @@
 import { SafroleState } from "@/index.js";
 import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 import {
+  BandersnatchKey,
   BandersnatchRingRoot,
   Tagged,
   TicketIdentifier,
@@ -56,8 +57,8 @@ export const mapTestDataToSafroleState = (testData: any): SafroleState => {
 
 const validatorEntryHexMap = (entry: ValidatorData) => {
   return {
-    bandersnatch: `0x${entry.banderSnatch.toString(16)}`,
-    ed25519: `0x${entry.ed25519.toString(16)}`,
+    bandersnatch: `0x${Buffer.from(bigintToBytes(entry.banderSnatch, 32)).toString("hex")}`,
+    ed25519: `0x${Buffer.from(bigintToBytes(entry.ed25519, 32)).toString("hex")}`,
     bls: `0x${Buffer.from(entry.blsKey).toString("hex")}`,
     metadata: `0x${Buffer.from(entry.metadata).toString("hex")}`,
   };
@@ -73,7 +74,17 @@ export const safroleStateToTestData = (state: SafroleState) => {
     gamma_s: (() => {
       if (typeof state.gamma_s[0] === "bigint") {
         return {
-          keys: state.gamma_s.map((key) => `0x${(key as bigint).toString(16)}`),
+          keys: state.gamma_s.map(
+            (key) =>
+              `0x${Buffer.from(bigintToBytes(key as BandersnatchKey, 32)).toString("hex")}`,
+          ),
+        };
+      } else {
+        return {
+          tickets: state.gamma_s.map((ticket) => ({
+            id: `0x${Buffer.from(bigintToBytes((ticket as TicketIdentifier).id, 32)).toString("hex")}`,
+            attempt: (ticket as TicketIdentifier).attempt,
+          })),
         };
       }
     })(),
