@@ -145,7 +145,7 @@ export interface DisputeExtrinsic {
  * @throws {Error} if the extrinsic is not valid
  */
 export const assertDisputeExtrinsicValid = (
-  safroleState: SafroleState,
+  kappa: SafroleState["kappa"],
   extrinsic: DisputeExtrinsic,
   currState: IDisputesState,
 ): Array<{ reportHash: Hash; votes: number }> => {
@@ -271,8 +271,7 @@ export const assertDisputeExtrinsicValid = (
   // verify all signatures
   extrinsic.verdicts.forEach((verdict) => {
     verdict.judgements.forEach((judgement) => {
-      const validatorPubKey =
-        safroleState.kappa[judgement.validatorIndex].ed25519;
+      const validatorPubKey = kappa[judgement.validatorIndex].ed25519;
       let message: Uint8Array;
       if (judgement.validity === 0) {
         message = new Uint8Array([
