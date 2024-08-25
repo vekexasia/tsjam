@@ -20,7 +20,10 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
   constructor(private subCodec: LengthDiscSubCodec<T>) {}
 
   encode(value: T, bytes: Uint8Array): number {
-    const size = (this.subCodec.length ?? this.subCodec.encodedSize)(value);
+    const size = (this.subCodec.length ?? this.subCodec.encodedSize).call(
+      this.subCodec,
+      value,
+    );
     const sizeBN = BigInt(size);
     const lengthSize = E.encodedSize(sizeBN);
     E.encode(sizeBN, bytes.subarray(0, lengthSize));
@@ -49,7 +52,12 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
     return (
       x +
       E.encodedSize(
-        BigInt((this.subCodec.length ?? this.subCodec.encodedSize)(value)),
+        BigInt(
+          (this.subCodec.length ?? this.subCodec.encodedSize).call(
+            this.subCodec,
+            value,
+          ),
+        ),
       )
     );
   }
