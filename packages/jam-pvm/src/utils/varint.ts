@@ -67,7 +67,6 @@ if (import.meta.vitest) {
     });
     it("should read a 3 byte varint with leading 1s", () => {
       const buffer = new Uint8Array([0b10001111, 0b11111110, 0b11111101]);
-      console.log(readVarIntFromBuffer(buffer, 3 as u8).toString(2));
       expect(readVarIntFromBuffer(buffer, 3 as u8)).toBe(
         0b11111111_10001111_11111110_11111101,
       );

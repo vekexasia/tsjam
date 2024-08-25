@@ -103,7 +103,6 @@ if (import.meta.vitest) {
       expect(context.instructionPointer).toBe(0);
       expect(context.memory).toBe(PVMMemory);
       expect(context.program).toBe(program);
-      console.log(context.meta.blockBeginnings);
       expect([...context.meta.ixSkips.entries()]).toEqual([
         [0, 2],
         [3, 2],
