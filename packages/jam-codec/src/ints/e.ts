@@ -1,6 +1,5 @@
 import { JamCodec } from "@/codec";
 import assert from "node:assert";
-import { LittleEndian } from "@/ints/littleEndian";
 import { E_8, E_sub } from "@/ints/E_subscr.js";
 
 /**
@@ -55,12 +54,6 @@ export const E: JamCodec<bigint> = {
       const remainder = first - (2 ** 8 - 2 ** (8 - l));
       const xMod2Pow8l = E_sub(l).decode(bytes.subarray(1, l + 1)).value;
 
-      console.log({
-        xMod2Pow8l,
-        remainder,
-        l,
-        res: xMod2Pow8l + 2n ** (8n * BigInt(l)) * BigInt(remainder),
-      });
       return {
         value: xMod2Pow8l + 2n ** (8n * BigInt(l)) * BigInt(remainder),
         readBytes: l + 1,
@@ -94,11 +87,6 @@ export const E: JamCodec<bigint> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("E", () => {
-    it("some tests", () => {
-      const b = new Uint8Array([181, 178, 44]);
-      const { value, readBytes } = E.decode(b);
-      console.log({ value, readBytes });
-    });
     it("should encode from 0 to 255", () => {
       for (let i = 0; i < 256; i++) {
         const bytes = new Uint8Array(10);
