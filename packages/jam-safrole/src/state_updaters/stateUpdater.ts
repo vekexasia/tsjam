@@ -9,7 +9,7 @@ import {
   TicketExtrinsics,
   validateTicketExtrinsic,
 } from "@/extrinsics/index.js";
-import { computePosteriorSlotKey } from "@/state_updaters/gammaS.js";
+import { gamma_sSTF } from "@/state_updaters/gammaS.js";
 import { computePosteriorGammaA } from "@/state_updaters/gammaA.js";
 
 export const computeNewSafroleState = (
@@ -44,12 +44,15 @@ export const computeNewSafroleState = (
 
   p_eta[0] = eta0STF.apply(entropy, curState.eta[0]);
 
-  const p_gamma_s = computePosteriorSlotKey(
-    newSlot,
-    curState.tau,
-    curState,
-    p_kappa,
-    p_eta,
+  const p_gamma_s = gamma_sSTF.apply(
+    {
+      tauTransition,
+      gamma_a: curState.gamma_a,
+      gamma_s: curState.gamma_s,
+      p_kappa,
+      p_eta,
+    },
+    curState.gamma_s,
   );
 
   // Tickets and gamma A
