@@ -45,9 +45,8 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
   } else {
     //return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH].id;
     // TODO: implment how to get key - see (43) in the graypaper
-    header.blockAuthorKey;
-    // return state.kappa[header.timeSlotIndex];
-    return null as unknown as BandersnatchKey;
+    const k = state.kappa[header.blockAuthorKeyIndex];
+    return k.banderSnatch;
   }
 };
 

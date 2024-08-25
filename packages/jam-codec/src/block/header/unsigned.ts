@@ -114,7 +114,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
         epochMarker: epochMarker.value,
         winningTickets: winningTickets.value, // FIXME
         judgementsMarkers: judgementMarker.value,
-        blockAuthorKey: Number(blockAuthorKey.value),
+        blockAuthorKeyIndex: toTagged(Number(blockAuthorKey.value)),
         entropySignature: entropySignature.value,
       },
       readBytes: offset + 32,
@@ -163,7 +163,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
 
     // Hk
     offset += E_2.encode(
-      BigInt(value.blockAuthorKey),
+      BigInt(value.blockAuthorKeyIndex),
       bytes.subarray(offset, offset + 2),
     );
 
