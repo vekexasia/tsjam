@@ -3,6 +3,7 @@ import { SafroleState } from "@/index.js";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
 import { isNewEra } from "@/utils.js";
+import { afterAll, beforeEach } from "vitest";
 const emptyValidatorKeys: ValidatorData = {
   banderSnatch: toTagged(0n),
   ed25519: toTagged(0n),
@@ -31,10 +32,12 @@ export const rotateValidatorKeys = (
     }
     return v;
   }) as unknown as Posterior<SafroleState["gamma_k"]>;
+
   // gamma_z is the ring root of the posterior gamma k
-  const gamma_z: SafroleState["gamma_z"] = Bandersnatch.ringRoot(
+  const gamma_z: Posterior<SafroleState["gamma_z"]> = Bandersnatch.ringRoot(
     gamma_k.map((v) => v.banderSnatch),
   );
+
   return [gamma_k, kappa, lambda, gamma_z];
 };
 
@@ -43,14 +46,14 @@ if (import.meta.vitest) {
   const { mockState, mockDisputesState, mockValidatorData } = await import(
     "../../test/mocks.js"
   );
-  type Mock = import("@vitest/spy").Mock;
 
-  // vi.mock("@vekexasia/jam-crypto", () => ({
-  //   Bandersnatch: {
-  //     ringRoot: vi.fn(),
-  //   },
-  // }));
   describe("rotateValidatorKeys", () => {
+    beforeEach(() => {
+      vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() => 0n);
+    });
+    afterAll(() => {
+      vi.restoreAllMocks();
+    });
     describe("rotation", () => {
       it("should assign yk to k'", () => {
         const r = rotateValidatorKeys(
@@ -81,7 +84,7 @@ if (import.meta.vitest) {
         expect(r[2]).toEqual([mockValidatorData({ ed25519: 2n })]);
       });
       it("should assign ringroot (of gamma k ) to gamma_z'", () => {
-        (Bandersnatch.ringRoot as Mock).mockReturnValue(42n);
+        vi.spyOn(Bandersnatch, "ringRoot").mockImplementationOnce(() => 42n);
         const r = rotateValidatorKeys(
           mockState({
             gamma_k: [mockValidatorData({ banderSnatch: 1n })],

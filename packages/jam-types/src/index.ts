@@ -73,9 +73,10 @@ export interface JamHeader {
    * @see DisputesState.psi_b
    */
   judgementsMarkers: Hash[]; // Hj
-  // todo: section 5 says it's a 32 byte hash
-  // but later Hk E Nv. so its a natural number
-  blockAuthorKey: number; // < V or < number of validators
+  // but later Hi E Nv. so its a natural number
+  // < typeof NUMBER_OF_VALIDATORS
+  blockAuthorKeyIndex: u32; // < V or < number of validators
+
   /**
    * `Hv` -
    * @see (62) in section 6.4

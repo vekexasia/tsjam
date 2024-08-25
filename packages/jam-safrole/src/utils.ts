@@ -8,7 +8,6 @@ import {
   TicketIdentifier,
 } from "@vekexasia/jam-types";
 
-console.log("ciao", EPOCH_LENGTH);
 /**
  * `m` in the graypaper
  * @param timeSlot - the time slot or `Ht` in the graypaper
@@ -46,6 +45,7 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
   } else {
     //return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH].id;
     // TODO: implment how to get key - see (43) in the graypaper
+    header.blockAuthorKey;
     // return state.kappa[header.timeSlotIndex];
     return null as unknown as BandersnatchKey;
   }

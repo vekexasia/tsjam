@@ -32,17 +32,11 @@ export const computePosteriorGammaA = (
 
 // TESTS
 if (import.meta.vitest) {
-  const { vi, describe, expect, it } = import.meta.vitest;
-  const { mockState, mockTicketIdentifier, mockHeader } = await import(
+  const { describe, expect, it } = import.meta.vitest;
+  const { mockState, mockTicketIdentifier } = await import(
     "../../test/mocks.js"
   );
-  // aaa
 
-  vi.mock("@vekexasia/jam-crypto", () => ({
-    Hashing: {
-      blake2bBuf: vi.fn((buf: Uint8Array) => buf),
-    },
-  }));
   describe("computePosteriorGammaA", () => {
     it("should add new identifiers", () => {
       const pga = computePosteriorGammaA(
@@ -68,7 +62,6 @@ if (import.meta.vitest) {
             mockTicketIdentifier({ id: 2n }),
           ],
         }),
-
         0 as u32,
         0 as u32,
         [mockTicketIdentifier({ id: 1n })],
@@ -87,8 +80,8 @@ if (import.meta.vitest) {
             ),
           ],
         }),
-        0 as u32,
         EPOCH_LENGTH as u32,
+        0 as u32,
         [mockTicketIdentifier({ id: 1n })],
       );
       expect(pga).toEqual([mockTicketIdentifier({ id: 1n })]);

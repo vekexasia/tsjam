@@ -49,7 +49,7 @@ import { TicketExtrinsics } from "@/extrinsics/index.js";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(
-      `../../jamtestvectors/safrole/${size}/${name}.json`,
+      `${__dirname}/../../../jamtestvectors/safrole/${size}/${name}.json`,
       "utf-8",
     ),
   );
@@ -60,7 +60,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       proof: hexToBytes(e.signature),
     }),
   );
-
   const postState = computeNewSafroleState(
     preState,
     test.input.slot,

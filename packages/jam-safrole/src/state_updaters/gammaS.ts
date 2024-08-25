@@ -17,8 +17,9 @@ import {
   isNewNextEra,
   slotIndex,
 } from "@/utils.js";
-import { bigintToBytes, E, E_4 } from "@vekexasia/jam-codec";
+import { bigintToBytes, E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
+import { afterEach } from "vitest";
 
 /**
  * it computes the posterior value of `gamma_s`
@@ -78,12 +79,13 @@ if (import.meta.vitest) {
   const { mockState, mockTicketIdentifier, mockValidatorData, mockHeader } =
     await import("../../test/mocks.js");
 
-  vi.spyOn(Hashing, "blake2bBuf");
-
   describe("computePosteriorSlotKey", () => {
     let state: SafroleState;
     beforeEach(() => {
       state = mockState({});
+      vi.spyOn(Hashing, "blake2bBuf").mockImplementation(
+        () => new Uint8Array(32),
+      );
     });
     describe("fallback", () => {
       let header: JamHeader;
