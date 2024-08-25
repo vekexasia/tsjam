@@ -1,5 +1,5 @@
 import { SafroleState } from "@/index.js";
-import { Posterior, toTagged, u32 } from "@vekexasia/jam-types";
+import { Posterior, u32 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import {
   computePosteriorEta0WithVRFOutput,
@@ -68,6 +68,7 @@ export const computeNewSafroleState = (
     ticketExtrinsics,
     identifiers,
     curState,
+    newSlot,
     p_eta,
     p_gamma_a,
   );

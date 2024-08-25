@@ -2,26 +2,34 @@ import { TicketExtrinsics } from "@/extrinsics/tickets/extrinsic.js";
 import {
   JAM_TICKET_SEAL,
   JAM_VALID,
+  LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
   Posterior,
   TicketIdentifier,
+  u32,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { SafroleState } from "@/index.js";
 import { bigintToBytes } from "@vekexasia/jam-codec";
+import { slotIndex } from "@/utils.js";
 
 export const validateTicketExtrinsic = (
   extrinsic: TicketExtrinsics,
   ticketIdentifiers: TicketIdentifier[], // computed with computeTicketIdentifiers
   state: SafroleState,
+  newSlotIndex: u32,
   p_eta: Posterior<SafroleState["eta"]>,
   p_gamma_a: Posterior<SafroleState["gamma_a"]>,
 ) => {
   if (extrinsic.length === 0) {
     return; // optimization
   }
-  // (75)
+  // (75) first case
+  if (slotIndex(newSlotIndex) >= LOTTERY_MAX_SLOT) {
+    throw new Error("Lottery has ended");
+  }
+  // (75) second case
   assert(
     extrinsic.length <= MAX_TICKETS_PER_BLOCK,
     "Extrinsic length must be less than 16",
