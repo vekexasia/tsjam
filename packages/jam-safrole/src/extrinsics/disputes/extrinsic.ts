@@ -69,7 +69,8 @@ export interface DisputeExtrinsic {
   >;
 
   /**
-   * proofs of misbehaviour of one or more validators to befound invalid
+   * validators that brought to chain the workreport saying it was valid by guarateeing for it
+   * this means that each .hash here should reference a verdict with validity === 0
    * they must be ordered by .ed25519PublicKey
    *
    * There are 2x entried in the culprit array for each in verdicts
@@ -99,7 +100,7 @@ export interface DisputeExtrinsic {
   }>;
 
   /**
-   * proofs of misbehaviour of one or more validators signing a judgement
+   * validators that brought to chain the workreport saying it was valid by guarateeing for it proofs of misbehaviour of one or more validators signing a judgement
    * in contraddiction with the workreport validity
    * they must be ordered by .ed25519PublicKey
    *

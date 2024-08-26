@@ -8,6 +8,7 @@ import {
   toTagged,
   ValidatorData,
 } from "@vekexasia/jam-types";
+import { IDisputesState } from "@/extrinsics/index.js";
 
 export const hexToBytes = (hex: string): Uint8Array => {
   return Buffer.from(hex.slice(2), "hex");
@@ -15,7 +16,7 @@ export const hexToBytes = (hex: string): Uint8Array => {
 export const hextToBigInt = (hex: string): bigint => {
   return bytesToBigInt(hexToBytes(hex));
 };
-const validatorEntryMap = (entry: any) => {
+export const validatorEntryMap = (entry: any) => {
   return {
     banderSnatch: hextToBigInt(entry.bandersnatch),
     ed25519: hextToBigInt(entry.ed25519),
@@ -93,5 +94,44 @@ export const safroleStateToTestData = (state: SafroleState) => {
     kappa: state.kappa.map(validatorEntryHexMap),
     lambda: state.lambda.map(validatorEntryHexMap),
     tau: state.tau,
+  };
+};
+
+export const disputesStateFromTest = (testData: {
+  psi_w: string[];
+  psi_b: string[];
+  psi_g: string[];
+  psi_o: string[];
+}): IDisputesState => {
+  return {
+    psi_w: new Set(testData.psi_w.map((item: string) => hextToBigInt(item))),
+    psi_b: new Set(testData.psi_b.map((item: string) => hextToBigInt(item))),
+    psi_g: new Set(testData.psi_g.map((item: string) => hextToBigInt(item))),
+    psi_o: new Set(testData.psi_o.map((item: string) => hextToBigInt(item))),
+  } as unknown as IDisputesState;
+};
+
+export const disputesStateToTest = (state: IDisputesState) => {
+  return {
+    psi_w: Array.from(state.psi_w)
+      .sort((a, b) => (a < b ? -1 : 1))
+      .map(
+        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
+      ),
+    psi_b: Array.from(state.psi_b)
+      .sort((a, b) => (a < b ? -1 : 1))
+      .map(
+        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
+      ),
+    psi_g: Array.from(state.psi_g)
+      .sort((a, b) => (a < b ? -1 : 1))
+      .map(
+        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
+      ),
+    psi_o: Array.from(state.psi_o)
+      .sort((a, b) => (a < b ? -1 : 1))
+      .map(
+        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
+      ),
   };
 };

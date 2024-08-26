@@ -12,6 +12,7 @@ import { DisputeExtrinsic, IDisputesState } from "@/extrinsics/index.js";
 import { Ed25519 } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
 import assert from "node:assert";
+import { epochIndex } from "@/utils.js";
 
 /**
  * Computes state transition for disputes state
@@ -20,11 +21,17 @@ export const disputesSTF = newSTF<
   IDisputesState,
   {
     kappa: SafroleState["kappa"];
+    lambda: SafroleState["lambda"];
     extrinsic: DisputeExtrinsic;
+    curTau: SafroleState["tau"];
   }
 >({
   apply(
-    input: { kappa: SafroleState["kappa"]; extrinsic: DisputeExtrinsic },
+    input: {
+      kappa: SafroleState["kappa"];
+      lambda: SafroleState["lambda"];
+      extrinsic: DisputeExtrinsic;
+    },
     curState: IDisputesState,
   ) {
     const V: Array<{ reportHash: Hash; votes: number }> =
@@ -88,6 +95,10 @@ export const disputesSTF = newSTF<
         new Uint8Array([...JAM_GUARANTEE, ...bigintToBytes(culprit.hash, 32)]),
       );
       assert(verified, "culprit signature is invalid");
+      // each culprit should reference a verdict
+      if (!input.extrinsic.verdicts.some((v) => v.hash === culprit.hash)) {
+        throw new Error("culprit.hash must reference a verdict");
+      }
     });
 
     // enforce faults keys are not in psi_o and signature is valid
@@ -109,34 +120,41 @@ export const disputesSTF = newSTF<
 
     // enforce verdicts are ordered and not duplicated by report hash
     // (103)
-    input.extrinsic.verdicts.reduce((prev, curr) => {
-      if (prev.hash >= curr.hash) {
-        throw new Error("verdicts must be ordered/not duplicated by .hash");
+    input.extrinsic.verdicts.length === 0 ||
+      input.extrinsic.verdicts.reduce((prev, curr) => {
+        if (prev.hash >= curr.hash) {
+          throw new Error("verdicts must be ordered/unique by .hash");
+        }
+        return curr;
+      });
+
+    input.extrinsic.verdicts.forEach((verdict) => {
+      if (verdict.epochIndex < epochIndex(input.curTau) - 1) {
+        throw new Error("verdicts must be for the current or previous epoch");
       }
-      return curr;
     });
 
     // enforce culprit are ordered by ed25519PublicKey
     // (104)
-    input.extrinsic.culprit.reduce((prev, curr) => {
-      if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
-        throw new Error(
-          "culprit must be ordered/not duplicated by .ed25519PublicKey",
-        );
-      }
-      return curr;
-    });
+    input.extrinsic.culprit.length === 0 ||
+      input.extrinsic.culprit.reduce((prev, curr) => {
+        if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
+          throw new Error(
+            "culprit must be ordered/unique by .ed25519PublicKey",
+          );
+        }
+        return curr;
+      });
 
     // enforce faults are ordered by ed25519PublicKey
     // (104)
-    input.extrinsic.faults.reduce((prev, curr) => {
-      if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
-        throw new Error(
-          "faults must be ordered/not duplicated by .ed25519PublicKey",
-        );
-      }
-      return curr;
-    });
+    input.extrinsic.faults.length === 0 ||
+      input.extrinsic.faults.reduce((prev, curr) => {
+        if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
+          throw new Error("faults must be ordered/unique by .ed25519PublicKey");
+        }
+        return curr;
+      });
 
     // ensure verdict report hashes are not in psi_g or psi_b or psi_w
     // aka not in the set of work reports that were judged to be valid, bad or wonky already
@@ -156,7 +174,9 @@ export const disputesSTF = newSTF<
     input.extrinsic.verdicts.forEach((verdict) => {
       verdict.judgements.reduce((prev, curr) => {
         if (prev.validatorIndex >= curr.validatorIndex) {
-          throw new Error("judgements must be ordered by .validatorIndex");
+          throw new Error(
+            "judgements must be ordered/unique by .validatorIndex",
+          );
         }
         return curr;
       });
@@ -176,7 +196,7 @@ export const disputesSTF = newSTF<
         };
       });
     if (
-      V.every((v) => {
+      !V.every((v) => {
         switch (v.votes) {
           case 0:
           case NUMBER_OF_VALIDATORS / 3:
@@ -216,10 +236,14 @@ export const disputesSTF = newSTF<
 
     // verify all signatures
     input.extrinsic.verdicts.forEach((verdict) => {
+      const validatorSet =
+        verdict.epochIndex === epochIndex(input.curTau)
+          ? input.kappa
+          : input.lambda;
       verdict.judgements.forEach((judgement) => {
-        const validatorPubKey = input.kappa[judgement.validatorIndex].ed25519;
+        const validatorPubKey = validatorSet[judgement.validatorIndex].ed25519;
         let message: Uint8Array;
-        if (judgement.validity === 0) {
+        if (judgement.validity === 1) {
           message = new Uint8Array([
             ...JAM_VALID,
             ...bigintToBytes(verdict.hash, 32),
@@ -244,22 +268,18 @@ export const disputesSTF = newSTF<
     return V;
   },
 
-  assertPStateValid(input, p_state) {
+  assertPStateValid(input, p_state, state) {
     // perform some other last checks
     // (102) of the graypaper states that faults reports should be in psi_b' if `r`
     input.extrinsic.faults.forEach(({ hash, validity, ed25519PublicKey }) => {
       if (validity == 1) {
-        if (
-          !(p_state.psi_b.has(hash) && !p_state.psi_o.has(ed25519PublicKey))
-        ) {
+        if (!(p_state.psi_b.has(hash) && !p_state.psi_g.has(hash))) {
           throw new Error(
             "with fault validity 1, the report must be in psi_b' and not in psi_o'",
           );
         }
       } else {
-        if (
-          !(!p_state.psi_b.has(hash) && p_state.psi_o.has(ed25519PublicKey))
-        ) {
+        if (!(!p_state.psi_b.has(hash) && p_state.psi_g.has(hash))) {
           throw new Error(
             "with fault validity 0, the report must NOT be in psi_b' and in psi_o'",
           );
