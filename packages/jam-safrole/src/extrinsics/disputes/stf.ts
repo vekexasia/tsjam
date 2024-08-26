@@ -23,6 +23,58 @@ export const disputesSTF = newSTF<
     extrinsic: DisputeExtrinsic;
   }
 >({
+  apply(
+    input: { kappa: SafroleState["kappa"]; extrinsic: DisputeExtrinsic },
+    curState: IDisputesState,
+  ) {
+    const V: Array<{ reportHash: Hash; votes: number }> =
+      input.extrinsic.verdicts.map((verdict) => {
+        return {
+          reportHash: verdict.hash,
+          votes: verdict.judgements.reduce(
+            (acc, curr) => acc + curr.validity,
+            0,
+          ),
+        };
+      });
+    return {
+      // (112) of the graypaper
+      psi_g: new Set([
+        ...curState.psi_g,
+        ...V.filter(
+          ({ votes }) => votes == (NUMBER_OF_VALIDATORS * 2) / 3 + 1,
+        ).map(({ reportHash }) => reportHash),
+      ]),
+
+      // (113) of the graypaper
+      psi_b: new Set([
+        ...curState.psi_b,
+        ...V.filter(({ votes }) => votes == 0).map(
+          ({ reportHash }) => reportHash,
+        ),
+      ]),
+
+      // (114) of the graypaper
+      psi_w: new Set([
+        ...curState.psi_w,
+        ...V.filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3).map(
+          ({ reportHash }) => reportHash,
+        ),
+      ]),
+
+      // (115) of the graypaper
+      psi_o: new Set([
+        ...curState.psi_o,
+        ...input.extrinsic.culprit.map(
+          ({ ed25519PublicKey }) => ed25519PublicKey,
+        ),
+        ...input.extrinsic.faults.map(
+          ({ ed25519PublicKey }) => ed25519PublicKey,
+        ),
+      ]),
+    } as Posterior<IDisputesState>;
+  },
+
   assertInputValid(input, curState) {
     // enforce culprit keys are not in psi_o and signture is valid
     // (102)
@@ -191,6 +243,7 @@ export const disputesSTF = newSTF<
 
     return V;
   },
+
   assertPStateValid(input, p_state) {
     // perform some other last checks
     // (102) of the graypaper states that faults reports should be in psi_b' if `r`
@@ -220,56 +273,6 @@ export const disputesSTF = newSTF<
         throw new Error("culprit must be in psi_b'");
       }
     });
-  },
-  apply(
-    input: { kappa: SafroleState["kappa"]; extrinsic: DisputeExtrinsic },
-    curState: IDisputesState,
-  ) {
-    const V: Array<{ reportHash: Hash; votes: number }> =
-      input.extrinsic.verdicts.map((verdict) => {
-        return {
-          reportHash: verdict.hash,
-          votes: verdict.judgements.reduce(
-            (acc, curr) => acc + curr.validity,
-            0,
-          ),
-        };
-      });
-    return {
-      // (112) of the graypaper
-      psi_g: new Set([
-        ...curState.psi_g,
-        ...V.filter(
-          ({ votes }) => votes == (NUMBER_OF_VALIDATORS * 2) / 3 + 1,
-        ).map(({ reportHash }) => reportHash),
-      ]),
-
-      // (113) of the graypaper
-      psi_b: new Set([
-        ...curState.psi_b,
-        ...V.filter(({ votes }) => votes == 0).map(
-          ({ reportHash }) => reportHash,
-        ),
-      ]),
-
-      // (114) of the graypaper
-      psi_w: new Set([
-        ...curState.psi_w,
-        ...V.filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3).map(
-          ({ reportHash }) => reportHash,
-        ),
-      ]),
-
-      // (115) of the graypaper
-      psi_o: new Set([
-        ...curState.psi_o,
-        ...input.extrinsic.culprit.map(
-          ({ ed25519PublicKey }) => ed25519PublicKey,
-        ),
-        ...input.extrinsic.faults.map(
-          ({ ed25519PublicKey }) => ed25519PublicKey,
-        ),
-      ]),
-    } as Posterior<IDisputesState>;
+    // todo: missing 111
   },
 });
