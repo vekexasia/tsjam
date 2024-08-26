@@ -102,6 +102,8 @@ export type ValidatorIndex = Tagged<
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;
+export type Dagger<T> = Tagged<T, "Dagger">;
+export type DoubleDagger<T> = Tagged<T, "DoubleDagger">;
 
 export type UnTagged<T> =
   T extends Tagged<number, never, never>
@@ -131,6 +133,16 @@ export const toTagged = <K, Tag extends PropertyKey, Metadata>(
   return value as Tagged<K, Tag, Metadata>;
 };
 
-export const toPosterior = <T>(value: T): Posterior<T> => {
+export const toDagger = <T>(value: T): Dagger<T> => {
+  return toTagged(value);
+};
+
+export const toDoubleDagger = <T>(value: Dagger<T>): DoubleDagger<T> => {
+  return toTagged(value);
+};
+
+export const toPosterior = <T>(
+  value: Dagger<T> | DoubleDagger<T> | T,
+): Posterior<T> => {
   return toTagged(value);
 };

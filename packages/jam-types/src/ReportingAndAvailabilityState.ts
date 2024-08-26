@@ -179,6 +179,15 @@ export type WorkReport = {
   results: BoundedSeq<WorkResult, 1, typeof MAXIMUM_WORK_ITEMS>;
 };
 
+/**
+ * `ρ`
+ * (118)
+ */
+export type RHO = SeqOfLength<
+  { workReport: WorkReport; reportTime: u32 } | null,
+  typeof CORES
+>;
+
 export type ReportingAndAvailabilityState = SeqOfLength<
   | undefined
   | {
