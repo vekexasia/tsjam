@@ -3,7 +3,8 @@ import {
   ED25519PrivateKey,
   ED25519Signature,
 } from "@vekexasia/jam-types";
-import { bytesToBigInt } from "@vekexasia/jam-codec";
+import sodium from "sodium-native";
+import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 
 export const Ed25519 = {
   /**
@@ -18,7 +19,11 @@ export const Ed25519 = {
     pubkey: ED25519PublicKey,
     message: Uint8Array,
   ): boolean {
-    return true; // TODO: implement
+    return sodium.crypto_sign_verify_detached(
+      Buffer.from(bigintToBytes(signature, 64)),
+      Buffer.from(message),
+      Buffer.from(bigintToBytes(pubkey, 32)),
+    );
   },
   /**
    * `E_{privkey}(message) `
@@ -26,6 +31,12 @@ export const Ed25519 = {
    * @param privkey
    */
   sign(message: Uint8Array, privkey: ED25519PrivateKey): ED25519Signature {
-    return 0n as ED25519Signature; // TODO: implement
+    const signatureBuf = Buffer.alloc(64);
+    sodium.crypto_sign_detached(
+      signatureBuf,
+      Buffer.from(message),
+      Buffer.from(bigintToBytes(privkey, 64)),
+    );
+    return bytesToBigInt(signatureBuf);
   },
 };
