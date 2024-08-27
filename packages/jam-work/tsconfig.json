@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "..",
+    "preserveSymlinks": false,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/test/*": ["./test/*"],
+      "@/*": ["./src/*"],
+      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
+      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"],
+      "@vekexasia/jam-safrole": ["../jam-safrole/dist/types/index.d.ts"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "dist/**/*"
+  ]
+}

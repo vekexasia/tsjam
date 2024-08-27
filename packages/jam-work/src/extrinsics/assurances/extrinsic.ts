@@ -14,14 +14,20 @@ import {
  */
 export type AssuranceExtrinsic = {
   /**
-   * the hash of parent header
+   * `a` the hash of parent header
    **/
   anchorHash: Hash;
+  /**
+   * `f`
+   */
   bitstring: SeqOfLength<0 | 1, typeof CORES>;
   /**
-   * the validator index assuring they're contributing to the Data availability
+   * `v` the validator index assuring they're contributing to the Data availability
    */
   validatorIndex: ValidatorIndex;
+  /**
+   * `s` the signature of the validator
+   */
   signature: ED25519Signature;
 };
 /**

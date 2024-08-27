@@ -1,0 +1,101 @@
+import {
+  CORES,
+  Dagger,
+  DoubleDagger,
+  JAM_AVAILABLE,
+  JamHeader,
+  newSTF,
+  NUMBER_OF_VALIDATORS,
+  Posterior,
+} from "@vekexasia/jam-types";
+import { RHO } from "@/rho";
+import assert from "node:assert";
+import { AssuranceExtrinsic, EA_Extrinsic } from "@/extrinsics/assurances";
+import { SafroleState } from "@vekexasia/jam-safrole";
+import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
+import { bigintToBytes, BitSequence } from "@vekexasia/jam-codec";
+
+/**
+ */
+export const RHO2DoubleDagger = newSTF<
+  Dagger<RHO>,
+  {
+    ea: EA_Extrinsic;
+    p_kappa: Posterior<SafroleState["kappa"]>;
+    hp: JamHeader["previousHash"];
+  },
+  DoubleDagger<RHO>
+>({
+  assertInputValid(input, curState) {
+    assert(
+      input.ea.length > NUMBER_OF_VALIDATORS,
+      "Extrinsic length must be less than NUMBER_OF_VALIDATORS",
+    );
+    input.ea.reduce((a, b) => {
+      assert(
+        a.validatorIndex < b.validatorIndex,
+        "EA.validatorIndex must be in ascending order",
+      );
+      return b;
+    });
+    input.ea.forEach((a) => {
+      assert(
+        a.validatorIndex < NUMBER_OF_VALIDATORS,
+        "Validator index must be less than NUMBER_OF_VALIDATORS",
+      );
+      assert(a.bitstring.length === CORES, "Bitstring length must be CORES");
+      // (130) in the greypaper
+      for (let i = 0; i < CORES; i++) {
+        if (a.bitstring[i] === 1) {
+          assert(
+            curState[i] === null,
+            "Bit may be set if the corresponding corea has a report pending availaibility",
+          );
+        }
+      }
+
+      // validate signature (128) in the greypaper
+      const encodedBitSequence = new Uint8Array(
+        BitSequence.encodedSize(a.bitstring),
+      ).fill(0);
+      BitSequence.encode(a.bitstring, encodedBitSequence);
+      const signatureValid = Ed25519.verifySignature(
+        a.signature,
+        input.p_kappa[a.validatorIndex].ed25519,
+        new Uint8Array([
+          ...JAM_AVAILABLE,
+          ...Hashing.blake2bBuf(
+            new Uint8Array([
+              ...bigintToBytes(input.hp, 32),
+              ...encodedBitSequence,
+            ]),
+          ),
+        ]),
+      );
+      assert(signatureValid, "Signature for EA extrinsic must be valid");
+    });
+  },
+  assertPStateValid() {
+  },
+  apply(
+    input: {
+      ea: EA_Extrinsic;
+      p_kappa: Posterior<SafroleState["kappa"]>;
+      hp: JamHeader["previousHash"];
+    },
+    curState: Dagger<RHO>,
+  ) {
+    // (132)
+    const newState = [...curState] as DoubleDagger<RHO>;
+    for (let i = 0; i < CORES; i++) {
+      const availabilitySum = input.ea.reduce(
+        (a: number, b: AssuranceExtrinsic) => a + b.bitstring[i],
+        0,
+      );
+      if (availabilitySum <= (NUMBER_OF_VALIDATORS * 2) / 3) {
+        newState[i] = null;
+      }
+    }
+    return newState;
+  },
+});

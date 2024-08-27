@@ -11,7 +11,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 cd packages;
-ordered_packages=("jam-types" "jam-codec" "jam-crypto" "jam-safrole")
+ordered_packages=("jam-types" "jam-codec" "jam-crypto" "jam-safrole" "jam-work")
 
 for package in "${ordered_packages[@]}"; do
   cd "$package"
