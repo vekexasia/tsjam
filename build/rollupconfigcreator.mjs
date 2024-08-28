@@ -60,7 +60,7 @@ export const rollupCreate = (conf, typescriptOptions= null) => {
       })(),
       typescript({
         tsconfig: './tsconfig.json',
-        include: ['../../build/types/globals.d.ts', 'src/**/*.ts'],
+        include: ['../../build/types/globals.d.ts', 'src/**/*.ts', 'test/**/*.ts'],
         ...(typescriptOptions || {})
       }),
 
