@@ -7,33 +7,41 @@ import {
   NUMBER_OF_VALIDATORS,
   Posterior,
   SeqOfLength,
+  Tagged,
   toPosterior,
   toTagged,
   u32,
   VALIDATOR_CORE_ROTATION,
-  ValidatorData,
 } from "@vekexasia/jam-types";
 import {
-  epochIndex,
   IDisputesState,
   PHI_FN,
   SafroleState,
   slotIndex,
   TauTransition,
 } from "@vekexasia/jam-safrole";
-import { FisherYates, FisherYatesH } from "@vekexasia/jam-crypto";
+import { FisherYatesH } from "@vekexasia/jam-crypto";
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it
  * section 11.3
  */
 export type GuarantorsAssignment = {
+  /**
+   * `c` - the core index
+   */
   validatorsAssignedCore: SeqOfLength<CoreIndex, typeof NUMBER_OF_VALIDATORS>;
+
+  /**
+   * `v` - the validators' public key
+   */
   validatorsED22519Key: SeqOfLength<
     ED25519PublicKey,
     typeof NUMBER_OF_VALIDATORS
   >;
 };
+
+export type G_Star = Tagged<GuarantorsAssignment, "G*">;
 
 /**
  * (134) in the graypaper
@@ -94,7 +102,7 @@ export const G_STAR_fn = (input: {
       p_tau: input.nextTau,
       validatorKeys: input.p_kappa,
       p_psi_o: input.p_psi_o,
-    });
+    }) as G_Star;
   } else {
     return G_fn({
       entropy: input.p_eta3,
@@ -102,7 +110,7 @@ export const G_STAR_fn = (input: {
       p_tau: input.nextTau,
       validatorKeys: input.p_lambda,
       p_psi_o: input.p_psi_o,
-    });
+    }) as G_Star;
   }
 };
 
@@ -127,4 +135,18 @@ export const GuarantorsAssignment_stf = newSTF<
       p_psi_o: input.p_psi_o,
     }),
   );
+});
+
+export const GuarantorsAssignment_stf_STAR = newSTF<
+  G_Star,
+  {
+    p_eta2: Posterior<SafroleState["eta"][2]>;
+    p_eta3: Posterior<SafroleState["eta"][3]>;
+    p_kappa: Posterior<SafroleState["kappa"]>;
+    p_lambda: Posterior<SafroleState["lambda"]>;
+    p_psi_o: Posterior<IDisputesState["psi_o"]>;
+    nextTau: TauTransition["nextTau"];
+  }
+>((input) => {
+  return toPosterior(G_STAR_fn(input));
 });

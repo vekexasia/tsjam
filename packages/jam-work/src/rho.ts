@@ -1,15 +1,5 @@
-import {
-  CORES,
-  newSTF,
-  SeqOfLength,
-  u32,
-  Dagger,
-  Hash,
-  toDagger,
-  toTagged,
-} from "@vekexasia/jam-types";
+import { CORES, SeqOfLength, u32 } from "@vekexasia/jam-types";
 import { WorkReport } from "@/type";
-import assert from "node:assert";
 
 /**
  * `ρ`

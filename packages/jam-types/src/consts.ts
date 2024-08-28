@@ -22,6 +22,10 @@ export const EPOCH_LENGTH = 600;
 export const MAX_TICKETS_PER_BLOCK = 16;
 
 /**
+ * `U` in the paper
+ */
+export const WORK_TIMEOUT = 5;
+/**
  * referred as constant `R` in the paper
  */
 export const VALIDATOR_CORE_ROTATION = 10;
