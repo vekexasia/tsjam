@@ -1,11 +1,13 @@
-import { SafroleState } from "@/index.js";
+import { IDisputesState, SafroleState } from "@/index.js";
 import {
   BandersnatchKey,
   EPOCH_LENGTH,
   JamHeader,
   OpaqueHash,
+  Posterior,
   SeqOfLength,
   TicketIdentifier,
+  ValidatorData,
 } from "@vekexasia/jam-types";
 
 /**
@@ -65,6 +67,23 @@ export const isNewEra = (newSlotIndex: number, curSlotIndex: number) => {
  */
 export const isNewNextEra = (newSlotIndex: number, curSlotIndex: number) => {
   return epochIndex(newSlotIndex) === epochIndex(curSlotIndex) + 1;
+};
+
+export const PHI_FN = <T extends ValidatorData[]>(
+  validatorKeys: ValidatorData[],
+  p_psi_o: Posterior<IDisputesState["psi_o"]>,
+): T => {
+  return validatorKeys.map((v) => {
+    if (p_psi_o.has(v.ed25519)) {
+      return {
+        banderSnatch: 0n as BandersnatchKey,
+        ed25519: 0n as ValidatorData["ed25519"],
+        blsKey: new Uint8Array(144) as ValidatorData["blsKey"],
+        metadata: new Uint8Array(128) as ValidatorData["metadata"],
+      };
+    }
+    return v;
+  }) as T;
 };
 
 if (import.meta.vitest) {

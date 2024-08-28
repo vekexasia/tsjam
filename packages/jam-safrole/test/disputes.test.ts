@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => {
     MAX_TICKETS_PER_BLOCK: 16,
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
-    toTagged: (a) => a,
+    toTagged: (a: any) => a,
   };
 });
 vi.mock("@vekexasia/jam-types", async (importOriginal) => {

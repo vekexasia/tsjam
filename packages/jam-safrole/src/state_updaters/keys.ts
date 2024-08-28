@@ -1,22 +1,10 @@
-import {
-  Posterior,
-  toTagged,
-  toPosterior,
-  ValidatorData,
-  newSTF,
-} from "@vekexasia/jam-types";
-import { SafroleState } from "@/index.js";
+import { Posterior, toTagged, toPosterior, newSTF } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
 import { afterAll, beforeEach } from "vitest";
 import { TauTransition } from "@/state_updaters/types.js";
-import { isNewEra } from "@/utils.js";
-const emptyValidatorKeys: ValidatorData = {
-  banderSnatch: toTagged(0n),
-  ed25519: toTagged(0n),
-  blsKey: 0n as unknown as ValidatorData["blsKey"],
-  metadata: new Uint8Array(128) as unknown as ValidatorData["metadata"],
-};
+import { isNewEra, PHI_FN } from "@/utils.js";
+import { SafroleState } from "@/state.js";
 
 // 58 and 59 in the graypaper
 export const rotateLambdaSTF = newSTF<
@@ -36,16 +24,13 @@ export const rotateKappaSTF = newSTF<
 );
 export const rotateGammaKSTF = newSTF<
   SafroleState["gamma_k"],
-  { iota: SafroleState["iota"]; p_disputes: Posterior<IDisputesState> }
+  { iota: SafroleState["iota"]; p_psi_o: Posterior<IDisputesState["psi_o"]> }
 >(
   (input): Posterior<SafroleState["gamma_k"]> =>
     // we empty the validator keys which are in ψo
-    input.iota.map((v) => {
-      if (input.p_disputes.psi_o.has(v.ed25519)) {
-        return emptyValidatorKeys;
-      }
-      return v;
-    }) as unknown as Posterior<SafroleState["gamma_k"]>,
+    PHI_FN(input.iota, input.p_psi_o) as unknown as Posterior<
+      SafroleState["gamma_k"]
+    >,
 );
 export const rotateGammaZSTF = newSTF<
   SafroleState["gamma_z"],
@@ -62,7 +47,7 @@ export const rotateKeys = newSTF<
     SafroleState["gamma_z"],
   ],
   {
-    p_disputes: Posterior<IDisputesState>;
+    p_psi_o: Posterior<IDisputesState["psi_o"]>;
     iota: SafroleState["iota"];
     tau: TauTransition;
   },
@@ -72,9 +57,9 @@ export const rotateKeys = newSTF<
     Posterior<SafroleState["gamma_k"]>,
     Posterior<SafroleState["gamma_z"]>,
   ]
->(({ p_disputes, iota, tau }, [lambda, kappa, gamma_k, gamma_z]) => {
+>(({ p_psi_o, iota, tau }, [lambda, kappa, gamma_k, gamma_z]) => {
   if (isNewEra(tau.nextTau, tau.curTau)) {
-    const p_gamma_k = rotateGammaKSTF.apply({ iota, p_disputes }, gamma_k);
+    const p_gamma_k = rotateGammaKSTF.apply({ iota, p_psi_o }, gamma_k);
     const p_kappa = rotateKappaSTF.apply(gamma_k, kappa);
     const p_lambda = rotateLambdaSTF.apply(kappa, lambda);
     const p_gamma_z = rotateGammaZSTF.apply(p_gamma_k, gamma_z);
@@ -87,6 +72,7 @@ export const rotateKeys = newSTF<
     toPosterior(gamma_z),
   ];
 });
+
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;
   const { mockState, mockDisputesState, mockValidatorData } = await import(
@@ -130,11 +116,21 @@ if (import.meta.vitest) {
           psi_o: new Set([1n]) as unknown as IDisputesState["psi_o"],
         }) as unknown as Posterior<IDisputesState>;
         const r = rotateGammaKSTF.apply(
-          { iota: state.iota, p_disputes },
+          {
+            iota: state.iota,
+            p_psi_o: p_disputes.psi_o as unknown as Posterior<
+              IDisputesState["psi_o"]
+            >,
+          },
           state.gamma_k,
         );
         expect(r).toEqual([
-          emptyValidatorKeys,
+          {
+            banderSnatch: 0n,
+            ed25519: 0n,
+            blsKey: new Uint8Array(144).fill(0),
+            metadata: new Uint8Array(128).fill(0),
+          },
           mockValidatorData({ ed25519: 2n }),
         ]);
       });

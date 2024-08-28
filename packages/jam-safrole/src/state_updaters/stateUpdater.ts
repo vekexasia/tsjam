@@ -26,12 +26,7 @@ export const computeNewSafroleState = (
   const p_eta = entropyRotationSTF.apply(tauTransition, curState.eta);
   const [p_lambda, p_kappa, p_gamma_k, p_gamma_z] = rotateKeys.apply(
     {
-      p_disputes: {
-        psi_g: new Set(),
-        psi_o: new Set(),
-        psi_w: new Set(),
-        psi_b: new Set(),
-      } as Posterior<IDisputesState>,
+      p_psi_o: new Set() as Posterior<IDisputesState["psi_o"]>,
       iota: curState.iota,
       tau: tauTransition,
     },
