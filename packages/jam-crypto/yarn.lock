@@ -80,6 +80,7 @@ __metadata:
     "@types/blake2b-wasm": "npm:^2"
     "@types/sodium-native": "npm:^2.3.9"
     blake2b-wasm: "npm:^2.4.0"
+    fast-shuffle: "npm:^6.1.0"
     sodium-native: "npm:^4.1.1"
   languageName: unknown
   linkType: soft
@@ -297,6 +298,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-shuffle@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "fast-shuffle@npm:6.1.0"
+  dependencies:
+    pcg: "npm:1.0.0"
+  checksum: 10c0/af8d4465eba907b0563bef2155dfb7f869cf63d48e8540314bf066e679852b9d2484a9d0a34eaef49fc987cfd4dcdc54aae93580c1471c4b4ebfd205cdd77a7c
+  languageName: node
+  linkType: hard
+
 "foreground-child@npm:^3.1.0":
   version: 3.3.0
   resolution: "foreground-child@npm:3.3.0"
@@ -453,6 +463,13 @@ __metadata:
   version: 1.1.0
   resolution: "jsbn@npm:1.1.0"
   checksum: 10c0/4f907fb78d7b712e11dea8c165fe0921f81a657d3443dde75359ed52eb2b5d33ce6773d97985a089f09a65edd80b11cb75c767b57ba47391fee4c969f7215c96
+  languageName: node
+  linkType: hard
+
+"long@npm:5.2.3":
+  version: 5.2.3
+  resolution: "long@npm:5.2.3"
+  checksum: 10c0/6a0da658f5ef683b90330b1af76f06790c623e148222da9d75b60e266bbf88f803232dd21464575681638894a84091616e7f89557aa087fd14116c0f4e0e43d9
   languageName: node
   linkType: hard
 
@@ -681,6 +698,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pcg@npm:1.0.0":
+  version: 1.0.0
+  resolution: "pcg@npm:1.0.0"
+  dependencies:
+    long: "npm:5.2.3"
+    ramda: "npm:0.29.0"
+  checksum: 10c0/af9dde758d5a9f79d15aadd15aef69840e4dbb5c2f96675557fbabedc6383b063a9a10cbaefb5beb7c0ac07dab47e476ae714b84ff08e96091bbb37520151f90
+  languageName: node
+  linkType: hard
+
 "proc-log@npm:^4.1.0, proc-log@npm:^4.2.0":
   version: 4.2.0
   resolution: "proc-log@npm:4.2.0"
@@ -695,6 +722,13 @@ __metadata:
     err-code: "npm:^2.0.2"
     retry: "npm:^0.12.0"
   checksum: 10c0/9c7045a1a2928094b5b9b15336dcd2a7b1c052f674550df63cc3f36cd44028e5080448175b6f6ca32b642de81150f5e7b1a98b728f15cb069f2dd60ac2616b96
+  languageName: node
+  linkType: hard
+
+"ramda@npm:0.29.0":
+  version: 0.29.0
+  resolution: "ramda@npm:0.29.0"
+  checksum: 10c0/b00eaaf1c62b06a99affa1d583e256bd65ad27ab9d0ef512f55d7d93b842e7cd244a4a09179f61fdd8548362e409323867a2b0477cbd0626b5644eb6ac7c53da
   languageName: node
   linkType: hard
 

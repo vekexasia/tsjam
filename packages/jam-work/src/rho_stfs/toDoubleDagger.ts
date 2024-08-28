@@ -16,6 +16,8 @@ import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
 import { bigintToBytes, BitSequence } from "@vekexasia/jam-codec";
 
 /**
+ * converts Dagger<RHO> to DoubleDagger<RHO>
+ * (131) & (132) in the greypaper
  */
 export const RHO2DoubleDagger = newSTF<
   Dagger<RHO>,
@@ -75,8 +77,7 @@ export const RHO2DoubleDagger = newSTF<
       assert(signatureValid, "Signature for EA extrinsic must be valid");
     });
   },
-  assertPStateValid() {
-  },
+  assertPStateValid() {},
   apply(
     input: {
       ea: EA_Extrinsic;

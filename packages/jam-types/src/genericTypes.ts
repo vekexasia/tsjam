@@ -41,7 +41,7 @@ export type BandersnatchPrivKey = Tagged<
   "BandersnatchPrivKey"
 >;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
-export type Blake2bHash = Tagged<BigIntBytes<32>, "Blake2bHash">;
+export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
 export type MerkeTreeRoot = Tagged<BigIntBytes<32>, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
@@ -77,7 +77,7 @@ export type UpToSeq<
 export type SeqOfLength<
   T,
   L extends number,
-  Tag extends string = `UpToSeq${L}`,
+  Tag extends string = `Seq${L}`,
 > = Tagged<T[], Tag, { length: L }>;
 
 export type MinSeqLength<

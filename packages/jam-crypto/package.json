@@ -29,6 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "blake2b-wasm": "^2.4.0",
+    "fast-shuffle": "^6.1.0",
     "sodium-native": "^4.1.1"
   },
   "devDependencies": {

@@ -20,6 +20,11 @@ export const EPOCH_LENGTH = 600;
  * referred as constant `K` in the paper
  */
 export const MAX_TICKETS_PER_BLOCK = 16;
+
+/**
+ * referred as constant `R` in the paper
+ */
+export const VALIDATOR_CORE_ROTATION = 10;
 /**
  * referred as capital i in the paper
  */
