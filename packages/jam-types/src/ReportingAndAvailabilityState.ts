@@ -135,6 +135,7 @@ export type WorkResult = {
   /**
    * `l` - The hash of the payload (l) which produced this result
    * in the refine stage
+   * @see WorkItem.payload
    */
   payloadHash: Hash;
   /**

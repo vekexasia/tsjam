@@ -1,4 +1,5 @@
-import { Hash, ServiceIndex, u32, u64 } from "@/genericTypes.js";
+import { Hash, ServiceIndex, u32, u64, UpToSeq } from "@/genericTypes.js";
+import { MAX_WORKPACKAGE_ENTRIES } from "@/consts.js";
 
 /**
  * Identified by `I` set
@@ -29,10 +30,19 @@ export interface WorkItem {
   /**
    * `i`
    */
-  importedDataSegments: Array<{
-    root: Hash;
-    index: u32;
-  }>;
+  importedDataSegments: UpToSeq<
+    {
+      /**
+       * merkle tree root
+       */
+      root: Hash;
+      /**
+       * index in the merkle tree
+       */
+      index: u32;
+    },
+    typeof MAX_WORKPACKAGE_ENTRIES
+  >;
 
   /**
    * `x`
@@ -44,6 +54,7 @@ export interface WorkItem {
 
   /**
    * `e`
+   * - should be < 2^11
    */
   numberExportedSegments: u32;
 }

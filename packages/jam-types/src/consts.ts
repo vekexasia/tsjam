@@ -33,6 +33,12 @@ export const VALIDATOR_CORE_ROTATION = 10;
  * referred as capital i in the paper
  */
 export const MAXIMUM_WORK_ITEMS = 4;
+
+/**
+ * `Wm` in the paper
+ * 2^11
+ */
+export const MAX_WORKPACKAGE_ENTRIES = 2048;
 /**
  * defined in timeslots
  * @see L in the paper
