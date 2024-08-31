@@ -2,20 +2,12 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
-  JAM_GUARANTEE,
-  JAM_INVALID,
-  JAM_VALID,
   MinSeqLength,
-  NUMBER_OF_VALIDATORS,
   SeqOfLength,
   u32,
   ValidatorIndex,
 } from "@vekexasia/jam-types";
 import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
-import { IDisputesState } from "@/extrinsics/disputes/state.js";
-import { SafroleState } from "@/index.js";
-import { Ed25519 } from "@vekexasia/jam-crypto";
-import { bigintToBytes } from "@vekexasia/jam-codec";
 /**
  * Identified ad E<sub>d</sub> in the paper
  */
