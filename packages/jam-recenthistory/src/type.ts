@@ -2,6 +2,7 @@ import { Hash, MerkeTreeRoot, UpToSeq } from "@vekexasia/jam-types";
 import { CORES } from "@vekexasia/jam-types";
 /*
  * @see section 7
+ * (80)
  */
 export interface RecentHistoryItem {
   /**
@@ -15,7 +16,7 @@ export interface RecentHistoryItem {
   /**
    * `b`
    */
-  accumulationResultMMR: Array<Hash | null>;
+  accumulationResultMMR: Array<Hash | undefined>;
   /**
    * `p` the hash of each work report that made into the block. there is no more than the number of
    * cores C which is 341

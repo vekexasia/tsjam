@@ -12,33 +12,28 @@ import {
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
  */
-export const appendMMR = <T extends Hash>(
+export const appendMMR = <T>(
   peeks: Array<T | undefined>,
   newPeek: T,
-  hashFn: (x: Uint8Array) => T,
+  hashFn: (rn: T, l: T) => T,
 ): Array<T | undefined> => {
   return p(peeks, newPeek, 0, hashFn);
 };
 
-const p = <T extends Hash>(
+const p = <T>(
   peeks: Array<T | undefined>,
   newEl: T,
   pos: number,
-  hashFn: (x: Uint8Array) => T,
+  hashFn: (rn: T, l: T) => T,
 ): Array<T | undefined> => {
   if (pos >= peeks.length) {
     return peeks.slice().concat(newEl);
-  } else if (pos < peeks.length && peeks[pos] === null) {
+  } else if (pos < peeks.length && typeof peeks[pos] === "undefined") {
     return replace(peeks, pos, newEl);
   } else {
     return p(
       replace(peeks, pos, undefined),
-      hashFn(
-        new Uint8Array([
-          ...bigintToBytes(peeks[pos]!, 32),
-          ...bigintToBytes(newEl, 32),
-        ]),
-      ),
+      hashFn(peeks[pos]!, newEl),
       pos + 1,
       hashFn,
     );

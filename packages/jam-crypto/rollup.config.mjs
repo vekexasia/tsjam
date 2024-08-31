@@ -3,7 +3,7 @@ import {rollupCreate, rollupTypes} from "../../build/rollupconfigcreator.mjs";
 
 const tsOptions = {compilerOptions: {rootDir: '.'}};
 
-const external = ['@vekexasia/jam-codec', '@vekexasia/jam-types', 'blake2', "@vekexasia/jam-crypto-napi", "sodium-native"];
+const external = ['@vekexasia/jam-codec', '@vekexasia/jam-types', 'blake2', "@vekexasia/jam-crypto-napi", "sodium-native", "keccak256"];
 
 /**
  * @type {import('rollup').RollupOptions[]}
