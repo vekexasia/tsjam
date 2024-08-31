@@ -1,16 +1,26 @@
 import { Hash, UpToSeq } from "@/genericTypes.js";
+import { CORES } from "@/consts.js";
 /*
  * @see section 7
  */
 export interface RecentHistoryItem {
+  /**
+   * `h`
+   */
   recentBlockHash: Hash;
+  /**
+   * `s`
+   */
   stateRoot: Hash;
+  /**
+   * `b`
+   */
   accumulationResultMMR: Array<Hash | null>;
   /**
    * the hash of each work report that made into the block. there is no more than the number of
    * cores C which is 341
    */
-  workReports: UpToSeq<Hash, 341>;
+  workReports: UpToSeq<Hash, typeof CORES>;
 }
 
 /**
