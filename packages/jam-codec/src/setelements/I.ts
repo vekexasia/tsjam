@@ -110,7 +110,8 @@ export const IMemberCodec: JamCodec<WorkItem> = {
     offset += payload.length;
     const gasLimit = E_8.decode(bytes.subarray(offset)).value;
     offset += 8;
-    const importedDataSegments = xiCodec.decode(bytes.subarray(offset)).value;
+    const importedDataSegments = xiCodec.decode(bytes.subarray(offset))
+      .value as WorkItem["importedDataSegments"];
     offset += xiCodec.encodedSize(importedDataSegments);
     const exportedDataSegments = xxCodec.decode(bytes.subarray(offset)).value;
     offset += xxCodec.encodedSize(exportedDataSegments);

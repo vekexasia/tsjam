@@ -6,11 +6,11 @@ import { HashCodec } from "@/identity.js";
  * OptCodec is a codec that allows for optional values
  * it is defined in 277 in graypaper and identified with ¿x
  */
-export class Optional<T> implements JamCodec<T | undefined> {
+export class Optional<T> implements JamCodec<T | undefined | null> {
   constructor(private codec: JamCodec<T>) {}
 
-  encode(value: T | undefined, bytes: Uint8Array): number {
-    if (typeof value === "undefined") {
+  encode(value: T | undefined | null, bytes: Uint8Array): number {
+    if (typeof value === "undefined" || value === null) {
       bytes[0] = 0;
     } else {
       bytes[0] = 1;
@@ -28,8 +28,8 @@ export class Optional<T> implements JamCodec<T | undefined> {
     }
   }
 
-  encodedSize(value: T | undefined): number {
-    if (value === undefined) {
+  encodedSize(value: T | undefined | null): number {
+    if (typeof value === "undefined" || value === null) {
       return 1;
     }
     return this.codec.encodedSize(value) + 1;

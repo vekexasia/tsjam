@@ -81,6 +81,7 @@ export function buildKeyValueCodec<
 ): JamCodec<X> {
   return new LengthDiscriminator(new KeyValue(keyCodec, valueCodec, xBuilder));
 }
+
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;
@@ -102,8 +103,9 @@ if (import.meta.vitest) {
         E,
         (keys, values) => new B(keys, values),
       );
-      const bytes = new Uint8Array(10);
-      codec.encode(new B([1n, 2n], [3n, 4n]), bytes);
+      const b = new B([1n, 2n], [3n, 4n]);
+      const bytes = new Uint8Array(codec.encodedSize(b));
+      codec.encode(b, bytes);
       expect(codec.decode(bytes).value).toEqual(new B([1n, 2n], [3n, 4n]));
     });
     it.skip("should allow for different key and value types", () => {});
