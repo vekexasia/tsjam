@@ -8,8 +8,8 @@
     "paths": {
       "@/test/*": ["./test/*"],
       "@/*": ["./src/*"],
-      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
-      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"]
+      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-merklization": ["../jam-merklization/dist/types/index.d.ts"]
     }
   },
   "include": [

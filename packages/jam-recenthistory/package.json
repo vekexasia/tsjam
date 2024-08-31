@@ -1,7 +1,7 @@
 {
-  "name": "@vekexasia/jam-merklization",
+  "name": "@vekexasia/jam-recenthistory",
   "version": "1.0.0",
-  "description": "MMR and merkle trees used in JAM",
+  "description": "Recent History state",
   "scripts": {
     "build": "rm -rf dist/; rollup --config rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
