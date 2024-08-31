@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
 import {
-  hexToBytes,
   hextToBigInt,
   validatorEntryMap,
   disputesStateFromTest,

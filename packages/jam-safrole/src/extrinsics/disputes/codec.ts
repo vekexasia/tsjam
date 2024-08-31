@@ -1,9 +1,9 @@
 import {
-  bigintToBytes,
   bytesToBigInt,
   createArrayLengthDiscriminator,
   E,
   E_2,
+  E_4,
   E_sub,
   Ed25519PubkeyCodec,
   Ed25519SignatureCodec,
@@ -20,7 +20,6 @@ import {
   ValidatorIndex,
 } from "@vekexasia/jam-types";
 import { hextToBigInt } from "@/test/utils.js";
-import { vi } from "vitest";
 
 const singleJudgementCodec: JamCodec<
   DisputeExtrinsic["verdicts"][0]["judgements"][0]
@@ -66,20 +65,17 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
   encode(value: DisputeExtrinsic["verdicts"][0], bytes: Uint8Array): number {
     let offset = HashCodec.encode(value.hash, bytes.subarray(0, 32));
 
-    offset += E.encode(BigInt(value.epochIndex), bytes.subarray(offset));
-    for (let i = 0; i < 1 /*(NUMBER_OF_VALIDATORS * 2) / 3 + 1*/; i++) {
-      console.log(value.judgements[i]);
-      const preoffset = offset;
+    offset += E_4.encode(
+      BigInt(value.epochIndex),
+      bytes.subarray(offset, offset + 4),
+    );
+    for (let i = 0; i < (NUMBER_OF_VALIDATORS * 2) / 3 + 1; i++) {
       offset += singleJudgementCodec.encode(
         value.judgements[i],
         bytes.subarray(offset),
       );
-      console.log(
-        Buffer.from(bytes.subarray(preoffset, offset)).toString("hex"),
-      );
     }
 
-    console.log(Buffer.from(bytes.subarray(0, offset)).toString("hex"));
     return offset;
   },
   decode(bytes: Uint8Array): {
@@ -88,10 +84,10 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
   } {
     const hash = HashCodec.decode(bytes);
     let offset = hash.readBytes;
-    const epochIndex = E.decode(bytes.subarray(offset));
+    const epochIndex = E_4.decode(bytes.subarray(offset, offset + 4));
     offset += epochIndex.readBytes;
     const judgements = [];
-    for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
+    for (let i = 0; i < (NUMBER_OF_VALIDATORS * 2) / 3 + 1; i++) {
       const judgement = singleJudgementCodec.decode(bytes.subarray(offset));
       judgements.push(judgement.value);
       offset += judgement.readBytes;
@@ -108,12 +104,9 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
   encodedSize(value: DisputeExtrinsic["verdicts"][0]): number {
     return (
       32 +
-      E.encodedSize(BigInt(value.epochIndex)) +
-      ((singleJudgementCodec.encodedSize(value.judgements[0]) *
-        NUMBER_OF_VALIDATORS) /
-        2) *
-        3 +
-      1
+      E_4.encodedSize(BigInt(value.epochIndex)) +
+      singleJudgementCodec.encodedSize(value.judgements[0]) *
+        ((NUMBER_OF_VALIDATORS * 2) / 3 + 1)
     );
   },
 });
@@ -185,9 +178,9 @@ const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"][0]>({
 });
 export const codecEd: JamCodec<DisputeExtrinsic> = {
   encode(value: DisputeExtrinsic, bytes: Uint8Array): number {
-    const offset = jCodec.encode(value.verdicts, bytes);
-    // offset += cCodec.encode(value.culprit, bytes.subarray(offset));
-    // offset += fCodec.encode(value.faults, bytes.subarray(offset));
+    let offset = jCodec.encode(value.verdicts, bytes);
+    offset += cCodec.encode(value.culprit, bytes.subarray(offset));
+    offset += fCodec.encode(value.faults, bytes.subarray(offset));
     return offset;
   },
   decode(bytes: Uint8Array): { value: DisputeExtrinsic; readBytes: number } {
@@ -213,33 +206,29 @@ export const codecEd: JamCodec<DisputeExtrinsic> = {
     );
   },
 };
-// TODO: Add Test for Codec
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
 
-  const mocks = vi.hoisted(() => {
-    return {
-      NUMBER_OF_VALIDATORS: 6,
-    };
-  });
-  vi.mock("@vekexasia/jam-types", async (importOriginal) => {
-    const toRet = {
-      ...(await importOriginal<typeof import("@vekexasia/jam-types")>()),
-      ...mocks,
-    };
-    Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
-      get() {
-        return mocks.NUMBER_OF_VALIDATORS;
-      },
-    });
-    return toRet;
-  });
+if (import.meta.vitest) {
+  const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
+  const fs = await import("fs");
+  const types = await import("@vekexasia/jam-types");
+
+  const path = await import("path");
   describe("codecED", () => {
-    console.log(import.meta);
-    const bin = fs.readFileSync("./test/fixtures/disputes_extrinsic.bin");
+    beforeAll(() => {
+      vi.spyOn(types, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(6 as any);
+    });
+
+    const bin = fs.readFileSync(
+      path.resolve(__dirname, "../../../test/fixtures/disputes_extrinsic.bin"),
+    );
     const json = JSON.parse(
-      fs.readFileSync("./test/fixtures/disputes_extrinsic.json", "utf8"),
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../../../test/fixtures/disputes_extrinsic.json",
+        ),
+        "utf8",
+      ),
     );
     it("disputes_extrinsic.json encoded should match disputes_extrinsic.bin", () => {
       const ed: DisputeExtrinsic = {
@@ -268,9 +257,11 @@ if (import.meta.vitest) {
       };
       const b = new Uint8Array(bin.length);
       codecEd.encode(ed, b);
-      console.log(Buffer.from(bin).toString("hex"));
-      console.log(Buffer.from(b).toString("hex"));
+      expect(codecEd.encodedSize(ed)).toBe(bin.length);
       expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+      // check decode now
+      const x = codecEd.decode(b);
+      expect(x.value.verdicts).toEqual(ed.verdicts);
     });
   });
 }

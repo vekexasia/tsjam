@@ -207,7 +207,10 @@ export const disputesSTF = newSTF<
         }
       })
     ) {
-      throw new Error("judgements must be 0 or 1/3 or 2/3+1 of NUM_VALIDATORS");
+      throw new Error(
+        "judgements must be 0 or 1/3 or 2/3+1 of NUM_VALIDATORS" +
+          NUMBER_OF_VALIDATORS,
+      );
     }
 
     const negativeVerdicts = V.filter((v) => v.votes === 0);
