@@ -10,7 +10,7 @@ export const createArrayLengthDiscriminator = <T>(
   return new LengthDiscriminator<T[]>({
     encode: (value, bytes) => {
       return value.reduce(
-        (acc, item) => singleItemCodec.encode(item, bytes.subarray(acc)),
+        (acc, item) => acc + singleItemCodec.encode(item, bytes.subarray(acc)),
         0,
       );
     },
