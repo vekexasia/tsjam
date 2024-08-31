@@ -22,6 +22,7 @@ export default defineConfig({
       "@/test": new URL('./test/', import.meta.url).pathname,
       "@/": new URL('./src/', import.meta.url).pathname,
       "@vekexasia/jam-types": new URL('../jam-types/', import.meta.url).pathname,
+      "@vekexasia/jam-codec": new URL('../jam-codec/', import.meta.url).pathname,
     }
   }
 });

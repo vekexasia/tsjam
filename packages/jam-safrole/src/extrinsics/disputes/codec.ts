@@ -262,6 +262,8 @@ if (import.meta.vitest) {
       // check decode now
       const x = codecEd.decode(b);
       expect(x.value.verdicts).toEqual(ed.verdicts);
+      expect(x.value.culprit).toEqual(ed.culprit);
+      expect(x.value.faults).toEqual(ed.faults);
     });
   });
 }

@@ -10,6 +10,8 @@ import {
   HashCodec,
   createArrayLengthDiscriminator,
   Ed25519SignatureCodec,
+  bytesToBigInt,
+  E_2,
 } from "@vekexasia/jam-codec";
 import { ValidatorIndex } from "@vekexasia/jam-types";
 
@@ -21,7 +23,7 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
       bytes.subarray(offset, offset + 32),
     );
     offset += BitSequence.encode(value.bitstring, bytes.subarray(offset));
-    offset += E.encode(
+    offset += E_2.encode(
       BigInt(value.validatorIndex),
       bytes.subarray(offset, offset + 2),
     );
@@ -37,8 +39,9 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   } {
     const anchorHash = HashCodec.decode(bytes.subarray(0, 32));
     const bitstring = BitSequence.decode(bytes.subarray(anchorHash.readBytes));
+
     const validatorIndex = Number(
-      E.decode(
+      E_2.decode(
         bytes.subarray(
           anchorHash.readBytes + bitstring.readBytes,
           2 + anchorHash.readBytes + bitstring.readBytes,
@@ -66,3 +69,55 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
 export const codecEa = createArrayLengthDiscriminator(
   singleExtrinsicCodec,
 ) as unknown as JamCodec<EA_Extrinsic>;
+
+if (import.meta.vitest) {
+  const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
+  const fs = await import("fs");
+  const types = await import("@vekexasia/jam-types");
+
+  const path = await import("path");
+  describe("codecEa", () => {
+    const bin = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../../../test/fixtures/assurances_extrinsic.bin",
+      ),
+    );
+    const json = JSON.parse(
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../../../test/fixtures/assurances_extrinsic.json",
+        ),
+        "utf8",
+      ),
+    );
+    const hexToBytes = (hex: string): Uint8Array => {
+      return Buffer.from(hex.slice(2), "hex");
+    };
+    const hextToBigInt = (hex: string): bigint => {
+      return bytesToBigInt(hexToBytes(hex));
+    };
+    it.fails(
+      "disputes_extrinsic.json encoded should match disputes_extrinsic.bin",
+      () => {
+        const ea: EA_Extrinsic = json.map((e: any) => ({
+          anchorHash: hextToBigInt(e.anchor),
+          // bitstring: [0, 0, 0, 0, 0, 0, 0, 1] as AssuranceExtrinsic["bitstring"],
+          bitstring: [1] as AssuranceExtrinsic["bitstring"],
+          validatorIndex: e.validator_index,
+          signature: hextToBigInt(
+            e.signature,
+          ) as AssuranceExtrinsic["signature"],
+        }));
+        const b = new Uint8Array(bin.length);
+        expect(codecEa.encodedSize(ea)).toBe(bin.length);
+        codecEa.encode(ea, b);
+        expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+        // check decode now
+        const x = codecEa.decode(b);
+        expect(x.value).toEqual(ea);
+      },
+    );
+  });
+}
