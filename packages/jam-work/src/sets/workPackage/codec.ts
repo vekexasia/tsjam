@@ -1,13 +1,17 @@
-import { JamCodec } from "@/codec.js";
-import { ServiceIndex, WorkItem, WorkPackage } from "@vekexasia/jam-types";
-import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { E_4 } from "@/ints/E_subscr.js";
-import { HashCodec } from "@/identity.js";
-import { XMemberCodec } from "@/setelements/X.js";
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { IMemberCodec } from "@/setelements/I.js";
+import {
+  createArrayLengthDiscriminator,
+  E_4,
+  HashCodec,
+  JamCodec,
+  LengthDiscrimantedIdentity,
+} from "@vekexasia/jam-codec";
+import { WorkItem } from "@/workItem.js";
+import { WorkPackage } from "@/sets/workPackage/type.js";
+import { ServiceIndex } from "@vekexasia/jam-types";
+import { WorkItemCodec } from "@/sets/workItem/codec.js";
+import { RefinementContextCodec } from "@/sets/refinementContext/codec.js";
 
-const xiCodec = createArrayLengthDiscriminator<WorkItem>(IMemberCodec);
+const xiCodec = createArrayLengthDiscriminator<WorkItem>(WorkItemCodec);
 export const PMemberCodec: JamCodec<WorkPackage> = {
   encode(value: WorkPackage, bytes: Uint8Array): number {
     let offset = LengthDiscrimantedIdentity.encode(
@@ -23,7 +27,10 @@ export const PMemberCodec: JamCodec<WorkPackage> = {
       value.parametrizationBlob,
       bytes.subarray(offset),
     );
-    offset += XMemberCodec.encode(value.context, bytes.subarray(offset));
+    offset += RefinementContextCodec.encode(
+      value.context,
+      bytes.subarray(offset),
+    );
 
     offset += xiCodec.encode(value.workItems, bytes.subarray(offset));
     return offset;
@@ -42,7 +49,7 @@ export const PMemberCodec: JamCodec<WorkPackage> = {
       bytes.subarray(offset),
     );
     offset += parametrizationBlob.readBytes;
-    const context = XMemberCodec.decode(bytes.subarray(offset));
+    const context = RefinementContextCodec.decode(bytes.subarray(offset));
     offset += context.readBytes;
     const workItems = xiCodec.decode(bytes.subarray(offset));
     offset += workItems.readBytes;
@@ -64,7 +71,7 @@ export const PMemberCodec: JamCodec<WorkPackage> = {
       E_4.encodedSize(BigInt(value.serviceIndex)) +
       HashCodec.encodedSize(value.authorizationCodeHash) +
       LengthDiscrimantedIdentity.encodedSize(value.parametrizationBlob) +
-      XMemberCodec.encodedSize(value.context) +
+      RefinementContextCodec.encodedSize(value.context) +
       xiCodec.encodedSize(value.workItems)
     );
   },

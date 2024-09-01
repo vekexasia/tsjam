@@ -10,15 +10,12 @@ import {
   MAXIMUM_AGE_LOOKUP_ANCHOR,
 } from "@vekexasia/jam-types";
 import { RHO } from "@/rho.js";
-import {
-  EG_Extrinsic,
-  SafroleState,
-  TauTransition,
-} from "@vekexasia/jam-safrole";
+import { SafroleState, TauTransition } from "@vekexasia/jam-safrole";
 import assert from "node:assert";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
-import { WMemberCodec } from "@vekexasia/jam-codec";
 import { G_Star, GuarantorsAssignment } from "@/garantors.js";
+import { EG_Extrinsic } from "@/extrinsics/index.js";
+import { WorkReportCodec } from "@/sets/index.js";
 
 export const RHO_toPosterior = newSTF<
   DoubleDagger<RHO>,
@@ -100,9 +97,9 @@ export const RHO_toPosterior = newSTF<
 
       // check signature (139)
       const workReportBuf = new Uint8Array(
-        WMemberCodec.encodedSize(workReport),
+        WorkReportCodec.encodedSize(workReport),
       );
-      WMemberCodec.encode(workReport, workReportBuf);
+      WorkReportCodec.encode(workReport, workReportBuf);
       const wrh = Hashing.blake2bBuf(workReportBuf);
 
       const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);

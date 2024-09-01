@@ -1,28 +1,36 @@
-import { JamCodec } from "@/codec.js";
-import { CoreIndex, WorkReport } from "@vekexasia/jam-types";
-import { HashCodec } from "@/identity.js";
-import { E } from "@/ints/e.js";
-import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { XMemberCodec } from "@/setelements/X.js";
-import { SMemberCodec } from "@/setelements/S.js";
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { LMemberCodec } from "@/setelements/L.js";
+import {
+  createArrayLengthDiscriminator,
+  E_2,
+  HashCodec,
+  JamCodec,
+  LengthDiscrimantedIdentity,
+} from "@vekexasia/jam-codec";
+import { WorkResultCodec } from "@/sets/workResult/codec.js";
+import { WorkReport } from "@/sets/workReport/type.js";
+import { RefinementContextCodec } from "@/sets/refinementContext/codec.js";
+import { CoreIndex } from "@vekexasia/jam-types";
+import { AvailabilityCodec } from "@/sets/availabilitySpec/codec.js";
 
-const resultsCodec = createArrayLengthDiscriminator(LMemberCodec);
-export const WMemberCodec: JamCodec<WorkReport> = {
+const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
+export const WorkReportCodec: JamCodec<WorkReport> = {
   encode(value: WorkReport, bytes: Uint8Array): number {
-    let offset = HashCodec.encode(value.authorizerHash, bytes);
-    offset += E.encode(BigInt(value.coreIndex), bytes.subarray(offset));
+    console.log("son qua dentro", value, bytes);
+
+    let offset = HashCodec.encode(value.authorizerHash, bytes.subarray(0, 32));
+    offset += E_2.encode(
+      BigInt(value.coreIndex),
+      bytes.subarray(offset, offset + 2),
+    );
     offset += LengthDiscrimantedIdentity.encode(
       value.authorizerOutput,
       bytes.subarray(offset),
     );
 
-    offset += XMemberCodec.encode(
+    offset += RefinementContextCodec.encode(
       value.refinementContext,
       bytes.subarray(offset),
     );
-    offset += SMemberCodec.encode(
+    offset += AvailabilityCodec.encode(
       value.workPackageSpecification,
       bytes.subarray(offset),
     );
@@ -33,15 +41,17 @@ export const WMemberCodec: JamCodec<WorkReport> = {
     let offset = 0;
     const authorizerHash = HashCodec.decode(bytes.subarray(offset));
     offset += authorizerHash.readBytes;
-    const coreIndex = E.decode(bytes.subarray(offset));
+    const coreIndex = E_2.decode(bytes.subarray(offset));
     offset += coreIndex.readBytes;
     const authorizerOutput = LengthDiscrimantedIdentity.decode(
       bytes.subarray(offset),
     );
     offset += authorizerOutput.readBytes;
-    const refinementContext = XMemberCodec.decode(bytes.subarray(offset));
+    const refinementContext = RefinementContextCodec.decode(
+      bytes.subarray(offset),
+    );
     offset += refinementContext.readBytes;
-    const workPackageSpecification = SMemberCodec.decode(
+    const workPackageSpecification = AvailabilityCodec.decode(
       bytes.subarray(offset),
     );
     offset += workPackageSpecification.readBytes;
@@ -62,10 +72,10 @@ export const WMemberCodec: JamCodec<WorkReport> = {
   encodedSize(value: WorkReport): number {
     return (
       HashCodec.encodedSize(value.authorizerHash) +
-      E.encodedSize(BigInt(value.coreIndex)) +
+      E_2.encodedSize(BigInt(value.coreIndex)) +
       LengthDiscrimantedIdentity.encodedSize(value.authorizerOutput) +
-      XMemberCodec.encodedSize(value.refinementContext) +
-      SMemberCodec.encodedSize(value.workPackageSpecification) +
+      RefinementContextCodec.encodedSize(value.refinementContext) +
+      AvailabilityCodec.encodedSize(value.workPackageSpecification) +
       resultsCodec.encodedSize(value.results)
     );
   },

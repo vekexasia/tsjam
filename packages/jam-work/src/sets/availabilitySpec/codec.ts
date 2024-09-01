@@ -1,9 +1,12 @@
-import { JamCodec } from "@/codec.js";
-import { AvailabilitySpecification } from "@vekexasia/jam-types";
-import { HashCodec } from "@/identity.js";
-import { E_4 } from "@/ints/E_subscr.js";
+import { E_4, HashCodec, JamCodec } from "@vekexasia/jam-codec";
+import { AvailabilitySpecification } from "@/sets/availabilitySpec/type.js";
+import { WorkPackageHash } from "@vekexasia/jam-types";
 
-export const SMemberCodec: JamCodec<AvailabilitySpecification> = {
+/**
+ *
+ * `S` set member codec
+ */
+export const AvailabilityCodec: JamCodec<AvailabilitySpecification> = {
   encode(value: AvailabilitySpecification, bytes: Uint8Array): number {
     let offset = HashCodec.encode(value.workPackageHash, bytes.subarray(0, 32));
     offset += E_4.encode(
@@ -27,7 +30,7 @@ export const SMemberCodec: JamCodec<AvailabilitySpecification> = {
     let offset = 0;
     const workPackageHash = HashCodec.decode(
       bytes.subarray(offset, offset + 32),
-    ).value;
+    ).value as WorkPackageHash;
     offset += 32;
     const bundleLength = Number(
       E_4.decode(bytes.subarray(offset, offset + 4)).value,
@@ -51,7 +54,7 @@ export const SMemberCodec: JamCodec<AvailabilitySpecification> = {
       readBytes: offset,
     };
   },
-  encodedSize(value: AvailabilitySpecification): number {
+  encodedSize(): number {
     return 32 + 4 + 32 + 32;
   },
 };

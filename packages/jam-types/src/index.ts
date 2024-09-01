@@ -2,7 +2,6 @@
 import {
   BandersnatchKey,
   BandersnatchSignature,
-  ED25519Signature,
   Hash,
   MerkeTreeRoot,
   OpaqueHash,
@@ -96,8 +95,5 @@ export * from "./JamBlock.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
 export * from "./consts.js";
-export * from "./ReportingAndAvailabilityState.js";
-export * from "./workItem.js";
-export * from "./workPackage.js";
 export * from "./Ticket.js";
 export * from "./STF.js";

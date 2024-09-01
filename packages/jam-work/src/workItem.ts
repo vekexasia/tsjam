@@ -1,5 +1,11 @@
-import { Hash, ServiceIndex, u32, u64, UpToSeq } from "@/genericTypes.js";
-import { MAX_WORKPACKAGE_ENTRIES } from "@/consts.js";
+import {
+  Hash,
+  MAX_WORKPACKAGE_ENTRIES,
+  ServiceIndex,
+  u32,
+  u64,
+  UpToSeq,
+} from "@vekexasia/jam-types";
 
 /**
  * Identified by `I` set

@@ -5,20 +5,19 @@ import {
   newSTF,
   Posterior,
   ServiceIndex,
+  WorkPackageHash,
 } from "@vekexasia/jam-types";
-import { RecentHistory } from "@/type.js";
+import { RecentHistory, RecentHistoryItem } from "@/type.js";
 import {
   appendMMR,
   wellBalancedBinaryMerkleRoot,
 } from "@vekexasia/jam-merklization";
 import {
-  bigintToBytes,
   bigintToExistingBytes,
   bytesToBigInt,
   E_4,
 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
-import { EG_Extrinsic } from "@vekexasia/jam-work";
 import { SIZE_OF_RECENT_HISTORY } from "@/consts.js";
 
 export const calculateAccumulateRoot = (
@@ -37,13 +36,6 @@ export const calculateAccumulateRoot = (
   return r;
 };
 
-export const fromEGToWorkReports = (
-  EG: EG_Extrinsic,
-): RecentHistory["0"]["workReports"] => {
-  return EG.map(
-    (e) => e.workReport.workPackageSpecification.workPackageHash,
-  ) as RecentHistory["0"]["workReports"];
-};
 /**
  * see (82) (162) (163)
  */
@@ -53,7 +45,7 @@ export const recentHistoryToPosterior = newSTF<
     // the result of accummulation merkle tree build
     accumulateRoot: MerkeTreeRoot;
     headerHash: Hash;
-    EG: EG_Extrinsic;
+    workPackageHashes: WorkPackageHash[];
   },
   Posterior<RecentHistory>
 >((input, curState) => {
@@ -77,7 +69,8 @@ export const recentHistoryToPosterior = newSTF<
     accumulationResultMMR: b,
     headerHash: input.headerHash,
     stateRoot: 0n as MerkeTreeRoot,
-    workReports: fromEGToWorkReports(input.EG),
+    reportedPackages:
+      input.workPackageHashes as RecentHistoryItem["reportedPackages"],
   });
 
   if (toRet.length > SIZE_OF_RECENT_HISTORY) {

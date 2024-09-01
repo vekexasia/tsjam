@@ -1,4 +1,3 @@
-import { WorkReport } from "@/type";
 import {
   BoundedSeq,
   CORES,
@@ -7,6 +6,7 @@ import {
   UpToSeq,
   ValidatorIndex,
 } from "@vekexasia/jam-types";
+import { WorkReport } from "@/sets/index.js";
 
 /**
  * Report of newly completed workload whose accuracy is guaranteed by specific validators.

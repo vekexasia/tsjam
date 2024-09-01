@@ -2,7 +2,7 @@ import typescript from '@rollup/plugin-typescript'
 import {rollupCreate, rollupTypes} from "../../build/rollupconfigcreator.mjs";
 
 const tsOptions = {compilerOptions: {rootDir: '.'}};
-const externals = ['@vekexasia/jam-types', '@vekexasia/jam-codec'];
+const externals = ['@vekexasia/jam-types', '@vekexasia/jam-codec', "vitest"];
 /**
  * @type {import('rollup').RollupOptions[]}
  */

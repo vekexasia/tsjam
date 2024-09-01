@@ -1,4 +1,9 @@
-import { Hash, MerkeTreeRoot, UpToSeq } from "@vekexasia/jam-types";
+import {
+  Hash,
+  MerkeTreeRoot,
+  UpToSeq,
+  WorkPackageHash,
+} from "@vekexasia/jam-types";
 import { CORES } from "@vekexasia/jam-types";
 /*
  * @see section 7
@@ -21,7 +26,7 @@ export interface RecentHistoryItem {
    * `p` the hash of each work report that made into the block. there is no more than the number of
    * cores C which is 341
    */
-  workReports: UpToSeq<Hash, typeof CORES>;
+  reportedPackages: UpToSeq<WorkPackageHash, typeof CORES>;
 }
 
 /**

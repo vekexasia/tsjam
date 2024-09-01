@@ -1,0 +1,41 @@
+import { Hash, u32 } from "@vekexasia/jam-types";
+
+/**
+ * gives a snapshotof what was the situation when the work report was created
+ * defined by `X` set
+ * @see section 11.1.2
+ */
+export type RefinementContext = {
+  // first block of the snapshot
+  anchor: {
+    /**
+     * `a` header hash
+     */
+    headerHash: Hash;
+    /**
+     * `s`
+     */
+    posteriorStateRoot: Hash;
+    /**
+     * `b`
+     */
+    posteriorBeefyRoot: Hash;
+  };
+  // second block of the snapshot
+  lookupAnchor: {
+    /**
+     * `l`
+     */
+    headerHash: Hash;
+    /**
+     * `t`
+     */
+    timeSlot: u32;
+  };
+  /**
+   * `p`
+   * it may define a required "parent" work package
+   * some kind of dependency of the work package
+   */
+  requiredWorkPackage?: Hash;
+};

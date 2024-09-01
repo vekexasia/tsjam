@@ -1,10 +1,9 @@
 import { beforeEach, describe, it, expect } from "vitest";
 import { RecentHistory, RecentHistoryItem } from "@/type.js";
 import { bytesToBigInt } from "@vekexasia/jam-codec";
-import { EG_Extrinsic } from "@vekexasia/jam-work";
 import { recentHistoryToDagger } from "@/stfs/toDagger.js";
 import { recentHistoryToPosterior } from "@/stfs/toPosterior.js";
-import { Hash, MerkeTreeRoot } from "@vekexasia/jam-types";
+import { Hash, MerkeTreeRoot, WorkPackageHash } from "@vekexasia/jam-types";
 
 export const hexToBytes = (hex: string): Uint8Array => {
   return Buffer.from(hex.slice(2), "hex");
@@ -23,7 +22,7 @@ const testToState = (item: any): RecentHistoryItem => {
     }),
     headerHash: hextToBigInt(item.header_hash),
     stateRoot: hextToBigInt(item.state_root),
-    workReports: item.reported.map(hextToBigInt),
+    reportedPackages: item.reported.map(hextToBigInt),
   };
 };
 
@@ -36,19 +35,9 @@ describe("recent-history", () => {
       headerHash: hextToBigInt(tst.input.header_hash) as Hash,
       Hr: hextToBigInt(tst.input.parent_state_root) as MerkeTreeRoot,
       accumulateRoot: hextToBigInt(tst.input.accumulate_root) as MerkeTreeRoot,
-      EG: tst.input.work_packages
-        .map((x: string) => {
-          return hextToBigInt(x);
-        })
-        .map((x: bigint) => {
-          return {
-            workReport: {
-              workPackageSpecification: {
-                workPackageHash: x,
-              },
-            },
-          };
-        }) as EG_Extrinsic,
+      workPackageHashes: tst.input.work_packages.map((x: string) => {
+        return hextToBigInt(x);
+      }) as WorkPackageHash[],
     };
 
     const expected = recentHistoryToDagger.apply({ hr: inputData.Hr }, preBeta);

@@ -1,9 +1,14 @@
-import { JamCodec } from "@/codec.js";
-import { Hash, WorkItem, u32 } from "@vekexasia/jam-types";
-import { E_2, E_4, E_8 } from "@/ints/E_subscr.js";
-import { HashCodec } from "@/identity.js";
-import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import {
+  createArrayLengthDiscriminator,
+  E_2,
+  E_4,
+  E_8,
+  HashCodec,
+  JamCodec,
+  LengthDiscrimantedIdentity,
+} from "@vekexasia/jam-codec";
+import { u32 } from "@vekexasia/jam-types";
+import { WorkItem } from "@/sets/workItem/type.js";
 
 const xxCodec = createArrayLengthDiscriminator<
   WorkItem["exportedDataSegments"][0]
@@ -74,7 +79,7 @@ const xiCodec = createArrayLengthDiscriminator<
 /**
  * @see Appendix C formula (288)
  */
-export const IMemberCodec: JamCodec<WorkItem> = {
+export const WorkItemCodec: JamCodec<WorkItem> = {
   encode(value: WorkItem, bytes: Uint8Array): number {
     let offset = E_4.encode(BigInt(value.serviceIndex), bytes);
     offset += HashCodec.encode(value.codeHash, bytes.subarray(offset));

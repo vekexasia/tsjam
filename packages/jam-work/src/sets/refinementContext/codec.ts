@@ -1,14 +1,12 @@
-import { JamCodec } from "@/codec.js";
-import { RefinementContext, u32 } from "@vekexasia/jam-types";
-import { E_4 } from "@/ints/E_subscr.js";
-import { OptHashCodec } from "@/optional.js";
-import { HashCodec } from "@/identity.js";
+import { E_4, HashCodec, JamCodec, OptHashCodec } from "@vekexasia/jam-codec";
+import { u32 } from "@vekexasia/jam-types";
+import { RefinementContext } from "@/sets/refinementContext/type.js";
 
 /**
  * Appendix C formula (283)
  * it defines codec for the RefinementContext or member of `X` set
  */
-export const XMemberCodec: JamCodec<RefinementContext> = {
+export const RefinementContextCodec: JamCodec<RefinementContext> = {
   encode(value: RefinementContext, bytes: Uint8Array): number {
     let offset = HashCodec.encode(
       value.anchor.headerHash,
