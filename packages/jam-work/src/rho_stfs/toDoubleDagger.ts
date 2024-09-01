@@ -4,16 +4,16 @@ import {
   DoubleDagger,
   JAM_AVAILABLE,
   JamHeader,
-  newSTF,
   NUMBER_OF_VALIDATORS,
   Posterior,
+  newSTF,
 } from "@vekexasia/jam-types";
 import { RHO } from "@/rho";
 import assert from "node:assert";
 import { AssuranceExtrinsic, EA_Extrinsic } from "@/extrinsics/assurances";
 import { SafroleState } from "@vekexasia/jam-safrole";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
-import { bigintToBytes, BitSequence } from "@vekexasia/jam-codec";
+import { BitSequence, bigintToBytes } from "@vekexasia/jam-codec";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>

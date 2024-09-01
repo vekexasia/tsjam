@@ -4,11 +4,11 @@ import {
   EPOCH_LENGTH,
   JamHeader,
   LOTTERY_MAX_SLOT,
-  newSTF,
   NUMBER_OF_VALIDATORS,
   Posterior,
   SeqOfLength,
   TicketIdentifier,
+  newSTF,
   toPosterior,
   toTagged,
   u32,
@@ -19,7 +19,7 @@ import {
   isNewNextEra,
   slotIndex,
 } from "@/utils.js";
-import { bigintToBytes, E_4 } from "@vekexasia/jam-codec";
+import { E_4, bigintToBytes } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { TauTransition } from "@/state_updaters/types.js";
 

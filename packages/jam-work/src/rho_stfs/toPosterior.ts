@@ -1,13 +1,13 @@
 import {
-  DoubleDagger,
-  Posterior,
-  newSTF,
   CORES,
-  NUMBER_OF_VALIDATORS,
+  DoubleDagger,
   JAM_GUARANTEE,
+  MAXIMUM_AGE_LOOKUP_ANCHOR,
+  NUMBER_OF_VALIDATORS,
+  Posterior,
   VALIDATOR_CORE_ROTATION,
   WORK_TIMEOUT,
-  MAXIMUM_AGE_LOOKUP_ANCHOR,
+  newSTF,
 } from "@vekexasia/jam-types";
 import { RHO } from "@/rho.js";
 import { SafroleState, TauTransition } from "@vekexasia/jam-safrole";

@@ -24,7 +24,7 @@ export const LittleEndian: JamCodec<bigint> = {
       readBytes: bytes.length, // when this method is being called we know the length
     };
   },
-  encodedSize: (value: bigint): number => {
+  encodedSize: (): number => {
     throw new Error("Not implemented");
   },
 };

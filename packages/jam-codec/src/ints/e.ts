@@ -91,7 +91,7 @@ if (import.meta.vitest) {
       for (let i = 0; i < 256; i++) {
         const bytes = new Uint8Array(10);
         E.encode(BigInt(i), bytes);
-        const { value: decoded, readBytes } = E.decode(bytes);
+        const { value: decoded } = E.decode(bytes);
         expect(decoded).toBe(BigInt(i));
       }
     });

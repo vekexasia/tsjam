@@ -1,4 +1,4 @@
-import { Posterior, toTagged, newSTF } from "@vekexasia/jam-types";
+import { Posterior, newSTF, toTagged } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";

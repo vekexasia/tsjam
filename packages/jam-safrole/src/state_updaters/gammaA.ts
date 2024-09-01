@@ -1,9 +1,9 @@
 import { SafroleState } from "@/index.js";
 import {
   EPOCH_LENGTH,
-  newSTF,
   Posterior,
   TicketIdentifier,
+  newSTF,
   u32,
 } from "@vekexasia/jam-types";
 import { isNewEra } from "@/utils.js";

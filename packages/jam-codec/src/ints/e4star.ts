@@ -35,7 +35,7 @@ export const E4star: JamCodec<bigint> = {
       };
     }
   },
-  encodedSize: (value: bigint): number => {
+  encodedSize: (): number => {
     throw new Error("Not implemented");
   },
 };

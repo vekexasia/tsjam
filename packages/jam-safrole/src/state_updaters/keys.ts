@@ -1,9 +1,9 @@
-import { Posterior, toTagged, toPosterior, newSTF } from "@vekexasia/jam-types";
+import { Posterior, newSTF, toPosterior, toTagged } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { IDisputesState } from "@/extrinsics/index.js";
 import { afterAll, beforeEach } from "vitest";
 import { TauTransition } from "@/state_updaters/types.js";
-import { isNewEra, PHI_FN } from "@/utils.js";
+import { PHI_FN, isNewEra } from "@/utils.js";
 import { SafroleState } from "@/state.js";
 
 // 58 and 59 in the graypaper

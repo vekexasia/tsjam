@@ -2,10 +2,10 @@ import {
   Dagger,
   Hash,
   MerkeTreeRoot,
-  newSTF,
   Posterior,
   ServiceIndex,
   WorkPackageHash,
+  newSTF,
 } from "@vekexasia/jam-types";
 import { RecentHistory, RecentHistoryItem } from "@/type.js";
 import {
@@ -13,9 +13,9 @@ import {
   wellBalancedBinaryMerkleRoot,
 } from "@vekexasia/jam-merklization";
 import {
+  E_4,
   bigintToExistingBytes,
   bytesToBigInt,
-  E_4,
 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { SIZE_OF_RECENT_HISTORY } from "@/consts.js";
