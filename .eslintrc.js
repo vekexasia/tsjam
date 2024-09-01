@@ -1,36 +1,43 @@
 module.exports = {
-  plugins: ['eslint-plugin-tsdoc'],
-  "env": {
-    "browser": true,
-    "es2020": true,
-    "node": true
+  plugins: ["eslint-plugin-tsdoc"],
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
   },
-  "ignorePatterns": ["**/dist/**/*"],
-  "extends": [
+  ignorePatterns: ["**/dist/**/*"],
+  extends: [
     "eslint:recommended",
     "@vue/eslint-config-typescript/recommended",
     "@vue/eslint-config-prettier",
   ],
-  "overrides": [
+  overrides: [
     {
-      "env": {
-        "node": true
+      env: {
+        node: true,
       },
-      "files": [
-        ".eslintrc.{js,cjs}"
-      ],
-      "parserOptions": {
-        "sourceType": "script"
-      }
-    }
+      files: [".eslintrc.{js,cjs}"],
+      parserOptions: {
+        sourceType: "script",
+      },
+    },
   ],
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module",
-    "project": "./tsconfig.json"
-
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+    project: "./tsconfig.json",
   },
   rules: {
-    'tsdoc/syntax': 'warn'
-  }
-}
+    "tsdoc/syntax": "warn",
+    "sort-imports": [
+      "error",
+      {
+        ignoreCase: false,
+        ignoreDeclarationSort: false,
+        ignoreMemberSort: false,
+        memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
+        allowSeparatedGroups: false,
+      },
+    ],
+  },
+};
