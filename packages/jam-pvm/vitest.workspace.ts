@@ -5,9 +5,7 @@ export default defineWorkspace([
   {
     extends: path.join(__dirname, "vitest.config.mts"),
     test: {
-      include: ["test/*.test.ts"],
-      environment: "node",
-      name: "node-polyfill",
+      name: "jam-pvm",
     },
   },
 ]);
