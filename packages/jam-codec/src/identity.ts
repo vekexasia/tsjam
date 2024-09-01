@@ -34,7 +34,7 @@ const GenericBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
   encode(value: K, bytes: Uint8Array): number {
     assert.ok(
       bytes.length === num,
-      `GenericBytesBigIntCodec: invalid length. Expected ${num} bytes`,
+      `GenericBytesBigIntCodec: invalid length. Expected ${num} bytes, was ${bytes.length}`,
     );
     bigintToExistingBytes(value, bytes);
     return num;

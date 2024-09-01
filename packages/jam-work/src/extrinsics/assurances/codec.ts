@@ -108,7 +108,7 @@ if (import.meta.vitest) {
     beforeAll(() => {
       vi.spyOn(types, "CORES", "get").mockReturnValue(2 as any);
     });
-    it("disputes_extrinsic.json encoded should match disputes_extrinsic.bin", () => {
+    it("assurances_extrinsic.json encoded should match assurances_extrinsic.bin", () => {
       const ea: EA_Extrinsic = json.map((e: any) => ({
         anchorHash: hextToBigInt(e.anchor),
         // bitstring: [0, 0, 0, 0, 0, 0, 0, 1] as AssuranceExtrinsic["bitstring"],
