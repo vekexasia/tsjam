@@ -29,24 +29,22 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
     return offset;
   },
   decode(bytes: Uint8Array): { value: WorkOutput; readBytes: number } {
-    const encodedValue = E.decode(bytes);
-    if (encodedValue.value === 0n) {
-      return LengthDiscrimantedIdentity.decode(
-        bytes.subarray(encodedValue.readBytes),
-      );
+    if (bytes[0] === 0) {
+      const r = LengthDiscrimantedIdentity.decode(bytes.subarray(1));
+      return { value: r.value, readBytes: r.readBytes + 1 };
     }
-    switch (encodedValue.value) {
-      case 1n:
-        return { value: WorkError.OutOfGas, readBytes: encodedValue.readBytes };
-      case 2n:
+    switch (bytes[0]) {
+      case 1:
+        return { value: WorkError.OutOfGas, readBytes: 1 };
+      case 2:
         return {
           value: WorkError.UnexpectedTermination,
-          readBytes: encodedValue.readBytes,
+          readBytes: 1,
         };
-      case 3n:
-        return { value: WorkError.Bad, readBytes: encodedValue.readBytes };
-      case 4n:
-        return { value: WorkError.Big, readBytes: encodedValue.readBytes };
+      case 3:
+        return { value: WorkError.Bad, readBytes: 1 };
+      case 4:
+        return { value: WorkError.Big, readBytes: 1 };
     }
     throw new Error("Invalid value");
   },

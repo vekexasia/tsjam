@@ -1,10 +1,10 @@
 import {
-  bytesToBigInt,
-  createArrayLengthDiscriminator,
   E_2,
   HashCodec,
   JamCodec,
   LengthDiscrimantedIdentity,
+  bytesToBigInt,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { WorkResultCodec } from "@/sets/workResult/codec.js";
 import { WorkReport } from "@/sets/workReport/type.js";
@@ -16,44 +16,69 @@ import { WorkError, WorkResult } from "@/sets/index.js";
 const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
 export const WorkReportCodec: JamCodec<WorkReport> = {
   encode(value: WorkReport, bytes: Uint8Array): number {
-    let offset = HashCodec.encode(value.authorizerHash, bytes.subarray(0, 32));
-    offset += E_2.encode(
-      BigInt(value.coreIndex),
-      bytes.subarray(offset, offset + 2),
+    // s
+    let offset = AvailabilityCodec.encode(
+      value.workPackageSpecification,
+      bytes,
     );
-    offset += LengthDiscrimantedIdentity.encode(
-      value.authorizerOutput,
-      bytes.subarray(offset),
-    );
+
+    // x
     offset += RefinementContextCodec.encode(
       value.refinementContext,
       bytes.subarray(offset),
     );
-    offset += AvailabilityCodec.encode(
-      value.workPackageSpecification,
+
+    // c
+    offset += E_2.encode(
+      BigInt(value.coreIndex),
+      bytes.subarray(offset, offset + 2),
+    );
+
+    // a
+    offset += HashCodec.encode(
+      value.authorizerHash,
+      bytes.subarray(offset, offset + 32),
+    );
+
+    // o
+    offset += LengthDiscrimantedIdentity.encode(
+      value.authorizerOutput,
       bytes.subarray(offset),
     );
+
+    // r
     offset += resultsCodec.encode(value.results, bytes.subarray(offset));
     return offset;
   },
   decode(bytes: Uint8Array): { value: WorkReport; readBytes: number } {
     let offset = 0;
-    const authorizerHash = HashCodec.decode(bytes.subarray(offset));
-    offset += authorizerHash.readBytes;
-    const coreIndex = E_2.decode(bytes.subarray(offset));
-    offset += coreIndex.readBytes;
-    const authorizerOutput = LengthDiscrimantedIdentity.decode(
-      bytes.subarray(offset),
-    );
-    offset += authorizerOutput.readBytes;
-    const refinementContext = RefinementContextCodec.decode(
-      bytes.subarray(offset),
-    );
-    offset += refinementContext.readBytes;
+    // s
     const workPackageSpecification = AvailabilityCodec.decode(
       bytes.subarray(offset),
     );
     offset += workPackageSpecification.readBytes;
+
+    // x
+    const refinementContext = RefinementContextCodec.decode(
+      bytes.subarray(offset),
+    );
+    offset += refinementContext.readBytes;
+
+    // c
+    const coreIndex = E_2.decode(bytes.subarray(offset));
+    offset += coreIndex.readBytes;
+
+    // a
+    const authorizerHash = HashCodec.decode(bytes.subarray(offset));
+    offset += authorizerHash.readBytes;
+
+    // o
+    const authorizerOutput = LengthDiscrimantedIdentity.decode(
+      bytes.subarray(offset),
+    );
+    offset += authorizerOutput.readBytes;
+
+    // r
     const results = resultsCodec.decode(bytes.subarray(offset));
     offset += results.readBytes;
     return {
@@ -96,12 +121,12 @@ if (import.meta.vitest) {
       ),
     );
     const hexToBytes = (hex: string): Uint8Array => {
-      return Buffer.from(hex.slice(2), "hex");
+      return new Uint8Array([...Buffer.from(hex.slice(2), "hex")]);
     };
     const hextToBigInt = <T extends bigint>(hex: string): T => {
       return bytesToBigInt(hexToBytes(hex)) as unknown as T;
     };
-    it.fails("work_report.json encoded should match work_report.bin", () => {
+    it("work_report.json encoded should match work_report.bin", () => {
       const wp: WorkReport = {
         workPackageSpecification: {
           workPackageHash: hextToBigInt(json.package_spec.hash),

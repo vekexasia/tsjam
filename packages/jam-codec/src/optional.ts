@@ -16,7 +16,7 @@ export class Optional<T> implements JamCodec<T | undefined | null> {
       bytes[0] = 1;
       this.codec.encode(value, bytes.subarray(1));
     }
-    return this.encodedSize(value) + 1;
+    return this.encodedSize(value);
   }
 
   decode(bytes: Uint8Array): { value: T | undefined; readBytes: number } {

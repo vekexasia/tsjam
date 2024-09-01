@@ -29,11 +29,12 @@ module.exports = {
   },
   rules: {
     "tsdoc/syntax": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
     "sort-imports": [
       "error",
       {
         ignoreCase: false,
-        ignoreDeclarationSort: false,
+        ignoreDeclarationSort: true,
         ignoreMemberSort: false,
         memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
         allowSeparatedGroups: false,
