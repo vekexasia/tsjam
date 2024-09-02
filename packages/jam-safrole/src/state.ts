@@ -9,9 +9,9 @@ import {
   SeqOfLength,
   Tagged,
   TicketIdentifier,
-  u32,
   UpToSeq,
   ValidatorData,
+  u32,
 } from "@vekexasia/jam-types";
 
 /**
