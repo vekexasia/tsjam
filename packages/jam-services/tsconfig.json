@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "..",
+    "preserveSymlinks": false,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/test/*": ["./test/*"],
+      "@/*": ["./src/*"],
+      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto-napi": ["../jam-crypto-napi/index.d.ts"],
+      "@vekexasia/jam-extrinsics": ["../jam-extrinsics/dist/types/index.d.ts"],
+    }
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "dist/**/*"
+  ]
+}
