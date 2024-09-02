@@ -3,7 +3,7 @@ import { WorkReport } from "@/sets/index.js";
 
 /**
  * `ρ`
- * (118)
+ * (116)
  */
 export type RHO = SeqOfLength<
   { workReport: WorkReport; reportTime: u32 } | null,

@@ -1,8 +1,9 @@
-import { Hash, Tagged, u32, UpToSeq } from "@/genericTypes.js";
+import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes.js";
 
 /**
+ * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
- *
+ * (89) in the graypaper
  */
 export interface ServiceAccount {
   /**
