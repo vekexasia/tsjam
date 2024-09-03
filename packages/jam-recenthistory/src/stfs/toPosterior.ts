@@ -7,7 +7,6 @@ import {
   WorkPackageHash,
   newSTF,
 } from "@vekexasia/jam-types";
-import { RecentHistory, RecentHistoryItem } from "@/type.js";
 import {
   appendMMR,
   wellBalancedBinaryMerkleRoot,
@@ -19,6 +18,7 @@ import {
 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { SIZE_OF_RECENT_HISTORY } from "@/consts.js";
+import { RecentHistory, RecentHistoryItem } from "@vekexasia/jam-types";
 
 export const calculateAccumulateRoot = (
   input: Array<{ serviceIndex: ServiceIndex; accummulationResult: Hash }>,

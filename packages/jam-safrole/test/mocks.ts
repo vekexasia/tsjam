@@ -1,15 +1,15 @@
 import {
   BandersnatchRingRoot,
   EPOCH_LENGTH,
+  IDisputesState,
   JamHeader,
   NUMBER_OF_VALIDATORS,
+  SafroleState,
   TicketIdentifier,
-  toTagged,
   UnTaggedObject,
   ValidatorData,
+  toTagged,
 } from "@vekexasia/jam-types";
-import { SafroleState } from "@/index";
-import { IDisputesState } from "@/extrinsics";
 
 export const mockHeader = (
   opts: Partial<UnTaggedObject<JamHeader>> = {},

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
 import {
-  hextToBigInt,
-  validatorEntryMap,
   disputesStateFromTest,
   disputesStateToTest,
+  hextToBigInt,
+  validatorEntryMap,
 } from "./utils.js";
 
 const mocks = vi.hoisted(() => {

@@ -1,4 +1,4 @@
-import { ED25519PublicKey, Hash } from "@vekexasia/jam-types";
+import {ED25519PublicKey, Hash} from "@/genericTypes";
 
 /**
  * Section 10 of graypaper
@@ -27,10 +27,3 @@ export interface IDisputesState {
    */
   psi_o: Set<ED25519PublicKey>;
 }
-
-export const DisputeState: IDisputesState = {
-  psi_g: new Set(),
-  psi_b: new Set(),
-  psi_w: new Set(),
-  psi_o: new Set(),
-};

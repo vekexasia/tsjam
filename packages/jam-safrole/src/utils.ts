@@ -1,10 +1,11 @@
-import { IDisputesState, SafroleState } from "@/index.js";
+import { IDisputesState } from "@/index.js";
 import {
   BandersnatchKey,
   EPOCH_LENGTH,
   JamHeader,
   OpaqueHash,
   Posterior,
+  SafroleState,
   SeqOfLength,
   TicketIdentifier,
   ValidatorData,

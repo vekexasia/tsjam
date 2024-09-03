@@ -1,5 +1,5 @@
-import { ServiceIndex } from "@vekexasia/jam-types";
-import { ServiceAccount } from "@/types/serviceAccount.js";
+import { ServiceIndex } from "@/genericTypes";
+import { ServiceAccount } from "@/sets/ServiceAccount";
 
 /**
  * It's identified as δ or delta in the graypaper

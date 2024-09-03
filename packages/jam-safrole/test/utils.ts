@@ -1,14 +1,14 @@
-import { SafroleState } from "@/index.js";
 import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
+  IDisputesState,
+  SafroleState,
   Tagged,
   TicketIdentifier,
-  toTagged,
   ValidatorData,
+  toTagged,
 } from "@vekexasia/jam-types";
-import { IDisputesState } from "@/extrinsics/index.js";
 
 export const hexToBytes = (hex: string): Uint8Array => {
   return Buffer.from(hex.slice(2), "hex");

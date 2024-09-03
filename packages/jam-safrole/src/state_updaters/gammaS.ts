@@ -1,4 +1,3 @@
-import { SafroleState } from "@/index.js";
 import {
   BandersnatchKey,
   EPOCH_LENGTH,
@@ -6,6 +5,7 @@ import {
   LOTTERY_MAX_SLOT,
   NUMBER_OF_VALIDATORS,
   Posterior,
+  SafroleState,
   SeqOfLength,
   TicketIdentifier,
   newSTF,

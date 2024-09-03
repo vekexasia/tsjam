@@ -1,9 +1,14 @@
-import { beforeEach, describe, it, expect } from "vitest";
-import { RecentHistory, RecentHistoryItem } from "@/type.js";
+import { describe, expect, it } from "vitest";
 import { bytesToBigInt } from "@vekexasia/jam-codec";
 import { recentHistoryToDagger } from "@/stfs/toDagger.js";
 import { recentHistoryToPosterior } from "@/stfs/toPosterior.js";
-import { Hash, MerkeTreeRoot, WorkPackageHash } from "@vekexasia/jam-types";
+import {
+  Hash,
+  MerkeTreeRoot,
+  RecentHistory,
+  RecentHistoryItem,
+  WorkPackageHash,
+} from "@vekexasia/jam-types";
 
 export const hexToBytes = (hex: string): Uint8Array => {
   return Buffer.from(hex.slice(2), "hex");

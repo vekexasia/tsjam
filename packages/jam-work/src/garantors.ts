@@ -3,8 +3,10 @@ import {
   CoreIndex,
   ED25519PublicKey,
   Hash,
+  IDisputesState,
   NUMBER_OF_VALIDATORS,
   Posterior,
+  SafroleState,
   SeqOfLength,
   Tagged,
   VALIDATOR_CORE_ROTATION,
@@ -13,13 +15,7 @@ import {
   toTagged,
   u32,
 } from "@vekexasia/jam-types";
-import {
-  IDisputesState,
-  PHI_FN,
-  SafroleState,
-  TauTransition,
-  slotIndex,
-} from "@vekexasia/jam-safrole";
+import { PHI_FN, TauTransition, slotIndex } from "@vekexasia/jam-safrole";
 import { FisherYatesH } from "@vekexasia/jam-crypto";
 
 /**

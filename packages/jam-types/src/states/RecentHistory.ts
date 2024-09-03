@@ -1,14 +1,11 @@
-import {
-  Hash,
-  MerkeTreeRoot,
-  UpToSeq,
-  WorkPackageHash,
-} from "@vekexasia/jam-types";
-import { CORES } from "@vekexasia/jam-types";
+import { Hash, MerkeTreeRoot, UpToSeq, WorkPackageHash } from "@/genericTypes";
+import { CORES } from "@/consts";
+
 /*
  * @see section 7
  * (80)
  */
+
 export interface RecentHistoryItem {
   /**
    * `h`

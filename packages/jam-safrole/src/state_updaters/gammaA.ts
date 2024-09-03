@@ -1,7 +1,7 @@
-import { SafroleState } from "@/index.js";
 import {
   EPOCH_LENGTH,
   Posterior,
+  SafroleState,
   TicketIdentifier,
   newSTF,
   u32,

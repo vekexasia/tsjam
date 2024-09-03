@@ -9,10 +9,10 @@ import {
   NUMBER_OF_VALIDATORS,
   Posterior,
   RHO,
+  SafroleState,
   newSTF,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
-import { SafroleState } from "@vekexasia/jam-safrole";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
 import { BitSequence, bigintToBytes } from "@vekexasia/jam-codec";
 

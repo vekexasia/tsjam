@@ -1,11 +1,11 @@
 import {
   Dagger,
+  Delta,
   ServiceIndex,
   newSTF,
   toTagged,
   u32,
 } from "@vekexasia/jam-types";
-import { Delta } from "@/types/delta.js";
 import assert from "node:assert";
 import { Hashing } from "@vekexasia/jam-crypto";
 

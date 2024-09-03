@@ -4,6 +4,7 @@ import {
   LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
   Posterior,
+  SafroleState,
   TicketExtrinsics,
   TicketIdentifier,
   newSTF,
@@ -13,7 +14,6 @@ import assert from "node:assert";
 import { TauTransition } from "@/state_updaters/types.js";
 import { slotIndex } from "@/utils.js";
 import { bigintToBytes } from "@vekexasia/jam-codec";
-import { SafroleState } from "@/index.js";
 
 export const ticketExtrinsicToIdentifiersSTF = newSTF<
   null,

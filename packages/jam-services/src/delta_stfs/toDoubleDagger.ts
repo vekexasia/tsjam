@@ -1,11 +1,11 @@
 import {
   Dagger,
+  Delta,
   DoubleDagger,
+  ServiceAccount,
   ServiceIndex,
   newSTF,
 } from "@vekexasia/jam-types";
-import { Delta } from "@/types/delta.js";
-import { ServiceAccount } from "@/types/serviceAccount.js";
 import assert from "node:assert";
 
 type Input = {

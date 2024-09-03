@@ -1,12 +1,12 @@
 import {
+  Delta,
   DoubleDagger,
   Posterior,
+  ServiceAccount,
   ServiceIndex,
   newSTF,
   u64,
 } from "@vekexasia/jam-types";
-import { Delta } from "@/types/delta.js";
-import { ServiceAccount } from "@/types/serviceAccount.js";
 type AccResultItem = {
   // service account after accummulation
   s: ServiceAccount | undefined;
