@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Package for JAM Services States",
   "scripts": {
-    "build": "rm -rf dist/; rollup --config rollup.config.mjs",
+    "build": "rollup --config rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",

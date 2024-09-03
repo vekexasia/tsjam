@@ -148,7 +148,6 @@ export const branch_gt_s_imm = create1Reg1IMM1OffsetIx(
 );
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  type Mock = import("@vitest/spy").Mock;
   describe("decode", () => {
     const encodeRaLx = (ra: number, lx: number) => {
       return ra + lx * 16;

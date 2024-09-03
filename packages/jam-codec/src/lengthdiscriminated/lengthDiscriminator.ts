@@ -1,7 +1,6 @@
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { IdentityCodec } from "@/identity.js";
-import { T } from "vitest/dist/reporters-P7C2ytIv.js";
 export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
   /**
    * Returns the length to store in the length discriminator

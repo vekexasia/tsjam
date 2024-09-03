@@ -1,7 +1,6 @@
 import {
   Dagger,
   DoubleDagger,
-  Hash,
   ServiceIndex,
   newSTF,
 } from "@vekexasia/jam-types";

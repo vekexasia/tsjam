@@ -121,7 +121,6 @@ if (import.meta.vitest) {
     branch: vi.fn(),
   }));
   const { createEvContext } = await import("@/test/mocks.js");
-  type Mock = import("@vitest/spy").Mock;
   describe("two_reg_one_offset_ixs", () => {
     describe("decode", () => {
       it("should decode rA, rB and offset properly", () => {

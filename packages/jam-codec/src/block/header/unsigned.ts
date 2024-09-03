@@ -61,7 +61,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     }, offset);
     return offset;
   },
-  encodedSize(value: Required<JamHeader["epochMarker"]>): number {
+  encodedSize(): number {
     return 4 + NUMBER_OF_VALIDATORS * 32;
   },
 };

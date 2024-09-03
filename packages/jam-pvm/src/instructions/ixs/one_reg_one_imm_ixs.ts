@@ -34,6 +34,7 @@ const create1Reg1IMMIx = (
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const jump_ind = create1Reg1IMMIx(
   19 as u8,
   "jump_ind",

@@ -1,4 +1,4 @@
-import { Hash, RingVRFProof } from "@/genericTypes.js";
+import { Hash } from "@/genericTypes.js";
 
 /**
  * identified by `C` set

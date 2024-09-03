@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BandersnatchKey,
   BandersnatchPrivKey,
@@ -6,7 +7,6 @@ import {
   NUMBER_OF_VALIDATORS,
   OpaqueHash,
   RingVRFProof,
-  toTagged,
 } from "@vekexasia/jam-types";
 import { ringRoot, vrfOutputHash, vrfVerify } from "@vekexasia/jam-crypto-napi";
 import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
@@ -14,10 +14,10 @@ import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 export const Bandersnatch = {
   /**
    * `F_{pubkey}^{message}(context) `
-   * @param bytes
-   * @param pubkey
-   * @param message
-   * @param context
+   * @param signature - the signature to verify
+   * @param pubkey - the public key to verify the signature with
+   * @param message - the message that was signed
+   * @param context - the context of the signature
    */
   verifySignature(
     signature: BandersnatchSignature,
@@ -27,11 +27,12 @@ export const Bandersnatch = {
   ): boolean {
     return true; // TODO: implement
   },
+
   /**
    * `F_{privkey}^{message}(context) `
-   * @param context
-   * @param message
-   * @param privkey
+   * @param context - the context of the signature
+   * @param message - the message to sign
+   * @param privkey - the private key to sign with
    */
   sign(
     context: Uint8Array,

@@ -271,10 +271,10 @@ export const disputesSTF = newSTF<
     return V;
   },
 
-  assertPStateValid(input, p_state, state) {
+  assertPStateValid(input, p_state) {
     // perform some other last checks
     // (102) of the graypaper states that faults reports should be in psi_b' if `r`
-    input.extrinsic.faults.forEach(({ hash, validity, ed25519PublicKey }) => {
+    input.extrinsic.faults.forEach(({ hash, validity }) => {
       if (validity == 1) {
         if (!(p_state.psi_b.has(hash) && !p_state.psi_g.has(hash))) {
           throw new Error(
