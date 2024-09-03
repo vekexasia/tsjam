@@ -3,9 +3,9 @@ import {
   JAM_GUARANTEE,
   JAM_INVALID,
   JAM_VALID,
-  newSTF,
   NUMBER_OF_VALIDATORS,
   Posterior,
+  newSTF,
 } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { DisputeExtrinsic, IDisputesState } from "@/extrinsics/index.js";

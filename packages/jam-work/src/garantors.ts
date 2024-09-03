@@ -1,24 +1,24 @@
 import {
-  CoreIndex,
   CORES,
+  CoreIndex,
   ED25519PublicKey,
   Hash,
-  newSTF,
   NUMBER_OF_VALIDATORS,
   Posterior,
   SeqOfLength,
   Tagged,
+  VALIDATOR_CORE_ROTATION,
+  newSTF,
   toPosterior,
   toTagged,
   u32,
-  VALIDATOR_CORE_ROTATION,
 } from "@vekexasia/jam-types";
 import {
   IDisputesState,
   PHI_FN,
   SafroleState,
-  slotIndex,
   TauTransition,
+  slotIndex,
 } from "@vekexasia/jam-safrole";
 import { FisherYatesH } from "@vekexasia/jam-crypto";
 

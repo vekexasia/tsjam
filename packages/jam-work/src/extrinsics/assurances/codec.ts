@@ -3,14 +3,14 @@ import {
   EA_Extrinsic,
 } from "@/extrinsics/assurances/extrinsic.js";
 import {
-  bigintToExistingBytes,
-  JamCodec,
   BitSequence,
-  HashCodec,
-  createArrayLengthDiscriminator,
-  Ed25519SignatureCodec,
-  bytesToBigInt,
   E_2,
+  Ed25519SignatureCodec,
+  HashCodec,
+  JamCodec,
+  bigintToExistingBytes,
+  bytesToBigInt,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { CORES, ValidatorIndex } from "@vekexasia/jam-types";
 

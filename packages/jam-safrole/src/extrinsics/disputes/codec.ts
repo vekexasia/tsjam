@@ -1,6 +1,4 @@
 import {
-  bytesToBigInt,
-  createArrayLengthDiscriminator,
   E,
   E_2,
   E_4,
@@ -9,6 +7,8 @@ import {
   Ed25519SignatureCodec,
   HashCodec,
   JamCodec,
+  bytesToBigInt,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { DisputeExtrinsic } from "@/extrinsics/disputes/extrinsic.js";
 import {
@@ -16,8 +16,8 @@ import {
   ED25519Signature,
   Hash,
   NUMBER_OF_VALIDATORS,
-  u32,
   ValidatorIndex,
+  u32,
 } from "@vekexasia/jam-types";
 import { hextToBigInt } from "@/test/utils.js";
 

@@ -1,11 +1,11 @@
 import {
-  createArrayLengthDiscriminator,
   E_2,
   E_4,
   E_8,
   HashCodec,
   JamCodec,
   LengthDiscrimantedIdentity,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { u32 } from "@vekexasia/jam-types";
 import { WorkItem } from "@/sets/workItem/type.js";

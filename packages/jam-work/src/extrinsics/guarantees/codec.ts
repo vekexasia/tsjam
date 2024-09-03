@@ -1,13 +1,13 @@
 import {
-  bytesToBigInt,
-  createArrayLengthDiscriminator,
   E_2,
   E_4,
   Ed25519SignatureCodec,
   JamCodec,
+  bytesToBigInt,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { EG_Extrinsic } from "@/extrinsics/guarantees/extrinsic.js";
-import { u32, u64, ValidatorIndex } from "@vekexasia/jam-types";
+import { ValidatorIndex, u32, u64 } from "@vekexasia/jam-types";
 import { WorkError, WorkReportCodec, WorkResult } from "@/sets/index.js";
 
 const signaturesCodec = createArrayLengthDiscriminator<

@@ -1,4 +1,4 @@
-import { JamCodec, E, E_1 } from "@vekexasia/jam-codec";
+import { E, E_1, JamCodec } from "@vekexasia/jam-codec";
 import { u32, u8 } from "@vekexasia/jam-types";
 
 export interface PVMProgram {

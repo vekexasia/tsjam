@@ -7,7 +7,7 @@ import {
 } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
 import { getBlockAuthorKey, isFallbackMode } from "@/utils.js";
-import { bigintToBytes, UnsignedHeaderCodec } from "@vekexasia/jam-codec";
+import { UnsignedHeaderCodec, bigintToBytes } from "@vekexasia/jam-codec";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import assert from "node:assert";
 

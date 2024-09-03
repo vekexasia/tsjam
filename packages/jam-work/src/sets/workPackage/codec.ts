@@ -1,9 +1,9 @@
 import {
-  createArrayLengthDiscriminator,
   E_4,
   HashCodec,
   JamCodec,
   LengthDiscrimantedIdentity,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { WorkItem } from "@/workItem.js";
 import { WorkPackage } from "@/sets/workPackage/type.js";

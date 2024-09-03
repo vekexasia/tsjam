@@ -1,6 +1,6 @@
 import {
-  ED25519PublicKey,
   ED25519PrivateKey,
+  ED25519PublicKey,
   ED25519Signature,
 } from "@vekexasia/jam-types";
 import sodium from "sodium-native";

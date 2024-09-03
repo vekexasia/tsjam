@@ -1,6 +1,6 @@
 import {
-  BandersnatchKey,
   BLSKey,
+  BandersnatchKey,
   ByteArrayOfLength,
   ED25519PublicKey,
 } from "@/genericTypes.js";

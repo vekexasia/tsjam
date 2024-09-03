@@ -4,9 +4,9 @@ import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
-  newSTF,
   Posterior,
   TicketIdentifier,
+  newSTF,
 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import assert from "node:assert";

@@ -1,9 +1,9 @@
 import { Hash } from "@vekexasia/jam-types";
 import {
-  bigintToBytes,
-  createArrayLengthDiscriminator,
   JamCodec,
   OptHashCodec,
+  bigintToBytes,
+  createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 
 /**

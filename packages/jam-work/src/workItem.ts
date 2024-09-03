@@ -2,9 +2,9 @@ import {
   Hash,
   MAX_WORKPACKAGE_ENTRIES,
   ServiceIndex,
+  UpToSeq,
   u32,
   u64,
-  UpToSeq,
 } from "@vekexasia/jam-types";
 
 /**

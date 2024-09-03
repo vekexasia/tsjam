@@ -5,9 +5,9 @@ import {
   MAXIMUM_WORK_ITEMS,
 } from "@vekexasia/jam-types";
 import {
-  WorkResult,
-  RefinementContext,
   AvailabilitySpecification,
+  RefinementContext,
+  WorkResult,
 } from "@/sets/index.js";
 
 /**

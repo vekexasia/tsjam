@@ -4,8 +4,8 @@ import {
   Hash,
   MinSeqLength,
   SeqOfLength,
-  u32,
   ValidatorIndex,
+  u32,
 } from "@vekexasia/jam-types";
 import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
 /**

@@ -1,8 +1,8 @@
 import {
-  JamCodec,
   E,
-  LengthDiscriminator,
   IdentityCodec,
+  JamCodec,
+  LengthDiscriminator,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { EP_Tuple } from "@/extrinsics/preimages/extrinsic.js";
