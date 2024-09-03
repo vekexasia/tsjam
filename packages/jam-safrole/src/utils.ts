@@ -1,7 +1,7 @@
-import { IDisputesState } from "@/index.js";
 import {
   BandersnatchKey,
   EPOCH_LENGTH,
+  IDisputesState,
   JamHeader,
   OpaqueHash,
   Posterior,

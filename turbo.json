@@ -4,6 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"],
+      "outputLogs": "new-only",
       "outputs": ["dist/**"]
     }
   }

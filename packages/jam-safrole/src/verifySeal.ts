@@ -3,9 +3,9 @@ import {
   JAM_ENTROPY,
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
+  SafroleState,
   SignedJamHeader,
 } from "@vekexasia/jam-types";
-import { SafroleState } from "@/index.js";
 import { getBlockAuthorKey, isFallbackMode } from "@/utils.js";
 import { UnsignedHeaderCodec, bigintToBytes } from "@vekexasia/jam-codec";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
