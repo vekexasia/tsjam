@@ -1,12 +1,12 @@
 import {
   BoundedSeq,
-  CORES,
   ED25519Signature,
   UpToSeq,
   ValidatorIndex,
   u32,
-} from "@vekexasia/jam-types";
-import { WorkReport } from "@/sets/index.js";
+} from "@/genericTypes";
+import { CORES } from "@/consts";
+import { WorkReport } from "@/sets/WorkReport";
 
 /**
  * Report of newly completed workload whose accuracy is guaranteed by specific validators.

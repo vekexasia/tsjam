@@ -1,4 +1,4 @@
-import { Hash } from "@/genericTypes.js";
+import { Hash } from "@/genericTypes";
 
 /**
  * identified by `C` set

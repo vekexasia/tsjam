@@ -1,5 +1,5 @@
-import { Hash, ServiceIndex, u64 } from "@vekexasia/jam-types";
-import { WorkOutput } from "@/sets/workOutput/type.js";
+import { Hash, ServiceIndex, u64 } from "@/genericTypes";
+import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
  * Identified by `L` set

@@ -95,5 +95,22 @@ export * from "./JamBlock.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
 export * from "./consts.js";
-export * from "./Ticket.js";
+export * from "./sets/Ticket";
 export * from "./STF.js";
+export * from "./utils.js";
+export * from "./extrinsics/assurances.js";
+export * from "./extrinsics/disputes.js";
+export * from "./extrinsics/guarantees.js";
+export * from "./extrinsics/preimages.js";
+export * from "./extrinsics/tickets.js";
+
+export * from "./sets/AvailabilitySpecification.js";
+export * from "./sets/RefinementContext.js";
+export * from "./sets/Ticket.js";
+export * from "./sets/WorkItem.js";
+export * from "./sets/WorkOutput.js";
+export * from "./sets/WorkPackage.js";
+export * from "./sets/WorkReport.js";
+export * from "./sets/WorkResult.js";
+
+export * from "./states/rho.js";

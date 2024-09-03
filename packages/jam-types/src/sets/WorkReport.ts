@@ -1,14 +1,8 @@
-import {
-  BoundedSeq,
-  CoreIndex,
-  Hash,
-  MAXIMUM_WORK_ITEMS,
-} from "@vekexasia/jam-types";
-import {
-  AvailabilitySpecification,
-  RefinementContext,
-  WorkResult,
-} from "@/sets/index.js";
+import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
+import { RefinementContext } from "@/sets/RefinementContext";
+import { BoundedSeq, CoreIndex, Hash } from "@/genericTypes";
+import { MAXIMUM_WORK_ITEMS } from "@/consts";
+import { WorkResult } from "@/sets/WorkResult";
 
 /**
  * Identified by `W` set

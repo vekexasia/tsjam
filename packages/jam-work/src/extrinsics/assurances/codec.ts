@@ -1,8 +1,4 @@
 import {
-  AssuranceExtrinsic,
-  EA_Extrinsic,
-} from "@/extrinsics/assurances/extrinsic.js";
-import {
   BitSequence,
   E_2,
   Ed25519SignatureCodec,
@@ -12,7 +8,12 @@ import {
   bytesToBigInt,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
-import { CORES, ValidatorIndex } from "@vekexasia/jam-types";
+import {
+  AssuranceExtrinsic,
+  CORES,
+  EA_Extrinsic,
+  ValidatorIndex,
+} from "@vekexasia/jam-types";
 
 const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   encode(value: AssuranceExtrinsic, bytes: Uint8Array): number {

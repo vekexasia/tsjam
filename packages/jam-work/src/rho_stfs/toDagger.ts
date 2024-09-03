@@ -1,5 +1,11 @@
-import { Dagger, Hash, newSTF, toDagger, toTagged } from "@vekexasia/jam-types";
-import { RHO } from "@/rho";
+import {
+  Dagger,
+  Hash,
+  RHO,
+  newSTF,
+  toDagger,
+  toTagged,
+} from "@vekexasia/jam-types";
 import assert from "node:assert";
 
 /**

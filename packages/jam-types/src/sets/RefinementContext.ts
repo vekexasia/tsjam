@@ -1,4 +1,4 @@
-import { Hash, u32 } from "@vekexasia/jam-types";
+import { Hash, u32 } from "@/genericTypes";
 
 /**
  * gives a snapshotof what was the situation when the work report was created

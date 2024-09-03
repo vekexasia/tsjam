@@ -1,6 +1,5 @@
 import { E_4, HashCodec, JamCodec, OptHashCodec } from "@vekexasia/jam-codec";
-import { u32 } from "@vekexasia/jam-types";
-import { RefinementContext } from "@/sets/refinementContext/type.js";
+import { RefinementContext, u32 } from "@vekexasia/jam-types";
 
 /**
  * Appendix C formula (283)

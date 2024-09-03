@@ -1,4 +1,5 @@
 import {
+  DisputeExtrinsic,
   Hash,
   JAM_GUARANTEE,
   JAM_INVALID,
@@ -8,7 +9,7 @@ import {
   newSTF,
 } from "@vekexasia/jam-types";
 import { SafroleState } from "@/index.js";
-import { DisputeExtrinsic, IDisputesState } from "@/extrinsics/index.js";
+import { IDisputesState } from "@/extrinsics/index.js";
 import { Ed25519 } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
 import assert from "node:assert";

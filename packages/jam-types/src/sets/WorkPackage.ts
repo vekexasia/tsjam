@@ -1,11 +1,7 @@
-import {
-  BoundedSeq,
-  Hash,
-  MAXIMUM_WORK_ITEMS,
-  ServiceIndex,
-} from "@vekexasia/jam-types";
-import { WorkItem } from "@/workItem.js";
-import { RefinementContext } from "@/sets/index.js";
+import { BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
+import { RefinementContext } from "@/sets/RefinementContext";
+import { WorkItem } from "@/sets/WorkItem";
+import { MAXIMUM_WORK_ITEMS } from "@/consts";
 
 /**
  * Identified by `P` set

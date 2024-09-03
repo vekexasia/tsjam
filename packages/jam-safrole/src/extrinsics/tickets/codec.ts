@@ -1,6 +1,5 @@
-import { TicketExtrinsics } from "@/extrinsics/tickets/extrinsic.js";
 import { createArrayLengthDiscriminator } from "@vekexasia/jam-codec";
-import { RingVRFProof } from "@vekexasia/jam-types";
+import { RingVRFProof, TicketExtrinsics } from "@vekexasia/jam-types";
 
 export const codecEt = createArrayLengthDiscriminator<TicketExtrinsics[0]>({
   encode(

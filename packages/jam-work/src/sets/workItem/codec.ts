@@ -7,8 +7,7 @@ import {
   LengthDiscrimantedIdentity,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
-import { u32 } from "@vekexasia/jam-types";
-import { WorkItem } from "@/sets/workItem/type.js";
+import { WorkItem, u32 } from "@vekexasia/jam-types";
 
 const xxCodec = createArrayLengthDiscriminator<
   WorkItem["exportedDataSegments"][0]

@@ -5,8 +5,7 @@ import {
   LengthDiscriminator,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
-import { EP_Tuple } from "@/extrinsics/preimages/extrinsic.js";
-import { ServiceIndex } from "@vekexasia/jam-types";
+import { EP_Tuple, ServiceIndex } from "@vekexasia/jam-types";
 
 const preimageCodec = new LengthDiscriminator(IdentityCodec);
 /**

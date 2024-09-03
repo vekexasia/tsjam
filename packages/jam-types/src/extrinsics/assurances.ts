@@ -1,12 +1,11 @@
 import {
-  CORES,
   ED25519Signature,
   Hash,
-  NUMBER_OF_VALIDATORS,
   SeqOfLength,
   UpToSeq,
   ValidatorIndex,
-} from "@vekexasia/jam-types";
+} from "@/genericTypes";
+import { CORES, NUMBER_OF_VALIDATORS } from "@/consts";
 
 /**
  * The assurance extrinsic is a proof that a validator has received and is storing a piece of data.

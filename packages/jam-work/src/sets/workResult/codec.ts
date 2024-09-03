@@ -1,7 +1,6 @@
 import { E_4, E_8, HashCodec, JamCodec } from "@vekexasia/jam-codec";
-import { WorkResult } from "@/sets/workResult/type.js";
 import { WorkOutputCodec } from "@/sets/workOutput/codec.js";
-import { ServiceIndex, u64 } from "@vekexasia/jam-types";
+import { ServiceIndex, WorkResult, u64 } from "@vekexasia/jam-types";
 
 export const WorkResultCodec: JamCodec<WorkResult> = {
   encode(value: WorkResult, bytes: Uint8Array): number {

@@ -3,10 +3,11 @@ import { Posterior, toPosterior, u32 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { entropyRotationSTF, eta0STF } from "@/state_updaters/eta.js";
 import { rotateKeys } from "@/state_updaters/keys.js";
-import { IDisputesState, TicketExtrinsics } from "@/extrinsics/index.js";
+import { IDisputesState } from "@/extrinsics/index.js";
 import { gamma_sSTF } from "@/state_updaters/gammaS.js";
 import { gamma_aSTF } from "@/state_updaters/gammaA.js";
 import { ticketExtrinsicToIdentifiersSTF } from "@/extrinsics/tickets/index.js";
+import { TicketExtrinsics } from "@vekexasia/jam-types";
 
 export const computeNewSafroleState = (
   curState: SafroleState,

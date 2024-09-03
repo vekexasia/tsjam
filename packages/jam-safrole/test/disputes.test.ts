@@ -43,8 +43,8 @@ vi.mock("@vekexasia/jam-types", async (importOriginal) => {
   });
   return toRet;
 });
-import { DisputeExtrinsic, disputesSTF } from "@/extrinsics/index.js";
-import { toTagged } from "@vekexasia/jam-types";
+import { disputesSTF } from "@/extrinsics/index.js";
+import { DisputeExtrinsic, toTagged } from "@vekexasia/jam-types";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(

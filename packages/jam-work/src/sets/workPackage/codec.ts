@@ -5,9 +5,7 @@ import {
   LengthDiscrimantedIdentity,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
-import { WorkItem } from "@/workItem.js";
-import { WorkPackage } from "@/sets/workPackage/type.js";
-import { ServiceIndex } from "@vekexasia/jam-types";
+import { ServiceIndex, WorkItem, WorkPackage } from "@vekexasia/jam-types";
 import { WorkItemCodec } from "@/sets/workItem/codec.js";
 import { RefinementContextCodec } from "@/sets/refinementContext/codec.js";
 

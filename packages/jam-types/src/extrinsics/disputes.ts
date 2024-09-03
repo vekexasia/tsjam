@@ -6,8 +6,9 @@ import {
   SeqOfLength,
   ValidatorIndex,
   u32,
-} from "@vekexasia/jam-types";
-import { MINIMUM_VALIDATORS } from "@vekexasia/jam-types";
+} from "@/genericTypes";
+import { MINIMUM_VALIDATORS } from "@/consts";
+
 /**
  * Identified ad E<sub>d</sub> in the paper
  */

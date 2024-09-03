@@ -1,6 +1,8 @@
 import { E_4, HashCodec, JamCodec } from "@vekexasia/jam-codec";
-import { AvailabilitySpecification } from "@/sets/availabilitySpec/type.js";
-import { WorkPackageHash } from "@vekexasia/jam-types";
+import {
+  AvailabilitySpecification,
+  WorkPackageHash,
+} from "@vekexasia/jam-types";
 
 /**
  *

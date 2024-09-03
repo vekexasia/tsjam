@@ -1,5 +1,5 @@
 import { E, JamCodec, LengthDiscrimantedIdentity } from "@vekexasia/jam-codec";
-import { WorkError, WorkOutput } from "@/sets/workOutput/type.js";
+import { WorkError, WorkOutput } from "@vekexasia/jam-types";
 
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
   encode(value: WorkOutput, bytes: Uint8Array): number {

@@ -45,7 +45,7 @@ vi.mock("@vekexasia/jam-types", async (importOriginal) => {
 });
 import { computeNewSafroleState } from "@/state_updaters/stateUpdater.js";
 import { toTagged } from "@vekexasia/jam-types";
-import { TicketExtrinsics } from "@/extrinsics/index.js";
+import { TicketExtrinsics } from "@vekexasia/jam-types";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(

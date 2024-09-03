@@ -1,10 +1,10 @@
 // compute `n` (76)
-import { TicketExtrinsics } from "@/extrinsics/index.js";
 import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
   Posterior,
+  TicketExtrinsics,
   TicketIdentifier,
   newSTF,
 } from "@vekexasia/jam-types";

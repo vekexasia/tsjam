@@ -1,9 +1,5 @@
-import {
-  Hash,
-  MAXIMUM_AGE_LOOKUP_ANCHOR,
-  Tagged,
-  WorkPackageHash,
-} from "@vekexasia/jam-types";
+import { Hash, Tagged, WorkPackageHash } from "@/genericTypes";
+import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@/consts";
 
 /**
  * identified by `S` set

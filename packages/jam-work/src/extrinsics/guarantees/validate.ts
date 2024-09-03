@@ -1,5 +1,4 @@
-import { EG_Extrinsic } from "@/extrinsics/guarantees/extrinsic.js";
-import { CORES } from "@vekexasia/jam-types";
+import { CORES, EG_Extrinsic } from "@vekexasia/jam-types";
 import assert from "node:assert";
 
 export const validateEG_Extrinsic = (extrinsic: EG_Extrinsic) => {

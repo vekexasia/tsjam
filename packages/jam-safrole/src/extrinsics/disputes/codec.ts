@@ -10,8 +10,8 @@ import {
   bytesToBigInt,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
-import { DisputeExtrinsic } from "@/extrinsics/disputes/extrinsic.js";
 import {
+  DisputeExtrinsic,
   ED25519PublicKey,
   ED25519Signature,
   Hash,

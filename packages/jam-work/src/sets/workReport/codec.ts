@@ -7,12 +7,15 @@ import {
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import { WorkResultCodec } from "@/sets/workResult/codec.js";
-import { WorkReport } from "@/sets/workReport/type.js";
 import { RefinementContextCodec } from "@/sets/refinementContext/codec.js";
-import { CoreIndex, u64 } from "@vekexasia/jam-types";
+import {
+  CoreIndex,
+  WorkError,
+  WorkReport,
+  WorkResult,
+  u64,
+} from "@vekexasia/jam-types";
 import { AvailabilityCodec } from "@/sets/availabilitySpec/codec.js";
-import { WorkError } from "@/sets/workOutput/type.js";
-import { WorkResult } from "@/sets/workResult/type.js";
 
 const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
 export const WorkReportCodec: JamCodec<WorkReport> = {

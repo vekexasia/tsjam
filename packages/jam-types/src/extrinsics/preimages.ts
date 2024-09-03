@@ -1,4 +1,4 @@
-import { ServiceIndex } from "@vekexasia/jam-types";
+import { ServiceIndex } from "@/genericTypes";
 
 /**
  *
