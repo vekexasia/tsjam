@@ -26,5 +26,8 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
+  "dependencies": {
+    "@vekexasia/jam-types": "*"
+  },
   "license": "MIT"
 }

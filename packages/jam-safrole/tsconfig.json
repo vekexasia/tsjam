@@ -12,7 +12,6 @@
       "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
       "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"],
       "@vekexasia/jam-crypto-napi": ["../jam-crypto-napi/index.d.ts"],
-      "@vekexasia/jam-extrinsics": ["../jam-extrinsics/dist/types/index.d.ts"],
     }
   },
   "include": [

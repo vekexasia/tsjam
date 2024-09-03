@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-safrole",
+  "name": "@vekexasia/jam-services",
   "version": "1.0.0",
   "description": "Package for JAM Services States",
   "scripts": {
@@ -25,6 +25,11 @@
     "url": "https://www.andreabaccega.com/",
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
+  },
+  "dependencies": {
+    "@vekexasia/jam-codec": "*",
+    "@vekexasia/jam-crypto": "*",
+    "@vekexasia/jam-types": "*"
   },
   "license": "MIT"
 }

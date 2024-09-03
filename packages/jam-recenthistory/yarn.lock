@@ -5,8 +5,8 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@vekexasia/jam-pvm@workspace:.":
+"@vekexasia/jam-recenthistory@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-pvm@workspace:."
+  resolution: "@vekexasia/jam-recenthistory@workspace:."
   languageName: unknown
   linkType: soft

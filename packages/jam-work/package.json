@@ -26,5 +26,11 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
+  "dependencies": {
+    "@vekexasia/jam-codec": "*",
+    "@vekexasia/jam-crypto": "*",
+    "@vekexasia/jam-safrole": "*",
+    "@vekexasia/jam-types": "*"
+  },
   "license": "MIT"
 }
