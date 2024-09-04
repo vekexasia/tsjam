@@ -4,6 +4,7 @@
   "description": "Package for JAM Services States",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
     "test": "npx vitest",
     "coverage": "vitest run --coverage",

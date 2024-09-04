@@ -6,6 +6,13 @@
       "inputs": ["src/**/*.ts"],
       "outputLogs": "new-only",
       "outputs": ["dist/**"]
+    },
+    "watch": {
+      "cache": true,
+      "inputs": ["src/**/*.ts"],
+      "outputLogs": "new-only",
+      "outputs": ["dist/**"]
     }
+
   }
 }

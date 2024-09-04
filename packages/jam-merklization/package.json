@@ -4,6 +4,7 @@
   "description": "MMR and merkle trees used in JAM",
   "scripts": {
     "build": "rollup --config ../../build/rollup.config.mjs",
+    "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
