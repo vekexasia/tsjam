@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
-    "test": "vitest",
+    "test": "npx vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build && vitest run"
   },

@@ -1,0 +1,37 @@
+import { defineWorkspace } from "vitest/config";
+import path from "path";
+
+export const buildAliases = (import_meta_url: string) => {
+  return {
+    "@/test": new URL("./test/", import_meta_url).pathname,
+    "@/": new URL("./src/", import_meta_url).pathname,
+    "@vekexasia/jam-codec": new URL("../jam-codec/", import_meta_url).pathname,
+    "@vekexasia/jam-types": new URL("../jam-types/", import_meta_url).pathname,
+    "@vekexasia/jam-utils": new URL("../jam-utils/", import_meta_url).pathname,
+    "@vekexasia/jam-crypto": new URL("../jam-crypto/", import_meta_url)
+      .pathname,
+    "@vekexasia/jam-crypto-napi": new URL(
+      "../jam-crypto-napi/",
+      import_meta_url,
+    ).pathname,
+    "@vekexasia/jam-merklization": new URL(
+      "../jam-merklization/",
+      import_meta_url,
+    ).pathname,
+  };
+};
+
+export const buildVitest = (import_meta_url: string) => {
+  const project = path.basename(new URL(".", import_meta_url).pathname);
+  const root = new URL(".", import_meta_url).pathname;
+  return defineWorkspace([
+    {
+      extends: path.join(__dirname, "vitest.config.mts"),
+      root,
+      test: {
+        name: project,
+        alias: buildAliases(import_meta_url),
+      },
+    },
+  ]);
+};
