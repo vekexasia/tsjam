@@ -1,2 +1,3 @@
 import { buildVitest } from "../../build/buildVitest";
-export default buildVitest(import.meta.url);
+import path from "path";
+export default buildVitest(path.basename(__dirname));

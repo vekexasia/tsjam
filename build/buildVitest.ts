@@ -21,16 +21,15 @@ export const buildAliases = (import_meta_url: string) => {
   };
 };
 
-export const buildVitest = (import_meta_url: string) => {
-  const project = path.basename(new URL(".", import_meta_url).pathname);
-  const root = new URL(".", import_meta_url).pathname;
+export const buildVitest = (project: string) => {
+  const root = path.join(__dirname, "..", "packages", project);
   return defineWorkspace([
     {
       extends: path.join(__dirname, "vitest.config.mts"),
       root,
       test: {
         name: project,
-        alias: buildAliases(import_meta_url),
+        alias: buildAliases(new URL(".", `file://${root}/package.json`).href),
       },
     },
   ]);
