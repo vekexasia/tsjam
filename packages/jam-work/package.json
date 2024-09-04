@@ -31,7 +31,8 @@
     "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-safrole": "*",
-    "@vekexasia/jam-types": "*"
+    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-utils": "*"
   },
   "license": "MIT"
 }

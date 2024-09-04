@@ -7,9 +7,6 @@ import {
   SafroleState,
   SeqOfLength,
   Tagged,
-  newSTF,
-  toPosterior,
-  toTagged,
   u32,
 } from "@vekexasia/jam-types";
 import { PHI_FN, TauTransition, slotIndex } from "@vekexasia/jam-safrole";
@@ -19,6 +16,7 @@ import {
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
 } from "@vekexasia/jam-constants";
+import { newSTF, toPosterior, toTagged } from "@vekexasia/jam-utils";
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it

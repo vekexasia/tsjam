@@ -15,9 +15,9 @@ const mocks = vi.hoisted(() => {
     toTagged: (a: any) => a,
   };
 });
-vi.mock("@vekexasia/jam-types", async (importOriginal) => {
+vi.mock("@vekexasia/jam-constants", async (importOriginal) => {
   const toRet = {
-    ...(await importOriginal<typeof import("@vekexasia/jam-types")>()),
+    ...(await importOriginal<typeof import("@vekexasia/jam-constants")>()),
     ...mocks,
   };
   Object.defineProperty(toRet, "LOTTERY_MAX_SLOT", {

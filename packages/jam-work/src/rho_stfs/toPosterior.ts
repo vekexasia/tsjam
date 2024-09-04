@@ -4,7 +4,6 @@ import {
   Posterior,
   RHO,
   SafroleState,
-  newSTF,
 } from "@vekexasia/jam-types";
 import { TauTransition } from "@vekexasia/jam-safrole";
 import assert from "node:assert";
@@ -19,6 +18,7 @@ import {
   VALIDATOR_CORE_ROTATION,
   WORK_TIMEOUT,
 } from "@vekexasia/jam-constants";
+import { newSTF } from "@vekexasia/jam-utils";
 
 export const RHO_toPosterior = newSTF<
   DoubleDagger<RHO>,

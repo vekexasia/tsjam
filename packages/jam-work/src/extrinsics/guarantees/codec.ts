@@ -3,7 +3,6 @@ import {
   E_4,
   Ed25519SignatureCodec,
   JamCodec,
-  bytesToBigInt,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import {
@@ -96,6 +95,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const fs = await import("fs");
 
+  const { hexToBytes, hextToBigInt } = await import("@vekexasia/jam-utils");
   const path = await import("path");
   describe("codecEg", () => {
     const bin = fs.readFileSync(
@@ -113,76 +113,67 @@ if (import.meta.vitest) {
         "utf8",
       ),
     );
-    const hexToBytes = (hex: string): Uint8Array => {
-      return Buffer.from(hex.slice(2), "hex");
-    };
-    const hextToBigInt = <T extends bigint>(hex: string): T => {
-      return bytesToBigInt(hexToBytes(hex)) as unknown as T;
-    };
-    it.fails(
-      "guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin",
-      () => {
-        const ea: EG_Extrinsic = json.map((e: any): EG_Extrinsic[0] => ({
-          workReport: {
-            workPackageSpecification: {
-              workPackageHash: hextToBigInt(e.report.package_spec.hash),
-              bundleLength: e.report.package_spec.len,
-              erasureRoot: hextToBigInt(e.report.package_spec.root),
-              segmentRoot: hextToBigInt(e.report.package_spec.segments),
-            },
-            refinementContext: {
-              anchor: {
-                headerHash: hextToBigInt(e.report.context.anchor),
-                posteriorStateRoot: hextToBigInt(e.report.context.state_root),
-                posteriorBeefyRoot: hextToBigInt(e.report.context.beefy_root),
-              },
-              lookupAnchor: {
-                headerHash: hextToBigInt(e.report.context.lookup_anchor),
-                timeSlot: e.report.context.lookup_anchor_slot,
-              },
-              requiredWorkPackage: e.report.context.prerequisite || undefined,
-            },
-            coreIndex: e.report.core_index,
-            authorizerHash: hextToBigInt(e.report.authorizer_hash),
-            authorizerOutput: hexToBytes(e.report.auth_output),
-            results: e.report.results.map(
-              (r: any): WorkResult => ({
-                serviceIndex: r.service,
-                codeHash: hextToBigInt(r.code_hash),
-                payloadHash: hextToBigInt(r.payload_hash),
-                gasPrioritization: BigInt(r.gas_ratio) as u64,
-                output: (() => {
-                  if (r.result.ok) {
-                    return hexToBytes(r.result.ok);
-                  }
-
-                  if ("out_of_gas" in r.result) {
-                    return WorkError.OutOfGas;
-                  }
-                  if ("panic" in r.result) {
-                    return WorkError.UnexpectedTermination;
-                  }
-                  throw new Error("pd");
-                })(),
-              }),
-            ),
+    it("guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin", () => {
+      const ea: EG_Extrinsic = json.map((e: any): EG_Extrinsic[0] => ({
+        workReport: {
+          workPackageSpecification: {
+            workPackageHash: hextToBigInt(e.report.package_spec.hash),
+            bundleLength: e.report.package_spec.len,
+            erasureRoot: hextToBigInt(e.report.package_spec.root),
+            segmentRoot: hextToBigInt(e.report.package_spec.segments),
           },
-          timeSlot: e.slot,
-          credential: e.signatures.map(
-            (s: any): EG_Extrinsic[0]["credential"][0] => ({
-              validatorIndex: s.validator_index,
-              signature: hextToBigInt(s.signature),
+          refinementContext: {
+            anchor: {
+              headerHash: hextToBigInt(e.report.context.anchor),
+              posteriorStateRoot: hextToBigInt(e.report.context.state_root),
+              posteriorBeefyRoot: hextToBigInt(e.report.context.beefy_root),
+            },
+            lookupAnchor: {
+              headerHash: hextToBigInt(e.report.context.lookup_anchor),
+              timeSlot: e.report.context.lookup_anchor_slot,
+            },
+            requiredWorkPackage: e.report.context.prerequisite || undefined,
+          },
+          coreIndex: e.report.core_index,
+          authorizerHash: hextToBigInt(e.report.authorizer_hash),
+          authorizerOutput: hexToBytes(e.report.auth_output),
+          results: e.report.results.map(
+            (r: any): WorkResult => ({
+              serviceIndex: r.service,
+              codeHash: hextToBigInt(r.code_hash),
+              payloadHash: hextToBigInt(r.payload_hash),
+              gasPrioritization: BigInt(r.gas_ratio) as u64,
+              output: (() => {
+                if (r.result.ok) {
+                  return hexToBytes(r.result.ok);
+                }
+
+                if ("out_of_gas" in r.result) {
+                  return WorkError.OutOfGas;
+                }
+                if ("panic" in r.result) {
+                  return WorkError.UnexpectedTermination;
+                }
+                throw new Error("pd");
+              })(),
             }),
           ),
-        }));
-        const b = new Uint8Array(bin.length);
-        codecEG_Extrinsic.encode(ea, b);
-        expect(codecEG_Extrinsic.encodedSize(ea)).toBe(bin.length);
-        expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
-        // check decode now
-        const x = codecEG_Extrinsic.decode(b);
-        expect(x.value).toEqual(ea);
-      },
-    );
+        },
+        timeSlot: e.slot,
+        credential: e.signatures.map(
+          (s: any): EG_Extrinsic[0]["credential"][0] => ({
+            validatorIndex: s.validator_index,
+            signature: hextToBigInt(s.signature),
+          }),
+        ),
+      }));
+      const b = new Uint8Array(bin.length);
+      codecEG_Extrinsic.encode(ea, b);
+      expect(codecEG_Extrinsic.encodedSize(ea)).toBe(bin.length);
+      expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+      // check decode now
+      const x = codecEG_Extrinsic.decode(b);
+      expect(x.value).toEqual(ea);
+    });
   });
 }

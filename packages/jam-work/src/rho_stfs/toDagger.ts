@@ -1,12 +1,6 @@
-import {
-  Dagger,
-  Hash,
-  RHO,
-  newSTF,
-  toDagger,
-  toTagged,
-} from "@vekexasia/jam-types";
+import { Dagger, Hash, RHO } from "@vekexasia/jam-types";
 import assert from "node:assert";
+import { newSTF, toDagger, toTagged } from "@vekexasia/jam-utils";
 
 /**
  * Input should be the newly added hashes to phi_b and phi_w

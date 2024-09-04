@@ -4,8 +4,6 @@ import {
   Ed25519SignatureCodec,
   HashCodec,
   JamCodec,
-  bigintToExistingBytes,
-  bytesToBigInt,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import {
@@ -14,6 +12,7 @@ import {
   ValidatorIndex,
 } from "@vekexasia/jam-types";
 import { CORES } from "@vekexasia/jam-constants";
+import { bigintToExistingBytes, bytesToBigInt } from "@vekexasia/jam-utils";
 
 const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   encode(value: AssuranceExtrinsic, bytes: Uint8Array): number {
@@ -83,6 +82,7 @@ if (import.meta.vitest) {
   const fs = await import("fs");
   const constants = await import("@vekexasia/jam-constants");
 
+  const { hextToBigInt } = await import("@vekexasia/jam-utils");
   const path = await import("path");
   describe("codecEa", () => {
     const bin = fs.readFileSync(
@@ -100,12 +100,6 @@ if (import.meta.vitest) {
         "utf8",
       ),
     );
-    const hexToBytes = (hex: string): Uint8Array => {
-      return Buffer.from(hex.slice(2), "hex");
-    };
-    const hextToBigInt = (hex: string): bigint => {
-      return bytesToBigInt(hexToBytes(hex));
-    };
     beforeAll(() => {
       vi.spyOn(constants, "CORES", "get").mockReturnValue(2 as any);
     });
