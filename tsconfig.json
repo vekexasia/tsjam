@@ -52,6 +52,7 @@
       "@vekexasia/jam-safrole": ["../jam-safrole/dist/types/index.d.ts"],
       "@vekexasia/jam-services": ["../jam-services/dist/types/index.d.ts"],
       "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-utils": ["../jam-utils/dist/types/index.d.ts"],
       "@vekexasia/jam-work": ["../jam-work/dist/types/index.d.ts"]
     }
 

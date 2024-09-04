@@ -6,6 +6,7 @@
     "test": "vitest",
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "build:one": "yarn workspace @vekexasia/jam-$0 build",
     "linturbo": "turbo run lint"
   },
   "devDependencies": {

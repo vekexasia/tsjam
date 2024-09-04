@@ -1331,7 +1331,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@vekexasia/jam-codec@workspace:packages/jam-codec"
   dependencies:
+    "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@vekexasia/jam-constants@npm:*, @vekexasia/jam-constants@workspace:*, @vekexasia/jam-constants@workspace:packages/jam-constants":
+  version: 0.0.0-use.local
+  resolution: "@vekexasia/jam-constants@workspace:packages/jam-constants"
   languageName: unknown
   linkType: soft
 
@@ -1350,8 +1358,10 @@ __metadata:
   dependencies:
     "@types/blake2b-wasm": "npm:^2"
     "@types/sodium-native": "npm:^2.3.9"
-    "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-crypto-napi": "npm:*"
+    "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
     blake2b-wasm: "npm:^2.4.0"
     fast-shuffle: "npm:^6.1.0"
     keccak-wasm: "npm:^0.11.2"
@@ -1374,6 +1384,7 @@ __metadata:
   dependencies:
     "@vekexasia/jam-codec": "npm:*"
     "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -1393,6 +1404,7 @@ __metadata:
   resolution: "@vekexasia/jam-safrole@workspace:packages/jam-safrole"
   dependencies:
     "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-crypto": "npm:*"
     "@vekexasia/jam-types": "npm:*"
   languageName: unknown
@@ -1402,15 +1414,28 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@vekexasia/jam-services@workspace:packages/jam-services"
   dependencies:
-    "@vekexasia/jam-codec": "npm:*"
     "@vekexasia/jam-crypto": "npm:*"
     "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@vekexasia/jam-types@npm:*, @vekexasia/jam-types@workspace:packages/jam-types":
+"@vekexasia/jam-types@npm:*, @vekexasia/jam-types@workspace:*, @vekexasia/jam-types@workspace:packages/jam-types":
   version: 0.0.0-use.local
   resolution: "@vekexasia/jam-types@workspace:packages/jam-types"
+  dependencies:
+    "@vekexasia/jam-constants": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@vekexasia/jam-utils@npm:*, @vekexasia/jam-utils@workspace:packages/jam-utils":
+  version: 0.0.0-use.local
+  resolution: "@vekexasia/jam-utils@workspace:packages/jam-utils"
+  dependencies:
+    "@vekexasia/bigint-uint8array": "npm:^1.1.1"
+    "@vekexasia/jam-constants": "workspace:*"
+    "@vekexasia/jam-types": "workspace:*"
+    bigint-buffer: "npm:^1.1.5"
   languageName: unknown
   linkType: soft
 
@@ -1419,6 +1444,7 @@ __metadata:
   resolution: "@vekexasia/jam-work@workspace:packages/jam-work"
   dependencies:
     "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-crypto": "npm:*"
     "@vekexasia/jam-safrole": "npm:*"
     "@vekexasia/jam-types": "npm:*"
@@ -2182,6 +2208,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bigint-buffer@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "bigint-buffer@npm:1.1.5"
+  dependencies:
+    bindings: "npm:^1.3.0"
+    node-gyp: "npm:latest"
+  checksum: 10c0/aa41e53d38242a2f05f85b08eaf592635f92e5328822784cda518232b1644efdbf29ab3664951b174cc645848add4605488e25c9439bcc749660c885b4ff6118
+  languageName: node
+  linkType: hard
+
 "binary-extensions@npm:^2.0.0":
   version: 2.3.0
   resolution: "binary-extensions@npm:2.3.0"
@@ -2199,7 +2235,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bindings@npm:^1.4.0":
+"bindings@npm:^1.3.0, bindings@npm:^1.4.0":
   version: 1.5.0
   resolution: "bindings@npm:1.5.0"
   dependencies:
