@@ -38,7 +38,22 @@
     /* Enable all strict type-checking options. */
     "skipLibCheck": true,
     /* Skip type checking all .d.ts files. */
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@/test/*": ["./test/*"],
+      "@/*": ["./src/*"],
+      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
+      "@vekexasia/jam-constants": ["../jam-constants/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"],
+      "@vekexasia/jam-crypto-napi": ["../jam-crypto-napi/index.d.ts"],
+      "@vekexasia/jam-merklization": ["../jam-merklization/dist/types/index.d.ts"],
+      "@vekexasia/jam-pvm": ["../jam-pvm/dist/types/index.d.ts"],
+      "@vekexasia/jam-recenthistory": ["../jam-recenthistory/dist/types/index.d.ts"],
+      "@vekexasia/jam-safrole": ["../jam-safrole/dist/types/index.d.ts"],
+      "@vekexasia/jam-services": ["../jam-services/dist/types/index.d.ts"],
+      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"],
+      "@vekexasia/jam-work": ["../jam-work/dist/types/index.d.ts"]
+    }
 
   },
 
