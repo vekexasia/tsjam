@@ -4,18 +4,11 @@ import {
   Posterior,
   SafroleState,
   SeqOfLength,
+  Tau,
   TicketIdentifier,
-  u32,
 } from "@vekexasia/jam-types";
-import {
-  epochIndex,
-  isFallbackMode,
-  isNewNextEra,
-  slotIndex,
-} from "@/utils.js";
 import { E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
-import { TauTransition } from "@/state_updaters/types.js";
 import {
   EPOCH_LENGTH,
   LOTTERY_MAX_SLOT,
@@ -23,7 +16,11 @@ import {
 } from "@vekexasia/jam-constants";
 import {
   bigintToBytes,
+  epochIndex,
+  isFallbackMode,
+  isNewNextEra,
   newSTF,
+  slotIndex,
   toPosterior,
   toTagged,
 } from "@vekexasia/jam-utils";
@@ -36,7 +33,8 @@ import {
 export const gamma_sSTF = newSTF<
   SafroleState["gamma_s"],
   {
-    tauTransition: TauTransition;
+    tau: Tau;
+    p_tau: Posterior<Tau>;
     gamma_a: SafroleState["gamma_a"];
     gamma_s: SafroleState["gamma_s"];
     p_kappa: Posterior<SafroleState["kappa"]>;
@@ -44,9 +42,9 @@ export const gamma_sSTF = newSTF<
   }
 >((input) => {
   if (
-    isNewNextEra(input.tauTransition.nextTau, input.tauTransition.curTau) &&
+    isNewNextEra(input.p_tau, input.tau) &&
     input.gamma_a.length === EPOCH_LENGTH &&
-    slotIndex(input.tauTransition.curTau) >= LOTTERY_MAX_SLOT
+    slotIndex(input.tau) >= LOTTERY_MAX_SLOT
   ) {
     // we've accumulated enough tickets
     // we can now compute the new posterior `gamma_s`
@@ -59,10 +57,7 @@ export const gamma_sSTF = newSTF<
       newGammaS.push(input.gamma_a[EPOCH_LENGTH - i - 1]);
     }
     return newGammaS;
-  } else if (
-    epochIndex(input.tauTransition.curTau) ===
-    epochIndex(input.tauTransition.nextTau)
-  ) {
+  } else if (epochIndex(input.tau) === epochIndex(input.p_tau)) {
     return toPosterior(input.gamma_s);
   } else {
     // we're in fallback mode
@@ -88,7 +83,7 @@ export const gamma_sSTF = newSTF<
 if (import.meta.vitest) {
   const { vi, describe, beforeEach, expect, it } = import.meta.vitest;
   const { mockState, mockTicketIdentifier, mockValidatorData, mockHeader } =
-    await import("../../test/mocks.js");
+    await import("../../test/safroleMocks.js");
 
   describe("computePosteriorSlotKey", () => {
     let state: SafroleState;
@@ -122,10 +117,8 @@ if (import.meta.vitest) {
         state.gamma_a = toTagged([]);
         const posterior = gamma_sSTF.apply(
           {
-            tauTransition: {
-              curTau: header.timeSlotIndex,
-              nextTau: posteriorHeader.timeSlotIndex,
-            },
+            tau: header.timeSlotIndex,
+            p_tau: toPosterior(posteriorHeader.timeSlotIndex),
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
@@ -140,10 +133,8 @@ if (import.meta.vitest) {
       it("fallsback if epoch skipped", () => {
         const posterior = gamma_sSTF.apply(
           {
-            tauTransition: {
-              curTau: header.timeSlotIndex,
-              nextTau: (EPOCH_LENGTH * 2) as u32,
-            },
+            tau: header.timeSlotIndex,
+            p_tau: (EPOCH_LENGTH * 2) as Posterior<Tau>,
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
@@ -158,10 +149,8 @@ if (import.meta.vitest) {
       it("fallsback if epoch slot index is less than `LOTTERY_MAX_SLOT`", () => {
         const posterior = gamma_sSTF.apply(
           {
-            tauTransition: {
-              curTau: header.timeSlotIndex,
-              nextTau: (EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1) as u32,
-            },
+            tau: header.timeSlotIndex,
+            p_tau: (EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1) as Posterior<Tau>,
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
@@ -178,10 +167,8 @@ if (import.meta.vitest) {
       it("should return ticketidentifiers if not in fallback mode", () => {
         const posterior = gamma_sSTF.apply(
           {
-            tauTransition: {
-              curTau: LOTTERY_MAX_SLOT as u32,
-              nextTau: EPOCH_LENGTH as u32,
-            },
+            tau: LOTTERY_MAX_SLOT as Posterior<Tau>,
+            p_tau: EPOCH_LENGTH as Posterior<Tau>,
             gamma_a: toTagged(
               new Array(EPOCH_LENGTH)
                 .fill(0)

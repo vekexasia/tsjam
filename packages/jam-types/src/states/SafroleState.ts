@@ -10,6 +10,7 @@ import {
   u32,
 } from "@/genericTypes";
 import { TicketIdentifier, ValidatorData } from "@/index";
+import { Tau } from "@/tau";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 /**
@@ -53,7 +54,7 @@ export interface SafroleBasicState {
  *
  */
 export interface SafroleState extends SafroleBasicState {
-  tau: u32;
+  tau: Tau;
   // entropy accumulator of randomness
   // (65) in graypaper
   eta: [_0: Blake2bHash, _1: Blake2bHash, _2: Blake2bHash, _3: Blake2bHash];

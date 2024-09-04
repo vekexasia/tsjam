@@ -1,17 +1,17 @@
 import {
   Posterior,
   SafroleState,
+  Tau,
   TicketIdentifier,
   u32,
 } from "@vekexasia/jam-types";
-import { isNewEra } from "@/utils.js";
-import { TauTransition } from "@/state_updaters/types.js";
 import assert from "node:assert";
 import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
-import { newSTF } from "@vekexasia/jam-utils";
+import { isNewEra, newSTF } from "@vekexasia/jam-utils";
 
 type Input = {
-  tauTransition: TauTransition;
+  tau: Tau;
+  p_tau: Posterior<Tau>;
   newIdentifiers: TicketIdentifier[];
 };
 /**
@@ -33,7 +33,7 @@ export const gamma_aSTF = newSTF<SafroleState["gamma_a"], Input>({
     return [
       ...input.newIdentifiers,
       ...(() => {
-        if (isNewEra(input.tauTransition.nextTau, input.tauTransition.curTau)) {
+        if (isNewEra(input.p_tau, input.tau)) {
           return [];
         }
         return gamma_a;
@@ -48,14 +48,15 @@ export const gamma_aSTF = newSTF<SafroleState["gamma_a"], Input>({
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { mockState, mockTicketIdentifier } = await import(
-    "../../test/mocks.js"
+    "../../test/safroleMocks.js"
   );
 
   describe("computePosteriorGammaA", () => {
     it("should add new identifiers", () => {
       const pga = gamma_aSTF.apply(
         {
-          tauTransition: { curTau: 0 as u32, nextTau: 0 as u32 },
+          tau: 0 as Tau,
+          p_tau: 0 as Posterior<Tau>,
           newIdentifiers: [mockTicketIdentifier({ id: 1n })],
         },
         mockState({
@@ -71,7 +72,8 @@ if (import.meta.vitest) {
     it("should chunk to EPOCH_LENGTH", () => {
       const pga = gamma_aSTF.apply(
         {
-          tauTransition: { curTau: 0 as u32, nextTau: 0 as u32 },
+          tau: 0 as Tau,
+          p_tau: 0 as Posterior<Tau>,
           newIdentifiers: [mockTicketIdentifier({ id: 1n })],
         },
         mockState({
@@ -91,7 +93,8 @@ if (import.meta.vitest) {
     it("should reset if new era", () => {
       const pga = gamma_aSTF.apply(
         {
-          tauTransition: { curTau: 0 as u32, nextTau: EPOCH_LENGTH as u32 },
+          tau: 0 as Tau,
+          p_tau: EPOCH_LENGTH as Posterior<Tau>,
           newIdentifiers: [mockTicketIdentifier({ id: 1n })],
         },
         mockState({

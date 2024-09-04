@@ -12,13 +12,13 @@ import {
 } from "@vekexasia/jam-merklization";
 import { E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
-import { SIZE_OF_RECENT_HISTORY } from "@/consts.js";
 import { RecentHistory, RecentHistoryItem } from "@vekexasia/jam-types";
 import {
   bigintToExistingBytes,
   bytesToBigInt,
   newSTF,
 } from "@vekexasia/jam-utils";
+import { RECENT_HISTORY_LENGTH } from "@vekexasia/jam-constants";
 
 export const calculateAccumulateRoot = (
   input: Array<{ serviceIndex: ServiceIndex; accummulationResult: Hash }>,
@@ -73,9 +73,9 @@ export const recentHistoryToPosterior = newSTF<
       input.workPackageHashes as RecentHistoryItem["reportedPackages"],
   });
 
-  if (toRet.length > SIZE_OF_RECENT_HISTORY) {
+  if (toRet.length > RECENT_HISTORY_LENGTH) {
     return toRet.slice(
-      toRet.length - SIZE_OF_RECENT_HISTORY,
+      toRet.length - RECENT_HISTORY_LENGTH,
     ) as Posterior<RecentHistory>;
   }
   return toRet as Posterior<RecentHistory>;

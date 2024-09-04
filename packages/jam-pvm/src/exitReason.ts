@@ -1,4 +1,4 @@
-import { RegisterIdentifier } from "@/types.js";
+import { RegisterIdentifier } from "@vekexasia/jam-types";
 
 export enum RegularPVMExitReason {
   Halt = 0,

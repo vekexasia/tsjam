@@ -1,8 +1,11 @@
-import { Posterior, SafroleState } from "@vekexasia/jam-types";
+import { Posterior, SafroleState, Tau } from "@vekexasia/jam-types";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
-import { isNewEra } from "@/utils.js";
-import { TauTransition } from "@/state_updaters/types.js";
-import { bigintToBytes, newSTF, toTagged } from "@vekexasia/jam-utils";
+import {
+  bigintToBytes,
+  isNewEra,
+  newSTF,
+  toTagged,
+} from "@vekexasia/jam-utils";
 
 export const eta0STF = newSTF<
   SafroleState["eta"][0],
@@ -23,12 +26,15 @@ export const eta0STF = newSTF<
   },
 );
 
-export const entropyRotationSTF = newSTF<SafroleState["eta"], TauTransition>(
+export const entropyRotationSTF = newSTF<
+  SafroleState["eta"],
+  { tau: Tau; p_tau: Posterior<Tau> }
+>(
   (
-    input: TauTransition,
+    input: { tau: Tau; p_tau: Posterior<Tau> },
     eta: SafroleState["eta"],
   ): Posterior<SafroleState["eta"]> => {
-    if (isNewEra(input.nextTau, input.curTau)) {
+    if (isNewEra(input.p_tau, input.tau)) {
       return [eta[0], eta[0], eta[1], eta[2]] as Posterior<SafroleState["eta"]>;
     }
     return eta as Posterior<SafroleState["eta"]>;

@@ -1,6 +1,5 @@
-import { u32, u8 } from "@vekexasia/jam-types";
+import { RegisterIdentifier, u32, u8 } from "@vekexasia/jam-types";
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
-import { RegisterIdentifier } from "@/types.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";

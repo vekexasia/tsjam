@@ -1,6 +1,10 @@
-import { EvaluationContext, u32, u8 } from "@vekexasia/jam-types";
+import {
+  EvaluationContext,
+  RegisterIdentifier,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { EvaluateFunction } from "@/instructions/genericInstruction.js";
-import { RegisterIdentifier } from "@/types.js";
 import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";

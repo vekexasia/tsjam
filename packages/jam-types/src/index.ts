@@ -10,6 +10,7 @@ import {
   u32,
 } from "@/genericTypes.js";
 import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+import { Tau } from "@/tau.js";
 
 export type TicketIdentifier = {
   /**
@@ -40,7 +41,7 @@ export interface JamHeader {
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  timeSlotIndex: u32; // Ht
+  timeSlotIndex: Tau; // Ht
   /**
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
@@ -121,3 +122,5 @@ export * from "./pvm/PVMProgram.js";
 export * from "./pvm/PVMMemory.js";
 export * from "./pvm/EvaluationContext.js";
 export * from "./pvm/RegisterIdentifier.js";
+
+export * from "./tau.js";

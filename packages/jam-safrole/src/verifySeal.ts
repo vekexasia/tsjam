@@ -1,5 +1,5 @@
 import { SafroleState, SignedJamHeader } from "@vekexasia/jam-types";
-import { getBlockAuthorKey, isFallbackMode } from "@/utils.js";
+import { getBlockAuthorKey } from "@/utils.js";
 import { UnsignedHeaderCodec } from "@vekexasia/jam-codec";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import assert from "node:assert";
@@ -9,7 +9,7 @@ import {
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
 } from "@vekexasia/jam-constants";
-import { bigintToBytes } from "@vekexasia/jam-utils";
+import { bigintToBytes, isFallbackMode } from "@vekexasia/jam-utils";
 
 export const verifySeal = (
   header: SignedJamHeader,

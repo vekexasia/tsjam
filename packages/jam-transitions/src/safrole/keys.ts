@@ -1,10 +1,61 @@
-import { IDisputesState, Posterior, SafroleState } from "@vekexasia/jam-types";
+import {
+  BandersnatchKey,
+  IDisputesState,
+  OpaqueHash,
+  Posterior,
+  SafroleState,
+  SeqOfLength,
+  Tau,
+  TicketIdentifier,
+  ValidatorData,
+} from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import { afterAll, beforeEach } from "vitest";
-import { TauTransition } from "@/state_updaters/types.js";
-import { PHI_FN, isNewEra } from "@/utils.js";
-import { newSTF, toPosterior, toTagged } from "@vekexasia/jam-utils";
+import {
+  isFallbackMode,
+  isNewEra,
+  newSTF,
+  toPosterior,
+  toTagged,
+} from "@vekexasia/jam-utils";
+import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
 
+export const PHI_FN = <T extends ValidatorData[]>(
+  validatorKeys: ValidatorData[],
+  p_psi_o: Posterior<IDisputesState["psi_o"]>,
+): T => {
+  return validatorKeys.map((v) => {
+    if (p_psi_o.has(v.ed25519)) {
+      return {
+        banderSnatch: 0n as BandersnatchKey,
+        ed25519: 0n as ValidatorData["ed25519"],
+        blsKey: new Uint8Array(144) as ValidatorData["blsKey"],
+        metadata: new Uint8Array(128) as ValidatorData["metadata"],
+      };
+    }
+    return v;
+  }) as T;
+};
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("isFallbackMode", () => {
+    it("should return true if gamma_s is a series of E Bandersnatch keys", () => {
+      const gamma_s = [
+        1n as BandersnatchKey,
+        2n as BandersnatchKey,
+      ] as SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
+      expect(isFallbackMode(gamma_s)).toBe(true);
+    });
+    it("should return false if gamma_s is a series of E tickets", () => {
+      const gamma_s = [
+        { id: 32n as OpaqueHash, attempt: 0 },
+        { id: 32n as OpaqueHash, attempt: 1 },
+      ] as SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
+      expect(isFallbackMode(gamma_s)).toBe(false);
+    });
+  });
+}
 // 58 and 59 in the graypaper
 export const rotateLambdaSTF = newSTF<
   SafroleState["lambda"],
@@ -48,7 +99,8 @@ export const rotateKeys = newSTF<
   {
     p_psi_o: Posterior<IDisputesState["psi_o"]>;
     iota: SafroleState["iota"];
-    tau: TauTransition;
+    tau: Tau;
+    p_tau: Posterior<Tau>;
   },
   [
     Posterior<SafroleState["lambda"]>,
@@ -56,8 +108,8 @@ export const rotateKeys = newSTF<
     Posterior<SafroleState["gamma_k"]>,
     Posterior<SafroleState["gamma_z"]>,
   ]
->(({ p_psi_o, iota, tau }, [lambda, kappa, gamma_k, gamma_z]) => {
-  if (isNewEra(tau.nextTau, tau.curTau)) {
+>(({ p_psi_o, iota, tau, p_tau }, [lambda, kappa, gamma_k, gamma_z]) => {
+  if (isNewEra(p_tau, tau)) {
     const p_gamma_k = rotateGammaKSTF.apply({ iota, p_psi_o }, gamma_k);
     const p_kappa = rotateKappaSTF.apply(gamma_k, kappa);
     const p_lambda = rotateLambdaSTF.apply(kappa, lambda);
@@ -75,7 +127,7 @@ export const rotateKeys = newSTF<
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;
   const { mockState, mockDisputesState, mockValidatorData } = await import(
-    "../../test/mocks.js"
+    "../../test/safroleMocks.js"
   );
 
   describe("rotateValidatorKeys", () => {

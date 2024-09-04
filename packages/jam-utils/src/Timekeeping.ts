@@ -1,4 +1,5 @@
-import { JAM_COMMON_ERA } from "@vekexasia/jam-constants";
+import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@vekexasia/jam-constants";
+import { Posterior, Tau } from "@vekexasia/jam-types";
 
 // todo: move away from types
 export class Timekeeping {
@@ -15,3 +16,37 @@ export class Timekeeping {
     return this.getJamSlotSinceEpoch() % 36;
   }
 }
+/**
+ * `m` in the graypaper
+ * @param timeSlot - the time slot or `Ht` in the graypaper
+ * @see section 6.1 - Timekeeping
+ */
+export const slotIndex = (timeSlot: Tau) => timeSlot % EPOCH_LENGTH;
+
+/**
+ * `r` in the graypaper
+ * @param timeSlot - the time slot or `Ht` in the graypaper
+ * @see section 6.1 - Timekeeping
+ */
+export const epochIndex = (timeSlot: number) =>
+  Math.floor(timeSlot / EPOCH_LENGTH);
+
+/**
+ * check if the header is the first block of a new era
+ * Note: this returns true even in the case of a skipped era
+ */
+export const isNewEra = (newSlotIndex: number, curSlotIndex: number) => {
+  return epochIndex(newSlotIndex) > epochIndex(curSlotIndex);
+};
+
+/**
+ * check if the header is the first block of a new **next** era
+ * Similar to {@link isNewEra} but checks if the new era is the next era
+ * @see isNewEra
+ */
+export const isNewNextEra = (
+  newSlotIndex: Posterior<Tau>,
+  curSlotIndex: Tau,
+) => {
+  return epochIndex(newSlotIndex) === epochIndex(curSlotIndex) + 1;
+};

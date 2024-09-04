@@ -2,20 +2,20 @@ import {
   IDisputesState,
   Posterior,
   SafroleState,
-  u32,
+  Tau,
 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
-import { entropyRotationSTF, eta0STF } from "@/state_updaters/eta.js";
-import { rotateKeys } from "@/state_updaters/keys.js";
-import { gamma_sSTF } from "@/state_updaters/gammaS.js";
-import { gamma_aSTF } from "@/state_updaters/gammaA.js";
-import { ticketExtrinsicToIdentifiersSTF } from "@/extrinsics/tickets/index.js";
+import { entropyRotationSTF, eta0STF } from "@/safrole/eta.js";
+import { rotateKeys } from "@/safrole/keys.js";
+import { gamma_sSTF } from "@/safrole/gammaS.js";
+import { gamma_aSTF } from "@/safrole/gammaA.js";
 import { TicketExtrinsics } from "@vekexasia/jam-types";
 import { toPosterior } from "@vekexasia/jam-utils";
+import { ticketExtrinsicToIdentifiersSTF } from "@/tickets.js";
 
 export const computeNewSafroleState = (
   curState: SafroleState,
-  newSlot: u32,
+  newSlot: Posterior<Tau>,
   entropy: ReturnType<typeof Bandersnatch.vrfOutputSignature>,
   ticketExtrinsics: TicketExtrinsics,
 ): Posterior<SafroleState> => {
@@ -24,8 +24,8 @@ export const computeNewSafroleState = (
   }
 
   const tauTransition = {
-    curTau: curState.tau,
-    nextTau: newSlot,
+    tau: curState.tau,
+    p_tau: newSlot,
   };
 
   const p_eta = entropyRotationSTF.apply(tauTransition, curState.eta);
@@ -33,7 +33,7 @@ export const computeNewSafroleState = (
     {
       p_psi_o: new Set() as Posterior<IDisputesState["psi_o"]>,
       iota: curState.iota,
-      tau: tauTransition,
+      ...tauTransition,
     },
     [curState.lambda, curState.kappa, curState.gamma_k, curState.gamma_z],
   );
@@ -42,7 +42,7 @@ export const computeNewSafroleState = (
 
   const p_gamma_s = gamma_sSTF.apply(
     {
-      tauTransition,
+      ...tauTransition,
       gamma_a: curState.gamma_a,
       gamma_s: curState.gamma_s,
       p_kappa,
@@ -56,14 +56,14 @@ export const computeNewSafroleState = (
       extrinsic: ticketExtrinsics,
       gamma_z: curState.gamma_z,
       gamma_a: curState.gamma_a,
-      nextTau: tauTransition.nextTau,
+      ...tauTransition,
       p_eta,
     },
     null,
   );
   const p_gamma_a = gamma_aSTF.apply(
     {
-      tauTransition,
+      ...tauTransition,
       newIdentifiers: ticketIdentifiers,
     },
     curState.gamma_a,

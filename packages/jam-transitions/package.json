@@ -1,12 +1,12 @@
 {
-  "name": "@vekexasia/jam-services",
+  "name": "@vekexasia/jam-transitions",
   "version": "1.0.0",
-  "description": "Package for JAM Services States",
+  "description": "A library collecting the state transitions for JAM",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
     "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
-    "test": "npx vitest",
+    "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build && vitest run"
   },
@@ -28,7 +28,10 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
+    "@vekexasia/jam-constants": "*",
+    "@vekexasia/jam-codec": "*",
     "@vekexasia/jam-crypto": "*",
+    "@vekexasia/jam-merklization": "*",
     "@vekexasia/jam-types": "*",
     "@vekexasia/jam-utils": "*"
   },
