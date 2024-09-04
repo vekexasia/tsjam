@@ -1,4 +1,4 @@
-import { Dagger, DoubleDagger, Posterior, Tagged } from "@/genericTypes";
+import { Dagger, DoubleDagger, Posterior, Tagged } from "@vekexasia/jam-types";
 
 /**
  * simple utility function to go from untagged to tagged

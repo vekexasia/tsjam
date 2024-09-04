@@ -1,13 +1,8 @@
-import {
-  Posterior,
-  SafroleState,
-  newSTF,
-  toTagged,
-} from "@vekexasia/jam-types";
+import { Posterior, SafroleState } from "@vekexasia/jam-types";
 import { Bandersnatch, Hashing } from "@vekexasia/jam-crypto";
-import { bigintToBytes } from "@vekexasia/jam-codec";
 import { isNewEra } from "@/utils.js";
 import { TauTransition } from "@/state_updaters/types.js";
+import { bigintToBytes, newSTF, toTagged } from "@vekexasia/jam-utils";
 
 export const eta0STF = newSTF<
   SafroleState["eta"][0],

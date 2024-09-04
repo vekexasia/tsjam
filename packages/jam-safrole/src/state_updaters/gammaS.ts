@@ -5,9 +5,6 @@ import {
   SafroleState,
   SeqOfLength,
   TicketIdentifier,
-  newSTF,
-  toPosterior,
-  toTagged,
   u32,
 } from "@vekexasia/jam-types";
 import {
@@ -16,7 +13,7 @@ import {
   isNewNextEra,
   slotIndex,
 } from "@/utils.js";
-import { E_4, bigintToBytes } from "@vekexasia/jam-codec";
+import { E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { TauTransition } from "@/state_updaters/types.js";
 import {
@@ -24,6 +21,12 @@ import {
   LOTTERY_MAX_SLOT,
   NUMBER_OF_VALIDATORS,
 } from "@vekexasia/jam-constants";
+import {
+  bigintToBytes,
+  newSTF,
+  toPosterior,
+  toTagged,
+} from "@vekexasia/jam-utils";
 
 /**
  * it computes the posterior value of `gamma_s`

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { bytesToBigInt } from "@vekexasia/jam-codec";
 import { recentHistoryToDagger } from "@/stfs/toDagger.js";
 import { recentHistoryToPosterior } from "@/stfs/toPosterior.js";
 import {
@@ -9,13 +8,8 @@ import {
   RecentHistoryItem,
   WorkPackageHash,
 } from "@vekexasia/jam-types";
+import { hextToBigInt } from "@vekexasia/jam-utils";
 
-export const hexToBytes = (hex: string): Uint8Array => {
-  return Buffer.from(hex.slice(2), "hex");
-};
-export const hextToBigInt = <T extends bigint>(hex: string): T => {
-  return bytesToBigInt(hexToBytes(hex)) as unknown as T;
-};
 const testToState = (item: any): RecentHistoryItem => {
   return {
     accumulationResultMMR: item.mmr.peaks.map((acItem: any) => {

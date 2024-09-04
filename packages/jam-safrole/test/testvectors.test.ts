@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
-import {
-  hexToBytes,
-  hextToBigInt,
-  mapTestDataToSafroleState,
-  safroleStateToTestData,
-} from "./utils.js";
+import { mapTestDataToSafroleState, safroleStateToTestData } from "./utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -44,8 +39,8 @@ vi.mock("@vekexasia/jam-types", async (importOriginal) => {
   return toRet;
 });
 import { computeNewSafroleState } from "@/state_updaters/stateUpdater.js";
-import { toTagged } from "@vekexasia/jam-types";
 import { TicketExtrinsics } from "@vekexasia/jam-types";
+import { hexToBytes, hextToBigInt, toTagged } from "@vekexasia/jam-utils";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(

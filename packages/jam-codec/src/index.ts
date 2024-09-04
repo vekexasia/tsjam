@@ -7,7 +7,6 @@ export * from "@/optional.js";
 export * from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 export * from "@/lengthdiscriminated/lengthDiscriminator.js";
 export type { JamCodec } from "@/codec.js";
-export * from "@/bigint_bytes.js";
 export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
 export * from "./setelements/index.js";

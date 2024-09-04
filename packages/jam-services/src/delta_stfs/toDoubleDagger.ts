@@ -4,9 +4,9 @@ import {
   DoubleDagger,
   ServiceAccount,
   ServiceIndex,
-  newSTF,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
+import { newSTF } from "@vekexasia/jam-utils";
 
 type Input = {
   accummulationResult: Map<

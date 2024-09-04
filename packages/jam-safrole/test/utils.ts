@@ -1,4 +1,3 @@
-import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
@@ -7,15 +6,9 @@ import {
   Tagged,
   TicketIdentifier,
   ValidatorData,
-  toTagged,
 } from "@vekexasia/jam-types";
+import { bigintToBytes, hextToBigInt, toTagged } from "@vekexasia/jam-utils";
 
-export const hexToBytes = (hex: string): Uint8Array => {
-  return Buffer.from(hex.slice(2), "hex");
-};
-export const hextToBigInt = (hex: string): bigint => {
-  return bytesToBigInt(hexToBytes(hex));
-};
 export const validatorEntryMap = (entry: any) => {
   return {
     banderSnatch: hextToBigInt(entry.bandersnatch),

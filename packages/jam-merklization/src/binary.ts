@@ -1,5 +1,5 @@
 import { MerkeTreeRoot } from "@vekexasia/jam-types";
-import { bytesToBigInt } from "@vekexasia/jam-codec";
+import { bytesToBigInt } from "@vekexasia/jam-utils";
 
 const prefix: Uint8Array = new TextEncoder().encode("node");
 

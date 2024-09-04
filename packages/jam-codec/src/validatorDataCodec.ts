@@ -5,8 +5,8 @@ import {
   type ValidatorData,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
-import { bigintToBytes } from "@/bigint_bytes.js";
 import { BandersnatchCodec, Ed25519PubkeyCodec } from "@/identity.js";
+import { bigintToBytes } from "@vekexasia/jam-utils";
 
 export const ValidatorDataCodec: JamCodec<ValidatorData> = {
   encode: function (value: ValidatorData, bytes: Uint8Array): number {

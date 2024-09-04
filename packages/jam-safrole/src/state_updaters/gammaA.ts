@@ -2,13 +2,13 @@ import {
   Posterior,
   SafroleState,
   TicketIdentifier,
-  newSTF,
   u32,
 } from "@vekexasia/jam-types";
 import { isNewEra } from "@/utils.js";
 import { TauTransition } from "@/state_updaters/types.js";
 import assert from "node:assert";
 import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+import { newSTF } from "@vekexasia/jam-utils";
 
 type Input = {
   tauTransition: TauTransition;

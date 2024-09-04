@@ -1,13 +1,7 @@
-import {
-  Dagger,
-  Delta,
-  ServiceIndex,
-  newSTF,
-  toTagged,
-  u32,
-} from "@vekexasia/jam-types";
+import { Dagger, Delta, ServiceIndex, u32 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { Hashing } from "@vekexasia/jam-crypto";
+import { newSTF, toTagged } from "@vekexasia/jam-utils";
 
 // (156) in graypaper
 export const deltaToDagger = newSTF<

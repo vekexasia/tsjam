@@ -4,9 +4,9 @@ import {
   Posterior,
   ServiceAccount,
   ServiceIndex,
-  newSTF,
   u64,
 } from "@vekexasia/jam-types";
+import { newSTF } from "@vekexasia/jam-utils";
 type AccResultItem = {
   // service account after accummulation
   s: ServiceAccount | undefined;

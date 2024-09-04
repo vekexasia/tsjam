@@ -4,7 +4,7 @@ import {
   ED25519Signature,
 } from "@vekexasia/jam-types";
 import sodium from "sodium-native";
-import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
+import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-utils";
 
 export const Ed25519 = {
   /**

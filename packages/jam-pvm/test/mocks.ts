@@ -1,12 +1,7 @@
 import { vi } from "vitest";
 import { PVMMemory } from "@/pvmMemory.js";
-import {
-  EvaluationContext,
-  SeqOfLength,
-  toTagged,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { EvaluationContext, SeqOfLength, u32, u8 } from "@vekexasia/jam-types";
+import { toTagged } from "@vekexasia/jam-utils";
 
 const mockMemory = (): typeof PVMMemory => ({
   set: vi.fn(),

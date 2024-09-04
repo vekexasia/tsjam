@@ -95,7 +95,6 @@ export * from "./JamBlock.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
 export * from "./STF.js";
-export * from "./utils.js";
 export * from "./extrinsics/assurances.js";
 export * from "./extrinsics/disputes.js";
 export * from "./extrinsics/guarantees.js";

@@ -2,7 +2,6 @@ import {
   IDisputesState,
   Posterior,
   SafroleState,
-  toPosterior,
   u32,
 } from "@vekexasia/jam-types";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
@@ -12,6 +11,7 @@ import { gamma_sSTF } from "@/state_updaters/gammaS.js";
 import { gamma_aSTF } from "@/state_updaters/gammaA.js";
 import { ticketExtrinsicToIdentifiersSTF } from "@/extrinsics/tickets/index.js";
 import { TicketExtrinsics } from "@vekexasia/jam-types";
+import { toPosterior } from "@vekexasia/jam-utils";
 
 export const computeNewSafroleState = (
   curState: SafroleState,

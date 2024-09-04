@@ -30,6 +30,9 @@
     "@vekexasia/jam-codec": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-merklization": "*",
+    "@vekexasia/jam-utils": "*"
+  },
+  "devDependencies": {
     "@vekexasia/jam-types": "*"
   },
   "license": "MIT"

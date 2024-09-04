@@ -1,7 +1,7 @@
-import { Blake2bHash, toTagged } from "@vekexasia/jam-types";
+import { Blake2bHash } from "@vekexasia/jam-types";
 import blake2b from "blake2b-wasm";
-import { bytesToBigInt } from "@vekexasia/jam-codec";
 import { keccak256 } from "keccak-wasm";
+import { bytesToBigInt, toTagged } from "@vekexasia/jam-utils";
 blake2b.ready((err) => {
   if (err) {
     throw err;

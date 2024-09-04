@@ -1,4 +1,4 @@
-import { i32, toTagged, u32, u8 } from "@vekexasia/jam-types";
+import { i32, u32, u8 } from "@vekexasia/jam-types";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Z } from "@/utils/zed.js";
@@ -30,6 +30,8 @@ if (import.meta.vitest) {
   vi.mock("@/utils/branch.js", () => ({
     branch: vi.fn(),
   }));
+
+  const { toTagged } = await import("@vekexasia/jam-utils");
   const { createEvContext } = await import("@/test/mocks.js");
   describe("one_offset_ixs", () => {
     describe("decode", () => {

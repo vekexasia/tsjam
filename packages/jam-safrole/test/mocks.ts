@@ -6,9 +6,9 @@ import {
   TicketIdentifier,
   UnTaggedObject,
   ValidatorData,
-  toTagged,
 } from "@vekexasia/jam-types";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { toTagged } from "@vekexasia/jam-utils";
 
 export const mockHeader = (
   opts: Partial<UnTaggedObject<JamHeader>> = {},

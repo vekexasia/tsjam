@@ -10,7 +10,7 @@ import {
   MerkeTreeRoot,
   OpaqueHash,
 } from "@vekexasia/jam-types";
-import { bigintToExistingBytes, bytesToBigInt } from "@/bigint_bytes.js";
+import { bigintToExistingBytes, bytesToBigInt } from "@vekexasia/jam-utils";
 
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {

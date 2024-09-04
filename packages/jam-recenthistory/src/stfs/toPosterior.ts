@@ -5,20 +5,20 @@ import {
   Posterior,
   ServiceIndex,
   WorkPackageHash,
-  newSTF,
 } from "@vekexasia/jam-types";
 import {
   appendMMR,
   wellBalancedBinaryMerkleRoot,
 } from "@vekexasia/jam-merklization";
-import {
-  E_4,
-  bigintToExistingBytes,
-  bytesToBigInt,
-} from "@vekexasia/jam-codec";
+import { E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { SIZE_OF_RECENT_HISTORY } from "@/consts.js";
 import { RecentHistory, RecentHistoryItem } from "@vekexasia/jam-types";
+import {
+  bigintToExistingBytes,
+  bytesToBigInt,
+  newSTF,
+} from "@vekexasia/jam-utils";
 
 export const calculateAccumulateRoot = (
   input: Array<{ serviceIndex: ServiceIndex; accummulationResult: Hash }>,

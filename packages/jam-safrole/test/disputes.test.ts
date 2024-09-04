@@ -3,7 +3,6 @@ import * as fs from "node:fs";
 import {
   disputesStateFromTest,
   disputesStateToTest,
-  hextToBigInt,
   validatorEntryMap,
 } from "./utils.js";
 
@@ -44,7 +43,8 @@ vi.mock("@vekexasia/jam-types", async (importOriginal) => {
   return toRet;
 });
 import { disputesSTF } from "@/extrinsics/index.js";
-import { DisputeExtrinsic, toTagged } from "@vekexasia/jam-types";
+import { DisputeExtrinsic } from "@vekexasia/jam-types";
+import { hextToBigInt, toTagged } from "@vekexasia/jam-utils";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(

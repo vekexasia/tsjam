@@ -1,9 +1,15 @@
 {
-  "name": "@vekexasia/jam-work",
+  "name": "@vekexasia/jam-utils",
   "version": "1.0.0",
-  "description": "Package to handle work reports and packages for JAM",
+  "description": "Utility functions for JAM",
+  "dependencies": {
+    "@vekexasia/bigint-uint8array": "^1.1.1",
+    "@vekexasia/jam-constants": "workspace:*",
+    "@vekexasia/jam-types": "workspace:*",
+    "bigint-buffer": "^1.1.5"
+  },
   "scripts": {
-    "build": "rollup --config ../../build/rollup.config.mjs",
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -25,13 +31,6 @@
     "url": "https://www.andreabaccega.com/",
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
-  },
-  "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-safrole": "*",
-    "@vekexasia/jam-types": "*"
   },
   "license": "MIT"
 }

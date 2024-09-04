@@ -1,5 +1,6 @@
-import { Dagger, JamHeader, newSTF } from "@vekexasia/jam-types";
+import { Dagger, JamHeader } from "@vekexasia/jam-types";
 import { RecentHistory } from "@vekexasia/jam-types";
+import { newSTF } from "@vekexasia/jam-utils";
 
 export const recentHistoryToDagger = newSTF<
   RecentHistory,

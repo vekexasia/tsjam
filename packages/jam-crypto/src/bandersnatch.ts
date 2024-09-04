@@ -8,8 +8,8 @@ import {
   RingVRFProof,
 } from "@vekexasia/jam-types";
 import { ringRoot, vrfOutputHash, vrfVerify } from "@vekexasia/jam-crypto-napi";
-import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-codec";
 import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-utils";
 
 export const Bandersnatch = {
   /**

@@ -7,7 +7,6 @@ import {
   Ed25519SignatureCodec,
   HashCodec,
   JamCodec,
-  bytesToBigInt,
   createArrayLengthDiscriminator,
 } from "@vekexasia/jam-codec";
 import {
@@ -18,8 +17,8 @@ import {
   ValidatorIndex,
   u32,
 } from "@vekexasia/jam-types";
-import { hextToBigInt } from "@/test/utils.js";
 import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { bytesToBigInt } from "@vekexasia/jam-utils";
 
 const singleJudgementCodec: JamCodec<
   DisputeExtrinsic["verdicts"][0]["judgements"][0]
@@ -212,6 +211,7 @@ if (import.meta.vitest) {
   const fs = await import("fs");
   const constants = await import("@vekexasia/jam-constants");
 
+  const { hextToBigInt } = await import("@vekexasia/jam-utils");
   const path = await import("path");
   describe("codecED", () => {
     beforeAll(() => {
