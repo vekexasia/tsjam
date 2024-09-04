@@ -9,12 +9,8 @@ import {
   UpToSeq,
   u32,
 } from "@/genericTypes";
-import {
-  EPOCH_LENGTH,
-  NUMBER_OF_VALIDATORS,
-  TicketIdentifier,
-  ValidatorData,
-} from "@/index";
+import { TicketIdentifier, ValidatorData } from "@/index";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 /**
  * Denoted with gamma (y) in the Greek alphabet.

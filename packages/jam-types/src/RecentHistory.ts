@@ -1,5 +1,5 @@
 import { Hash, UpToSeq } from "@/genericTypes.js";
-import { CORES } from "@/consts.js";
+import { CORES } from "@vekexasia/jam-constants";
 /*
  * @see section 7
  */

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Base Types for JAM",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -27,8 +27,8 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-types": "*"
+    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-codec": "*"
   },
   "license": "MIT"
 }

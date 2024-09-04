@@ -1,5 +1,5 @@
 import { Hash, MerkeTreeRoot, UpToSeq, WorkPackageHash } from "@/genericTypes";
-import { CORES } from "@/consts";
+import { CORES } from "@vekexasia/jam-constants";
 
 /*
  * @see section 7

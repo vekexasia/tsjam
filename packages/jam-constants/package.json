@@ -1,7 +1,7 @@
 {
-  "name": "@vekexasia/jam-recenthistory",
+  "name": "@vekexasia/jam-constants",
   "version": "1.0.0",
-  "description": "Recent History state",
+  "description": "JAM constants",
   "scripts": {
     "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
@@ -25,12 +25,6 @@
     "url": "https://www.andreabaccega.com/",
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
-  },
-  "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-merklization": "*",
-    "@vekexasia/jam-types": "*"
   },
   "license": "MIT"
 }

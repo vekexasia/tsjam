@@ -5,7 +5,9 @@
     "rootDir": "..",
     "preserveSymlinks": false,
     "moduleResolution": "bundler",
-
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "src/**/*",

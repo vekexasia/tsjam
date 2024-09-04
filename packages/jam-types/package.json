@@ -2,8 +2,11 @@
   "name": "@vekexasia/jam-types",
   "version": "1.0.0",
   "description": "Base Types for JAM",
+  "dependencies": {
+    "@vekexasia/jam-constants": "*"
+  },
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",

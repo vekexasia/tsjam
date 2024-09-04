@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A library to convert back and forth according appendix C of graypaper. Also called SCALE",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -27,7 +27,8 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-types": "*"
+    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-constants": "*"
   },
   "license": "MIT"
 }

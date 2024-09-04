@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Crypto utils for JAM",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -30,6 +30,8 @@
   "dependencies": {
     "@vekexasia/jam-codec": "*",
     "@vekexasia/jam-crypto-napi": "*",
+    "@vekexasia/jam-constants": "*",
+    "@vekexasia/jam-types": "*",
     "blake2b-wasm": "^2.4.0",
     "fast-shuffle": "^6.1.0",
     "keccak-wasm": "^0.11.2",

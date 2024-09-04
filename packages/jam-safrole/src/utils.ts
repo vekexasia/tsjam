@@ -1,6 +1,5 @@
 import {
   BandersnatchKey,
-  EPOCH_LENGTH,
   IDisputesState,
   JamHeader,
   OpaqueHash,
@@ -10,6 +9,7 @@ import {
   TicketIdentifier,
   ValidatorData,
 } from "@vekexasia/jam-types";
+import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
 
 /**
  * `m` in the graypaper

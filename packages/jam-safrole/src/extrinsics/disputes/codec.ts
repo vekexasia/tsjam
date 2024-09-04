@@ -15,11 +15,11 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
-  NUMBER_OF_VALIDATORS,
   ValidatorIndex,
   u32,
 } from "@vekexasia/jam-types";
 import { hextToBigInt } from "@/test/utils.js";
+import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 const singleJudgementCodec: JamCodec<
   DisputeExtrinsic["verdicts"][0]["judgements"][0]
@@ -210,12 +210,14 @@ export const codecEd: JamCodec<DisputeExtrinsic> = {
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
   const fs = await import("fs");
-  const types = await import("@vekexasia/jam-types");
+  const constants = await import("@vekexasia/jam-constants");
 
   const path = await import("path");
   describe("codecED", () => {
     beforeAll(() => {
-      vi.spyOn(types, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(6 as any);
+      vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
+        6 as any,
+      );
     });
 
     const bin = fs.readFileSync(

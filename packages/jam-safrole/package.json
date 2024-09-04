@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Block production and chain growth. Aka Safrole",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@vekexasia/jam-codec": "*",
+    "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-types": "*"
   },

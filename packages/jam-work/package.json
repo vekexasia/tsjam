@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Package to handle work reports and packages for JAM",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -30,7 +30,8 @@
     "@vekexasia/jam-codec": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-safrole": "*",
-    "@vekexasia/jam-types": "*"
+    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-constants": "*"
   },
   "license": "MIT"
 }

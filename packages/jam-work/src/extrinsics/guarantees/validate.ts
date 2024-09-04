@@ -1,5 +1,6 @@
-import { CORES, EG_Extrinsic } from "@vekexasia/jam-types";
+import { EG_Extrinsic } from "@vekexasia/jam-types";
 import assert from "node:assert";
+import { CORES } from "@vekexasia/jam-constants";
 
 export const validateEG_Extrinsic = (extrinsic: EG_Extrinsic) => {
   assert(extrinsic.length <= CORES, "Extrinsic length must be less than CORES");

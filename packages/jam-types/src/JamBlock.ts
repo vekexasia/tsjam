@@ -1,5 +1,5 @@
 import { JamHeader, RingVRFProof, Tagged, UpToSeq } from "@/index";
-import { CORES, NUMBER_OF_VALIDATORS } from "@/consts.js";
+import { CORES, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 export interface JamBlock {
   header: JamHeader;

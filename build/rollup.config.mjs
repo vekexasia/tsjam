@@ -1,8 +1,9 @@
-import {rollupCreate, rollupTypes} from "../../build/rollupconfigcreator.mjs";
-
+import {rollupCreate, rollupTypes} from "./rollupconfigcreator.mjs";
+import fs from "fs";
 const tsOptions = {compilerOptions: {rootDir: '.'}};
 
-const external = ['vitest', '@vekexasia/jam-types', '@vekexasia/jam-crypto', '@vekexasia/jam-codec', '@vekexasia/jam-exstrinsics'];
+const p = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+const external = Object.keys(p.dependencies ?? {}).concat("vitest");
 /**
  * @type {import('rollup').RollupOptions[]}
  */

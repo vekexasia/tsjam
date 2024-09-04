@@ -1,5 +1,5 @@
 import { Hash, ServiceIndex, UpToSeq, u32, u64 } from "@/genericTypes";
-import { MAX_WORKPACKAGE_ENTRIES } from "@/consts";
+import { MAX_WORKPACKAGE_ENTRIES } from "@vekexasia/jam-constants";
 
 /**
  * Identified by `I` set

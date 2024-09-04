@@ -1,4 +1,4 @@
-import { CORES, NUMBER_OF_VALIDATORS } from "@/consts.js";
+import { CORES, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 declare const tags: unique symbol;
 export type Tagged<

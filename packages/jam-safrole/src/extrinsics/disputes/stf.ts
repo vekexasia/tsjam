@@ -2,10 +2,6 @@ import {
   DisputeExtrinsic,
   Hash,
   IDisputesState,
-  JAM_GUARANTEE,
-  JAM_INVALID,
-  JAM_VALID,
-  NUMBER_OF_VALIDATORS,
   Posterior,
   SafroleState,
   newSTF,
@@ -14,6 +10,12 @@ import { Ed25519 } from "@vekexasia/jam-crypto";
 import { bigintToBytes } from "@vekexasia/jam-codec";
 import assert from "node:assert";
 import { epochIndex } from "@/utils.js";
+import {
+  JAM_GUARANTEE,
+  JAM_INVALID,
+  JAM_VALID,
+  NUMBER_OF_VALIDATORS,
+} from "@vekexasia/jam-constants";
 
 /**
  * Computes state transition for disputes state

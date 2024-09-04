@@ -9,7 +9,7 @@ import {
   Tagged,
   u32,
 } from "@/genericTypes.js";
-import { EPOCH_LENGTH } from "@/consts.js";
+import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
 
 export type TicketIdentifier = {
   /**
@@ -94,7 +94,6 @@ export interface SignedJamHeader extends JamHeader {
 export * from "./JamBlock.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
-export * from "./consts.js";
 export * from "./STF.js";
 export * from "./utils.js";
 export * from "./extrinsics/assurances.js";

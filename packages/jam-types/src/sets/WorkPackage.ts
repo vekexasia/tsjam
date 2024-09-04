@@ -1,7 +1,7 @@
 import { BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { WorkItem } from "@/sets/WorkItem";
-import { MAXIMUM_WORK_ITEMS } from "@/consts";
+import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
 
 /**
  * Identified by `P` set

@@ -1,8 +1,6 @@
 import { JamCodec } from "@/codec.js";
 import {
-  EPOCH_LENGTH,
   JamHeader,
-  NUMBER_OF_VALIDATORS,
   TicketIdentifier,
   toTagged,
   u32,
@@ -19,6 +17,7 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
 import { createSequenceCodec } from "@/sequenceCodec.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   decode(bytes: Uint8Array): {

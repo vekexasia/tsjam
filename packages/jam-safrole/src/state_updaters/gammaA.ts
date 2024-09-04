@@ -1,5 +1,4 @@
 import {
-  EPOCH_LENGTH,
   Posterior,
   SafroleState,
   TicketIdentifier,
@@ -9,6 +8,7 @@ import {
 import { isNewEra } from "@/utils.js";
 import { TauTransition } from "@/state_updaters/types.js";
 import assert from "node:assert";
+import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
 
 type Input = {
   tauTransition: TauTransition;

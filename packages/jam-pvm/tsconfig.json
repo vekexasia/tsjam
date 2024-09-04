@@ -5,12 +5,7 @@
     "rootDir": "..",
     "preserveSymlinks": false,
     "moduleResolution": "bundler",
-    "paths": {
-      "@/test/*": ["./test/*"],
-      "@/*": ["./src/*"],
-      "@vekexasia/jam-codec": ["../jam-codec/dist/types/index.d.ts"],
-      "@vekexasia/jam-types": ["../jam-types/dist/types/index.d.ts"]
-    }
+
   },
   "include": [
     "src/**/*",

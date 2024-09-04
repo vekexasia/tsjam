@@ -5,7 +5,7 @@ import {
   UpToSeq,
   ValidatorIndex,
 } from "@/genericTypes";
-import { CORES, NUMBER_OF_VALIDATORS } from "@/consts";
+import { CORES, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 /**
  * The assurance extrinsic is a proof that a validator has received and is storing a piece of data.

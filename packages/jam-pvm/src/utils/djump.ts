@@ -1,5 +1,4 @@
-import { EvaluationContext } from "@/evaluationContext.js";
-import { u32 } from "@vekexasia/jam-types";
+import { EvaluationContext, u32 } from "@vekexasia/jam-types";
 import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
 import { RegularPVMExitReason } from "@/exitReason.js";
 const ZA = 4;

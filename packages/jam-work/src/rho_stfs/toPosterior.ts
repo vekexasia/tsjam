@@ -1,15 +1,9 @@
 import {
-  CORES,
   DoubleDagger,
   EG_Extrinsic,
-  JAM_GUARANTEE,
-  MAXIMUM_AGE_LOOKUP_ANCHOR,
-  NUMBER_OF_VALIDATORS,
   Posterior,
   RHO,
   SafroleState,
-  VALIDATOR_CORE_ROTATION,
-  WORK_TIMEOUT,
   newSTF,
 } from "@vekexasia/jam-types";
 import { TauTransition } from "@vekexasia/jam-safrole";
@@ -17,6 +11,14 @@ import assert from "node:assert";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
 import { G_Star, GuarantorsAssignment } from "@/garantors.js";
 import { WorkReportCodec } from "@/sets/index.js";
+import {
+  CORES,
+  JAM_GUARANTEE,
+  MAXIMUM_AGE_LOOKUP_ANCHOR,
+  NUMBER_OF_VALIDATORS,
+  VALIDATOR_CORE_ROTATION,
+  WORK_TIMEOUT,
+} from "@vekexasia/jam-constants";
 
 export const RHO_toPosterior = newSTF<
   DoubleDagger<RHO>,

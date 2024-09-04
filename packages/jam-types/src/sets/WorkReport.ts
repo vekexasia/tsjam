@@ -1,8 +1,8 @@
 import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { BoundedSeq, CoreIndex, Hash } from "@/genericTypes";
-import { MAXIMUM_WORK_ITEMS } from "@/consts";
 import { WorkResult } from "@/sets/WorkResult";
+import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
 
 /**
  * Identified by `W` set

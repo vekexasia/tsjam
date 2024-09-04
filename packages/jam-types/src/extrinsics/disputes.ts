@@ -7,7 +7,7 @@ import {
   ValidatorIndex,
   u32,
 } from "@/genericTypes";
-import { MINIMUM_VALIDATORS } from "@/consts";
+import { MINIMUM_VALIDATORS } from "@vekexasia/jam-constants";
 
 /**
  * Identified ad E<sub>d</sub> in the paper

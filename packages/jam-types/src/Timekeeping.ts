@@ -1,5 +1,6 @@
-import { JAM_COMMON_ERA } from "@/consts";
+import { JAM_COMMON_ERA } from "@vekexasia/jam-constants";
 
+// todo: move away from types
 export class Timekeeping {
   static getJamSlotSinceEpoch() {
     const now = (Date.now() / 1000) | 0;

@@ -10,10 +10,10 @@ import {
 } from "@vekexasia/jam-codec";
 import {
   AssuranceExtrinsic,
-  CORES,
   EA_Extrinsic,
   ValidatorIndex,
 } from "@vekexasia/jam-types";
+import { CORES } from "@vekexasia/jam-constants";
 
 const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   encode(value: AssuranceExtrinsic, bytes: Uint8Array): number {
@@ -81,7 +81,7 @@ export const codecEa = createArrayLengthDiscriminator(
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
   const fs = await import("fs");
-  const types = await import("@vekexasia/jam-types");
+  const constants = await import("@vekexasia/jam-constants");
 
   const path = await import("path");
   describe("codecEa", () => {
@@ -107,7 +107,7 @@ if (import.meta.vitest) {
       return bytesToBigInt(hexToBytes(hex));
     };
     beforeAll(() => {
-      vi.spyOn(types, "CORES", "get").mockReturnValue(2 as any);
+      vi.spyOn(constants, "CORES", "get").mockReturnValue(2 as any);
     });
     it("assurances_extrinsic.json encoded should match assurances_extrinsic.bin", () => {
       const ea: EA_Extrinsic = json.map((e: any) => ({

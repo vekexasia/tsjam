@@ -1,9 +1,6 @@
 import {
   BandersnatchKey,
-  EPOCH_LENGTH,
   JamHeader,
-  LOTTERY_MAX_SLOT,
-  NUMBER_OF_VALIDATORS,
   Posterior,
   SafroleState,
   SeqOfLength,
@@ -22,6 +19,11 @@ import {
 import { E_4, bigintToBytes } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { TauTransition } from "@/state_updaters/types.js";
+import {
+  EPOCH_LENGTH,
+  LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+} from "@vekexasia/jam-constants";
 
 /**
  * it computes the posterior value of `gamma_s`

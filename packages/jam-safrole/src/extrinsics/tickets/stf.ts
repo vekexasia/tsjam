@@ -1,8 +1,5 @@
 // compute `n` (76)
 import {
-  JAM_TICKET_SEAL,
-  LOTTERY_MAX_SLOT,
-  MAX_TICKETS_PER_BLOCK,
   Posterior,
   SafroleState,
   TicketExtrinsics,
@@ -14,6 +11,11 @@ import assert from "node:assert";
 import { TauTransition } from "@/state_updaters/types.js";
 import { slotIndex } from "@/utils.js";
 import { bigintToBytes } from "@vekexasia/jam-codec";
+import {
+  JAM_TICKET_SEAL,
+  LOTTERY_MAX_SLOT,
+  MAX_TICKETS_PER_BLOCK,
+} from "@vekexasia/jam-constants";
 
 export const ticketExtrinsicToIdentifiersSTF = newSTF<
   null,

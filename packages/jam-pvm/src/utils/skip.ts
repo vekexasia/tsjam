@@ -1,4 +1,4 @@
-import { PVMProgram } from "@/program.js";
+import { PVMProgram } from "@vekexasia/jam-types";
 
 /**
  * This function returns the number of bytes to `skip` for the next instruction.

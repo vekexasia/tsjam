@@ -1,15 +1,12 @@
 import {
-  CORES,
   CoreIndex,
   ED25519PublicKey,
   Hash,
   IDisputesState,
-  NUMBER_OF_VALIDATORS,
   Posterior,
   SafroleState,
   SeqOfLength,
   Tagged,
-  VALIDATOR_CORE_ROTATION,
   newSTF,
   toPosterior,
   toTagged,
@@ -17,6 +14,11 @@ import {
 } from "@vekexasia/jam-types";
 import { PHI_FN, TauTransition, slotIndex } from "@vekexasia/jam-safrole";
 import { FisherYatesH } from "@vekexasia/jam-crypto";
+import {
+  CORES,
+  NUMBER_OF_VALIDATORS,
+  VALIDATOR_CORE_ROTATION,
+} from "@vekexasia/jam-constants";
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it

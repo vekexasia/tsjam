@@ -1,6 +1,6 @@
 import { SeqOfLength, u32 } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
-import { CORES } from "@/consts";
+import { CORES } from "@vekexasia/jam-constants";
 
 /**
  * `ρ`

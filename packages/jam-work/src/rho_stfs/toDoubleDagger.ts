@@ -1,12 +1,9 @@
 import {
   AssuranceExtrinsic,
-  CORES,
   Dagger,
   DoubleDagger,
   EA_Extrinsic,
-  JAM_AVAILABLE,
   JamHeader,
-  NUMBER_OF_VALIDATORS,
   Posterior,
   RHO,
   SafroleState,
@@ -15,6 +12,11 @@ import {
 import assert from "node:assert";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
 import { BitSequence, bigintToBytes } from "@vekexasia/jam-codec";
+import {
+  CORES,
+  JAM_AVAILABLE,
+  NUMBER_OF_VALIDATORS,
+} from "@vekexasia/jam-constants";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
