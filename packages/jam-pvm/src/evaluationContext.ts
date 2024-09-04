@@ -1,36 +1,14 @@
-import { SeqOfLength, u32, u8 } from "@vekexasia/jam-types";
-import { PVMProgram } from "@/program.js";
+import {
+  EvaluationContext,
+  PVMProgram,
+  SeqOfLength,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { PVMMemory } from "@/pvmMemory.js";
 import { Ixdb } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 
-/**
- * This is the context passed to instructions for evaluation.
- *
- */
-export interface EvaluationContext {
-  instructionPointer: u32;
-  memory: typeof PVMMemory;
-  program: PVMProgram;
-  meta: {
-    /**
-     * the set of instruction indexes that are the start of a block
-     * defined by ϖ in the graypaper
-     */
-    blockBeginnings: Set<u32>;
-    /**
-     * the length of each block in the program
-     * key is the `ix` index
-     * value is the length of bytes till the next `ix` index
-     *
-     * not including the ix index itself
-     * basically its the `skip()` function
-     *
-     */
-    ixSkips: Map<u32, u32>;
-  };
-  registers: SeqOfLength<u32, 13>;
-}
 /**
  * Instantiate a new evaluation context given the PVM Program
  * @param program - the PVM Program

@@ -1,5 +1,5 @@
 import "@/instructions/index.js";
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Ixdb } from "@/instructions/ixdb.js";
 describe("allixs", () => {
   it("should have registered all opcodes", () => {
