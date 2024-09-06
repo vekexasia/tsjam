@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { JamHeader, TicketIdentifier, u32 } from "@vekexasia/jam-types";
+import { JamHeader, Tau, TicketIdentifier, u32 } from "@vekexasia/jam-types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
@@ -105,7 +105,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
         previousHash: previousHash.value,
         priorStateRoot: priorStateRoot.value,
         extrinsicHash: extrinsicHash.value,
-        timeSlotIndex: toTagged(Number(timeSlotIndex.value)),
+        timeSlotIndex: toTagged(Number(timeSlotIndex.value)) as Tau,
         epochMarker: epochMarker.value,
         winningTickets: winningTickets.value, // FIXME
         judgementsMarkers: judgementMarker.value,

@@ -12,3 +12,4 @@ export * from "./safrole/stateUpdater.js";
 
 export * from "./disputesState.js";
 export * from "./tickets.js";
+export * from "./garantorsAssignment.js";

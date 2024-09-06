@@ -8,6 +8,10 @@ export const buildAliases = (import_meta_url: string) => {
     "@vekexasia/jam-codec": new URL("../jam-codec/", import_meta_url).pathname,
     "@vekexasia/jam-types": new URL("../jam-types/", import_meta_url).pathname,
     "@vekexasia/jam-utils": new URL("../jam-utils/", import_meta_url).pathname,
+    "@vekexasia/jam-transitions": new URL(
+      "../jam-transitions/",
+      import_meta_url,
+    ).pathname,
     "@vekexasia/jam-crypto": new URL("../jam-crypto/", import_meta_url)
       .pathname,
     "@vekexasia/jam-crypto-napi": new URL(
