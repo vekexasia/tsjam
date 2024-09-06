@@ -33,25 +33,22 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
     value: AssuranceExtrinsic;
     readBytes: number;
   } {
+    let offset = 0;
     const anchorHash = HashCodec.decode(bytes.subarray(0, 32));
+    offset += anchorHash.readBytes;
     const bitstring = BitSequence.decode(
-      bytes.subarray(
-        anchorHash.readBytes,
-        anchorHash.readBytes + Math.ceil(CORES / 8),
-      ),
+      bytes.subarray(offset, offset + Math.ceil(CORES / 8)),
     );
+    offset += bitstring.readBytes;
 
     const validatorIndex = Number(
-      E_2.decode(
-        bytes.subarray(
-          anchorHash.readBytes + bitstring.readBytes,
-          2 + anchorHash.readBytes + bitstring.readBytes,
-        ),
-      ).value,
+      E_2.decode(bytes.subarray(offset, offset + 2)).value,
     ) as ValidatorIndex;
+    offset += 2;
     const signature = Ed25519SignatureCodec.decode(
-      bytes.subarray(34 + bitstring.readBytes),
+      bytes.subarray(offset, offset + 64),
     );
+    offset += signature.readBytes;
     return {
       value: {
         anchorHash: anchorHash.value,
@@ -62,7 +59,7 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
         validatorIndex,
         signature: signature.value,
       },
-      readBytes: 98 + BitSequence.encodedSize(bitstring.value),
+      readBytes: offset,
     };
   },
   encodedSize(value: AssuranceExtrinsic): number {
@@ -70,47 +67,34 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
   },
 };
 
-export const codecEa = createArrayLengthDiscriminator(
+export const codec_Ea = createArrayLengthDiscriminator(
   singleExtrinsicCodec,
 ) as unknown as JamCodec<EA_Extrinsic>;
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
   const constants = await import("@vekexasia/jam-constants");
-
-  const { hextToBigInt } = await import("@vekexasia/jam-utils");
-  const path = await import("path");
+  const {
+    assurancesExtrinsicFromJSON,
+    getUTF8FixtureFile,
+    getCodecFixtureFile,
+  } = await import("@/test/utils.js");
   describe("codecEa", () => {
-    const bin = fs.readFileSync(
-      path.resolve(__dirname, "../../test/fixtures/assurances_extrinsic.bin"),
-    );
-    const json = JSON.parse(
-      fs.readFileSync(
-        path.resolve(
-          __dirname,
-          "../../test/fixtures/assurances_extrinsic.json",
-        ),
-        "utf8",
-      ),
-    );
+    const bin = getCodecFixtureFile("assurances_extrinsic.bin");
+    const json = JSON.parse(getUTF8FixtureFile("assurances_extrinsic.json"));
     beforeAll(() => {
       vi.spyOn(constants, "CORES", "get").mockReturnValue(2 as any);
     });
     it("assurances_extrinsic.json encoded should match assurances_extrinsic.bin", () => {
-      const ea: EA_Extrinsic = json.map((e: any) => ({
-        anchorHash: hextToBigInt(e.anchor),
-        // bitstring: [0, 0, 0, 0, 0, 0, 0, 1] as AssuranceExtrinsic["bitstring"],
-        bitstring: [1, 0] as AssuranceExtrinsic["bitstring"],
-        validatorIndex: e.validator_index,
-        signature: hextToBigInt(e.signature) as AssuranceExtrinsic["signature"],
-      }));
+      const ea: EA_Extrinsic = assurancesExtrinsicFromJSON(json);
       const b = new Uint8Array(bin.length);
-      expect(codecEa.encodedSize(ea)).toBe(bin.length);
-      codecEa.encode(ea, b);
-      expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+      expect(codec_Ea.encodedSize(ea)).toBe(bin.length);
+      codec_Ea.encode(ea, b);
+      expect(Buffer.from(b).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
       // check decode now
-      const x = codecEa.decode(b);
+      const x = codec_Ea.decode(b);
       expect(x.value).toEqual(ea);
     });
   });

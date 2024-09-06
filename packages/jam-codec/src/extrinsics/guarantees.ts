@@ -11,6 +11,7 @@ import { Ed25519SignatureCodec } from "@/identity.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
 import { WorkReportCodec } from "@/setelements/WorkReportCodec.js";
+import { guaranteesExtrinsicFromJSON } from "@/test/utils.js";
 
 const signaturesCodec = createArrayLengthDiscriminator<
   EG_Extrinsic[0]["credential"][0]
@@ -84,89 +85,30 @@ const codecSingleGuarantee: JamCodec<EG_Extrinsic[0]> = {
   },
 };
 
-export const codecEG_Extrinsic = createArrayLengthDiscriminator<
-  EG_Extrinsic[0]
->(codecSingleGuarantee) as unknown as JamCodec<EG_Extrinsic>;
+export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
+  codecSingleGuarantee,
+) as unknown as JamCodec<EG_Extrinsic>;
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
-
-  const { hexToBytes, hextToBigInt } = await import("@vekexasia/jam-utils");
-  const path = await import("path");
+  const {
+    getUTF8FixtureFile,
+    getCodecFixtureFile,
+    guaranteesExtrinsicFromJSON,
+  } = await import("@/test/utils.js");
   describe("codecEg", () => {
-    const bin = fs.readFileSync(
-      path.resolve(__dirname, "../../test/fixtures/guarantees_extrinsic.bin"),
-    );
-    const json = JSON.parse(
-      fs.readFileSync(
-        path.resolve(
-          __dirname,
-          "../../test/fixtures/guarantees_extrinsic.json",
-        ),
-        "utf8",
-      ),
-    );
+    const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
+    const json = JSON.parse(getUTF8FixtureFile("guarantees_extrinsic.json"));
     it("guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin", () => {
-      const ea: EG_Extrinsic = json.map((e: any): EG_Extrinsic[0] => ({
-        workReport: {
-          workPackageSpecification: {
-            workPackageHash: hextToBigInt(e.report.package_spec.hash),
-            bundleLength: e.report.package_spec.len,
-            erasureRoot: hextToBigInt(e.report.package_spec.root),
-            segmentRoot: hextToBigInt(e.report.package_spec.segments),
-          },
-          refinementContext: {
-            anchor: {
-              headerHash: hextToBigInt(e.report.context.anchor),
-              posteriorStateRoot: hextToBigInt(e.report.context.state_root),
-              posteriorBeefyRoot: hextToBigInt(e.report.context.beefy_root),
-            },
-            lookupAnchor: {
-              headerHash: hextToBigInt(e.report.context.lookup_anchor),
-              timeSlot: e.report.context.lookup_anchor_slot,
-            },
-            requiredWorkPackage: e.report.context.prerequisite || undefined,
-          },
-          coreIndex: e.report.core_index,
-          authorizerHash: hextToBigInt(e.report.authorizer_hash),
-          authorizerOutput: hexToBytes(e.report.auth_output),
-          results: e.report.results.map(
-            (r: any): WorkResult => ({
-              serviceIndex: r.service,
-              codeHash: hextToBigInt(r.code_hash),
-              payloadHash: hextToBigInt(r.payload_hash),
-              gasPrioritization: BigInt(r.gas_ratio) as u64,
-              output: (() => {
-                if (r.result.ok) {
-                  return hexToBytes(r.result.ok);
-                }
-
-                if ("out_of_gas" in r.result) {
-                  return WorkError.OutOfGas;
-                }
-                if ("panic" in r.result) {
-                  return WorkError.UnexpectedTermination;
-                }
-                throw new Error("pd");
-              })(),
-            }),
-          ),
-        },
-        timeSlot: e.slot,
-        credential: e.signatures.map(
-          (s: any): EG_Extrinsic[0]["credential"][0] => ({
-            validatorIndex: s.validator_index,
-            signature: hextToBigInt(s.signature),
-          }),
-        ),
-      }));
+      const ea: EG_Extrinsic = guaranteesExtrinsicFromJSON(json);
       const b = new Uint8Array(bin.length);
-      codecEG_Extrinsic.encode(ea, b);
-      expect(codecEG_Extrinsic.encodedSize(ea)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+      codec_Eg.encode(ea, b);
+      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
+      expect(Buffer.from(b).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
       // check decode now
-      const x = codecEG_Extrinsic.decode(b);
+      const x = codec_Eg.decode(b);
       expect(x.value).toEqual(ea);
     });
   });

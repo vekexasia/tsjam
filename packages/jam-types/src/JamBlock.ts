@@ -1,8 +1,14 @@
-import { JamHeader, RingVRFProof, Tagged, UpToSeq } from "@/index";
-import { CORES, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import {
+  DisputeExtrinsic,
+  EA_Extrinsic,
+  EG_Extrinsic,
+  EP_Tuple,
+  SignedJamHeader,
+  TicketExtrinsics,
+} from "@/index";
 
 export interface JamBlock {
-  header: JamHeader;
+  header: SignedJamHeader;
   extrinsics: JamBlockExtrinsics;
 }
 
@@ -10,13 +16,9 @@ export interface JamBlockExtrinsics {
   // Et the maximum number of tickets in a block is
   // K=16 and it is allowed to be submitted only if current slot is less than Y=500 ( aka lottery did not end yet)
   // @see section 6.7
-  tickets: Tagged<
-    { entryIndex: 0 | 1; proof: RingVRFProof }[],
-    "block-tickets",
-    { maxLength: 16 }
-  >;
-  judgements: never[];
-  preimages: never[];
+  tickets: TicketExtrinsics;
+  disputes: DisputeExtrinsic;
+  preimages: EP_Tuple[];
 
   /**
    * Assurances by each validator concerning which of the input data of workloads they have
@@ -24,11 +26,10 @@ export interface JamBlockExtrinsics {
    * denoted `Ea`.
    * anchored on the parent and ordered by `AssuranceExtrinsic.validatorIndex`
    */
-  availability: UpToSeq<any, typeof NUMBER_OF_VALIDATORS>;
+  assurances: EA_Extrinsic;
   /**
    * Reports of newly completed workloads
    * whose accuracy is guaranteed by specific validators. This is denoted `EG`.
    */
-  reportGuarantees: UpToSeq<any, typeof CORES>;
+  reportGuarantees: EG_Extrinsic;
 }
-// TODO: Move this file to a separate package to avoid circular dependencies

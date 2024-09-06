@@ -6,6 +6,10 @@ import {
   toTagged,
 } from "@vekexasia/jam-utils";
 import {
+  AssuranceExtrinsic,
+  DisputeExtrinsic,
+  EA_Extrinsic,
+  EG_Extrinsic,
   RefinementContext,
   SignedJamHeader,
   WorkError,
@@ -29,6 +33,97 @@ export const getUTF8FixtureFile = (filename: string): string => {
   );
 };
 
+export const assurancesExtrinsicFromJSON = (json: any): EA_Extrinsic => {
+  return json.map((e: any) => ({
+    anchorHash: hextToBigInt(e.anchor),
+    // bitstring: [0, 0, 0, 0, 0, 0, 0, 1] as AssuranceExtrinsic["bitstring"],
+    bitstring: [1, 0] as AssuranceExtrinsic["bitstring"],
+    validatorIndex: e.validator_index,
+    signature: hextToBigInt(e.signature) as AssuranceExtrinsic["signature"],
+  }));
+};
+
+export const guaranteesExtrinsicFromJSON = (json: any): EG_Extrinsic => {
+  return json.map((e: any): EG_Extrinsic[0] => ({
+    workReport: {
+      workPackageSpecification: {
+        workPackageHash: hextToBigInt(e.report.package_spec.hash),
+        bundleLength: e.report.package_spec.len,
+        erasureRoot: hextToBigInt(e.report.package_spec.root),
+        segmentRoot: hextToBigInt(e.report.package_spec.segments),
+      },
+      refinementContext: {
+        anchor: {
+          headerHash: hextToBigInt(e.report.context.anchor),
+          posteriorStateRoot: hextToBigInt(e.report.context.state_root),
+          posteriorBeefyRoot: hextToBigInt(e.report.context.beefy_root),
+        },
+        lookupAnchor: {
+          headerHash: hextToBigInt(e.report.context.lookup_anchor),
+          timeSlot: e.report.context.lookup_anchor_slot,
+        },
+        requiredWorkPackage: e.report.context.prerequisite || undefined,
+      },
+      coreIndex: e.report.core_index,
+      authorizerHash: hextToBigInt(e.report.authorizer_hash),
+      authorizerOutput: hexToBytes(e.report.auth_output),
+      results: e.report.results.map(
+        (r: any): WorkResult => ({
+          serviceIndex: r.service,
+          codeHash: hextToBigInt(r.code_hash),
+          payloadHash: hextToBigInt(r.payload_hash),
+          gasPrioritization: BigInt(r.gas_ratio) as u64,
+          output: (() => {
+            if (r.result.ok) {
+              return hexToBytes(r.result.ok);
+            }
+
+            if ("out_of_gas" in r.result) {
+              return WorkError.OutOfGas;
+            }
+            if ("panic" in r.result) {
+              return WorkError.UnexpectedTermination;
+            }
+            throw new Error("pd");
+          })(),
+        }),
+      ),
+    },
+    timeSlot: e.slot,
+    credential: e.signatures.map(
+      (s: any): EG_Extrinsic[0]["credential"][0] => ({
+        validatorIndex: s.validator_index,
+        signature: hextToBigInt(s.signature),
+      }),
+    ),
+  }));
+};
+export const disputesExtrinsicFromJSON = (json: any): DisputeExtrinsic => {
+  return {
+    verdicts: json.verdicts.map((v: any) => ({
+      hash: hextToBigInt(v.target),
+      epochIndex: v.age,
+      judgements: v.votes.map((j: any) => {
+        return {
+          signature: hextToBigInt(j.signature),
+          validity: j.vote ? 1 : 0,
+          validatorIndex: j.index,
+        };
+      }),
+    })),
+    culprit: json.culprits.map((c: any) => ({
+      hash: hextToBigInt(c.target),
+      ed25519PublicKey: hextToBigInt(c.key),
+      signature: hextToBigInt(c.signature),
+    })),
+    faults: json.faults.map((f: any) => ({
+      ed25519PublicKey: hextToBigInt(f.key),
+      hash: hextToBigInt(f.target),
+      signature: hextToBigInt(f.signature),
+      validity: f.vote ? 1 : 0,
+    })),
+  };
+};
 export const workItemFromJSON = (json: any): WorkItem => {
   return {
     serviceIndex: json.service,

@@ -32,7 +32,7 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
     const consumedBytes = UnsignedHeaderCodec.encode(value, bytes);
     BandersnatchSignatureCodec.encode(
       value.blockSeal,
-      bytes.subarray(consumedBytes),
+      bytes.subarray(consumedBytes, consumedBytes + 96),
     );
     return consumedBytes + 96;
   },
@@ -73,6 +73,7 @@ if (import.meta.vitest) {
   const { getCodecFixtureFile, getUTF8FixtureFile, headerFromJSON } =
     await import("@/test/utils.js");
   describe("SignedHeader", () => {
+    beforeAll(() => {});
     let item: SignedJamHeader;
     let bin: Uint8Array;
     describe("header_0", () => {
