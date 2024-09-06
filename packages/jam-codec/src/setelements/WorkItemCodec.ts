@@ -154,33 +154,14 @@ if (import.meta.vitest) {
   const { hexToBytes, hextToBigInt, toTagged } = await import(
     "@vekexasia/jam-utils"
   );
-  const { getCodecFixtureFile, getUTF8FixtureFile } = await import(
-    "@/test/utils.js"
-  );
+  const { getCodecFixtureFile, getUTF8FixtureFile, workItemFromJSON } =
+    await import("@/test/utils.js");
   describe("WorkItemCodec", () => {
     let item: WorkItem;
     let bin: Uint8Array;
     beforeAll(() => {
       const json = JSON.parse(getUTF8FixtureFile("work_item.json"));
-      item = {
-        serviceIndex: json.service,
-        codeHash: hextToBigInt(json.code_hash),
-        payload: hexToBytes(json.payload),
-        gasLimit: toTagged(BigInt(json.gas_limit)),
-        importedDataSegments: json.import_segments.map((e) => {
-          return {
-            root: hextToBigInt(e.tree_root),
-            index: e.index,
-          };
-        }),
-        exportedDataSegments: json.extrinsic.map((e) => {
-          return {
-            blobHash: hextToBigInt(e.hash),
-            length: e.len,
-          };
-        }),
-        numberExportedSegments: json.export_count,
-      };
+      item = workItemFromJSON(json);
       bin = getCodecFixtureFile("work_item.bin");
     });
 

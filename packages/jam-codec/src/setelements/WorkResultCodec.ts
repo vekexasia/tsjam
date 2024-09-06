@@ -59,3 +59,33 @@ export const WorkResultCodec: JamCodec<WorkResult> = {
     return 4 + 32 + 32 + 8 + WorkOutputCodec.encodedSize(value.output);
   },
 };
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  const { getCodecFixtureFile, getUTF8FixtureFile, workResultFromJSON } =
+    await import("@/test/utils.js");
+
+  describe("WorkResultCodec", () => {
+    it("work_result_1.json encoded should match work_result_1.bin (and back)", () => {
+      const bin = getCodecFixtureFile("work_result_1.bin");
+      const json = workResultFromJSON(
+        JSON.parse(getUTF8FixtureFile("work_result_1.json")),
+      );
+      const buf = new Uint8Array(WorkResultCodec.encodedSize(json));
+      WorkResultCodec.encode(json, buf);
+      expect(buf).toStrictEqual(bin);
+      expect(WorkResultCodec.decode(bin).value).toStrictEqual(json);
+    });
+    it("work_result_0.json encoded should match work_result_0.bin (and back)", () => {
+      const bin = getCodecFixtureFile("work_result_0.bin");
+      const json = workResultFromJSON(
+        JSON.parse(getUTF8FixtureFile("work_result_0.json")),
+      );
+      const buf = new Uint8Array(WorkResultCodec.encodedSize(json));
+      WorkResultCodec.encode(json, buf);
+      expect(buf).toStrictEqual(bin);
+      expect(WorkResultCodec.decode(bin).value).toStrictEqual(json);
+    });
+  });
+}

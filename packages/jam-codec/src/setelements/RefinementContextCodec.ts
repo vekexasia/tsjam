@@ -4,6 +4,7 @@ import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";
 import { OptHashCodec } from "@/optional.js";
 import { hextToBigInt } from "@vekexasia/jam-utils";
+import { contextFromJSON } from "../../test/utils.js";
 
 /**
  * Appendix C formula (283)
@@ -73,26 +74,14 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile, getUTF8FixtureFile } = await import(
-    "@/test/utils.js"
-  );
+  const { getCodecFixtureFile, getUTF8FixtureFile, contextFromJSON } =
+    await import("@/test/utils.js");
   describe("RefinementContextCodec", () => {
     let ctx: RefinementContext;
     let bin: Uint8Array;
     beforeAll(() => {
       const json = JSON.parse(getUTF8FixtureFile("refine_context.json"));
-      ctx = {
-        anchor: {
-          headerHash: hextToBigInt(json.anchor),
-          posteriorStateRoot: hextToBigInt(json.state_root),
-          posteriorBeefyRoot: hextToBigInt(json.beefy_root),
-        },
-        lookupAnchor: {
-          headerHash: hextToBigInt(json.lookup_anchor),
-          timeSlot: json.lookup_anchor_slot,
-        },
-        requiredWorkPackage: undefined,
-      };
+      ctx = contextFromJSON(json);
       bin = getCodecFixtureFile("refine_context.bin");
     });
 

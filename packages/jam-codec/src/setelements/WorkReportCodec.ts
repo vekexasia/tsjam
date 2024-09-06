@@ -1,10 +1,4 @@
-import {
-  CoreIndex,
-  WorkError,
-  WorkReport,
-  WorkResult,
-  u64,
-} from "@vekexasia/jam-types";
+import { CoreIndex, WorkReport, WorkResult } from "@vekexasia/jam-types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
@@ -110,70 +104,39 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
 
   const { hexToBytes, hextToBigInt } = await import("@vekexasia/jam-utils");
-  const path = await import("path");
+  const {
+    getCodecFixtureFile,
+    getUTF8FixtureFile,
+    contextFromJSON,
+    workResultFromJSON,
+  } = await import("@/test/utils.js");
   describe("work_report", () => {
-    const bin = fs.readFileSync(
-      path.resolve(__dirname, "../../test/fixtures/work_report.bin"),
-    );
-    const json = JSON.parse(
-      fs.readFileSync(
-        path.resolve(__dirname, "../../test/fixtures/work_report.json"),
-        "utf8",
-      ),
-    );
+    const bin = getCodecFixtureFile("work_report.bin");
+    const json = JSON.parse(getUTF8FixtureFile("work_report.json"));
     it("work_report.json encoded should match work_report.bin", () => {
       const wp: WorkReport = {
         workPackageSpecification: {
           workPackageHash: hextToBigInt(json.package_spec.hash),
-
           bundleLength: json.package_spec.len,
           erasureRoot: hextToBigInt(json.package_spec.root),
           segmentRoot: hextToBigInt(json.package_spec.segments),
         },
-        refinementContext: {
-          anchor: {
-            headerHash: hextToBigInt(json.context.anchor),
-            posteriorStateRoot: hextToBigInt(json.context.state_root),
-            posteriorBeefyRoot: hextToBigInt(json.context.beefy_root),
-          },
-          lookupAnchor: {
-            headerHash: hextToBigInt(json.context.lookup_anchor),
-            timeSlot: json.context.lookup_anchor_slot,
-          },
-          requiredWorkPackage: json.context.prerequisite || undefined,
-        },
+        refinementContext: contextFromJSON(json.context),
         coreIndex: json.core_index,
         authorizerHash: hextToBigInt(json.authorizer_hash),
         authorizerOutput: hexToBytes(json.auth_output),
         results: json.results.map(
-          (r: any): WorkResult => ({
-            serviceIndex: r.service,
-            codeHash: hextToBigInt(r.code_hash),
-            payloadHash: hextToBigInt(r.payload_hash),
-            gasPrioritization: BigInt(r.gas_ratio) as u64,
-            output: (() => {
-              if (r.result.ok) {
-                return hexToBytes(r.result.ok);
-              }
-
-              if ("out_of_gas" in r.result) {
-                return WorkError.OutOfGas;
-              }
-              if ("panic" in r.result) {
-                return WorkError.UnexpectedTermination;
-              }
-              throw new Error("pd");
-            })(),
-          }),
+          (r: any): WorkResult => workResultFromJSON(r),
         ),
       };
       const b = new Uint8Array(bin.length);
       WorkReportCodec.encode(wp, b);
       expect(WorkReportCodec.encodedSize(wp)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
+      expect(Buffer.from(b).toString("hex")).toBe(
+        new Buffer(bin).toString("hex"),
+      );
       // check decode now
       const x = WorkReportCodec.decode(b);
       expect(x.value).toEqual(wp);
