@@ -8,10 +8,13 @@ export const createSequenceCodec = <T, K extends number>(
 ): JamCodec<SeqOfLength<T, K>> => {
   return {
     encode(value: T[], bytes: Uint8Array): number {
-      assert(value.length === howMany, "Invalid array length");
+      assert(
+        value.length === howMany,
+        `Invalid array length ${value.length} - ${howMany}`,
+      );
       let offset = 0;
       for (let i = 0; i < howMany; i++) {
-        offset += codec.encode(value[i], bytes);
+        offset += codec.encode(value[i], bytes.subarray(offset));
       }
       return offset;
     },

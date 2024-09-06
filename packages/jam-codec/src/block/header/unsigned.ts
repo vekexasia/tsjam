@@ -1,9 +1,16 @@
 import { JamCodec } from "@/codec.js";
-import { JamHeader, Tau, TicketIdentifier, u32 } from "@vekexasia/jam-types";
+import {
+  Blake2bHash,
+  ED25519PublicKey,
+  JamHeader,
+  Tau,
+  TicketIdentifier,
+} from "@vekexasia/jam-types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
   BandersnatchSignatureCodec,
+  Ed25519PubkeyCodec,
   HashCodec,
   MerkleTreeRootCodec,
 } from "@/identity.js";
@@ -20,34 +27,36 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     value: NonNullable<JamHeader["epochMarker"]>;
     readBytes: number;
   } {
-    const numValidators = NUMBER_OF_VALIDATORS;
-    const entropy = E_4.decode(bytes.subarray(0, 4));
+    const entropy = HashCodec.decode(bytes.subarray(0, 32));
     const validatorKeys = [] as unknown as NonNullable<
       JamHeader["epochMarker"]
     >["validatorKeys"];
-    for (let i = 0; i < numValidators; i++) {
+    for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
       validatorKeys.push(
-        BandersnatchCodec.decode(bytes.subarray(4 + i * 32, 4 + (i + 1) * 32))
+        BandersnatchCodec.decode(bytes.subarray(32 + i * 32, 32 + (i + 1) * 32))
           .value,
       );
     }
     return {
       value: {
-        entropy: Number(entropy.value) as u32,
+        entropy: entropy.value as Blake2bHash,
         validatorKeys,
       },
-      readBytes: 4 + numValidators * 32,
+      readBytes: 32 + NUMBER_OF_VALIDATORS * 32,
     };
   },
   encode(
     value: NonNullable<JamHeader["epochMarker"]>,
     bytes: Uint8Array,
   ): number {
-    assert.ok(value.validatorKeys.length === NUMBER_OF_VALIDATORS);
+    assert.ok(
+      value.validatorKeys.length === NUMBER_OF_VALIDATORS,
+      `expected ${NUMBER_OF_VALIDATORS} validator keys, got ${value.validatorKeys.length}`,
+    );
     let offset = 0;
-    offset += E_4.encode(
-      BigInt(value.entropy),
-      bytes.subarray(offset, offset + 4),
+    offset += HashCodec.encode(
+      value.entropy,
+      bytes.subarray(offset, offset + 32),
     );
 
     offset += value.validatorKeys.reduce((acc, key) => {
@@ -57,12 +66,20 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     return offset;
   },
   encodedSize(): number {
-    return 4 + NUMBER_OF_VALIDATORS * 32;
+    return 32 + NUMBER_OF_VALIDATORS * 32;
   },
 };
 const optHeCodec = new Optional(epochMarkerCodec);
-const judgementMarkerCodec = createArrayLengthDiscriminator(HashCodec);
-const winningTicketsCodec = new Optional(
+const offendersCodec = createArrayLengthDiscriminator({
+  ...Ed25519PubkeyCodec,
+  encode(value: ED25519PublicKey, bytes: Uint8Array): number {
+    return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
+  },
+  decode(bytes: Uint8Array) {
+    return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
+  },
+});
+export const winningTicketsCodec = new Optional(
   createSequenceCodec<TicketIdentifier, typeof EPOCH_LENGTH>(
     EPOCH_LENGTH,
     TicketIdentifierCodec,
@@ -90,14 +107,14 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     const winningTickets = winningTicketsCodec.decode(bytes.subarray(offset));
     offset += winningTickets.readBytes;
 
-    const judgementMarker = judgementMarkerCodec.decode(bytes.subarray(offset));
-    offset += judgementMarker.readBytes;
+    const offenders = offendersCodec.decode(bytes.subarray(offset));
+    offset += offenders.readBytes;
 
     const blockAuthorKey = E_2.decode(bytes.subarray(offset, offset + 2));
     offset += blockAuthorKey.readBytes;
 
     const entropySignature = BandersnatchSignatureCodec.decode(
-      bytes.subarray(offset, offset + 64),
+      bytes.subarray(offset, offset + 96),
     );
     offset += entropySignature.readBytes;
     return {
@@ -107,12 +124,12 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
         extrinsicHash: extrinsicHash.value,
         timeSlotIndex: toTagged(Number(timeSlotIndex.value)) as Tau,
         epochMarker: epochMarker.value,
-        winningTickets: winningTickets.value, // FIXME
-        judgementsMarkers: judgementMarker.value,
+        winningTickets: winningTickets.value,
+        offenders: offenders.value,
         blockAuthorKeyIndex: toTagged(Number(blockAuthorKey.value)),
         entropySignature: entropySignature.value,
       },
-      readBytes: offset + 32,
+      readBytes: offset,
     };
   },
 
@@ -150,11 +167,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
 
     // Hj
-
-    offset += judgementMarkerCodec.encode(
-      value.judgementsMarkers,
-      bytes.subarray(offset),
-    );
+    offset += offendersCodec.encode(value.offenders, bytes.subarray(offset));
 
     // Hk
     offset += E_2.encode(
@@ -164,7 +177,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
 
     offset += BandersnatchSignatureCodec.encode(
       value.entropySignature,
-      bytes.subarray(offset, offset + 64),
+      bytes.subarray(offset, offset + 96),
     );
 
     return offset;
@@ -178,7 +191,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
       4 + // timeSlotIndex
       optHeCodec.encodedSize(value.epochMarker) +
       winningTicketsCodec.encodedSize(value.winningTickets) +
-      judgementMarkerCodec.encodedSize(value.judgementsMarkers) +
+      offendersCodec.encodedSize(value.offenders) +
       2 + // blockAuthorKey
       BandersnatchSignatureCodec.encodedSize(value.entropySignature)
     );

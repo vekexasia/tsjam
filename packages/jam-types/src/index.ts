@@ -2,6 +2,8 @@
 import {
   BandersnatchKey,
   BandersnatchSignature,
+  Blake2bHash,
+  ED25519PublicKey,
   Hash,
   MerkeTreeRoot,
   OpaqueHash,
@@ -9,7 +11,7 @@ import {
   Tagged,
   u32,
 } from "@/genericTypes.js";
-import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 import { Tau } from "@/tau.js";
 
 export type TicketIdentifier = {
@@ -51,28 +53,28 @@ export interface JamHeader {
   epochMarker?: {
     // 4 byte see (65) on section 6.5
     // coming from eta
-    entropy: u32;
+    entropy: Blake2bHash;
     // 32 byte bandersnatch sequence (ordered) coming from gamma_k
-    validatorKeys: Tagged<
-      BandersnatchKey[],
-      "validatorKeys",
-      { length: "epoch-length" }
+    validatorKeys: SeqOfLength<
+      BandersnatchKey,
+      typeof NUMBER_OF_VALIDATORS,
+      "validatorKeys"
     >;
   };
 
-  // set on after end of the lottery
-  // and the lottery accumulator (gamma_a) is saturated (epoch-length)
-  // and we're not changing epoch
-  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>; // Hw
-  // section 10
-  // must contain exactly the sequence of report hashes of only bad and wonky verdicts
-  // does not nneed to be included in the serialization. this is here for convenience
-  // but it's just the result of other variables
   /**
+   * `Hw` - The winning tickets of the block.
+   * set on after end of the lottery
+   * and the lottery accumulator (gamma_a) is saturated (epoch-length)
+   * and we're not changing epoch
+   */
+  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>; // Hw
+  /**
+   * `Ho`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  judgementsMarkers: Hash[]; // Hj
+  offenders: ED25519PublicKey[]; // Ho
   // but later Hi E Nv. so its a natural number
   // < typeof NUMBER_OF_VALIDATORS
   blockAuthorKeyIndex: u32; // < V or < number of validators

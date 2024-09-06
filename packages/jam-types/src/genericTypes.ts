@@ -49,7 +49,7 @@ export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
 export type ED25519PrivateKey = Tagged<BigIntBytes<64>, "ED25519PrivateKey">;
 export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;
 export type BandersnatchSignature = Tagged<
-  BigIntBytes<64>,
+  BigIntBytes<96>,
   "BandersnatchSignature"
 >;
 export type BandersnatchRingRoot = Tagged<

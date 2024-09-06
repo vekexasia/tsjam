@@ -15,10 +15,13 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
       value: {
         ...unsignedHeader.value,
         blockSeal: BandersnatchSignatureCodec.decode(
-          bytes.slice(unsignedHeader.readBytes, unsignedHeader.readBytes + 64),
+          bytes.subarray(
+            unsignedHeader.readBytes,
+            unsignedHeader.readBytes + 96,
+          ),
         ).value,
       },
-      readBytes: unsignedHeader.readBytes + 64,
+      readBytes: unsignedHeader.readBytes + 96,
     };
   },
   encode(value: SignedJamHeader, bytes: Uint8Array): number {
@@ -31,9 +34,86 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
       value.blockSeal,
       bytes.subarray(consumedBytes),
     );
-    return consumedBytes + 64;
+    return consumedBytes + 96;
   },
   encodedSize(value: SignedJamHeader): number {
-    return UnsignedHeaderCodec.encodedSize(value) + 64;
+    return UnsignedHeaderCodec.encodedSize(value) + 96;
   },
 };
+
+if (import.meta.vitest) {
+  const { vi, beforeAll, beforeEach, describe, it, expect } = import.meta
+    .vitest;
+  const { hexToBytes, hextToBigInt, toTagged } = await import(
+    "@vekexasia/jam-utils"
+  );
+
+  const constantMocks = vi.hoisted(() => {
+    return {
+      NUMBER_OF_VALIDATORS: 6,
+      EPOCH_LENGTH: 12,
+    };
+  });
+  vi.mock("@vekexasia/jam-constants", async (importOriginal) => {
+    const toRet = {
+      ...(await importOriginal<typeof import("@vekexasia/jam-constants")>()),
+    };
+    Object.defineProperty(toRet, "EPOCH_LENGTH", {
+      get() {
+        return constantMocks.EPOCH_LENGTH;
+      },
+    });
+    Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
+      get() {
+        return constantMocks.NUMBER_OF_VALIDATORS;
+      },
+    });
+    return toRet;
+  });
+  const { getCodecFixtureFile, getUTF8FixtureFile, headerFromJSON } =
+    await import("@/test/utils.js");
+  describe("SignedHeader", () => {
+    let item: SignedJamHeader;
+    let bin: Uint8Array;
+    describe("header_0", () => {
+      beforeAll(() => {
+        const json = JSON.parse(getUTF8FixtureFile("header_0.json"));
+        item = headerFromJSON(json);
+        bin = getCodecFixtureFile("header_0.bin");
+      });
+
+      it("should encode properly", () => {
+        const bytes = new Uint8Array(SignedHeaderCodec.encodedSize(item));
+        SignedHeaderCodec.encode(item, bytes);
+        const off = 362;
+        expect(Buffer.from(bytes).subarray(off).toString("hex")).toBe(
+          Buffer.from(bin).subarray(off).toString("hex"),
+        );
+        expect(bytes).toEqual(bin);
+      });
+      it("should decode properly", () => {
+        const { value, readBytes } = SignedHeaderCodec.decode(bin);
+        expect(value).toEqual(item);
+        expect(readBytes).toBe(bin.length);
+      });
+    });
+    describe("header_1", () => {
+      beforeAll(() => {
+        const json = JSON.parse(getUTF8FixtureFile("header_1.json"));
+        item = headerFromJSON(json);
+        bin = getCodecFixtureFile("header_1.bin");
+      });
+
+      it("should encode properly", () => {
+        const bytes = new Uint8Array(SignedHeaderCodec.encodedSize(item));
+        SignedHeaderCodec.encode(item, bytes);
+        expect(bytes).toEqual(bin);
+      });
+      it("should decode properly", () => {
+        const { value, readBytes } = SignedHeaderCodec.decode(bin);
+        expect(value).toEqual(item);
+        expect(readBytes).toBe(bin.length);
+      });
+    });
+  });
+}

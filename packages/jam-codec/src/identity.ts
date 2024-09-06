@@ -58,8 +58,8 @@ export const BandersnatchCodec = GenericBytesBigIntCodec<BandersnatchKey, 32>(
 );
 export const BandersnatchSignatureCodec = GenericBytesBigIntCodec<
   BandersnatchSignature,
-  64
->(64);
+  96
+>(96);
 export const Ed25519SignatureCodec = GenericBytesBigIntCodec<
   ED25519Signature,
   64

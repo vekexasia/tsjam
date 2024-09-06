@@ -1,7 +1,13 @@
 import * as fs from "node:fs";
-import { hexToBytes, hextToBigInt, toTagged } from "@vekexasia/jam-utils";
+import {
+  bigintToBytes,
+  hexToBytes,
+  hextToBigInt,
+  toTagged,
+} from "@vekexasia/jam-utils";
 import {
   RefinementContext,
+  SignedJamHeader,
   WorkError,
   WorkItem,
   WorkResult,
@@ -78,6 +84,39 @@ export const workResultFromJSON = (r: any): WorkResult => {
         return WorkError.UnexpectedTermination;
       }
       throw new Error("pd");
+    })(),
+  };
+};
+
+export const headerFromJSON = (json: any): SignedJamHeader => {
+  return {
+    blockAuthorKeyIndex: json.author_index,
+    blockSeal: hextToBigInt(json.seal),
+    entropySignature: hextToBigInt(json.entropy_source),
+    epochMarker: (() => {
+      if (!json.epoch_mark) {
+        return undefined;
+      }
+      return {
+        entropy: hextToBigInt(json.epoch_mark.entropy),
+        validatorKeys: json.epoch_mark.validators.map((e: any) =>
+          hextToBigInt(e),
+        ),
+      };
+    })(),
+    extrinsicHash: hextToBigInt(json.extrinsic_hash),
+    offenders: json.offenders_mark.map((e: any) => hextToBigInt(e)),
+    previousHash: hextToBigInt(json.parent),
+    priorStateRoot: hextToBigInt(json.parent_state_root),
+    timeSlotIndex: json.slot,
+    winningTickets: (() => {
+      if (!json.tickets_mark) {
+        return undefined;
+      }
+      return json.tickets_mark.map((e: any) => ({
+        attempt: e.attempt,
+        id: hextToBigInt(e.id),
+      }));
     })(),
   };
 };
