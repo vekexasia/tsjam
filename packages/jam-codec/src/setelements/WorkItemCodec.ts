@@ -12,7 +12,7 @@ const xxCodec = createArrayLengthDiscriminator<
     value: WorkItem["exportedDataSegments"][0],
     bytes: Uint8Array,
   ): number {
-    let offset = HashCodec.encode(value.blobHash, bytes);
+    let offset = HashCodec.encode(value.blobHash, bytes.subarray(0, 32));
     offset += E_4.encode(
       BigInt(value.length),
       bytes.subarray(offset, offset + 4),
@@ -46,7 +46,7 @@ const xiCodec = createArrayLengthDiscriminator<
     value: WorkItem["importedDataSegments"][0],
     bytes: Uint8Array,
   ): number {
-    let offset = HashCodec.encode(value.root, bytes);
+    let offset = HashCodec.encode(value.root, bytes.subarray(0, 32));
     offset += E_2.encode(
       BigInt(value.index),
       bytes.subarray(offset, offset + 2),
@@ -76,13 +76,19 @@ const xiCodec = createArrayLengthDiscriminator<
  */
 export const WorkItemCodec: JamCodec<WorkItem> = {
   encode(value: WorkItem, bytes: Uint8Array): number {
-    let offset = E_4.encode(BigInt(value.serviceIndex), bytes);
-    offset += HashCodec.encode(value.codeHash, bytes.subarray(offset));
+    let offset = E_4.encode(BigInt(value.serviceIndex), bytes.subarray(0, 4));
+    offset += HashCodec.encode(
+      value.codeHash,
+      bytes.subarray(offset, offset + 32),
+    );
     offset += LengthDiscrimantedIdentity.encode(
       value.payload,
       bytes.subarray(offset),
     );
-    offset += E_8.encode(BigInt(value.gasLimit), bytes.subarray(offset));
+    offset += E_8.encode(
+      BigInt(value.gasLimit),
+      bytes.subarray(offset, offset + 8),
+    );
     offset += xiCodec.encode(
       value.importedDataSegments,
       bytes.subarray(offset),
@@ -94,7 +100,7 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
 
     offset += E_2.encode(
       BigInt(value.numberExportedSegments),
-      bytes.subarray(offset),
+      bytes.subarray(offset, offset + 2),
     );
     return offset;
   },
@@ -104,10 +110,8 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
     offset += 4;
     const codeHash = HashCodec.decode(bytes.subarray(offset)).value;
     offset += 32;
-    const payload = LengthDiscrimantedIdentity.decode(
-      bytes.subarray(offset),
-    ).value;
-    offset += payload.length;
+    const payload = LengthDiscrimantedIdentity.decode(bytes.subarray(offset));
+    offset += payload.readBytes;
     const gasLimit = E_8.decode(bytes.subarray(offset)).value;
     offset += 8;
     const importedDataSegments = xiCodec.decode(bytes.subarray(offset))
@@ -123,7 +127,7 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
       value: {
         serviceIndex: serviceIndex as WorkItem["serviceIndex"],
         codeHash,
-        payload,
+        payload: payload.value,
         gasLimit: gasLimit as WorkItem["gasLimit"],
         importedDataSegments,
         exportedDataSegments,
@@ -136,7 +140,7 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
     return (
       4 +
       32 +
-      value.payload.length +
+      LengthDiscrimantedIdentity.encodedSize(value.payload) +
       8 +
       xiCodec.encodedSize(value.importedDataSegments) +
       xxCodec.encodedSize(value.exportedDataSegments) +
@@ -144,3 +148,51 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
     );
   },
 };
+
+if (import.meta.vitest) {
+  const { beforeAll, describe, it, expect } = import.meta.vitest;
+  const { hexToBytes, hextToBigInt, toTagged } = await import(
+    "@vekexasia/jam-utils"
+  );
+  const { getCodecFixtureFile, getUTF8FixtureFile } = await import(
+    "@/test/utils.js"
+  );
+  describe("WorkItemCodec", () => {
+    let item: WorkItem;
+    let bin: Uint8Array;
+    beforeAll(() => {
+      const json = JSON.parse(getUTF8FixtureFile("work_item.json"));
+      item = {
+        serviceIndex: json.service,
+        codeHash: hextToBigInt(json.code_hash),
+        payload: hexToBytes(json.payload),
+        gasLimit: toTagged(BigInt(json.gas_limit)),
+        importedDataSegments: json.import_segments.map((e) => {
+          return {
+            root: hextToBigInt(e.tree_root),
+            index: e.index,
+          };
+        }),
+        exportedDataSegments: json.extrinsic.map((e) => {
+          return {
+            blobHash: hextToBigInt(e.hash),
+            length: e.len,
+          };
+        }),
+        numberExportedSegments: json.export_count,
+      };
+      bin = getCodecFixtureFile("work_item.bin");
+    });
+
+    it("should encode properly", () => {
+      const bytes = new Uint8Array(WorkItemCodec.encodedSize(item));
+      WorkItemCodec.encode(item, bytes);
+      expect(bytes).toEqual(bin);
+    });
+    it("should decode properly", () => {
+      const { value, readBytes } = WorkItemCodec.decode(bin);
+      expect(value).toEqual(item);
+      expect(readBytes).toBe(bin.length);
+    });
+  });
+}

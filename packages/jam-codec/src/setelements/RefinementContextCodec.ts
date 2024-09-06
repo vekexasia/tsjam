@@ -3,6 +3,7 @@ import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";
 import { OptHashCodec } from "@/optional.js";
+import { hextToBigInt } from "@vekexasia/jam-utils";
 
 /**
  * Appendix C formula (283)
@@ -69,3 +70,41 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
     return 32 * 4 + 4 + OptHashCodec.encodedSize(value.requiredWorkPackage);
   },
 };
+
+if (import.meta.vitest) {
+  const { beforeAll, describe, it, expect } = import.meta.vitest;
+  const { getCodecFixtureFile, getUTF8FixtureFile } = await import(
+    "@/test/utils.js"
+  );
+  describe("RefinementContextCodec", () => {
+    let ctx: RefinementContext;
+    let bin: Uint8Array;
+    beforeAll(() => {
+      const json = JSON.parse(getUTF8FixtureFile("refine_context.json"));
+      ctx = {
+        anchor: {
+          headerHash: hextToBigInt(json.anchor),
+          posteriorStateRoot: hextToBigInt(json.state_root),
+          posteriorBeefyRoot: hextToBigInt(json.beefy_root),
+        },
+        lookupAnchor: {
+          headerHash: hextToBigInt(json.lookup_anchor),
+          timeSlot: json.lookup_anchor_slot,
+        },
+        requiredWorkPackage: undefined,
+      };
+      bin = getCodecFixtureFile("refine_context.bin");
+    });
+
+    it("should encode properly", () => {
+      const bytes = new Uint8Array(RefinementContextCodec.encodedSize(ctx));
+      RefinementContextCodec.encode(ctx, bytes);
+      expect(bytes).toEqual(bin);
+    });
+    it("should decode properly", () => {
+      const { value, readBytes } = RefinementContextCodec.decode(bin);
+      expect(value).toEqual(ctx);
+      expect(readBytes).toBe(bin.length);
+    });
+  });
+}
