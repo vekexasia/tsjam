@@ -120,9 +120,12 @@ export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";
 
-export * from "./pvm/PVMProgram.js";
+export * from "./pvm/IParsedProgram.js";
+export * from "./pvm/PVMProgramExecutionContext.js";
+export * from "./pvm/PVMExitReason.js";
+export * from "./pvm/PVMIx.js";
 export * from "./pvm/PVMMemory.js";
-export * from "./pvm/EvaluationContext.js";
+export * from "./pvm/PVMProgram.js";
 export * from "./pvm/RegisterIdentifier.js";
 
 export * from "./tau.js";

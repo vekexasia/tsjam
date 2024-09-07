@@ -1,5 +1,4 @@
-import { EvaluateFunction } from "@/instructions/genericInstruction.js";
-import { u32, u8 } from "@vekexasia/jam-types";
+import { PVMIxEvaluateFN, u32, u8 } from "@vekexasia/jam-types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
@@ -33,7 +32,7 @@ export const decode = (bytes: Uint8Array): [vX: u32, vY: u32] => {
 const create = (
   identifier: u8,
   name: string,
-  evaluate: EvaluateFunction<[vX: u32, vY: u32]>,
+  evaluate: PVMIxEvaluateFN<[vX: u32, vY: u32]>,
 ) => {
   return regIx({
     opCode: identifier,
@@ -49,7 +48,7 @@ const store_imm_u8 = create(
   62 as u8,
   "store_imm_u8",
   (context, offset, value) => {
-    context.memory.set(offset, (value % 256) as u8);
+    context.execution.memory.set(offset, (value % 256) as u8);
   },
 );
 
@@ -59,7 +58,7 @@ const store_imm_u16 = create(
   (context, offset, value) => {
     const tmp = new Uint8Array(2);
     E_2.encode(BigInt(value % 2 ** 16), tmp);
-    context.memory.setBytes(offset, tmp);
+    context.execution.memory.setBytes(offset, tmp);
   },
 );
 
@@ -69,7 +68,7 @@ const store_imm_u32 = create(
   (context, offset, value) => {
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(value), tmp);
-    context.memory.setBytes(offset, tmp);
+    context.execution.memory.setBytes(offset, tmp);
   },
 );
 
@@ -106,21 +105,21 @@ if (import.meta.vitest) {
       it("store_imm_u8", () => {
         const context = createEvContext();
         store_imm_u8.evaluate(context, 0x100 as u32, 0x4422 as u32);
-        expect((context.memory.set as Mock).mock.calls).toEqual([
+        expect((context.execution.memory.set as Mock).mock.calls).toEqual([
           [0x100, 0x22],
         ]);
       });
       it("store_imm_u16", () => {
         const context = createEvContext();
         store_imm_u16.evaluate(context, 0x100 as u32, 0x44221133 as u32);
-        expect((context.memory.setBytes as Mock).mock.calls).toEqual([
+        expect((context.execution.memory.setBytes as Mock).mock.calls).toEqual([
           [0x100, new Uint8Array([0x33, 0x11])],
         ]);
       });
       it("store_imm_u32", () => {
         const context = createEvContext();
         store_imm_u32.evaluate(context, 0x100 as u32, 0x44221133 as u32);
-        expect((context.memory.setBytes as Mock).mock.calls).toEqual([
+        expect((context.execution.memory.setBytes as Mock).mock.calls).toEqual([
           [0x100, new Uint8Array([0x33, 0x11, 0x22, 0x44])],
         ]);
       });

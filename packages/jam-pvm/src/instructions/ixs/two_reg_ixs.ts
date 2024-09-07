@@ -1,5 +1,9 @@
-import { EvaluateFunction } from "@/instructions/genericInstruction.js";
-import { RegisterIdentifier, u32, u8 } from "@vekexasia/jam-types";
+import {
+  PVMIxEvaluateFN,
+  RegisterIdentifier,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 const decode = (
@@ -14,7 +18,7 @@ const decode = (
 const create = (
   identifier: u8,
   name: string,
-  evaluate: EvaluateFunction<[RegisterIdentifier, RegisterIdentifier]>,
+  evaluate: PVMIxEvaluateFN<[RegisterIdentifier, RegisterIdentifier]>,
 ) => {
   return regIx<[wD: RegisterIdentifier, wA: RegisterIdentifier]>({
     opCode: identifier,
@@ -27,7 +31,7 @@ const create = (
 };
 
 const move_reg = create(82 as u8, "move_reg", (context, rd, ra) => {
-  context.registers[rd] = context.registers[ra];
+  context.execution.registers[rd] = context.execution.registers[ra];
   return {};
 });
 
@@ -58,13 +62,13 @@ if (import.meta.vitest) {
     describe("ixs", () => {
       it("move_reg", () => {
         const context = createEvContext();
-        context.registers[0] = 0xbacce6a0 as u32;
+        context.execution.registers[0] = 0xbacce6a0 as u32;
         move_reg.evaluate(
           context,
           1 as RegisterIdentifier,
           0 as RegisterIdentifier,
         );
-        expect(context.registers[1]).toBe(0xbacce6a0);
+        expect(context.execution.registers[1]).toBe(0xbacce6a0);
       });
       it.skip("sbrk");
     });

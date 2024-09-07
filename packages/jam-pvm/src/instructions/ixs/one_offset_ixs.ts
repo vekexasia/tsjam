@@ -18,7 +18,7 @@ const jump = regIx<[offset: i32]>({
   ix: {
     decode,
     evaluate(context, vx) {
-      const addr = context.instructionPointer + vx;
+      const addr = context.execution.instructionPointer + vx;
       assert(addr >= 0, "address must be >= 0");
       return branch(context, addr as u32, true);
     },
@@ -51,7 +51,7 @@ if (import.meta.vitest) {
     describe("jump", () => {
       it("should propagate value to branch", () => {
         const context = createEvContext();
-        context.instructionPointer = toTagged(10);
+        context.execution.instructionPointer = toTagged(10);
         jump.evaluate(context, 1 as i32);
         expect(branch).toHaveBeenCalledWith(context, 11, true);
         jump.evaluate(context, -1 as i32);
@@ -59,7 +59,7 @@ if (import.meta.vitest) {
       });
       it("should throw if address is negative", () => {
         const context = createEvContext();
-        context.instructionPointer = toTagged(10);
+        context.execution.instructionPointer = toTagged(10);
         expect(() => jump.evaluate(context, -11 as i32)).toThrow(
           "address must be >= 0",
         );

@@ -1,5 +1,4 @@
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
-import { EvaluationContext, u32 } from "@vekexasia/jam-types";
+import { PVMIx, RegularPVMExitReason, u32 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 
 /**
@@ -11,25 +10,21 @@ import assert from "node:assert";
  * @see `226` on graypaper
  */
 export const branch = (
-  context: EvaluationContext,
+  context: Parameters<PVMIx<any>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
-): ReturnType<GenericPVMInstruction<never>["evaluate"]> => {
+): ReturnType<PVMIx<never>["evaluate"]> => {
   if (!condition) {
+    // even if (226) says that instruction pointer should not move
+    // we should allow that
     return;
   }
-
-  assert(address >= 0, "branch address is negative");
-
-  assert(
-    context.program.k[address] !== 1,
-    "branch target is not an instruction",
-  );
-
-  assert(
-    context.meta.blockBeginnings.has(address),
-    "branch target is not a block beginning",
-  );
+  if (!context.parsedProgram.isBlockBeginning(address)) {
+    return {
+      exitReason: RegularPVMExitReason.Panic,
+      nextInstructionPointer: context.execution.instructionPointer,
+    };
+  }
 
   return {
     nextInstructionPointer: address,

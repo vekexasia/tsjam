@@ -1,6 +1,5 @@
-import { u8 } from "@vekexasia/jam-types";
+import { RegularPVMExitReason, u8 } from "@vekexasia/jam-types";
 import { regIx } from "@/instructions/ixdb.js";
-import { RegularPVMExitReason } from "@/exitReason.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fallthrough = regIx<[]>({

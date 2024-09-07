@@ -1,6 +1,14 @@
 import { vi } from "vitest";
 import { PVMMemory } from "@/pvmMemory.js";
-import { EvaluationContext, SeqOfLength, u32, u8 } from "@vekexasia/jam-types";
+import {
+  IParsedProgram,
+  PVMIx,
+  PVMProgram,
+  PVMProgramExecutionContext,
+  SeqOfLength,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { toTagged } from "@vekexasia/jam-utils";
 
 const mockMemory = (): typeof PVMMemory => ({
@@ -9,18 +17,22 @@ const mockMemory = (): typeof PVMMemory => ({
   get: vi.fn(),
   getBytes: vi.fn(),
 });
-export const createEvContext = (): EvaluationContext => ({
-  instructionPointer: toTagged(0),
-  memory: mockMemory(),
+export const createEvContext = (): Parameters<PVMIx<any>["evaluate"]>[0] => ({
+  execution: {
+    instructionPointer: toTagged(0),
+    gas: toTagged(0),
+    memory: mockMemory(),
+    registers: new Array(13).fill(0 as u8) as SeqOfLength<u32, 13>,
+  },
   program: {
     j: [],
     z: null as any,
     c: null as any,
     k: [],
   },
-  meta: {
-    blockBeginnings: new Set<u32>(),
-    ixSkips: new Map<u32, u32>(),
+  parsedProgram: {
+    isBlockBeginning: vi.fn(),
+    ixAt: vi.fn(),
+    skip: vi.fn(),
   },
-  registers: new Array(13).fill(0 as u8) as SeqOfLength<u32, 13>,
 });

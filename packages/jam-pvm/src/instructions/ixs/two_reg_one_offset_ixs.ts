@@ -1,10 +1,9 @@
 import {
-  EvaluationContext,
+  PVMIxEvaluateFN,
   RegisterIdentifier,
   u32,
   u8,
 } from "@vekexasia/jam-types";
-import { EvaluateFunction } from "@/instructions/genericInstruction.js";
 import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
@@ -24,7 +23,7 @@ const decode = (
 const create = (
   identifier: u8,
   name: string,
-  evaluate: EvaluateFunction<
+  evaluate: PVMIxEvaluateFN<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: u32]
   >,
   blockTermination?: true,
@@ -47,7 +46,7 @@ export const branch_eq = create(
     return branch(
       context,
       offset,
-      context.registers[rA] === context.registers[rB],
+      context.execution.registers[rA] === context.execution.registers[rB],
     );
   },
   true,
@@ -60,7 +59,7 @@ export const branch_ne = create(
     return branch(
       context,
       offset,
-      context.registers[rA] !== context.registers[rB],
+      context.execution.registers[rA] !== context.execution.registers[rB],
     );
   },
   true,
@@ -73,7 +72,7 @@ export const branch_lt_u = create(
     return branch(
       context,
       offset,
-      context.registers[rA] < context.registers[rB],
+      context.execution.registers[rA] < context.execution.registers[rB],
     );
   },
   true,
@@ -86,7 +85,8 @@ export const branch_lt_s = create(
     return branch(
       context,
       offset,
-      Z(4, context.registers[rA]) < Z(4, context.registers[rB]),
+      Z(4, context.execution.registers[rA]) <
+        Z(4, context.execution.registers[rB]),
     );
   },
   true,
@@ -99,7 +99,7 @@ export const branch_ge_u = create(
     return branch(
       context,
       offset,
-      context.registers[rA] >= context.registers[rB],
+      context.execution.registers[rA] >= context.execution.registers[rB],
     );
   },
   true,
@@ -112,7 +112,8 @@ export const branch_ge_s = create(
     return branch(
       context,
       offset,
-      Z(4, context.registers[rA]) < Z(4, context.registers[rB]),
+      Z(4, context.execution.registers[rA]) <
+        Z(4, context.execution.registers[rB]),
     );
   },
   true,
@@ -140,13 +141,13 @@ if (import.meta.vitest) {
       });
     });
     describe("ixs", () => {
-      let context: EvaluationContext;
+      let context: ReturnType<typeof createEvContext>;
       beforeAll(() => {
         context = createEvContext();
       });
       it("branch_eq", () => {
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xdeadbeef as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xdeadbeef as u32;
         branch_eq.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -154,7 +155,7 @@ if (import.meta.vitest) {
           2 as u32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
-        context.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[1] = 0xdeadbeee as u32;
         branch_eq.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -164,8 +165,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, false);
       });
       it("branch_ne", () => {
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xdeadbeef as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xdeadbeef as u32;
         branch_ne.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -173,7 +174,7 @@ if (import.meta.vitest) {
           2 as u32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[1] = 0xdeadbeee as u32;
         branch_ne.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -183,8 +184,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, true);
       });
       it("branch_lt_u", () => {
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xdeadbeee as u32;
         branch_lt_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -192,7 +193,7 @@ if (import.meta.vitest) {
           2 as u32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.registers[1] = 0xdeadbeff as u32;
+        context.execution.registers[1] = 0xdeadbeff as u32;
         branch_lt_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -202,8 +203,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, true);
       });
       it("branch_lt_s", () => {
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xdeadbeee as u32;
         branch_lt_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -211,7 +212,7 @@ if (import.meta.vitest) {
           2 as u32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.registers[1] = 0xdeadbeff as u32;
+        context.execution.registers[1] = 0xdeadbeff as u32;
         branch_lt_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -221,8 +222,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
       });
       it("branch_ge_u", () => {
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xdeadbeee as u32;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -231,7 +232,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
 
-        context.registers[0] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeee as u32;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -240,7 +241,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
 
-        context.registers[0] = 0xdeadbeed as u32;
+        context.execution.registers[0] = 0xdeadbeed as u32;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -250,8 +251,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenNthCalledWith(2, context, 2, false);
       });
       it("branch_ge_s", () => {
-        context.registers[0] = Z4_inv(-2);
-        context.registers[1] = Z4_inv(-2);
+        context.execution.registers[0] = Z4_inv(-2);
+        context.execution.registers[1] = Z4_inv(-2);
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -260,7 +261,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
 
-        context.registers[0] = Z4_inv(-1);
+        context.execution.registers[0] = Z4_inv(-1);
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -269,7 +270,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
 
-        context.registers[0] = Z4_inv(-3);
+        context.execution.registers[0] = Z4_inv(-3);
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,

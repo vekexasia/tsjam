@@ -1,26 +1,35 @@
-import { EvaluationContext, u32 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
-import { RegularPVMExitReason } from "@/exitReason.js";
+import {
+  PVMIx,
+  PVMProgramExecutionContext,
+  RegularPVMExitReason,
+  u32,
+} from "@vekexasia/jam-types";
 const ZA = 4;
 /**
- * djump(a) method defined in `227`
+ * djump(a) method defined in `225`
  * @param context - the current evaluating context
  * @param a - the address to jump to
  */
 export const djump = (
-  context: EvaluationContext,
+  context: Parameters<PVMIx<any>["evaluate"]>[0],
   a: u32,
-): ReturnType<GenericPVMInstruction<never>["evaluate"]> => {
+): ReturnType<PVMIx<never>["evaluate"]> => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
-    return { exitReason: RegularPVMExitReason.Halt };
+    return {
+      exitReason: RegularPVMExitReason.Halt,
+      nextInstructionPointer: context.execution.instructionPointer,
+    };
   } else if (
     a === 0 ||
     a > context.program.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
-    return { exitReason: RegularPVMExitReason.Panic };
+    return {
+      exitReason: RegularPVMExitReason.Panic,
+      nextInstructionPointer: context.execution.instructionPointer,
+    };
   }
 
   return {

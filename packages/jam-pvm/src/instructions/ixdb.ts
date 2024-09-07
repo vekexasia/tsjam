@@ -1,9 +1,8 @@
-import { u8 } from "@vekexasia/jam-types";
-import { GenericPVMInstruction } from "@/instructions/genericInstruction.js";
+import { PVMIx, u8 } from "@vekexasia/jam-types";
 
 export const Ixdb = {
-  byCode: new Map<u8, GenericPVMInstruction<unknown[]>>(),
-  byIdentifier: new Map<string, GenericPVMInstruction<unknown[]>>(),
+  byCode: new Map<u8, PVMIx<unknown[]>>(),
+  byIdentifier: new Map<string, PVMIx<unknown[]>>(),
   blockTerminators: new Set<u8>(),
 };
 /**
@@ -25,8 +24,8 @@ export const regIx = <T extends unknown[]>(conf: {
    */
   blockTermination?: true;
 
-  ix: GenericPVMInstruction<T>;
-}): GenericPVMInstruction<T> => {
+  ix: PVMIx<T>;
+}): PVMIx<T> => {
   if (Ixdb.byCode.has(conf.opCode)) {
     throw new Error(`duplicate opCode ${conf.opCode}`);
   }

@@ -1,5 +1,9 @@
-import { RegisterIdentifier, u32, u8 } from "@vekexasia/jam-types";
-import { EvaluateFunction } from "@/instructions/genericInstruction.js";
+import {
+  PVMIxEvaluateFN,
+  RegisterIdentifier,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";
@@ -26,7 +30,7 @@ const decode = (
 const create = (
   identifier: u8,
   name: string,
-  evaluate: EvaluateFunction<
+  evaluate: PVMIxEvaluateFN<
     [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32]
   >,
   blockTermination?: true,
@@ -48,8 +52,11 @@ export const load_imm_jump_ind = create(
   42 as u8,
   "load_imm_jump_ind",
   (context, rA, rB, vx, vy) => {
-    context.registers[rA] = vx;
-    return djump(context, ((context.registers[rB] + vy) % 2 ** 32) as u32);
+    context.execution.registers[rA] = vx;
+    return djump(
+      context,
+      ((context.execution.registers[rB] + vy) % 2 ** 32) as u32,
+    );
   },
   true,
 );
@@ -89,8 +96,8 @@ if (import.meta.vitest) {
     describe("ixs", () => {
       it("load_imm_jump_ind", () => {
         const context = createEvContext();
-        context.registers[0] = 0xdeadbeef as u32;
-        context.registers[1] = 0xfffffffe as u32;
+        context.execution.registers[0] = 0xdeadbeef as u32;
+        context.execution.registers[1] = 0xfffffffe as u32;
         load_imm_jump_ind.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -99,7 +106,7 @@ if (import.meta.vitest) {
           0x00000003 as u32,
         );
         expect(djump).toHaveBeenCalledWith(context, 1);
-        expect(context.registers[0]).toBe(0xdeadbeef);
+        expect(context.execution.registers[0]).toBe(0xdeadbeef);
       });
     });
   });
