@@ -1,7 +1,8 @@
 import { PVMProgram, u32, u8 } from "@vekexasia/jam-types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
-import { E_1 } from "@/ints/E_subscr.js";
+import { E_1, E_sub } from "@/ints/E_subscr.js";
+import { BitSequence } from "@/bitSequence.js";
 
 export const PVMProgramCodec: JamCodec<PVMProgram> = {
   encode(value: PVMProgram, bytes: Uint8Array): number {
@@ -61,7 +62,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     // E_z(j)
     obj.j = [];
     for (let i = 0; i < jCard.value; i++) {
-      const item = E.decode(bytes.subarray(offset, offset + obj.z));
+      const item = E_sub(obj.z).decode(bytes.subarray(offset, offset + obj.z));
       obj.j.push(Number(item.value) as u32);
       offset += item.readBytes; // should be z
     }
@@ -72,16 +73,9 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
 
     // E(k)
     const elements = Math.ceil(Number(cCard.value) / 8);
-    obj.k = Array.from(bytes.subarray(offset, offset + elements))
-      .map((byte) => {
-        const bits: Array<0 | 1> = [];
-        for (let bitIndex = 7; bitIndex >= 0; bitIndex--) {
-          bits.push(((byte >> bitIndex) & 1) as 0 | 1);
-        }
-        return bits;
-      })
-      .flat()
-      .slice(0, Number(cCard.value));
+    obj.k = BitSequence.decode(
+      bytes.subarray(offset, offset + elements),
+    ).value.slice(0, Number(cCard.value));
 
     offset += elements;
     return { value: obj, readBytes: offset };
