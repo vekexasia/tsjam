@@ -22,6 +22,7 @@ export class ParsedProgram implements IParsedProgram {
       program.k[0] === 1 && Ixdb.byCode.has(program.c[0] as u8),
       "First instruction must be an instruction",
     );
+    this.#ixs.set(0 as u32, program.c[0] as u8);
     let lastIx = 0 as u32;
     for (let i = 1; i < program.k.length; i++) {
       // if this is an instruction opcode
