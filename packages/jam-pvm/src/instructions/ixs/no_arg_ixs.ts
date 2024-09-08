@@ -10,8 +10,8 @@ const fallthrough = regIx<[]>({
     decode() {
       return [];
     },
-    evaluate() {
-      // TODO: implement this is not specified in the paper. most likely its a useless instruction
+    evaluate(context) {
+      context.execution.instructionPointer++;
     },
   },
 });

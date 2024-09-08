@@ -26,10 +26,7 @@ const jump = regIx<[offset: i32]>({
 });
 
 if (import.meta.vitest) {
-  const { vi, describe, expect, it } = import.meta.vitest;
-  vi.mock("@/utils/branch.js", () => ({
-    branch: vi.fn(),
-  }));
+  const { describe, expect, it } = import.meta.vitest;
 
   const { toTagged } = await import("@vekexasia/jam-utils");
   const { createEvContext } = await import("@/test/mocks.js");

@@ -33,7 +33,7 @@ export class ParsedProgram implements IParsedProgram {
         lastIx = i as u32;
       }
     }
-    this.#ixSkips.set(lastIx, (program.k.length - lastIx - 2) as u32);
+    this.#ixSkips.set(lastIx, (program.k.length - lastIx - 1) as u32);
     this.#blockBeginnings.add(0 as u32);
     for (const [ix, skip] of this.#ixSkips.entries()) {
       if (Ixdb.blockTerminators.has(program.c[ix] as u8)) {
@@ -49,8 +49,9 @@ export class ParsedProgram implements IParsedProgram {
     return Ixdb.byCode.get(this.#ixs.get(pointer)!) as K | undefined;
   }
 
-  skip(pointer: u32): u32 | undefined {
-    return this.#ixSkips.get(pointer);
+  skip(pointer: u32): u32 {
+    // we assume that the pointer is valid
+    return this.#ixSkips.get(pointer)!;
   }
 
   isBlockBeginning(pointer: u32): boolean {

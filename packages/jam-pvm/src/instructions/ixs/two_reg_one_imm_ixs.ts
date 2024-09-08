@@ -4,10 +4,10 @@ import {
   u32,
   u8,
 } from "@vekexasia/jam-types";
-import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4 } from "@vekexasia/jam-codec";
+import { E_2, E_4, E_sub } from "@vekexasia/jam-codec";
+import { readVarIntFromBuffer } from "@/utils/varint.js";
 
 const decode = (
   bytes: Uint8Array,
@@ -16,7 +16,8 @@ const decode = (
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
   const imm = readVarIntFromBuffer(bytes.subarray(1, 1 + lX), lX as u8);
-  return [rA, rB, imm];
+
+  return [rA, rB, Number(imm) as u32];
 };
 
 const create = (
@@ -113,27 +114,27 @@ const load_ind_i16 = create(33 as u8, "load_ind_i16", (context, rA, rB, vX) => {
 
 // math
 const add_imm = create(2 as u8, "add_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = ((context.execution.registers[rA] + vX) %
+  context.execution.registers[rA] = ((context.execution.registers[rB] + vX) %
     2 ** 32) as u32;
 });
 
 const and_imm = create(18 as u8, "and_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (context.execution.registers[rA] &
+  context.execution.registers[rA] = (context.execution.registers[rB] &
     vX) as u32;
 });
 
 const xor_imm = create(31 as u8, "xor_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (context.execution.registers[rA] ^
+  context.execution.registers[rA] = (context.execution.registers[rB] ^
     vX) as u32;
 });
 
 const or_imm = create(49 as u8, "or_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (context.execution.registers[rA] |
+  context.execution.registers[rA] = (context.execution.registers[rB] |
     vX) as u32;
 });
 
 const mul_imm = create(35 as u8, "mul_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = ((context.execution.registers[rA] * vX) %
+  context.execution.registers[rA] = ((context.execution.registers[rB] * vX) %
     2 ** 32) as u32;
 });
 
@@ -141,8 +142,8 @@ const mul_upper_s_s_imm = create(
   65 as u8,
   "mul_upper_s_s_imm",
   (context, rA, rB, vX) => {
-    context.execution.registers[rB] = Z4_inv(
-      Math.floor((Z4(context.execution.registers[rA]) * Z4(vX)) / 2 ** 32),
+    context.execution.registers[rA] = Z4_inv(
+      Math.floor((Z4(context.execution.registers[rB]) * Z4(vX)) / 2 ** 32),
     );
   },
 );
@@ -151,22 +152,22 @@ const mul_upper_u_u_imm = create(
   63 as u8,
   "mul_upper_u_u_imm",
   (context, rA, rB, vX) => {
-    context.execution.registers[rB] = Math.floor(
-      (context.execution.registers[rA] * vX) / 2 ** 32,
+    context.execution.registers[rA] = Math.floor(
+      (context.execution.registers[rB] * vX) / 2 ** 32,
     ) as u32;
   },
 );
 
 const neg_add_imm = create(40 as u8, "neg_add_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = ((vX +
+  context.execution.registers[rA] = ((vX +
     2 ** 32 -
-    context.execution.registers[rA]) %
+    context.execution.registers[rB]) %
     2 ** 32) as u32;
 });
 
 // # bitshifts
 const shlo_l_imm = create(9 as u8, "shlo_l_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = ((context.execution.registers[rA] <<
+  context.execution.registers[rA] = ((context.execution.registers[rB] <<
     vX % 32) %
     2 ** 32) as u32;
 });
@@ -175,14 +176,14 @@ const shlo_l_imm_alt = create(
   75 as u8,
   "shlo_l_imm_alt",
   (context, rA, rB, vX) => {
-    context.execution.registers[rB] = ((vX <<
-      context.execution.registers[rA] % 32) %
+    context.execution.registers[rA] = ((vX <<
+      context.execution.registers[rB] % 32) %
       2 ** 32) as u32;
   },
 );
 
 const shlo_r_imm = create(14 as u8, "shlo_r_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (context.execution.registers[rA] >>>
+  context.execution.registers[rA] = (context.execution.registers[rB] >>>
     vX % 32) as u32;
 });
 
@@ -190,14 +191,14 @@ const shlo_r_imm_alt = create(
   72 as u8,
   "shlo_r_imm_alt",
   (context, rA, rB, vX) => {
-    context.execution.registers[rB] = (vX >>>
-      context.execution.registers[rA] % 32) as u32;
+    context.execution.registers[rA] = (vX >>>
+      context.execution.registers[rB] % 32) as u32;
   },
 );
 
 const shar_r_imm = create(25 as u8, "shar_r_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = Z4_inv(
-    Z4(context.execution.registers[rA]) >> vX % 32,
+  context.execution.registers[rA] = Z4_inv(
+    Z4(context.execution.registers[rB]) >> vX % 32,
   );
 });
 
@@ -205,33 +206,33 @@ const shar_r_imm_alt = create(
   80 as u8,
   "shar_r_imm_alt",
   (context, rA, rB, vX) => {
-    context.execution.registers[rB] = Z4_inv(
-      Z4(vX) >> context.execution.registers[rA] % 32,
+    context.execution.registers[rA] = Z4_inv(
+      Z4(vX) >> context.execution.registers[rB] % 32,
     );
   },
 );
 
 // # sets
 const set_lt_u_imm = create(27 as u8, "set_lt_u_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (
-    context.execution.registers[rA] < vX ? 1 : 0
+  context.execution.registers[rA] = (
+    context.execution.registers[rB] < vX ? 1 : 0
   ) as u32;
 });
 
 const set_lt_s_imm = create(56 as u8, "set_lt_s_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (
-    Z4(context.execution.registers[rA]) < Z(4, vX) ? 1 : 0
+  context.execution.registers[rA] = (
+    Z4(context.execution.registers[rB]) < Z(4, vX) ? 1 : 0
   ) as u32;
 });
 const set_gt_u_imm = create(39 as u8, "set_gt_u_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (
-    context.execution.registers[rA] > vX ? 1 : 0
+  context.execution.registers[rA] = (
+    context.execution.registers[rB] > vX ? 1 : 0
   ) as u32;
 });
 
 const set_gt_s_imm = create(61 as u8, "set_gt_s_imm", (context, rA, rB, vX) => {
-  context.execution.registers[rB] = (
-    Z4(context.execution.registers[rA]) > Z(4, vX) ? 1 : 0
+  context.execution.registers[rA] = (
+    Z4(context.execution.registers[rB]) > Z(4, vX) ? 1 : 0
   ) as u32;
 });
 
@@ -262,13 +263,13 @@ if (import.meta.vitest) {
       it("should decode the imm with boundaries", () => {
         expect(decode(new Uint8Array([0, 0x11]))).toEqual([0, 0, 0x11000000]);
         expect(decode(new Uint8Array([0, 0x11, 0x22]))).toEqual([
-          0, 0, 0x11220000,
+          0, 0, 0x22110000,
         ]);
       });
       it("should decode the imm and allow extra bytes", () => {
         expect(
           decode(new Uint8Array([0, 0x11, 0x22, 0x33, 0x44, 0x55])),
-        ).toEqual([0, 0, 0x11223344]);
+        ).toEqual([0, 0, 0x44332211]);
       });
     });
     describe("ixs", () => {
@@ -408,8 +409,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0xffffffff as u32;
         add_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           3 as u32,
         );
         expect(context.execution.registers[1]).toBe(2);

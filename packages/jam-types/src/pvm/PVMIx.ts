@@ -1,4 +1,3 @@
-import { u32 } from "@vekexasia/jam-types";
 import { PVMExitReason } from "@/pvm/PVMExitReason.js";
 import { PVMProgramExecutionContext } from "@/pvm/PVMProgramExecutionContext.js";
 import { PVMProgram } from "@/pvm/PVMProgram.js";
@@ -25,7 +24,6 @@ export interface PVMIx<Args extends unknown[]> {
     ...args: Args
   ): {
     exitReason?: PVMExitReason;
-    nextInstructionPointer?: u32;
   } | void;
 }
 

@@ -1,5 +1,4 @@
 import { PVMIx, RegularPVMExitReason, u32 } from "@vekexasia/jam-types";
-import assert from "node:assert";
 
 /**
  * Branch to the given address if the condition is true.
@@ -20,13 +19,11 @@ export const branch = (
     return;
   }
   if (!context.parsedProgram.isBlockBeginning(address)) {
+    console.log("branching to non block beginning", address);
     return {
       exitReason: RegularPVMExitReason.Panic,
       nextInstructionPointer: context.execution.instructionPointer,
     };
   }
-
-  return {
-    nextInstructionPointer: address,
-  };
+  context.execution.instructionPointer = address;
 };

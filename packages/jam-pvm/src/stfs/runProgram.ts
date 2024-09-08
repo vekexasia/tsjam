@@ -8,6 +8,7 @@ import {
 } from "@vekexasia/jam-types";
 import { pvmSingleStepSTF } from "@/stfs/singleStep.js";
 import { ParsedProgram } from "@/parseProgram.js";
+import * as console from "node:console";
 
 export const runProgramSTF = newSTF<
   PVMProgramExecutionContext,
@@ -21,6 +22,7 @@ export const runProgramSTF = newSTF<
   // how to handle errors here?
   const parsedProgram = ParsedProgram.parse(input.program);
 
+  let runs = 30;
   let intermediateState = curState;
   while (intermediateState.gas > 0) {
     const out = pvmSingleStepSTF.apply(
@@ -28,7 +30,7 @@ export const runProgramSTF = newSTF<
         program: input.program,
         parsedProgram,
       },
-      curState,
+      intermediateState,
     );
     if (out.exitReason) {
       return {
@@ -40,6 +42,17 @@ export const runProgramSTF = newSTF<
       };
     }
     intermediateState = out.posteriorContext;
+    if (runs-- < 0) {
+      console.log("breaking");
+      console.log(intermediateState);
+      break;
+    } else {
+      console.log(
+        ".",
+        intermediateState.instructionPointer,
+        intermediateState.registers,
+      );
+    }
   }
   return {
     context: {
