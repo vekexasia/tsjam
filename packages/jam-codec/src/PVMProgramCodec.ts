@@ -1,5 +1,7 @@
-import { E, E_1, JamCodec } from "@vekexasia/jam-codec";
 import { PVMProgram, u32, u8 } from "@vekexasia/jam-types";
+import { JamCodec } from "@/codec.js";
+import { E } from "@/ints/e.js";
+import { E_1 } from "@/ints/E_subscr.js";
 
 export const PVMProgramCodec: JamCodec<PVMProgram> = {
   encode(value: PVMProgram, bytes: Uint8Array): number {

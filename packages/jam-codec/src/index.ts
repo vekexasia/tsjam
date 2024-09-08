@@ -25,3 +25,4 @@ export * from "@/setelements/WorkResultCodec.js";
 
 export * from "./block/header/unsigned.js";
 export * from "./block/header/signed.js";
+export * from "./PVMProgramCodec.js";
