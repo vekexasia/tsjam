@@ -1,5 +1,5 @@
-import { SeqOfLength, u32 } from "@vekexasia/jam-types";
 import { PVMMemory } from "@/pvm/PVMMemory.js";
+import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
 
 /**
  * This is the context passed to instructions for evaluation.
@@ -7,7 +7,7 @@ import { PVMMemory } from "@/pvm/PVMMemory.js";
  */
 export interface PVMProgramExecutionContext {
   instructionPointer: u32;
-  gas: u32;
+  gas: u64;
   memory: PVMMemory;
   registers: SeqOfLength<u32, 13>;
 }

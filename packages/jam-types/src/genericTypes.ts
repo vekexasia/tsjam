@@ -11,6 +11,11 @@ export type Tagged<
 export type u8 = Tagged<number, "u8", { minValue: 0; maxValue: 255 }>;
 export type u16 = Tagged<number, "u16", { minValue: 0; maxValue: 65535 }>;
 export type u32 = Tagged<number, "u32", { minValue: 0; maxValue: 4294967295 }>;
+export type i64 = Tagged<
+  bigint,
+  "i64",
+  { minValue: -9223372036854775808n; maxValue: 9223372036854775807n }
+>;
 export type u64 = Tagged<
   bigint,
   "u64",

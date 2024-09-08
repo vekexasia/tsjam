@@ -49,8 +49,8 @@ export class ParsedProgram implements IParsedProgram {
     return Ixdb.byCode.get(this.#ixs.get(pointer)!) as K | undefined;
   }
 
-  skip(pointer: u32): u32 {
-    return this.#ixSkips.get(pointer) ?? (0 as u32);
+  skip(pointer: u32): u32 | undefined {
+    return this.#ixSkips.get(pointer);
   }
 
   isBlockBeginning(pointer: u32): boolean {
