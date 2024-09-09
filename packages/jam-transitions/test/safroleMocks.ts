@@ -18,9 +18,9 @@ export const mockHeader = (
   priorStateRoot: toTagged(opts.priorStateRoot || 0n),
   extrinsicHash: toTagged(opts.extrinsicHash || 0n),
   timeSlotIndex: toTagged(opts.timeSlotIndex || 0) as Tau,
-  judgementsMarkers: toTagged(
-    opts.judgementsMarkers || [],
-  ) as unknown as JamHeader["judgementsMarkers"],
+  offenders: toTagged(
+    opts.offenders || [],
+  ) as unknown as JamHeader["offenders"],
   blockAuthorKeyIndex: toTagged(opts.blockAuthorKeyIndex || 0),
   entropySignature: toTagged(opts.entropySignature || 0n),
 });
