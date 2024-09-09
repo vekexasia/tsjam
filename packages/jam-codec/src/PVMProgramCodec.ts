@@ -29,18 +29,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     offset += value.c.length;
 
     // E(k)
-    bytes.set(
-      value.k.reduce<number[]>((acc, k, index) => {
-        if (index % 8 === 0) {
-          // init the new byte to 0
-          acc.push(0);
-        }
-        acc[acc.length - 1] |= k << (7 - (index % 8));
-        return acc;
-      }, []),
-      offset,
-    );
-    offset += Math.ceil(value.k.length / 8);
+    offset += BitSequence.encode(value.k, bytes.subarray(offset));
     return offset;
   },
   decode(bytes: Uint8Array): { value: PVMProgram; readBytes: number } {
