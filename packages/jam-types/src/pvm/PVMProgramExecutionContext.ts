@@ -1,4 +1,4 @@
-import { PVMMemory } from "@/pvm/PVMMemory.js";
+import { IPVMMemory } from "@/pvm/IPVMMemory.js";
 import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
 
 /**
@@ -8,6 +8,6 @@ import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
 export interface PVMProgramExecutionContext {
   instructionPointer: u32;
   gas: u64;
-  memory: PVMMemory;
+  memory: IPVMMemory;
   registers: SeqOfLength<u32, 13>;
 }

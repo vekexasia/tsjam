@@ -56,9 +56,10 @@ const load_imm = create1Reg1IMMIx(4 as u8, "load_imm", (context, ri, vx) => {
 });
 
 const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
-  context.execution.registers[ri] = context.execution.memory.get(
+  context.execution.registers[ri] = context.execution.memory.getBytes(
     vx,
-  ) as number as u32;
+    1,
+  )[0] as number as u32;
 });
 
 const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
@@ -76,7 +77,7 @@ const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
 // ### Load signed
 const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
   context.execution.registers[ri] = Z4_inv(
-    Z(1, context.execution.memory.get(vx)),
+    Z(1, context.execution.memory.getBytes(vx, 1)[0]),
   );
 });
 const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
@@ -89,7 +90,7 @@ const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
 
 const store_u8 = create1Reg1IMMIx(71 as u8, "store_u8", (context, ri, vx) => {
   const wa = (context.execution.registers[ri] % 256) as u8;
-  context.execution.memory.set(vx, wa);
+  context.execution.memory.setBytes(vx, new Uint8Array([wa]));
 });
 const store_u16 = create1Reg1IMMIx(69 as u8, "store_u16", (context, ri, vx) => {
   const wa = (context.execution.registers[ri] % 2 ** 16) as u16;
@@ -124,7 +125,7 @@ if (import.meta.vitest) {
       });
       it("should varint properly", () => {
         const [, vX] = decode(new Uint8Array([1, 0b00000001]));
-        expect(vX).toBe(0b00000001_00000000_00000000_00000000);
+        expect(vX).toBe(0b00000000_00000000_00000000_00000001);
       });
       it("should ignore extra bytes", () => {
         const [, vX] = decode(
@@ -132,7 +133,7 @@ if (import.meta.vitest) {
             1, 0b00000001, 0b00000010, 0b00000010, 0b00000010, 1,
           ]),
         );
-        expect(vX).toBe(0b00000001_00000010_00000010_00000010);
+        expect(vX).toBe(0b00000010_00000010_00000010_00000001);
       });
     });
     describe("ixs", () => {
@@ -144,7 +145,9 @@ if (import.meta.vitest) {
       });
       it("load_u8", () => {
         const context = createEvContext();
-        (context.execution.memory.get as Mock).mockReturnValueOnce(0xaaaa);
+        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
+          0xaaaa,
+        ]);
         load_u8.evaluate(context, 1 as RegisterIdentifier, 0x1234 as u32);
         expect(context.execution.registers[1]).toBe(0xaaaa);
       });
@@ -178,19 +181,19 @@ if (import.meta.vitest) {
       });
       it("load_i8", () => {
         const context = createEvContext();
-        (context.execution.memory.get as Mock).mockReturnValueOnce(127);
+        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([127]);
         load_i8.evaluate(context, 1 as RegisterIdentifier, 0x1234 as u32);
         expect(context.execution.registers[1]).toBe(127);
         // test negative
-        (context.execution.memory.get as Mock).mockReturnValueOnce(
+        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
           Z_inv(1, -2),
-        );
+        ]);
         load_i8.evaluate(context, 1 as RegisterIdentifier, 0x1234 as u32);
         expect(Z4(context.execution.registers[1])).toBe(-2);
 
-        expect((context.execution.memory.get as Mock).mock.calls).toHaveLength(
-          2,
-        );
+        expect(
+          (context.execution.memory.getBytes as Mock).mock.calls,
+        ).toHaveLength(2);
       });
       it("load_i16", () => {
         const context = createEvContext();
@@ -216,12 +219,12 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[1] = 0x2211 as u32;
         store_u8.evaluate(context, 1 as RegisterIdentifier, 0x1234 as u32);
-        expect((context.execution.memory.set as Mock).mock.calls).toHaveLength(
-          1,
-        );
-        expect((context.execution.memory.set as Mock).mock.calls[0]).toEqual([
-          0x1234, 0x11,
-        ]);
+        expect(
+          (context.execution.memory.setBytes as Mock).mock.calls,
+        ).toHaveLength(1);
+        expect(
+          (context.execution.memory.setBytes as Mock).mock.calls[0],
+        ).toEqual([0x1234, new Uint8Array([0x11])]);
       });
       it("store_u16", () => {
         const context = createEvContext();

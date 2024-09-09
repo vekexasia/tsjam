@@ -85,12 +85,8 @@ if (import.meta.vitest) {
         expect(decode(new Uint8Array([1 + 16, 0]))).toEqual([1, 1, 0, 0]);
         expect(decode(new Uint8Array([13, 0]))).toEqual([12, 0, 0, 0]);
         expect(decode(new Uint8Array([13 * 16, 0]))).toEqual([0, 12, 0, 0]);
-        expect(decode(new Uint8Array([0, 1, 0x11]))).toEqual([
-          0, 0, 0x11000000, 0,
-        ]);
-        expect(decode(new Uint8Array([1, 0, 0x11]))).toEqual([
-          1, 0, 0, 0x11000000,
-        ]);
+        expect(decode(new Uint8Array([0, 1, 0x11]))).toEqual([0, 0, 0x11, 0]);
+        expect(decode(new Uint8Array([1, 0, 0x11]))).toEqual([1, 0, 0, 0x11]);
       });
     });
     describe("ixs", () => {

@@ -126,7 +126,7 @@ if (import.meta.vitest) {
   const { createEvContext } = await import("@/test/mocks.js");
   const b = await import("@/utils/branch.js");
   describe("two_reg_one_offset_ixs", () => {
-    beforeEach(() => {
+    beforeAll(() => {
       vi.spyOn(b, "branch").mockReturnValue(() => undefined);
     });
     describe("decode", () => {

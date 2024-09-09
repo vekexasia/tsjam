@@ -124,7 +124,7 @@ export * from "./pvm/IParsedProgram.js";
 export * from "./pvm/PVMProgramExecutionContext.js";
 export * from "./pvm/PVMExitReason.js";
 export * from "./pvm/PVMIx.js";
-export * from "./pvm/PVMMemory.js";
+export * from "./pvm/IPVMMemory.js";
 export * from "./pvm/PVMProgram.js";
 export * from "./pvm/RegisterIdentifier.js";
 

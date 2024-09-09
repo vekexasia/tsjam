@@ -102,7 +102,7 @@ if (import.meta.vitest) {
       expect(parsed.skip(3 as u32)).toBe(2);
       expect(parsed.skip(6 as u32)).toBe(2);
       expect(parsed.skip(9 as u32)).toBe(0);
-      expect(parsed.skip(10 as u32)).toBe(5);
+      expect(parsed.skip(10 as u32)).toBe(6);
       expect(parsed.isBlockBeginning(0 as u32)).toBe(true);
       expect(parsed.isBlockBeginning(9 as u32)).toBe(true);
       expect(parsed.isBlockBeginning(10 as u32)).toBe(true);

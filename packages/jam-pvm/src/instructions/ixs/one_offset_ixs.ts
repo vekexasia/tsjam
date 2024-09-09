@@ -4,6 +4,7 @@ import { regIx } from "@/instructions/ixdb.js";
 import { Z } from "@/utils/zed.js";
 import assert from "node:assert";
 import { E_sub } from "@vekexasia/jam-codec";
+import { beforeAll } from "vitest";
 
 const decode = (bytes: Uint8Array): [offset: i32] => {
   const lx = Math.min(4, bytes.length);
@@ -26,11 +27,15 @@ const jump = regIx<[offset: i32]>({
 });
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { vi, describe, expect, it } = import.meta.vitest;
 
   const { toTagged } = await import("@vekexasia/jam-utils");
   const { createEvContext } = await import("@/test/mocks.js");
+  const b = await import("@/utils/branch.js");
   describe("one_offset_ixs", () => {
+    beforeAll(() => {
+      vi.spyOn(b, "branch").mockReturnValue(undefined);
+    });
     describe("decode", () => {
       it("should decode to 0 if no bytes provided", () => {
         expect(decode(new Uint8Array([]))).toEqual([0]);

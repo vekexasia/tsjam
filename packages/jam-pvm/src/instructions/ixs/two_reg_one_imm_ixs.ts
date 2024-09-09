@@ -6,7 +6,7 @@ import {
 } from "@vekexasia/jam-types";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4, E_sub } from "@vekexasia/jam-codec";
+import { E_2, E_4 } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 
 const decode = (
@@ -40,9 +40,9 @@ const create = (
 // # store
 
 const store_ind_u8 = create(16 as u8, "store_ind_u8", (context, rA, rB, vX) => {
-  context.execution.memory.set(
+  context.execution.memory.setBytes(
     context.execution.registers[rB] + vX,
-    (context.execution.registers[rA] & 0xff) as u8,
+    new Uint8Array([context.execution.registers[rA] & 0xff]),
   );
 });
 
@@ -74,9 +74,10 @@ const store_ind_u32 = create(
 
 // # load unsigned
 const load_ind_u8 = create(11 as u8, "load_ind_u8", (context, rA, rB, vX) => {
-  context.execution.registers[rA] = context.execution.memory.get(
+  context.execution.registers[rA] = context.execution.memory.getBytes(
     context.execution.registers[rB] + vX,
-  ) as number as u32; // it's a u8 but typescript doesn't know that
+    1,
+  )[0] as u32; // it's a u8 but typescript doesn't know that
 });
 
 const load_ind_u16 = create(37 as u8, "load_ind_u16", (context, rA, rB, vX) => {
@@ -97,10 +98,11 @@ const load_ind_u32 = create(1 as u8, "load_ind_u32", (context, rA, rB, vX) => {
 
 // # load signed
 const load_ind_i8 = create(21 as u8, "load_ind_i8", (context, rA, rB, vX) => {
-  const val = context.execution.memory.get(
+  const val = context.execution.memory.getBytes(
     context.execution.registers[rB] + vX,
+    1,
   );
-  context.execution.registers[rA] = Z4_inv(Z(1, val));
+  context.execution.registers[rA] = Z4_inv(Z(1, val[0]));
 });
 
 const load_ind_i16 = create(33 as u8, "load_ind_i16", (context, rA, rB, vX) => {
@@ -261,9 +263,9 @@ if (import.meta.vitest) {
         expect(decode(new Uint8Array([16 * 15]))).toEqual([0, 12, 0]);
       });
       it("should decode the imm with boundaries", () => {
-        expect(decode(new Uint8Array([0, 0x11]))).toEqual([0, 0, 0x11000000]);
+        expect(decode(new Uint8Array([0, 0x11]))).toEqual([0, 0, 0x00000011]);
         expect(decode(new Uint8Array([0, 0x11, 0x22]))).toEqual([
-          0, 0, 0x22110000,
+          0, 0, 0x00002211,
         ]);
       });
       it("should decode the imm and allow extra bytes", () => {
@@ -283,8 +285,8 @@ if (import.meta.vitest) {
           1 as RegisterIdentifier,
           0x01 as u32,
         );
-        expect((context.execution.memory.set as Mock).mock.calls).toEqual([
-          [0x1011, 0x20],
+        expect((context.execution.memory.setBytes as Mock).mock.calls).toEqual([
+          [0x1011, new Uint8Array([0x20])],
         ]);
       });
       it("store_ind_u16", () => {
@@ -317,7 +319,7 @@ if (import.meta.vitest) {
       });
       it("load_ind_u8", () => {
         const context = createEvContext();
-        (context.execution.memory.get as Mock).mockReturnValueOnce(0x20);
+        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([0x20]);
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
         load_ind_u8.evaluate(
@@ -327,8 +329,8 @@ if (import.meta.vitest) {
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(0x20);
-        expect((context.execution.memory.get as Mock).mock.calls).toEqual([
-          [0x1021],
+        expect((context.execution.memory.getBytes as Mock).mock.calls).toEqual([
+          [0x1021, 1],
         ]);
       });
       it("load_ind_u16", () => {
@@ -369,9 +371,9 @@ if (import.meta.vitest) {
       });
       it("load_ind_i8", () => {
         const context = createEvContext();
-        (context.execution.memory.get as Mock).mockReturnValueOnce(
+        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
           Z_inv(1, -1),
-        );
+        ]);
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
         load_ind_i8.evaluate(
@@ -381,8 +383,8 @@ if (import.meta.vitest) {
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(Z4_inv(-1));
-        expect((context.execution.memory.get as Mock).mock.calls).toEqual([
-          [0x1021],
+        expect((context.execution.memory.getBytes as Mock).mock.calls).toEqual([
+          [0x1021, 1],
         ]);
       });
       it("load_ind_i16", () => {
@@ -420,8 +422,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0b101 as u32;
         and_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0b110 as u32,
         );
         expect(context.execution.registers[1]).toBe(0b100);
@@ -431,8 +433,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0b101 as u32;
         xor_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0b110 as u32,
         );
         expect(context.execution.registers[1]).toBe(0b011);
@@ -442,8 +444,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0b101 as u32;
         or_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0b110 as u32,
         );
         expect(context.execution.registers[1]).toBe(0b111);
@@ -453,16 +455,16 @@ if (import.meta.vitest) {
         context.execution.registers[0] = (2 ** 31) as u32;
         mul_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           2 as u32,
         );
         expect(context.execution.registers[1]).toBe(0);
 
         mul_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           3 as u32,
         );
         expect(context.execution.registers[1]).toBe(2 ** 31);
@@ -472,8 +474,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = Z4_inv(2 ** 30);
         mul_upper_s_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(8),
         );
         expect(context.execution.registers[1]).toBe(Z4_inv(2));
@@ -481,8 +483,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = Z4_inv(2 ** 30);
         mul_upper_s_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-16),
         );
         expect(context.execution.registers[1]).toBe(Z4_inv(-4));
@@ -492,8 +494,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = (2 ** 30) as u32;
         mul_upper_u_u_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           8 as u32,
         );
         expect(context.execution.registers[1]).toBe(2);
@@ -503,16 +505,16 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0x10 as u32;
         set_lt_u_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(1);
         context.execution.registers[0] = 0x11 as u32;
         set_lt_u_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(0);
@@ -522,24 +524,24 @@ if (import.meta.vitest) {
         context.execution.registers[0] = Z4_inv(-2);
         set_lt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-1),
         );
         expect(context.execution.registers[1]).toBe(1);
         context.execution.registers[0] = Z4_inv(-1);
         set_lt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(0),
         );
         expect(context.execution.registers[1]).toBe(1);
         context.execution.registers[0] = Z4_inv(0);
         set_lt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-1),
         );
         expect(context.execution.registers[1]).toBe(0);
@@ -549,16 +551,16 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0x11 as u32;
         set_gt_u_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(0);
         context.execution.registers[0] = 0x12 as u32;
         set_gt_u_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x11 as u32,
         );
         expect(context.execution.registers[1]).toBe(1);
@@ -568,24 +570,24 @@ if (import.meta.vitest) {
         context.execution.registers[0] = Z4_inv(-1);
         set_gt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-2),
         );
         expect(context.execution.registers[1]).toBe(1);
         context.execution.registers[0] = Z4_inv(-1);
         set_gt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-1),
         );
         expect(context.execution.registers[1]).toBe(0);
         context.execution.registers[0] = Z4_inv(-2);
         set_gt_s_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           Z4_inv(-1),
         );
         expect(context.execution.registers[1]).toBe(0);
@@ -637,8 +639,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 10 as u32;
         neg_add_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           11 as u32,
         );
         expect(context.execution.registers[1]).toBe(1);
@@ -648,16 +650,16 @@ if (import.meta.vitest) {
         context.execution.registers[0] = (2 ** 31) as u32;
         shlo_l_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           33 as u32, // 1
         );
         expect(context.execution.registers[1]).toBe(0);
         context.execution.registers[0] = 1 as u32;
         shlo_l_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           1 as u32,
         );
         expect(context.execution.registers[1]).toBe(2);
@@ -667,8 +669,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 33 as u32;
         shlo_l_imm_alt.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           1 as u32,
         );
         expect(context.execution.registers[1]).toBe(2);
@@ -676,8 +678,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 1 as u32;
         shlo_l_imm_alt.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           (2 ** 31) as u32,
         );
         expect(context.execution.registers[1]).toBe(0);
@@ -687,8 +689,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0x80000000 as u32;
         shlo_r_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           1 as u32,
         );
         expect(context.execution.registers[1]).toBe(0x40000000);
@@ -698,8 +700,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 1 as u32;
         shlo_r_imm_alt.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x80000000 as u32,
         );
         expect(context.execution.registers[1]).toBe(0x40000000);
@@ -709,8 +711,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = Z4_inv(-1 * 2 ** 31) as u32;
         shar_r_imm.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           33 as u32,
         );
         expect(context.execution.registers[1]).toBe(Z4_inv(-1 * 2 ** 30));
@@ -720,8 +722,8 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 33 as u32;
         shar_r_imm_alt.evaluate(
           context,
-          0 as RegisterIdentifier,
           1 as RegisterIdentifier,
+          0 as RegisterIdentifier,
           0x80000000 as u32,
         );
         expect(context.execution.registers[1]).toBe(Z4_inv(-1 * 2 ** 30));

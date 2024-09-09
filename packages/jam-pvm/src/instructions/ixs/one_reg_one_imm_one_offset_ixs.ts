@@ -176,7 +176,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 1), 0x12, 0x00, 0x00, 0x11]),
       );
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x12000000);
+      expect(vx).toEqual(0x12);
       expect(offset).toEqual(0x110000);
     });
     it("should put 0 in vx if lx is 0", () => {
@@ -192,7 +192,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 6), 0x12, 0x00, 0x00, 0x11, 1]),
       );
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x12000011);
+      expect(vx).toEqual(0x11000012);
       expect(offset).toEqual(1);
     });
     it("should discard extra bytes", () => {
@@ -211,7 +211,7 @@ if (import.meta.vitest) {
         ]),
       );
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x12000011);
+      expect(vx).toEqual(0x11000012);
       expect(offset).toEqual(0);
     });
     it("should decode when lx is 0 and no other bytes", () => {

@@ -41,9 +41,9 @@ const store_imm_ind_u8 = create(
   26 as u8,
   "store_imm_ind_u8",
   (context, ri, vx, vy) => {
-    context.execution.memory.set(
+    context.execution.memory.setBytes(
       context.execution.registers[ri] + vx,
-      (vy % 0xff) as u8,
+      new Uint8Array([vy % 0xff]),
     );
   },
 );
@@ -97,14 +97,14 @@ if (import.meta.vitest) {
           new Uint8Array([16, 0x12, 0x11, 0x22, 0x33, 0x44]),
         );
         expect(rA).toEqual(0);
-        expect(vX).toEqual(0x12000000);
-        expect(vY).toEqual(0x11223344);
+        expect(vX).toEqual(0x00000012);
+        expect(vY).toEqual(0x44332211);
         [rA, vX, vY] = decode(
           new Uint8Array([16 * 4, 0x12, 0x11, 0x22, 0x33, 0x44]),
         );
         expect(rA).toEqual(0);
-        expect(vX).toEqual(0x12112233);
-        expect(vY).toEqual(0x44000000);
+        expect(vX).toEqual(0x33221112);
+        expect(vY).toEqual(0x00000044);
       });
       it("should ignore extra bytes", () => {
         const [, vX, vY] = decode(
@@ -112,8 +112,8 @@ if (import.meta.vitest) {
             16, 0x12, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
           ]),
         );
-        expect(vX).toEqual(0x12000000);
-        expect(vY).toEqual(0x11223344);
+        expect(vX).toEqual(0x00000012);
+        expect(vY).toEqual(0x44332211);
       });
     });
     describe("ixs", () => {
@@ -126,8 +126,8 @@ if (import.meta.vitest) {
           0x10 as u32,
           0x12 as u32,
         );
-        expect((context.execution.memory.set as Mock).mock.calls).toEqual([
-          [0x1010, 0x12],
+        expect((context.execution.memory.setBytes as Mock).mock.calls).toEqual([
+          [0x1010, new Uint8Array([0x12])],
         ]);
       });
       it("store_imm_ind_u16", () => {

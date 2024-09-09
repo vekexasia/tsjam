@@ -48,7 +48,7 @@ const store_imm_u8 = create(
   62 as u8,
   "store_imm_u8",
   (context, offset, value) => {
-    context.execution.memory.set(offset, (value % 256) as u8);
+    context.execution.memory.setBytes(offset, new Uint8Array([value % 256]));
   },
 );
 
@@ -80,18 +80,18 @@ if (import.meta.vitest) {
     describe("decode", () => {
       it("decode just fine", () => {
         expect(decode(new Uint8Array([0, 0]))).toEqual([0, 0]);
-        expect(decode(new Uint8Array([1, 0x44]))).toEqual([0x44000000, 0]);
-        expect(decode(new Uint8Array([0, 0x44]))).toEqual([0, 0x44000000]);
+        expect(decode(new Uint8Array([1, 0x44]))).toEqual([0x44, 0]);
+        expect(decode(new Uint8Array([0, 0x44]))).toEqual([0, 0x44]);
         expect(
           decode(new Uint8Array([1, 0x44, 0x55, 0x11, 0x22, 0x33])),
-        ).toEqual([0x44000000, 0x55112233]);
+        ).toEqual([0x44, 0x33221155]);
         expect(
           decode(new Uint8Array([4, 0x44, 0x55, 0x11, 0x22, 0x33])),
-        ).toEqual([0x44551122, 0x33000000]);
+        ).toEqual([0x22115544, 0x33]);
         // mod 8 on first param and min 4
         expect(
           decode(new Uint8Array([7 + 8, 0x44, 0x55, 0x11, 0x22, 0x33])),
-        ).toEqual([0x44551122, 0x33000000]);
+        ).toEqual([0x22115544, 0x33]);
       });
       it("should throw if not enough bytes", () => {
         expect(() => decode(new Uint8Array([0]))).toThrow("not enough bytes");
@@ -105,8 +105,8 @@ if (import.meta.vitest) {
       it("store_imm_u8", () => {
         const context = createEvContext();
         store_imm_u8.evaluate(context, 0x100 as u32, 0x4422 as u32);
-        expect((context.execution.memory.set as Mock).mock.calls).toEqual([
-          [0x100, 0x22],
+        expect((context.execution.memory.setBytes as Mock).mock.calls).toEqual([
+          [0x100, new Uint8Array([0x22])],
         ]);
       });
       it("store_imm_u16", () => {
