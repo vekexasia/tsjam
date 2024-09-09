@@ -18,7 +18,6 @@ export const djump = (
   if (a == 2 ** 32 - 2 ** 16) {
     return {
       exitReason: RegularPVMExitReason.Halt,
-      nextInstructionPointer: context.execution.instructionPointer,
     };
   } else if (
     a === 0 ||
@@ -28,11 +27,10 @@ export const djump = (
   ) {
     return {
       exitReason: RegularPVMExitReason.Panic,
-      nextInstructionPointer: context.execution.instructionPointer,
     };
   }
 
-  return {
-    nextInstructionPointer: (context.program.j[Math.floor(a / ZA)] - 1) as u32,
-  };
+  context.execution.instructionPointer = (context.program.j[
+    Math.floor(a / ZA)
+  ] - 1) as u32;
 };

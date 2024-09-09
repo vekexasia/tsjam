@@ -33,6 +33,7 @@ const create = (
     ix: {
       decode,
       evaluate,
+      gasCost: 1n,
     },
   });
 };

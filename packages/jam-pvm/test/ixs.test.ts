@@ -8,6 +8,7 @@ import { PVMProgramCodec } from "@vekexasia/jam-codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { runProgramSTF } from "@/stfs/runProgram.js";
 import { RegularPVMExitReason } from "@vekexasia/jam-types";
+import { PVMMemory } from "@/pvmMemory.js";
 
 describe("allixs", () => {
   it("should have registered all opcodes", () => {
@@ -49,8 +50,22 @@ describe("testcases", () => {
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
     const context = createEvContext();
+    context.execution.memory = new PVMMemory(
+      json["initial-memory"].map(
+        (v: { address: number; contents: number[] }) => ({
+          at: v.address,
+          content: new Uint8Array(v.contents),
+        }),
+      ),
+      json["initial-page-map"].map(
+        (v: { address: number; length: number; "is-writable": boolean }) => ({
+          from: v.address,
+          to: v.address + v.length,
+          writable: v["is-writable"],
+        }),
+      ),
+    );
     context.execution.gas = toTagged(BigInt(json["initial-gas"]));
-    // context.execution.memory = new
     context.execution.instructionPointer = toTagged(json["initial-pc"]);
     context.execution.registers = json["initial-regs"];
 
@@ -65,124 +80,23 @@ describe("testcases", () => {
     );
     expect(r.context.registers).toEqual(json["expected-regs"]);
     expect(r.context.instructionPointer).toEqual(json["expected-pc"]);
-    expect(r.exitReason == RegularPVMExitReason.Panic ? "trap" : 0).toEqual(
-      json["expected-status"],
-    );
+    expect(
+      r.exitReason == RegularPVMExitReason.Panic
+        ? "trap"
+        : RegularPVMExitReason.Halt == r.exitReason
+          ? "halt"
+          : 0,
+    ).toEqual(json["expected-status"]);
+    for (const { address, contents } of json["expected-memory"]) {
+      expect(r.context.memory.getBytes(address, contents.length)).toEqual(
+        new Uint8Array(contents),
+      );
+    }
+    expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
   };
-  it("inst_add_imm", doTest("inst_add_imm"));
-  it("inst_add", doTest("inst_add"));
-  it("inst_add_with_overflow", doTest("inst_add_with_overflow"));
-  it("inst_and", doTest("inst_and"));
-  it("inst_and_imm", doTest("inst_and_imm"));
-  it("inst_branch_eq_imm_nok", doTest("inst_branch_eq_imm_nok"));
-  it("inst_branch_eq_imm_ok", doTest("inst_branch_eq_imm_ok"));
-  it("inst_branch_eq_nok", doTest("inst_branch_eq_nok"));
-  it("inst_branch_eq_ok", doTest("inst_branch_eq_ok"));
-  it(
-    "inst_branch_greater_or_equal_signed_imm_nok",
-    doTest("inst_branch_greater_or_equal_signed_imm_nok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_signed_imm_ok",
-    doTest("inst_branch_greater_or_equal_signed_imm_ok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_signed_nok",
-    doTest("inst_branch_greater_or_equal_signed_nok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_signed_ok",
-    doTest("inst_branch_greater_or_equal_signed_ok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_unsigned_imm_nok",
-    doTest("inst_branch_greater_or_equal_unsigned_imm_nok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_unsigned_imm_ok",
-    doTest("inst_branch_greater_or_equal_unsigned_imm_ok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_unsigned_nok",
-    doTest("inst_branch_greater_or_equal_unsigned_nok"),
-  );
-  it(
-    "inst_branch_greater_or_equal_unsigned_ok",
-    doTest("inst_branch_greater_or_equal_unsigned_ok"),
-  );
-  it(
-    "inst_branch_greater_signed_imm_nok",
-    doTest("inst_branch_greater_signed_imm_nok"),
-  );
-
-  it(
-    "inst_branch_greater_signed_imm_ok",
-    doTest("inst_branch_greater_signed_imm_ok"),
-  );
-  it(
-    "inst_branch_greater_unsigned_imm_nok",
-    doTest("inst_branch_greater_unsigned_imm_nok"),
-  );
-  it(
-    "inst_branch_greater_unsigned_imm_ok",
-    doTest("inst_branch_greater_unsigned_imm_ok"),
-  );
-  it(
-    "inst_branch_less_or_equal_signed_imm_nok",
-    doTest("inst_branch_less_or_equal_signed_imm_nok"),
-  );
-  it(
-    "inst_branch_less_or_equal_signed_imm_ok",
-    doTest("inst_branch_less_or_equal_signed_imm_ok"),
-  );
-  it(
-    "inst_branch_less_or_equal_unsigned_imm_nok",
-    doTest("inst_branch_less_or_equal_unsigned_imm_nok"),
-  );
-  it(
-    "inst_branch_less_or_equal_unsigned_imm_ok",
-    doTest("inst_branch_less_or_equal_unsigned_imm_ok"),
-  );
-  it(
-    "inst_branch_less_signed_imm_nok",
-    doTest("inst_branch_less_signed_imm_nok"),
-  );
-  it(
-    "inst_branch_less_signed_imm_ok",
-    doTest("inst_branch_less_signed_imm_ok"),
-  );
-  it("inst_branch_less_signed_nok", doTest("inst_branch_less_signed_nok"));
-  it("inst_branch_less_signed_ok", doTest("inst_branch_less_signed_ok"));
-  it(
-    "inst_branch_less_unsigned_imm_nok",
-    doTest("inst_branch_less_unsigned_imm_nok"),
-  );
-  it(
-    "inst_branch_less_unsigned_imm_ok",
-    doTest("inst_branch_less_unsigned_imm_ok"),
-  );
-  it("inst_branch_less_unsigned_nok", doTest("inst_branch_less_unsigned_nok"));
-  it("inst_branch_less_unsigned_ok", doTest("inst_branch_less_unsigned_ok"));
-  it("inst_branch_not_eq_imm_nok", doTest("inst_branch_not_eq_imm_nok"));
-  it("inst_branch_not_eq_imm_ok", doTest("inst_branch_not_eq_imm_ok"));
-  it("inst_branch_not_eq_nok", doTest("inst_branch_not_eq_nok"));
-  it("inst_branch_not_eq_ok", doTest("inst_branch_not_eq_ok"));
-  it("inst_cmov_if_zero_imm_nok", doTest("inst_cmov_if_zero_imm_nok"));
-  it("inst_cmov_if_zero_imm_ok", doTest("inst_cmov_if_zero_imm_ok"));
-  it("inst_cmov_if_zero_nok", doTest("inst_cmov_if_zero_nok"));
-  it("inst_cmov_if_zero_ok", doTest("inst_cmov_if_zero_ok"));
-  it("inst_div_signed", doTest("inst_div_signed"));
-  it("inst_div_signed_by_zero", doTest("inst_div_signed_by_zero"));
-  it("inst_div_signed_with_overflow", doTest("inst_div_signed_with_overflow"));
-  it("inst_div_unsigned", doTest("inst_div_unsigned"));
-  it("inst_div_unsigned_by_zero", doTest("inst_div_unsigned_by_zero"));
-  it(
-    "inst_div_unsigned_with_overflow",
-    doTest("inst_div_unsigned_with_overflow"),
-  );
-  it("inst_fallthrough", doTest("inst_fallthrough"));
-  it("inst_jump", doTest("inst_jump"));
-  it("inst_load_imm", doTest("inst_load_imm"));
-  it("inst_load_u8", doTest("inst_load_u8"));
-  it("inst_load_u8_trap", doTest("inst_load_u8_trap"));
+  // read all fixtures directory
+  const files = fs.readdirSync(`${__dirname}/fixtures`);
+  for (const file of files) {
+    it(file, doTest(file.replace(".json", "")));
+  }
 });

@@ -61,6 +61,7 @@ if (import.meta.vitest) {
           evaluate() {
             return {};
           },
+          gasCost: 1n,
         },
       });
       expect(Ixdb.byCode.get(0 as u8)).toBe(ix);
@@ -72,6 +73,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
+          gasCost: 1n,
           decode() {
             return [];
           },
@@ -85,6 +87,7 @@ if (import.meta.vitest) {
           opCode: 0 as u8,
           identifier: "test2",
           ix: {
+            gasCost: 1n,
             decode() {
               return [];
             },
@@ -100,6 +103,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
+          gasCost: 1n,
           decode() {
             return [];
           },
@@ -113,6 +117,7 @@ if (import.meta.vitest) {
           opCode: 1 as u8,
           identifier: "test",
           ix: {
+            gasCost: 1n,
             decode() {
               return [];
             },
@@ -128,6 +133,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
+          gasCost: 1n,
           decode() {
             return [];
           },

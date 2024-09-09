@@ -15,8 +15,8 @@ export const createEvContext = (): Parameters<PVMIx<any>["evaluate"]>[0] => ({
   },
   program: {
     j: [],
-    z: null as any,
-    c: null as any,
+    z: 0 as u8,
+    c: new Uint8Array(0),
     k: [],
   },
   parsedProgram: {

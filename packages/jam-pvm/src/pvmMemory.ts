@@ -1,36 +1,32 @@
-import { u8 } from "@vekexasia/jam-types";
+import { IPVMMemory, u32 } from "@vekexasia/jam-types";
 
-const innerMemory = new Uint8Array(2 ** 32);
-export const PVMMemory = {
-  /**
-   * @throws in case there is an issue accessing the memory
-   * @param offset
-   * @param value
-   */
-  set(offset: number, value: u8): void {
-    innerMemory[offset] = value;
-  },
-  /**
-   * @throws in case there is an issue accessing the memory
-   * @param offset
-   * @param bytes
-   */
+export class PVMMemory implements IPVMMemory {
+  #innerMemory = new Uint8Array(2 ** 32);
+  constructor(
+    initialMemory: Array<{ at: u32; content: Uint8Array }>,
+    private acl: Array<{ from: u32; to: u32; writable: boolean }>,
+  ) {
+    for (const { at, content } of initialMemory) {
+      this.#innerMemory.set(content, at);
+    }
+  }
   setBytes(offset: number, bytes: Uint8Array): void {
-    innerMemory.set(bytes, offset);
-  },
-  /**
-   * @throws in case there is an issue accessing the memory
-   * @param offset
-   */
-  get(offset: number): u8 {
-    return innerMemory[offset] as u8;
-  },
-  /**
-   * @throws in case there is an issue accessing the memory
-   * @param offset
-   * @param length
-   */
+    const writeable = this.acl.find(
+      (acl) =>
+        offset >= acl.from && offset + bytes.length < acl.to && acl.writable,
+    );
+    if (!writeable) {
+      throw new Error("Memory is not writeable");
+    }
+    this.#innerMemory.set(bytes, offset);
+  }
   getBytes(offset: number, length: number): Uint8Array {
-    return innerMemory.subarray(offset, offset + length);
-  },
-};
+    const read = this.acl.find(
+      (acl) => offset >= acl.from && offset + length < acl.to,
+    );
+    if (!read) {
+      throw new Error("Memory is not readable");
+    }
+    return this.#innerMemory.subarray(offset, offset + length);
+  }
+}

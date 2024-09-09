@@ -34,6 +34,7 @@ const create1Reg1IMMIx = (
     ix: {
       decode,
       evaluate,
+      gasCost: 1n,
     },
   });
 };

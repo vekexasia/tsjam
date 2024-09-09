@@ -39,6 +39,7 @@ const create = (
           rD,
         );
       },
+      gasCost: 1n,
     },
   });
 };
@@ -150,7 +151,7 @@ const shlo_l = create(55 as u8, "shlo_l", (context, wA, wB, rD) => {
 });
 
 const shlo_r = create(51 as u8, "shlo_r", (context, wA, wB, rD) => {
-  context.execution.registers[rD] = (wA >> wB % 32) as u32;
+  context.execution.registers[rD] = (wA >>> wB % 32) as u32;
 });
 
 const shar_r = create(77 as u8, "shar_r", (context, wA, wB, rD) => {

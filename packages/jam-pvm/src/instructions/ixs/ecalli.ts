@@ -15,5 +15,6 @@ const ecalli = regIx<[u32]>({
       // graypaper defines an exitreason for this instruction?
       // we should then check the hostcall exitreason and propagate it in case it exits
     },
+    gasCost: 1n,
   },
 });

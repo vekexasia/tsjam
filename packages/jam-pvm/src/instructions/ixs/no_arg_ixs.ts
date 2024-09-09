@@ -13,11 +13,12 @@ const fallthrough = regIx<[]>({
     evaluate(context) {
       context.execution.instructionPointer++;
     },
+    gasCost: 1n,
   },
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const trap = regIx<[]>({
+export const trap = regIx<[]>({
   opCode: 0 as u8,
   identifier: "trap",
   blockTermination: true,
@@ -28,6 +29,7 @@ const trap = regIx<[]>({
     evaluate() {
       return { exitReason: RegularPVMExitReason.Panic };
     },
+    gasCost: 1n,
   },
 });
 

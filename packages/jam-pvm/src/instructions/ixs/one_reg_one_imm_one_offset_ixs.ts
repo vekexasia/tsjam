@@ -46,6 +46,7 @@ const create1Reg1IMM1OffsetIx = (
         const vy = (context.execution.instructionPointer + offset) as u32;
         return evaluate(context, ri, vx, vy);
       },
+      gasCost: 1n,
     },
   });
 };

@@ -23,6 +23,7 @@ const jump = regIx<[offset: i32]>({
       assert(addr >= 0, "address must be >= 0");
       return branch(context, addr as u32, true);
     },
+    gasCost: 1n,
   },
 });
 

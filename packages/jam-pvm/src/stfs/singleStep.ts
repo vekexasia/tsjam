@@ -7,9 +7,8 @@ import {
   Posterior,
   RegularPVMExitReason,
   u32,
-  u8,
 } from "@vekexasia/jam-types";
-import { Ixdb } from "@/instructions/ixdb.js";
+import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 type Input = { program: PVMProgram; parsedProgram: IParsedProgram };
 type Output = {
   posteriorContext: Posterior<PVMProgramExecutionContext>;
@@ -25,35 +24,21 @@ export const pvmSingleStepSTF = newSTF<
   Input,
   Output
 >((input: Input, state: PVMProgramExecutionContext): Output => {
-  try {
-    return ixExecutor(input, state);
-  } catch (e) {
-    console.log(e);
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-      posteriorContext: toPosterior(state),
-    };
-  }
+  return ixExecutor(input, state);
 });
 
 const ixExecutor = (
   input: Input,
   state: PVMProgramExecutionContext,
 ): Output => {
+  const ix = input.parsedProgram.ixAt(state.instructionPointer);
   if (
     state.instructionPointer >= input.program.c.length ||
-    state.instructionPointer < 0
+    state.instructionPointer < 0 ||
+    typeof ix === "undefined"
   ) {
-    // out of bounds ix pointer
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-      posteriorContext: toPosterior(state),
-    };
-  }
-
-  const ix = input.parsedProgram.ixAt(state.instructionPointer);
-  if (typeof ix === "undefined") {
-    // may have jumped to an invalid instruction
+    // out of bounds ix pointer or invalid ix
+    state.gas = toTagged(state.gas - 1n); // trap
     return {
       exitReason: RegularPVMExitReason.Panic,
       posteriorContext: toPosterior(state),
@@ -70,9 +55,9 @@ const ixExecutor = (
   const args = ix.decode(byteArgs);
   const p_state: PVMProgramExecutionContext = {
     ...state,
-    // todo for memory
+    // todo for memory ?
     // maybe instead of cloning the memory object we should either create a temp memory object
-    // that records modifications
+    // that records modifications at each step
     registers:
       state.registers.slice() as PVMProgramExecutionContext["registers"],
   };
@@ -82,12 +67,27 @@ const ixExecutor = (
     parsedProgram: input.parsedProgram,
   };
 
-  const r = ix.evaluate(context, ...args);
+  // account for gas cost independently of evaluation
+  if (p_state.gas === state.gas) {
+    p_state.gas = toTagged(state.gas - ix.gasCost);
+  }
 
-  if (r?.exitReason) {
+  let r: { exitReason?: PVMExitReason } | void = void 0;
+  try {
+    r = ix.evaluate(context, ...args);
+  } catch (e) {
+    // trap
+    p_state.gas = toTagged(p_state.gas - trap.gasCost);
+    return {
+      ...trap.evaluate({ ...context, execution: p_state }),
+      posteriorContext: toPosterior(p_state),
+    };
+  }
+
+  if (typeof r?.exitReason !== "undefined") {
     return {
       exitReason: r.exitReason,
-      posteriorContext: toPosterior(state),
+      posteriorContext: toPosterior(p_state),
     };
   }
   if (p_state.instructionPointer === state.instructionPointer) {

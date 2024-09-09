@@ -25,6 +25,7 @@ export interface PVMIx<Args extends unknown[]> {
   ): {
     exitReason?: PVMExitReason;
   } | void;
+  gasCost: bigint;
 }
 
 export type PVMIxEvaluateFN<Args extends unknown[]> = PVMIx<Args>["evaluate"];
