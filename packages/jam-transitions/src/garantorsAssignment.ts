@@ -16,7 +16,7 @@ import {
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
 } from "@vekexasia/jam-constants";
-import { newSTF, slotIndex, toPosterior } from "@vekexasia/jam-utils";
+import { slotIndex } from "@vekexasia/jam-utils";
 import { PHI_FN } from "@/safrole/keys.js";
 
 /**
@@ -110,40 +110,3 @@ export const G_STAR_fn = (input: {
     }) as G_Star;
   }
 };
-
-/**
- * Guarantors assignment STF
- */
-export const GuarantorsAssignment_stf = newSTF<
-  GuarantorsAssignment,
-  {
-    p_eta2: Posterior<SafroleState["eta"][2]>;
-    p_tau: Posterior<Tau>;
-    p_kappa: Posterior<SafroleState["kappa"]>;
-    p_psi_o: Posterior<IDisputesState["psi_o"]>;
-  }
->((input) => {
-  return toPosterior(
-    G_fn({
-      entropy: input.p_eta2,
-      tauOffset: 0 as u32,
-      p_tau: input.p_tau,
-      validatorKeys: input.p_kappa,
-      p_psi_o: input.p_psi_o,
-    }),
-  );
-});
-
-export const GuarantorsAssignment_stf_STAR = newSTF<
-  G_Star,
-  {
-    p_eta2: Posterior<SafroleState["eta"][2]>;
-    p_eta3: Posterior<SafroleState["eta"][3]>;
-    p_kappa: Posterior<SafroleState["kappa"]>;
-    p_lambda: Posterior<SafroleState["lambda"]>;
-    p_psi_o: Posterior<IDisputesState["psi_o"]>;
-    p_tau: Posterior<Tau>;
-  }
->((input) => {
-  return toPosterior(G_STAR_fn(input));
-});
