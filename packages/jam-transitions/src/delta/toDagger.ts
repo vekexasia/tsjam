@@ -1,46 +1,77 @@
-import { Dagger, Delta, ServiceIndex, u32 } from "@vekexasia/jam-types";
+import {
+  Dagger,
+  Delta,
+  EG_Extrinsic,
+  ServiceIndex,
+  Tau,
+  u32,
+} from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { newSTF, toTagged } from "@vekexasia/jam-utils";
+import { _w } from "@/utilityComputations/w.js";
+import { MAX_GAS_ACCUMULATION } from "@vekexasia/jam-constants";
 
+type Input = {
+  // We are not using the native type to avoid circular dependencies
+  EP_Extrinsic: Array<{
+    serviceIndex: ServiceIndex;
+    preimage: Uint8Array;
+  }>;
+  nextTau: Tau;
+
+  // EG extrinsic is not a direct depenedency
+  // but it's needed to calculate `w` at 141 from which
+  // we assert the gas limit for accumulation phase
+  EG_Extrinsic: EG_Extrinsic;
+};
 // (156) in graypaper
-export const deltaToDagger = newSTF<
-  Delta,
-  {
-    // We are not using the native type to avoid circular dependencies
-    EP_Extrinsic: Array<{
-      serviceIndex: ServiceIndex;
-      preimage: Uint8Array;
-    }>;
-    // todo: tau needs better typing
-    nextTau: u32;
+export const deltaToDagger = newSTF<Delta, Input, Dagger<Delta>>({
+  assertInputValid(input, curState) {
+    // (143)
+    const w = _w(input.EG_Extrinsic);
+    const totalGas = w
+      .flatMap(({ results }) => results)
+      .map(({ serviceIndex }) => {
+        const service = curState.get(serviceIndex);
+        assert(typeof service !== "undefined", "service index not found");
+        return service;
+      })
+      .reduce((acc, { minGasAccumulate }) => acc + minGasAccumulate, 0n);
+
+    assert(
+      totalGas <= MAX_GAS_ACCUMULATION,
+      "Gas limit exceeded for accummulation",
+    );
   },
-  Dagger<Delta>
->((input, curState) => {
-  const result = new Map(curState) as Dagger<Delta>;
-  for (const { serviceIndex, preimage } of input.EP_Extrinsic) {
-    const x = result.get(serviceIndex);
-    assert(typeof x !== "undefined", "service index not found");
+  assertPStateValid() {},
 
-    const hash = Hashing.blake2b(preimage);
-    // clone to avoid modifying original Delta
-    x!.preimage_p = new Map(x!.preimage_p);
-    x!.preimage_p.set(hash, preimage);
+  apply(input: Input, curState: Delta): Dagger<Delta> {
+    const result = new Map(curState) as Dagger<Delta>;
+    for (const { serviceIndex, preimage } of input.EP_Extrinsic) {
+      const x = result.get(serviceIndex);
+      assert(typeof x !== "undefined", "service index not found");
 
-    x!.preimage_l = new Map(x!.preimage_l);
-    let plh = x!.preimage_l.get(hash);
-    if (typeof plh === "undefined") {
-      plh = new Map();
-    } else {
-      // clone
-      plh = new Map(plh);
+      const hash = Hashing.blake2b(preimage);
+      // clone to avoid modifying original Delta
+      x!.preimage_p = new Map(x!.preimage_p);
+      x!.preimage_p.set(hash, preimage);
+
+      x!.preimage_l = new Map(x!.preimage_l);
+      let plh = x!.preimage_l.get(hash);
+      if (typeof plh === "undefined") {
+        plh = new Map();
+      } else {
+        // clone
+        plh = new Map(plh);
+      }
+      // set
+      x!.preimage_l.set(hash, plh);
+      // (156)
+      plh.set(toTagged(preimage.length as u32), toTagged([input.nextTau]));
     }
-    // set
-    x!.preimage_l.set(hash, plh);
-    // (156)
-    plh.set(toTagged(preimage.length as u32), toTagged([input.nextTau]));
-  }
-  return result;
+    return result;
+  },
 });
 
 // TODO: implement tests

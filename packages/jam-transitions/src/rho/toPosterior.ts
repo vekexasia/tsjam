@@ -19,6 +19,7 @@ import {
 import { newSTF } from "@vekexasia/jam-utils";
 import { WorkReportCodec } from "@vekexasia/jam-codec";
 import { G_Star, GuarantorsAssignment } from "@/garantorsAssignment.js";
+import {_w} from "@/utilityComputations/w.js";
 
 export const RHO_toPosterior = newSTF<
   DoubleDagger<RHO>,
@@ -145,7 +146,7 @@ export const RHO_toPosterior = newSTF<
     });
 
     // (141)
-    const w = ext.map(({ workReport }) => workReport);
+    const w = _w(input.EG_Extrinsic);
 
     // (142) - no reports can be placed in core when there is something pending
     // and that pending stuff is not expird
