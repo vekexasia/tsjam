@@ -88,3 +88,8 @@ export const JAM_VALID = new TextEncoder().encode("jam_valid");
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
  */
 export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
+
+/**
+ * `GA` in the paper
+ */
+export const MAX_GAS_ACCUMULATION = 1000000000n;
