@@ -126,3 +126,5 @@ export type UnTaggedObject<T> = {
     ? UnTagged<X>
     : UnTagged<T>[K];
 };
+
+export type Validated<T> = Tagged<T, "validated">;

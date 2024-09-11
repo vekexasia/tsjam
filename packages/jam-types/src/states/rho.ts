@@ -1,7 +1,7 @@
 import { SeqOfLength } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
 import { CORES } from "@vekexasia/jam-constants";
-import { Tau } from "@/tau.js";
+import { Tau } from "@/Tau.js";
 
 /**
  * `ρ`

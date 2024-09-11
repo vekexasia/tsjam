@@ -10,7 +10,7 @@ import {
   u32,
 } from "@/genericTypes";
 import { TicketIdentifier, ValidatorData } from "@/index";
-import { Tau } from "@/tau";
+import { Tau } from "@/Tau";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 
 /**

@@ -91,5 +91,16 @@ export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 
 /**
  * `GA` in the paper
+ * TODO: set to correct value
  */
 export const MAX_GAS_ACCUMULATION = 1000000000n;
+
+/**
+ * `O` in the paper
+ */
+export const AUTHPOOL_SIZE = 8;
+
+/**
+ * `Q` in the paper
+ */
+export const AUTHQUEUE_MAX_SIZE = 80;

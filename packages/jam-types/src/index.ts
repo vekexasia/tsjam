@@ -8,11 +8,10 @@ import {
   MerkeTreeRoot,
   OpaqueHash,
   SeqOfLength,
-  Tagged,
   u32,
 } from "@/genericTypes.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
-import { Tau } from "@/tau.js";
+import { Tau } from "@/Tau.js";
 
 export type TicketIdentifier = {
   /**
@@ -114,6 +113,8 @@ export * from "./sets/WorkPackage.js";
 export * from "./sets/WorkReport.js";
 export * from "./sets/WorkResult.js";
 
+export * from "./states/AuthorizerQueue.js";
+export * from "./states/AuthorizerPool.js";
 export * from "./states/Delta.js";
 export * from "./states/DisputesState.js";
 export * from "./states/rho.js";
@@ -128,4 +129,5 @@ export * from "./pvm/IPVMMemory.js";
 export * from "./pvm/PVMProgram.js";
 export * from "./pvm/RegisterIdentifier.js";
 
-export * from "./tau.js";
+export * from "./Tau.js";
+export * from "./garantors.js";

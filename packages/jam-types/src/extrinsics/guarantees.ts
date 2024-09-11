@@ -25,7 +25,7 @@ type SingleWorkReportGuarantee = {
   timeSlot: u32;
 
   /**
-   * `v`
+   * `a`
    * the creds must be ordered by `validatorIndex` (140)
    *
    */

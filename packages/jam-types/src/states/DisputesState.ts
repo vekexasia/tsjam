@@ -1,4 +1,4 @@
-import {ED25519PublicKey, Hash} from "@/genericTypes";
+import { ED25519PublicKey, Hash } from "@/genericTypes";
 
 /**
  * Section 10 of graypaper
