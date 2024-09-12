@@ -1,12 +1,24 @@
 import { vi } from "vitest";
-import { IPVMMemory, PVMIx, SeqOfLength, u32, u8 } from "@vekexasia/jam-types";
+import {
+  IPVMMemory,
+  IParsedProgram,
+  PVMProgram,
+  PVMProgramExecutionContext,
+  SeqOfLength,
+  u32,
+  u8,
+} from "@vekexasia/jam-types";
 import { toTagged } from "@vekexasia/jam-utils";
 
 const mockMemory = (): IPVMMemory => ({
   setBytes: vi.fn(),
   getBytes: vi.fn(),
 });
-export const createEvContext = (): Parameters<PVMIx<any>["evaluate"]>[0] => ({
+export const createEvContext = (): {
+  execution: PVMProgramExecutionContext;
+  program: PVMProgram;
+  parsedProgram: IParsedProgram;
+} => ({
   execution: {
     instructionPointer: toTagged(0),
     gas: toTagged(0n),

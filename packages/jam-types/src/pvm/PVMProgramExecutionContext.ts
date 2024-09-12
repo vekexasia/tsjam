@@ -6,8 +6,20 @@ import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
  *
  */
 export interface PVMProgramExecutionContext {
+  /**
+   * `ı`
+   */
   instructionPointer: u32;
+  /**
+   * `ξ`
+   */
   gas: u64;
-  memory: IPVMMemory;
+  /**
+   * `ω`
+   */
   registers: SeqOfLength<u32, 13>;
+  /**
+   * `μ`
+   */
+  memory: IPVMMemory;
 }

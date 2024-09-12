@@ -5,12 +5,15 @@ import {
   PVMProgramExecutionContext,
   RegularPVMExitReason,
   i64,
-  u64,
 } from "@vekexasia/jam-types";
-import { pvmSingleStepSTF } from "@/stfs/singleStep.js";
+import { pvmSingleStepSTF } from "@/invocations/singleStep.js";
 import { ParsedProgram } from "@/parseProgram.js";
 
-export const runProgramSTF = newSTF<
+/**
+ * Basic invocation
+ * `Ψ` in the graypaper
+ */
+export const basicInvocation = newSTF<
   PVMProgramExecutionContext,
   { parsedProgram: ParsedProgram; program: PVMProgram },
   {
@@ -36,7 +39,7 @@ export const runProgramSTF = newSTF<
   }
   return {
     context: {
-      ...curState,
+      ...intermediateState,
       gas: toTagged(intermediateState.gas),
     },
     exitReason: RegularPVMExitReason.OutOfGas,

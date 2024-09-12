@@ -6,7 +6,7 @@ import { createEvContext } from "@/test/mocks.js";
 import { toTagged } from "@vekexasia/jam-utils";
 import { PVMProgramCodec } from "@vekexasia/jam-codec";
 import { ParsedProgram } from "@/parseProgram.js";
-import { runProgramSTF } from "@/stfs/runProgram.js";
+import { basicInvocation } from "@/invocations/basic.js";
 import { RegularPVMExitReason } from "@vekexasia/jam-types";
 import { PVMMemory } from "@/pvmMemory.js";
 
@@ -72,7 +72,7 @@ describe("testcases", () => {
     const program = PVMProgramCodec.decode(new Uint8Array(json.program));
     context.program = program.value;
     context.parsedProgram = ParsedProgram.parse(program.value);
-    const r = runProgramSTF.apply(
+    const r = basicInvocation.apply(
       {
         parsedProgram: ParsedProgram.parse(program.value),
         program: program.value,

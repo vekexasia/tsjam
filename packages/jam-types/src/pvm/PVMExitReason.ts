@@ -1,4 +1,3 @@
-import { RegisterIdentifier } from "@vekexasia/jam-types";
 import { u32 } from "@/genericTypes.js";
 
 export enum RegularPVMExitReason {
@@ -14,5 +13,5 @@ export type PVMExitReason =
     }
   | {
       type: "page-fault";
-      memoryLocationIn: RegisterIdentifier;
+      memoryLocationIn: u32;
     };
