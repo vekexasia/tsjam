@@ -1,4 +1,5 @@
 import { RegisterIdentifier } from "@vekexasia/jam-types";
+import { u32 } from "@/genericTypes.js";
 
 export enum RegularPVMExitReason {
   Halt = 0,
@@ -9,7 +10,7 @@ export type PVMExitReason =
   | RegularPVMExitReason
   | {
       type: "host-call";
-      callIDIn: RegisterIdentifier;
+      h: u32;
     }
   | {
       type: "page-fault";

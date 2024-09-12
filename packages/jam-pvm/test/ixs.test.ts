@@ -74,6 +74,7 @@ describe("testcases", () => {
     context.parsedProgram = ParsedProgram.parse(program.value);
     const r = runProgramSTF.apply(
       {
+        parsedProgram: ParsedProgram.parse(program.value),
         program: program.value,
       },
       context.execution,

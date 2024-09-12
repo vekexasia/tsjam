@@ -5,31 +5,24 @@ import {
   PVMProgramExecutionContext,
   RegularPVMExitReason,
   i64,
+  u64,
 } from "@vekexasia/jam-types";
 import { pvmSingleStepSTF } from "@/stfs/singleStep.js";
 import { ParsedProgram } from "@/parseProgram.js";
 
 export const runProgramSTF = newSTF<
   PVMProgramExecutionContext,
-  { program: PVMProgram },
+  { parsedProgram: ParsedProgram; program: PVMProgram },
   {
     context: Omit<PVMProgramExecutionContext, "gas"> & { gas: i64 };
     exitReason?: PVMExitReason;
-    // TODO:implement host exitreason
   }
 >((input, curState) => {
   // how to handle errors here?
-  const parsedProgram = ParsedProgram.parse(input.program);
 
   let intermediateState = curState;
   while (intermediateState.gas > 0) {
-    const out = pvmSingleStepSTF.apply(
-      {
-        program: input.program,
-        parsedProgram,
-      },
-      intermediateState,
-    );
+    const out = pvmSingleStepSTF.apply(input, intermediateState);
     if (typeof out.exitReason !== "undefined") {
       return {
         context: {
