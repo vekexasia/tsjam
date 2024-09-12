@@ -18,6 +18,7 @@ type AccResultItem = {
 type Input = {
   accummulationResult: Map<ServiceIndex, AccResultItem>;
 };
+// (168) (261)
 export const deltaToPosterior = newSTF<
   DoubleDagger<Delta>,
   Input,
