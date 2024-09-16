@@ -47,7 +47,6 @@ export const hostCallInvocation: BaseSTF<StateIn, Input, StateOut> = newSTF<
       return hostCallInvocation.apply(input, {
         context: {
           instructionPointer: (out.context.instructionPointer +
-            1 +
             input.parsedProgram.skip(out.context.instructionPointer)) as u32,
           gas: res.gas,
           registers: res.registers,

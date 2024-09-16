@@ -1,15 +1,19 @@
 import { IPVMMemory } from "@/pvm/IPVMMemory.js";
-import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
+import { ByteArrayOfLength, SeqOfLength, u32, u64 } from "@/genericTypes.js";
 
 /**
  * This is the context passed to instructions for evaluation.
  *
  */
-export interface PVMProgramExecutionContext {
+export interface PVMProgramExecutionContext
+  extends PVMProgramExecutionContextBase {
   /**
    * `ı`
    */
   instructionPointer: u32;
+}
+
+export interface PVMProgramExecutionContextBase {
   /**
    * `ξ`
    */
@@ -22,4 +26,12 @@ export interface PVMProgramExecutionContext {
    * `μ`
    */
   memory: IPVMMemory;
+}
+
+/**
+ * Defined in B.8
+ */
+export interface PVMRefineContext {
+  m: Map<number, IPVMMemory>;
+  e: ByteArrayOfLength<6>[];
 }

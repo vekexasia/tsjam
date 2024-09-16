@@ -1,5 +1,10 @@
 import { IPVMMemory, u32 } from "@vekexasia/jam-types";
 
+/**
+ * `M` set
+ * This is the implementation of (34) in the graypaper
+ * providing both `V` and using `A`
+ */
 export class PVMMemory implements IPVMMemory {
   #innerMemory = new Uint8Array(2 ** 32);
   constructor(

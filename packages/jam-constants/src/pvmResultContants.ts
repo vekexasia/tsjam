@@ -48,7 +48,7 @@ export enum HostCallResult {
   OK = 0,
 }
 
-export enum InneerPVMResultCode {
+export enum InnerPVMResultCode {
   /**
    * The invocation completed and halted normally.
    */
