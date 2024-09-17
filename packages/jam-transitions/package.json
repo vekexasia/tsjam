@@ -28,8 +28,8 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-codec": "*",
+    "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-merklization": "*",
     "@vekexasia/jam-types": "*",

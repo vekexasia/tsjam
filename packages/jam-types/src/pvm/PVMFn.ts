@@ -1,4 +1,3 @@
-import { PVMExitReason } from "@/pvm/PVMExitReason.js";
 import {
   PVMProgramExecutionContextBase,
   PVMRefineContext,
@@ -10,7 +9,7 @@ import { PVMResultContext } from "@/pvm/PVMResultContext.js";
  * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
-export interface PVMFn<Args extends unknown[], Out = {}> {
+export interface PVMFn<Args extends unknown[], Out extends object = object> {
   execute(
     context: {
       execution: PVMProgramExecutionContextBase;

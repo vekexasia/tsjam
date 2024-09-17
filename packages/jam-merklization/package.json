@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-utils": "*",
-    "@vekexasia/jam-types": "*"
+    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-utils": "*"
   },
   "license": "MIT"
 }

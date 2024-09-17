@@ -8,7 +8,10 @@ export const FnsDb = {
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regFn = (conf: {
+export const regFn = <
+  Args extends unknown[],
+  Out extends object = object,
+>(conf: {
   /**
    * the identifier of the instruction
    */
@@ -18,8 +21,8 @@ export const regFn = (conf: {
    */
   identifier: string;
 
-  fn: PVMFn<any, any>;
-}): PVMFn<any, any> => {
+  fn: PVMFn<Args, Out>;
+}): PVMFn<Args, Out> => {
   if (FnsDb.byCode.has(conf.opCode)) {
     throw new Error(`duplicate opCode ${conf.opCode}`);
   }

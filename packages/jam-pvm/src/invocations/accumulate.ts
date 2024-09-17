@@ -4,21 +4,13 @@ import {
   Delta,
   DoubleDagger,
   Hash,
-  IPVMMemory,
-  PVMProgramExecutionContext,
+  PVMProgramExecutionContextBase,
+  PVMResultContext,
   RegularPVMExitReason,
   SafroleState,
-  SeqOfLength,
   ServiceAccount,
   ServiceIndex,
-  ValidatorData,
-  u32,
 } from "@vekexasia/jam-types";
-import {
-  AUTHQUEUE_MAX_SIZE,
-  CORES,
-  NUMBER_OF_VALIDATORS,
-} from "@vekexasia/jam-constants";
 
 /**
  * Accumulate State Transition Function
@@ -29,47 +21,6 @@ import {
 export const accumulateSTF = newSTF<null, null, null>(() => {
   return null;
 });
-type X = {
-  /**
-   * `s`
-   */
-  serviceAccount?: ServiceAccount;
-  /**
-   * `c` asically the AuthorizerQueue
-   */
-  c: SeqOfLength<SeqOfLength<Hash, typeof AUTHQUEUE_MAX_SIZE>, typeof CORES>;
-  /**
-   * `v`
-   */
-  validatorKeys: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS>;
-  /**
-   * `i`
-   */
-  service: ServiceIndex;
-  /**
-   * `t`
-   */
-  transfers: any; // todo
-  /**
-   * `n`
-   */
-  n: Map<ServiceIndex, ServiceAccount>;
-
-  p: {
-    /**
-     * `m`
-     */
-    m: ServiceAccount;
-    /**
-     * `a`
-     */
-    a: ServiceIndex;
-    /**
-     * `v`
-     */
-    v: ServiceIndex;
-  };
-};
 /**
  *
  * see (256)
@@ -80,11 +31,11 @@ const I_fn = (
   iota: SafroleState["iota"],
   authQueue: AuthorizerQueue,
   dd_delta: DoubleDagger<Delta>,
-): XxX => {
-  const x: X = {
+): { x: PVMResultContext; y: PVMResultContext } => {
+  const x: PVMResultContext = {
     serviceAccount,
     c: authQueue,
-    validatorKeys: iota as unknown as X["validatorKeys"],
+    validatorKeys: iota as unknown as PVMResultContext["validatorKeys"],
     service: check_fn(service, dd_delta),
     transfers: [],
     n: new Map(),
@@ -94,43 +45,84 @@ const I_fn = (
       v: service,
     },
   };
-  return [x, x];
+  return { x, y: { ...x } };
 };
-const F_fn = (n: FNS, ctx: LimitedPVMContext, d: [x: X, y: X]): null => {
-  throw new Error("Not implemented");
+
+const F_fn = (
+  n: FNS,
+  ctx: PVMProgramExecutionContextBase,
+  d: { x: PVMResultContext; y: PVMResultContext },
+): null => {
+  switch (n) {
+    case "read":
+      return null;
+    case "write":
+      return null;
+    case "lookup":
+      return null;
+    case "gas":
+      return null;
+    case "info":
+      return null;
+    case "empower":
+      return null;
+    case "assign":
+      return null;
+    case "designate":
+      return null;
+    case "checkpoint":
+      return null;
+    case "new":
+      return null;
+    case "upgrade":
+      return null;
+    case "transfer":
+      return null;
+    case "quit":
+      return null;
+    case "solicit":
+      return null;
+    case "forget":
+      return null;
+  }
 };
+
 /**
  * (258)
  */
 const G_fn = (
-  context: LimitedPVMContext,
+  context: PVMProgramExecutionContextBase,
   serviceAccount: ServiceAccount,
-  x: [x: X, y: X],
-): LimitedPVMContext & { x: XxX } => {
+  x: { x: PVMResultContext; y: PVMResultContext },
+): PVMProgramExecutionContextBase & {
+  x: PVMResultContext;
+  y: PVMResultContext;
+} => {
   return {
     ...context,
-    x: [{ ...x[0], serviceAccount }, x[1]],
+    x: { ...x.x, serviceAccount },
+    y: x.y,
   };
 };
 
 const C_fn = (
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
-  d: XxX,
-): X & { r?: Hash } => {
+  d: { x: PVMResultContext; y: PVMResultContext },
+): PVMResultContext & { r?: Hash } => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
     return {
-      ...d[1],
+      ...d.y,
       r: undefined,
     };
   } else if (o.length === 32) {
     // it's an hash
     return {
-      ...d[0],
+      ...d.x,
       r: o as unknown as Hash,
     };
   } else {
     return {
-      ...d[0],
+      ...d.x,
       r: undefined,
     };
   }
@@ -152,11 +144,6 @@ function check_fn(
     return i;
   }
 }
-type XxX = [x: X, y: X];
-type LimitedPVMContext = Omit<PVMProgramExecutionContext, "instructionPointer">;
-type Output = LimitedPVMContext & {
-  r: XxX;
-};
 
 type FNS =
   | "read"

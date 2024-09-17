@@ -15,4 +15,7 @@ export interface IPVMMemory {
    * @param length - the length of the bytes to read
    */
   getBytes(offset: number, length: number): Uint8Array;
+
+  canRead(offset: number, length: number): boolean;
+  canWrite(offset: number, length: number): boolean;
 }
