@@ -48,7 +48,7 @@ if (import.meta.vitest) {
         identifier: "test",
         fn: {
           execute() {
-            return {};
+            return {} as any;
           },
           gasCost: 1n,
         },
@@ -63,7 +63,7 @@ if (import.meta.vitest) {
         fn: {
           gasCost: 1n,
           execute() {
-            return {};
+            return {} as any;
           },
         },
       });
@@ -74,7 +74,7 @@ if (import.meta.vitest) {
           fn: {
             gasCost: 1n,
             execute() {
-              return {};
+              return {} as any;
             },
           },
         }),
@@ -87,7 +87,7 @@ if (import.meta.vitest) {
         fn: {
           gasCost: 1n,
           execute() {
-            return {};
+            return {} as any;
           },
         },
       });
@@ -98,7 +98,7 @@ if (import.meta.vitest) {
           fn: {
             gasCost: 1n,
             execute() {
-              return {};
+              return {} as any;
             },
           },
         }),

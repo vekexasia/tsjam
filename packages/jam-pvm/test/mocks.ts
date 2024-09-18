@@ -13,6 +13,8 @@ import { toTagged } from "@vekexasia/jam-utils";
 const mockMemory = (): IPVMMemory => ({
   setBytes: vi.fn(),
   getBytes: vi.fn(),
+  canRead: vi.fn(),
+  canWrite: vi.fn(),
 });
 export const createEvContext = (): {
   execution: PVMProgramExecutionContext;
