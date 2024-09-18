@@ -1,4 +1,5 @@
 import { IPVMMemory, u32 } from "@vekexasia/jam-types";
+import assert from "node:assert";
 
 /**
  * `M` set
@@ -16,22 +17,21 @@ export class PVMMemory implements IPVMMemory {
     }
   }
   setBytes(offset: number, bytes: Uint8Array): void {
-    const writeable = this.acl.find(
-      (acl) =>
-        offset >= acl.from && offset + bytes.length < acl.to && acl.writable,
-    );
-    if (!writeable) {
-      throw new Error("Memory is not writeable");
-    }
+    assert(this.canWrite(offset, bytes.length), "Memory is not writeable");
     this.#innerMemory.set(bytes, offset);
   }
   getBytes(offset: number, length: number): Uint8Array {
-    const read = this.acl.find(
+    assert(this.canRead(offset, length), "Memory is not readable");
+    return this.#innerMemory.subarray(offset, offset + length);
+  }
+  canRead(offset: number, length: number): boolean {
+    return !!this.acl.find(
       (acl) => offset >= acl.from && offset + length < acl.to,
     );
-    if (!read) {
-      throw new Error("Memory is not readable");
-    }
-    return this.#innerMemory.subarray(offset, offset + length);
+  }
+  canWrite(offset: number, length: number): boolean {
+    return !!this.acl.find(
+      (acl) => offset >= acl.from && offset + length < acl.to && acl.writable,
+    );
   }
 }
