@@ -3,6 +3,7 @@ import {
   Blake2bHash,
   Dagger,
   Delta,
+  Hash,
   PVMProgramExecutionContextBase,
   ServiceAccount,
   ServiceIndex,
@@ -11,7 +12,7 @@ import {
 } from "@vekexasia/jam-types";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { HostCallResult } from "@vekexasia/jam-constants";
-import {E_4} from "@vekexasia/jam-codec";
+import { E_4 } from "@vekexasia/jam-codec";
 
 /**
  * `ΩG`
@@ -120,7 +121,43 @@ export const gamma_r = regFn<
         a = d.get(w0 as ServiceIndex);
       }
       const [k0, kz, b0, bz] = context.execution.registers.slice(1);
-      E_4.encode(BigInt(s))
-     },
+      let k: Hash;
+      if (
+        !context.execution.memory.canRead(k0, kz) ||
+        !context.execution.memory.canWrite(b0, bz)
+      ) {
+        return {
+          ...context.execution,
+          registers: [
+            HostCallResult.OOB,
+            ...context.execution.registers.slice(1),
+          ] as PVMProgramExecutionContextBase["registers"],
+        };
+      } else {
+        const tmp = new Uint8Array(4);
+        E_4.encode(BigInt(s), tmp);
+        k = Hashing.blake2b(
+          new Uint8Array([
+            ...tmp,
+            ...context.execution.memory.getBytes(k0, kz),
+          ]),
+        );
+      }
+      let v: Uint8Array | undefined;
+      if (typeof a !== "undefined") {
+        v = a.storage.get(k);
+      } else {
+        v = undefined;
+      }
+      // a
+
+      return {
+        ...context.execution,
+        registers: [
+          typeof v === "undefined" ? HostCallResult.NONE : v.length,
+          ...context.execution.registers.slice(1),
+        ] as PVMProgramExecutionContextBase["registers"],
+      };
+    },
   },
 });
