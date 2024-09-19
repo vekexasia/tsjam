@@ -41,7 +41,7 @@ export interface PVMResultContext {
     /**
      * `m`
      */
-    m: ServiceAccount;
+    m: ServiceIndex;
     /**
      * `a`
      */

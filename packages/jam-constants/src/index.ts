@@ -118,3 +118,7 @@ export const SERVICE_ADDITIONAL_BALANCE_PER_OCTET = 1n;
  * `BI` in the paper
  */
 export const SERVICE_ADDITIONAL_BALANCE_PER_ITEM = 10n;
+/**
+ * `M` in the paper
+ */
+export const TRANSFER_MEMO_SIZE = 128;

@@ -1,5 +1,6 @@
 import { IPVMMemory } from "@/pvm/IPVMMemory.js";
 import { ByteArrayOfLength, SeqOfLength, u32, u64 } from "@/genericTypes.js";
+import { Tau } from "@/Tau.js";
 
 /**
  * This is the context passed to instructions for evaluation.
@@ -28,6 +29,10 @@ export interface PVMProgramExecutionContextBase {
   memory: IPVMMemory;
 }
 
+export interface AccumulateHostFNContext
+  extends PVMProgramExecutionContextBase {
+  tau: Tau;
+}
 /**
  * Defined in B.8
  */

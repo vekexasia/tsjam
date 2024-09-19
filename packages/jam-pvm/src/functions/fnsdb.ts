@@ -1,4 +1,8 @@
-import { PVMFn, u8 } from "@vekexasia/jam-types";
+import {
+  PVMFn,
+  PVMProgramExecutionContextBase,
+  u8,
+} from "@vekexasia/jam-types";
 
 export const FnsDb = {
   byCode: new Map<u8, PVMFn<unknown[], any>>(),
@@ -10,7 +14,8 @@ export const FnsDb = {
  */
 export const regFn = <
   Args extends unknown[],
-  Out extends object = object,
+  Out,
+  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
 >(conf: {
   /**
    * the identifier of the instruction
@@ -21,8 +26,8 @@ export const regFn = <
    */
   identifier: string;
 
-  fn: PVMFn<Args, Out>;
-}): PVMFn<Args, Out> => {
+  fn: PVMFn<Args, Out, CTX>;
+}): PVMFn<Args, Out, CTX> => {
   if (FnsDb.byCode.has(conf.opCode)) {
     throw new Error(`duplicate opCode ${conf.opCode}`);
   }

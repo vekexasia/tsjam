@@ -39,8 +39,9 @@ const I_fn = (
     service: check_fn(service, dd_delta),
     transfers: [],
     n: new Map(),
+    // todo: fix this
     p: {
-      m: serviceAccount,
+      m: service,
       a: service,
       v: service,
     },
@@ -131,7 +132,7 @@ const C_fn = (
 /**
  * (260)
  */
-function check_fn(
+export function check_fn(
   i: ServiceIndex,
   dd_delta: DoubleDagger<Delta>,
 ): ServiceIndex {

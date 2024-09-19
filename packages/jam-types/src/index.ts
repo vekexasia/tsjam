@@ -121,6 +121,7 @@ export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";
 
+export * from "./pvm/DeferredTransfer.js";
 export * from "./pvm/IParsedProgram.js";
 export * from "./pvm/PVMProgramExecutionContext.js";
 export * from "./pvm/PVMExitReason.js";
