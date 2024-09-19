@@ -104,6 +104,7 @@ export * from "./extrinsics/preimages.js";
 export * from "./extrinsics/tickets.js";
 
 export * from "./sets/AvailabilitySpecification.js";
+export * from "./sets/ExportSegment.js";
 export * from "./sets/RefinementContext.js";
 export * from "./sets/ServiceAccount.js";
 export * from "./sets/Ticket.js";

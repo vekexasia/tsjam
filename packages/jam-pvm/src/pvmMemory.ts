@@ -16,6 +16,9 @@ export class PVMMemory implements IPVMMemory {
       this.#innerMemory.set(content, at);
     }
   }
+  addACL(acl: { from: u32; to: u32; writable: boolean }): void {
+    this.acl.push(acl);
+  }
   setBytes(offset: number, bytes: Uint8Array): void {
     assert(this.canWrite(offset, bytes.length), "Memory is not writeable");
     this.#innerMemory.set(bytes, offset);
@@ -32,6 +35,12 @@ export class PVMMemory implements IPVMMemory {
   canWrite(offset: number, length: number): boolean {
     return !!this.acl.find(
       (acl) => offset >= acl.from && offset + length < acl.to && acl.writable,
+    );
+  }
+  clone(): PVMMemory {
+    return new PVMMemory(
+      [{ at: 0 as u32, content: this.#innerMemory }],
+      this.acl.map((acl) => ({ ...acl })),
     );
   }
 }

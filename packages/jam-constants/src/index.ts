@@ -127,3 +127,13 @@ export const TRANSFER_MEMO_SIZE = 128;
  * `D` in the paper
  */
 export const PREIMAGE_EXPIRATION = 28800;
+
+/**
+ * `Wc` in the paper
+ */
+export const ERASURECODE_BASIC_SIZE = 684;
+
+/**
+ * `Ws` in the paper
+ */
+export const ERASURECODE_EXPORTED_SIZE = 6;
