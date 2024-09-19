@@ -5,6 +5,7 @@ import {
   Delta,
   Hash,
   PVMProgramExecutionContextBase,
+  PVMResultContext,
   ServiceAccount,
   ServiceIndex,
   u32,
@@ -14,6 +15,7 @@ import { Hashing } from "@vekexasia/jam-crypto";
 import { HostCallResult } from "@vekexasia/jam-constants";
 import { E_4 } from "@vekexasia/jam-codec";
 import { computeServiceAccountThreshold } from "@vekexasia/jam-utils";
+import { fnReturn } from "@/functions/utils.js";
 
 /**
  * `ΩG`
@@ -25,14 +27,10 @@ export const gamma_g = regFn<[]>({
     gasCost: 10n,
     execute(context: { execution: PVMProgramExecutionContextBase }) {
       const p_gas = context.execution.gas - this.gasCost;
-      return {
-        ...context.execution,
-        registers: [
-          p_gas % BigInt(2 ** 32),
-          p_gas / BigInt(2 ** 32),
-          ...context.execution.registers.slice(2),
-        ] as PVMProgramExecutionContextBase["registers"],
-      };
+      return fnReturn(context.execution, {
+        w0: p_gas % BigInt(2 ** 32),
+        w1: p_gas / BigInt(2 ** 32),
+      });
     },
   },
 });
@@ -127,13 +125,7 @@ export const gamma_r = regFn<
         !context.execution.memory.canRead(k0, kz) ||
         !context.execution.memory.canWrite(b0, bz)
       ) {
-        return {
-          ...context.execution,
-          registers: [
-            HostCallResult.OOB,
-            ...context.execution.registers.slice(1),
-          ] as PVMProgramExecutionContextBase["registers"],
-        };
+        return fnReturn(context.execution, { w0: HostCallResult.OOB });
       } else {
         const tmp = new Uint8Array(4);
         E_4.encode(BigInt(s), tmp);
@@ -151,13 +143,9 @@ export const gamma_r = regFn<
         v = undefined;
       }
 
-      return {
-        ...context.execution,
-        registers: [
-          typeof v === "undefined" ? HostCallResult.NONE : v.length,
-          ...context.execution.registers.slice(1),
-        ] as PVMProgramExecutionContextBase["registers"],
-      };
+      return fnReturn(context.execution, {
+        w0: v?.length ?? HostCallResult.NONE,
+      });
     },
   },
 });
@@ -181,14 +169,11 @@ export const gamma_w = regFn<
         !context.execution.memory.canRead(k0, kz) ||
         !context.execution.memory.canRead(v0, vz)
       ) {
-        return {
-          ...context.execution,
-          registers: [
-            HostCallResult.OOB,
-            ...context.execution.registers.slice(1),
-          ] as PVMProgramExecutionContextBase["registers"],
-          p_bold_s: bold_s,
-        };
+        return fnReturn(
+          context.execution,
+          { w0: HostCallResult.OOB },
+          { p_bold_s: bold_s },
+        );
       } else {
         const tmp = new Uint8Array(4);
         E_4.encode(BigInt(s), tmp);
@@ -213,27 +198,62 @@ export const gamma_w = regFn<
       if (bold_s.storage.has(k)) {
         const at = computeServiceAccountThreshold(bold_s);
         if (at > a.balance) {
-          return {
-            ...context.execution,
-            registers: [
-              HostCallResult.FULL,
-              ...context.execution.registers.slice(1),
-            ] as PVMProgramExecutionContextBase["registers"],
-            p_bold_s: bold_s,
-          };
+          return fnReturn(
+            context.execution,
+            { w0: HostCallResult.FULL },
+            { p_bold_s: bold_s },
+          );
         }
         l = bold_s.storage.get(k)!.length;
       } else {
         l = HostCallResult.NONE;
       }
-      return {
-        ...context.execution,
-        p_bold_s: a,
-        registers: [
-          l as u32,
-          ...context.execution.registers.slice(1),
-        ] as PVMProgramExecutionContextBase["registers"],
-      };
+      return fnReturn(context.execution, { w0: l }, { p_bold_s: a });
+    },
+  },
+});
+
+export const gamma_i = regFn<
+  [
+    Xs: ServiceAccount,
+    s: ServiceIndex,
+    dag_delta: Dagger<Delta>,
+    xn: PVMResultContext["n"],
+  ]
+>({
+  opCode: 4 as u8,
+  identifier: "info",
+  fn: {
+    gasCost: 10n,
+    execute(
+      context: { execution: PVMProgramExecutionContextBase },
+      bold_s: ServiceAccount,
+      s: ServiceIndex,
+      d: Dagger<Delta>,
+      xn: PVMResultContext["n"],
+    ): PVMProgramExecutionContextBase {
+      const w0 = context.execution.registers[0];
+      let t: ServiceAccount;
+      if (w0 === s || w0 === 2 ** 32 - 1) {
+        t = bold_s;
+      } else {
+        if (xn.has(w0 as ServiceIndex)) {
+          t = xn.get(w0 as ServiceIndex)!;
+        } else if (d.has(w0 as ServiceIndex)) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          t = d.get(w0 as ServiceIndex)!;
+        } else {
+          return fnReturn(context.execution, { w0: HostCallResult.NONE });
+        }
+      }
+      const o = context.execution.registers[1];
+      const m = new Uint8Array(32); //TODO encode of t
+      if (!context.execution.memory.canWrite(o, m.length)) {
+        return fnReturn(context.execution, { w0: HostCallResult.OOB });
+      } else {
+        context.execution.memory.setBytes(o, m);
+        return fnReturn(context.execution, { w0: HostCallResult.OK });
+      }
     },
   },
 });
