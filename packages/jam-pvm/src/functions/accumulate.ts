@@ -8,6 +8,7 @@ import {
   ServiceAccount,
   ServiceIndex,
   Tagged,
+  Tau,
   UpToSeq,
   u32,
   u64,
@@ -17,6 +18,7 @@ import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
   HostCallResult,
+  PREIMAGE_EXPIRATION,
   SERVICE_MIN_BALANCE,
   TRANSFER_MEMO_SIZE,
 } from "@vekexasia/jam-constants";
@@ -31,6 +33,7 @@ import { W0, W1 } from "@/functions/utils.js";
 
 /**
  * `ΩE`
+ * empower service host call
  */
 export const gamma_e = regFn<
   [x: PVMResultContext],
@@ -69,6 +72,7 @@ export const gamma_e = regFn<
 
 /**
  * `ΩA`
+ * assign core host call
  */
 export const gamma_a = regFn<
   [x: PVMResultContext],
@@ -104,8 +108,9 @@ export const gamma_a = regFn<
 
 /**
  * `ΩD`
+ * designate validators host call
  */
-export const omega_D = regFn<[x: PVMResultContext], { x: PVMResultContext }>({
+export const gamma_D = regFn<[x: PVMResultContext], { x: PVMResultContext }>({
   opCode: 7 as u8,
   identifier: "designate",
   fn: {
@@ -119,8 +124,9 @@ export const omega_D = regFn<[x: PVMResultContext], { x: PVMResultContext }>({
 
 /**
  * `ΩC`
+ * checkpoint host call
  */
-export const omega_c = regFn<
+export const gamma_c = regFn<
   [x: PVMResultContext, y: PVMResultContext],
   W0 & W1 & { y: PVMResultContext }
 >({
@@ -142,8 +148,9 @@ export const omega_c = regFn<
 
 /**
  * `ΩN`
+ * new-service host call
  */
-export const omega_n = regFn<
+export const gamma_n = regFn<
   [x: PVMResultContext, dd_delta: DoubleDagger<Delta>],
   W0 &
     Partial<{
@@ -207,7 +214,7 @@ export const omega_n = regFn<
  * `ΩU`
  * upgrade-service host call
  */
-export const omega_u = regFn<
+export const gamma_u = regFn<
   [x: PVMResultContext, s: ServiceIndex],
   W0 &
     Partial<{
@@ -242,7 +249,7 @@ export const omega_u = regFn<
   },
 });
 
-export const omega_t = regFn<
+export const gamma_t = regFn<
   [x: PVMResultContext, s: ServiceIndex],
   W0 &
     Partial<{
@@ -273,7 +280,7 @@ export const omega_t = regFn<
  * `ΩX`
  * quit-service host call
  */
-export const omega_x = regFn<
+export const gamma_x = regFn<
   [x: PVMResultContext, s: ServiceIndex],
   W0 &
     Partial<{
@@ -306,9 +313,9 @@ export const omega_x = regFn<
 
 /**
  * `ΩS`
- * solicit-service host call
+ * solicit-preimage host call
  */
-export const omega_s = regFn<
+export const gamma_s = regFn<
   [x: PVMResultContext],
   W0 & Partial<{ _s: ServiceAccount }>,
   AccumulateHostFNContext
@@ -345,6 +352,69 @@ export const omega_s = regFn<
       } else {
         return { w0: HostCallResult.OK, _s: a };
       }
+    },
+  },
+});
+
+/**
+ * `ΩF`
+ * forget preimage host call
+ */
+export const gamma_f = regFn<
+  [x: PVMResultContext, t: Tau],
+  W0 & Partial<{ _s: ServiceAccount }>,
+  AccumulateHostFNContext
+>({
+  opCode: 14 as u8,
+  identifier: "forget",
+  fn: {
+    gasCost: 10n,
+    execute(context, x, t) {
+      const [o, z] = context.registers;
+      if (!context.memory.canRead(o, 32)) {
+        return { w0: HostCallResult.OOB };
+      }
+      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const a_l: ServiceAccount["preimage_l"] = new Map(
+        x.serviceAccount!.preimage_l,
+      );
+      const a_p: ServiceAccount["preimage_p"] = new Map(
+        x.serviceAccount!.preimage_p,
+      );
+      if (a_l.get(h)?.get(toTagged(z))?.length === 1) {
+        a_l.get(h)!.get(toTagged(z))!.push(t);
+      } else if (a_l.get(h)?.get(toTagged(z))?.length === 3) {
+        const [x, y] = a_l.get(h)!.get(toTagged(z))!;
+        if (y < t - PREIMAGE_EXPIRATION) {
+          // todo: check
+          a_l.get(h)!.set(toTagged(z), toTagged([x, y, t]));
+        } else {
+          return { w0: HostCallResult.HUH };
+        }
+      } else if (a_l.get(h)?.get(toTagged(z))?.length === 2) {
+        const [x, y] = a_l.get(h)!.get(toTagged(z))!;
+        if (y < t - PREIMAGE_EXPIRATION) {
+          a_l.get(h)!.delete(toTagged(z));
+          if (a_l.get(h)!.size === 0) {
+            a_l.delete(h);
+          }
+          a_p.delete(h);
+        } else {
+          return { w0: HostCallResult.HUH };
+        }
+      } else if (a_l.get(h)?.get(toTagged(z))?.length !== 0) {
+        return {
+          w0: HostCallResult.HUH,
+        };
+      }
+      return {
+        w0: HostCallResult.OK,
+        _s: {
+          ...x.serviceAccount!,
+          preimage_l: a_l,
+          preimage_p: a_p,
+        },
+      };
     },
   },
 });

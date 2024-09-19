@@ -122,3 +122,8 @@ export const SERVICE_ADDITIONAL_BALANCE_PER_ITEM = 10n;
  * `M` in the paper
  */
 export const TRANSFER_MEMO_SIZE = 128;
+
+/**
+ * `D` in the paper
+ */
+export const PREIMAGE_EXPIRATION = 28800;
