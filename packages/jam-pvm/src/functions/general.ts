@@ -13,6 +13,7 @@ import {
 import { Hashing } from "@vekexasia/jam-crypto";
 import { HostCallResult } from "@vekexasia/jam-constants";
 import { E_4 } from "@vekexasia/jam-codec";
+import { computeServiceAccountThreshold } from "@vekexasia/jam-utils";
 
 /**
  * `ΩG`
@@ -149,12 +150,87 @@ export const gamma_r = regFn<
       } else {
         v = undefined;
       }
-      // a
 
       return {
         ...context.execution,
         registers: [
           typeof v === "undefined" ? HostCallResult.NONE : v.length,
+          ...context.execution.registers.slice(1),
+        ] as PVMProgramExecutionContextBase["registers"],
+      };
+    },
+  },
+});
+
+export const gamma_w = regFn<
+  [bold_s: ServiceAccount, s: ServiceIndex],
+  { p_bold_s: ServiceAccount }
+>({
+  opCode: 3 as u8,
+  identifier: "write",
+  fn: {
+    gasCost: 10n,
+    execute(
+      context: { execution: PVMProgramExecutionContextBase },
+      bold_s: ServiceAccount,
+      s: ServiceIndex,
+    ) {
+      const [k0, kz, v0, vz] = context.execution.registers.slice(0, 4);
+      let k: Hash;
+      if (
+        !context.execution.memory.canRead(k0, kz) ||
+        !context.execution.memory.canRead(v0, vz)
+      ) {
+        return {
+          ...context.execution,
+          registers: [
+            HostCallResult.OOB,
+            ...context.execution.registers.slice(1),
+          ] as PVMProgramExecutionContextBase["registers"],
+          p_bold_s: bold_s,
+        };
+      } else {
+        const tmp = new Uint8Array(4);
+        E_4.encode(BigInt(s), tmp);
+        k = Hashing.blake2b(
+          new Uint8Array([
+            ...tmp,
+            ...context.execution.memory.getBytes(k0, kz),
+          ]),
+        );
+      }
+      const a: ServiceAccount = {
+        ...bold_s,
+        storage: new Map(bold_s.storage),
+      };
+      if (vz === 0) {
+        a.storage.delete(k);
+      } else {
+        a.storage.set(k, context.execution.memory.getBytes(v0, vz));
+      }
+
+      let l: number;
+      if (bold_s.storage.has(k)) {
+        const at = computeServiceAccountThreshold(bold_s);
+        if (at > a.balance) {
+          return {
+            ...context.execution,
+            registers: [
+              HostCallResult.FULL,
+              ...context.execution.registers.slice(1),
+            ] as PVMProgramExecutionContextBase["registers"],
+            p_bold_s: bold_s,
+          };
+        }
+        l = bold_s.storage.get(k)!.length;
+      } else {
+        l = HostCallResult.NONE;
+      }
+      return {
+        ...context.execution,
+        p_bold_s: a,
+        registers: [
+          l as u32,
           ...context.execution.registers.slice(1),
         ] as PVMProgramExecutionContextBase["registers"],
       };

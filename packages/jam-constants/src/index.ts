@@ -105,3 +105,16 @@ export const AUTHPOOL_SIZE = 8;
  * `Q` in the paper
  */
 export const AUTHQUEUE_MAX_SIZE = 80;
+
+/**
+ * `BS` in the paper
+ */
+export const SERVICE_MIN_BALANCE = 100n;
+/**
+ * `BL` in the paper
+ */
+export const SERVICE_ADDITIONAL_BALANCE_PER_OCTET = 1n;
+/**
+ * `BI` in the paper
+ */
+export const SERVICE_ADDITIONAL_BALANCE_PER_ITEM = 10n;

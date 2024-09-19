@@ -10,6 +10,7 @@ export * from "./hex.js";
 export * from "./Timekeeping.js";
 export * from "./utils.js";
 export * from "./STF.js";
+export * from "./serviceAccountThreshold.js";
 
 /**
  * Check if the current epoch is in fallback mode.
