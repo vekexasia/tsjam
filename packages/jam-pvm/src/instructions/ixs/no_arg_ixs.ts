@@ -1,4 +1,4 @@
-import { RegularPVMExitReason, u8 } from "@vekexasia/jam-types";
+import { RegularPVMExitReason, u32, u8 } from "@vekexasia/jam-types";
 import { regIx } from "@/instructions/ixdb.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -11,7 +11,9 @@ const fallthrough = regIx<[]>({
       return [];
     },
     evaluate(context) {
-      context.execution.instructionPointer++;
+      return [
+        { type: "ip", data: (context.execution.instructionPointer + 1) as u32 },
+      ];
     },
     gasCost: 1n,
   },
@@ -27,7 +29,7 @@ export const trap = regIx<[]>({
       return [];
     },
     evaluate() {
-      return { exitReason: RegularPVMExitReason.Panic };
+      return [{ type: "exit", data: RegularPVMExitReason.Panic, dio: "can" }];
     },
     gasCost: 1n,
   },

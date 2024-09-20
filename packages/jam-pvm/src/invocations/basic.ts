@@ -29,13 +29,13 @@ export const basicInvocation = newSTF<
     if (typeof out.exitReason !== "undefined") {
       return {
         context: {
-          ...out.posteriorContext,
-          gas: toTagged(out.posteriorContext.gas),
+          ...out.p_context,
+          gas: toTagged(out.p_context.gas),
         },
         exitReason: out.exitReason,
       };
     }
-    intermediateState = out.posteriorContext;
+    intermediateState = out.p_context;
   }
   return {
     context: {

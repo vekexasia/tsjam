@@ -2,6 +2,7 @@ import { vi } from "vitest";
 import {
   IPVMMemory,
   IParsedProgram,
+  PVMIx,
   PVMProgram,
   PVMProgramExecutionContext,
   SeqOfLength,
@@ -9,6 +10,8 @@ import {
   u8,
 } from "@vekexasia/jam-types";
 import { toTagged } from "@vekexasia/jam-utils";
+import * as process from "node:process";
+import { processIxResult } from "@/invocations/singleStep.js";
 
 const mockMemory = (): IPVMMemory => ({
   setBytes: vi.fn(),
@@ -39,3 +42,16 @@ export const createEvContext = (): {
     skip: vi.fn(),
   },
 });
+
+export const runTestIx = <T extends unknown[]>(
+  ctx: ReturnType<typeof createEvContext>,
+  ix: PVMIx<T>,
+  ...args: T
+) => {
+  return processIxResult(
+    ctx.execution,
+    ix.evaluate(ctx, ...args),
+    ix.gasCost,
+    0,
+  );
+};

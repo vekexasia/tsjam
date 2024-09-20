@@ -1,4 +1,5 @@
 import {
+  IxModification,
   PVMIxEvaluateFN,
   RegisterIdentifier,
   i32,
@@ -9,7 +10,6 @@ import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_sub } from "@vekexasia/jam-codec";
-import { beforeEach } from "vitest";
 const decode = (
   bytes: Uint8Array,
 ): [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: i32] => {
@@ -128,7 +128,7 @@ if (import.meta.vitest) {
   const b = await import("@/utils/branch.js");
   describe("two_reg_one_offset_ixs", () => {
     beforeAll(() => {
-      vi.spyOn(b, "branch").mockReturnValue(() => undefined);
+      vi.spyOn(b, "branch").mockReturnValue([] as IxModification[]);
     });
     describe("decode", () => {
       it("should decode rA, rB and offset properly", () => {

@@ -80,7 +80,6 @@ describe("testcases", () => {
       context.execution,
     );
     expect(r.context.registers).toEqual(json["expected-regs"]);
-    expect(r.context.instructionPointer).toEqual(json["expected-pc"]);
     expect(
       r.exitReason == RegularPVMExitReason.Panic
         ? "trap"
@@ -88,6 +87,9 @@ describe("testcases", () => {
           ? "halt"
           : 0,
     ).toEqual(json["expected-status"]);
+    expect(r.context.instructionPointer, "instruction pointer").toEqual(
+      json["expected-pc"],
+    );
     for (const { address, contents } of json["expected-memory"]) {
       expect(r.context.memory.getBytes(address, contents.length)).toEqual(
         new Uint8Array(contents),
@@ -96,7 +98,9 @@ describe("testcases", () => {
     expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
   };
   // read all fixtures directory
-  const files = fs.readdirSync(`${__dirname}/fixtures`);
+  const files = fs.readdirSync(`${__dirname}/fixtures`).filter((a) => {
+    return true; //a.startsWith("inst_load_u8_trap");
+  });
   for (const file of files) {
     it(file, doTest(file.replace(".json", "")));
   }

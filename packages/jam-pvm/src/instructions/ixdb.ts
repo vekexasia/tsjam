@@ -59,7 +59,7 @@ if (import.meta.vitest) {
             return [];
           },
           evaluate() {
-            return {};
+            return [];
           },
           gasCost: 1n,
         },
@@ -78,7 +78,7 @@ if (import.meta.vitest) {
             return [];
           },
           evaluate() {
-            return {};
+            return [];
           },
         },
       });
@@ -92,7 +92,7 @@ if (import.meta.vitest) {
               return [];
             },
             evaluate() {
-              return {};
+              return [];
             },
           },
         }),
@@ -108,7 +108,7 @@ if (import.meta.vitest) {
             return [];
           },
           evaluate() {
-            return {};
+            return [];
           },
         },
       });
@@ -122,7 +122,7 @@ if (import.meta.vitest) {
               return [];
             },
             evaluate() {
-              return {};
+              return [];
             },
           },
         }),
@@ -138,7 +138,7 @@ if (import.meta.vitest) {
             return [];
           },
           evaluate() {
-            return {};
+            return [];
           },
         },
       });

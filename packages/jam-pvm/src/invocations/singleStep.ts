@@ -1,6 +1,12 @@
 import { newSTF, toPosterior, toTagged } from "@vekexasia/jam-utils";
 import {
   IParsedProgram,
+  IxModification,
+  IxSingleModExit,
+  IxSingleModGas,
+  IxSingleModMemory,
+  IxSingleModPointer,
+  IxSingleModRegister,
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
@@ -9,9 +15,11 @@ import {
   u32,
 } from "@vekexasia/jam-types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
+import { createThreadsRpcOptions } from "vitest/workers";
+
 type Input = { program: PVMProgram; parsedProgram: IParsedProgram };
 type Output = {
-  posteriorContext: Posterior<PVMProgramExecutionContext>;
+  p_context: Posterior<PVMProgramExecutionContext>;
   exitReason?: PVMExitReason;
 };
 /**
@@ -27,6 +35,101 @@ export const pvmSingleStepSTF = newSTF<
   return ixExecutor(input, state);
 });
 
+/**
+ * computes the new context after the ix has been applied
+ * @param context - the current context
+ * @param result - the result of the ix evaluation
+ * @param gasCost - the gas cost of the ix
+ * @param skip - the result of skip fn
+ * @returns the new context
+ */
+export const processIxResult = (
+  context: PVMProgramExecutionContext,
+  result: IxModification[],
+  gasCost: bigint,
+  skip: number,
+): {
+  exitReason?: PVMExitReason;
+  p_context: Posterior<PVMProgramExecutionContext>;
+} => {
+  // compute p_context
+  const p_context: Posterior<PVMProgramExecutionContext> = toPosterior({
+    ...context,
+    registers:
+      context.registers.slice() as PVMProgramExecutionContext["registers"],
+  });
+
+  if (!result.some((x) => x.type === "gas")) {
+    p_context.gas = toTagged(context.gas - gasCost);
+  } else {
+    result
+      .filter((x): x is IxSingleModGas => x.type === "gas")
+      .forEach((x) => {
+        p_context.gas = toTagged(p_context.gas - x.data);
+      });
+  }
+
+  const invalidMemWrite = result.some(
+    (x) =>
+      x.type === "memory" &&
+      !context.memory.canWrite(x.data.from, x.data.data.length),
+  );
+  if (invalidMemWrite) {
+    p_context.gas = toTagged(context.gas - trap.gasCost - gasCost);
+    return {
+      exitReason: RegularPVMExitReason.Panic,
+      p_context,
+    };
+  }
+
+  // instruction pointer
+  if (!result.some((x) => x.type === "ip")) {
+    // if the instruction did not jump to another instruction
+    // we default to skip
+    p_context.instructionPointer = (context.instructionPointer +
+      (skip ? skip + 1 : 0)) as u32;
+  } else {
+    result
+      .filter((x): x is IxSingleModPointer => x.type === "ip")
+      .forEach((x) => {
+        p_context.instructionPointer = x.data;
+      });
+  }
+
+  if (result.some((x) => x.type === "register")) {
+    result
+      .filter((x): x is IxSingleModRegister => x.type === "register")
+      .forEach((x) => {
+        p_context.registers[x.data.index] = x.data.value;
+      });
+  }
+
+  if (result.some((x) => x.type === "memory")) {
+    result
+      .filter((x): x is IxSingleModMemory => x.type === "memory")
+      .forEach((x) => {
+        p_context.memory.setBytes(x.data.from, x.data.data);
+      });
+  }
+
+  if (result.some((x) => x.type === "exit")) {
+    // in this case we reset the instruction pointer to the curr instruction (unless there is one result item)
+    if (!result.some((x) => x.type === "ip")) {
+      p_context.instructionPointer = context.instructionPointer;
+    }
+
+    return {
+      exitReason: result.find((x): x is IxSingleModExit => x.type === "exit")!
+        .data,
+      p_context,
+    };
+  }
+
+  return {
+    p_context: p_context,
+  };
+};
+
 const ixExecutor = (
   input: Input,
   state: PVMProgramExecutionContext,
@@ -38,10 +141,12 @@ const ixExecutor = (
     typeof ix === "undefined"
   ) {
     // out of bounds ix pointer or invalid ix
-    state.gas = toTagged(state.gas - 1n); // trap
     return {
       exitReason: RegularPVMExitReason.Panic,
-      posteriorContext: toPosterior(state),
+      p_context: toPosterior({
+        ...state,
+        gas: toTagged(state.gas - trap.gasCost),
+      }),
     };
   }
 
@@ -53,53 +158,30 @@ const ixExecutor = (
       : input.program.c.length,
   );
   const args = ix.decode(byteArgs);
-  const p_state: PVMProgramExecutionContext = {
-    ...state,
-    // todo for memory ?
-    // maybe instead of cloning the memory object we should either create a temp memory object
-    // that records modifications at each step
-    registers:
-      state.registers.slice() as PVMProgramExecutionContext["registers"],
-  };
+
   const context = {
-    execution: p_state,
+    execution: state,
     program: input.program,
     parsedProgram: input.parsedProgram,
   };
 
-  // account for gas cost independently of evaluation
-  if (p_state.gas === state.gas) {
-    p_state.gas = toTagged(state.gas - ix.gasCost);
-  }
-
-  let r: { exitReason?: PVMExitReason } | void = void 0;
+  let r = [];
   try {
     r = ix.evaluate(context, ...args);
   } catch (e) {
-    // trap
-    p_state.gas = toTagged(p_state.gas - trap.gasCost);
-    return {
-      ...trap.evaluate({ ...context, execution: p_state }),
-      posteriorContext: toPosterior(p_state),
-    };
+    // inner panics
+    return processIxResult(
+      state,
+      [
+        { type: "exit", data: RegularPVMExitReason.Panic },
+        { type: "gas", data: toTagged(trap.gasCost) },
+        { type: "gas", data: toTagged(ix.gasCost) },
+      ],
+      ix.gasCost,
+      skip,
+    );
   }
-
-  if (typeof r?.exitReason !== "undefined") {
-    return {
-      exitReason: r.exitReason,
-      posteriorContext: toPosterior(p_state),
-    };
-  }
-  if (p_state.instructionPointer === state.instructionPointer) {
-    // if the instruction did not jump to another instruction
-    // we default to skip
-    p_state.instructionPointer = (state.instructionPointer +
-      (skip ? skip + 1 : 0)) as u32;
-  }
-
-  return {
-    posteriorContext: toPosterior(p_state),
-  };
+  return processIxResult(state, r, ix.gasCost, skip);
 };
 
 if (import.meta.vitest) {

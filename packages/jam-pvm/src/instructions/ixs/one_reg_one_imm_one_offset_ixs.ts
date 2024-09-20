@@ -55,8 +55,10 @@ export const load_imm_jump = create1Reg1IMM1OffsetIx(
   6 as u8,
   "load_imm_jump",
   (context, ri, vx, vy) => {
-    context.execution.registers[ri] = vx;
-    return branch(context, vy, true);
+    return [
+      { type: "register", data: { index: ri, value: vx } },
+      ...branch(context, vy, true),
+    ];
   },
   true,
 );

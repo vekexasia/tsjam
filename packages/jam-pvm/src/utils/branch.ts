@@ -1,4 +1,10 @@
-import { PVMIx, RegularPVMExitReason, u32 } from "@vekexasia/jam-types";
+import {
+  IxModification,
+  PVMIx,
+  RegularPVMExitReason,
+  u32,
+  u64,
+} from "@vekexasia/jam-types";
 
 /**
  * Branch to the given address if the condition is true.
@@ -12,18 +18,17 @@ export const branch = (
   context: Parameters<PVMIx<any>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
-): ReturnType<PVMIx<never>["evaluate"]> => {
+): IxModification[] => {
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that
-    return;
+    return [];
   }
   if (!context.parsedProgram.isBlockBeginning(address)) {
-    console.log("branching to non block beginning", address);
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-      nextInstructionPointer: context.execution.instructionPointer,
-    };
+    return [
+      { type: "exit", data: RegularPVMExitReason.Panic },
+      { type: "ip", data: context.execution.instructionPointer },
+    ];
   }
-  context.execution.instructionPointer = address;
+  return [{ type: "ip", data: address }];
 };

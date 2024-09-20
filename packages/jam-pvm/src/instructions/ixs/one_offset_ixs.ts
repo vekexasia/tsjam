@@ -35,7 +35,7 @@ if (import.meta.vitest) {
   const b = await import("@/utils/branch.js");
   describe("one_offset_ixs", () => {
     beforeAll(() => {
-      vi.spyOn(b, "branch").mockReturnValue(undefined);
+      vi.spyOn(b, "branch").mockReturnValue([]);
     });
     describe("decode", () => {
       it("should decode to 0 if no bytes provided", () => {

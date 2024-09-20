@@ -1,6 +1,6 @@
 import {
+  IxModification,
   PVMIx,
-  PVMProgramExecutionContext,
   RegularPVMExitReason,
   u32,
 } from "@vekexasia/jam-types";
@@ -13,24 +13,33 @@ const ZA = 4;
 export const djump = (
   context: Parameters<PVMIx<any>["evaluate"]>[0],
   a: u32,
-): ReturnType<PVMIx<never>["evaluate"]> => {
+): IxModification[] => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
-    return {
-      exitReason: RegularPVMExitReason.Halt,
-    };
+    return [
+      {
+        type: "exit",
+        data: RegularPVMExitReason.Halt,
+      },
+    ];
   } else if (
     a === 0 ||
     a > context.program.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-    };
+    return [
+      {
+        type: "exit",
+        data: RegularPVMExitReason.Panic,
+      },
+    ];
   }
 
-  context.execution.instructionPointer = (context.program.j[
-    Math.floor(a / ZA)
-  ] - 1) as u32;
+  return [
+    {
+      type: "ip",
+      data: (context.program.j[Math.floor(a / ZA)] - 1) as u32,
+    },
+  ];
 };
