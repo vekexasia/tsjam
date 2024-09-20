@@ -5,8 +5,11 @@ import {
   type ValidatorData,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
-import { BandersnatchCodec, Ed25519PubkeyCodec } from "@/identity.js";
-import { bigintToBytes } from "@vekexasia/jam-utils";
+import {
+  BandersnatchCodec,
+  Ed25519PubkeyCodec,
+  IdentityCodec,
+} from "@/identity.js";
 
 export const ValidatorDataCodec: JamCodec<ValidatorData> = {
   encode: function (value: ValidatorData, bytes: Uint8Array): number {
@@ -15,17 +18,29 @@ export const ValidatorDataCodec: JamCodec<ValidatorData> = {
       "Buffer for validator data is too small",
     );
     let offset = 0;
-    //todo: change to proper codecs
-    bytes.set(bigintToBytes(value.banderSnatch, 32), offset);
-    offset += 32;
-    bytes.set(bigintToBytes(value.ed25519, 32), offset);
-    offset += 32;
-    bytes.set(value.blsKey, offset);
-    offset += 144;
-    bytes.set(value.metadata, offset);
-    offset += 128;
+
+    offset += BandersnatchCodec.encode(
+      value.banderSnatch,
+      bytes.subarray(offset, offset + 32),
+    );
+
+    offset += Ed25519PubkeyCodec.encode(
+      value.ed25519,
+      bytes.subarray(offset, offset + 32),
+    );
+
+    offset += IdentityCodec.encode(
+      value.blsKey,
+      bytes.subarray(offset, offset + 144),
+    );
+
+    offset += IdentityCodec.encode(
+      value.metadata,
+      bytes.subarray(offset, offset + 128),
+    );
     return offset;
   },
+
   decode(bytes: Uint8Array): {
     value: ValidatorData;
     readBytes: number;

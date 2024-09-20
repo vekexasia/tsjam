@@ -51,9 +51,9 @@ export const gamma_e = regFn<
         return { w0: HostCallResult.OOB, xp: x.p };
       } else {
         const g = new Map<u32, u64>();
+        const buf = context.memory.getBytes(o, 12 * n);
         for (let i = 0; i < n; i++) {
-          // todo:we can optimize by reading mem only once and play with subarray
-          const data = context.memory.getBytes(o + 12 * i, 12);
+          const data = buf.subarray(i * 12, (i + 1) * 12);
           const key = E_4.decode(data).value;
           const value = E_8.decode(data.subarray(4)).value;
           g.set(Number(key) as u32, value as u64);

@@ -34,5 +34,3 @@ export const trap = regIx<[]>({
     gasCost: 1n,
   },
 });
-
-// TODO: implement tests?
