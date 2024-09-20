@@ -1,6 +1,7 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
   AccumulateHostFNContext,
+  DeferredTransfer,
   Delta,
   DoubleDagger,
   Hash,
@@ -18,11 +19,12 @@ import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
   HostCallResult,
+  NUMBER_OF_VALIDATORS,
   PREIMAGE_EXPIRATION,
   SERVICE_MIN_BALANCE,
   TRANSFER_MEMO_SIZE,
 } from "@vekexasia/jam-constants";
-import { E_4, E_8 } from "@vekexasia/jam-codec";
+import { E_4, E_8, ValidatorDataCodec } from "@vekexasia/jam-codec";
 import {
   bytesToBigInt,
   computeServiceAccountThreshold,
@@ -116,8 +118,20 @@ export const gamma_D = regFn<[x: PVMResultContext], { x: PVMResultContext }>({
   fn: {
     gasCost: 10n,
     execute(context, x) {
-      // TODO: implement this function
-      throw new Error("Not implemented");
+      const [o] = context.registers;
+      if (!context.memory.canRead(o, 336)) {
+        return { w0: HostCallResult.OOB, x };
+      } else {
+        const validators = [] as unknown as PVMResultContext["validatorKeys"];
+        for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
+          const c = context.memory.getBytes(o + 336 * i, 336);
+          validators.push(ValidatorDataCodec.decode(c).value);
+        }
+        return {
+          w0: HostCallResult.OK,
+          x: { ...x, validatorKeys: validators },
+        };
+      }
     },
   },
 });
@@ -250,7 +264,7 @@ export const gamma_u = regFn<
 });
 
 export const gamma_t = regFn<
-  [x: PVMResultContext, s: ServiceIndex],
+  [x: PVMResultContext, s: ServiceIndex, delta: Delta],
   W0 &
     Partial<{
       _t: PVMResultContext["transfers"];
@@ -261,17 +275,42 @@ export const gamma_t = regFn<
   identifier: "transfer",
   fn: {
     gasCost: 10n,
-    execute(context, x, s) {
+    execute(context, x, s, delta) {
       const [d, al, ah, gl, gh, o] = context.registers;
       const a = 2n ** 32n * BigInt(ah) + BigInt(al);
       const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
       if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
         return { w0: HostCallResult.OOB };
-      } else {
-        const memo = context.memory.getBytes(o, TRANSFER_MEMO_SIZE);
-
-        throw new Error("waiting for clarification");
       }
+      if (!delta.has(d as ServiceIndex) && !x.n.has(d as ServiceIndex)) {
+        return { w0: HostCallResult.WHO };
+      }
+      const serviceAccount =
+        delta.get(d as ServiceIndex) ?? x.n.get(d as ServiceIndex)!;
+      if (g < serviceAccount.minGasOnTransfer) {
+        return { w0: HostCallResult.LOW };
+      }
+      if (context.gas < g) {
+        return { w0: HostCallResult.HIGH };
+      }
+      const b = x.serviceAccount!.balance - a;
+      if (b < computeServiceAccountThreshold(x.serviceAccount!)) {
+        return { w0: HostCallResult.CASH };
+      }
+
+      const t: DeferredTransfer = {
+        sender: s,
+        destination: d as ServiceIndex,
+        amount: toTagged(a),
+        gasLimit: toTagged(g),
+        memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
+      };
+
+      return {
+        w0: HostCallResult.OK,
+        _t: x.transfers.concat(t),
+        _b: b,
+      };
     },
   },
 });
@@ -281,7 +320,7 @@ export const gamma_t = regFn<
  * quit-service host call
  */
 export const gamma_x = regFn<
-  [x: PVMResultContext, s: ServiceIndex],
+  [x: PVMResultContext, s: ServiceIndex, delta: Delta],
   W0 &
     Partial<{
       _s: PVMResultContext["serviceAccount"];
@@ -292,7 +331,7 @@ export const gamma_x = regFn<
   identifier: "quit",
   fn: {
     gasCost: 10n,
-    execute(context, x, s) {
+    execute(context, x, s, delta) {
       const [d, o] = context.registers;
       const a =
         x.serviceAccount!.balance -
@@ -300,13 +339,39 @@ export const gamma_x = regFn<
         SERVICE_MIN_BALANCE;
       const g = context.gas;
       if (d === s || d === 2 ** 32 - 1) {
+        // todo halt machine
         return {
           w0: HostCallResult.OK,
+          _s: undefined,
         };
       }
-      // todo continue here
 
-      throw new Error("waiting for clarification");
+      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
+        return { w0: HostCallResult.OOB };
+      }
+      if (!delta.has(d as ServiceIndex) && !x.n.has(d as ServiceIndex)) {
+        return { w0: HostCallResult.WHO };
+      }
+      const serviceAccount =
+        delta.get(d as ServiceIndex) ?? x.n.get(d as ServiceIndex)!;
+      if (g < serviceAccount.minGasOnTransfer) {
+        return { w0: HostCallResult.LOW };
+      }
+
+      // todo: signal pvm halt?
+      return {
+        w0: HostCallResult.OK,
+        _s: undefined,
+        _t: x.transfers.concat([
+          {
+            sender: s as ServiceIndex,
+            destination: d as ServiceIndex,
+            amount: toTagged(a),
+            gasLimit: toTagged(g),
+            memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
+          },
+        ]),
+      };
     },
   },
 });
@@ -392,7 +457,7 @@ export const gamma_f = regFn<
           return { w0: HostCallResult.HUH };
         }
       } else if (a_l.get(h)?.get(toTagged(z))?.length === 2) {
-        const [x, y] = a_l.get(h)!.get(toTagged(z))!;
+        const [_, y] = a_l.get(h)!.get(toTagged(z))!;
         if (y < t - PREIMAGE_EXPIRATION) {
           a_l.get(h)!.delete(toTagged(z));
           if (a_l.get(h)!.size === 0) {

@@ -6,6 +6,7 @@ import {
   NUMBER_OF_VALIDATORS,
 } from "@vekexasia/jam-constants";
 import { ValidatorData } from "@/ValidatorData.js";
+import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
 
 /**
  * `X` in the graypaper
@@ -31,7 +32,7 @@ export interface PVMResultContext {
   /**
    * `t`
    */
-  transfers: any; // todo
+  transfers: DeferredTransfer[]; // todo
   /**
    * `n`
    */
