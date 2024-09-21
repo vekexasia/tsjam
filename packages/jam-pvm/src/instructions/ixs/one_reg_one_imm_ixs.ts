@@ -11,6 +11,7 @@ import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { E_2, E_4 } from "@vekexasia/jam-codec";
+import { IxMod } from "@/instructions/utils.js";
 
 type InputType = [register: RegisterIdentifier, value: u32];
 const decode = (bytes: Uint8Array): InputType => {
@@ -58,70 +59,45 @@ const load_imm = create1Reg1IMMIx(4 as u8, "load_imm", (context, ri, vx) => {
 
 const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: ri,
-        value: context.execution.memory.getBytes(vx, 1)[0] as number as u32,
-      },
-    },
+    IxMod.reg(ri, context.execution.memory.getBytes(vx, 1)[0] as number as u32),
   ];
 });
 
 const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: ri,
-        value: Number(
-          E_2.decode(context.execution.memory.getBytes(vx, 2)).value,
-        ) as u32,
-      },
-    },
+    IxMod.reg(
+      ri,
+      Number(E_2.decode(context.execution.memory.getBytes(vx, 2)).value) as u32,
+    ),
   ];
 });
 
 const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: ri,
-        value: Number(
-          E_4.decode(context.execution.memory.getBytes(vx, 4)).value,
-        ) as u32,
-      },
-    },
+    IxMod.reg(
+      ri,
+      Number(E_4.decode(context.execution.memory.getBytes(vx, 4)).value) as u32,
+    ),
   ];
 });
 
 // ### Load signed
 const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: ri,
-        value: Z4_inv(Z(1, context.execution.memory.getBytes(vx, 1)[0])),
-      },
-    },
+    IxMod.reg(ri, Z4_inv(Z(1, context.execution.memory.getBytes(vx, 1)[0]))),
   ];
 });
 const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: ri,
-        value: Z4_inv(
-          Z(
-            2,
-            Number(E_2.decode(context.execution.memory.getBytes(vx, 2)).value),
-          ),
+    IxMod.reg(
+      ri,
+      Z4_inv(
+        Z(
+          2,
+          Number(E_2.decode(context.execution.memory.getBytes(vx, 2)).value),
         ),
-      },
-    },
+      ),
+    ),
   ];
 });
 

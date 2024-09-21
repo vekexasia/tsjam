@@ -6,6 +6,7 @@ import {
 } from "@vekexasia/jam-types";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
+import { IxMod } from "@/instructions/utils.js";
 const decode = (
   bytes: Uint8Array,
 ): [RegisterIdentifier, RegisterIdentifier] => {
@@ -33,12 +34,7 @@ const create = (
 
 const move_reg = create(82 as u8, "move_reg", (context, rd, ra) => {
   context.execution.registers[rd] = context.execution.registers[ra];
-  return [
-    {
-      type: "register",
-      data: { index: rd, value: context.execution.registers[ra] },
-    },
-  ];
+  return [IxMod.reg(rd, context.execution.registers[ra])];
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

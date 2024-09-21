@@ -28,7 +28,8 @@ export const E_sub = (sub: number): JamCodec<bigint> => ({
   },
 });
 
+export const E_1 = E_sub(1);
+export const E_2 = E_sub(2);
+export const E_3 = E_sub(3);
 export const E_4 = E_sub(4);
 export const E_8 = E_sub(8);
-export const E_2 = E_sub(2);
-export const E_1 = E_sub(1);

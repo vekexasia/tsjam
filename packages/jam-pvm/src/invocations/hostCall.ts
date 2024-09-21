@@ -3,6 +3,8 @@ import {
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
+  PVMProgramExecutionContextBase,
+  PVMResultContext,
   SeqOfLength,
   u32,
   u64,
@@ -16,21 +18,19 @@ import { BaseSTF, newSTF } from "@vekexasia/jam-utils";
  * `ΨH` in the graypaper
  * (238)
  */
-export const hostCallInvocation: BaseSTF<StateIn, Input, StateOut> = newSTF<
+export const hostCallInvocation: BaseSTF<StateIn, Input, HostCallOut> = newSTF<
   StateIn,
   Input,
-  StateOut
->((input, curState): StateOut => {
+  HostCallOut
+>((input, curState): HostCallOut => {
   const out = basicInvocation.apply(input, curState.context);
   if (
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"
   ) {
     const res = input.fn({
-      hostCall: out.exitReason.h,
-      gas: out.context.gas as unknown as u64,
-      registers: out.context.registers,
-      memory: out.context.memory,
+      hostCallOpcode: out.exitReason.h,
+      ctx: out.context,
       out: curState.out,
     });
     if ("pageFaultAddress" in res) {
@@ -70,13 +70,13 @@ type StateIn = {
   /**
    * `x`
    */
-  out: any;
+  out: PVMResultContext;
 };
 
-type StateOut = {
+export type HostCallOut = {
   exitReason?: PVMExitReason;
   context: PVMProgramExecutionContext;
-  out: any;
+  out: PVMResultContext;
 };
 
 type Input = {
@@ -88,10 +88,10 @@ type Input = {
   fn: HostCallExecutor;
 };
 
-export type HostCallExecutor = <T>(input: {
-  hostCall: any;
-  gas: u64;
-  registers: SeqOfLength<u32, 13>;
-  memory: IPVMMemory;
-  out: T;
-}) => { pageFaultAddress: u32 } | (PVMProgramExecutionContext & { out: T });
+export type HostCallExecutor = (input: {
+  hostCallOpcode: number;
+  ctx: PVMProgramExecutionContextBase;
+  out: PVMResultContext;
+}) =>
+  | { pageFaultAddress: u32 }
+  | (PVMProgramExecutionContextBase & { out: PVMResultContext });

@@ -1,21 +1,20 @@
 import { newSTF, toPosterior, toTagged } from "@vekexasia/jam-utils";
 import {
   IParsedProgram,
-  IxModification,
-  IxSingleModExit,
-  IxSingleModGas,
-  IxSingleModMemory,
-  IxSingleModPointer,
-  IxSingleModRegister,
   PVMExitReason,
+  PVMModification,
   PVMProgram,
   PVMProgramExecutionContext,
+  PVMSingleModExit,
+  PVMSingleModGas,
+  PVMSingleModMemory,
+  PVMSingleModPointer,
+  PVMSingleModRegister,
   Posterior,
   RegularPVMExitReason,
   u32,
 } from "@vekexasia/jam-types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
-import { createThreadsRpcOptions } from "vitest/workers";
 
 type Input = { program: PVMProgram; parsedProgram: IParsedProgram };
 type Output = {
@@ -45,7 +44,7 @@ export const pvmSingleStepSTF = newSTF<
  */
 export const processIxResult = (
   context: PVMProgramExecutionContext,
-  result: IxModification[],
+  result: PVMModification[],
   gasCost: bigint,
   skip: number,
 ): {
@@ -63,7 +62,7 @@ export const processIxResult = (
     p_context.gas = toTagged(context.gas - gasCost);
   } else {
     result
-      .filter((x): x is IxSingleModGas => x.type === "gas")
+      .filter((x): x is PVMSingleModGas => x.type === "gas")
       .forEach((x) => {
         p_context.gas = toTagged(p_context.gas - x.data);
       });
@@ -90,7 +89,7 @@ export const processIxResult = (
       (skip ? skip + 1 : 0)) as u32;
   } else {
     result
-      .filter((x): x is IxSingleModPointer => x.type === "ip")
+      .filter((x): x is PVMSingleModPointer => x.type === "ip")
       .forEach((x) => {
         p_context.instructionPointer = x.data;
       });
@@ -98,7 +97,7 @@ export const processIxResult = (
 
   if (result.some((x) => x.type === "register")) {
     result
-      .filter((x): x is IxSingleModRegister => x.type === "register")
+      .filter((x): x is PVMSingleModRegister<any> => x.type === "register")
       .forEach((x) => {
         p_context.registers[x.data.index] = x.data.value;
       });
@@ -106,7 +105,7 @@ export const processIxResult = (
 
   if (result.some((x) => x.type === "memory")) {
     result
-      .filter((x): x is IxSingleModMemory => x.type === "memory")
+      .filter((x): x is PVMSingleModMemory => x.type === "memory")
       .forEach((x) => {
         p_context.memory.setBytes(x.data.from, x.data.data);
       });
@@ -119,7 +118,7 @@ export const processIxResult = (
     }
 
     return {
-      exitReason: result.find((x): x is IxSingleModExit => x.type === "exit")!
+      exitReason: result.find((x): x is PVMSingleModExit => x.type === "exit")!
         .data,
       p_context,
     };

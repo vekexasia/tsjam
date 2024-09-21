@@ -1,7 +1,6 @@
 import {
   PVMIxEvaluateFN,
   RegisterIdentifier,
-  RegularPVMExitReason,
   u32,
   u8,
 } from "@vekexasia/jam-types";
@@ -9,6 +8,7 @@ import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_2, E_4 } from "@vekexasia/jam-codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
+import { IxMod } from "@/instructions/utils.js";
 
 const decode = (
   bytes: Uint8Array,
@@ -92,16 +92,8 @@ const load_ind_u8 = create(11 as u8, "load_ind_u8", (context, rA, rB, vX) => {
 
 const load_ind_u16 = create(37 as u8, "load_ind_u16", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
-  const r = context.execution.memory.getBytes(
-    context.execution.registers[rB] + vX,
-    2,
-  );
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: Number(E_2.decode(r).value) as u32 },
-    },
-  ];
+  const r = context.execution.memory.getBytes(location, 2);
+  return [IxMod.reg(rA, Number(E_2.decode(r).value))];
 });
 
 const load_ind_u32 = create(1 as u8, "load_ind_u32", (context, rA, rB, vX) => {
@@ -119,78 +111,38 @@ const load_ind_u32 = create(1 as u8, "load_ind_u32", (context, rA, rB, vX) => {
 const load_ind_i8 = create(21 as u8, "load_ind_i8", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const val = context.execution.memory.getBytes(location, 1);
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: Z4_inv(Z(1, val[0])) },
-    },
-  ];
+  return [IxMod.reg(rA, Z4_inv(Z(1, val[0])))];
 });
 
 const load_ind_i16 = create(33 as u8, "load_ind_i16", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const val = context.execution.memory.getBytes(location, 2);
   const num = Number(E_2.decode(val).value);
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: Z4_inv(Z(2, num)) },
-    },
-  ];
+  return [IxMod.reg(rA, Z4_inv(Z(2, num)))];
 });
 
 // math
 const add_imm = create(2 as u8, "add_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: ((context.execution.registers[rB] + vX) % 2 ** 32) as u32,
-      },
-    },
+    IxMod.reg(rA, ((context.execution.registers[rB] + vX) % 2 ** 32) as u32),
   ];
 });
 
 const and_imm = create(18 as u8, "and_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (context.execution.registers[rB] & vX) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] & vX) as u32)];
 });
 
 const xor_imm = create(31 as u8, "xor_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: (context.execution.registers[rB] ^ vX) as u32 },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] ^ vX) as u32)];
 });
 
 const or_imm = create(49 as u8, "or_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: (context.execution.registers[rB] | vX) as u32 },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] | vX) as u32)];
 });
 
 const mul_imm = create(35 as u8, "mul_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: ((context.execution.registers[rB] * vX) % 2 ** 32) as u32,
-      },
-    },
+    IxMod.reg(rA, ((context.execution.registers[rB] * vX) % 2 ** 32) as u32),
   ];
 });
 
@@ -199,17 +151,12 @@ const mul_upper_s_s_imm = create(
   "mul_upper_s_s_imm",
   (context, rA, rB, vX) => {
     return [
-      {
-        type: "register",
-        data: {
-          index: rA,
-          value: Z4_inv(
-            Math.floor(
-              (Z4(context.execution.registers[rB]) * Z4(vX)) / 2 ** 32,
-            ),
-          ) as u32,
-        },
-      },
+      IxMod.reg(
+        rA,
+        Z4_inv(
+          Math.floor((Z4(context.execution.registers[rB]) * Z4(vX)) / 2 ** 32),
+        ) as u32,
+      ),
     ];
   },
 );
@@ -219,42 +166,30 @@ const mul_upper_u_u_imm = create(
   "mul_upper_u_u_imm",
   (context, rA, rB, vX) => {
     return [
-      {
-        type: "register",
-        data: {
-          index: rA,
-          value: Math.floor(
-            (context.execution.registers[rB] * vX) / 2 ** 32,
-          ) as u32,
-        },
-      },
+      IxMod.reg(
+        rA,
+        Math.floor((context.execution.registers[rB] * vX) / 2 ** 32) as u32,
+      ),
     ];
   },
 );
 
 const neg_add_imm = create(40 as u8, "neg_add_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: ((vX + 2 ** 32 - context.execution.registers[rB]) %
-          2 ** 32) as u32,
-      },
-    },
+    IxMod.reg(
+      rA,
+      ((vX + 2 ** 32 - context.execution.registers[rB]) % 2 ** 32) as u32,
+    ),
   ];
 });
 
 // # bitshifts
 const shlo_l_imm = create(9 as u8, "shlo_l_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: ((context.execution.registers[rB] << vX % 32) % 2 ** 32) as u32,
-      },
-    },
+    IxMod.reg(
+      rA,
+      ((context.execution.registers[rB] << vX % 32) % 2 ** 32) as u32,
+    ),
   ];
 });
 
@@ -263,28 +198,16 @@ const shlo_l_imm_alt = create(
   "shlo_l_imm_alt",
   (context, rA, rB, vX) => {
     return [
-      {
-        type: "register",
-        data: {
-          index: rA,
-          value: ((vX << context.execution.registers[rB] % 32) %
-            2 ** 32) as u32,
-        },
-      },
+      IxMod.reg(
+        rA,
+        ((vX << context.execution.registers[rB] % 32) % 2 ** 32) as u32,
+      ),
     ];
   },
 );
 
 const shlo_r_imm = create(14 as u8, "shlo_r_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (context.execution.registers[rB] >>> vX % 32) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] >>> vX % 32) as u32)];
 });
 
 const shlo_r_imm_alt = create(
@@ -292,26 +215,14 @@ const shlo_r_imm_alt = create(
   "shlo_r_imm_alt",
   (context, rA, rB, vX) => {
     return [
-      {
-        type: "register",
-        data: {
-          index: rA,
-          value: (vX >>> context.execution.registers[rB] % 32) as u32,
-        },
-      },
+      IxMod.reg(rA, (vX >>> context.execution.registers[rB] % 32) as u32),
     ];
   },
 );
 
 const shar_r_imm = create(25 as u8, "shar_r_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: Z4_inv(Z4(context.execution.registers[rB]) >> vX % 32),
-      },
-    },
+    IxMod.reg(rA, Z4_inv(Z4(context.execution.registers[rB]) >> vX % 32)),
   ];
 });
 
@@ -320,69 +231,41 @@ const shar_r_imm_alt = create(
   "shar_r_imm_alt",
   (context, rA, rB, vX) => {
     return [
-      {
-        type: "register",
-        data: {
-          index: rA,
-          value: Z4_inv(Z4(vX) >> context.execution.registers[rB] % 32),
-        },
-      },
+      IxMod.reg(rA, Z4_inv(Z4(vX) >> context.execution.registers[rB] % 32)),
     ];
   },
 );
 
 // # sets
 const set_lt_u_imm = create(27 as u8, "set_lt_u_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (context.execution.registers[rB] < vX ? 1 : 0) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] < vX ? 1 : 0) as u32)];
 });
 
 const set_lt_s_imm = create(56 as u8, "set_lt_s_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (Z4(context.execution.registers[rB]) < Z(4, vX) ? 1 : 0) as u32,
-      },
-    },
+    IxMod.reg(
+      rA,
+      (Z4(context.execution.registers[rB]) < Z(4, vX) ? 1 : 0) as u32,
+    ),
   ];
 });
 
 const set_gt_u_imm = create(39 as u8, "set_gt_u_imm", (context, rA, rB, vX) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (context.execution.registers[rB] > vX ? 1 : 0) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rA, (context.execution.registers[rB] > vX ? 1 : 0) as u32)];
 });
 
 const set_gt_s_imm = create(61 as u8, "set_gt_s_imm", (context, rA, rB, vX) => {
   return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: (Z4(context.execution.registers[rB]) > Z(4, vX) ? 1 : 0) as u32,
-      },
-    },
+    IxMod.reg(
+      rA,
+      (Z4(context.execution.registers[rB]) > Z(4, vX) ? 1 : 0) as u32,
+    ),
   ];
 });
 
 const cmov_iz_imm = create(85 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] === 0) {
-    return [{ type: "register", data: { index: rA, value: vX } }];
+    return [IxMod.reg(rA, vX)];
   }
 
   return [];
@@ -390,7 +273,7 @@ const cmov_iz_imm = create(85 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
 
 const cmov_nz_imm = create(86 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] !== 0) {
-    return [{ type: "register", data: { index: rA, value: vX } }];
+    return [IxMod.reg(rA, vX)];
   }
   return [];
 });

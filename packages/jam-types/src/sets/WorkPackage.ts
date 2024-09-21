@@ -18,7 +18,7 @@ export interface WorkPackage {
    */
   serviceIndex: ServiceIndex;
   /**
-   * `c`
+   * `u`
    */
   authorizationCodeHash: Hash;
   /**

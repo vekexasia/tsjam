@@ -1,9 +1,8 @@
 import {
-  IxModification,
   PVMIx,
+  PVMModification,
   RegularPVMExitReason,
   u32,
-  u64,
 } from "@vekexasia/jam-types";
 
 /**
@@ -18,7 +17,7 @@ export const branch = (
   context: Parameters<PVMIx<any>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
-): IxModification[] => {
+): PVMModification[] => {
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that

@@ -9,6 +9,7 @@ import { Z4, Z4_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { beforeEach } from "vitest";
+import { IxMod } from "@/instructions/utils.js";
 
 type EvaluateType = [wA: u32, wB: u32, rD: RegisterIdentifier];
 type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
@@ -45,72 +46,34 @@ const create = (
 };
 
 const add = create(8 as u8, "add", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: ((wA + wB) % 2 ** 32) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, ((wA + wB) % 2 ** 32) as u32)];
 });
 
 const sub = create(20 as u8, "sub", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: ((wA + 2 ** 32 - wB) % 2 ** 32) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, ((wA + 2 ** 32 - wB) % 2 ** 32) as u32)];
 });
 
 const and = create(23 as u8, "and", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: (wA & wB) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, (wA & wB) as u32)];
 });
 
 const xor = create(28 as u8, "xor", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: (wA ^ wB) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, (wA ^ wB) as u32)];
 });
 
 const or = create(12 as u8, "or", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: (wA | wB) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, (wA | wB) as u32)];
 });
 
 const mul = create(34 as u8, "mul", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: ((wA * wB) % 2 ** 32) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, ((wA * wB) % 2 ** 32) as u32)];
 });
 
 const mul_upper_s_s = create(
   67 as u8,
   "mul_upper_s_s",
   (context, wA, wB, rD) => {
-    return [
-      {
-        type: "register",
-        data: {
-          index: rD,
-          value: Z4_inv(Math.floor((Z4(wA) * Z4(wB)) / 2 ** 32)),
-        },
-      },
-    ];
+    return [IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * Z4(wB)) / 2 ** 32)))];
   },
 );
 
@@ -118,12 +81,7 @@ const mul_upper_u_u = create(
   57 as u8,
   "mul_upper_u_u",
   (context, wA, wB, rD) => {
-    return [
-      {
-        type: "register",
-        data: { index: rD, value: Math.floor((wA * wB) / 2 ** 32) as u32 },
-      },
-    ];
+    return [IxMod.reg(rD, Math.floor((wA * wB) / 2 ** 32) as u32)];
   },
 );
 
@@ -131,33 +89,15 @@ const mul_upper_s_u = create(
   81 as u8,
   "mul_upper_s_u",
   (context, wA, wB, rD) => {
-    return [
-      {
-        type: "register",
-        data: {
-          index: rD,
-          value: Z4_inv(Math.floor((Z4(wA) * wB) / 2 ** 32)),
-        },
-      },
-    ];
+    return [IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * wB) / 2 ** 32)))];
   },
 );
 
 const div_u = create(68 as u8, "div", (context, wA, wB, rD) => {
   if (wB === 0) {
-    return [
-      {
-        type: "register",
-        data: { index: rD, value: (2 ** 32 - 1) as u32 },
-      },
-    ];
+    return [IxMod.reg(rD, (2 ** 32 - 1) as u32)];
   } else {
-    return [
-      {
-        type: "register",
-        data: { index: rD, value: Math.floor(wA / wB) as u32 },
-      },
-    ];
+    return [IxMod.reg(rD, Math.floor(wA / wB) as u32)];
   }
 });
 
@@ -200,54 +140,26 @@ const rem_s = create(70 as u8, "rem_s", (context, wA, wB, rD) => {
 });
 
 const set_lt_u = create(36 as u8, "set_lt_u", (context, wA, wB, rD) => {
-  return [
-    { type: "register", data: { index: rD, value: (wA < wB ? 1 : 0) as u32 } },
-  ];
+  return [IxMod.reg(rD, (wA < wB ? 1 : 0) as u32)];
 });
 
 const set_lt_s = create(58 as u8, "set_lt_s", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
   const z4b = Z4(wB);
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: (z4a < z4b ? 1 : 0) as u32 },
-    },
-  ];
+  return [IxMod.reg(rD, (z4a < z4b ? 1 : 0) as u32)];
 });
 
 const shlo_l = create(55 as u8, "shlo_l", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rD,
-        value: ((wA << wB % 32) % 2 ** 32) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rD, ((wA << wB % 32) % 2 ** 32) as u32)];
 });
 
 const shlo_r = create(51 as u8, "shlo_r", (context, wA, wB, rD) => {
-  return [
-    {
-      type: "register",
-      data: {
-        index: rD,
-        value: (wA >>> wB % 32) as u32,
-      },
-    },
-  ];
+  return [IxMod.reg(rD, (wA >>> wB % 32) as u32)];
 });
 
 const shar_r = create(77 as u8, "shar_r", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
-  return [
-    {
-      type: "register",
-      data: { index: rD, value: Z4_inv(Math.floor(z4a / 2 ** (wB % 32))) },
-    },
-  ];
+  return [IxMod.reg(rD, Z4_inv(Math.floor(z4a / 2 ** (wB % 32))))];
 });
 
 const cmov_iz = create(83 as u8, "cmov_iz", (context, wA, wB, rD) => {

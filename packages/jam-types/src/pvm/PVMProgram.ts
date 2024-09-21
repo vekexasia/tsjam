@@ -1,5 +1,4 @@
 import { u32, u8 } from "@/genericTypes.js";
-import { PVMIx } from "@/pvm/PVMIx.js";
 
 export interface PVMProgram {
   /**

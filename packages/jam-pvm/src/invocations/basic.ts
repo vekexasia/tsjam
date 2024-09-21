@@ -17,7 +17,7 @@ export const basicInvocation = newSTF<
   PVMProgramExecutionContext,
   { parsedProgram: ParsedProgram; program: PVMProgram },
   {
-    context: Omit<PVMProgramExecutionContext, "gas"> & { gas: i64 };
+    context: PVMProgramExecutionContext;
     exitReason?: PVMExitReason;
   }
 >((input, curState) => {

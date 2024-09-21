@@ -14,7 +14,7 @@ export const FnsDb = {
  */
 export const regFn = <
   Args extends unknown[],
-  Out,
+  Out extends unknown[],
   CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
 >(conf: {
   /**

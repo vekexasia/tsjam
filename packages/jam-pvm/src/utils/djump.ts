@@ -1,6 +1,6 @@
 import {
-  IxModification,
   PVMIx,
+  PVMModification,
   RegularPVMExitReason,
   u32,
 } from "@vekexasia/jam-types";
@@ -13,7 +13,7 @@ const ZA = 4;
 export const djump = (
   context: Parameters<PVMIx<any>["evaluate"]>[0],
   a: u32,
-): IxModification[] => {
+): PVMModification[] => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
     return [

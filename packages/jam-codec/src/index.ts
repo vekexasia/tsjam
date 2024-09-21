@@ -20,6 +20,7 @@ export * from "@/setelements/AvailabilitySpecificationCodec.js";
 export * from "@/setelements/RefinementContextCodec.js";
 export * from "@/setelements/TicketCodec.js";
 export * from "@/setelements/WorkItemCodec.js";
+export * from "@/setelements/WorkPackageCodec.js";
 export * from "@/setelements/WorkReportCodec.js";
 export * from "@/setelements/WorkResultCodec.js";
 

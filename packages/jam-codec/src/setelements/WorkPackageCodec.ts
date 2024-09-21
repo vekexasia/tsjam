@@ -1,4 +1,4 @@
-import { RefinementContext, WorkItem, WorkPackage } from "@vekexasia/jam-types";
+import { WorkPackage } from "@vekexasia/jam-types";
 import { JamCodec } from "@/codec.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_4 } from "@/ints/E_subscr.js";
@@ -6,7 +6,7 @@ import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js"
 import { HashCodec } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
-import { workItemFromJSON } from "../../test/utils.js";
+
 const workItemsCodec = createArrayLengthDiscriminator(WorkItemCodec);
 export const WorkPackageCodec: JamCodec<WorkPackage> = {
   encode(value: WorkPackage, bytes: Uint8Array): number {
