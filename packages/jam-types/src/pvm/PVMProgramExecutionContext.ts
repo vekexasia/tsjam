@@ -28,15 +28,3 @@ export interface PVMProgramExecutionContextBase {
    */
   memory: IPVMMemory;
 }
-
-export interface AccumulateHostFNContext
-  extends PVMProgramExecutionContextBase {
-  tau: Tau;
-}
-/**
- * Defined in B.8
- */
-export interface PVMRefineContext {
-  m: Map<number, IPVMMemory>;
-  e: ByteArrayOfLength<6>[];
-}

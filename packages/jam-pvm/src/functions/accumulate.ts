@@ -1,10 +1,10 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
-  AccumulateHostFNContext,
+  Dagger,
   DeferredTransfer,
   Delta,
-  DoubleDagger,
   Hash,
+  PVMProgramExecutionContextBase,
   PVMResultContext,
   PVMSingleModObject,
   ServiceAccount,
@@ -32,45 +32,42 @@ import {
   toTagged,
 } from "@vekexasia/jam-utils";
 import { check_fn } from "@/invocations/accumulate.js";
-import { W0, W1 } from "@/functions/utils.js";
+import { W0, W1, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 
 /**
  * `ΩE`
  * empower service host call
  */
-export const gamma_e = regFn<
-  [x: PVMResultContext],
-  Array<
-    | W0
-    | PVMSingleModObject<{ xp: PVMResultContext["p"] & { g?: Map<u32, u64> } }>
-  >
->({
-  opCode: 5 as u8,
-  identifier: "empower",
+export const omega_e = regFn<[x: PVMResultContext], Array<W0 | XMod>>({
   fn: {
+    opCode: 5 as u8,
+    identifier: "empower",
     gasCost: 10n,
     execute(context, x) {
       const [m, a, v, o, n] = context.registers;
       if (!context.memory.canRead(o, 12 * n)) {
-        return [IxMod.w0(HostCallResult.OOB), IxMod.obj({ xp: x.p })];
+        return [IxMod.w0(HostCallResult.OOB)];
       } else {
-        const g = new Map<u32, u64>();
+        const g = new Map<ServiceIndex, u64>();
         const buf = context.memory.getBytes(o, 12 * n);
         for (let i = 0; i < n; i++) {
           const data = buf.subarray(i * 12, (i + 1) * 12);
           const key = E_4.decode(data).value;
           const value = E_8.decode(data.subarray(4)).value;
-          g.set(Number(key) as u32, value as u64);
+          g.set(Number(key) as ServiceIndex, value as u64);
         }
         return [
           IxMod.w0(HostCallResult.OK),
           IxMod.obj({
-            xp: {
-              m: m as ServiceIndex,
-              a: a as ServiceIndex,
-              v: v as ServiceIndex,
-              g,
+            x: {
+              ...x,
+              p: {
+                m: m as ServiceIndex,
+                a: a as ServiceIndex,
+                v: v as ServiceIndex,
+                g,
+              },
             },
           }),
         ];
@@ -83,13 +80,13 @@ export const gamma_e = regFn<
  * `ΩA`
  * assign core host call
  */
-export const gamma_a = regFn<
+export const omega_a = regFn<
   [x: PVMResultContext],
   Array<W0 | PVMSingleModObject<{ x: PVMResultContext }>>
 >({
-  opCode: 6 as u8,
-  identifier: "assign",
   fn: {
+    opCode: 6 as u8,
+    identifier: "assign",
     gasCost: 10n,
     execute(context, x) {
       const [w0, w1] = context.registers;
@@ -122,13 +119,13 @@ export const gamma_a = regFn<
  * `ΩD`
  * designate validators host call
  */
-export const gamma_D = regFn<
+export const omega_d = regFn<
   [x: PVMResultContext],
   Array<W0 | PVMSingleModObject<{ x: PVMResultContext }>>
 >({
-  opCode: 7 as u8,
-  identifier: "designate",
   fn: {
+    opCode: 7 as u8,
+    identifier: "designate",
     gasCost: 10n,
     execute(context, x) {
       const [o] = context.registers;
@@ -153,17 +150,17 @@ export const gamma_D = regFn<
  * `ΩC`
  * checkpoint host call
  */
-export const gamma_c = regFn<
+export const omega_c = regFn<
   [x: PVMResultContext, y: PVMResultContext],
-  Array<W0 | W1 | PVMSingleModObject<{ y: PVMResultContext }>>
+  Array<W0 | W1 | YMod>
 >({
-  opCode: 8 as u8,
-  identifier: "checkpoint",
   fn: {
+    opCode: 8 as u8,
+    identifier: "checkpoint",
     gasCost: 10n,
     execute(context, x) {
       const p_y = x;
-      const gasAfter = context.gas - this.gasCost;
+      const gasAfter = context.gas - (this.gasCost as bigint);
       return [
         IxMod.w0(Number(gasAfter % 2n ** 32n)),
         IxMod.w1(Number(gasAfter / 2n ** 32n)),
@@ -177,22 +174,20 @@ export const gamma_c = regFn<
  * `ΩN`
  * new-service host call
  */
-export const gamma_n = regFn<
-  [x: PVMResultContext, dd_delta: DoubleDagger<Delta>],
+export const omega_n = regFn<
+  [x: PVMResultContext, dd_delta: Dagger<Delta>],
   Array<
     | W0
     | PVMSingleModObject<{
-        x_i: PVMResultContext["service"];
-        x_n: PVMResultContext["n"];
-        x_s_b: ServiceAccount["balance"];
+        x: PVMResultContext;
       }>
   >
 >({
-  opCode: 9 as u8,
-  identifier: "new",
   fn: {
+    opCode: 9 as u8,
+    identifier: "new",
     gasCost: 10n,
-    execute(context, x, dd_delta) {
+    execute(context, x, d_delta) {
       const [o, l, gl, gh, ml, mh] = context.registers;
 
       if (!context.memory.canRead(o, 32)) {
@@ -230,9 +225,15 @@ export const gamma_n = regFn<
       return [
         IxMod.w0(x.service),
         IxMod.obj({
-          x_i: check_fn(bump(x.service) as ServiceIndex, dd_delta),
-          x_n: new Map([[x.service, a]]),
-          x_s_b: b,
+          x: {
+            ...x,
+            service: check_fn(bump(x.service) as ServiceIndex, d_delta),
+            n: new Map([[x.service, a]]),
+            serviceAccount: {
+              ...x.serviceAccount!,
+              balance: b,
+            },
+          },
         }),
       ];
     },
@@ -243,20 +244,13 @@ export const gamma_n = regFn<
  * `ΩU`
  * upgrade-service host call
  */
-export const gamma_u = regFn<
+export const omega_u = regFn<
   [x: PVMResultContext, s: ServiceIndex],
-  Array<
-    | W0
-    | PVMSingleModObject<{
-        _c: ServiceAccount["codeHash"];
-        _g: ServiceAccount["minGasAccumulate"];
-        _m: ServiceAccount["minGasOnTransfer"];
-      }>
-  >
+  Array<W0 | XMod>
 >({
-  opCode: 10 as u8,
-  identifier: "upgrade",
   fn: {
+    opCode: 10 as u8,
+    identifier: "upgrade",
     gasCost: 10n,
     execute(context, x, s) {
       const [o, gh, gl, mh, ml] = context.registers;
@@ -265,14 +259,20 @@ export const gamma_u = regFn<
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w0(HostCallResult.OOB)];
       } else {
+        const newMap: PVMResultContext["n"] = new Map(x.n);
+
+        const a = { ...newMap.get(s)! };
+        a.codeHash = bytesToBigInt(context.memory.getBytes(o, 32));
+        a.minGasAccumulate = g;
+        a.minGasOnTransfer = m;
+        newMap.set(s, a);
         return [
           IxMod.w0(HostCallResult.OK),
           IxMod.obj({
-            _c: bytesToBigInt(
-              context.memory.getBytes(o, 32),
-            ) as ServiceAccount["codeHash"],
-            _g: g,
-            _m: m,
+            x: {
+              ...x,
+              n: newMap,
+            },
           }),
         ];
       }
@@ -280,20 +280,20 @@ export const gamma_u = regFn<
   },
 });
 
-export const gamma_t = regFn<
+export const omega_t = regFn<
   [x: PVMResultContext, s: ServiceIndex, delta: Delta],
-  Array<
-    | W0
-    | PVMSingleModObject<{
-        _t: PVMResultContext["transfers"];
-        _b: ServiceAccount["balance"];
-      }>
-  >
+  Array<W0 | XMod>
 >({
-  opCode: 11 as u8,
-  identifier: "transfer",
   fn: {
-    gasCost: 10n,
+    opCode: 11 as u8,
+    identifier: "transfer",
+    gasCost: (context: PVMProgramExecutionContextBase) => {
+      return (
+        10n +
+        BigInt(context.registers[1]) +
+        BigInt(context.registers[2]) * 2n ** 32n
+      );
+    },
     execute(context, x, s, delta) {
       const [d, al, ah, gl, gh, o] = context.registers;
       const a = 2n ** 32n * BigInt(ah) + BigInt(al);
@@ -328,8 +328,14 @@ export const gamma_t = regFn<
       return [
         IxMod.w0(HostCallResult.OK),
         IxMod.obj({
-          _t: x.transfers.concat([t]),
-          _b: b,
+          x: {
+            ...x,
+            transfers: x.transfers.slice().concat([t]),
+            serviceAccount: {
+              ...x.serviceAccount!,
+              balance: b,
+            },
+          },
         }),
       ];
     },
@@ -340,21 +346,13 @@ export const gamma_t = regFn<
  * `ΩX`
  * quit-service host call
  */
-export const gamma_x = regFn<
+export const omega_x = regFn<
   [x: PVMResultContext, s: ServiceIndex, delta: Delta],
-  Array<
-    | W0
-    | PVMSingleModObject<{
-        _s: PVMResultContext["serviceAccount"];
-      }>
-    | PVMSingleModObject<{
-        _t: PVMResultContext["transfers"];
-      }>
-  >
+  Array<W0 | XMod>
 >({
-  opCode: 12 as u8,
-  identifier: "quit",
   fn: {
+    opCode: 12 as u8,
+    identifier: "quit",
     gasCost: 10n,
     execute(context, x, s, delta) {
       const [d, o] = context.registers;
@@ -365,7 +363,10 @@ export const gamma_x = regFn<
       const g = context.gas;
       if (d === s || d === 2 ** 32 - 1) {
         // todo halt machine
-        return [IxMod.w0(HostCallResult.OK), IxMod.obj({ _s: undefined })];
+        return [
+          IxMod.w0(HostCallResult.OK),
+          IxMod.obj({ x: { ...x, serviceAccount: undefined } }),
+        ];
       }
 
       if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
@@ -384,18 +385,19 @@ export const gamma_x = regFn<
       return [
         IxMod.w0(HostCallResult.OK),
         IxMod.obj({
-          _s: undefined,
-        }),
-        IxMod.obj({
-          _t: x.transfers.concat([
-            {
-              sender: s as ServiceIndex,
-              destination: d as ServiceIndex,
-              amount: toTagged(a),
-              gasLimit: toTagged(g),
-              memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
-            },
-          ]),
+          x: {
+            ...x,
+            serviceAccount: undefined,
+            transfers: x.transfers.slice().concat([
+              {
+                sender: s as ServiceIndex,
+                destination: d as ServiceIndex,
+                amount: toTagged(a),
+                gasLimit: toTagged(g),
+                memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
+              },
+            ]),
+          },
         }),
       ];
     },
@@ -406,16 +408,12 @@ export const gamma_x = regFn<
  * `ΩS`
  * solicit-preimage host call
  */
-export const gamma_s = regFn<
-  [x: PVMResultContext],
-  Array<W0 | PVMSingleModObject<{ _s: ServiceAccount }>>,
-  AccumulateHostFNContext
->({
-  opCode: 13 as u8,
-  identifier: "solicit",
+export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W0 | XMod>>({
   fn: {
+    opCode: 13 as u8,
+    identifier: "solicit",
     gasCost: 10n,
-    execute(context, x) {
+    execute(context, x, tau) {
       const [o, z] = context.registers;
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w0(HostCallResult.OOB)];
@@ -431,7 +429,7 @@ export const gamma_s = regFn<
       if (typeof a_l.get(h)?.get(toTagged(z)) === "undefined") {
         a_l.set(h, new Map([[toTagged(z), toTagged([])]]));
       } else {
-        a_l.get(h)!.get(toTagged(z))!.push(context.tau);
+        a_l.get(h)!.get(toTagged(z))!.push(tau);
       }
       const newL = a_l.get(h)!.get(toTagged(z))!.length;
       if (newL !== 3 && newL !== 0) {
@@ -441,7 +439,15 @@ export const gamma_s = regFn<
       } else if (a.balance < computeServiceAccountThreshold(a)) {
         return [IxMod.w0(HostCallResult.FULL)];
       } else {
-        return [IxMod.w0(HostCallResult.OK), IxMod.obj({ _s: a })];
+        return [
+          IxMod.w0(HostCallResult.OK),
+          IxMod.obj({
+            x: {
+              ...x,
+              serviceAccount: a,
+            },
+          }),
+        ];
       }
     },
   },
@@ -451,14 +457,10 @@ export const gamma_s = regFn<
  * `ΩF`
  * forget preimage host call
  */
-export const gamma_f = regFn<
-  [x: PVMResultContext, t: Tau],
-  Array<W0 | PVMSingleModObject<{ _s: ServiceAccount }>>,
-  AccumulateHostFNContext
->({
-  opCode: 14 as u8,
-  identifier: "forget",
+export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W0 | XMod>>({
   fn: {
+    opCode: 14 as u8,
+    identifier: "forget",
     gasCost: 10n,
     execute(context, x, t) {
       const [o, z] = context.registers;
@@ -499,10 +501,13 @@ export const gamma_f = regFn<
       return [
         IxMod.w0(HostCallResult.OK),
         IxMod.obj({
-          _s: {
-            ...x.serviceAccount!,
-            preimage_l: a_l,
-            preimage_p: a_p,
+          x: {
+            ...x,
+            serviceAccount: {
+              ...x.serviceAccount!,
+              preimage_l: a_l,
+              preimage_p: a_p,
+            },
           },
         }),
       ];

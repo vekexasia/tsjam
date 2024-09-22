@@ -1,10 +1,10 @@
+import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 import {
   CoreIndex,
   ED25519PublicKey,
   SeqOfLength,
   Tagged,
-} from "@vekexasia/jam-types";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+} from "@/genericTypes.js";
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it

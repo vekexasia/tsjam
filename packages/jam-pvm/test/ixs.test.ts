@@ -72,7 +72,7 @@ describe("testcases", () => {
     const program = PVMProgramCodec.decode(new Uint8Array(json.program));
     context.program = program.value;
     context.parsedProgram = ParsedProgram.parse(program.value);
-    const r = basicInvocation.apply(
+    const r = basicInvocation(
       {
         parsedProgram: ParsedProgram.parse(program.value),
         program: program.value,

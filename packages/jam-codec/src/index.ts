@@ -17,6 +17,7 @@ export * from "@/extrinsics/preimages.js";
 export * from "@/extrinsics/tickets.js";
 
 export * from "@/setelements/AvailabilitySpecificationCodec.js";
+export * from "@/setelements/PVMAccumulationOpCodec.js";
 export * from "@/setelements/RefinementContextCodec.js";
 export * from "@/setelements/TicketCodec.js";
 export * from "@/setelements/WorkItemCodec.js";

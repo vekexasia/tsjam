@@ -1,4 +1,4 @@
-import { newSTF, toPosterior, toTagged } from "@vekexasia/jam-utils";
+import { toPosterior, toTagged } from "@vekexasia/jam-utils";
 import {
   IParsedProgram,
   PVMExitReason,
@@ -16,24 +16,87 @@ import {
 } from "@vekexasia/jam-types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 
-type Input = { program: PVMProgram; parsedProgram: IParsedProgram };
 type Output = {
   p_context: Posterior<PVMProgramExecutionContext>;
   exitReason?: PVMExitReason;
 };
+
 /**
  * SingleStep State Transition Function
  * Ψ1 in the graypaper
  * (217)
  */
-export const pvmSingleStepSTF = newSTF<
-  PVMProgramExecutionContext,
-  Input,
-  Output
->((input: Input, state: PVMProgramExecutionContext): Output => {
-  return ixExecutor(input, state);
-});
+export const pvmSingleStep = (
+  p: { program: PVMProgram; parsedProgram: IParsedProgram },
+  ctx: PVMProgramExecutionContext,
+): Output => {
+  const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
+  if (
+    ctx.instructionPointer >= p.program.c.length ||
+    ctx.instructionPointer < 0 ||
+    typeof ix === "undefined"
+  ) {
+    // out of bounds ix pointer or invalid ix
+    return {
+      exitReason: RegularPVMExitReason.Panic,
+      p_context: toPosterior({
+        ...ctx,
+        gas: toTagged(ctx.gas - trap.gasCost),
+      }),
+    };
+  }
 
+  const skip = p.parsedProgram.skip(ctx.instructionPointer);
+  const byteArgs = p.program.c.subarray(
+    ctx.instructionPointer + 1,
+    typeof skip !== "undefined"
+      ? ctx.instructionPointer + skip + 1
+      : p.program.c.length,
+  );
+  const args = ix.decode(byteArgs);
+
+  const context = {
+    execution: ctx,
+    program: p.program,
+    parsedProgram: p.parsedProgram,
+  };
+
+  let r = [];
+  try {
+    r = ix.evaluate(context, ...args);
+  } catch (e) {
+    // inner panics
+    return processIxResult(
+      ctx,
+      [
+        { type: "exit", data: RegularPVMExitReason.Panic },
+        { type: "gas", data: toTagged(trap.gasCost) },
+        { type: "gas", data: toTagged(ix.gasCost) },
+      ],
+      ix.gasCost,
+      skip,
+    );
+  }
+  return processIxResult(ctx, r, ix.gasCost, skip);
+};
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  const { createEvContext } = await import("@/test/mocks.js");
+  describe("singleStep", () => {
+    it("should panic if no instructions", () => {
+      const evaluationContext = createEvContext();
+      const out = pvmSingleStep(
+        {
+          program: evaluationContext.program,
+          parsedProgram: evaluationContext.parsedProgram,
+        },
+        evaluationContext.execution,
+      );
+      expect(out.exitReason).toBe(RegularPVMExitReason.Panic);
+    });
+  });
+}
 /**
  * computes the new context after the ix has been applied
  * @param context - the current context
@@ -128,75 +191,3 @@ export const processIxResult = (
     p_context: p_context,
   };
 };
-
-const ixExecutor = (
-  input: Input,
-  state: PVMProgramExecutionContext,
-): Output => {
-  const ix = input.parsedProgram.ixAt(state.instructionPointer);
-  if (
-    state.instructionPointer >= input.program.c.length ||
-    state.instructionPointer < 0 ||
-    typeof ix === "undefined"
-  ) {
-    // out of bounds ix pointer or invalid ix
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-      p_context: toPosterior({
-        ...state,
-        gas: toTagged(state.gas - trap.gasCost),
-      }),
-    };
-  }
-
-  const skip = input.parsedProgram.skip(state.instructionPointer);
-  const byteArgs = input.program.c.subarray(
-    state.instructionPointer + 1,
-    typeof skip !== "undefined"
-      ? state.instructionPointer + skip + 1
-      : input.program.c.length,
-  );
-  const args = ix.decode(byteArgs);
-
-  const context = {
-    execution: state,
-    program: input.program,
-    parsedProgram: input.parsedProgram,
-  };
-
-  let r = [];
-  try {
-    r = ix.evaluate(context, ...args);
-  } catch (e) {
-    // inner panics
-    return processIxResult(
-      state,
-      [
-        { type: "exit", data: RegularPVMExitReason.Panic },
-        { type: "gas", data: toTagged(trap.gasCost) },
-        { type: "gas", data: toTagged(ix.gasCost) },
-      ],
-      ix.gasCost,
-      skip,
-    );
-  }
-  return processIxResult(state, r, ix.gasCost, skip);
-};
-
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("@/test/mocks.js");
-  describe("singleStep", () => {
-    it("should panic if no instructions", () => {
-      const evaluationContext = createEvContext();
-      const out = pvmSingleStepSTF.apply(
-        {
-          program: evaluationContext.program,
-          parsedProgram: evaluationContext.parsedProgram,
-        },
-        evaluationContext.execution,
-      );
-      expect(out.exitReason).toBe(RegularPVMExitReason.Panic);
-    });
-  });
-}

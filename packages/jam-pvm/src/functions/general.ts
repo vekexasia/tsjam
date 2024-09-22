@@ -22,12 +22,12 @@ import { IxMod } from "@/instructions/utils.js";
  * `ΩG`
  */
 export const omega_g = regFn<[], [W0, W1]>({
-  opCode: 0 as u8,
-  identifier: "gas",
   fn: {
+    opCode: 0 as u8,
+    identifier: "gas",
     gasCost: 10n,
     execute(context) {
-      const p_gas = context.gas - this.gasCost;
+      const p_gas = context.gas - (this.gasCost as bigint);
       return [
         IxMod.w0(Number(p_gas % BigInt(2 ** 32))),
         IxMod.w1(Number(p_gas / BigInt(2 ** 32))),
@@ -40,9 +40,9 @@ export const omega_l = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, dag_delta: Dagger<Delta>],
   [W0, PVMSingleModMemory] | [W0]
 >({
-  opCode: 1 as u8,
-  identifier: "lookup",
   fn: {
+    opCode: 1 as u8,
+    identifier: "lookup",
     gasCost: 10n,
     execute(
       context,
@@ -90,9 +90,9 @@ export const omega_r = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, dag_delta: Dagger<Delta>],
   [W0, PVMSingleModMemory] | [W0]
 >({
-  opCode: 2 as u8,
-  identifier: "read",
   fn: {
+    opCode: 2 as u8,
+    identifier: "read",
     gasCost: 10n,
     execute(
       context,
@@ -134,17 +134,17 @@ export const omega_r = regFn<
 
 export const omega_w = regFn<
   [bold_s: ServiceAccount, s: ServiceIndex],
-  [W0, PVMSingleModObject<{ p_bold_s: ServiceAccount }>]
+  Array<W0 | PVMSingleModObject<{ bold_s: ServiceAccount }>>
 >({
-  opCode: 3 as u8,
-  identifier: "write",
   fn: {
+    opCode: 3 as u8,
+    identifier: "write",
     gasCost: 10n,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(0, 4);
       let k: Hash;
       if (!context.memory.canRead(k0, kz) || !context.memory.canRead(v0, vz)) {
-        return [IxMod.w0(HostCallResult.OOB), IxMod.obj({ p_bold_s: bold_s })];
+        return [IxMod.w0(HostCallResult.OOB)];
       } else {
         const tmp = new Uint8Array(4);
         E_4.encode(BigInt(s), tmp);
@@ -166,16 +166,13 @@ export const omega_w = regFn<
       if (bold_s.storage.has(k)) {
         const at = computeServiceAccountThreshold(bold_s);
         if (at > a.balance) {
-          return [
-            IxMod.w0(HostCallResult.FULL),
-            IxMod.obj({ p_bold_s: bold_s }),
-          ];
+          return [IxMod.w0(HostCallResult.FULL)];
         }
         l = bold_s.storage.get(k)!.length;
       } else {
         l = HostCallResult.NONE;
       }
-      return [IxMod.w0(l), IxMod.obj({ p_bold_s: a })];
+      return [IxMod.w0(l), IxMod.obj({ bold_s: a })];
     },
   },
 });
@@ -189,9 +186,9 @@ export const omega_i = regFn<
   ],
   [W0, PVMSingleModMemory] | [W0]
 >({
-  opCode: 4 as u8,
-  identifier: "info",
   fn: {
+    opCode: 4 as u8,
+    identifier: "info",
     gasCost: 10n,
     execute(
       context,

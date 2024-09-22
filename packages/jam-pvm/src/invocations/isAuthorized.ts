@@ -1,59 +1,81 @@
-import { newSTF } from "@vekexasia/jam-utils";
 import {
   CoreIndex,
-  PVMExitReason,
+  PVMProgramExecutionContext,
+  PVMResultContext,
+  RegularPVMExitReason,
   WorkPackage,
   u32,
+  u64,
 } from "@vekexasia/jam-types";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { E_4, WorkPackageCodec } from "@vekexasia/jam-codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
 import { processIxResult } from "@/invocations/singleStep.js";
+import { HostCallResult } from "@vekexasia/jam-constants";
 
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
  */
-export const isAuthorizedInvocation = newSTF<
-  null,
-  { package: WorkPackage; core: CoreIndex },
-  PVMExitReason | Uint8Array
->((input) => {
-  const args = new Uint8Array(WorkPackageCodec.encodedSize(input.package) + 4);
-  WorkPackageCodec.encode(input.package, args);
-  E_4.encode(BigInt(input.core), args.subarray(args.length - 4));
-
-  argumentInvocation.apply(
-    {
-      p: new Uint8Array(),
-      arguments: args,
-      ctx: {},
-      fn: null as any,
-    },
-    {
-      gas: Gi,
-      memory: new Uint8Array(),
-      registers: new Uint8Array(),
-      instructionPointer: 0 as any,
-    },
+export const isAuthorized = (
+  p: WorkPackage,
+  c: CoreIndex,
+): RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic | Uint8Array => {
+  const args = new Uint8Array(WorkPackageCodec.encodedSize(p) + 4);
+  WorkPackageCodec.encode(p, args);
+  E_4.encode(BigInt(c), args.subarray(args.length - 4));
+  const res = argumentInvocation(
+    new Uint8Array(), // todo missing the preimage fetch
+    0 as u32,
+    Gi,
+    args,
+    F_Fn,
+    undefined as unknown as PVMResultContext, // something is missing from the paper
   );
-  throw new Error("not implemented");
-});
+  if (
+    res.exitReason === RegularPVMExitReason.OutOfGas ||
+    res.exitReason === RegularPVMExitReason.Panic
+  ) {
+    return res.exitReason;
+  }
+  if (res.ok) {
+    return res.ok[1];
+  }
+  throw new Error("unexpected");
+};
+
 /**
  * TODO set the correct value
  */
-const Gi = 0n;
+const Gi = 0n as u64;
 
-const F_Fn: HostCallExecutor = (input) => {
+const F_Fn: HostCallExecutor<any> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
-    processIxResult(
+    const r = processIxResult(
       { ...input.ctx, instructionPointer: 4 as u32 },
       omega_g.execute(input.ctx),
-      omega_g.gasCost,
+      omega_g.gasCost as bigint,
       0,
     );
-    const r = omega_g.execute(input);
+    return {
+      ctx: {
+        gas: r.p_context.gas,
+        registers: r.p_context.registers,
+        memory: r.p_context.memory,
+      },
+      out: input.out,
+    };
   }
-  throw new Error("not implemnented");
+  return {
+    ctx: {
+      gas: (input.ctx.gas - 10n) as u64,
+      registers: [
+        HostCallResult.WHAT,
+        input.ctx.registers.slice(1),
+      ] as PVMProgramExecutionContext["registers"],
+      memory: input.ctx.memory,
+    },
+    out: input.out,
+  };
 };

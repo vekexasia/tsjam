@@ -1,4 +1,4 @@
-import { u32 } from "@/genericTypes.js";
+import { u32, u8 } from "@/genericTypes.js";
 
 export enum RegularPVMExitReason {
   Halt = 0,
@@ -9,7 +9,7 @@ export type PVMExitReason =
   | RegularPVMExitReason
   | {
       type: "host-call";
-      h: u32;
+      opCode: u8;
     }
   | {
       type: "page-fault";

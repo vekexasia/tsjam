@@ -12,7 +12,12 @@ const ecalli = regIx<[u32]>({
       return [readVarIntFromBuffer(bytes, lx as u8)];
     },
     evaluate(context, vX: u32) {
-      return [{ type: "exit", data: { type: "host-call", h: vX } }];
+      return [
+        {
+          type: "exit",
+          data: { type: "host-call", opCode: vX as number as u8 },
+        },
+      ];
     },
     gasCost: 1n,
   },

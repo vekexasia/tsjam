@@ -124,6 +124,7 @@ export * from "./states/SafroleState.js";
 
 export * from "./pvm/DeferredTransfer.js";
 export * from "./pvm/IParsedProgram.js";
+export * from "./pvm/PVMAccumulationOp.js";
 export * from "./pvm/PVMProgramExecutionContext.js";
 export * from "./pvm/PVMModifications.js";
 export * from "./pvm/PVMExitReason.js";

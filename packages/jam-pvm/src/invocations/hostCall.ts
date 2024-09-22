@@ -1,37 +1,34 @@
 import {
-  IPVMMemory,
+  IParsedProgram,
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
-  PVMResultContext,
-  SeqOfLength,
   u32,
-  u64,
+  u8,
 } from "@vekexasia/jam-types";
 import { basicInvocation } from "@/invocations/basic.js";
-import { ParsedProgram } from "@/parseProgram.js";
-import { BaseSTF, newSTF } from "@vekexasia/jam-utils";
 
 /**
  * Host call invocation
  * `ΨH` in the graypaper
  * (238)
  */
-export const hostCallInvocation: BaseSTF<StateIn, Input, HostCallOut> = newSTF<
-  StateIn,
-  Input,
-  HostCallOut
->((input, curState): HostCallOut => {
-  const out = basicInvocation.apply(input, curState.context);
+export const hostCallInvocation = <X>(
+  p: { program: PVMProgram; parsedProgram: IParsedProgram },
+  ctx: PVMProgramExecutionContext, // ı, ξ, ω, μ
+  f: HostCallExecutor<X>,
+  x: X,
+): HostCallOut<X> => {
+  const out = basicInvocation(p, ctx);
   if (
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"
   ) {
-    const res = input.fn({
-      hostCallOpcode: out.exitReason.h,
+    const res = f({
+      hostCallOpcode: out.exitReason.opCode,
       ctx: out.context,
-      out: curState.out,
+      out: x,
     });
     if ("pageFaultAddress" in res) {
       return {
@@ -40,58 +37,43 @@ export const hostCallInvocation: BaseSTF<StateIn, Input, HostCallOut> = newSTF<
           memoryLocationIn: res.pageFaultAddress,
         },
         context: out.context as unknown as PVMProgramExecutionContext,
-        out: curState.out,
+        out: x,
       };
     } else {
       // check on gas maybe?
-      return hostCallInvocation.apply(input, {
-        context: {
+      return hostCallInvocation(
+        p,
+        {
           instructionPointer: (out.context.instructionPointer +
-            input.parsedProgram.skip(out.context.instructionPointer)) as u32,
-          gas: res.gas,
-          registers: res.registers,
-          memory: res.memory,
+            p.parsedProgram.skip(out.context.instructionPointer)) as u32,
+          gas: res.ctx.gas,
+          registers: res.ctx.registers,
+          memory: res.ctx.memory,
         },
-        out: res.out,
-      });
+        f,
+        res.out,
+      );
     }
   } else {
     // regular execution without host call
     return {
       exitReason: out.exitReason,
-      out: curState.out,
+      out: x,
       context: out.context as unknown as PVMProgramExecutionContext,
     };
   }
-});
-
-type StateIn = {
-  context: PVMProgramExecutionContext;
-  /**
-   * `x`
-   */
-  out: PVMResultContext;
 };
 
-export type HostCallOut = {
+export type HostCallOut<X> = {
   exitReason?: PVMExitReason;
   context: PVMProgramExecutionContext;
-  out: PVMResultContext;
+  out: X;
 };
 
-type Input = {
-  program: PVMProgram;
-  parsedProgram: ParsedProgram;
-  /**
-   * `f`
-   */
-  fn: HostCallExecutor;
-};
-
-export type HostCallExecutor = (input: {
-  hostCallOpcode: number;
+export type HostCallExecutor<X> = (input: {
+  hostCallOpcode: u8;
   ctx: PVMProgramExecutionContextBase;
-  out: PVMResultContext;
+  out: X;
 }) =>
   | { pageFaultAddress: u32 }
-  | (PVMProgramExecutionContextBase & { out: PVMResultContext });
+  | { ctx: PVMProgramExecutionContextBase; out: X };

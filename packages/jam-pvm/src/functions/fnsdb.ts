@@ -1,8 +1,5 @@
-import {
-  PVMFn,
-  PVMProgramExecutionContextBase,
-  u8,
-} from "@vekexasia/jam-types";
+import { PVMFn, u8 } from "@vekexasia/jam-types";
+import { toTagged } from "@vekexasia/jam-utils";
 
 export const FnsDb = {
   byCode: new Map<u8, PVMFn<unknown[], any>>(),
@@ -12,30 +9,17 @@ export const FnsDb = {
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regFn = <
-  Args extends unknown[],
-  Out extends unknown[],
-  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
->(conf: {
-  /**
-   * the identifier of the instruction
-   */
-  opCode: u8;
-  /**
-   * the human readable name of the instruction
-   */
-  identifier: string;
-
-  fn: PVMFn<Args, Out, CTX>;
-}): PVMFn<Args, Out, CTX> => {
-  if (FnsDb.byCode.has(conf.opCode)) {
-    throw new Error(`duplicate opCode ${conf.opCode}`);
+export const regFn = <Args extends unknown[], Out extends unknown[]>(conf: {
+  fn: PVMFn<Args, Out>;
+}): PVMFn<Args, Out> => {
+  if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
+    throw new Error(`duplicate opCode ${conf.fn.opCode}`);
   }
-  if (FnsDb.byIdentifier.has(conf.identifier)) {
-    throw new Error(`duplicate identifier ${conf.identifier}`);
+  if (FnsDb.byIdentifier.has(conf.fn.identifier)) {
+    throw new Error(`duplicate identifier ${conf.fn.identifier}`);
   }
-  FnsDb.byCode.set(conf.opCode, conf.fn);
-  FnsDb.byIdentifier.set(conf.identifier, conf.fn);
+  FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn as PVMFn<unknown[], any>);
+  FnsDb.byIdentifier.set(conf.fn.identifier, conf.fn as PVMFn<unknown[], any>);
   return conf.fn;
 };
 
@@ -49,9 +33,9 @@ if (import.meta.vitest) {
     });
     it("register an fn", () => {
       const fn = regFn({
-        opCode: 0 as u8,
-        identifier: "test",
         fn: {
+          opCode: 0 as u8,
+          identifier: "test",
           execute() {
             return {} as any;
           },
@@ -63,9 +47,9 @@ if (import.meta.vitest) {
     });
     it("throws on duplicate opCode", () => {
       regFn({
-        opCode: 0 as u8,
-        identifier: "test",
         fn: {
+          opCode: 0 as u8,
+          identifier: "test",
           gasCost: 1n,
           execute() {
             return {} as any;
@@ -74,9 +58,9 @@ if (import.meta.vitest) {
       });
       expect(() =>
         regFn({
-          opCode: 0 as u8,
-          identifier: "test2",
           fn: {
+            opCode: 0 as u8,
+            identifier: "test2",
             gasCost: 1n,
             execute() {
               return {} as any;
@@ -87,9 +71,9 @@ if (import.meta.vitest) {
     });
     it("throws on duplicate identifier", () => {
       regFn({
-        opCode: 0 as u8,
-        identifier: "test",
         fn: {
+          opCode: 0 as u8,
+          identifier: "test",
           gasCost: 1n,
           execute() {
             return {} as any;
@@ -98,9 +82,9 @@ if (import.meta.vitest) {
       });
       expect(() =>
         regFn({
-          opCode: 1 as u8,
-          identifier: "test",
           fn: {
+            opCode: 1 as u8,
+            identifier: "test",
             gasCost: 1n,
             execute() {
               return {} as any;

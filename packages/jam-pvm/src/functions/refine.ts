@@ -38,9 +38,9 @@ export const omega_h = regFn<
   [m: any, e: E, s: ServiceIndex, delta: Delta, t: Tau],
   [W0, PVMSingleModMemory] | [W0]
 >({
-  opCode: 15 as u8,
-  identifier: "historical_lookup",
   fn: {
+    opCode: 15 as u8,
+    identifier: "historical_lookup",
     gasCost: 10n,
     execute(context, m, e, s: ServiceIndex, delta: Delta, t: Tau) {
       const [w0, h0, b0, bz] = context.registers;
@@ -78,9 +78,9 @@ export const omega_y = regFn<
   [i: ExportSegment[]],
   [W0, PVMSingleModMemory] | [W0]
 >({
-  opCode: 16 as u8,
-  identifier: "import",
   fn: {
+    opCode: 16 as u8,
+    identifier: "import",
     gasCost: 10n,
     execute(context, i) {
       const [w0, o, w2] = context.registers;
@@ -109,9 +109,9 @@ export const omega_z = regFn<
   [e: E, segmentOffset: number],
   Array<W0 | PVMSingleModObject<{ e: E }>>
 >({
-  opCode: 17 as u8,
-  identifier: "export",
   fn: {
+    opCode: 17 as u8,
+    identifier: "export",
     gasCost: 10n,
     execute(context, e, offset) {
       const [p, w1] = context.registers;
@@ -140,9 +140,9 @@ export const omega_z = regFn<
  */
 export const omega_m = regFn<[m: M], [W0, PVMSingleModObject<{ m: M }>] | [W0]>(
   {
-    opCode: 18 as u8,
-    identifier: "machine",
     fn: {
+      opCode: 18 as u8,
+      identifier: "machine",
       gasCost: 10n,
       execute(context, m) {
         const [p0, pz, i] = context.registers;
@@ -173,9 +173,9 @@ export const omega_m = regFn<[m: M], [W0, PVMSingleModObject<{ m: M }>] | [W0]>(
  * Peek PVM host call
  */
 export const omega_p = regFn<[m: M], [W0, PVMSingleModMemory] | [W0]>({
-  opCode: 19 as u8,
-  identifier: "peek",
   fn: {
+    opCode: 19 as u8,
+    identifier: "peek",
     gasCost: 10n,
     execute(context, m) {
       const [n, a, b, l] = context.registers;
@@ -203,9 +203,9 @@ export const omega_p = regFn<[m: M], [W0, PVMSingleModMemory] | [W0]>({
  */
 export const omega_o = regFn<[m: M], [W0, PVMSingleModObject<{ m: M }>] | [W0]>(
   {
-    opCode: 20 as u8,
-    identifier: "poke",
     fn: {
+      opCode: 20 as u8,
+      identifier: "poke",
       gasCost: 10n,
       execute(context, m) {
         const [n, a, b, l] = context.registers;
@@ -242,9 +242,9 @@ export const omega_k = regFn<
   [m: M],
   Array<W0 | W1 | PVMSingleModMemory | PVMSingleModObject<{ m: M }>>
 >({
-  opCode: 21 as u8,
-  identifier: "invoke",
   fn: {
+    opCode: 21 as u8,
+    identifier: "invoke",
     gasCost: 10n,
     execute(context: PVMProgramExecutionContextBase, m) {
       const [n, o] = context.registers;
@@ -270,11 +270,8 @@ export const omega_k = regFn<
         registers: w as PVMProgramExecutionContextBase["registers"],
         memory: m.get(n)!.u.clone(),
       };
-      const res = basicInvocation.apply(
-        {
-          program: PVMProgramCodec.decode(m.get(n)!.p).value,
-          parsedProgram: parsed,
-        },
+      const res = basicInvocation(
+        { program: program, parsedProgram: parsed },
         pvmCtx,
       );
 
@@ -306,7 +303,7 @@ export const omega_k = regFn<
       } else if (res.exitReason.type === "host-call") {
         return [
           IxMod.w0(0), // fixme "host",
-          IxMod.w1(res.exitReason.h),
+          IxMod.w1(res.exitReason.opCode),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ m: mStar }),
         ];
@@ -327,9 +324,9 @@ export const omega_k = regFn<
  * expunge PVM host call
  */
 export const omega_x = regFn<[m: M], Array<W0 | PVMSingleModObject<{ m: M }>>>({
-  opCode: 22 as u8,
-  identifier: "expunge",
   fn: {
+    opCode: 22 as u8,
+    identifier: "expunge",
     gasCost: 10n,
     execute(context, m) {
       const [n] = context.registers;

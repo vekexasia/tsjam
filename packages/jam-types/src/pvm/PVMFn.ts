@@ -10,5 +10,7 @@ export interface PVMFn<
   CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
 > {
   execute(context: CTX, ...args: Args): Out;
-  gasCost: bigint;
+  gasCost: bigint | ((ctx: CTX, ...args: Args) => bigint);
+  opCode: number;
+  identifier: string;
 }

@@ -1,4 +1,4 @@
-import { RingVRFProof, UpToSeq } from "../../dist/types";
+import { RingVRFProof, UpToSeq } from "@/genericTypes.js";
 
 /**
  *

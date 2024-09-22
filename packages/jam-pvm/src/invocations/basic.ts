@@ -1,36 +1,28 @@
-import { newSTF, toTagged } from "@vekexasia/jam-utils";
 import {
+  IParsedProgram,
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
   RegularPVMExitReason,
-  i64,
 } from "@vekexasia/jam-types";
-import { pvmSingleStepSTF } from "@/invocations/singleStep.js";
-import { ParsedProgram } from "@/parseProgram.js";
+import { pvmSingleStep } from "@/invocations/singleStep.js";
 
 /**
  * Basic invocation
  * `Ψ` in the graypaper
  */
-export const basicInvocation = newSTF<
-  PVMProgramExecutionContext,
-  { parsedProgram: ParsedProgram; program: PVMProgram },
-  {
-    context: PVMProgramExecutionContext;
-    exitReason?: PVMExitReason;
-  }
->((input, curState) => {
+export const basicInvocation = (
+  p: { parsedProgram: IParsedProgram; program: PVMProgram },
+  executionContext: PVMProgramExecutionContext,
+): { context: PVMProgramExecutionContext; exitReason: PVMExitReason } => {
   // how to handle errors here?
-
-  let intermediateState = curState;
+  let intermediateState = executionContext;
   while (intermediateState.gas > 0) {
-    const out = pvmSingleStepSTF.apply(input, intermediateState);
+    const out = pvmSingleStep(p, intermediateState);
     if (typeof out.exitReason !== "undefined") {
       return {
         context: {
           ...out.p_context,
-          gas: toTagged(out.p_context.gas),
         },
         exitReason: out.exitReason,
       };
@@ -40,8 +32,7 @@ export const basicInvocation = newSTF<
   return {
     context: {
       ...intermediateState,
-      gas: toTagged(intermediateState.gas),
     },
     exitReason: RegularPVMExitReason.OutOfGas,
   };
-});
+};

@@ -1,12 +1,9 @@
 import { ServiceAccount } from "@/sets/ServiceAccount.js";
-import { Hash, SeqOfLength, ServiceIndex } from "@/genericTypes.js";
-import {
-  AUTHQUEUE_MAX_SIZE,
-  CORES,
-  NUMBER_OF_VALIDATORS,
-} from "@vekexasia/jam-constants";
+import { SeqOfLength, ServiceIndex, u64 } from "@/genericTypes.js";
+import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 import { ValidatorData } from "@/ValidatorData.js";
 import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
+import { AuthorizerQueue } from "@/states/AuthorizerQueue.js";
 
 /**
  * `X` in the graypaper
@@ -18,9 +15,9 @@ export interface PVMResultContext {
    */
   serviceAccount?: ServiceAccount;
   /**
-   * `c` asically the AuthorizerQueue
+   * `c`
    */
-  c: SeqOfLength<SeqOfLength<Hash, typeof AUTHQUEUE_MAX_SIZE>, typeof CORES>;
+  c: AuthorizerQueue;
   /**
    * `v`
    */
@@ -32,11 +29,14 @@ export interface PVMResultContext {
   /**
    * `t`
    */
-  transfers: DeferredTransfer[]; // todo
+  transfers: DeferredTransfer[];
   /**
    * `n`
    */
   n: Map<ServiceIndex, ServiceAccount>;
+  /**
+   * `p` - privileged services
+   */
 
   p: {
     /**
@@ -51,5 +51,9 @@ export interface PVMResultContext {
      * `v`
      */
     v: ServiceIndex;
+    /**
+     * gas limits
+     */
+    g: Map<ServiceIndex, u64>;
   };
 }
