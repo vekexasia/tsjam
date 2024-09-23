@@ -3,6 +3,7 @@
  * implementors should take care of the memory access
  */
 export interface IPVMMemory {
+  clone(): this;
   /**
    * @throws in case there is an issue accessing the memory
    * @param offset - offset to write the value to

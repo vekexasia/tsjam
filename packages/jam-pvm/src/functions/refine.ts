@@ -1,6 +1,5 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
-  ByteArrayOfLength,
   Delta,
   ExportSegment,
   Hash,
@@ -27,22 +26,43 @@ import { basicInvocation } from "@/invocations/basic.js";
 import { ParsedProgram } from "@/parseProgram.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
+export type RefineContext = {
+  m: Map<
+    number,
+    {
+      /**
+       * `p`
+       */
+      programCode: Uint8Array;
+      /**
+       * `u`
+       */
+      memory: PVMMemory;
+      /**
+       * `i`
+       */
+      instructionPointer: u32;
+    }
+  >;
+  /**
+   * segments
+   */
+  e: Uint8Array[];
+};
 
-type M = Map<number, { p: Uint8Array; u: PVMMemory; i: u32 }>;
-type E = Array<ByteArrayOfLength<typeof ERASURECODE_EXPORTED_SIZE>>;
 /**
  * `ΩH` in the graypaper
  * historical lookup preimage
  */
 export const omega_h = regFn<
-  [m: any, e: E, s: ServiceIndex, delta: Delta, t: Tau],
+  [s: ServiceIndex, delta: Delta, t: Tau],
   [W0, PVMSingleModMemory] | [W0]
 >({
   fn: {
     opCode: 15 as u8,
     identifier: "historical_lookup",
     gasCost: 10n,
-    execute(context, m, e, s: ServiceIndex, delta: Delta, t: Tau) {
+    execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
       const [w0, h0, b0, bz] = context.registers;
       if (!context.memory.canWrite(b0, bz)) {
         return [IxMod.w0(HostCallResult.OOB)];
@@ -106,14 +126,14 @@ export const omega_y = regFn<
  * export segment host call
  */
 export const omega_z = regFn<
-  [e: E, segmentOffset: number],
-  Array<W0 | PVMSingleModObject<{ e: E }>>
+  [ctx: RefineContext, segmentOffset: number],
+  Array<W0 | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 17 as u8,
     identifier: "export",
     gasCost: 10n,
-    execute(context, e, offset) {
+    execute(context, refineCtx, offset) {
       const [p, w1] = context.registers;
       const z = Math.min(
         w1,
@@ -122,14 +142,17 @@ export const omega_z = regFn<
       if (!context.memory.canRead(p, z)) {
         return [IxMod.w0(HostCallResult.OOB)];
       }
-      if (offset + e.length >= 11 /* Wx */) {
+      if (offset + refineCtx.e.length >= 11 /* Wx */) {
         return [IxMod.w0(HostCallResult.FULL)];
       }
       const x = new Uint8Array(
         Math.ceil(z / (ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE)),
       ).fill(0);
       x.set(context.memory.getBytes(p, z));
-      return [IxMod.w0(HostCallResult.OK), IxMod.obj({ e: [...e, x] as E })];
+      return [
+        IxMod.w0(HostCallResult.OK),
+        IxMod.obj({ ...refineCtx, e: [...refineCtx.e, x] }),
+      ];
     },
   },
 });
@@ -138,51 +161,55 @@ export const omega_z = regFn<
  * `ΩM` in the graypaper
  *  Make PVM host call
  */
-export const omega_m = regFn<[m: M], [W0, PVMSingleModObject<{ m: M }>] | [W0]>(
-  {
-    fn: {
-      opCode: 18 as u8,
-      identifier: "machine",
-      gasCost: 10n,
-      execute(context, m) {
-        const [p0, pz, i] = context.registers;
-        if (!context.memory.canWrite(p0, pz)) {
-          return [IxMod.w0(HostCallResult.OOB)];
-        }
-        const p = context.memory.getBytes(p0, pz);
-        const sortedKeys = [...m.keys()].sort((a, b) => a - b);
-        let n = 0;
-        while (sortedKeys.length > 0 && n == sortedKeys[0]) {
-          sortedKeys.shift()!;
-          n++;
-        }
-        const mem = new PVMMemory([], []);
-        const newM = new Map(m);
-        newM.set(n, { p, u: mem, i });
-        return [
-          IxMod.w0(n), // new Service index?
-          IxMod.obj({ m: newM }),
-        ];
-      },
+export const omega_m = regFn<
+  [refineCtx: RefineContext],
+  [W0, PVMSingleModObject<RefineContext>] | [W0]
+>({
+  fn: {
+    opCode: 18 as u8,
+    identifier: "machine",
+    gasCost: 10n,
+    execute(context, refineCtx) {
+      const [p0, pz, i] = context.registers;
+      if (!context.memory.canWrite(p0, pz)) {
+        return [IxMod.w0(HostCallResult.OOB)];
+      }
+      const p = context.memory.getBytes(p0, pz);
+      const sortedKeys = [...refineCtx.m.keys()].sort((a, b) => a - b);
+      let n = 0;
+      while (sortedKeys.length > 0 && n == sortedKeys[0]) {
+        sortedKeys.shift()!;
+        n++;
+      }
+      const mem = new PVMMemory([], []);
+      const newM = new Map(refineCtx.m);
+      newM.set(n, { programCode: p, memory: mem, instructionPointer: i });
+      return [
+        IxMod.w0(n), // new Service index?
+        IxMod.obj({ ...refineCtx, m: newM }),
+      ];
     },
   },
-);
+});
 
 /**
  * `ΩP` in the graypaper
  * Peek PVM host call
  */
-export const omega_p = regFn<[m: M], [W0, PVMSingleModMemory] | [W0]>({
+export const omega_p = regFn<
+  [refineCtx: RefineContext],
+  [W0, PVMSingleModMemory] | [W0]
+>({
   fn: {
     opCode: 19 as u8,
     identifier: "peek",
     gasCost: 10n,
-    execute(context, m) {
+    execute(context, refineCtx) {
       const [n, a, b, l] = context.registers;
-      if (!m.has(n)) {
+      if (!refineCtx.m.has(n)) {
         return [IxMod.w0(HostCallResult.WHO)];
       }
-      if (!m.get(n)!.u.canRead(b, l)) {
+      if (!refineCtx.m.get(n)!.memory.canRead(b, l)) {
         return [IxMod.w0(HostCallResult.OOB)];
       }
       if (!context.memory.canWrite(a, l)) {
@@ -191,7 +218,7 @@ export const omega_p = regFn<[m: M], [W0, PVMSingleModMemory] | [W0]>({
 
       return [
         IxMod.w0(HostCallResult.OK),
-        IxMod.memory(a, m.get(n)!.u.getBytes(b, l)),
+        IxMod.memory(a, refineCtx.m.get(n)!.memory.getBytes(b, l)),
       ];
     },
   },
@@ -201,57 +228,62 @@ export const omega_p = regFn<[m: M], [W0, PVMSingleModMemory] | [W0]>({
  * `ΩO` in the graypaper
  * Poke PVM host call
  */
-export const omega_o = regFn<[m: M], [W0, PVMSingleModObject<{ m: M }>] | [W0]>(
-  {
-    fn: {
-      opCode: 20 as u8,
-      identifier: "poke",
-      gasCost: 10n,
-      execute(context, m) {
-        const [n, a, b, l] = context.registers;
-        if (!m.has(n)) {
-          return [IxMod.w0(HostCallResult.WHO)];
-        }
-        const u = m.get(n)!.u;
+export const omega_o = regFn<
+  [RefineContext],
+  [W0, PVMSingleModObject<RefineContext>] | [W0]
+>({
+  fn: {
+    opCode: 20 as u8,
+    identifier: "poke",
+    gasCost: 10n,
+    execute(context, refineCtx) {
+      const [n, a, b, l] = context.registers;
+      if (!refineCtx.m.has(n)) {
+        return [IxMod.w0(HostCallResult.WHO)];
+      }
+      const u = refineCtx.m.get(n)!.memory;
 
-        if (!context.memory.canRead(a, l)) {
-          return [IxMod.w0(HostCallResult.OOB)];
-        }
-        const s = context.memory.getBytes(a, l);
+      if (!context.memory.canRead(a, l)) {
+        return [IxMod.w0(HostCallResult.OOB)];
+      }
+      const s = context.memory.getBytes(a, l);
 
-        if (!context.memory.canRead(a, l)) {
-          return [IxMod.w0(HostCallResult.OOB)];
-        }
-        const p_u = u.clone();
-        p_u.addACL({ from: b, to: (b + l) as u32, writable: true });
-        p_u.setBytes(b, s);
-        const p_m = new Map(m);
-        p_m.set(n, { p: m.get(n)!.p, u: p_u, i: m.get(n)!.i });
+      if (!context.memory.canRead(a, l)) {
+        return [IxMod.w0(HostCallResult.OOB)];
+      }
+      const p_u = u.clone();
+      p_u.addACL({ from: b, to: (b + l) as u32, writable: true });
+      p_u.setBytes(b, s);
+      const p_m = new Map(refineCtx.m);
+      p_m.set(n, {
+        programCode: refineCtx.m.get(n)!.programCode,
+        memory: p_u,
+        instructionPointer: refineCtx.m.get(n)!.instructionPointer,
+      });
 
-        return [IxMod.w0(HostCallResult.OK), IxMod.obj({ m: p_m })];
-      },
+      return [IxMod.w0(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
     },
   },
-);
+});
 
 /**
  * `ΩK` in the graypaper
  * kick off pvm host call
  */
 export const omega_k = regFn<
-  [m: M],
-  Array<W0 | W1 | PVMSingleModMemory | PVMSingleModObject<{ m: M }>>
+  [RefineContext],
+  Array<W0 | W1 | PVMSingleModMemory | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 21 as u8,
     identifier: "invoke",
     gasCost: 10n,
-    execute(context: PVMProgramExecutionContextBase, m) {
+    execute(context: PVMProgramExecutionContextBase, refineCtx) {
       const [n, o] = context.registers;
       if (!context.memory.canWrite(o, 60)) {
         return [IxMod.w0(HostCallResult.OOB)];
       }
-      if (!m.has(n)) {
+      if (!refineCtx.m.has(n)) {
         return [IxMod.w0(HostCallResult.WHO)];
       }
       const g = E_8.decode(context.memory.getBytes(o, 8)).value;
@@ -261,14 +293,16 @@ export const omega_k = regFn<
         .map((_, i) =>
           Number(E_4.decode(context.memory.getBytes(o + 8 + 4 * i, 4)).value),
         );
-      const program = PVMProgramCodec.decode(m.get(n)!.p).value;
+      const program = PVMProgramCodec.decode(
+        refineCtx.m.get(n)!.programCode,
+      ).value;
       const parsed = ParsedProgram.parse(program);
 
       const pvmCtx = {
-        instructionPointer: m.get(n)!.i,
+        instructionPointer: refineCtx.m.get(n)!.instructionPointer,
         gas: g as u64,
         registers: w as PVMProgramExecutionContextBase["registers"],
-        memory: m.get(n)!.u.clone(),
+        memory: refineCtx.m.get(n)!.memory.clone(),
       };
       const res = basicInvocation(
         { program: program, parsedProgram: parsed },
@@ -286,11 +320,16 @@ export const omega_k = regFn<
       );
 
       // compute m*
-      const mStar = new Map(m);
+      const mStar = new Map(refineCtx.m);
       mStar.set(n, {
-        p: m.get(n)!.p,
-        u: pvmCtx.memory,
-        i: m.get(n)!.i, // fixme: this is not computed
+        programCode: refineCtx.m.get(n)!.programCode,
+        memory: pvmCtx.memory,
+        instructionPointer:
+          typeof res.exitReason !== "undefined" &&
+          typeof res.exitReason !== "number" &&
+          res.exitReason.type == "host-call"
+            ? ((res.context.instructionPointer + 1) as u32)
+            : res.context.instructionPointer,
       });
 
       assert(typeof res.exitReason !== "undefined", "exit reason is undefined");
@@ -298,21 +337,21 @@ export const omega_k = regFn<
         return [
           IxMod.w0(res.exitReason),
           IxMod.memory(newMemory.from, newMemory.newData),
-          IxMod.obj({ m: mStar }),
+          IxMod.obj({ ...refineCtx, m: mStar }),
         ];
       } else if (res.exitReason.type === "host-call") {
         return [
           IxMod.w0(0), // fixme "host",
           IxMod.w1(res.exitReason.opCode),
           IxMod.memory(newMemory.from, newMemory.newData),
-          IxMod.obj({ m: mStar }),
+          IxMod.obj({ ...refineCtx, m: mStar }),
         ];
       } else {
         return [
           IxMod.w0(1), // fixme "fault",
           IxMod.w1(res.exitReason.memoryLocationIn),
           IxMod.memory(newMemory.from, newMemory.newData),
-          IxMod.obj({ m: mStar }),
+          IxMod.obj({ ...refineCtx, m: mStar }),
         ];
       }
     },
@@ -323,20 +362,26 @@ export const omega_k = regFn<
  * `ΩX` in the graypaper
  * expunge PVM host call
  */
-export const omega_x = regFn<[m: M], Array<W0 | PVMSingleModObject<{ m: M }>>>({
+export const omega_x = regFn<
+  [RefineContext],
+  Array<W0 | PVMSingleModObject<RefineContext>>
+>({
   fn: {
     opCode: 22 as u8,
     identifier: "expunge",
     gasCost: 10n,
-    execute(context, m) {
+    execute(context, refineCtx) {
       const [n] = context.registers;
-      if (!m.has(n)) {
+      if (!refineCtx.m.has(n)) {
         return [IxMod.w0(HostCallResult.WHO)];
       }
-      const entry = m.get(n)!;
-      const newM = new Map(m);
+      const entry = refineCtx.m.get(n)!;
+      const newM = new Map(refineCtx.m);
       newM.delete(n);
-      return [IxMod.w0(entry.i), IxMod.obj({ m: newM })];
+      return [
+        IxMod.w0(entry.instructionPointer),
+        IxMod.obj({ ...refineCtx, m: newM }),
+      ];
     },
   },
 });

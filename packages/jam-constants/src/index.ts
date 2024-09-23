@@ -1,3 +1,5 @@
+import { historicalLookup } from "@vekexasia/jam-utils";
+
 export * from "./pvmResultContants.js";
 /**
  * Jam Common Era, 1200 UTC on January 1, 2024.
@@ -106,6 +108,10 @@ export const AUTHPOOL_SIZE = 8;
  */
 export const AUTHQUEUE_MAX_SIZE = 80;
 
+/**
+ * `S` in the paper
+ */
+export const SERVICECODE_MAX_SIZE = 40000000;
 /**
  * `BS` in the paper
  */
