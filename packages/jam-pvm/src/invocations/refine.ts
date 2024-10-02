@@ -91,8 +91,6 @@ export const refineInvocation = (
         : WorkError.UnexpectedTermination,
     out: [],
   };
-
-  throw new Error("Not implemented");
 };
 
 const F_fn: (

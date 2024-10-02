@@ -37,7 +37,6 @@ export interface PVMResultContext {
   /**
    * `p` - privileged services
    */
-
   p: {
     /**
      * `m`

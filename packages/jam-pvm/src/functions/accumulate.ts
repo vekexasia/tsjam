@@ -31,9 +31,9 @@ import {
   computeServiceAccountThreshold,
   toTagged,
 } from "@vekexasia/jam-utils";
-import { check_fn } from "@/invocations/accumulate.js";
 import { W0, W1, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
+import { check_fn } from "@/utils/check_fn";
 
 /**
  * `ΩE`

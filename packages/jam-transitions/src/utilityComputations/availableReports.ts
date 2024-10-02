@@ -7,7 +7,10 @@ import { CORES, MINIMUM_VALIDATORS } from "@vekexasia/jam-constants";
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
-export const availableReports = (ea: EA_Extrinsic, d_rho: Dagger<RHO>) => {
+export const availableReports = (
+  ea: EA_Extrinsic,
+  d_rho: Dagger<RHO>,
+): WorkReport[] => {
   const W: WorkReport[] = [];
   for (let c = 0; c < CORES; c++) {
     const sum = ea.reduce((acc, curr) => {

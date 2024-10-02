@@ -41,11 +41,12 @@ import {
   omega_r,
   omega_w,
 } from "@/functions/general.js";
+import { check_fn } from "@/utils/check_fn.js";
 
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * (239)
+ * (255)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -292,20 +293,3 @@ const C_fn = (
     };
   }
 };
-
-/**
- * (260)
- */
-export function check_fn(
-  i: ServiceIndex,
-  dd_delta: Dagger<Delta>,
-): ServiceIndex {
-  if (dd_delta.has(i)) {
-    return check_fn(
-      (((i - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9)) + 2 ** 8) as ServiceIndex,
-      dd_delta,
-    );
-  } else {
-    return i;
-  }
-}
