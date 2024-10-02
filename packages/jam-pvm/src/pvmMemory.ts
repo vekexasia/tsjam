@@ -39,10 +39,10 @@ export class PVMMemory implements IPVMMemory {
       (acl) => offset >= acl.from && offset + length < acl.to && acl.writable,
     );
   }
-  clone(): PVMMemory {
+  clone(): this {
     return new PVMMemory(
       [{ at: 0 as u32, content: this.#innerMemory }],
       this.acl.map((acl) => ({ ...acl })),
-    );
+    ) as this;
   }
 }

@@ -10,7 +10,6 @@ import {
   u8,
 } from "@vekexasia/jam-types";
 import { toTagged } from "@vekexasia/jam-utils";
-import * as process from "node:process";
 import { processIxResult } from "@/invocations/singleStep.js";
 
 const mockMemory = (): IPVMMemory => ({
@@ -18,6 +17,7 @@ const mockMemory = (): IPVMMemory => ({
   getBytes: vi.fn(),
   canRead: vi.fn(),
   canWrite: vi.fn(),
+  clone: vi.fn(),
 });
 export const createEvContext = (): {
   execution: PVMProgramExecutionContext;
