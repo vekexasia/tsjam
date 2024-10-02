@@ -5,7 +5,6 @@ import {
   EG_Extrinsic,
   Hash,
   Posterior,
-  RHO,
   Tau,
   Validated,
 } from "@vekexasia/jam-types";

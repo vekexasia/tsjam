@@ -2,23 +2,19 @@ import {
   Dagger,
   Delta,
   DoubleDagger,
-  ServiceAccount,
   ServiceIndex,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { newSTF } from "@vekexasia/jam-utils";
+import { accumulateInvocation } from "@vekexasia/jam-pvm";
 
 type Input = {
   accummulationResult: Map<
     ServiceIndex,
-    {
-      // service account after accummulation
-      s: ServiceAccount | undefined;
-      // dictionary of newly created services
-      n: Map<ServiceIndex, ServiceAccount>;
-    }
+    ReturnType<typeof accumulateInvocation>
   >;
 };
+
 export const deltaToDoubleDagger = newSTF<
   Dagger<Delta>,
   Input,
@@ -40,20 +36,23 @@ export const deltaToDoubleDagger = newSTF<
     }
   },
   assertPStateValid() {},
+  // (166) in the graypaper
   apply(input: Input, curState: Dagger<Delta>): DoubleDagger<Delta> {
     const newDelta = new Map(curState) as DoubleDagger<Delta>;
 
     for (const service of input.accummulationResult.keys()) {
-      const { s, n } = input.accummulationResult.get(service)!;
-      if (typeof s === "undefined") {
+      const { serviceAccount, n } = input.accummulationResult.get(service)!;
+      if (typeof serviceAccount === "undefined") {
         // if service auto terminated, remove it from delta
         newDelta.delete(service);
       } else {
         // update delta with the new ServiceAccount
-        newDelta.set(service, s);
+        // A(s)s if s ∈ S
+        newDelta.set(service, serviceAccount);
       }
       if (n.size > 0) {
         // add newly created services to delta
+        // A(t)n[s] if ∃!t ∶ t ∈ S, s ∈ K(A(t)n)
         for (const [newServiceIndex, serviceAccount] of n) {
           newDelta.set(newServiceIndex, serviceAccount);
         }
