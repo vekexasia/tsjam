@@ -23,6 +23,9 @@ export const RHO_toPosterior = newSTF<
   },
   Posterior<RHO>
 >({
+  /**
+   * (152) in the greypaper
+   */
   apply(
     input: {
       EG_Extrinsic: EG_Extrinsic;

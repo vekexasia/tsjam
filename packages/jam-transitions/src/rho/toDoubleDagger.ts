@@ -17,6 +17,7 @@ import {
   NUMBER_OF_VALIDATORS,
 } from "@vekexasia/jam-constants";
 import { bigintToBytes, newSTF } from "@vekexasia/jam-utils";
+import { availableReports } from "@/utilityComputations/availableReports.js";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
@@ -91,6 +92,7 @@ export const RHO2DoubleDagger = newSTF<
   ) {
     // (132)
     const newState = [...curState] as DoubleDagger<RHO>;
+    // todo we could use utilityComputations/availableReports here
     for (let i = 0; i < CORES; i++) {
       const availabilitySum = input.ea.reduce(
         (a: number, b: AssuranceExtrinsic) => a + b.bitstring[i],

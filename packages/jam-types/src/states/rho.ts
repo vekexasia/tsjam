@@ -8,6 +8,15 @@ import { Tau } from "@/Tau.js";
  * (116)
  */
 export type RHO = SeqOfLength<
-  { workReport: WorkReport; reportTime: Tau } | null,
+  {
+    /**
+     * `w`
+     */
+    workReport: WorkReport;
+    /**
+     * `t`
+     */
+    reportTime: Tau;
+  } | null,
   typeof CORES
 >;

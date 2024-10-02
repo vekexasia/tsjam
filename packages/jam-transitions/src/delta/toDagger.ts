@@ -2,7 +2,8 @@ import {
   Dagger,
   Delta,
   EG_Extrinsic,
-  ServiceIndex,
+  EP_Extrinsic,
+  Tagged,
   Tau,
   u32,
 } from "@vekexasia/jam-types";
@@ -14,10 +15,7 @@ import { MAX_GAS_ACCUMULATION } from "@vekexasia/jam-constants";
 
 type Input = {
   // We are not using the native type to avoid circular dependencies
-  EP_Extrinsic: Array<{
-    serviceIndex: ServiceIndex;
-    preimage: Uint8Array;
-  }>;
+  EP_Extrinsic: EP_Extrinsic;
   nextTau: Tau;
 
   // EG extrinsic is not a direct depenedency
@@ -43,6 +41,22 @@ export const deltaToDagger = newSTF<Delta, Input, Dagger<Delta>>({
       totalGas <= MAX_GAS_ACCUMULATION,
       "Gas limit exceeded for accummulation",
     );
+
+    // (154) todo:  ep pair must be ordered by what?
+    // (155) data must be solicited by a service but not yet provided
+    for (const { serviceIndex, preimage } of input.EP_Extrinsic) {
+      const preimageHash = Hashing.blake2b(preimage);
+      const alreadyProvided = new Set(
+        curState.get(serviceIndex)!.preimage_p.keys(),
+      ).has(preimageHash);
+      assert(!alreadyProvided, "preimage already provided");
+
+      const inL = curState
+        .get(serviceIndex)!
+        .preimage_l.get(preimageHash)
+        ?.get(preimage.length as Tagged<u32, "length">);
+      assert(typeof inL === "undefined", "preimage already provided");
+    }
   },
   assertPStateValid() {},
 
@@ -58,16 +72,10 @@ export const deltaToDagger = newSTF<Delta, Input, Dagger<Delta>>({
       x!.preimage_p.set(hash, preimage);
 
       x!.preimage_l = new Map(x!.preimage_l);
-      let plh = x!.preimage_l.get(hash);
-      if (typeof plh === "undefined") {
-        plh = new Map();
-      } else {
-        // clone
-        plh = new Map(plh);
-      }
+      let plh = x!.preimage_l.get(hash) ?? new Map();
+      plh = new Map(plh);
       // set
       x!.preimage_l.set(hash, plh);
-      // (156)
       plh.set(toTagged(preimage.length as u32), toTagged([input.nextTau]));
     }
     return result;
