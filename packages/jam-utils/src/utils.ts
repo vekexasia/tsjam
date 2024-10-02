@@ -1,5 +1,13 @@
-import { Dagger, DoubleDagger, Posterior, Tagged } from "@vekexasia/jam-types";
-
+import {
+  BandersnatchKey,
+  Dagger,
+  DoubleDagger,
+  Posterior,
+  SeqOfLength,
+  Tagged,
+} from "@vekexasia/jam-types";
+import { JamHeader, SafroleState } from "@vekexasia/jam-types";
+import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
 /**
  * simple utility function to go from untagged to tagged
  */
@@ -21,4 +29,30 @@ export const toPosterior = <T>(
   value: Dagger<T> | DoubleDagger<T> | T,
 ): Posterior<T> => {
   return toTagged(value);
+};
+
+/**
+ * Check if the current epoch is in fallback mode.
+ * @param gamma_s - a series of E tickets or, in the case of a fallback mode, a series of E Bandersnatch keys
+ * @returns
+ * @see SafroleState.gamma_s
+ */
+export const isFallbackMode = (
+  gamma_s: SafroleState["gamma_s"],
+): gamma_s is SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s"> => {
+  return typeof gamma_s[0] === "bigint";
+};
+
+/**
+ * `Ha` in the graypaper
+ * @param header - the header of the blockj
+ * @param state - the state of the safrole state machine
+ */
+export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
+  if (isFallbackMode(state.gamma_s)) {
+    return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+  } else {
+    const k = state.kappa[header.blockAuthorKeyIndex];
+    return k.banderSnatch;
+  }
 };

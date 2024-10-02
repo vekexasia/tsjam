@@ -26,12 +26,18 @@ type SingleWorkReportGuarantee = {
 
   /**
    * `a`
-   * the creds must be ordered by `validatorIndex` (140)
+   * the creds must be ordered by `validatorIndex`
    *
    */
   credential: BoundedSeq<
     {
+      /**
+       * `v`
+       */
       validatorIndex: ValidatorIndex;
+      /**
+       * `s`
+       */
       signature: ED25519Signature;
     },
     2,

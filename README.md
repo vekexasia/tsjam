@@ -3,7 +3,7 @@
 - https://hackmd.io/@polkadot/jamsnp
 
 
-# 12.4.1 privileged transitions
+# 14
 # TODOs
 
 - [ ] rewrite crypto to use bigint entirely instead of relying on UInt8Array

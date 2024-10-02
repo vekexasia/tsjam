@@ -8,6 +8,7 @@ import {
   MerkeTreeRoot,
   OpaqueHash,
   SeqOfLength,
+  ValidatorIndex,
   u32,
 } from "@/genericTypes.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
@@ -76,7 +77,7 @@ export interface JamHeader {
   offenders: ED25519PublicKey[]; // Ho
   // but later Hi E Nv. so its a natural number
   // < typeof NUMBER_OF_VALIDATORS
-  blockAuthorKeyIndex: u32; // < V or < number of validators
+  blockAuthorKeyIndex: ValidatorIndex; // < V or < number of validators
 
   /**
    * `Hv` -
@@ -121,6 +122,7 @@ export * from "./states/DisputesState.js";
 export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";
+export * from "./states/ValidatorStatistics.js";
 
 export * from "./pvm/DeferredTransfer.js";
 export * from "./pvm/IParsedProgram.js";
