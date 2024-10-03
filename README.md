@@ -13,3 +13,8 @@
 - [ ] paged proofs (181) `P` 
 - [ ] computeworkResult
 - [ ] erasure coding
+
+
+minor:
+
+- [ ] use `encodeWithCodec` instead of `encode` when possible
