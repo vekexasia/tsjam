@@ -4,21 +4,21 @@ import { MAX_WORKPACKAGE_ENTRIES } from "@vekexasia/jam-constants";
 /**
  * Identified by `I` set
  * @see section 14.3
- * @see formula (176)
+ * @see formula (175)
  */
 export interface WorkItem {
   /**
-   * `s`
+   * `s` - the service related to the work item
    */
   serviceIndex: ServiceIndex;
 
   /**
-   * `c`
+   * `c` - the code hash of the service a time of the work item creation
    */
   codeHash: Hash;
 
   /**
-   * `y`
+   * `y` - the payload of the work item
    */
   payload: Uint8Array;
 
@@ -30,19 +30,16 @@ export interface WorkItem {
   /**
    * `i`
    */
-  importedDataSegments: UpToSeq<
-    {
-      /**
-       * merkle tree root
-       */
-      root: Hash;
-      /**
-       * index in the merkle tree
-       */
-      index: u32;
-    },
-    typeof MAX_WORKPACKAGE_ENTRIES
-  >;
+  importedDataSegments: Array<{
+    /**
+     * merkle tree root
+     */
+    root: Hash;
+    /**
+     * index in the merkle tree
+     */
+    index: u32;
+  }>;
 
   /**
    * `x`

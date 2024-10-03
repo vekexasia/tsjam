@@ -1,4 +1,4 @@
-import { BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
+import { Blake2bHash, BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { WorkItem } from "@/sets/WorkItem";
 import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
@@ -6,7 +6,7 @@ import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
 /**
  * Identified by `P` set
  * @see section 14.3
- * @see formula (176)
+ * @see formula (174)
  */
 export interface WorkPackage {
   /**
@@ -14,23 +14,39 @@ export interface WorkPackage {
    */
   authorizationToken: Uint8Array;
   /**
-   * `h`
+   * `h` - index of the service that hosts the authorization code
    */
   serviceIndex: ServiceIndex;
   /**
-   * `u`
+   * `u` - authorization code hash
    */
   authorizationCodeHash: Hash;
   /**
-   * `p`
+   * `p` - parametrization blob
    */
   parametrizationBlob: Uint8Array;
   /**
-   * `x`
+   * `x` - context
    */
   context: RefinementContext;
   /**
-   * `i`
+   * `i` - sequence of work items
    */
   workItems: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
+}
+
+/**
+ * WorkPackage augmented with some computed fields
+ */
+export interface WorkPackageWithAuth extends WorkPackage {
+  /**
+   * `a` - public key of the authorizer
+   * Hash(pc ^ parametrizationBlob)
+   */
+  readonly pa: Blake2bHash;
+  /**
+   * `c` - the authorization code
+   * historicalLookup(delta(serviceIndex), context.lookupAnchor.timeSlot, authorizationCodeHash)
+   */
+  readonly pc: Uint8Array;
 }
