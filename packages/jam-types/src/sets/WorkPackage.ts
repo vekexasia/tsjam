@@ -30,7 +30,7 @@ export interface WorkPackage {
    */
   context: RefinementContext;
   /**
-   * `i` - sequence of work items
+   * `w` - sequence of work items
    */
   workItems: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
 }

@@ -10,6 +10,7 @@ import {
   Tau,
   WorkError,
   WorkOutput,
+  WorkPackageHash,
   u32,
   u64,
 } from "@vekexasia/jam-types";
@@ -35,7 +36,7 @@ export const refineInvocation = (
   serviceCodeHash: Hash, // `c`
   gas: u64,
   serviceIndex: ServiceIndex,
-  workPackageHash: Hash,
+  workPackageHash: WorkPackageHash,
   workPayload: Uint8Array, // `y`
   refinementContext: RefinementContext, // `c`
   authorizerHash: Hash, // `a`

@@ -1,4 +1,9 @@
-import { CoreIndex, WorkReport, WorkResult } from "@vekexasia/jam-types";
+import {
+  Blake2bHash,
+  CoreIndex,
+  WorkReport,
+  WorkResult,
+} from "@vekexasia/jam-types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
@@ -78,7 +83,7 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
     offset += results.readBytes;
     return {
       value: {
-        authorizerHash: authorizerHash.value,
+        authorizerHash: authorizerHash.value as Blake2bHash,
         coreIndex: Number(coreIndex.value) as CoreIndex,
         authorizerOutput: authorizerOutput.value,
         refinementContext: refinementContext.value,

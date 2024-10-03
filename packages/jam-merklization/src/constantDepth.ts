@@ -1,14 +1,13 @@
 // E.1.2
 import { HashFn } from "@/utils.js";
 import { binaryMerkleTree, traceBinaryMerkleTree } from "@/binary.js";
-import assert from "node:assert";
 
 const leaf: Uint8Array = new TextEncoder().encode("leaf");
 
 /**
- * (297) `M`
+ * (299) `M`
  */
-export const constantDepth = (
+export const constantDepthBinaryTree = (
   elements: Uint8Array[],
   hashFn: HashFn,
 ): Uint8Array => {

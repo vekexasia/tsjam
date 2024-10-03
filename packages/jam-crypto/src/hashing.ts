@@ -8,7 +8,7 @@ blake2b.ready((err) => {
   }
 });
 export const Hashing = {
-  blake2b(bytes: Uint8Array): Blake2bHash {
+  blake2b<T extends Blake2bHash>(bytes: Uint8Array): T {
     return toTagged(bytesToBigInt(this.blake2bBuf(bytes)));
   },
   blake2bBuf(bytes: Uint8Array): Uint8Array {
