@@ -9,22 +9,23 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Corepack enable
+      shell: bash
+      run: corepack enable
 
     - name: Set up node
       id: setup-node
       uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-        cache: 'yarn'
         cache-dependency-path: '**/yarn.lock'
 
     - id: outputs
       shell: bash
       run: |
-        corepack enable
         node_version="${{ steps.setup-node.outputs.node-version }}"
         echo "node-version=${node_version#v}" >> "$GITHUB_OUTPUT"
 
     - name: Install node dependencies
       shell: bash
-      run: yarn
+      run: yarn install --immutable
