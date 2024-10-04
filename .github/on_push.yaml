@@ -1,0 +1,7 @@
+name: Deploy & Make Tag Release
+on:
+  push:
+jobs:
+  ci-checks:
+    name: CI checks
+    uses: ./.github/ci.yaml

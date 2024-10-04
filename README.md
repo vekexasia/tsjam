@@ -11,7 +11,9 @@
 - [ ] erasure coding
 - [ ] migrate to neverthrow
 - [ ] github pipeline
-
+- [ ] cli
+- [ ] package rename to @tsjam
+ 
 minor:
 
 - [ ] clean jam-utils
