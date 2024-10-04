@@ -10,14 +10,13 @@ import {
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
-import { BitSequence } from "@vekexasia/jam-codec";
+import { BitSequence, encodeWithCodec } from "@vekexasia/jam-codec";
 import {
   CORES,
   JAM_AVAILABLE,
   NUMBER_OF_VALIDATORS,
 } from "@vekexasia/jam-constants";
 import { bigintToBytes, newSTF } from "@vekexasia/jam-utils";
-import { availableReports } from "@/utilityComputations/availableReports.js";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
@@ -61,10 +60,8 @@ export const RHO2DoubleDagger = newSTF<
       }
 
       // validate signature (128) in the greypaper
-      const encodedBitSequence = new Uint8Array(
-        BitSequence.encodedSize(a.bitstring),
-      ).fill(0);
-      BitSequence.encode(a.bitstring, encodedBitSequence);
+
+      const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
       const signatureValid = Ed25519.verifySignature(
         a.signature,
         input.p_kappa[a.validatorIndex].ed25519,

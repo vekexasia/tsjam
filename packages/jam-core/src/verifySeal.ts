@@ -1,5 +1,5 @@
 import { SafroleState, SignedJamHeader } from "@vekexasia/jam-types";
-import { UnsignedHeaderCodec } from "@vekexasia/jam-codec";
+import { UnsignedHeaderCodec, encodeWithCodec } from "@vekexasia/jam-codec";
 import { Bandersnatch } from "@vekexasia/jam-crypto";
 import assert from "node:assert";
 import {
@@ -18,16 +18,12 @@ export const verifySeal = (
   header: SignedJamHeader,
   state: SafroleState,
 ): boolean => {
-  const tmpArray = new Uint8Array(UnsignedHeaderCodec.encodedSize(header));
-
-  const size = UnsignedHeaderCodec.encode(header, tmpArray);
-
   const blockAuthorKey = getBlockAuthorKey(header, state);
   if (isFallbackMode(state.gamma_s)) {
     return Bandersnatch.verifySignature(
       header.blockSeal,
       blockAuthorKey,
-      tmpArray.subarray(0, size), // message,
+      encodeWithCodec(UnsignedHeaderCodec, header), // message
       new Uint8Array([
         ...JAM_FALLBACK_SEAL,
         ...bigintToBytes(state.eta[3], 32),

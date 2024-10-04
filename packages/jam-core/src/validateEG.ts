@@ -14,7 +14,7 @@ import {
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
 } from "@vekexasia/jam-constants";
-import { WorkReportCodec } from "@vekexasia/jam-codec";
+import { WorkReportCodec, encodeWithCodec } from "@vekexasia/jam-codec";
 import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
 
 export const assertEGValid = (
@@ -66,11 +66,9 @@ export const assertEGValid = (
 
     const { workReport, credential } = ext;
     // check signature (139)
-    const workReportBuf = new Uint8Array(
-      WorkReportCodec.encodedSize(workReport),
+    const wrh = Hashing.blake2bBuf(
+      encodeWithCodec(WorkReportCodec, workReport),
     );
-    WorkReportCodec.encode(workReport, workReportBuf);
-    const wrh = Hashing.blake2bBuf(workReportBuf);
 
     const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
 

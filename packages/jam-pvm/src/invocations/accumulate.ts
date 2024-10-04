@@ -33,6 +33,7 @@ import { applyMods } from "@/functions/utils.js";
 import {
   PVMAccumulationOpCodec,
   createArrayLengthDiscriminator,
+  encodeWithCodec,
 } from "@vekexasia/jam-codec";
 import {
   omega_g,
@@ -80,8 +81,7 @@ export const accumulateInvocation = (
   }
 
   const codec = createArrayLengthDiscriminator(PVMAccumulationOpCodec);
-  const args = new Uint8Array(codec.encodedSize(o));
-  codec.encode(o, args);
+  const args = encodeWithCodec(codec, o);
 
   const mres = argumentInvocation(
     new Uint8Array(), // get preimage from dd_delta.get(s)!.codeHash as Uint8Array,

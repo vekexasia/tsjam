@@ -14,7 +14,6 @@
 
 minor:
 
-- [ ] use `encodeWithCodec` instead of `encode` when possible
 - [ ] clean jam-utils
 
 
