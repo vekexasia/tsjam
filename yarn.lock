@@ -1343,6 +1343,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@vekexasia/jam-core@workspace:packages/jam-core":
+  version: 0.0.0-use.local
+  resolution: "@vekexasia/jam-core@workspace:packages/jam-core"
+  dependencies:
+    "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-constants": "npm:*"
+    "@vekexasia/jam-crypto": "npm:*"
+    "@vekexasia/jam-pvm": "npm:*"
+    "@vekexasia/jam-transitions": "npm:*"
+    "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@vekexasia/jam-crypto-napi@npm:*, @vekexasia/jam-crypto-napi@workspace:packages/jam-crypto-napi":
   version: 0.0.0-use.local
   resolution: "@vekexasia/jam-crypto-napi@workspace:packages/jam-crypto-napi"
@@ -1369,52 +1383,46 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@vekexasia/jam-erasurecoding@workspace:packages/jam-erasurecoding":
+  version: 0.0.0-use.local
+  resolution: "@vekexasia/jam-erasurecoding@workspace:packages/jam-erasurecoding"
+  dependencies:
+    "@vekexasia/jam-constants": "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@vekexasia/jam-merklization@npm:*, @vekexasia/jam-merklization@workspace:packages/jam-merklization":
   version: 0.0.0-use.local
   resolution: "@vekexasia/jam-merklization@workspace:packages/jam-merklization"
   dependencies:
     "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-pvm@workspace:packages/jam-pvm":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-pvm@workspace:packages/jam-pvm"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-crypto": "npm:*"
     "@vekexasia/jam-types": "npm:*"
     "@vekexasia/jam-utils": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@vekexasia/jam-recenthistory@workspace:packages/jam-recenthistory":
+"@vekexasia/jam-pvm@npm:*, @vekexasia/jam-pvm@workspace:packages/jam-pvm":
   version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-recenthistory@workspace:packages/jam-recenthistory"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-merklization": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-safrole@npm:*, @vekexasia/jam-safrole@workspace:packages/jam-safrole":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-safrole@workspace:packages/jam-safrole"
+  resolution: "@vekexasia/jam-pvm@workspace:packages/jam-pvm"
   dependencies:
     "@vekexasia/jam-codec": "npm:*"
     "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-crypto": "npm:*"
     "@vekexasia/jam-types": "npm:*"
+    "@vekexasia/jam-utils": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@vekexasia/jam-services@workspace:packages/jam-services":
+"@vekexasia/jam-transitions@npm:*, @vekexasia/jam-transitions@workspace:packages/jam-transitions":
   version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-services@workspace:packages/jam-services"
+  resolution: "@vekexasia/jam-transitions@workspace:packages/jam-transitions"
   dependencies:
+    "@vekexasia/jam-codec": "npm:*"
+    "@vekexasia/jam-constants": "npm:*"
     "@vekexasia/jam-crypto": "npm:*"
+    "@vekexasia/jam-merklization": "npm:*"
+    "@vekexasia/jam-pvm": "npm:*"
     "@vekexasia/jam-types": "npm:*"
     "@vekexasia/jam-utils": "npm:*"
   languageName: unknown
@@ -1436,18 +1444,6 @@ __metadata:
     "@vekexasia/jam-constants": "workspace:*"
     "@vekexasia/jam-types": "workspace:*"
     bigint-buffer: "npm:^1.1.5"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-work@workspace:packages/jam-work":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-work@workspace:packages/jam-work"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-safrole": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
   languageName: unknown
   linkType: soft
 

@@ -32,8 +32,8 @@
     "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
     "@vekexasia/jam-merklization": "*",
-    "@vekexasia/jam-types": "*",
     "@vekexasia/jam-pvm": "*",
+    "@vekexasia/jam-types": "*",
     "@vekexasia/jam-utils": "*"
   },
   "license": "MIT"

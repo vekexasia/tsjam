@@ -31,10 +31,10 @@
     "@vekexasia/jam-codec": "*",
     "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
+    "@vekexasia/jam-pvm": "*",
     "@vekexasia/jam-transitions": "*",
     "@vekexasia/jam-types": "*",
-    "@vekexasia/jam-utils": "*",
-    "@vekexasia/jam-pvm": "*"
+    "@vekexasia/jam-utils": "*"
   },
   "license": "MIT"
 }

@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-types": "*",
+    "@vekexasia/jam-constants": "*",
     "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-constants": "*"
+    "@vekexasia/jam-types": "*"
   },
   "devDependencies": {
     "@vekexasia/jam-utils": "*"
