@@ -18,12 +18,13 @@ export const verifySeal = (
   header: SignedJamHeader,
   state: SafroleState,
 ): boolean => {
+  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
   const blockAuthorKey = getBlockAuthorKey(header, state);
   if (isFallbackMode(state.gamma_s)) {
     return Bandersnatch.verifySignature(
       header.blockSeal,
       blockAuthorKey,
-      encodeWithCodec(UnsignedHeaderCodec, header), // message
+      encodedHeader, // message
       new Uint8Array([
         ...JAM_FALLBACK_SEAL,
         ...bigintToBytes(state.eta[3], 32),
@@ -40,7 +41,7 @@ export const verifySeal = (
     return Bandersnatch.verifySignature(
       header.blockSeal,
       blockAuthorKey,
-      tmpArray.subarray(0, size), // message,
+      encodedHeader, // message,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
         ...bigintToBytes(state.eta[3], 32),
