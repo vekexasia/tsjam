@@ -4,7 +4,6 @@ import {
   Delta,
   Hash,
   PVMAccumulationOp,
-  PVMProgramExecutionContextBase,
   PVMResultContext,
   RegularPVMExitReason,
   SafroleState,
@@ -252,24 +251,24 @@ const F_fn: (
     }
     throw new Error("not implemented");
   };
-
-/**
- * (258)
- */
-const G_fn = (
-  context: PVMProgramExecutionContextBase,
-  serviceAccount: ServiceAccount,
-  x: { x: PVMResultContext; y: PVMResultContext },
-): PVMProgramExecutionContextBase & {
-  x: PVMResultContext;
-  y: PVMResultContext;
-} => {
-  return {
-    ...context,
-    x: { ...x.x, serviceAccount },
-    y: x.y,
-  };
-};
+//
+// /**
+//  * (258)
+//  */
+// const G_fn = (
+//   context: PVMProgramExecutionContextBase,
+//   serviceAccount: ServiceAccount,
+//   x: { x: PVMResultContext; y: PVMResultContext },
+// ): PVMProgramExecutionContextBase & {
+//   x: PVMResultContext;
+//   y: PVMResultContext;
+// } => {
+//   return {
+//     ...context,
+//     x: { ...x.x, serviceAccount },
+//     y: x.y,
+//   };
+// };
 
 const C_fn = (
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,

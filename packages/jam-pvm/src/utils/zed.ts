@@ -1,7 +1,7 @@
 import assert from "node:assert";
 
 /**
- * Z(n, a) = a if a < 2^(8n-1) else a - 2^(8n)
+ * Z(n, a) = a if a &lt; 2^(8n-1) else a - 2^(8n)
  * @param n - the number of bytes
  * @param a - the number to convert
  * @see (221) in graypaper

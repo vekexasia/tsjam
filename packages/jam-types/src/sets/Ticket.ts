@@ -5,7 +5,7 @@ import { Hash } from "@/genericTypes";
  */
 export type Ticket = {
   /**
-   * `y
+   * `y`
    */
   identifier: Hash;
   /**

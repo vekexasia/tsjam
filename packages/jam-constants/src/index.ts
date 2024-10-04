@@ -45,7 +45,7 @@ export const MAX_WORKPACKAGE_ENTRIES = 2048;
  * defined in timeslots
  * @see L in the paper
  *
- * it's essentially 1 day => 14400 * 6s = 86400s
+ * it's essentially 1 day = 14400 * 6s = 86400s
  */
 export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 

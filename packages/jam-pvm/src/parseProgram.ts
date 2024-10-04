@@ -93,7 +93,7 @@ if (import.meta.vitest) {
           0xad,
           0xde, // load_imm a0 0xdeadbeef
         ]),
-        j: [] as any,
+        j: [] as u32[],
         k: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
         z: 0 as u8,
       };
@@ -114,7 +114,7 @@ if (import.meta.vitest) {
     it("should fail if no ix valid at index 0", () => {
       const program: PVMProgram = {
         c: new Uint8Array([0x64, 0x07, 0x0a]),
-        j: [] as any,
+        j: [] as u32[],
         k: [1, 0, 0],
         z: 0 as u8,
       };
@@ -125,7 +125,7 @@ if (import.meta.vitest) {
     it("should fail if k[0] is not 1", () => {
       const program: PVMProgram = {
         c: new Uint8Array([0x04, 0x07, 0x0a]),
-        j: [] as any,
+        j: [] as u32[],
         k: [0, 0, 0],
         z: 0 as u8,
       };

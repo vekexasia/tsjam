@@ -1,7 +1,6 @@
 import {
   IDisputesState,
   JamHeader,
-  OpaqueHash,
   Posterior,
   SafroleState,
   Tau,

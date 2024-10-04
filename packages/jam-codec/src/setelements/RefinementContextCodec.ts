@@ -3,8 +3,6 @@ import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";
 import { OptHashCodec } from "@/optional.js";
-import { hextToBigInt } from "@vekexasia/jam-utils";
-import { contextFromJSON } from "../../test/utils.js";
 
 /**
  * Appendix C formula (283)

@@ -54,7 +54,6 @@ export const Bandersnatch = {
   /**
    * `Y` function in the graypaper
    * (311)
-   * @param ringRoot
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
     return bytesToBigInt(vrfOutputHash(ringProof));

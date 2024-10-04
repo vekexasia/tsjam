@@ -3,7 +3,6 @@ import { TicketIdentifier } from "@vekexasia/jam-types";
 import { OpaqueHashCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 import assert from "node:assert";
-import { E_2 } from "@/ints/E_subscr.js";
 
 export const TicketIdentifierCodec: JamCodec<TicketIdentifier> = {
   encode: function (value: TicketIdentifier, bytes: Uint8Array): number {

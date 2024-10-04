@@ -159,7 +159,7 @@ const I_fn = (
 const R_fn = (
   pac: WorkPackageWithAuth,
   item: WorkItem,
-  l: any,
+  l: number,
   authorizerOutput: Uint8Array,
   deps: {
     delta: Delta;

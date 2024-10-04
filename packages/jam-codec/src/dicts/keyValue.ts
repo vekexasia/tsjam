@@ -11,7 +11,6 @@ export interface KeyOrderableDictionary<T, V> {
  * It encodes a dictionary with orderable keys into key value pairs.
  * it's out of spec as it is. The spec defines a Variable length discriminator is needed
  * @see buildKeyValueCodec
- * @private
  */
 class KeyValue<T, V, X extends KeyOrderableDictionary<T, V>>
   implements JamCodec<X>
@@ -66,9 +65,6 @@ class KeyValue<T, V, X extends KeyOrderableDictionary<T, V>>
 /**
  * Builds a codec for a dictionary with orderable keys
  * graypaper reference is 279
- * @param keyCodec the codec to use to encode the keys
- * @param valueCodec the codec to use to encode the values
- * @param xBuilder the constructor to use when decoding
  */
 export function buildKeyValueCodec<
   T,

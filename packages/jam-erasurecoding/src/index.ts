@@ -8,7 +8,7 @@ import { ByteArrayOfLength, SeqOfLength } from "@vekexasia/jam-types";
  * @param data - data to split
  * @returns array of chunks
  */
-const split = <N extends number, K extends number>(
+export const split = <N extends number, K extends number>(
   n: N,
   k: K,
   data: Uint8Array,
@@ -21,7 +21,7 @@ const split = <N extends number, K extends number>(
   return toRet as SeqOfLength<ByteArrayOfLength<N>, K>;
 };
 
-const join = <N extends number, K extends number>(
+export const join = <N extends number, K extends number>(
   n: N,
   k: K,
   data: SeqOfLength<ByteArrayOfLength<K>, N>,
@@ -33,7 +33,7 @@ const join = <N extends number, K extends number>(
   return toRet;
 };
 
-const unzip = <N extends number, K extends number>(
+export const unzip = <N extends number, K extends number>(
   n: N,
   k: K,
   data: Uint8Array,
@@ -50,7 +50,7 @@ const unzip = <N extends number, K extends number>(
   return toRet as SeqOfLength<ByteArrayOfLength<N>, K>;
 };
 
-const lace = <N extends number, K extends number>(
+export const lace = <N extends number, K extends number>(
   n: N,
   k: K,
   data: SeqOfLength<ByteArrayOfLength<N>, K>,

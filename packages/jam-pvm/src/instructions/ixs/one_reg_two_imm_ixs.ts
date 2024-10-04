@@ -1,7 +1,6 @@
 import {
   PVMIxEvaluateFN,
   RegisterIdentifier,
-  RegularPVMExitReason,
   u32,
   u8,
 } from "@vekexasia/jam-types";

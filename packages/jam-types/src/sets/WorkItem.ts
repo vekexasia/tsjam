@@ -1,5 +1,4 @@
-import { Hash, ServiceIndex, UpToSeq, u32, u64 } from "@/genericTypes";
-import { MAX_WORKPACKAGE_ENTRIES } from "@vekexasia/jam-constants";
+import { Hash, ServiceIndex, u32, u64 } from "@/genericTypes";
 
 /**
  * Identified by `I` set
@@ -51,7 +50,7 @@ export interface WorkItem {
 
   /**
    * `e`
-   * - should be < 2^11
+   * - should be &lt; 2^11
    */
   numberExportedSegments: u32;
 }

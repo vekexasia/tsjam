@@ -206,16 +206,13 @@ export const codec_Ed: JamCodec<DisputeExtrinsic> = {
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
   const constants = await import("@vekexasia/jam-constants");
   const { disputesExtrinsicFromJSON, getUTF8FixtureFile, getCodecFixtureFile } =
     await import("@/test/utils.js");
-  const path = await import("path");
   describe("codecED", () => {
     beforeAll(() => {
-      vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
-        6 as any,
-      );
+      // @ts-expect-error validators
+      vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(6);
     });
 
     const bin = getCodecFixtureFile("disputes_extrinsic.bin");

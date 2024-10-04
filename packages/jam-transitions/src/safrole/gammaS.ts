@@ -122,7 +122,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as any,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
           },
           state.gamma_s,
         );
@@ -138,7 +138,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as any,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
           },
           state.gamma_s,
         );
@@ -154,7 +154,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as any,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
           },
           state.gamma_s,
         );
@@ -175,8 +175,10 @@ if (import.meta.vitest) {
                 .map((_, idx) => mockTicketIdentifier({ id: BigInt(idx) })),
             ),
             gamma_s: state.gamma_s,
-            p_kappa: toTagged([]) as any,
-            p_eta: toTagged([]) as any,
+            p_kappa: toTagged([]) as unknown as Posterior<
+              SafroleState["kappa"]
+            >,
+            p_eta: [] as unknown as Posterior<SafroleState["eta"]>,
           },
           state.gamma_s,
         );

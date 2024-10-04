@@ -55,8 +55,6 @@ const G_fn = (input: {
 
 /**
  * (135) in the graypaper
- * @param input
- * @constructor
  */
 export const G_STAR_fn = (input: {
   p_eta2: Posterior<SafroleState["eta"][2]>;

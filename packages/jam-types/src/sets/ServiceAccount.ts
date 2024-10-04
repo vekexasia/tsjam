@@ -7,17 +7,17 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  */
 export interface ServiceAccount {
   /**
-   * `s` - should be a storage Dictionary in the form of Hash => Uint8Array
+   * `s` - should be a storage Dictionary in the form of Hash =&gt; Uint8Array
    */
   storage: Map<Hash, Uint8Array>;
 
   /**
-   * `p` - preimage lookup dictionaries in the form of Hash => Uint8Array
+   * `p` - preimage lookup dictionaries in the form of Hash =&gt; Uint8Array
    */
   preimage_p: Map<Hash, Uint8Array>;
 
   /**
-   * `l` - preimage lookup dictionaries (hash, preimageLength) => Array of up to 3 timeslot indexes<br>
+   * `l` - preimage lookup dictionaries (hash, preimageLength) =&gt; Array of up to 3 timeslot indexes<br>
    * if there is no item for a given hash, it means that the preimage is not known<br>
    * if there is 1 item, then it means that the preimage is available since that timeslot<br>
    * if there are 2 items, then it was available but now it's not since the 2nd timeslot<br>

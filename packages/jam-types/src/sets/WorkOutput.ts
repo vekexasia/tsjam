@@ -16,8 +16,7 @@ export enum WorkError {
   UnexpectedTermination = 1,
 
   /**
-   * Service code was not available for lookup @ the lookup anchor block
-   *
+   * Service code was not available for lookup at the lookup anchor block
    * it essentially means that `WorkResult.codeHash` preimage was not found
    */
   Bad = 2,

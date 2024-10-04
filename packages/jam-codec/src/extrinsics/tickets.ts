@@ -22,10 +22,7 @@ export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics[0]>({
       readBytes: 1 + 784,
     };
   },
-  encodedSize: function (value: {
-    entryIndex: 0 | 1;
-    proof: RingVRFProof;
-  }): number {
+  encodedSize(): number {
     return 1 + 784;
   },
 });
@@ -47,10 +44,12 @@ if (import.meta.vitest) {
       ),
     );
     it("tickets_extrinsic.json encoded should match tickets_extrinsic.bin", () => {
-      const preimage: TicketExtrinsics = json.map((e: any) => ({
-        entryIndex: e.attempt,
-        proof: hexToBytes(e.signature),
-      }));
+      const preimage: TicketExtrinsics = json.map(
+        (e: { attempt: 0 | 1; signature: string }) => ({
+          entryIndex: e.attempt,
+          proof: hexToBytes(e.signature),
+        }),
+      );
       const b = new Uint8Array(bin.length);
       codec_Et.encode(preimage, b);
       expect(codec_Et.encodedSize(preimage)).toBe(bin.length);

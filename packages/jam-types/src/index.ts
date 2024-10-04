@@ -9,7 +9,6 @@ import {
   OpaqueHash,
   SeqOfLength,
   ValidatorIndex,
-  u32,
 } from "@/genericTypes.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
 import { Tau } from "@/Tau.js";

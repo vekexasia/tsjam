@@ -485,7 +485,7 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W0 | XMod>>({
           return [IxMod.w0(HostCallResult.HUH)];
         }
       } else if (a_l.get(h)?.get(toTagged(z))?.length === 2) {
-        const [_, y] = a_l.get(h)!.get(toTagged(z))!;
+        const [, y] = a_l.get(h)!.get(toTagged(z))!;
         if (y < t - PREIMAGE_EXPIRATION) {
           a_l.get(h)!.delete(toTagged(z));
           if (a_l.get(h)!.size === 0) {

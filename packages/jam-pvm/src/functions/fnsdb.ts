@@ -2,8 +2,8 @@ import { PVMFn, u8 } from "@vekexasia/jam-types";
 import { toTagged } from "@vekexasia/jam-utils";
 
 export const FnsDb = {
-  byCode: new Map<u8, PVMFn<unknown[], any>>(),
-  byIdentifier: new Map<string, PVMFn<unknown[], any>>(),
+  byCode: new Map<u8, PVMFn<unknown[], unknown>>(),
+  byIdentifier: new Map<string, PVMFn<unknown[], unknown>>(),
 };
 /**
  * register an instruction in the instruction database
@@ -18,8 +18,11 @@ export const regFn = <Args extends unknown[], Out extends unknown[]>(conf: {
   if (FnsDb.byIdentifier.has(conf.fn.identifier)) {
     throw new Error(`duplicate identifier ${conf.fn.identifier}`);
   }
-  FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn as PVMFn<unknown[], any>);
-  FnsDb.byIdentifier.set(conf.fn.identifier, conf.fn as PVMFn<unknown[], any>);
+  FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn as PVMFn<unknown[], never>);
+  FnsDb.byIdentifier.set(
+    conf.fn.identifier,
+    conf.fn as PVMFn<unknown[], never>,
+  );
   return conf.fn;
 };
 
@@ -37,7 +40,7 @@ if (import.meta.vitest) {
           opCode: 0 as u8,
           identifier: "test",
           execute() {
-            return {} as any;
+            return {} as never;
           },
           gasCost: 1n,
         },
@@ -52,7 +55,7 @@ if (import.meta.vitest) {
           identifier: "test",
           gasCost: 1n,
           execute() {
-            return {} as any;
+            return {} as never;
           },
         },
       });
@@ -63,7 +66,7 @@ if (import.meta.vitest) {
             identifier: "test2",
             gasCost: 1n,
             execute() {
-              return {} as any;
+              return {} as never;
             },
           },
         }),
@@ -76,7 +79,7 @@ if (import.meta.vitest) {
           identifier: "test",
           gasCost: 1n,
           execute() {
-            return {} as any;
+            return {} as never;
           },
         },
       });
@@ -87,7 +90,7 @@ if (import.meta.vitest) {
             identifier: "test",
             gasCost: 1n,
             execute() {
-              return {} as any;
+              return {} as never;
             },
           },
         }),

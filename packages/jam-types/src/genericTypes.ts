@@ -122,7 +122,7 @@ export type UnTagged<T> =
           ? Omit<X, typeof tags>
           : T;
 export type UnTaggedObject<T> = {
-  [K in keyof UnTagged<T>]: UnTagged<T>[K] extends Tagged<infer X, any, any>
+  [K in keyof UnTagged<T>]: UnTagged<T>[K] extends Tagged<infer X, never, never>
     ? UnTagged<X>
     : UnTagged<T>[K];
 };

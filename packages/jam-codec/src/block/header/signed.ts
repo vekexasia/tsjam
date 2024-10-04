@@ -42,11 +42,7 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
 };
 
 if (import.meta.vitest) {
-  const { vi, beforeAll, beforeEach, describe, it, expect } = import.meta
-    .vitest;
-  const { hexToBytes, hextToBigInt, toTagged } = await import(
-    "@vekexasia/jam-utils"
-  );
+  const { vi, beforeAll, describe, it, expect } = import.meta.vitest;
 
   const constantMocks = vi.hoisted(() => {
     return {

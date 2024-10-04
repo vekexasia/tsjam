@@ -3,7 +3,6 @@ import {
   SafroleState,
   Tau,
   TicketIdentifier,
-  u32,
 } from "@vekexasia/jam-types";
 import assert from "node:assert";
 import { EPOCH_LENGTH } from "@vekexasia/jam-constants";

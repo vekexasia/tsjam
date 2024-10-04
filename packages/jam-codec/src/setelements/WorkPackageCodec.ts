@@ -97,7 +97,7 @@ if (import.meta.vitest) {
       item = {
         authorizationToken: hexToBytes(json.authorization),
         context: contextFromJSON(json.context),
-        workItems: json.items.map((item: any) => workItemFromJSON(item)),
+        workItems: json.items.map((item: never) => workItemFromJSON(item)),
         authorizationCodeHash: hextToBigInt(json.authorizer.code_hash),
         parametrizationBlob: hexToBytes(json.authorizer.params),
         serviceIndex: json.auth_code_host,

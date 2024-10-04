@@ -50,7 +50,7 @@ export const isAuthorized = (
  */
 const Gi = 0n as u64;
 
-const F_Fn: HostCallExecutor<any> = (input) => {
+const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     const r = processIxResult(
       { ...input.ctx, instructionPointer: 4 as u32 },

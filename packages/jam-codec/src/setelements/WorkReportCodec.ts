@@ -133,14 +133,14 @@ if (import.meta.vitest) {
         authorizerHash: hextToBigInt(json.authorizer_hash),
         authorizerOutput: hexToBytes(json.auth_output),
         results: json.results.map(
-          (r: any): WorkResult => workResultFromJSON(r),
+          (r: never): WorkResult => workResultFromJSON(r),
         ),
       };
       const b = new Uint8Array(bin.length);
       WorkReportCodec.encode(wp, b);
       expect(WorkReportCodec.encodedSize(wp)).toBe(bin.length);
       expect(Buffer.from(b).toString("hex")).toBe(
-        new Buffer(bin).toString("hex"),
+        Buffer.from(bin).toString("hex"),
       );
       // check decode now
       const x = WorkReportCodec.decode(b);

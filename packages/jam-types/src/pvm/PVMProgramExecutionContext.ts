@@ -1,6 +1,5 @@
 import { IPVMMemory } from "@/pvm/IPVMMemory.js";
-import { ByteArrayOfLength, SeqOfLength, u32, u64 } from "@/genericTypes.js";
-import { Tau } from "@/Tau.js";
+import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
 
 /**
  * This is the context passed to instructions for evaluation.

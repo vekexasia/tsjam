@@ -5,7 +5,12 @@ import { codec_Ep } from "@/extrinsics/preimages.js";
 import { codec_Ea } from "@/extrinsics/assurances.js";
 import { codec_Eg } from "@/extrinsics/guarantees.js";
 import { JamCodec } from "@/codec.js";
-import { EA_Extrinsic, JamBlock, TicketExtrinsics } from "@vekexasia/jam-types";
+import {
+  EA_Extrinsic,
+  JamBlock,
+  ServiceIndex,
+  TicketExtrinsics,
+} from "@vekexasia/jam-types";
 
 export const BlockCodec: JamCodec<JamBlock> = {
   encode(value: JamBlock, bytes: Uint8Array): number {
@@ -19,7 +24,6 @@ export const BlockCodec: JamCodec<JamBlock> = {
       value.extrinsics.preimages,
       bytes.subarray(offset),
     );
-    const prev = offset;
     offset += codec_Ea.encode(
       value.extrinsics.assurances,
       bytes.subarray(offset),
@@ -87,20 +91,25 @@ if (import.meta.vitest) {
     let item: JamBlock;
     let bin: Uint8Array;
     beforeAll(() => {
-      vi.spyOn(constants, "CORES", "get").mockReturnValue(2 as any);
+      // @ts-expect-error cores
+      vi.spyOn(constants, "CORES", "get").mockReturnValue(2);
       const json = JSON.parse(getUTF8FixtureFile("block.json"));
       item = {
         header: headerFromJSON(json.header),
         extrinsics: {
-          tickets: json.extrinsic.tickets.map((t: any) => ({
-            entryIndex: t.attempt,
-            proof: hexToBytes(t.signature),
-          })),
+          tickets: json.extrinsic.tickets.map(
+            (t: { attempt: number; signature: string }) => ({
+              entryIndex: t.attempt,
+              proof: hexToBytes(t.signature),
+            }),
+          ),
           disputes: disputesExtrinsicFromJSON(json.extrinsic.disputes),
-          preimages: json.extrinsic.preimages.map((p: any) => ({
-            serviceIndex: p.requester,
-            preimage: hexToBytes(p.blob),
-          })),
+          preimages: json.extrinsic.preimages.map(
+            (p: { requester: ServiceIndex; blob: string }) => ({
+              serviceIndex: p.requester,
+              preimage: hexToBytes(p.blob),
+            }),
+          ),
           assurances: assurancesExtrinsicFromJSON(json.extrinsic.assurances),
           reportGuarantees: guaranteesExtrinsicFromJSON(
             json.extrinsic.guarantees,

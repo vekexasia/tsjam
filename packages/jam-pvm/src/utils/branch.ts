@@ -14,7 +14,7 @@ import {
  * @see `226` on graypaper
  */
 export const branch = (
-  context: Parameters<PVMIx<any>["evaluate"]>[0],
+  context: Parameters<PVMIx<unknown[]>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
 ): PVMModification[] => {

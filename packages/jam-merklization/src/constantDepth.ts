@@ -21,7 +21,6 @@ export const constantDepthBinaryTree = (
  * hashes all data and pads the array to the next power of 2
  * @param elements - preimage elements
  * @param hashFn - the hashing function
- * @constructor
  */
 const C_fn = (
   elements: Uint8Array[],

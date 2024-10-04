@@ -83,7 +83,8 @@ if (import.meta.vitest) {
     const bin = getCodecFixtureFile("assurances_extrinsic.bin");
     const json = JSON.parse(getUTF8FixtureFile("assurances_extrinsic.json"));
     beforeAll(() => {
-      vi.spyOn(constants, "CORES", "get").mockReturnValue(2 as any);
+      // @ts-expect-error cores
+      vi.spyOn(constants, "CORES", "get").mockReturnValue(2);
     });
     it("assurances_extrinsic.json encoded should match assurances_extrinsic.bin", () => {
       const ea: EA_Extrinsic = assurancesExtrinsicFromJSON(json);

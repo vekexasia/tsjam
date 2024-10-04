@@ -39,7 +39,8 @@ export const applyMods = <T extends object>(
       newCtx.memory.setBytes(mod.data.from, mod.data.data);
     } else if (mod.type === "object") {
       for (const key in mod.data) {
-        (out as any)[key] = (mod.data as any)[key];
+        // @ts-expect-error - we know that key is a key of T
+        out[key] = mod.data[key];
       }
     }
   }

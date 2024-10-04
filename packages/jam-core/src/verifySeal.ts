@@ -53,8 +53,6 @@ export const verifySeal = (
 };
 /**
  * verify `Hv`
- * @param header
- * @param state
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,

@@ -9,10 +9,6 @@ import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-utils";
 export const Ed25519 = {
   /**
    * `E_{pubkey}(message) `
-   * @param bytes
-   * @param pubkey
-   * @param message
-   * @param context
    */
   verifySignature(
     signature: ED25519Signature,
@@ -25,10 +21,9 @@ export const Ed25519 = {
       Buffer.from(bigintToBytes(pubkey, 32)),
     );
   },
+
   /**
    * `E_{privkey}(message) `
-   * @param message
-   * @param privkey
    */
   sign(message: Uint8Array, privkey: ED25519PrivateKey): ED25519Signature {
     const signatureBuf = Buffer.alloc(64);

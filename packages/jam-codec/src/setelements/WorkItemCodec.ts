@@ -151,9 +151,6 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { hexToBytes, hextToBigInt, toTagged } = await import(
-    "@vekexasia/jam-utils"
-  );
   const { getCodecFixtureFile, getUTF8FixtureFile, workItemFromJSON } =
     await import("@/test/utils.js");
   describe("WorkItemCodec", () => {

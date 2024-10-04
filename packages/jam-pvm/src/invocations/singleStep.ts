@@ -160,7 +160,7 @@ export const processIxResult = (
 
   if (result.some((x) => x.type === "register")) {
     result
-      .filter((x): x is PVMSingleModRegister<any> => x.type === "register")
+      .filter((x): x is PVMSingleModRegister<unknown> => x.type === "register")
       .forEach((x) => {
         p_context.registers[x.data.index] = x.data.value;
       });

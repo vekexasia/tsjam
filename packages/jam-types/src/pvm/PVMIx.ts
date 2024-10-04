@@ -11,7 +11,6 @@ export interface PVMIx<Args extends unknown[]> {
   /**
    * decode the full instruction from the bytes.
    * the byte array is chunked to include only the bytes of the instruction (included opcode)
-   * @param bytes
    */
   decode(bytes: Uint8Array): Args;
 

@@ -63,10 +63,12 @@ if (import.meta.vitest) {
       ),
     );
     it("preimages_extrinsic.json encoded should match preimages_extrinsic.bin", () => {
-      const preimage: EP_Tuple[] = json.map((e: any) => ({
-        serviceIndex: e.requester,
-        preimage: hexToBytes(e.blob),
-      }));
+      const preimage: EP_Tuple[] = json.map(
+        (e: { requester: ServiceIndex; blob: string }) => ({
+          serviceIndex: e.requester,
+          preimage: hexToBytes(e.blob),
+        }),
+      );
       const b = new Uint8Array(bin.length);
       codec_Ep.encode(preimage, b);
       expect(codec_Ep.encodedSize(preimage)).toBe(bin.length);

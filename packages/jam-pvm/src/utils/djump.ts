@@ -11,7 +11,7 @@ const ZA = 4;
  * @param a - the address to jump to
  */
 export const djump = (
-  context: Parameters<PVMIx<any>["evaluate"]>[0],
+  context: Parameters<PVMIx<unknown[]>["evaluate"]>[0],
   a: u32,
 ): PVMModification[] => {
   // first branch of djump(a)
