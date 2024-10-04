@@ -1,4 +1,4 @@
-name: Deploy & Make Tag Release
+name: CI
 on:
   push:
 jobs:
