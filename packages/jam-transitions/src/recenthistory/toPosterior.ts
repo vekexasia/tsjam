@@ -13,11 +13,7 @@ import {
 import { E_4 } from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
 import { RecentHistory, RecentHistoryItem } from "@vekexasia/jam-types";
-import {
-  bigintToExistingBytes,
-  bytesToBigInt,
-  newSTF,
-} from "@vekexasia/jam-utils";
+import { bigintToExistingBytes, newSTF } from "@vekexasia/jam-utils";
 import { RECENT_HISTORY_LENGTH } from "@vekexasia/jam-constants";
 
 export const calculateAccumulateRoot = (
@@ -61,7 +57,7 @@ export const recentHistoryToPosterior = newSTF<
       const a = new Uint8Array(32 * 2);
       bigintToExistingBytes(rn, a.subarray(0, 32));
       bigintToExistingBytes(l, a.subarray(32, 64));
-      return bytesToBigInt(Hashing.keccak256(a));
+      return Hashing.keccak256(a);
     },
   );
 

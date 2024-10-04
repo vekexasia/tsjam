@@ -1,4 +1,4 @@
-import { Blake2bHash } from "@vekexasia/jam-types";
+import { Blake2bHash, Hash } from "@vekexasia/jam-types";
 import blake2b from "blake2b-wasm";
 import { keccak256 } from "keccak-wasm";
 import { bytesToBigInt, toTagged } from "@vekexasia/jam-utils";
@@ -14,7 +14,7 @@ export const Hashing = {
   blake2bBuf(bytes: Uint8Array): Uint8Array {
     return blake2b().update(bytes).digest();
   },
-  keccak256(bytes: Uint8Array): Uint8Array {
-    return keccak256(bytes);
+  keccak256<T extends Hash>(bytes: Uint8Array): T {
+    return toTagged(bytesToBigInt(keccak256(bytes)));
   },
 };
