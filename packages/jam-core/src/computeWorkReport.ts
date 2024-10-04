@@ -6,9 +6,11 @@ import {
   Hash,
   Tau,
   WorkItem,
+  WorkOutput,
   WorkPackageHash,
   WorkPackageWithAuth,
   WorkReport,
+  WorkResult,
 } from "@vekexasia/jam-types";
 import { isAuthorized, refineInvocation } from "@vekexasia/jam-pvm";
 import {
@@ -22,70 +24,105 @@ import {
   J_fn,
   constantDepthBinaryTree,
   traceBinarySliced,
+  wellBalancedBinaryMerkleRoot,
 } from "@vekexasia/jam-merklization";
-import { bytesToBigInt, toTagged, zeroPad } from "@vekexasia/jam-utils";
+import { toTagged, zeroPad } from "@vekexasia/jam-utils";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
 } from "@vekexasia/jam-constants";
+import { erasureCoding, transpose } from "@vekexasia/jam-erasurecoding";
 
-export const computeWorkResults = (
+/**
+ * `Ξ` fn
+ * @see (182) in section 14.4
+ * @see I_fn
+ * @see R_fn
+ * @see A_fn
+ * @see C_fn
+ * @see M_fn
+ */
+export const computeWorkReport = (
   pac: WorkPackageWithAuth,
   core: CoreIndex,
+  deps: { delta: Delta; tau: Tau },
 ): WorkReport => {
   const o = isAuthorized(pac, core);
   if (!(o instanceof Uint8Array)) {
     throw new Error("unexpected");
   }
+  const els = new Array(pac.workItems.length).fill(0).map((_, j) => {
+    const { result: r, out: e } = I_fn(pac, j, o, deps);
+    const workResult = C_fn(pac.workItems[j], r);
+    return { result: workResult, out: e };
+  });
+
   return {
     authorizerHash: pac.pa,
     authorizerOutput: o,
     refinementContext: pac.context,
-    workPackageSpecification: A_fn(pac, []), // todo
-    results: null as unknown as any, // todo
+    workPackageSpecification: A_fn(
+      pac,
+      els.map((a) => a.out).flat() as ExportSegment[],
+    ),
+    results: toTagged(els.map((a) => a.result)),
     coreIndex: core,
   };
-
-  throw new Error("Not implemented");
 };
 /**
  * compute availability specifier
- * @param pac
  * @returns AvailabilitySpecification
+ * @see (185) in section 14.4.1
  */
 const A_fn = (
   pac: WorkPackageWithAuth,
-  exportedSegments: Uint8Array[],
+  exportedSegments: ExportSegment[],
 ): AvailabilitySpecification => {
   const x = pac.workItems.map((item) => X_fn(item)).flat();
   const i = pac.workItems.map((item) => M_fn(item)).flat();
   const j = pac.workItems
     .map((item) =>
       item.importedDataSegments.map(({ root, index }) =>
-        J_fn(merkleTreeRootRetriever(root), index, Hashing.blake2bBuf),
+        J_fn(merkleTreeRootRetriever(root), index),
       ),
     )
     .flat(2);
 
-  const blob = new Uint8Array(); // todo:encode x, i, j
+  const blob = new Uint8Array([
+    ...encodeWithCodec(WorkPackageCodec, pac),
+    ...encodeWithCodec(dlArrayOfUint8ArrayCodec, x), // todo this is probably wrong
+    ...encodeWithCodec(dlArrayOfUint8ArrayCodec, i), // todo this is probably wrong
+    ...encodeWithCodec(dlArrayOfHashesCodec, j),
+  ]);
 
-  const a: AvailabilitySpecification = {
+  const s_flower = transpose(
+    [...exportedSegments, ...pagedProof(exportedSegments)].map((x) =>
+      erasureCoding(6, x),
+    ),
+  ).map((x) => wellBalancedBinaryMerkleRoot(x));
+
+  const b_flower = erasureCoding(
+    Math.ceil(blob.length / ERASURECODE_BASIC_SIZE),
+    zeroPad(ERASURECODE_BASIC_SIZE, blob),
+  ).map(Hashing.blake2b);
+
+  const erasureRoot = wellBalancedBinaryMerkleRoot(
+    transpose<Hash>([b_flower, s_flower]).flat(),
+  );
+
+  return {
     workPackageHash: Hashing.blake2b(encodeWithCodec(WorkPackageCodec, pac)),
     bundleLength: toTagged(blob.length),
-    segmentRoot: bytesToBigInt(
-      constantDepthBinaryTree(exportedSegments, Hashing.blake2bBuf),
-    ),
-    erasureRoot: null as unknown as Hash, //todo
+    segmentRoot: constantDepthBinaryTree(exportedSegments),
+    erasureRoot,
   };
-
-  throw new Error("Not implemented");
 };
 
 /**
  * Paged Proof
  * (181) P_fn
  */
-const pagedProof = (segments: ExportSegment[]): ExportSegment[] => {
+const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
   const toRet = [];
   for (let i = 0; i < limit; i += 64) {
@@ -96,10 +133,10 @@ const pagedProof = (segments: ExportSegment[]): ExportSegment[] => {
       ...encodeWithCodec(dlArrayOfUint8ArrayCodec, p),
     ]);
     toRet.push(
-      zeroPad(encoded, ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE),
+      zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),
     );
   }
-  return toRet as ExportSegment[];
+  return toRet as Uint8Array[];
 };
 
 const I_fn = (
@@ -165,6 +202,19 @@ export const X_fn = (workItem: WorkItem) => {
   return workItem.exportedDataSegments.map(({ blobHash }) => {
     return blobPreimageRetriever(blobHash);
   });
+};
+
+/**
+ * (179) `C` constructs WorkResult from item and output
+ */
+export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
+  return {
+    serviceIndex: workItem.serviceIndex,
+    codeHash: workItem.codeHash,
+    payloadHash: Hashing.blake2b(workItem.payload),
+    gasPrioritization: workItem.gasLimit,
+    output: out,
+  };
 };
 
 const merkleTreeRootRetriever: (h: Hash) => Uint8Array[] = () => []; // todo
