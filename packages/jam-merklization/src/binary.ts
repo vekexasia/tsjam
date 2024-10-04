@@ -1,16 +1,17 @@
-import { MerkeTreeRoot } from "@vekexasia/jam-types";
-import { bytesToBigInt } from "@vekexasia/jam-utils";
+import { Hash, MerkeTreeRoot } from "@vekexasia/jam-types";
+import { toTagged } from "@vekexasia/jam-utils";
 import assert from "node:assert";
-import { HashFn } from "@/utils.js";
+import { HashFn, maybeBigintToBytes } from "@/utils.js";
+import { Hashing } from "@vekexasia/jam-crypto";
 
 const prefix: Uint8Array = new TextEncoder().encode("node");
 
-export const binaryMerkleTree = (
-  elements: Uint8Array[],
-  hashFn: HashFn,
-): Uint8Array => {
+export const binaryMerkleTree = <T extends Uint8Array | Hash>(
+  elements: T[],
+  hashFn: HashFn = Hashing.blake2b,
+): T | Hash => {
   if (elements.length === 0) {
-    return new Uint8Array(32).fill(0);
+    return 0n as Hash;
   }
   if (elements.length === 1) {
     return elements[0];
@@ -18,17 +19,21 @@ export const binaryMerkleTree = (
   const mid = Math.ceil(elements.length / 2);
   const buf = new Uint8Array([
     ...prefix,
-    ...binaryMerkleTree(elements.slice(0, mid), hashFn),
-    ...binaryMerkleTree(elements.slice(mid), hashFn),
+    ...maybeBigintToBytes(binaryMerkleTree(elements.slice(0, mid), hashFn)),
+    ...maybeBigintToBytes(binaryMerkleTree(elements.slice(mid), hashFn)),
   ]);
   return hashFn(buf);
 };
 
-const P_sup = (v: Uint8Array[], i: number, sup: boolean): Uint8Array[] => {
+const P_sup = <T extends Uint8Array | Hash>(
+  v: T[],
+  i: number,
+  sup: boolean,
+): T[] => {
   if (i < Math.ceil(v.length / 2) == sup) {
-    return v.slice(0, Math.ceil(v.length / 2));
+    return v.slice(0, Math.ceil(v.length / 2)) as T[];
   } else {
-    return v.slice(Math.ceil(v.length / 2));
+    return v.slice(Math.ceil(v.length / 2)) as T[];
   }
 };
 
@@ -39,11 +44,11 @@ const P_sup = (v: Uint8Array[], i: number, sup: boolean): Uint8Array[] => {
  * @param hashFn the hashfn
  * @returns each opposite node from top to bottom as the tree is the navigated to arrive at the leaf
  */
-export const traceBinaryMerkleTree = (
-  elements: Uint8Array[],
+export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
+  elements: T[],
   index: number,
-  hashFn: HashFn,
-): Uint8Array[] => {
+  hashFn: HashFn = Hashing.blake2b,
+): (T | Hash)[] => {
   assert(index >= 0 && index < elements.length, "Index out of bounds");
   if (elements.length === 0) {
     return [];
@@ -51,17 +56,28 @@ export const traceBinaryMerkleTree = (
   const pi =
     index < Math.ceil(elements.length / 2) ? 0 : Math.ceil(elements.length / 2);
   return [
-    binaryMerkleTree(P_sup(elements, index, false), hashFn), // opposite node
-    ...traceBinaryMerkleTree(P_sup(elements, index, true), index - pi, hashFn),
+    binaryMerkleTree<T>(P_sup(elements, index, false), hashFn), // opposite node
+    ...traceBinaryMerkleTree<T>(
+      P_sup(elements, index, true),
+      index - pi,
+      hashFn,
+    ),
   ];
 };
 
+/**
+ * (298) `Mb`
+ * @param elements
+ * @param hashFn
+ */
 export const wellBalancedBinaryMerkleRoot = (
   elements: Uint8Array[],
-  hashFn: (preimage: Uint8Array) => Uint8Array,
+  hashFn: HashFn = Hashing.blake2b,
 ): MerkeTreeRoot => {
   if (elements.length === 1) {
-    return bytesToBigInt(hashFn(elements[0]));
+    return toTagged(hashFn(elements[0]));
   }
-  return bytesToBigInt(binaryMerkleTree(elements, hashFn));
+  // we are sure it returns Hash as the only reason binaryMerkleTree returns Uint8Array is when elements.length === 1
+  // which is the case above.
+  return toTagged(binaryMerkleTree(elements, hashFn) as Hash);
 };
