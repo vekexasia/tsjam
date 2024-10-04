@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Node
-        uses: ./.github/setup
+        uses: ./.github/actions/setup
 
       - name: Run lint
         run: |
@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Node
-        uses: ./.github/actions/setup-node
+        uses: ./.github/actions/setup
 
       - name: Build Typescript
         run: |
@@ -49,7 +49,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Node
-        uses: ./.github/actions/setup-node
+        uses: ./.github/actions/setup
 
       - name: Test Jam
         run: |
