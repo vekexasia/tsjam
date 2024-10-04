@@ -64,7 +64,7 @@ export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
  * @param n - the multiple of which the end buffer length should be
  * @see (186)
  */
-export const zeroPad = (buf: Uint8Array, n: number): Uint8Array => {
+export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   const toRet = new Uint8Array(Math.ceil(buf.length / n) * n).fill(0);
   toRet.set(buf);
   return toRet;

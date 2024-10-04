@@ -47,6 +47,7 @@
       "@vekexasia/jam-constants": ["../jam-constants/dist/types/index.d.ts"],
       "@vekexasia/jam-crypto": ["../jam-crypto/dist/types/index.d.ts"],
       "@vekexasia/jam-crypto-napi": ["../jam-crypto-napi/index.d.ts"],
+      "@vekexasia/jam-erasurecoding": ["../jam-erasurecoding/dist/types/index.d.ts"],
       "@vekexasia/jam-merklization": ["../jam-merklization/dist/types/index.d.ts"],
       "@vekexasia/jam-pvm": ["../jam-pvm/dist/types/index.d.ts"],
       "@vekexasia/jam-transitions": ["../jam-transitions/dist/types/index.d.ts"],

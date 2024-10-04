@@ -71,11 +71,11 @@ export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
  * @param hashFn
  */
 export const wellBalancedBinaryMerkleRoot = (
-  elements: Uint8Array[],
+  elements: (Hash | Uint8Array)[],
   hashFn: HashFn = Hashing.blake2b,
 ): MerkeTreeRoot => {
   if (elements.length === 1) {
-    return toTagged(hashFn(elements[0]));
+    return toTagged(hashFn(maybeBigintToBytes(elements[0])));
   }
   // we are sure it returns Hash as the only reason binaryMerkleTree returns Uint8Array is when elements.length === 1
   // which is the case above.
