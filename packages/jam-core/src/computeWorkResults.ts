@@ -11,10 +11,23 @@ import {
   WorkReport,
 } from "@vekexasia/jam-types";
 import { isAuthorized, refineInvocation } from "@vekexasia/jam-pvm";
-import { WorkPackageCodec, encodeWithCodec } from "@vekexasia/jam-codec";
+import {
+  WorkPackageCodec,
+  dlArrayOfHashesCodec,
+  dlArrayOfUint8ArrayCodec,
+  encodeWithCodec,
+} from "@vekexasia/jam-codec";
 import { Hashing } from "@vekexasia/jam-crypto";
-import { J_fn, constantDepthBinaryTree } from "@vekexasia/jam-merklization";
-import { bytesToBigInt, toTagged } from "@vekexasia/jam-utils";
+import {
+  J_fn,
+  constantDepthBinaryTree,
+  traceBinarySliced,
+} from "@vekexasia/jam-merklization";
+import { bytesToBigInt, toTagged, zeroPad } from "@vekexasia/jam-utils";
+import {
+  ERASURECODE_BASIC_SIZE,
+  ERASURECODE_EXPORTED_SIZE,
+} from "@vekexasia/jam-constants";
 
 export const computeWorkResults = (
   pac: WorkPackageWithAuth,
@@ -66,6 +79,27 @@ const A_fn = (
   };
 
   throw new Error("Not implemented");
+};
+
+/**
+ * Paged Proof
+ * (181) P_fn
+ */
+const pagedProof = (segments: ExportSegment[]): ExportSegment[] => {
+  const limit = 64 * Math.ceil(segments.length / 64);
+  const toRet = [];
+  for (let i = 0; i < limit; i += 64) {
+    const p = segments.slice(i, i + 64);
+    const j6 = traceBinarySliced(6, segments, i);
+    const encoded = new Uint8Array([
+      ...encodeWithCodec(dlArrayOfHashesCodec, j6),
+      ...encodeWithCodec(dlArrayOfUint8ArrayCodec, p),
+    ]);
+    toRet.push(
+      zeroPad(encoded, ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE),
+    );
+  }
+  return toRet as ExportSegment[];
 };
 
 const I_fn = (
