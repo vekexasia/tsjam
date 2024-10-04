@@ -8,6 +8,7 @@ export * from "@/bitSequence.js";
 export * from "@/optional.js";
 export * from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 export * from "@/lengthdiscriminated/lengthDiscriminator.js";
+export * from "@/lengthdiscriminated/utils.js";
 export type { JamCodec } from "@/codec.js";
 export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
