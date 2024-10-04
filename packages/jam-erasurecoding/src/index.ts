@@ -83,3 +83,11 @@ export const transpose = <T>(matrix: T[][]): T[][] => {
   }
   return toRet;
 };
+
+export const erasureCoding = (
+  k: number,
+  d: Uint8Array,
+): SeqOfLength<Uint8Array, 1023> => {
+  assert(d.length === 684 * k, "data length must be 684*k");
+  throw new Error("Not implemented");
+};
