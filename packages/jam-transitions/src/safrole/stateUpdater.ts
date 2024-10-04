@@ -1,5 +1,7 @@
 import {
   IDisputesState,
+  JamHeader,
+  OpaqueHash,
   Posterior,
   SafroleState,
   Tau,
@@ -10,8 +12,24 @@ import { rotateKeys } from "@/safrole/keys.js";
 import { gamma_sSTF } from "@/safrole/gammaS.js";
 import { gamma_aSTF } from "@/safrole/gammaA.js";
 import { TicketExtrinsics } from "@vekexasia/jam-types";
-import { toPosterior } from "@vekexasia/jam-utils";
+import { newSTF, toPosterior } from "@vekexasia/jam-utils";
 import { ticketExtrinsicToIdentifiersSTF } from "@/tickets.js";
+
+export const safroleToPosterior = newSTF<
+  SafroleState,
+  {
+    p_tau: Posterior<Tau>;
+    h_v: JamHeader["entropySignature"];
+    et: TicketExtrinsics;
+  }
+>((input, curState) => {
+  return computeNewSafroleState(
+    curState,
+    input.p_tau,
+    Bandersnatch.vrfOutputSignature(input.h_v),
+    input.et,
+  );
+});
 
 export const computeNewSafroleState = (
   curState: SafroleState,
