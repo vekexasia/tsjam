@@ -21,6 +21,7 @@ runs:
     - id: outputs
       shell: bash
       run: |
+        corepack enable
         node_version="${{ steps.setup-node.outputs.node-version }}"
         echo "node-version=${node_version#v}" >> "$GITHUB_OUTPUT"
 
