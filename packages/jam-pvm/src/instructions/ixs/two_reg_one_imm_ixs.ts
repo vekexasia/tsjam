@@ -1,12 +1,7 @@
-import {
-  PVMIxEvaluateFN,
-  RegisterIdentifier,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { PVMIxEvaluateFN, RegisterIdentifier, u32, u8 } from "@tsjam/types";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4 } from "@vekexasia/jam-codec";
+import { E_2, E_4 } from "@tsjam/codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { IxMod } from "@/instructions/utils.js";
 

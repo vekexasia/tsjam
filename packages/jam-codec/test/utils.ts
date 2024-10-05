@@ -4,7 +4,7 @@ import {
   hexToBytes,
   hextToBigInt,
   toTagged,
-} from "@vekexasia/jam-utils";
+} from "@tsjam/utils";
 import {
   AssuranceExtrinsic,
   DisputeExtrinsic,
@@ -16,7 +16,7 @@ import {
   WorkItem,
   WorkResult,
   u64,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 
 export const getCodecFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(

@@ -3,7 +3,7 @@ import {
   PVMModification,
   RegularPVMExitReason,
   u32,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 const ZA = 4;
 /**
  * djump(a) method defined in `225`

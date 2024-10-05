@@ -15,7 +15,7 @@ import {
   u32,
   u64,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
@@ -24,13 +24,13 @@ import {
   PREIMAGE_EXPIRATION,
   SERVICE_MIN_BALANCE,
   TRANSFER_MEMO_SIZE,
-} from "@vekexasia/jam-constants";
-import { E_4, E_8, ValidatorDataCodec } from "@vekexasia/jam-codec";
+} from "@tsjam/constants";
+import { E_4, E_8, ValidatorDataCodec } from "@tsjam/codec";
 import {
   bytesToBigInt,
   computeServiceAccountThreshold,
   toTagged,
-} from "@vekexasia/jam-utils";
+} from "@tsjam/utils";
 import { W0, W1, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";

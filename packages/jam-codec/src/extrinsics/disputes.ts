@@ -5,9 +5,9 @@ import {
   Hash,
   ValidatorIndex,
   u32,
-} from "@vekexasia/jam-types";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
-import { bytesToBigInt } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { bytesToBigInt } from "@tsjam/utils";
 import { JamCodec } from "@/codec.js";
 import { E_2, E_4, E_sub } from "@/ints/E_subscr.js";
 import { E } from "@/ints/e.js";
@@ -206,7 +206,7 @@ export const codec_Ed: JamCodec<DisputeExtrinsic> = {
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
-  const constants = await import("@vekexasia/jam-constants");
+  const constants = await import("@tsjam/constants");
   const { disputesExtrinsicFromJSON, getUTF8FixtureFile, getCodecFixtureFile } =
     await import("@/test/utils.js");
   describe("codecED", () => {

@@ -1,9 +1,9 @@
 {
-  "name": "@tsjam/jam-types",
+  "name": "@tsjam/types",
   "version": "1.0.0",
   "description": "Base Types for JAM",
   "dependencies": {
-    "@tsjam/jam-constants": "*"
+    "@tsjam/constants": "*"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

@@ -1,4 +1,4 @@
-import { Hash } from "@vekexasia/jam-types";
+import { Hash } from "@tsjam/types";
 import { HashCodec, IdentityCodec } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 

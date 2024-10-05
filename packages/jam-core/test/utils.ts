@@ -6,8 +6,8 @@ import {
   Tagged,
   TicketIdentifier,
   ValidatorData,
-} from "@vekexasia/jam-types";
-import { bigintToBytes, hextToBigInt, toTagged } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
 
 export const validatorEntryMap = (entry: any) => {
   return {

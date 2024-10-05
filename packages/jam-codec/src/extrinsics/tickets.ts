@@ -1,4 +1,4 @@
-import { RingVRFProof, TicketExtrinsics } from "@vekexasia/jam-types";
+import { RingVRFProof, TicketExtrinsics } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 
 export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics[0]>({
@@ -31,7 +31,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const fs = await import("fs");
 
-  const { hexToBytes } = await import("@vekexasia/jam-utils");
+  const { hexToBytes } = await import("@tsjam/utils");
   const path = await import("path");
   describe("codecEt", () => {
     const bin = fs.readFileSync(

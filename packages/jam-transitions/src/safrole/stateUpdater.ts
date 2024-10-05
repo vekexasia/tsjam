@@ -4,14 +4,14 @@ import {
   Posterior,
   SafroleState,
   Tau,
-} from "@vekexasia/jam-types";
-import { Bandersnatch } from "@vekexasia/jam-crypto";
+} from "@tsjam/types";
+import { Bandersnatch } from "@tsjam/crypto";
 import { entropyRotationSTF, eta0STF } from "@/safrole/eta.js";
 import { rotateKeys } from "@/safrole/keys.js";
 import { gamma_sSTF } from "@/safrole/gammaS.js";
 import { gamma_aSTF } from "@/safrole/gammaA.js";
-import { TicketExtrinsics } from "@vekexasia/jam-types";
-import { newSTF, toPosterior } from "@vekexasia/jam-utils";
+import { TicketExtrinsics } from "@tsjam/types";
+import { newSTF, toPosterior } from "@tsjam/utils";
 import { ticketExtrinsicToIdentifiersSTF } from "@/tickets.js";
 
 export const safroleToPosterior = newSTF<

@@ -1,4 +1,4 @@
-import { Hash, ServiceAccount, UpToSeq, u32 } from "@vekexasia/jam-types";
+import { Hash, ServiceAccount, UpToSeq, u32 } from "@tsjam/types";
 import assert from "node:assert";
 import { toTagged } from "@/utils.js";
 

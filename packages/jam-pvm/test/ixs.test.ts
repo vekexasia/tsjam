@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { Ixdb } from "@/instructions/ixdb.js";
 import * as fs from "node:fs";
 import { createEvContext } from "@/test/mocks.js";
-import { toTagged } from "@vekexasia/jam-utils";
-import { PVMProgramCodec } from "@vekexasia/jam-codec";
+import { toTagged } from "@tsjam/utils";
+import { PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { basicInvocation } from "@/invocations/basic.js";
-import { RegularPVMExitReason } from "@vekexasia/jam-types";
+import { RegularPVMExitReason } from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 
 describe("allixs", () => {

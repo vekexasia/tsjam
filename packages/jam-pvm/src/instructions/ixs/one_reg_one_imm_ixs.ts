@@ -4,13 +4,13 @@ import {
   u16,
   u32,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
-import { E_2, E_4 } from "@vekexasia/jam-codec";
+import { E_2, E_4 } from "@tsjam/codec";
 import { IxMod } from "@/instructions/utils.js";
 
 type InputType = [register: RegisterIdentifier, value: u32];

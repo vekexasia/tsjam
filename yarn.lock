@@ -950,6 +950,127 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tsjam/codec@npm:*, @tsjam/codec@workspace:packages/jam-codec":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/codec@workspace:packages/jam-codec"
+  dependencies:
+    "@tsjam/constants": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/constants@npm:*, @tsjam/constants@workspace:*, @tsjam/constants@workspace:packages/jam-constants":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/constants@workspace:packages/jam-constants"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/core@workspace:packages/jam-core":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/core@workspace:packages/jam-core"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
+    "@tsjam/crypto": "npm:*"
+    "@tsjam/pvm": "npm:*"
+    "@tsjam/transitions": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/crypto-napi@npm:*, @tsjam/crypto-napi@workspace:packages/jam-crypto-napi":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/crypto-napi@workspace:packages/jam-crypto-napi"
+  dependencies:
+    "@napi-rs/cli": "npm:^2.18.0"
+    ava: "npm:^6.0.1"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/crypto@npm:*, @tsjam/crypto@workspace:packages/jam-crypto":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/crypto@workspace:packages/jam-crypto"
+  dependencies:
+    "@tsjam/constants": "npm:*"
+    "@tsjam/crypto-napi": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+    "@types/blake2b-wasm": "npm:^2"
+    "@types/sodium-native": "npm:^2.3.9"
+    blake2b-wasm: "npm:^2.4.0"
+    fast-shuffle: "npm:^6.1.0"
+    keccak-wasm: "npm:^0.11.2"
+    sodium-native: "npm:^4.1.1"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/erasurecoding@workspace:packages/jam-erasurecoding":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/erasurecoding@workspace:packages/jam-erasurecoding"
+  dependencies:
+    "@tsjam/constants": "npm:*"
+    "@tsjam/types": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/merklization@npm:*, @tsjam/merklization@workspace:packages/jam-merklization":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/merklization@workspace:packages/jam-merklization"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/crypto": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/pvm@npm:*, @tsjam/pvm@workspace:packages/jam-pvm":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/pvm@workspace:packages/jam-pvm"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
+    "@tsjam/crypto": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/transitions@npm:*, @tsjam/transitions@workspace:packages/jam-transitions":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/transitions@workspace:packages/jam-transitions"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
+    "@tsjam/crypto": "npm:*"
+    "@tsjam/merklization": "npm:*"
+    "@tsjam/pvm": "npm:*"
+    "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/types@npm:*, @tsjam/types@workspace:*, @tsjam/types@workspace:packages/jam-types":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/types@workspace:packages/jam-types"
+  dependencies:
+    "@tsjam/constants": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/utils@npm:*, @tsjam/utils@workspace:packages/jam-utils":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/utils@workspace:packages/jam-utils"
+  dependencies:
+    "@tsjam/constants": "workspace:*"
+    "@tsjam/types": "workspace:*"
+    "@vekexasia/bigint-uint8array": "npm:^1.1.1"
+    bigint-buffer: "npm:^1.1.5"
+  languageName: unknown
+  linkType: soft
+
 "@types/blake2b-wasm@npm:^2":
   version: 2.4.3
   resolution: "@types/blake2b-wasm@npm:2.4.3"
@@ -1326,126 +1447,6 @@ __metadata:
   checksum: 10c0/8de5bb683d42ea4a1fc11a72ffc683b3b30893b8d578c6184643e398adb2a8ce622ea95d2284c7ac26579e1f814f21c7737a8dd42c902adfc698aed842d8a519
   languageName: node
   linkType: hard
-
-"@vekexasia/jam-codec@npm:*, @vekexasia/jam-codec@workspace:packages/jam-codec":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-codec@workspace:packages/jam-codec"
-  dependencies:
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-constants@npm:*, @vekexasia/jam-constants@workspace:*, @vekexasia/jam-constants@workspace:packages/jam-constants":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-constants@workspace:packages/jam-constants"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-core@workspace:packages/jam-core":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-core@workspace:packages/jam-core"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-pvm": "npm:*"
-    "@vekexasia/jam-transitions": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-crypto-napi@npm:*, @vekexasia/jam-crypto-napi@workspace:packages/jam-crypto-napi":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-crypto-napi@workspace:packages/jam-crypto-napi"
-  dependencies:
-    "@napi-rs/cli": "npm:^2.18.0"
-    ava: "npm:^6.0.1"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-crypto@npm:*, @vekexasia/jam-crypto@workspace:packages/jam-crypto":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-crypto@workspace:packages/jam-crypto"
-  dependencies:
-    "@types/blake2b-wasm": "npm:^2"
-    "@types/sodium-native": "npm:^2.3.9"
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-crypto-napi": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-    blake2b-wasm: "npm:^2.4.0"
-    fast-shuffle: "npm:^6.1.0"
-    keccak-wasm: "npm:^0.11.2"
-    sodium-native: "npm:^4.1.1"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-erasurecoding@workspace:packages/jam-erasurecoding":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-erasurecoding@workspace:packages/jam-erasurecoding"
-  dependencies:
-    "@vekexasia/jam-constants": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-merklization@npm:*, @vekexasia/jam-merklization@workspace:packages/jam-merklization":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-merklization@workspace:packages/jam-merklization"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-pvm@npm:*, @vekexasia/jam-pvm@workspace:packages/jam-pvm":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-pvm@workspace:packages/jam-pvm"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-transitions@npm:*, @vekexasia/jam-transitions@workspace:packages/jam-transitions":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-transitions@workspace:packages/jam-transitions"
-  dependencies:
-    "@vekexasia/jam-codec": "npm:*"
-    "@vekexasia/jam-constants": "npm:*"
-    "@vekexasia/jam-crypto": "npm:*"
-    "@vekexasia/jam-merklization": "npm:*"
-    "@vekexasia/jam-pvm": "npm:*"
-    "@vekexasia/jam-types": "npm:*"
-    "@vekexasia/jam-utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-types@npm:*, @vekexasia/jam-types@workspace:*, @vekexasia/jam-types@workspace:packages/jam-types":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-types@workspace:packages/jam-types"
-  dependencies:
-    "@vekexasia/jam-constants": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@vekexasia/jam-utils@npm:*, @vekexasia/jam-utils@workspace:packages/jam-utils":
-  version: 0.0.0-use.local
-  resolution: "@vekexasia/jam-utils@workspace:packages/jam-utils"
-  dependencies:
-    "@vekexasia/bigint-uint8array": "npm:^1.1.1"
-    "@vekexasia/jam-constants": "workspace:*"
-    "@vekexasia/jam-types": "workspace:*"
-    bigint-buffer: "npm:^1.1.5"
-  languageName: unknown
-  linkType: soft
 
 "@vercel/nft@npm:^0.26.2":
   version: 0.26.5

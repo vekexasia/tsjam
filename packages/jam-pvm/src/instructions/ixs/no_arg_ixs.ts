@@ -1,4 +1,4 @@
-import { RegularPVMExitReason, u32, u8 } from "@vekexasia/jam-types";
+import { RegularPVMExitReason, u32, u8 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -5,7 +5,7 @@ import {
   JamHeader,
   Tau,
   TicketIdentifier,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
@@ -19,8 +19,8 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
 import { createSequenceCodec } from "@/sequenceCodec.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
-import { toTagged } from "@vekexasia/jam-utils";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { toTagged } from "@tsjam/utils";
 
 const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
   decode(bytes: Uint8Array): {

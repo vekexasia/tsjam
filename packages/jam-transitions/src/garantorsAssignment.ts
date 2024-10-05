@@ -7,14 +7,14 @@ import {
   SafroleState,
   Tau,
   u32,
-} from "@vekexasia/jam-types";
-import { FisherYatesH } from "@vekexasia/jam-crypto";
+} from "@tsjam/types";
+import { FisherYatesH } from "@tsjam/crypto";
 import {
   CORES,
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
-} from "@vekexasia/jam-constants";
-import { slotIndex } from "@vekexasia/jam-utils";
+} from "@tsjam/constants";
+import { slotIndex } from "@tsjam/utils";
 import { PHI_FN } from "@/safrole/keys.js";
 
 /**

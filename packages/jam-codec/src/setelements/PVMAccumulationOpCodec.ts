@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { PVMAccumulationOp } from "@vekexasia/jam-types";
+import { PVMAccumulationOp } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import { WorkOutputCodec } from "@/setelements/WorkOutputCodec.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";

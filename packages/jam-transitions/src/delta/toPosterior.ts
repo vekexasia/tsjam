@@ -5,8 +5,8 @@ import {
   ServiceAccount,
   ServiceIndex,
   u64,
-} from "@vekexasia/jam-types";
-import { newSTF } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { newSTF } from "@tsjam/utils";
 type AccResultItem = {
   // service account after accummulation
   s: ServiceAccount | undefined;

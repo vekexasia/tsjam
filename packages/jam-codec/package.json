@@ -1,5 +1,5 @@
 {
-  "name": "@tsjam/jam-codec",
+  "name": "@tsjam/codec",
   "version": "1.0.0",
   "description": "A library to convert back and forth according appendix C of graypaper. Also called SCALE",
   "scripts": {
@@ -28,9 +28,9 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@tsjam/jam-constants": "*",
-    "@tsjam/jam-types": "*",
-    "@tsjam/jam-utils": "*"
+    "@tsjam/constants": "*",
+    "@tsjam/types": "*",
+    "@tsjam/utils": "*"
   },
   "license": "MIT"
 }

@@ -2,9 +2,9 @@ import {
   ED25519PrivateKey,
   ED25519PublicKey,
   ED25519Signature,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import sodium from "sodium-native";
-import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-utils";
+import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 export const Ed25519 = {
   /**

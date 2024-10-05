@@ -11,27 +11,27 @@ import {
   WorkPackageWithAuth,
   WorkReport,
   WorkResult,
-} from "@vekexasia/jam-types";
-import { isAuthorized, refineInvocation } from "@vekexasia/jam-pvm";
+} from "@tsjam/types";
+import { isAuthorized, refineInvocation } from "@tsjam/pvm";
 import {
   WorkPackageCodec,
   dlArrayOfHashesCodec,
   dlArrayOfUint8ArrayCodec,
   encodeWithCodec,
-} from "@vekexasia/jam-codec";
-import { Hashing } from "@vekexasia/jam-crypto";
+} from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
 import {
   J_fn,
   constantDepthBinaryTree,
   traceBinarySliced,
   wellBalancedBinaryMerkleRoot,
-} from "@vekexasia/jam-merklization";
-import { toTagged, zeroPad } from "@vekexasia/jam-utils";
+} from "@tsjam/merklization";
+import { toTagged, zeroPad } from "@tsjam/utils";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
-} from "@vekexasia/jam-constants";
-import { erasureCoding, transpose } from "@vekexasia/jam-erasurecoding";
+} from "@tsjam/constants";
+import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 
 /**
  * `Ξ` fn

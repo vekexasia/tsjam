@@ -1,4 +1,4 @@
-import { RefinementContext, u32 } from "@vekexasia/jam-types";
+import { RefinementContext, u32 } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";

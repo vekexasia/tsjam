@@ -13,8 +13,8 @@ import {
   WorkPackageHash,
   u32,
   u64,
-} from "@vekexasia/jam-types";
-import { HostCallResult, SERVICECODE_MAX_SIZE } from "@vekexasia/jam-constants";
+} from "@tsjam/types";
+import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import {
   RefineContext,
   omega_h,
@@ -29,7 +29,7 @@ import {
 import { FnsDb } from "@/functions/fnsdb.js";
 import { applyMods } from "@/functions/utils.js";
 import { omega_g } from "@/functions/general.js";
-import { historicalLookup } from "@vekexasia/jam-utils";
+import { historicalLookup } from "@tsjam/utils";
 import { argumentInvocation } from "@/invocations/argument.js";
 
 export const refineInvocation = (

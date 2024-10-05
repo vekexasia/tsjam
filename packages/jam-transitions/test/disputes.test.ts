@@ -15,9 +15,9 @@ const mocks = vi.hoisted(() => {
     toTagged: (a: any) => a,
   };
 });
-vi.mock("@vekexasia/jam-constants", async (importOriginal) => {
+vi.mock("@tsjam/constants", async (importOriginal) => {
   const toRet = {
-    ...(await importOriginal<typeof import("@vekexasia/jam-constants")>()),
+    ...(await importOriginal<typeof import("@tsjam/constants")>()),
     ...mocks,
   };
   Object.defineProperty(toRet, "LOTTERY_MAX_SLOT", {
@@ -43,8 +43,8 @@ vi.mock("@vekexasia/jam-constants", async (importOriginal) => {
   return toRet;
 });
 import { disputesSTF } from "@/disputesState.js";
-import { DisputeExtrinsic } from "@vekexasia/jam-types";
-import { hextToBigInt, toTagged } from "@vekexasia/jam-utils";
+import { DisputeExtrinsic } from "@tsjam/types";
+import { hextToBigInt, toTagged } from "@tsjam/utils";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(

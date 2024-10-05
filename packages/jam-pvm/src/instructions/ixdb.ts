@@ -1,4 +1,4 @@
-import { PVMIx, u8 } from "@vekexasia/jam-types";
+import { PVMIx, u8 } from "@tsjam/types";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown[]>>(),

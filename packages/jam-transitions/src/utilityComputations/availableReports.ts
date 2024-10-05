@@ -1,5 +1,5 @@
-import { Dagger, EA_Extrinsic, RHO, WorkReport } from "@vekexasia/jam-types";
-import { CORES, MINIMUM_VALIDATORS } from "@vekexasia/jam-constants";
+import { Dagger, EA_Extrinsic, RHO, WorkReport } from "@tsjam/types";
+import { CORES, MINIMUM_VALIDATORS } from "@tsjam/constants";
 
 /**
  * (129) `W` in the paper section

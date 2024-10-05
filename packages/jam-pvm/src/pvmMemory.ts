@@ -1,4 +1,4 @@
-import { IPVMMemory, u32 } from "@vekexasia/jam-types";
+import { IPVMMemory, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type ACL = { from: u32; to: u32; writable: boolean };
 export type MemoryContent = { at: u32; content: Uint8Array };

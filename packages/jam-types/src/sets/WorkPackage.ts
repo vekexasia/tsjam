@@ -1,7 +1,7 @@
 import { Blake2bHash, BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { WorkItem } from "@/sets/WorkItem";
-import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
+import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 
 /**
  * Identified by `P` set

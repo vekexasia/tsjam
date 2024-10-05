@@ -1,5 +1,5 @@
 import { Hash, SeqOfLength } from "@/genericTypes.js";
-import { AUTHQUEUE_MAX_SIZE, CORES } from "@vekexasia/jam-constants";
+import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
 
 // [ [H]Q ]C
 /**

@@ -1,9 +1,5 @@
 import { JamCodec } from "@/codec";
-import {
-  BLSKey,
-  ByteArrayOfLength,
-  type ValidatorData,
-} from "@vekexasia/jam-types";
+import { BLSKey, ByteArrayOfLength, type ValidatorData } from "@tsjam/types";
 import assert from "node:assert";
 import {
   BandersnatchCodec,

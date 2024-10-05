@@ -1,7 +1,7 @@
 import { HashFn, maybeBigintToBytes } from "@/utils.js";
 import { binaryMerkleTree } from "@/binary.js";
-import { Hash } from "@vekexasia/jam-types";
-import { Hashing } from "@vekexasia/jam-crypto";
+import { Hash } from "@tsjam/types";
+import { Hashing } from "@tsjam/crypto";
 
 /**
  * (298) `Mb`

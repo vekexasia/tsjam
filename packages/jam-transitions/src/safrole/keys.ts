@@ -8,8 +8,8 @@ import {
   Tau,
   TicketIdentifier,
   ValidatorData,
-} from "@vekexasia/jam-types";
-import { Bandersnatch } from "@vekexasia/jam-crypto";
+} from "@tsjam/types";
+import { Bandersnatch } from "@tsjam/crypto";
 import { afterAll, beforeEach } from "vitest";
 import {
   isFallbackMode,
@@ -17,8 +17,8 @@ import {
   newSTF,
   toPosterior,
   toTagged,
-} from "@vekexasia/jam-utils";
-import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+} from "@tsjam/utils";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[],

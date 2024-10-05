@@ -1,6 +1,6 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
-import { SeqOfLength } from "@vekexasia/jam-types";
+import { SeqOfLength } from "@tsjam/types";
 
 export const createSequenceCodec = <T, K extends number>(
   howMany: number,

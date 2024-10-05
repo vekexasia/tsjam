@@ -1,8 +1,8 @@
-import { Hash, MerkeTreeRoot } from "@vekexasia/jam-types";
-import { toTagged } from "@vekexasia/jam-utils";
+import { Hash, MerkeTreeRoot } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { HashFn, maybeBigintToBytes } from "@/utils.js";
-import { Hashing } from "@vekexasia/jam-crypto";
+import { Hashing } from "@tsjam/crypto";
 
 const prefix: Uint8Array = new TextEncoder().encode("node");
 

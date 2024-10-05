@@ -6,14 +6,14 @@ import {
   SeqOfLength,
   Tau,
   TicketIdentifier,
-} from "@vekexasia/jam-types";
-import { E_4 } from "@vekexasia/jam-codec";
-import { Hashing } from "@vekexasia/jam-crypto";
+} from "@tsjam/types";
+import { E_4 } from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
 import {
   EPOCH_LENGTH,
   LOTTERY_MAX_SLOT,
   NUMBER_OF_VALIDATORS,
-} from "@vekexasia/jam-constants";
+} from "@tsjam/constants";
 import {
   bigintToBytes,
   epochIndex,
@@ -23,7 +23,7 @@ import {
   slotIndex,
   toPosterior,
   toTagged,
-} from "@vekexasia/jam-utils";
+} from "@tsjam/utils";
 
 /**
  * it computes the posterior value of `gamma_s`

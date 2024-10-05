@@ -6,7 +6,7 @@ import {
   PVMProgramExecutionContextBase,
   u32,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { basicInvocation } from "@/invocations/basic.js";
 
 /**

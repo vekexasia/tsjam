@@ -3,7 +3,7 @@ import {
   PVMModification,
   RegularPVMExitReason,
   u32,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 
 /**
  * Branch to the given address if the condition is true.

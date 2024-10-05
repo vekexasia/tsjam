@@ -1,12 +1,7 @@
-import {
-  Posterior,
-  SafroleState,
-  Tau,
-  TicketIdentifier,
-} from "@vekexasia/jam-types";
+import { Posterior, SafroleState, Tau, TicketIdentifier } from "@tsjam/types";
 import assert from "node:assert";
-import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
-import { isNewEra, newSTF } from "@vekexasia/jam-utils";
+import { EPOCH_LENGTH } from "@tsjam/constants";
+import { isNewEra, newSTF } from "@tsjam/utils";
 
 type Input = {
   tau: Tau;

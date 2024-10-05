@@ -1,8 +1,8 @@
 // E.1.2
 import { HashFn } from "@/utils.js";
 import { binaryMerkleTree, traceBinaryMerkleTree } from "@/binary.js";
-import { Hashing } from "@vekexasia/jam-crypto";
-import { Hash } from "@vekexasia/jam-types";
+import { Hashing } from "@tsjam/crypto";
+import { Hash } from "@tsjam/types";
 
 const leaf: Uint8Array = new TextEncoder().encode("leaf");
 

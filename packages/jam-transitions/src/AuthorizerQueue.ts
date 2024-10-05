@@ -1,6 +1,6 @@
-import { newSTF } from "@vekexasia/jam-utils";
-import { AuthorizerQueue, Posterior } from "@vekexasia/jam-types";
-import { accumulateInvocation } from "@vekexasia/jam-pvm";
+import { newSTF } from "@tsjam/utils";
+import { AuthorizerQueue, Posterior } from "@tsjam/types";
+import { accumulateInvocation } from "@tsjam/pvm";
 
 // 164 of gp
 // `φ' = A(Xa)c` (84)

@@ -12,7 +12,7 @@ import {
   Tau,
   u32,
   u64,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { FnsDb } from "@/functions/fnsdb.js";
@@ -33,7 +33,7 @@ import {
   PVMAccumulationOpCodec,
   createArrayLengthDiscriminator,
   encodeWithCodec,
-} from "@vekexasia/jam-codec";
+} from "@tsjam/codec";
 import {
   omega_g,
   omega_i,

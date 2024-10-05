@@ -7,9 +7,9 @@ import {
   Posterior,
   Tau,
   Validated,
-} from "@vekexasia/jam-types";
-import { newSTF } from "@vekexasia/jam-utils";
-import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE } from "@vekexasia/jam-constants";
+} from "@tsjam/types";
+import { newSTF } from "@tsjam/utils";
+import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE } from "@tsjam/constants";
 
 type Input = {
   p_queue: Posterior<AuthorizerQueue>;

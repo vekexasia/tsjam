@@ -1,4 +1,4 @@
-import { WorkItem, u32 } from "@vekexasia/jam-types";
+import { WorkItem, u32 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { HashCodec } from "@/identity.js";
 import { E_2, E_4, E_8 } from "@/ints/E_subscr.js";

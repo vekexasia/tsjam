@@ -1,12 +1,6 @@
-import {
-  Dagger,
-  Hash,
-  IDisputesState,
-  Posterior,
-  RHO,
-} from "@vekexasia/jam-types";
+import { Dagger, Hash, IDisputesState, Posterior, RHO } from "@tsjam/types";
 import assert from "node:assert";
-import { newSTF, toDagger, toTagged } from "@vekexasia/jam-utils";
+import { newSTF, toDagger, toTagged } from "@tsjam/utils";
 
 /**
  * Input should be the newly added hashes to phi_b and phi_w

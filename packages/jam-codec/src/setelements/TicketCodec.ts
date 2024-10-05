@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { Ticket } from "@vekexasia/jam-types";
+import { Ticket } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 

@@ -1,9 +1,4 @@
-import {
-  PVMIxEvaluateFN,
-  RegisterIdentifier,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { PVMIxEvaluateFN, RegisterIdentifier, u32, u8 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";

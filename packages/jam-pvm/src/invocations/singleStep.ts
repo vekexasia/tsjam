@@ -1,4 +1,4 @@
-import { toPosterior, toTagged } from "@vekexasia/jam-utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import {
   IParsedProgram,
   PVMExitReason,
@@ -13,7 +13,7 @@ import {
   Posterior,
   RegularPVMExitReason,
   u32,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 
 type Output = {

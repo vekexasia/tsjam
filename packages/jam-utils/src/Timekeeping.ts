@@ -1,5 +1,5 @@
-import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@vekexasia/jam-constants";
-import { Posterior, Tau } from "@vekexasia/jam-types";
+import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
+import { Posterior, Tau } from "@tsjam/types";
 
 // todo: move away from types
 export class Timekeeping {

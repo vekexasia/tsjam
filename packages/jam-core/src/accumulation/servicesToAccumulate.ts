@@ -1,5 +1,5 @@
-import { ServiceIndex } from "@vekexasia/jam-types";
-import { availableReports } from "@vekexasia/jam-transitions";
+import { ServiceIndex } from "@tsjam/types";
+import { availableReports } from "@tsjam/transitions";
 
 /**
  * `S` set

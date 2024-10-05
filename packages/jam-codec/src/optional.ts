@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { BigIntBytes, Hash } from "@vekexasia/jam-types";
+import { BigIntBytes, Hash } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 
 /**

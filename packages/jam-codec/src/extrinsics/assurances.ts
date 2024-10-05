@@ -1,10 +1,6 @@
-import {
-  AssuranceExtrinsic,
-  EA_Extrinsic,
-  ValidatorIndex,
-} from "@vekexasia/jam-types";
-import { CORES } from "@vekexasia/jam-constants";
-import { bigintToExistingBytes } from "@vekexasia/jam-utils";
+import { AssuranceExtrinsic, EA_Extrinsic, ValidatorIndex } from "@tsjam/types";
+import { CORES } from "@tsjam/constants";
+import { bigintToExistingBytes } from "@tsjam/utils";
 import { JamCodec } from "@/codec.js";
 import { BitSequence } from "@/bitSequence.js";
 import { E_2 } from "@/ints/E_subscr.js";
@@ -73,7 +69,7 @@ export const codec_Ea = createArrayLengthDiscriminator(
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
-  const constants = await import("@vekexasia/jam-constants");
+  const constants = await import("@tsjam/constants");
   const {
     assurancesExtrinsicFromJSON,
     getUTF8FixtureFile,

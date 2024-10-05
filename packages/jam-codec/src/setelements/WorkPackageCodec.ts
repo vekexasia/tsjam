@@ -1,4 +1,4 @@
-import { WorkPackage } from "@vekexasia/jam-types";
+import { WorkPackage } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_4 } from "@/ints/E_subscr.js";
@@ -82,7 +82,7 @@ export const WorkPackageCodec: JamCodec<WorkPackage> = {
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { hexToBytes, hextToBigInt } = await import("@vekexasia/jam-utils");
+  const { hexToBytes, hextToBigInt } = await import("@tsjam/utils");
   const {
     getCodecFixtureFile,
     getUTF8FixtureFile,

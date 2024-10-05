@@ -12,16 +12,16 @@ import {
   u32,
   u64,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { W0, W1 } from "@/functions/utils.js";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
   HostCallResult,
-} from "@vekexasia/jam-constants";
-import { bytesToBigInt, historicalLookup } from "@vekexasia/jam-utils";
+} from "@tsjam/constants";
+import { bytesToBigInt, historicalLookup } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
-import { E_4, E_8, PVMProgramCodec } from "@vekexasia/jam-codec";
+import { E_4, E_8, PVMProgramCodec } from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
 import { ParsedProgram } from "@/parseProgram.js";
 import assert from "node:assert";

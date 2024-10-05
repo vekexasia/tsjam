@@ -1,5 +1,5 @@
-import { PVMAccumulationOp, ServiceIndex } from "@vekexasia/jam-types";
-import { availableReports } from "@vekexasia/jam-transitions";
+import { PVMAccumulationOp, ServiceIndex } from "@tsjam/types";
+import { availableReports } from "@tsjam/transitions";
 
 /**
  * Computes according to (160) the operations to accumulate for the pvm

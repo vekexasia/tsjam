@@ -6,16 +6,16 @@ import {
   SafroleState,
   Tau,
   Validated,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import assert from "node:assert";
 import {
   CORES,
   JAM_GUARANTEE,
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
-} from "@vekexasia/jam-constants";
-import { WorkReportCodec, encodeWithCodec } from "@vekexasia/jam-codec";
-import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
+} from "@tsjam/constants";
+import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
+import { Ed25519, Hashing } from "@tsjam/crypto";
 
 export const assertEGValid = (
   extrinsic: EG_Extrinsic,

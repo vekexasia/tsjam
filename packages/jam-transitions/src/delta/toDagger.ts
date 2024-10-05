@@ -6,12 +6,12 @@ import {
   Tagged,
   Tau,
   u32,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import assert from "node:assert";
-import { Hashing } from "@vekexasia/jam-crypto";
-import { newSTF, toTagged } from "@vekexasia/jam-utils";
+import { Hashing } from "@tsjam/crypto";
+import { newSTF, toTagged } from "@tsjam/utils";
 import { _w } from "@/utilityComputations/w.js";
-import { MAX_GAS_ACCUMULATION } from "@vekexasia/jam-constants";
+import { MAX_GAS_ACCUMULATION } from "@tsjam/constants";
 
 type Input = {
   // We are not using the native type to avoid circular dependencies

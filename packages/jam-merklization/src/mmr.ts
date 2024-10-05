@@ -1,9 +1,9 @@
-import { Hash } from "@vekexasia/jam-types";
+import { Hash } from "@tsjam/types";
 import {
   JamCodec,
   OptHashCodec,
   createArrayLengthDiscriminator,
-} from "@vekexasia/jam-codec";
+} from "@tsjam/codec";
 
 /**
  * section E.2 (301) `A`

@@ -10,7 +10,7 @@ import {
   SeqOfLength,
   ValidatorIndex,
 } from "@/genericTypes.js";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Tau } from "@/Tau.js";
 
 export type TicketIdentifier = {

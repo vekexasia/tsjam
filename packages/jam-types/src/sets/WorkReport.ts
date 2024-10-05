@@ -2,7 +2,7 @@ import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { Blake2bHash, BoundedSeq, CoreIndex } from "@/genericTypes";
 import { WorkResult } from "@/sets/WorkResult";
-import { MAXIMUM_WORK_ITEMS } from "@vekexasia/jam-constants";
+import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 
 /**
  * Identified by `W` set

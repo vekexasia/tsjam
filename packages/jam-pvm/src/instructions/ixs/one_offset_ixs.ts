@@ -1,9 +1,9 @@
-import { i32, u32, u8 } from "@vekexasia/jam-types";
+import { i32, u32, u8 } from "@tsjam/types";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Z } from "@/utils/zed.js";
 import assert from "node:assert";
-import { E_sub } from "@vekexasia/jam-codec";
+import { E_sub } from "@tsjam/codec";
 import { beforeAll } from "vitest";
 
 const decode = (bytes: Uint8Array): [offset: i32] => {
@@ -30,7 +30,7 @@ const jump = regIx<[offset: i32]>({
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;
 
-  const { toTagged } = await import("@vekexasia/jam-utils");
+  const { toTagged } = await import("@tsjam/utils");
   const { createEvContext } = await import("@/test/mocks.js");
   const b = await import("@/utils/branch.js");
   describe("one_offset_ixs", () => {

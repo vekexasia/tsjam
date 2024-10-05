@@ -1,7 +1,7 @@
-import { availableReports } from "@vekexasia/jam-transitions";
-import { Delta, DoubleDagger, ServiceIndex } from "@vekexasia/jam-types";
+import { availableReports } from "@tsjam/transitions";
+import { Delta, DoubleDagger, ServiceIndex } from "@tsjam/types";
 import assert from "node:assert";
-import { MAX_GAS_ACCUMULATION } from "@vekexasia/jam-constants";
+import { MAX_GAS_ACCUMULATION } from "@tsjam/constants";
 
 /**
  * (158) `G` in the paper

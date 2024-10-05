@@ -1,4 +1,4 @@
-import { Dagger, Delta, ServiceIndex } from "@vekexasia/jam-types";
+import { Dagger, Delta, ServiceIndex } from "@tsjam/types";
 
 /**
  * (260)

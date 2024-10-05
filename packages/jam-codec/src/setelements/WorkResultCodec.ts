@@ -1,6 +1,6 @@
 import { E_4, E_8 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
-import { ServiceIndex, WorkResult, u64 } from "@vekexasia/jam-types";
+import { ServiceIndex, WorkResult, u64 } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import { WorkOutputCodec } from "@/setelements/WorkOutputCodec.js";
 

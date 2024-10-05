@@ -6,13 +6,13 @@ import {
   WorkPackage,
   u32,
   u64,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
-import { E_4, WorkPackageCodec } from "@vekexasia/jam-codec";
+import { E_4, WorkPackageCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
 import { processIxResult } from "@/invocations/singleStep.js";
-import { HostCallResult } from "@vekexasia/jam-constants";
+import { HostCallResult } from "@tsjam/constants";
 
 /**
  * `ΨI` in the paper

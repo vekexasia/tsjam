@@ -7,16 +7,12 @@ import {
   Posterior,
   RHO,
   SafroleState,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import assert from "node:assert";
-import { Ed25519, Hashing } from "@vekexasia/jam-crypto";
-import { BitSequence, encodeWithCodec } from "@vekexasia/jam-codec";
-import {
-  CORES,
-  JAM_AVAILABLE,
-  NUMBER_OF_VALIDATORS,
-} from "@vekexasia/jam-constants";
-import { bigintToBytes, newSTF } from "@vekexasia/jam-utils";
+import { Ed25519, Hashing } from "@tsjam/crypto";
+import { BitSequence, encodeWithCodec } from "@tsjam/codec";
+import { CORES, JAM_AVAILABLE, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { bigintToBytes, newSTF } from "@tsjam/utils";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>

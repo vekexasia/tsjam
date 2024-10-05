@@ -8,8 +8,8 @@ import {
   SeqOfLength,
   u32,
   u8,
-} from "@vekexasia/jam-types";
-import { toTagged } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { processIxResult } from "@/invocations/singleStep.js";
 
 const mockMemory = (): IPVMMemory => ({

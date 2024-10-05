@@ -1,18 +1,18 @@
-import { bigintToBytes, newSTF, slotIndex } from "@vekexasia/jam-utils";
+import { bigintToBytes, newSTF, slotIndex } from "@tsjam/utils";
 import {
   Posterior,
   SafroleState,
   Tau,
   TicketExtrinsics,
   TicketIdentifier,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
-} from "@vekexasia/jam-constants";
+} from "@tsjam/constants";
 import assert from "node:assert";
-import { Bandersnatch } from "@vekexasia/jam-crypto";
+import { Bandersnatch } from "@tsjam/crypto";
 
 export const ticketExtrinsicToIdentifiersSTF = newSTF<
   null,

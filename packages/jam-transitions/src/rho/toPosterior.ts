@@ -5,13 +5,10 @@ import {
   RHO,
   SafroleState,
   Tau,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import assert from "node:assert";
-import {
-  MAXIMUM_AGE_LOOKUP_ANCHOR,
-  WORK_TIMEOUT,
-} from "@vekexasia/jam-constants";
-import { newSTF } from "@vekexasia/jam-utils";
+import { MAXIMUM_AGE_LOOKUP_ANCHOR, WORK_TIMEOUT } from "@tsjam/constants";
+import { newSTF } from "@tsjam/utils";
 import { _w } from "@/utilityComputations/w.js";
 
 export const RHO_toPosterior = newSTF<

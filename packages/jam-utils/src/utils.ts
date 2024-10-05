@@ -5,9 +5,9 @@ import {
   Posterior,
   SeqOfLength,
   Tagged,
-} from "@vekexasia/jam-types";
-import { JamHeader, SafroleState } from "@vekexasia/jam-types";
-import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+} from "@tsjam/types";
+import { JamHeader, SafroleState } from "@tsjam/types";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 /**
  * simple utility function to go from untagged to tagged
  */

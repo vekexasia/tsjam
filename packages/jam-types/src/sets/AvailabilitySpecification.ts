@@ -1,5 +1,5 @@
 import { Hash, Tagged, WorkPackageHash } from "@/genericTypes";
-import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@vekexasia/jam-constants";
+import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 
 /**
  * identified by `S` set

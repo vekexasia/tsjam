@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Hash } from "@vekexasia/jam-types";
+import { Hash } from "@tsjam/types";
 
 export const FisherYates = <T>(arr: T[], entropies: number[]) => {
   return arr.slice();

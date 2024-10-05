@@ -6,10 +6,10 @@ import {
   BandersnatchSignature,
   OpaqueHash,
   RingVRFProof,
-} from "@vekexasia/jam-types";
-import { ringRoot, vrfOutputHash, vrfVerify } from "@vekexasia/jam-crypto-napi";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
-import { bigintToBytes, bytesToBigInt } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { ringRoot, vrfOutputHash, vrfVerify } from "@tsjam/crypto-napi";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 export const Bandersnatch = {
   /**

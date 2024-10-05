@@ -1,7 +1,4 @@
-import {
-  AvailabilitySpecification,
-  WorkPackageHash,
-} from "@vekexasia/jam-types";
+import { AvailabilitySpecification, WorkPackageHash } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";

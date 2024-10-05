@@ -1,6 +1,6 @@
 import assert from "node:assert";
-import { u32, u8 } from "@vekexasia/jam-types";
-import { E_sub } from "@vekexasia/jam-codec";
+import { u32, u8 } from "@tsjam/types";
+import { E_sub } from "@tsjam/codec";
 
 /**
  * Reads a varint from a buffer. it follows the X formula from the graypaper appendix A.

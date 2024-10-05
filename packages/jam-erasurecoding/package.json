@@ -1,10 +1,10 @@
 {
-  "name": "@tsjam/jam-erasurecoding",
+  "name": "@tsjam/erasurecoding",
   "version": "1.0.0",
   "description": "Erasure Coding in JAM",
   "dependencies": {
-    "@tsjam/jam-constants": "*",
-    "@tsjam/jam-types": "*"
+    "@tsjam/constants": "*",
+    "@tsjam/types": "*"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

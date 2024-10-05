@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { SignedJamHeader } from "@tsjam/jam-types";
+import { SignedJamHeader } from "@tsjam/types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
 import { BandersnatchSignatureCodec } from "@/identity.js";
@@ -50,9 +50,9 @@ if (import.meta.vitest) {
       EPOCH_LENGTH: 12,
     };
   });
-  vi.mock("@vekexasia/jam-constants", async (importOriginal) => {
+  vi.mock("@tsjam/constants", async (importOriginal) => {
     const toRet = {
-      ...(await importOriginal<typeof import("@vekexasia/jam-constants")>()),
+      ...(await importOriginal<typeof import("@tsjam/constants")>()),
     };
     Object.defineProperty(toRet, "EPOCH_LENGTH", {
       get() {

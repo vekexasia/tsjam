@@ -1,4 +1,4 @@
-import { PVMProgram } from "@vekexasia/jam-types";
+import { PVMProgram } from "@tsjam/types";
 
 /**
  * This function returns the number of bytes to `skip` for the next instruction.

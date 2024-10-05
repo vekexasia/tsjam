@@ -4,7 +4,7 @@ import {
   PVMProgram,
   PVMProgramExecutionContext,
   RegularPVMExitReason,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { pvmSingleStep } from "@/invocations/singleStep.js";
 
 /**

@@ -1,4 +1,4 @@
-import { EG_Extrinsic } from "@vekexasia/jam-types";
+import { EG_Extrinsic } from "@tsjam/types";
 
 // (141)
 export const _w = (eg_ex: EG_Extrinsic) =>

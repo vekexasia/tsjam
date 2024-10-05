@@ -5,20 +5,20 @@ export const buildAliases = (import_meta_url: string) => {
   return {
     "@/test": new URL("./test/", import_meta_url).pathname,
     "@/": new URL("./src/", import_meta_url).pathname,
-    "@vekexasia/jam-codec": new URL("../jam-codec/", import_meta_url).pathname,
-    "@vekexasia/jam-types": new URL("../jam-types/", import_meta_url).pathname,
-    "@vekexasia/jam-utils": new URL("../jam-utils/", import_meta_url).pathname,
-    "@vekexasia/jam-transitions": new URL(
+    "@tsjam/codec": new URL("../jam-codec/", import_meta_url).pathname,
+    "@tsjam/types": new URL("../jam-types/", import_meta_url).pathname,
+    "@tsjam/utils": new URL("../jam-utils/", import_meta_url).pathname,
+    "@tsjam/transitions": new URL(
       "../jam-transitions/",
       import_meta_url,
     ).pathname,
-    "@vekexasia/jam-crypto": new URL("../jam-crypto/", import_meta_url)
+    "@tsjam/crypto": new URL("../jam-crypto/", import_meta_url)
       .pathname,
-    "@vekexasia/jam-crypto-napi": new URL(
+    "@tsjam/crypto-napi": new URL(
       "../jam-crypto-napi/",
       import_meta_url,
     ).pathname,
-    "@vekexasia/jam-merklization": new URL(
+    "@tsjam/merklization": new URL(
       "../jam-merklization/",
       import_meta_url,
     ).pathname,

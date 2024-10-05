@@ -9,8 +9,8 @@ import {
   Hash,
   MerkeTreeRoot,
   OpaqueHash,
-} from "@vekexasia/jam-types";
-import { bigintToExistingBytes, bytesToBigInt } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
 
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {

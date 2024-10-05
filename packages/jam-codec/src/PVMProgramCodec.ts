@@ -1,4 +1,4 @@
-import { PVMProgram, u32, u8 } from "@vekexasia/jam-types";
+import { PVMProgram, u32, u8 } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { E_1, E_sub } from "@/ints/E_subscr.js";

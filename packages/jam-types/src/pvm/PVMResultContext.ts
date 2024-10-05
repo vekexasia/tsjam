@@ -1,6 +1,6 @@
 import { ServiceAccount } from "@/sets/ServiceAccount.js";
 import { SeqOfLength, ServiceIndex, u64 } from "@/genericTypes.js";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { ValidatorData } from "@/ValidatorData.js";
 import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
 import { AuthorizerQueue } from "@/states/AuthorizerQueue.js";

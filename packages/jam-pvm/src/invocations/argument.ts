@@ -1,4 +1,4 @@
-import { RegularPVMExitReason, u32, u64 } from "@vekexasia/jam-types";
+import { RegularPVMExitReason, u32, u64 } from "@tsjam/types";
 import {
   HostCallExecutor,
   HostCallOut,

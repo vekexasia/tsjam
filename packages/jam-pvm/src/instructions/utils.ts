@@ -3,7 +3,7 @@ import {
   PVMSingleModObject,
   PVMSingleModRegister,
   u32,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 
 export const IxMod = {
   reg: <T extends number>(

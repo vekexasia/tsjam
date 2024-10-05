@@ -1,18 +1,18 @@
-import { bigintToBytes, epochIndex, newSTF } from "@vekexasia/jam-utils";
+import { bigintToBytes, epochIndex, newSTF } from "@tsjam/utils";
 import {
   DisputeExtrinsic,
   Hash,
   IDisputesState,
   Posterior,
   SafroleState,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import {
   JAM_GUARANTEE,
   JAM_INVALID,
   JAM_VALID,
   NUMBER_OF_VALIDATORS,
-} from "@vekexasia/jam-constants";
-import { Ed25519 } from "@vekexasia/jam-crypto";
+} from "@tsjam/constants";
+import { Ed25519 } from "@tsjam/crypto";
 import assert from "node:assert";
 
 /**

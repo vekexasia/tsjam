@@ -1,5 +1,5 @@
 import { Hash, SeqOfLength, UpToSeq } from "@/genericTypes.js";
-import { AUTHPOOL_SIZE, CORES } from "@vekexasia/jam-constants";
+import { AUTHPOOL_SIZE, CORES } from "@tsjam/constants";
 
 // [ H:O ]C
 /**

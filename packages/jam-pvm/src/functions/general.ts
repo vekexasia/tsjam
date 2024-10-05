@@ -10,11 +10,11 @@ import {
   ServiceAccount,
   ServiceIndex,
   u8,
-} from "@vekexasia/jam-types";
-import { Hashing } from "@vekexasia/jam-crypto";
-import { HostCallResult } from "@vekexasia/jam-constants";
-import { E_4 } from "@vekexasia/jam-codec";
-import { computeServiceAccountThreshold } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { Hashing } from "@tsjam/crypto";
+import { HostCallResult } from "@tsjam/constants";
+import { E_4 } from "@tsjam/codec";
+import { computeServiceAccountThreshold } from "@tsjam/utils";
 import { W0, W1 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 

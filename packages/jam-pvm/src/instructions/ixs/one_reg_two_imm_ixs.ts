@@ -1,13 +1,8 @@
-import {
-  PVMIxEvaluateFN,
-  RegisterIdentifier,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { PVMIxEvaluateFN, RegisterIdentifier, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
-import { E_2, E_4 } from "@vekexasia/jam-codec";
+import { E_2, E_4 } from "@tsjam/codec";
 
 export const decode = (
   bytes: Uint8Array,

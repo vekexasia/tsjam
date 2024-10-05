@@ -11,7 +11,7 @@ import {
 } from "@/genericTypes";
 import { TicketIdentifier, ValidatorData } from "@/index";
 import { Tau } from "@/Tau";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * Denoted with gamma (y) in the Greek alphabet.

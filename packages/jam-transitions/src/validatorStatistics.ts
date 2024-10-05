@@ -1,4 +1,4 @@
-import { isNewEra, newSTF } from "@vekexasia/jam-utils";
+import { isNewEra, newSTF } from "@tsjam/utils";
 import {
   JamBlock,
   Posterior,
@@ -7,8 +7,8 @@ import {
   SingleValidatorStatistics,
   Tau,
   ValidatorStatistics,
-} from "@vekexasia/jam-types";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+} from "@tsjam/types";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * computes the posterior validator statistics as depicted in

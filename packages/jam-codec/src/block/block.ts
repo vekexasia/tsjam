@@ -10,7 +10,7 @@ import {
   JamBlock,
   ServiceIndex,
   TicketExtrinsics,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 
 export const BlockCodec: JamCodec<JamBlock> = {
   encode(value: JamBlock, bytes: Uint8Array): number {
@@ -77,8 +77,8 @@ export const BlockCodec: JamCodec<JamBlock> = {
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, it, expect } = import.meta.vitest;
-  const { hexToBytes } = await import("@vekexasia/jam-utils");
-  const constants = await import("@vekexasia/jam-constants");
+  const { hexToBytes } = await import("@tsjam/utils");
+  const constants = await import("@tsjam/constants");
   const {
     getCodecFixtureFile,
     getUTF8FixtureFile,

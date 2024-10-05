@@ -1,9 +1,4 @@
-import {
-  PVMIxEvaluateFN,
-  RegisterIdentifier,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { PVMIxEvaluateFN, RegisterIdentifier, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";

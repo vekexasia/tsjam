@@ -2,8 +2,8 @@ import {
   SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
   SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
   SERVICE_MIN_BALANCE,
-} from "@vekexasia/jam-constants";
-import { ServiceAccount, u64 } from "@vekexasia/jam-types";
+} from "@tsjam/constants";
+import { ServiceAccount, u64 } from "@tsjam/types";
 
 /**
  * compute the gas threshold of a service account

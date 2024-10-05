@@ -1,5 +1,5 @@
 import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
-import { BigIntBytes } from "@vekexasia/jam-types";
+import { BigIntBytes } from "@tsjam/types";
 
 /**
  * Utility to convert a BigInt to a Uint8Array

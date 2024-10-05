@@ -1,11 +1,5 @@
-import { IPVMMemory, PVMProgram, SeqOfLength, u32 } from "@vekexasia/jam-types";
-import {
-  E_2,
-  E_3,
-  E_4,
-  IdentityCodec,
-  PVMProgramCodec,
-} from "@vekexasia/jam-codec";
+import { IPVMMemory, PVMProgram, SeqOfLength, u32 } from "@tsjam/types";
+import { E_2, E_3, E_4, IdentityCodec, PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { ACL, MemoryContent, PVMMemory } from "@/pvmMemory.js";
 

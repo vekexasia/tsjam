@@ -2,7 +2,7 @@ import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.j
 import { IdentityCodec } from "@/identity.js";
 import { JamCodec } from "@/codec.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { EP_Tuple, ServiceIndex } from "@vekexasia/jam-types";
+import { EP_Tuple, ServiceIndex } from "@tsjam/types";
 import { E_4 } from "@/ints/E_subscr.js";
 
 const preimageCodec = new LengthDiscriminator({
@@ -50,7 +50,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const fs = await import("fs");
 
-  const { hexToBytes } = await import("@vekexasia/jam-utils");
+  const { hexToBytes } = await import("@tsjam/utils");
   const path = await import("path");
   describe("codecEa", () => {
     const bin = fs.readFileSync(

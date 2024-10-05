@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { ByteArrayOfLength, SeqOfLength } from "@vekexasia/jam-types";
+import { ByteArrayOfLength, SeqOfLength } from "@tsjam/types";
 
 /**
  * Split data into k parts of n bytes each

@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { TicketIdentifier } from "@vekexasia/jam-types";
+import { TicketIdentifier } from "@tsjam/types";
 import { OpaqueHashCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 import assert from "node:assert";

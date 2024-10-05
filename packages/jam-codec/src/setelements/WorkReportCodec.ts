@@ -1,9 +1,4 @@
-import {
-  Blake2bHash,
-  CoreIndex,
-  WorkReport,
-  WorkResult,
-} from "@vekexasia/jam-types";
+import { Blake2bHash, CoreIndex, WorkReport, WorkResult } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
@@ -110,7 +105,7 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  const { hexToBytes, hextToBigInt } = await import("@vekexasia/jam-utils");
+  const { hexToBytes, hextToBigInt } = await import("@tsjam/utils");
   const {
     getCodecFixtureFile,
     getUTF8FixtureFile,

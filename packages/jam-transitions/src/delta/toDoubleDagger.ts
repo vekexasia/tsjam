@@ -1,12 +1,7 @@
-import {
-  Dagger,
-  Delta,
-  DoubleDagger,
-  ServiceIndex,
-} from "@vekexasia/jam-types";
+import { Dagger, Delta, DoubleDagger, ServiceIndex } from "@tsjam/types";
 import assert from "node:assert";
-import { newSTF } from "@vekexasia/jam-utils";
-import { accumulateInvocation } from "@vekexasia/jam-pvm";
+import { newSTF } from "@tsjam/utils";
+import { accumulateInvocation } from "@tsjam/pvm";
 
 type Input = {
   accummulationResult: Map<

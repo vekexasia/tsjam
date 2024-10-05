@@ -5,11 +5,11 @@ import {
   i32,
   u32,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_sub } from "@vekexasia/jam-codec";
+import { E_sub } from "@tsjam/codec";
 const decode = (
   bytes: Uint8Array,
 ): [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: i32] => {

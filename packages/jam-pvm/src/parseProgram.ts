@@ -1,10 +1,4 @@
-import {
-  IParsedProgram,
-  PVMIx,
-  PVMProgram,
-  u32,
-  u8,
-} from "@vekexasia/jam-types";
+import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import { Ixdb } from "@/instructions/ixdb.js";
 

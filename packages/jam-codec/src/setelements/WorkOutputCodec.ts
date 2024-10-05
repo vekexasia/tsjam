@@ -1,4 +1,4 @@
-import { WorkError, WorkOutput } from "@vekexasia/jam-types";
+import { WorkError, WorkOutput } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";

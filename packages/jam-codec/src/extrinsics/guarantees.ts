@@ -1,4 +1,4 @@
-import { EG_Extrinsic, ValidatorIndex, u32 } from "@vekexasia/jam-types";
+import { EG_Extrinsic, ValidatorIndex, u32 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { Ed25519SignatureCodec } from "@/identity.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";

@@ -4,7 +4,7 @@ import {
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModRegister,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 
 export type W0 = PVMSingleModRegister<0>;

@@ -1,4 +1,4 @@
-import { accumulateInvocation } from "@vekexasia/jam-pvm";
+import { accumulateInvocation } from "@tsjam/pvm";
 import {
   AuthorizerQueue,
   Dagger,
@@ -9,8 +9,8 @@ import {
   ServiceIndex,
   Tau,
   u64,
-} from "@vekexasia/jam-types";
-import { toTagged } from "@vekexasia/jam-utils";
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 
 /**
  * (162)

@@ -1,5 +1,5 @@
 import { ByteArrayOfLength, ServiceIndex, u64 } from "@/genericTypes.js";
-import { TRANSFER_MEMO_SIZE } from "@vekexasia/jam-constants";
+import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 
 /**
  * `T` set in graypaper

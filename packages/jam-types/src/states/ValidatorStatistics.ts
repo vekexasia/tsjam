@@ -1,5 +1,5 @@
 import { SeqOfLength } from "@/genericTypes.js";
-import { NUMBER_OF_VALIDATORS } from "@vekexasia/jam-constants";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 export type SingleValidatorStatistics = {
   /**

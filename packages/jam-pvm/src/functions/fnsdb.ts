@@ -1,5 +1,5 @@
-import { PVMFn, u8 } from "@vekexasia/jam-types";
-import { toTagged } from "@vekexasia/jam-utils";
+import { PVMFn, u8 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 
 export const FnsDb = {
   byCode: new Map<u8, PVMFn<unknown[], unknown>>(),

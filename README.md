@@ -10,9 +10,7 @@
 - [ ] add 177 checks about work package max size
 - [ ] erasure coding
 - [ ] migrate to neverthrow
-- [ ] github pipeline
 - [ ] cli
-- [ ] package rename to @tsjam
  
 minor:
 

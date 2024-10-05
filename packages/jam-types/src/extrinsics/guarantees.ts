@@ -6,7 +6,7 @@ import {
   u32,
 } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
-import { CORES } from "@vekexasia/jam-constants";
+import { CORES } from "@tsjam/constants";
 
 /**
  * Report of newly completed workload whose accuracy is guaranteed by specific validators.

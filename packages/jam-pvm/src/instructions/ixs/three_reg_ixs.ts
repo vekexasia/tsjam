@@ -4,7 +4,7 @@ import {
   SeqOfLength,
   u32,
   u8,
-} from "@vekexasia/jam-types";
+} from "@tsjam/types";
 import { Z4, Z4_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";

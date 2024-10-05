@@ -1,4 +1,4 @@
-import { Posterior, RAWSTF } from "@vekexasia/jam-types";
+import { Posterior, RAWSTF } from "@tsjam/types";
 
 export class BaseSTF<State, Input, PState = Posterior<State>> {
   constructor(private innerSTF: RAWSTF<State, Input, PState>) {}
