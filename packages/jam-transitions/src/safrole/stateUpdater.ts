@@ -12,7 +12,7 @@ import { gamma_sSTF } from "@/safrole/gammaS.js";
 import { gamma_aSTF } from "@/safrole/gammaA.js";
 import { TicketExtrinsics } from "@tsjam/types";
 import { newSTF, toPosterior } from "@tsjam/utils";
-import { ticketExtrinsicToIdentifiersSTF } from "@/tickets.js";
+import { ticketExtrinsicToIdentifiersSTF } from "@/safrole/tickets.js";
 
 export const safroleToPosterior = newSTF<
   SafroleState,

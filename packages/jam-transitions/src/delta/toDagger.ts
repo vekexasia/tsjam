@@ -3,6 +3,7 @@ import {
   Delta,
   EG_Extrinsic,
   EP_Extrinsic,
+  Posterior,
   Tagged,
   Tau,
   u32,
@@ -16,7 +17,7 @@ import { MAX_GAS_ACCUMULATION } from "@tsjam/constants";
 type Input = {
   // We are not using the native type to avoid circular dependencies
   EP_Extrinsic: EP_Extrinsic;
-  nextTau: Tau;
+  p_tau: Posterior<Tau>;
 
   // EG extrinsic is not a direct depenedency
   // but it's needed to calculate `w` at 141 from which
@@ -76,7 +77,7 @@ export const deltaToDagger = newSTF<Delta, Input, Dagger<Delta>>({
       plh = new Map(plh);
       // set
       x!.preimage_l.set(hash, plh);
-      plh.set(toTagged(preimage.length as u32), toTagged([input.nextTau]));
+      plh.set(toTagged(preimage.length as u32), toTagged([input.p_tau]));
     }
     return result;
   },

@@ -30,7 +30,7 @@ export const calculateAccumulateRoot = (
 };
 
 /**
- * see (82) (162) (163)
+ * see (83) (162) (163)
  */
 export const recentHistoryToPosterior = newSTF<
   Dagger<RecentHistory>,

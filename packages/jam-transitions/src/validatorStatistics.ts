@@ -14,7 +14,7 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
  * computes the posterior validator statistics as depicted in
  * section 13
  */
-export const validatorStatistics = newSTF<
+export const validatorStatisticsToPosterior = newSTF<
   ValidatorStatistics,
   {
     block: JamBlock;

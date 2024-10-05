@@ -20,8 +20,12 @@ import {
 } from "@tsjam/utils";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 
+/**
+ * (58) Phi function
+ * returns the validator keys which are not in ψo. nullify the validator keys which are in ψo
+ */
 export const PHI_FN = <T extends ValidatorData[]>(
-  validatorKeys: ValidatorData[],
+  validatorKeys: ValidatorData[], // `k` in the graypaper
   p_psi_o: Posterior<IDisputesState["psi_o"]>,
 ): T => {
   return validatorKeys.map((v) => {

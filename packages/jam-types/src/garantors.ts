@@ -17,7 +17,7 @@ export type GuarantorsAssignment = {
   validatorsAssignedCore: SeqOfLength<CoreIndex, typeof NUMBER_OF_VALIDATORS>;
 
   /**
-   * `v` - the validators' public key
+   * `k` - the validators' public key
    */
   validatorsED22519Key: SeqOfLength<
     ED25519PublicKey,
