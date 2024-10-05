@@ -1,9 +1,9 @@
 {
-  "name": "@vekexasia/jam-types",
+  "name": "@tsjam/jam-types",
   "version": "1.0.0",
   "description": "Base Types for JAM",
   "dependencies": {
-    "@vekexasia/jam-constants": "*"
+    "@tsjam/jam-constants": "*"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

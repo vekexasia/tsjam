@@ -1,10 +1,10 @@
 {
-  "name": "@vekexasia/jam-erasurecoding",
+  "name": "@tsjam/jam-erasurecoding",
   "version": "1.0.0",
   "description": "Erasure Coding in JAM",
   "dependencies": {
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-types": "*"
+    "@tsjam/jam-constants": "*",
+    "@tsjam/jam-types": "*"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

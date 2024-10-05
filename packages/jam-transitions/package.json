@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-transitions",
+  "name": "@tsjam/jam-transitions",
   "version": "1.0.0",
   "description": "A library collecting the state transitions for JAM",
   "scripts": {
@@ -28,13 +28,13 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-merklization": "*",
-    "@vekexasia/jam-pvm": "*",
-    "@vekexasia/jam-types": "*",
-    "@vekexasia/jam-utils": "*"
+    "@tsjam/jam-codec": "*",
+    "@tsjam/jam-constants": "*",
+    "@tsjam/jam-crypto": "*",
+    "@tsjam/jam-merklization": "*",
+    "@tsjam/jam-pvm": "*",
+    "@tsjam/jam-types": "*",
+    "@tsjam/jam-utils": "*"
   },
   "license": "MIT"
 }

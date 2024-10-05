@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-pvm",
+  "name": "@tsjam/jam-pvm",
   "version": "1.0.0",
   "description": "Base Types for JAM",
   "scripts": {
@@ -28,13 +28,11 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-types": "*"
-  },
-  "devDependencies": {
-    "@vekexasia/jam-utils": "*"
+    "@tsjam/jam-codec": "*",
+    "@tsjam/jam-constants": "*",
+    "@tsjam/jam-crypto": "*",
+    "@tsjam/jam-types": "*",
+    "@tsjam/jam-utils": "*"
   },
   "license": "MIT"
 }

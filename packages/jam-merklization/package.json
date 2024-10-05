@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-merklization",
+  "name": "@tsjam/jam-merklization",
   "version": "1.0.0",
   "description": "MMR and merkle trees used in JAM",
   "scripts": {
@@ -28,10 +28,10 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-types": "*",
-    "@vekexasia/jam-utils": "*"
+    "@tsjam/jam-codec": "*",
+    "@tsjam/jam-crypto": "*",
+    "@tsjam/jam-types": "*",
+    "@tsjam/jam-utils": "*"
   },
   "license": "MIT"
 }

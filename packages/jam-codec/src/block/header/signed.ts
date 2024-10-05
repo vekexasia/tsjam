@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { SignedJamHeader } from "@vekexasia/jam-types";
+import { SignedJamHeader } from "@tsjam/jam-types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
 import { BandersnatchSignatureCodec } from "@/identity.js";

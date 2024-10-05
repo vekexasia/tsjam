@@ -1,11 +1,11 @@
 {
-  "name": "@vekexasia/jam-utils",
+  "name": "@tsjam/jam-utils",
   "version": "1.0.0",
   "description": "Utility functions for JAM",
   "dependencies": {
-    "@vekexasia/bigint-uint8array": "^1.1.1",
-    "@vekexasia/jam-constants": "workspace:*",
-    "@vekexasia/jam-types": "workspace:*",
+    "@tsjam/bigint-uint8array": "^1.1.1",
+    "@tsjam/jam-constants": "workspace:*",
+    "@tsjam/jam-types": "workspace:*",
     "bigint-buffer": "^1.1.5"
   },
   "scripts": {

@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-core",
+  "name": "@tsjam/jam-core",
   "version": "1.0.0",
   "description": "Block production and chain growth. Aka Safrole",
   "scripts": {
@@ -28,13 +28,13 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@vekexasia/jam-codec": "*",
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-crypto": "*",
-    "@vekexasia/jam-pvm": "*",
-    "@vekexasia/jam-transitions": "*",
-    "@vekexasia/jam-types": "*",
-    "@vekexasia/jam-utils": "*"
+    "@tsjam/jam-codec": "*",
+    "@tsjam/jam-constants": "*",
+    "@tsjam/jam-crypto": "*",
+    "@tsjam/jam-pvm": "*",
+    "@tsjam/jam-transitions": "*",
+    "@tsjam/jam-types": "*",
+    "@tsjam/jam-utils": "*"
   },
   "license": "MIT"
 }

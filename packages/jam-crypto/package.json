@@ -1,5 +1,5 @@
 {
-  "name": "@vekexasia/jam-crypto",
+  "name": "@tsjam/jam-crypto",
   "version": "1.0.0",
   "description": "Crypto utils for JAM",
   "scripts": {
@@ -29,10 +29,10 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@vekexasia/jam-constants": "*",
-    "@vekexasia/jam-crypto-napi": "*",
-    "@vekexasia/jam-types": "*",
-    "@vekexasia/jam-utils": "*",
+    "@tsjam/jam-constants": "*",
+    "@tsjam/jam-crypto-napi": "*",
+    "@tsjam/jam-types": "*",
+    "@tsjam/jam-utils": "*",
     "blake2b-wasm": "^2.4.0",
     "fast-shuffle": "^6.1.0",
     "keccak-wasm": "^0.11.2",
