@@ -6,23 +6,21 @@ import {
   Hash,
   Posterior,
   Tau,
-  Validated,
 } from "@tsjam/types";
 import { newSTF } from "@tsjam/utils";
 import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE } from "@tsjam/constants";
 
 type Input = {
+  eg: EG_Extrinsic;
   p_queue: Posterior<AuthorizerQueue>;
-  eg: Validated<EG_Extrinsic>;
-  p_pool: Posterior<AuthorizerQueue>;
   p_tau: Posterior<Tau>;
 };
 // (85) and (86)
-export const alphaSTF = newSTF<AuthorizerPool, Input>(
+export const authorizerPool_toPosterior = newSTF<AuthorizerPool, Input>(
   (input: Input, curState: AuthorizerPool): Posterior<AuthorizerPool> => {
     const newState = [];
     for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
-      const fromPool = input.p_pool[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
+      const fromPool = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
       let hashes: Hash[];
       const firstWReport = input.eg.find(
         (w) => w.workReport.coreIndex === core,

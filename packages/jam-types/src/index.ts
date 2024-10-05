@@ -125,6 +125,7 @@ export * from "./states/ValidatorStatistics.js";
 
 export * from "./pvm/DeferredTransfer.js";
 export * from "./pvm/IParsedProgram.js";
+export * from "./pvm/PrivilegedServices.js";
 export * from "./pvm/PVMAccumulationOp.js";
 export * from "./pvm/PVMProgramExecutionContext.js";
 export * from "./pvm/PVMModifications.js";

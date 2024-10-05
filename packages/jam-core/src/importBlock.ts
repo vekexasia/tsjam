@@ -1,17 +1,23 @@
 import {
+  AuthorizerPool,
+  AuthorizerQueue,
   Delta,
   IDisputesState,
   JamBlock,
   MerkeTreeRoot,
+  PrivilegedServices,
   RHO,
   RecentHistory,
   SafroleState,
   ValidatorStatistics,
+  u64,
 } from "@tsjam/types";
 import {
   RHO2DoubleDagger,
   RHO_2_Dagger,
   RHO_toPosterior,
+  authorizerPool_toPosterior,
+  authorizerQueue_toPosterior,
   deltaToDagger,
   deltaToDoubleDagger,
   deltaToPosterior,
@@ -21,18 +27,23 @@ import {
   safroleToPosterior,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import { toPosterior } from "@tsjam/utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { assertEGValid } from "@/validateEG.js";
+import { accumulateInvocation } from "@tsjam/pvm";
 
-const safroleState: SafroleState = null as unknown as SafroleState;
-const recentHistory: RecentHistory = null as unknown as RecentHistory;
-const rho: RHO = null as unknown as RHO;
-const disputesState: IDisputesState = null as unknown as IDisputesState;
-const delta: Delta = null as unknown as Delta;
-const validatorStatistics: ValidatorStatistics =
+let safroleState: SafroleState = null as unknown as SafroleState;
+let recentHistory: RecentHistory = null as unknown as RecentHistory;
+let rho: RHO = null as unknown as RHO;
+let disputesState: IDisputesState = null as unknown as IDisputesState;
+let delta: Delta = null as unknown as Delta;
+let validatorStatistics: ValidatorStatistics =
   null as unknown as ValidatorStatistics;
+let authorizerQueue: AuthorizerQueue = null as unknown as AuthorizerQueue;
+let authorizerPool: AuthorizerPool = null as unknown as AuthorizerPool;
+let privilegedServices: PrivilegedServices =
+  null as unknown as PrivilegedServices;
 
 export const importBlock = (block: JamBlock) => {
   const headerHash = Hashing.blake2b(
@@ -134,5 +145,71 @@ export const importBlock = (block: JamBlock) => {
     validatorStatistics,
   );
 
+  const xares = accumulateInvocation(
+    d_delta,
+    privilegedServices.a,
+    0n as u64, // todo gas according to (162)
+    [],
+    {
+      tau: safroleState.tau,
+      iota: safroleState.iota,
+      authQueue: authorizerQueue,
+      privilegedServices: privilegedServices,
+    },
+  );
+  const p_authorizerQueue = authorizerQueue_toPosterior.apply(
+    xares,
+    authorizerQueue,
+  );
+
+  const p_authorizerPool = authorizerPool_toPosterior.apply(
+    {
+      p_queue: p_authorizerQueue,
+      eg: toTagged(block.extrinsics.reportGuarantees),
+      p_tau: toPosterior(newSafroleState.tau),
+    },
+    authorizerPool,
+  );
+
+  // (164) privilegedServices update
+  const privservRes = accumulateInvocation(
+    d_delta,
+    privilegedServices.m,
+    0n as u64, // todo gas according to (162)
+    [],
+    {
+      tau: safroleState.tau,
+      iota: safroleState.iota,
+      authQueue: authorizerQueue,
+      privilegedServices,
+    },
+  );
+
+  // (164) iota update
+  const iotaRes = accumulateInvocation(
+    d_delta,
+    privilegedServices.v,
+    0n as u64, // todo gas according to (162)
+    [],
+    {
+      tau: safroleState.tau,
+      iota: newSafroleState.iota, // iota here is only used to polyfill the result it's not actually used in computation
+      authQueue: authorizerQueue,
+      privilegedServices,
+    },
+  );
+
+  newSafroleState.iota =
+    iotaRes.validatorKeys as unknown as SafroleState["iota"];
+
   //todo assign
+  safroleState = newSafroleState;
+  disputesState = p_disputesState;
+  rho = p_rho;
+  delta = p_delta;
+  recentHistory = p_recentHistory;
+  validatorStatistics = p_validatorStatistics;
+  authorizerQueue = p_authorizerQueue;
+  authorizerPool = p_authorizerPool;
+  privilegedServices = privservRes.p;
 };

@@ -4,7 +4,7 @@ import {
   Dagger,
   Delta,
   PVMAccumulationOp,
-  PVMResultContext,
+  PrivilegedServices,
   SafroleState,
   ServiceIndex,
   Tau,
@@ -24,7 +24,7 @@ export const accumulate = (conf: {
   gas: u64;
   Xg_s: u64;
   o: PVMAccumulationOp[];
-  privilegedServices: PVMResultContext["p"];
+  privilegedServices: PrivilegedServices;
 }): ReturnType<typeof accumulateInvocation> => {
   return accumulateInvocation(
     conf.d_delta,

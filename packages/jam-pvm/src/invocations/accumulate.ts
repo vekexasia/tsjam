@@ -5,6 +5,7 @@ import {
   Hash,
   PVMAccumulationOp,
   PVMResultContext,
+  PrivilegedServices,
   RegularPVMExitReason,
   SafroleState,
   ServiceAccount,
@@ -58,12 +59,7 @@ export const accumulateInvocation = (
     iota: SafroleState["iota"];
     authQueue: AuthorizerQueue;
     tau: Tau;
-    privilegedServices: {
-      m: ServiceIndex;
-      a: ServiceIndex;
-      v: ServiceIndex;
-      g: Map<ServiceIndex, u64>;
-    };
+    privilegedServices: PrivilegedServices;
   },
 ): PVMResultContext & { r?: Hash } => {
   if (typeof d_delta.get(s)?.codeHash === "undefined") {

@@ -13,8 +13,9 @@ export * from "./safrole/keys.js";
 export * from "./safrole/stateUpdater.js";
 export * from "./safrole/tickets.js";
 
+export * from "./AuthorizerQueue.js";
+export * from "./AuthorizerPool.js";
 export * from "./disputesState.js";
-// export * from "./garantorsAssignment.js";
 export * from "./validatorStatistics.js";
 
 export * from "./utilityComputations/availableReports.js";
