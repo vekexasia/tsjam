@@ -1,4 +1,4 @@
-import { RefinementContext, u32 } from "@tsjam/types";
+import { RefinementContext, Tau, u32 } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";
@@ -52,7 +52,7 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
       headerHash: HashCodec.decode(bytes.subarray(offset, offset + 32)).value,
       timeSlot: Number(
         E_4.decode(bytes.subarray(offset + 32, offset + 36)).value,
-      ) as u32,
+      ) as Tau,
     };
     offset += 36;
     const requiredWorkPackage = OptHashCodec.decode(bytes.subarray(offset));

@@ -30,6 +30,7 @@ export const BitSequence: JamCodec<bit[]> = {
     return Math.ceil(value.length / 8);
   },
 };
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("BitSequence", () => {

@@ -10,7 +10,7 @@ import { ServiceAccount, u64 } from "@tsjam/types";
  * @param a - the service account
  * @see (94) in the graypaper
  */
-export const computeServiceAccountThreshold = (a: ServiceAccount): u64 => {
+export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
   const i = 2n * BigInt(a.preimage_l.size) + BigInt(a.storage.size);
   const l =
     [...a.preimage_l.values()].reduce(

@@ -1,4 +1,5 @@
-import { Hash, u32 } from "@/genericTypes";
+import { Tau } from "@/Tau";
+import { Hash } from "@/genericTypes";
 
 /**
  * gives a snapshotof what was the situation when the work report was created
@@ -30,7 +31,7 @@ export type RefinementContext = {
     /**
      * `t`
      */
-    timeSlot: u32;
+    timeSlot: Tau;
   };
   /**
    * `p`

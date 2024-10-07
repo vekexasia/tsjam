@@ -14,7 +14,7 @@ import {
 import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
 import { E_4 } from "@tsjam/codec";
-import { computeServiceAccountThreshold } from "@tsjam/utils";
+import { serviceAccountGasThreshold } from "@tsjam/utils";
 import { W0, W1 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 
@@ -164,7 +164,7 @@ export const omega_w = regFn<
 
       let l: number;
       if (bold_s.storage.has(k)) {
-        const at = computeServiceAccountThreshold(bold_s);
+        const at = serviceAccountGasThreshold(bold_s);
         if (at > a.balance) {
           return [IxMod.w0(HostCallResult.FULL)];
         }

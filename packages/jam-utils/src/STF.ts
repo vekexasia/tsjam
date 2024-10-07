@@ -21,6 +21,10 @@ export class BaseSTF<State, Input, PState = Posterior<State>> {
   }
 }
 
+/**
+ * Creates a new STF from a function or Raw STF
+ * @param inner - the function or raw STF
+ **/
 export const newSTF = <State, Input, PState = Posterior<State>>(
   inner: RAWSTF<State, Input, PState> | ((i: Input, s: State) => PState),
 ) => {

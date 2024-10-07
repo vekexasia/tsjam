@@ -28,7 +28,7 @@ import {
 import { E_4, E_8, ValidatorDataCodec } from "@tsjam/codec";
 import {
   bytesToBigInt,
-  computeServiceAccountThreshold,
+  serviceAccountGasThreshold,
   toTagged,
 } from "@tsjam/utils";
 import { W0, W1, XMod, YMod } from "@/functions/utils.js";
@@ -214,9 +214,9 @@ export const omega_n = regFn<
       nm.set(toTagged(l), toTagged([]));
       a.preimage_l.set(c, nm);
 
-      a.balance = computeServiceAccountThreshold(a);
+      a.balance = serviceAccountGasThreshold(a);
       const b = x.serviceAccount!.balance - a.balance;
-      if (b < computeServiceAccountThreshold(x.serviceAccount!)) {
+      if (b < serviceAccountGasThreshold(x.serviceAccount!)) {
         return [IxMod.w0(HostCallResult.CASH)];
       }
 
@@ -313,7 +313,7 @@ export const omega_t = regFn<
         return [IxMod.w0(HostCallResult.HIGH)];
       }
       const b = x.serviceAccount!.balance - a;
-      if (b < computeServiceAccountThreshold(x.serviceAccount!)) {
+      if (b < serviceAccountGasThreshold(x.serviceAccount!)) {
         return [IxMod.w0(HostCallResult.CASH)];
       }
 
@@ -358,7 +358,7 @@ export const omega_x = regFn<
       const [d, o] = context.registers;
       const a =
         x.serviceAccount!.balance -
-        computeServiceAccountThreshold(x.serviceAccount!) +
+        serviceAccountGasThreshold(x.serviceAccount!) +
         SERVICE_MIN_BALANCE;
       const g = context.gas;
       if (d === s || d === 2 ** 32 - 1) {
@@ -436,7 +436,7 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W0 | XMod>>({
         // third case of `a`
         // we either have 1 or 2 elements or more than 3
         return [IxMod.w0(HostCallResult.HUH)];
-      } else if (a.balance < computeServiceAccountThreshold(a)) {
+      } else if (a.balance < serviceAccountGasThreshold(a)) {
         return [IxMod.w0(HostCallResult.FULL)];
       } else {
         return [

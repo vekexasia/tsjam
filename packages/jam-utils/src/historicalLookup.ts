@@ -1,26 +1,32 @@
-import { Hash, ServiceAccount, UpToSeq, u32 } from "@tsjam/types";
+import { Hash, ServiceAccount, Tau, UpToSeq, u32 } from "@tsjam/types";
 import assert from "node:assert";
 import { toTagged } from "@/utils.js";
 
 /**
  * `Λ` in the graypaper
  * (93)
+ * @param a - the service account
+ * @param tau - the timeslot for the lookup
+ * @param hash - the hash to look up
  */
 export const historicalLookup = (
   a: ServiceAccount,
-  timeslot: u32,
+  tau: Tau,
   hash: Hash,
 ): Uint8Array | undefined => {
   const ap = a.preimage_p.get(hash);
   if (
     typeof ap !== "undefined" &&
-    IFn(a.preimage_l.get(hash)!.get(toTagged(ap.length as u32))!, timeslot)
+    IFn(a.preimage_l.get(hash)!.get(toTagged(ap.length as u32))!, tau)
   ) {
     return a.preimage_p.get(hash)!;
   }
 };
 
-const IFn = (l: UpToSeq<u32, 3, "Nt">, t: u32) => {
+/**
+ * Checks based on the length of the preimage and tau if it is valid
+ */
+const IFn = (l: UpToSeq<u32, 3, "Nt">, t: Tau) => {
   switch (l.length) {
     case 0:
       return false;

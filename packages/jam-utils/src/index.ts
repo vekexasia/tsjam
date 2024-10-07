@@ -4,4 +4,4 @@ export * from "./historicalLookup.js";
 export * from "./Timekeeping.js";
 export * from "./utils.js";
 export * from "./STF.js";
-export * from "./serviceAccountThreshold.js";
+export * from "./serviceAccountGasThreshold.js";
