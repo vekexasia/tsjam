@@ -72,26 +72,3 @@ export interface SafroleState extends SafroleBasicState {
    */
   iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "iota">;
 }
-
-/**
- * for tests
- */
-export interface SafroleInput {
-  slot: u32;
-  entropy: OpaqueHash; // generated from the entropy accumulator?
-  extrinsic: Array<{
-    attempt: 0 | 1;
-    signature: ByteArrayOfLength<784>;
-  }>;
-}
-export interface SafroleOutput {
-  epochMark?: {
-    entropy: ByteArrayOfLength<32>; // todo fix type
-    validatorKeys: SeqOfLength<
-      ByteArrayOfLength<32>, // todo fix type
-      typeof NUMBER_OF_VALIDATORS,
-      "validatorkeys"
-    >;
-  };
-  ticketsMark?: SafroleBasicState["gamma_a"];
-}
