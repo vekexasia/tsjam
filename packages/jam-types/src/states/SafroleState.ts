@@ -9,8 +9,9 @@ import {
   UpToSeq,
   u32,
 } from "@/genericTypes";
-import { TicketIdentifier, ValidatorData } from "@/index";
+import { TicketIdentifier } from "@/sets/Ticket";
 import { Tau } from "@/Tau";
+import { ValidatorData } from "@/ValidatorData";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**

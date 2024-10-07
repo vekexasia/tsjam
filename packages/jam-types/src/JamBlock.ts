@@ -3,9 +3,9 @@ import {
   EA_Extrinsic,
   EG_Extrinsic,
   EP_Tuple,
-  SignedJamHeader,
   TicketExtrinsics,
 } from "@/index";
+import { SignedJamHeader } from "@/header";
 
 export interface JamBlock {
   header: SignedJamHeader;

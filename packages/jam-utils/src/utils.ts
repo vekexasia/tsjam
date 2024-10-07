@@ -17,14 +17,23 @@ export const toTagged = <K, Tag extends PropertyKey, Metadata>(
   return value as Tagged<K, Tag, Metadata>;
 };
 
+/**
+ * converts any value to Dagger<Value>
+ */
 export const toDagger = <T>(value: T): Dagger<T> => {
   return toTagged(value);
 };
 
+/**
+ * converts any value to DoubleDagger<Value>
+ */
 export const toDoubleDagger = <T>(value: Dagger<T>): DoubleDagger<T> => {
   return toTagged(value);
 };
 
+/**
+ * converts any value to Posterior<Value>
+ */
 export const toPosterior = <T>(
   value: Dagger<T> | DoubleDagger<T> | T,
 ): Posterior<T> => {
