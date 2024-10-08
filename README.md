@@ -11,11 +11,8 @@
 - [ ] erasure coding
 - [ ] migrate to neverthrow
 - [ ] cli
+- [ ] Database integration
  
-minor:
-
-- [ ] clean jam-utils
-
 
 abandoned:
 

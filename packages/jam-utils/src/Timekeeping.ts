@@ -1,7 +1,10 @@
 import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
 import { Posterior, Tau } from "@tsjam/types";
 
-// todo: move away from types
+/**
+ * Unused
+ * TODO:remove if unused
+ */
 export class Timekeeping {
   static getJamSlotSinceEpoch() {
     const now = (Date.now() / 1000) | 0;

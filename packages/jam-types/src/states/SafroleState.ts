@@ -2,12 +2,9 @@ import {
   BandersnatchKey,
   BandersnatchRingRoot,
   Blake2bHash,
-  ByteArrayOfLength,
-  OpaqueHash,
   SeqOfLength,
   Tagged,
   UpToSeq,
-  u32,
 } from "@/genericTypes";
 import { TicketIdentifier } from "@/sets/Ticket";
 import { Tau } from "@/Tau";
