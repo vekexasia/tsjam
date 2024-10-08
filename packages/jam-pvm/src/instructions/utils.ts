@@ -3,11 +3,14 @@ import {
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
+  PVMSingleModPointer,
   PVMSingleModRegister,
+  PVMSingleSelfGas,
   RegularPVMExitReason,
   u32,
   u64,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 
 export class MemoryUnreadable extends PVMIxExecutionError {
   constructor(location: u32, amount: number) {
@@ -15,11 +18,20 @@ export class MemoryUnreadable extends PVMIxExecutionError {
       [],
       RegularPVMExitReason.Panic,
       `memory @${location}:-${amount} is not readable`,
+      true, // account Trap gas cost
     );
   }
 }
 
 export const IxMod = {
+  ip: (value: number): PVMSingleModPointer => ({
+    type: "ip",
+    data: toTagged(value),
+  }),
+  selfGas: (): PVMSingleSelfGas => ({
+    type: "self-gas",
+    data: undefined,
+  }),
   gas: (value: bigint): PVMSingleModGas => ({
     type: "gas",
     data: value as u64,

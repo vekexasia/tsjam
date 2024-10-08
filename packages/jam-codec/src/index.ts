@@ -33,10 +33,6 @@ export * from "./block/header/signed.js";
 export * from "./block/block.js";
 export * from "./PVMProgramCodec.js";
 
-
-
-
-
 /**
  * encode with codec a value by also creating the buffer
  * @param codec - the codec to use

@@ -36,7 +36,12 @@ export const trap = regIx<[]>({
     },
     evaluate() {
       return err(
-        new PVMIxExecutionError([], RegularPVMExitReason.Panic, "trap"),
+        new PVMIxExecutionError(
+          [],
+          RegularPVMExitReason.Panic,
+          "trap",
+          false, // no double accounting
+        ),
       );
     },
     gasCost: 1n,

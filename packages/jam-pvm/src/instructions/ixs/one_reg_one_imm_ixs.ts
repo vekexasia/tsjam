@@ -15,7 +15,6 @@ import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { E_2, E_4 } from "@tsjam/codec";
 import { IxMod, MemoryUnreadable } from "@/instructions/utils.js";
-import { beforeEach } from "node:test";
 
 type InputType = [register: RegisterIdentifier, value: u32];
 const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {

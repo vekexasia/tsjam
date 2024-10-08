@@ -1,16 +1,10 @@
-import {
-  PVMIxExecutionError,
-  RegularPVMExitReason,
-  i32,
-  u32,
-  u8,
-} from "@tsjam/types";
+import { i32, u32, u8 } from "@tsjam/types";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Z } from "@/utils/zed.js";
 import { E_sub } from "@tsjam/codec";
 import { beforeAll } from "vitest";
-import { Result, err, ok } from "neverthrow";
+import { Result, ok } from "neverthrow";
 
 const decode = (bytes: Uint8Array): Result<[offset: i32], never> => {
   const lx = Math.min(4, bytes.length);
@@ -26,16 +20,6 @@ const jump = regIx<[offset: i32]>({
     decode,
     evaluate(context, vx) {
       const addr = context.execution.instructionPointer + vx;
-      if (addr < 0) {
-        return err(
-          new PVMIxExecutionError(
-            [],
-            RegularPVMExitReason.Panic,
-            "address must be >= 0",
-          ),
-        );
-      }
-
       return branch(context, addr as u32, true);
     },
     gasCost: 1n,
@@ -74,13 +58,6 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 11, true);
         jump.evaluate(context, -1 as i32);
         expect(branch).toHaveBeenCalledWith(context, 9, true);
-      });
-      it("should throw if address is negative", () => {
-        const context = createEvContext();
-        context.execution.instructionPointer = toTagged(10);
-        expect(
-          jump.evaluate(context, -11 as i32)._unsafeUnwrapErr().reason,
-        ).toEqual("address must be >= 0");
       });
     });
   });

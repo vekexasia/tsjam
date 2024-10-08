@@ -7,8 +7,8 @@ import {
   u8,
 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
-import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
+
 const decode = (
   bytes: Uint8Array,
 ): Result<[RegisterIdentifier, RegisterIdentifier], PVMIxDecodeError> => {
@@ -43,7 +43,7 @@ const move_reg = create(82 as u8, "move_reg", (context, rd, ra) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sbrk = create(87 as u8, "sbrk", (context, rd, ra) => {
-  //TODO implement sbrk (space break)
+  // TODO: implement sbrk (space break)
   return ok([]);
 });
 

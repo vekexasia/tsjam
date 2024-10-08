@@ -6,6 +6,7 @@ import {
   RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
+import { IxMod } from "@/instructions/utils";
 const ZA = 4;
 /**
  * djump(a) method defined in `225`
@@ -19,7 +20,12 @@ export const djump = (
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
     return err(
-      new PVMIxExecutionError([], RegularPVMExitReason.Halt, "regular halt"),
+      new PVMIxExecutionError(
+        [],
+        RegularPVMExitReason.Halt,
+        "regular halt",
+        false,
+      ),
     );
   } else if (
     a === 0 ||
@@ -32,14 +38,10 @@ export const djump = (
         [],
         RegularPVMExitReason.Panic,
         "invalid jump location",
+        false,
       ),
     );
   }
 
-  return ok([
-    {
-      type: "ip",
-      data: (context.program.j[Math.floor(a / ZA)] - 1) as u32,
-    },
-  ]);
+  return ok([IxMod.ip(context.program.j[Math.floor(a / ZA)] - 1)]);
 };

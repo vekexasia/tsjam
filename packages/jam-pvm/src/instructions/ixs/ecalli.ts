@@ -18,6 +18,7 @@ const ecalli = regIx<[u32]>({
           [],
           { type: "host-call", opCode: vX as number as u8 },
           "ecalli",
+          false,
         ),
       );
     },

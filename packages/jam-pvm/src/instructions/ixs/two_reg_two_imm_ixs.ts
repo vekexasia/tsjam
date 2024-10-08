@@ -8,7 +8,6 @@ import {
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";
-import assert from "node:assert";
 import { Result, err, ok } from "neverthrow";
 
 const decode = (
@@ -81,7 +80,6 @@ if (import.meta.vitest) {
   const { createEvContext } = await import("@/test/mocks.js");
   describe("two_reg_two_imm_ixs", () => {
     describe("decode", () => {
-      console.log("ciao");
       it("should fail if not enough bytes", () => {
         expect(decode(new Uint8Array([]))._unsafeUnwrapErr().message).toEqual(
           "not enough bytes [1]",

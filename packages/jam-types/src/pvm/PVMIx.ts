@@ -47,8 +47,9 @@ export class PVMIxDecodeError {
 export class PVMIxExecutionError {
   constructor(
     public readonly mods: PVMModification[],
-    public type: PVMExitReason,
-    public reason: string,
+    public readonly type: PVMExitReason,
+    public readonly reason: string,
+    public readonly accountTrapCost: boolean,
   ) {}
 }
 

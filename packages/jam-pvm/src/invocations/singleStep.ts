@@ -72,14 +72,10 @@ export const pvmSingleStep = (
   const r = ix.evaluate(context, ...args.value);
   if (r.isErr()) {
     const mods: PVMModification[] = [];
-    // if it is a panic and the trap is not the current ix
-    // then we must add trap cost
-    if (
-      r.error.type === RegularPVMExitReason.Panic &&
-      trap.opCode !== ix.opCode
-    ) {
+    if (r.error.accountTrapCost) {
       mods.push(IxMod.gas(trap.gasCost));
     }
+
     return processIxResult(
       ctx,
       [...r.error.mods, ...mods, IxMod.gas(ix.gasCost)],
@@ -150,20 +146,16 @@ export const processIxResult = (
 
   // instruction pointer
   if (result.some((x) => x.type === "ip")) {
-    console.log("a");
     result
       .filter((x): x is PVMSingleModPointer => x.type === "ip")
       .forEach((x) => {
         p_context.instructionPointer = x.data;
       });
-  } else if (!exitReason) {
-    console.log("b", exitReason);
+  } else if (typeof exitReason === "undefined") {
     // if the instruction did not jump to another instruction
     // we default to skip
     p_context.instructionPointer = (context.instructionPointer +
       (skip ? skip + 1 : 0)) as u32;
-  } else {
-    console.log("c");
   }
 
   if (result.some((x) => x.type === "register")) {
