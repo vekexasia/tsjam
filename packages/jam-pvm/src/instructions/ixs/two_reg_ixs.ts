@@ -1,14 +1,23 @@
-import { PVMIxEvaluateFN, RegisterIdentifier, u32, u8 } from "@tsjam/types";
+import { Result, err, ok } from "neverthrow";
+import {
+  PVMIxDecodeError,
+  PVMIxEvaluateFN,
+  RegisterIdentifier,
+  u32,
+  u8,
+} from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
 const decode = (
   bytes: Uint8Array,
-): [RegisterIdentifier, RegisterIdentifier] => {
-  assert(bytes.length >= 1, "not enough bytes");
+): Result<[RegisterIdentifier, RegisterIdentifier], PVMIxDecodeError> => {
+  if (bytes.length < 1) {
+    return err(new PVMIxDecodeError("not enough bytes"));
+  }
   const rd = Math.min(12, bytes[0] % 16);
   const ra = Math.min(12, Math.floor(bytes[0] / 16));
-  return [rd as RegisterIdentifier, ra as RegisterIdentifier];
+  return ok([rd as RegisterIdentifier, ra as RegisterIdentifier]);
 };
 
 const create = (
@@ -29,13 +38,13 @@ const create = (
 
 const move_reg = create(82 as u8, "move_reg", (context, rd, ra) => {
   context.execution.registers[rd] = context.execution.registers[ra];
-  return [IxMod.reg(rd, context.execution.registers[ra])];
+  return ok([IxMod.reg(rd, context.execution.registers[ra])]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sbrk = create(87 as u8, "sbrk", (context, rd, ra) => {
   //TODO implement sbrk (space break)
-  return [];
+  return ok([]);
 });
 
 if (import.meta.vitest) {
@@ -44,16 +53,24 @@ if (import.meta.vitest) {
   describe("two_reg_ixs", () => {
     describe("decode", () => {
       it("should decode rD and rA properly", () => {
-        expect(decode(new Uint8Array([13]))).toEqual([12, 0]);
-        expect(decode(new Uint8Array([1]))).toEqual([1, 0]);
-        expect(decode(new Uint8Array([1 + 1 * 16]))).toEqual([1, 1]);
-        expect(decode(new Uint8Array([1 + 13 * 16]))).toEqual([1, 12]);
+        expect(decode(new Uint8Array([13]))._unsafeUnwrap()).toEqual([12, 0]);
+        expect(decode(new Uint8Array([1]))._unsafeUnwrap()).toEqual([1, 0]);
+        expect(decode(new Uint8Array([1 + 1 * 16]))._unsafeUnwrap()).toEqual([
+          1, 1,
+        ]);
+        expect(decode(new Uint8Array([1 + 13 * 16]))._unsafeUnwrap()).toEqual([
+          1, 12,
+        ]);
         expect(
-          decode(new Uint8Array([1 + 13 * 16, 0xba, 0xcc, 0xe6, 0xaa])),
+          decode(
+            new Uint8Array([1 + 13 * 16, 0xba, 0xcc, 0xe6, 0xaa]),
+          )._unsafeUnwrap(),
         ).toEqual([1, 12]);
       });
       it("should fail if no bytes provided", () => {
-        expect(() => decode(new Uint8Array([]))).toThrow();
+        expect(decode(new Uint8Array([]))._unsafeUnwrapErr().message).toEqual(
+          "not enough bytes",
+        );
       });
     });
     describe("ixs", () => {

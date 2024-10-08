@@ -1035,6 +1035,7 @@ __metadata:
     "@tsjam/crypto": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
+    neverthrow: "npm:^8.0.0"
   languageName: unknown
   linkType: soft
 
@@ -1057,6 +1058,7 @@ __metadata:
   resolution: "@tsjam/types@workspace:packages/jam-types"
   dependencies:
     "@tsjam/constants": "npm:*"
+    neverthrow: "npm:^8.0.0"
   languageName: unknown
   linkType: soft
 
@@ -5844,6 +5846,13 @@ __metadata:
   version: 2.0.2
   resolution: "netmask@npm:2.0.2"
   checksum: 10c0/cafd28388e698e1138ace947929f842944d0f1c0b87d3fa2601a61b38dc89397d33c0ce2c8e7b99e968584b91d15f6810b91bef3f3826adf71b1833b61d4bf4f
+  languageName: node
+  linkType: hard
+
+"neverthrow@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "neverthrow@npm:8.0.0"
+  checksum: 10c0/09652f2e8179ab5f915566c82bbce4886a793637b57c5663db8dd9c51d8ec808179e4e0eebc66dbb6f632629c0160850e004e5616ecb53d88498723e0c2dd459
   languageName: node
   linkType: hard
 

@@ -1,4 +1,11 @@
-import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import {
+  IParsedProgram,
+  PVMIx,
+  PVMIxExecutionError,
+  PVMProgram,
+  u32,
+  u8,
+} from "@tsjam/types";
 import assert from "node:assert";
 import { Ixdb } from "@/instructions/ixdb.js";
 
@@ -36,7 +43,9 @@ export class ParsedProgram implements IParsedProgram {
     }
   }
 
-  ixAt<K extends PVMIx<T>, T extends unknown[]>(pointer: u32): K | undefined {
+  ixAt<K extends PVMIx<T, PVMIxExecutionError>, T extends unknown[]>(
+    pointer: u32,
+  ): K | undefined {
     if (!this.#ixs.has(pointer)) {
       return undefined;
     }

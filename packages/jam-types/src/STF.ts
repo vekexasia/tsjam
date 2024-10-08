@@ -1,3 +1,6 @@
+/**
+ * Defines the RAW state transition function
+ */
 export interface RAWSTF<State, Input, PState> {
   /**
    * Performs static checks over the input. if valid, it returns the manipulated input

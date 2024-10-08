@@ -1,5 +1,4 @@
 import { u32, u64 } from "@/genericTypes.js";
-import { PVMExitReason } from "@/pvm/PVMExitReason.js";
 
 export type PVMSingleMod<T, K> = { type: T; data: K };
 export type PVMSingleModGas = PVMSingleMod<"gas", u64>;
@@ -13,10 +12,8 @@ export type PVMSingleModRegister<T extends number> = PVMSingleMod<
   "register",
   { index: T; value: u32 }
 >;
-export type PVMSingleModExit = PVMSingleMod<"exit", PVMExitReason>;
 export type PVMModification =
   | PVMSingleModPointer
   | PVMSingleModGas
   | PVMSingleModMemory
-  | PVMSingleModRegister<number>
-  | PVMSingleModExit;
+  | PVMSingleModRegister<number>;

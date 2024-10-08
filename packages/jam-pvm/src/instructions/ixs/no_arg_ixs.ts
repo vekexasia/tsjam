@@ -1,5 +1,11 @@
-import { RegularPVMExitReason, u32, u8 } from "@tsjam/types";
+import {
+  PVMIxExecutionError,
+  RegularPVMExitReason,
+  u32,
+  u8,
+} from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
+import { err, ok } from "neverthrow";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fallthrough = regIx<[]>({
@@ -8,12 +14,12 @@ const fallthrough = regIx<[]>({
   blockTermination: true,
   ix: {
     decode() {
-      return [];
+      return ok([]);
     },
     evaluate(context) {
-      return [
+      return ok([
         { type: "ip", data: (context.execution.instructionPointer + 1) as u32 },
-      ];
+      ]);
     },
     gasCost: 1n,
   },
@@ -26,10 +32,12 @@ export const trap = regIx<[]>({
   blockTermination: true,
   ix: {
     decode() {
-      return [];
+      return ok([]);
     },
     evaluate() {
-      return [{ type: "exit", data: RegularPVMExitReason.Panic, dio: "can" }];
+      return err(
+        new PVMIxExecutionError([], RegularPVMExitReason.Panic, "trap"),
+      );
     },
     gasCost: 1n,
   },

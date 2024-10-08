@@ -1,5 +1,8 @@
+import { Result, err, ok } from "neverthrow";
 import {
+  PVMIxDecodeError,
   PVMIxEvaluateFN,
+  PVMIxExecutionError,
   RegisterIdentifier,
   u16,
   u32,
@@ -11,21 +14,22 @@ import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
 import { E_2, E_4 } from "@tsjam/codec";
-import { IxMod } from "@/instructions/utils.js";
+import { IxMod, MemoryUnreadable } from "@/instructions/utils.js";
+import { beforeEach } from "node:test";
 
 type InputType = [register: RegisterIdentifier, value: u32];
-const decode = (bytes: Uint8Array): InputType => {
+const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   assert(bytes.length > 0, "no input bytes");
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.max(0, bytes.length - 1));
   const vx = readVarIntFromBuffer(bytes.subarray(1), lx as u8);
-  return [ra, vx];
+  return ok([ra, vx]);
 };
 
 const create1Reg1IMMIx = (
   opCode: u8,
   identifier: string,
-  evaluate: PVMIxEvaluateFN<InputType>,
+  evaluate: PVMIxEvaluateFN<InputType, PVMIxExecutionError>,
   blockTermination?: true,
 ) => {
   return regIx({
@@ -54,41 +58,59 @@ const jump_ind = create1Reg1IMMIx(
 
 // ### Load unsigned
 const load_imm = create1Reg1IMMIx(4 as u8, "load_imm", (context, ri, vx) => {
-  return [{ type: "register", data: { index: ri, value: vx } }];
+  return ok([{ type: "register", data: { index: ri, value: vx } }]);
 });
 
 const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
-  return [
+  if (!context.execution.memory.canRead(vx, 1)) {
+    return err(new MemoryUnreadable(vx, 1));
+  }
+
+  return ok([
     IxMod.reg(ri, context.execution.memory.getBytes(vx, 1)[0] as number as u32),
-  ];
+  ]);
 });
 
 const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
-  return [
+  if (!context.execution.memory.canRead(vx, 2)) {
+    return err(new MemoryUnreadable(vx, 2));
+  }
+  return ok([
     IxMod.reg(
       ri,
       Number(E_2.decode(context.execution.memory.getBytes(vx, 2)).value) as u32,
     ),
-  ];
+  ]);
 });
 
 const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
-  return [
+  if (!context.execution.memory.canRead(vx, 4)) {
+    return err(new MemoryUnreadable(vx, 4));
+  }
+  return ok([
     IxMod.reg(
       ri,
       Number(E_4.decode(context.execution.memory.getBytes(vx, 4)).value) as u32,
     ),
-  ];
+  ]);
 });
 
 // ### Load signed
 const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
-  return [
+  if (!context.execution.memory.canRead(vx, 1)) {
+    return err(new MemoryUnreadable(vx, 1));
+  }
+
+  return ok([
     IxMod.reg(ri, Z4_inv(Z(1, context.execution.memory.getBytes(vx, 1)[0]))),
-  ];
+  ]);
 });
 const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
-  return [
+  if (!context.execution.memory.canRead(vx, 2)) {
+    return err(new MemoryUnreadable(vx, 2));
+  }
+
+  return ok([
     IxMod.reg(
       ri,
       Z4_inv(
@@ -98,50 +120,28 @@ const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
         ),
       ),
     ),
-  ];
+  ]);
 });
 
 // ### Store
 
 const store_u8 = create1Reg1IMMIx(71 as u8, "store_u8", (context, ri, vx) => {
-  return [
-    {
-      type: "memory",
-      data: {
-        from: vx,
-        data: new Uint8Array([context.execution.registers[ri] % 256]),
-      },
-    },
-  ];
+  return ok([
+    IxMod.memory(vx, new Uint8Array([context.execution.registers[ri] % 256])),
+  ]);
 });
 
 const store_u16 = create1Reg1IMMIx(69 as u8, "store_u16", (context, ri, vx) => {
   const wa = (context.execution.registers[ri] % 2 ** 16) as u16;
   const tmp = new Uint8Array(2);
   E_2.encode(BigInt(wa), tmp);
-  return [
-    {
-      type: "memory",
-      data: {
-        from: vx,
-        data: tmp,
-      },
-    },
-  ];
+  return ok([IxMod.memory(vx, tmp)]);
 });
 const store_u32 = create1Reg1IMMIx(22 as u8, "store_u32", (context, ri, vx) => {
   const wa = (context.execution.registers[ri] % 2 ** 32) as u32;
   const tmp = new Uint8Array(4);
   E_4.encode(BigInt(wa), tmp);
-  return [
-    {
-      type: "memory",
-      data: {
-        from: vx,
-        data: tmp,
-      },
-    },
-  ];
+  return ok([IxMod.memory(vx, tmp)]);
 });
 
 if (import.meta.vitest) {
@@ -155,16 +155,16 @@ if (import.meta.vitest) {
         expect(() => decode(new Uint8Array([]))).toThrow("no input bytes");
       });
       it("it should get vx 0 if only 1 byte", () => {
-        const [rA, vX] = decode(new Uint8Array([1]));
+        const [rA, vX] = decode(new Uint8Array([1]))._unsafeUnwrap();
         expect(rA).toBe(1);
         expect(vX).toBe(0);
       });
       it("should mod 16 for rA", () => {
-        const [rA] = decode(new Uint8Array([16]));
+        const [rA] = decode(new Uint8Array([16]))._unsafeUnwrap();
         expect(rA).toBe(0);
       });
       it("should varint properly", () => {
-        const [, vX] = decode(new Uint8Array([1, 0b00000001]));
+        const [, vX] = decode(new Uint8Array([1, 0b00000001]))._unsafeUnwrap();
         expect(vX).toBe(0b00000000_00000000_00000000_00000001);
       });
       it("should ignore extra bytes", () => {
@@ -172,7 +172,7 @@ if (import.meta.vitest) {
           new Uint8Array([
             1, 0b00000001, 0b00000010, 0b00000010, 0b00000010, 1,
           ]),
-        );
+        )._unsafeUnwrap();
         expect(vX).toBe(0b00000010_00000010_00000010_00000001);
       });
     });
@@ -180,11 +180,13 @@ if (import.meta.vitest) {
       it.skip("jump_ind", () => {});
       it("load_imm", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
         const { p_context } = runTestIx(context, load_imm, 1, 0x1234);
         expect(p_context.registers[1]).toBe(0x1234);
       });
       it("load_u8", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
           0xaaaa,
         ]);
@@ -193,6 +195,7 @@ if (import.meta.vitest) {
       });
       it("load_u16", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12]),
         );
@@ -205,6 +208,7 @@ if (import.meta.vitest) {
       });
       it("load_u32", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValue(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12, 0x00, 0x01]),
         );
@@ -217,6 +221,7 @@ if (import.meta.vitest) {
       });
       it("load_i8", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValue(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([127]);
         let { p_context } = runTestIx(context, load_i8, 1, 0x1234);
         expect(p_context.registers[1]).toBe(127);
@@ -229,6 +234,7 @@ if (import.meta.vitest) {
       });
       it("load_i16", () => {
         const context = createEvContext();
+        (context.execution.memory.canRead as Mock).mockReturnValue(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12]),
         );

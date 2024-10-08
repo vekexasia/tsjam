@@ -5,7 +5,6 @@ import {
   PVMModification,
   PVMProgram,
   PVMProgramExecutionContext,
-  PVMSingleModExit,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModPointer,
@@ -15,6 +14,7 @@ import {
   u32,
 } from "@tsjam/types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
+import { IxMod } from "@/instructions/utils";
 
 type Output = {
   p_context: Posterior<PVMProgramExecutionContext>;
@@ -54,6 +54,14 @@ export const pvmSingleStep = (
       : p.program.c.length,
   );
   const args = ix.decode(byteArgs);
+  if (args.isErr()) {
+    return processIxResult(
+      ctx,
+      [IxMod.gas(trap.gasCost), IxMod.gas(ix.gasCost)],
+      skip,
+      RegularPVMExitReason.Panic,
+    );
+  }
 
   const context = {
     execution: ctx,
@@ -61,23 +69,25 @@ export const pvmSingleStep = (
     parsedProgram: p.parsedProgram,
   };
 
-  let r = [];
-  try {
-    r = ix.evaluate(context, ...args);
-  } catch (e) {
-    // inner panics
+  const r = ix.evaluate(context, ...args.value);
+  if (r.isErr()) {
+    const mods: PVMModification[] = [];
+    // if it is a panic and the trap is not the current ix
+    // then we must add trap cost
+    if (
+      r.error.type === RegularPVMExitReason.Panic &&
+      trap.opCode !== ix.opCode
+    ) {
+      mods.push(IxMod.gas(trap.gasCost));
+    }
     return processIxResult(
       ctx,
-      [
-        { type: "exit", data: RegularPVMExitReason.Panic },
-        { type: "gas", data: toTagged(trap.gasCost) },
-        { type: "gas", data: toTagged(ix.gasCost) },
-      ],
-      ix.gasCost,
+      [...r.error.mods, ...mods, IxMod.gas(ix.gasCost)],
       skip,
+      r.error.type,
     );
   }
-  return processIxResult(ctx, r, ix.gasCost, skip);
+  return processIxResult(ctx, [IxMod.gas(ix.gasCost), ...r.value], skip);
 };
 
 if (import.meta.vitest) {
@@ -108,8 +118,8 @@ if (import.meta.vitest) {
 export const processIxResult = (
   context: PVMProgramExecutionContext,
   result: PVMModification[],
-  gasCost: bigint,
   skip: number,
+  exitReason?: PVMExitReason,
 ): {
   exitReason?: PVMExitReason;
   p_context: Posterior<PVMProgramExecutionContext>;
@@ -121,15 +131,9 @@ export const processIxResult = (
       context.registers.slice() as PVMProgramExecutionContext["registers"],
   });
 
-  if (!result.some((x) => x.type === "gas")) {
-    p_context.gas = toTagged(context.gas - gasCost);
-  } else {
-    result
-      .filter((x): x is PVMSingleModGas => x.type === "gas")
-      .forEach((x) => {
-        p_context.gas = toTagged(p_context.gas - x.data);
-      });
-  }
+  const gasCost = result
+    .filter((x): x is PVMSingleModGas => x.type === "gas")
+    .reduce((acc, x) => acc + x.data, 0n);
 
   const invalidMemWrite = result.some(
     (x) =>
@@ -145,17 +149,21 @@ export const processIxResult = (
   }
 
   // instruction pointer
-  if (!result.some((x) => x.type === "ip")) {
-    // if the instruction did not jump to another instruction
-    // we default to skip
-    p_context.instructionPointer = (context.instructionPointer +
-      (skip ? skip + 1 : 0)) as u32;
-  } else {
+  if (result.some((x) => x.type === "ip")) {
+    console.log("a");
     result
       .filter((x): x is PVMSingleModPointer => x.type === "ip")
       .forEach((x) => {
         p_context.instructionPointer = x.data;
       });
+  } else if (!exitReason) {
+    console.log("b", exitReason);
+    // if the instruction did not jump to another instruction
+    // we default to skip
+    p_context.instructionPointer = (context.instructionPointer +
+      (skip ? skip + 1 : 0)) as u32;
+  } else {
+    console.log("c");
   }
 
   if (result.some((x) => x.type === "register")) {
@@ -173,21 +181,10 @@ export const processIxResult = (
         p_context.memory.setBytes(x.data.from, x.data.data);
       });
   }
-
-  if (result.some((x) => x.type === "exit")) {
-    // in this case we reset the instruction pointer to the curr instruction (unless there is one result item)
-    if (!result.some((x) => x.type === "ip")) {
-      p_context.instructionPointer = context.instructionPointer;
-    }
-
-    return {
-      exitReason: result.find((x): x is PVMSingleModExit => x.type === "exit")!
-        .data,
-      p_context,
-    };
-  }
+  p_context.gas = toTagged(context.gas - gasCost);
 
   return {
+    exitReason,
     p_context: p_context,
   };
 };

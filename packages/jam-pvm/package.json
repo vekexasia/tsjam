@@ -32,7 +32,8 @@
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*"
+    "@tsjam/utils": "*",
+    "neverthrow": "^8.0.0"
   },
   "license": "MIT"
 }

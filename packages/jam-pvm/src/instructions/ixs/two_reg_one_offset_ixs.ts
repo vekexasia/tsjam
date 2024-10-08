@@ -10,9 +10,13 @@ import { Z, Z4, Z4_inv } from "@/utils/zed.js";
 import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_sub } from "@tsjam/codec";
+import { Result, ok } from "neverthrow";
 const decode = (
   bytes: Uint8Array,
-): [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: i32] => {
+): Result<
+  [rA: RegisterIdentifier, rB: RegisterIdentifier, offset: i32],
+  never
+> => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
@@ -20,7 +24,7 @@ const decode = (
     lX,
     Number(E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
   );
-  return [rA, rB, offset];
+  return ok([rA, rB, offset]);
 };
 const create = (
   identifier: u8,
@@ -128,20 +132,18 @@ if (import.meta.vitest) {
   const b = await import("@/utils/branch.js");
   describe("two_reg_one_offset_ixs", () => {
     beforeAll(() => {
-      vi.spyOn(b, "branch").mockReturnValue([] as PVMModification[]);
+      vi.spyOn(b, "branch").mockReturnValue(ok([] as PVMModification[]));
     });
     describe("decode", () => {
       it("should decode rA, rB and offset properly", () => {
-        expect(decode(new Uint8Array([0]))).toEqual([0, 0, 0]);
-        expect(decode(new Uint8Array([1]))).toEqual([1, 0, 0]);
-        expect(decode(new Uint8Array([13]))).toEqual([12, 0, 0]);
-        expect(decode(new Uint8Array([16]))).toEqual([0, 1, 0]);
-        expect(decode(new Uint8Array([16 * 13]))).toEqual([0, 12, 0]);
-        expect(decode(new Uint8Array([0, 0xba, 0xcc, 0xe6, 0xaa]))).toEqual([
-          0,
-          0,
-          Z4(0xaae6ccba),
-        ]);
+        expect(decode(new Uint8Array([0]))).toEqual(ok([0, 0, 0]));
+        expect(decode(new Uint8Array([1]))).toEqual(ok([1, 0, 0]));
+        expect(decode(new Uint8Array([13]))).toEqual(ok([12, 0, 0]));
+        expect(decode(new Uint8Array([16]))).toEqual(ok([0, 1, 0]));
+        expect(decode(new Uint8Array([16 * 13]))).toEqual(ok([0, 12, 0]));
+        expect(decode(new Uint8Array([0, 0xba, 0xcc, 0xe6, 0xaa]))).toEqual(
+          ok([0, 0, Z4(0xaae6ccba)]),
+        );
       });
     });
     describe("ixs", () => {

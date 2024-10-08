@@ -1,19 +1,24 @@
-import { PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
+import { PVMIxDecodeError, PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
-import assert from "node:assert";
 import { E_2, E_4 } from "@tsjam/codec";
+import { Result, err, ok } from "neverthrow";
+import { IxMod } from "../utils";
 
 /**
  * decode the full instruction from the bytes.
  * the byte array is chunked to include only the bytes of the instruction
  */
-export const decode = (bytes: Uint8Array): [vX: u32, vY: u32] => {
+export const decode = (
+  bytes: Uint8Array,
+): Result<[vX: u32, vY: u32], PVMIxDecodeError> => {
   let offset = 0;
   const lX = Math.min(4, bytes[0] % 8);
   offset += 1;
 
-  assert(bytes.length >= offset + lX + (lX == 0 ? 1 : 0), "not enough bytes");
+  if (bytes.length < offset + lX + (lX == 0 ? 1 : 0)) {
+    return err(new PVMIxDecodeError("not enough bytes"));
+  }
   const first: u32 = readVarIntFromBuffer(
     bytes.subarray(offset, offset + lX),
     lX as u8,
@@ -25,7 +30,7 @@ export const decode = (bytes: Uint8Array): [vX: u32, vY: u32] => {
     bytes.subarray(1 + lX, 1 + lX + secondArgLength),
     secondArgLength as u8,
   );
-  return [first, second];
+  return ok([first, second]);
 };
 
 const create = (
@@ -48,12 +53,7 @@ const store_imm_u8 = create(
   62 as u8,
   "store_imm_u8",
   (context, offset, value) => {
-    return [
-      {
-        type: "memory",
-        data: { from: offset, data: new Uint8Array([value % 256]) },
-      },
-    ];
+    return ok([IxMod.memory(offset, new Uint8Array([value % 256]))]);
   },
 );
 
@@ -63,7 +63,7 @@ const store_imm_u16 = create(
   (context, offset, value) => {
     const tmp = new Uint8Array(2);
     E_2.encode(BigInt(value % 2 ** 16), tmp);
-    return [{ type: "memory", data: { from: offset, data: tmp } }];
+    return ok([IxMod.memory(offset, tmp)]);
   },
 );
 
@@ -73,7 +73,7 @@ const store_imm_u32 = create(
   (context, offset, value) => {
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(value), tmp);
-    return [{ type: "memory", data: { from: offset, data: tmp } }];
+    return ok([IxMod.memory(offset, tmp)]);
   },
 );
 
@@ -85,26 +85,40 @@ if (import.meta.vitest) {
   describe("two_imm_ixs", () => {
     describe("decode", () => {
       it("decode just fine", () => {
-        expect(decode(new Uint8Array([0, 0]))).toEqual([0, 0]);
-        expect(decode(new Uint8Array([1, 0x44]))).toEqual([0x44, 0]);
-        expect(decode(new Uint8Array([0, 0x44]))).toEqual([0, 0x44]);
+        expect(decode(new Uint8Array([0, 0]))._unsafeUnwrap()).toEqual([0, 0]);
+        expect(decode(new Uint8Array([1, 0x44]))._unsafeUnwrap()).toEqual([
+          0x44, 0,
+        ]);
+        expect(decode(new Uint8Array([0, 0x44]))._unsafeUnwrap()).toEqual([
+          0, 0x44,
+        ]);
         expect(
-          decode(new Uint8Array([1, 0x44, 0x55, 0x11, 0x22, 0x33])),
+          decode(
+            new Uint8Array([1, 0x44, 0x55, 0x11, 0x22, 0x33]),
+          )._unsafeUnwrap(),
         ).toEqual([0x44, 0x33221155]);
         expect(
-          decode(new Uint8Array([4, 0x44, 0x55, 0x11, 0x22, 0x33])),
+          decode(
+            new Uint8Array([4, 0x44, 0x55, 0x11, 0x22, 0x33]),
+          )._unsafeUnwrap(),
         ).toEqual([0x22115544, 0x33]);
         // mod 8 on first param and min 4
         expect(
-          decode(new Uint8Array([7 + 8, 0x44, 0x55, 0x11, 0x22, 0x33])),
+          decode(
+            new Uint8Array([7 + 8, 0x44, 0x55, 0x11, 0x22, 0x33]),
+          )._unsafeUnwrap(),
         ).toEqual([0x22115544, 0x33]);
       });
       it("should throw if not enough bytes", () => {
-        expect(() => decode(new Uint8Array([0]))).toThrow("not enough bytes");
-        expect(() => decode(new Uint8Array([1]))).toThrow("not enough bytes");
-        expect(() => decode(new Uint8Array([2, 0]))).toThrow(
+        expect(decode(new Uint8Array([0]))._unsafeUnwrapErr().message).toEqual(
           "not enough bytes",
         );
+        expect(decode(new Uint8Array([1]))._unsafeUnwrapErr().message).toEqual(
+          "not enough bytes",
+        );
+        expect(
+          decode(new Uint8Array([2, 0]))._unsafeUnwrapErr().message,
+        ).toEqual("not enough bytes");
       });
     });
     describe("ixs", () => {

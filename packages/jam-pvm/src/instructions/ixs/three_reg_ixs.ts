@@ -1,4 +1,6 @@
+import { Result, err, ok } from "neverthrow";
 import {
+  PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
   SeqOfLength,
@@ -7,19 +9,20 @@ import {
 } from "@tsjam/types";
 import { Z4, Z4_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
-import assert from "node:assert";
 import { beforeEach } from "vitest";
 import { IxMod } from "@/instructions/utils.js";
 
 type EvaluateType = [wA: u32, wB: u32, rD: RegisterIdentifier];
 type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
 
-const decode = (bytes: Uint8Array): InputType => {
-  assert(bytes.length >= 2, "Not enough bytes");
+const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
+  if (bytes.length < 2) {
+    return err(new PVMIxDecodeError("not enough bytes (2)"));
+  }
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const rD = Math.min(12, bytes[1]) as RegisterIdentifier;
-  return [rA, rB, rD];
+  return ok([rA, rB, rD]);
 };
 
 const create = (
@@ -46,34 +49,34 @@ const create = (
 };
 
 const add = create(8 as u8, "add", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, ((wA + wB) % 2 ** 32) as u32)];
+  return ok([IxMod.reg(rD, ((wA + wB) % 2 ** 32) as u32)]);
 });
 
 const sub = create(20 as u8, "sub", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, ((wA + 2 ** 32 - wB) % 2 ** 32) as u32)];
+  return ok([IxMod.reg(rD, ((wA + 2 ** 32 - wB) % 2 ** 32) as u32)]);
 });
 
 const and = create(23 as u8, "and", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, (wA & wB) as u32)];
+  return ok([IxMod.reg(rD, (wA & wB) as u32)]);
 });
 
 const xor = create(28 as u8, "xor", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, (wA ^ wB) as u32)];
+  return ok([IxMod.reg(rD, (wA ^ wB) as u32)]);
 });
 
 const or = create(12 as u8, "or", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, (wA | wB) as u32)];
+  return ok([IxMod.reg(rD, (wA | wB) as u32)]);
 });
 
 const mul = create(34 as u8, "mul", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, ((wA * wB) % 2 ** 32) as u32)];
+  return ok([IxMod.reg(rD, ((wA * wB) % 2 ** 32) as u32)]);
 });
 
 const mul_upper_s_s = create(
   67 as u8,
   "mul_upper_s_s",
   (context, wA, wB, rD) => {
-    return [IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * Z4(wB)) / 2 ** 32)))];
+    return ok([IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * Z4(wB)) / 2 ** 32)))]);
   },
 );
 
@@ -81,7 +84,7 @@ const mul_upper_u_u = create(
   57 as u8,
   "mul_upper_u_u",
   (context, wA, wB, rD) => {
-    return [IxMod.reg(rD, Math.floor((wA * wB) / 2 ** 32) as u32)];
+    return ok([IxMod.reg(rD, Math.floor((wA * wB) / 2 ** 32) as u32)]);
   },
 );
 
@@ -89,15 +92,15 @@ const mul_upper_s_u = create(
   81 as u8,
   "mul_upper_s_u",
   (context, wA, wB, rD) => {
-    return [IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * wB) / 2 ** 32)))];
+    return ok([IxMod.reg(rD, Z4_inv(Math.floor((Z4(wA) * wB) / 2 ** 32)))]);
   },
 );
 
 const div_u = create(68 as u8, "div", (context, wA, wB, rD) => {
   if (wB === 0) {
-    return [IxMod.reg(rD, (2 ** 32 - 1) as u32)];
+    return ok([IxMod.reg(rD, (2 ** 32 - 1) as u32)]);
   } else {
-    return [IxMod.reg(rD, Math.floor(wA / wB) as u32)];
+    return ok([IxMod.reg(rD, Math.floor(wA / wB) as u32)]);
   }
 });
 
@@ -112,7 +115,7 @@ const div_s = create(64 as u8, "div_s", (context, wA, wB, rD) => {
   } else {
     newVal = Z4_inv(Math.floor(z4a / z4b));
   }
-  return [{ type: "register", data: { index: rD, value: newVal } }];
+  return ok([IxMod.reg(rD, newVal)]);
 });
 
 const rem_u = create(73 as u8, "rem_u", (context, wA, wB, rD) => {
@@ -122,7 +125,7 @@ const rem_u = create(73 as u8, "rem_u", (context, wA, wB, rD) => {
   } else {
     newVal = Math.floor(wA % wB) as u32;
   }
-  return [{ type: "register", data: { index: rD, value: newVal } }];
+  return ok([IxMod.reg(rD, newVal)]);
 });
 
 const rem_s = create(70 as u8, "rem_s", (context, wA, wB, rD) => {
@@ -136,44 +139,44 @@ const rem_s = create(70 as u8, "rem_s", (context, wA, wB, rD) => {
   } else {
     newVal = Z4_inv(z4a % z4b);
   }
-  return [{ type: "register", data: { index: rD, value: newVal } }];
+  return ok([IxMod.reg(rD, newVal)]);
 });
 
 const set_lt_u = create(36 as u8, "set_lt_u", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, (wA < wB ? 1 : 0) as u32)];
+  return ok([IxMod.reg(rD, (wA < wB ? 1 : 0) as u32)]);
 });
 
 const set_lt_s = create(58 as u8, "set_lt_s", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
   const z4b = Z4(wB);
-  return [IxMod.reg(rD, (z4a < z4b ? 1 : 0) as u32)];
+  return ok([IxMod.reg(rD, (z4a < z4b ? 1 : 0) as u32)]);
 });
 
 const shlo_l = create(55 as u8, "shlo_l", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, ((wA << wB % 32) % 2 ** 32) as u32)];
+  return ok([IxMod.reg(rD, ((wA << wB % 32) % 2 ** 32) as u32)]);
 });
 
 const shlo_r = create(51 as u8, "shlo_r", (context, wA, wB, rD) => {
-  return [IxMod.reg(rD, (wA >>> wB % 32) as u32)];
+  return ok([IxMod.reg(rD, (wA >>> wB % 32) as u32)]);
 });
 
 const shar_r = create(77 as u8, "shar_r", (context, wA, wB, rD) => {
   const z4a = Z4(wA);
-  return [IxMod.reg(rD, Z4_inv(Math.floor(z4a / 2 ** (wB % 32))))];
+  return ok([IxMod.reg(rD, Z4_inv(Math.floor(z4a / 2 ** (wB % 32))))]);
 });
 
 const cmov_iz = create(83 as u8, "cmov_iz", (context, wA, wB, rD) => {
   if (wB === 0) {
-    return [{ type: "register", data: { index: rD, value: wA } }];
+    return ok([{ type: "register", data: { index: rD, value: wA } }]);
   }
-  return [];
+  return ok([]);
 });
 
 const cmov_nz = create(84 as u8, "cmov_nz", (context, wA, wB, rD) => {
   if (wB !== 0) {
-    return [{ type: "register", data: { index: rD, value: wA } }];
+    return ok([{ type: "register", data: { index: rD, value: wA } }]);
   }
-  return [];
+  return ok([]);
 });
 
 if (import.meta.vitest) {
@@ -185,35 +188,37 @@ if (import.meta.vitest) {
     describe("decoding", () => {
       it("decodes properly", () => {
         const bytes = new Uint8Array([0x10, 0x02]);
-        const [rA, rB, rD] = decode(bytes);
+        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
         expect(rA).toBe(0);
         expect(rB).toBe(1);
         expect(rD).toBe(2);
       });
       it("decodes with rD = 12", () => {
         const bytes = new Uint8Array([0x10, 0xff]);
-        const [rA, rB, rD] = decode(bytes);
+        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
         expect(rA).toBe(0);
         expect(rB).toBe(1);
         expect(rD).toBe(12);
       });
       it("decodes rA = 12", () => {
         const bytes = new Uint8Array([14, 0xff]);
-        const [rA] = decode(bytes);
+        const [rA] = decode(bytes)._unsafeUnwrap();
         expect(rA).toBe(12);
       });
       it("decodes rB = 12", () => {
         const bytes = new Uint8Array([0xff, 0]);
-        const [, rB] = decode(bytes);
+        const [, rB] = decode(bytes)._unsafeUnwrap();
         expect(rB).toBe(12);
       });
       it("throws when not enough bytes (2)", () => {
         const bytes = new Uint8Array([0x10]);
-        expect(() => decode(bytes)).toThrow();
+        expect(decode(bytes)._unsafeUnwrapErr().message).toEqual(
+          "not enough bytes (2)",
+        );
       });
       it("decodes properly even with extra bytes", () => {
         const bytes = new Uint8Array([0x10, 0x02, 0x03, 0x10, 0x02, 0x03]);
-        const [rA, rB, rD] = decode(bytes);
+        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
         expect(rA).toBe(0);
         expect(rB).toBe(1);
         expect(rD).toBe(2);

@@ -13,6 +13,7 @@ import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
 import { processIxResult } from "@/invocations/singleStep.js";
 import { HostCallResult } from "@tsjam/constants";
+import { IxMod } from "@/instructions/utils";
 
 /**
  * `ΨI` in the paper
@@ -54,8 +55,7 @@ const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     const r = processIxResult(
       { ...input.ctx, instructionPointer: 4 as u32 },
-      omega_g.execute(input.ctx),
-      omega_g.gasCost as bigint,
+      [IxMod.gas(omega_g.gasCost as bigint), ...omega_g.execute(input.ctx)],
       0,
     );
     return {

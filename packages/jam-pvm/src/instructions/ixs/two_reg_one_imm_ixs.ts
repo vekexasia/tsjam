@@ -4,16 +4,17 @@ import { regIx } from "@/instructions/ixdb.js";
 import { E_2, E_4 } from "@tsjam/codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { IxMod } from "@/instructions/utils.js";
+import { Result, ok } from "neverthrow";
 
 const decode = (
   bytes: Uint8Array,
-): [RegisterIdentifier, RegisterIdentifier, u32] => {
+): Result<[RegisterIdentifier, RegisterIdentifier, u32], never> => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
   const imm = readVarIntFromBuffer(bytes.subarray(1, 1 + lX), lX as u8);
 
-  return [rA, rB, Number(imm) as u32];
+  return ok([rA, rB, Number(imm) as u32]);
 };
 
 const create = (
@@ -38,15 +39,12 @@ const create = (
 
 const store_ind_u8 = create(16 as u8, "store_ind_u8", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
-  return [
-    {
-      type: "memory",
-      data: {
-        from: location as u32,
-        data: new Uint8Array([context.execution.registers[rA] & 0xff]),
-      },
-    },
-  ];
+  return ok([
+    IxMod.memory(
+      location as u32,
+      new Uint8Array([context.execution.registers[rA] & 0xff]),
+    ),
+  ]);
 });
 
 const store_ind_u16 = create(
@@ -56,7 +54,7 @@ const store_ind_u16 = create(
     const location = context.execution.registers[rB] + vX;
     const tmp = new Uint8Array(2);
     E_2.encode(BigInt(context.execution.registers[rA] & 0xffff), tmp);
-    return [{ type: "memory", data: { from: location as u32, data: tmp } }];
+    return ok([IxMod.memory(location, tmp)]);
   },
 );
 
@@ -67,92 +65,81 @@ const store_ind_u32 = create(
     const location = context.execution.registers[rB] + vX;
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(context.execution.registers[rA]), tmp);
-    return [{ type: "memory", data: { from: location as u32, data: tmp } }];
+    return ok([IxMod.memory(location, tmp)]);
   },
 );
 
 // # load unsigned
 const load_ind_u8 = create(11 as u8, "load_ind_u8", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
-  return [
-    {
-      type: "register",
-      data: {
-        index: rA,
-        value: context.execution.memory.getBytes(location, 1)[0] as u32,
-      },
-    },
-  ];
+  return ok([
+    IxMod.reg(rA, context.execution.memory.getBytes(location, 1)[0] as u32),
+  ]);
 });
 
 const load_ind_u16 = create(37 as u8, "load_ind_u16", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const r = context.execution.memory.getBytes(location, 2);
-  return [IxMod.reg(rA, Number(E_2.decode(r).value))];
+  return ok([IxMod.reg(rA, Number(E_2.decode(r).value))]);
 });
 
 const load_ind_u32 = create(1 as u8, "load_ind_u32", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const r = context.execution.memory.getBytes(location, 4);
-  return [
-    {
-      type: "register",
-      data: { index: rA, value: Number(E_4.decode(r).value) as u32 },
-    },
-  ];
+  return ok([IxMod.reg(rA, Number(E_4.decode(r).value) as u32)]);
 });
 
 // # load signed
 const load_ind_i8 = create(21 as u8, "load_ind_i8", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const val = context.execution.memory.getBytes(location, 1);
-  return [IxMod.reg(rA, Z4_inv(Z(1, val[0])))];
+  return ok([IxMod.reg(rA, Z4_inv(Z(1, val[0])))]);
 });
 
 const load_ind_i16 = create(33 as u8, "load_ind_i16", (context, rA, rB, vX) => {
   const location = context.execution.registers[rB] + vX;
   const val = context.execution.memory.getBytes(location, 2);
   const num = Number(E_2.decode(val).value);
-  return [IxMod.reg(rA, Z4_inv(Z(2, num)))];
+  return ok([IxMod.reg(rA, Z4_inv(Z(2, num)))]);
 });
 
 // math
 const add_imm = create(2 as u8, "add_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(rA, ((context.execution.registers[rB] + vX) % 2 ** 32) as u32),
-  ];
+  ]);
 });
 
 const and_imm = create(18 as u8, "and_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] & vX) as u32)];
+  return ok([IxMod.reg(rA, (context.execution.registers[rB] & vX) as u32)]);
 });
 
 const xor_imm = create(31 as u8, "xor_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] ^ vX) as u32)];
+  return ok([IxMod.reg(rA, (context.execution.registers[rB] ^ vX) as u32)]);
 });
 
 const or_imm = create(49 as u8, "or_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] | vX) as u32)];
+  return ok([IxMod.reg(rA, (context.execution.registers[rB] | vX) as u32)]);
 });
 
 const mul_imm = create(35 as u8, "mul_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(rA, ((context.execution.registers[rB] * vX) % 2 ** 32) as u32),
-  ];
+  ]);
 });
 
 const mul_upper_s_s_imm = create(
   65 as u8,
   "mul_upper_s_s_imm",
   (context, rA, rB, vX) => {
-    return [
+    return ok([
       IxMod.reg(
         rA,
         Z4_inv(
           Math.floor((Z4(context.execution.registers[rB]) * Z4(vX)) / 2 ** 32),
         ) as u32,
       ),
-    ];
+    ]);
   },
 );
 
@@ -160,117 +147,123 @@ const mul_upper_u_u_imm = create(
   63 as u8,
   "mul_upper_u_u_imm",
   (context, rA, rB, vX) => {
-    return [
+    return ok([
       IxMod.reg(
         rA,
         Math.floor((context.execution.registers[rB] * vX) / 2 ** 32) as u32,
       ),
-    ];
+    ]);
   },
 );
 
 const neg_add_imm = create(40 as u8, "neg_add_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(
       rA,
       ((vX + 2 ** 32 - context.execution.registers[rB]) % 2 ** 32) as u32,
     ),
-  ];
+  ]);
 });
 
 // # bitshifts
 const shlo_l_imm = create(9 as u8, "shlo_l_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(
       rA,
       ((context.execution.registers[rB] << vX % 32) % 2 ** 32) as u32,
     ),
-  ];
+  ]);
 });
 
 const shlo_l_imm_alt = create(
   75 as u8,
   "shlo_l_imm_alt",
   (context, rA, rB, vX) => {
-    return [
+    return ok([
       IxMod.reg(
         rA,
         ((vX << context.execution.registers[rB] % 32) % 2 ** 32) as u32,
       ),
-    ];
+    ]);
   },
 );
 
 const shlo_r_imm = create(14 as u8, "shlo_r_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] >>> vX % 32) as u32)];
+  return ok([
+    IxMod.reg(rA, (context.execution.registers[rB] >>> vX % 32) as u32),
+  ]);
 });
 
 const shlo_r_imm_alt = create(
   72 as u8,
   "shlo_r_imm_alt",
   (context, rA, rB, vX) => {
-    return [
+    return ok([
       IxMod.reg(rA, (vX >>> context.execution.registers[rB] % 32) as u32),
-    ];
+    ]);
   },
 );
 
 const shar_r_imm = create(25 as u8, "shar_r_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(rA, Z4_inv(Z4(context.execution.registers[rB]) >> vX % 32)),
-  ];
+  ]);
 });
 
 const shar_r_imm_alt = create(
   80 as u8,
   "shar_r_imm_alt",
   (context, rA, rB, vX) => {
-    return [
+    return ok([
       IxMod.reg(rA, Z4_inv(Z4(vX) >> context.execution.registers[rB] % 32)),
-    ];
+    ]);
   },
 );
 
 // # sets
 const set_lt_u_imm = create(27 as u8, "set_lt_u_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] < vX ? 1 : 0) as u32)];
+  return ok([
+    IxMod.reg(rA, (context.execution.registers[rB] < vX ? 1 : 0) as u32),
+  ]);
 });
 
 const set_lt_s_imm = create(56 as u8, "set_lt_s_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(
       rA,
       (Z4(context.execution.registers[rB]) < Z(4, vX) ? 1 : 0) as u32,
     ),
-  ];
+  ]);
 });
 
 const set_gt_u_imm = create(39 as u8, "set_gt_u_imm", (context, rA, rB, vX) => {
-  return [IxMod.reg(rA, (context.execution.registers[rB] > vX ? 1 : 0) as u32)];
+  return ok([
+    IxMod.reg(rA, (context.execution.registers[rB] > vX ? 1 : 0) as u32),
+  ]);
 });
 
 const set_gt_s_imm = create(61 as u8, "set_gt_s_imm", (context, rA, rB, vX) => {
-  return [
+  return ok([
     IxMod.reg(
       rA,
       (Z4(context.execution.registers[rB]) > Z(4, vX) ? 1 : 0) as u32,
     ),
-  ];
+  ]);
 });
 
 const cmov_iz_imm = create(85 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] === 0) {
-    return [IxMod.reg(rA, vX)];
+    return ok([IxMod.reg(rA, vX)]);
   }
 
-  return [];
+  return ok([]);
 });
 
 const cmov_nz_imm = create(86 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] !== 0) {
-    return [IxMod.reg(rA, vX)];
+    return ok([IxMod.reg(rA, vX)]);
   }
-  return [];
+  return ok([]);
 });
 
 if (import.meta.vitest) {
@@ -281,21 +274,23 @@ if (import.meta.vitest) {
   describe("two_reg_one_imm_ixs", () => {
     describe("decode", () => {
       it("should decode valid params", () => {
-        expect(decode(new Uint8Array([0]))).toEqual([0, 0, 0]);
-        expect(decode(new Uint8Array([15]))).toEqual([12, 0, 0]);
-        expect(decode(new Uint8Array([15 + 16]))).toEqual([12, 1, 0]);
-        expect(decode(new Uint8Array([16 * 15]))).toEqual([0, 12, 0]);
+        expect(decode(new Uint8Array([0]))).toEqual(ok([0, 0, 0]));
+        expect(decode(new Uint8Array([15]))).toEqual(ok([12, 0, 0]));
+        expect(decode(new Uint8Array([15 + 16]))).toEqual(ok([12, 1, 0]));
+        expect(decode(new Uint8Array([16 * 15]))).toEqual(ok([0, 12, 0]));
       });
       it("should decode the imm with boundaries", () => {
-        expect(decode(new Uint8Array([0, 0x11]))).toEqual([0, 0, 0x00000011]);
-        expect(decode(new Uint8Array([0, 0x11, 0x22]))).toEqual([
-          0, 0, 0x00002211,
-        ]);
+        expect(decode(new Uint8Array([0, 0x11]))).toEqual(
+          ok([0, 0, 0x00000011]),
+        );
+        expect(decode(new Uint8Array([0, 0x11, 0x22]))).toEqual(
+          ok([0, 0, 0x00002211]),
+        );
       });
       it("should decode the imm and allow extra bytes", () => {
         expect(
           decode(new Uint8Array([0, 0x11, 0x22, 0x33, 0x44, 0x55])),
-        ).toEqual([0, 0, 0x44332211]);
+        ).toEqual(ok([0, 0, 0x44332211]));
       });
     });
     describe("ixs", () => {

@@ -1,11 +1,29 @@
 import {
+  PVMIxExecutionError,
+  PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModRegister,
+  RegularPVMExitReason,
   u32,
+  u64,
 } from "@tsjam/types";
 
+export class MemoryUnreadable extends PVMIxExecutionError {
+  constructor(location: u32, amount: number) {
+    super(
+      [],
+      RegularPVMExitReason.Panic,
+      `memory @${location}:-${amount} is not readable`,
+    );
+  }
+}
+
 export const IxMod = {
+  gas: (value: bigint): PVMSingleModGas => ({
+    type: "gas",
+    data: value as u64,
+  }),
   reg: <T extends number>(
     register: T,
     value: number,

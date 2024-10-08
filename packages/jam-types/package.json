@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Base Types for JAM",
   "dependencies": {
-    "@tsjam/constants": "*"
+    "@tsjam/constants": "*",
+    "neverthrow": "^8.0.0"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

@@ -1,15 +1,18 @@
-import { PVMIx, u8 } from "@tsjam/types";
+import { PVMIx, PVMIxExecutionError, u8 } from "@tsjam/types";
 
 export const Ixdb = {
-  byCode: new Map<u8, PVMIx<unknown[]>>(),
-  byIdentifier: new Map<string, PVMIx<unknown[]>>(),
+  byCode: new Map<u8, PVMIx<unknown[], PVMIxExecutionError>>(),
+  byIdentifier: new Map<string, PVMIx<unknown[], PVMIxExecutionError>>(),
   blockTerminators: new Set<u8>(),
 };
 /**
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regIx = <T extends unknown[]>(conf: {
+export const regIx = <
+  T extends unknown[],
+  K extends PVMIxExecutionError = PVMIxExecutionError,
+>(conf: {
   /**
    * the identifier of the instruction
    */
@@ -24,25 +27,31 @@ export const regIx = <T extends unknown[]>(conf: {
    */
   blockTermination?: true;
 
-  ix: PVMIx<T>;
-}): PVMIx<T> => {
+  ix: Omit<PVMIx<T, K>, "opCode" | "identifier">;
+}): PVMIx<T, K> => {
+  const ix = {
+    ...conf.ix,
+    opCode: conf.opCode,
+    identifier: conf.identifier,
+  };
   if (Ixdb.byCode.has(conf.opCode)) {
     throw new Error(`duplicate opCode ${conf.opCode}`);
   }
   if (Ixdb.byIdentifier.has(conf.identifier)) {
     throw new Error(`duplicate identifier ${conf.identifier}`);
   }
-  Ixdb.byCode.set(conf.opCode, conf.ix);
-  Ixdb.byIdentifier.set(conf.identifier, conf.ix);
+  Ixdb.byCode.set(conf.opCode, ix);
+  Ixdb.byIdentifier.set(conf.identifier, ix);
   if (conf.blockTermination) {
     Ixdb.blockTerminators.add(conf.opCode);
   }
-  return conf.ix;
+  return ix;
 };
 
 // test
 if (import.meta.vitest) {
   const { describe, expect, it, beforeEach } = import.meta.vitest;
+  const { ok } = await import("neverthrow");
   describe("regIx", () => {
     beforeEach(() => {
       Ixdb.byCode.clear();
@@ -56,10 +65,10 @@ if (import.meta.vitest) {
         blockTermination: true,
         ix: {
           decode() {
-            return [];
+            return ok([]);
           },
           evaluate() {
-            return [];
+            return ok([]);
           },
           gasCost: 1n,
         },
@@ -75,10 +84,10 @@ if (import.meta.vitest) {
         ix: {
           gasCost: 1n,
           decode() {
-            return [];
+            return ok([]);
           },
           evaluate() {
-            return [];
+            return ok([]);
           },
         },
       });
@@ -89,10 +98,10 @@ if (import.meta.vitest) {
           ix: {
             gasCost: 1n,
             decode() {
-              return [];
+              return ok([]);
             },
             evaluate() {
-              return [];
+              return ok([]);
             },
           },
         }),
@@ -105,10 +114,10 @@ if (import.meta.vitest) {
         ix: {
           gasCost: 1n,
           decode() {
-            return [];
+            return ok([]);
           },
           evaluate() {
-            return [];
+            return ok([]);
           },
         },
       });
@@ -119,10 +128,10 @@ if (import.meta.vitest) {
           ix: {
             gasCost: 1n,
             decode() {
-              return [];
+              return ok([]);
             },
             evaluate() {
-              return [];
+              return ok([]);
             },
           },
         }),
@@ -135,10 +144,10 @@ if (import.meta.vitest) {
         ix: {
           gasCost: 1n,
           decode() {
-            return [];
+            return ok([]);
           },
           evaluate() {
-            return [];
+            return ok([]);
           },
         },
       });

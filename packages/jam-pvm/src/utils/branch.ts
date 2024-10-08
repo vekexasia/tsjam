@@ -1,5 +1,7 @@
+import { Result, err, ok } from "neverthrow";
 import {
   PVMIx,
+  PVMIxExecutionError,
   PVMModification,
   RegularPVMExitReason,
   u32,
@@ -14,20 +16,23 @@ import {
  * @see `226` on graypaper
  */
 export const branch = (
-  context: Parameters<PVMIx<unknown[]>["evaluate"]>[0],
+  context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
-): PVMModification[] => {
+): Result<PVMModification[], PVMIxExecutionError> => {
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that
-    return [];
+    return ok([]);
   }
   if (!context.parsedProgram.isBlockBeginning(address)) {
-    return [
-      { type: "exit", data: RegularPVMExitReason.Panic },
-      { type: "ip", data: context.execution.instructionPointer },
-    ];
+    return err(
+      new PVMIxExecutionError(
+        [{ type: "ip", data: context.execution.instructionPointer }],
+        RegularPVMExitReason.Panic,
+        "branch",
+      ),
+    );
   }
-  return [{ type: "ip", data: address }];
+  return ok([{ type: "ip", data: address }]);
 };
