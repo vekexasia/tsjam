@@ -9,6 +9,9 @@ import { PVMMemory } from "@/pvmMemory.js";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
+export type W7 = PVMSingleModRegister<7>;
+export type W8 = PVMSingleModRegister<8>;
+
 export type XMod = PVMSingleModObject<{ x: PVMResultContext }>;
 export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
 
@@ -22,7 +25,11 @@ export const applyMods = <T extends object>(
   ctx: PVMProgramExecutionContextBase,
   out: T,
   mods: Array<
-    W0 | W1 | XMod | YMod | PVMSingleModMemory | PVMSingleModObject<T>
+    | PVMSingleModRegister<number>
+    | XMod
+    | YMod
+    | PVMSingleModMemory
+    | PVMSingleModObject<T>
   >,
 ): { ctx: PVMProgramExecutionContextBase; out: T } => {
   const newCtx = {

@@ -10,7 +10,7 @@ const Zi = 2 ** 24;
 
 /**
  * `Y` fn in the graypaper
- * see (257)
+ * see (258)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -61,7 +61,7 @@ export const programInitialization = (
     return undefined;
   }
 
-  // registers (246)
+  // registers (263)
   const registers = [
     2 ** 32 - 2 ** 16,
     2 ** 32 - 2 * Zq - Zi,
@@ -78,7 +78,7 @@ export const programInitialization = (
     0,
   ] as SeqOfLength<u32, 13>;
 
-  // memory (245)
+  // memory (263)
   const acl: ACL[] = [];
   const mem: MemoryContent[] = [];
   // first case

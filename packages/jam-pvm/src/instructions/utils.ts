@@ -48,8 +48,8 @@ export const IxMod = {
       },
     };
   },
-  w0: (value: number) => IxMod.reg(0, value),
-  w1: (value: number) => IxMod.reg(1, value),
+  w7: (value: number) => IxMod.reg(7, value),
+  w8: (value: number) => IxMod.reg(8, value),
   memory: (from: number, data: Uint8Array): PVMSingleModMemory => ({
     type: "memory",
     data: {

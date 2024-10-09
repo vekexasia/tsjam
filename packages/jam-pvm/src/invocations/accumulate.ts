@@ -1,13 +1,12 @@
 import {
-  AuthorizerQueue,
-  Dagger,
+  DeferredTransfer,
   Delta,
   Hash,
   PVMAccumulationOp,
+  PVMAccumulationState,
+  PVMProgramExecutionContextBase,
   PVMResultContext,
-  PrivilegedServices,
   RegularPVMExitReason,
-  SafroleState,
   ServiceAccount,
   ServiceIndex,
   Tau,
@@ -43,58 +42,43 @@ import {
   omega_w,
 } from "@/functions/general.js";
 import { check_fn } from "@/utils/check_fn.js";
+import { bytesToBigInt, toTagged } from "@tsjam/utils";
 
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * (255)
+ * (274)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
-  d_delta: Dagger<Delta>,
+  pvmAccState: PVMAccumulationState,
   s: ServiceIndex,
   gas: u64,
   o: PVMAccumulationOp[],
-  dependencies: {
-    iota: SafroleState["iota"];
-    authQueue: AuthorizerQueue;
-    tau: Tau;
-    privilegedServices: PrivilegedServices;
-  },
-): PVMResultContext & { r?: Hash } => {
-  if (typeof d_delta.get(s)?.codeHash === "undefined") {
-    return {
-      serviceAccount: d_delta.get(s),
-      service: s,
-      p: dependencies.privilegedServices,
-      transfers: [],
-      c: dependencies.authQueue,
-      validatorKeys:
-        dependencies.iota as unknown as PVMResultContext["validatorKeys"],
-      n: new Map(),
-    };
+  tau: Tau,
+): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
+  const iRes = I_fn(pvmAccState, s);
+  // first case of 274
+  if (pvmAccState.delta.has(s)) {
+    return [iRes, [], undefined, toTagged(0n)];
   }
 
-  const codec = createArrayLengthDiscriminator(PVMAccumulationOpCodec);
-  const args = encodeWithCodec(codec, o);
+  const args = encodeWithCodec(
+    createArrayLengthDiscriminator(PVMAccumulationOpCodec),
+    o,
+  );
 
   const mres = argumentInvocation(
-    new Uint8Array(), // get preimage from dd_delta.get(s)!.codeHash as Uint8Array,
+    new Uint8Array(), // TODO: get preimage from dd_delta.get(s)!.codeHash as Uint8Array,
     10 as u32, // instructionPointer
     gas,
     args,
-    F_fn(d_delta, s, dependencies.tau),
-    I_fn(
-      d_delta.get(s)!,
-      s,
-      dependencies.iota,
-      dependencies.authQueue,
-      d_delta,
-    ),
+    F_fn(s, tau),
+    { x: iRes, y: I_fn(pvmAccState, s) },
   );
 
   const _o = mres.exitReason ?? mres.ok![1];
-  return C_fn(_o, mres.out);
+  return C_fn(gas, _o, mres.out);
 };
 
 /**
@@ -102,88 +86,78 @@ export const accumulateInvocation = (
  * see (256)
  */
 const I_fn = (
-  serviceAccount: ServiceAccount,
+  pvmAccState: PVMAccumulationState,
   service: ServiceIndex,
-  iota: SafroleState["iota"],
-  authQueue: AuthorizerQueue,
-  d_delta: Dagger<Delta>,
-): { x: PVMResultContext; y: PVMResultContext } => {
-  const x: PVMResultContext = {
-    serviceAccount,
-    c: authQueue,
-    validatorKeys: iota as unknown as PVMResultContext["validatorKeys"],
-    service: check_fn(service, d_delta),
-    transfers: [],
-    n: new Map(),
-    // todo: fix this to be the correct privileged services
-    p: {
-      m: service,
-      a: service,
-      v: service,
-      g: new Map(),
+): PVMResultContext => {
+  const d: Delta = new Map(pvmAccState.delta);
+  d.delete(service);
+  return {
+    delta: d,
+    service,
+    u: {
+      ...pvmAccState,
+      delta: new Map([[service, pvmAccState.delta.get(service)]]) as Delta,
     },
+    i: check_fn(service, pvmAccState.delta),
+
+    transfer: [],
   };
-  return { x, y: { ...x } };
 };
 
 const F_fn: (
-  d_delta: Dagger<Delta>,
   service: ServiceIndex,
   tau: Tau,
 ) => HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }> =
-  (d_delta: Dagger<Delta>, service: ServiceIndex, tau: Tau) => (input) => {
+  (service: ServiceIndex, tau: Tau) => (input) => {
     const fn = FnsDb.byCode.get(input.hostCallOpcode)!;
+    const bold_d = new Map([
+      ...input.out.x.u.delta.entries(),
+      ...input.out.x.delta.entries(),
+    ]);
+    const bold_s = input.out.x.u.delta.get(service)!;
     switch (fn.identifier) {
-      case "read":
-        return applyMods(
+      case "read": {
+        const { ctx, out } = applyMods(
           input.ctx,
           input.out,
           omega_r.execute(
             input.ctx,
-            input.out.x.serviceAccount!,
-            service,
-            d_delta,
+            input.out.x.u.delta.get(service)!,
+            input.out.x.service,
+            bold_d,
           ),
         );
+        return G_fn(ctx, bold_s, out);
+      }
       case "write": {
+        const m = applyMods<{ bold_s: ServiceAccount }>(
+          input.ctx,
+          { bold_s },
+          omega_w.execute(input.ctx, bold_s, input.out.x.service),
+        );
+        return G_fn(m.ctx, m.out.bold_s, input.out);
+      }
+      case "lookup": {
         const m = applyMods(
           input.ctx,
-          { bold_s: input.out.x.serviceAccount! },
-          omega_w.execute(input.ctx, input.out.x.serviceAccount!, service),
+          input.out,
+          omega_l.execute(input.ctx, bold_s, input.out.x.service, bold_d),
         );
-        return {
-          ctx: m.ctx,
-          out: {
-            x: { ...input.out.x, serviceAccount: m.out.bold_s },
-            y: input.out.y,
-          },
-        };
+        return G_fn(m.ctx, bold_s, m.out);
       }
-      case "lookup":
-        return applyMods(
+      case "gas": {
+        const m = applyMods(input.ctx, input.out, omega_g.execute(input.ctx));
+        return G_fn(m.ctx, bold_s, m.out);
+      }
+      case "info": {
+        const m = applyMods(
           input.ctx,
           input.out,
-          omega_l.execute(
-            input.ctx,
-            input.out.x.serviceAccount!,
-            service,
-            d_delta,
-          ),
+          omega_i.execute(input.ctx, input.out.x.service, bold_d),
         );
-      case "gas":
-        return applyMods(input.ctx, input.out, omega_g.execute(input.ctx));
-      case "info":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_i.execute(
-            input.ctx,
-            input.out.x.serviceAccount!,
-            service,
-            d_delta,
-            input.out.x.n,
-          ),
-        );
+
+        return G_fn(m.ctx, bold_s, m.out);
+      }
       case "empower":
         return applyMods(
           input.ctx,
@@ -248,43 +222,33 @@ const F_fn: (
     throw new Error("not implemented");
   };
 //
-// /**
-//  * (258)
-//  */
-// const G_fn = (
-//   context: PVMProgramExecutionContextBase,
-//   serviceAccount: ServiceAccount,
-//   x: { x: PVMResultContext; y: PVMResultContext },
-// ): PVMProgramExecutionContextBase & {
-//   x: PVMResultContext;
-//   y: PVMResultContext;
-// } => {
-//   return {
-//     ...context,
-//     x: { ...x.x, serviceAccount },
-//     y: x.y,
-//   };
-// };
+/**
+ * (258)
+ */
+const G_fn = (
+  context: PVMProgramExecutionContextBase,
+  serviceAccount: ServiceAccount,
+  x: { x: PVMResultContext; y: PVMResultContext },
+): ReturnType<
+  HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }>
+> => {
+  x.x.u.delta.set(x.x.service, serviceAccount);
+  return {
+    out: x,
+    ctx: { ...context },
+  };
+};
 
 const C_fn = (
+  gas: u64,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
   d: { x: PVMResultContext; y: PVMResultContext },
-): PVMResultContext & { r?: Hash } => {
+): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
-    return {
-      ...d.y,
-      r: undefined,
-    };
+    return [d.y.u, d.y.transfer, 0n as Hash, gas];
   } else if (o.length === 32) {
-    // it's an hash
-    return {
-      ...d.x,
-      r: o as unknown as Hash,
-    };
+    return [d.x.u, d.x.transfer, bytesToBigInt(o) as unknown as Hash, gas];
   } else {
-    return {
-      ...d.x,
-      r: undefined,
-    };
+    return [d.x.u, d.x.transfer, 0n as Hash, gas];
   }
 };

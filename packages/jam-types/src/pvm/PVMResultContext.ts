@@ -1,42 +1,36 @@
 import { ServiceAccount } from "@/sets/ServiceAccount.js";
-import { SeqOfLength, ServiceIndex } from "@/genericTypes.js";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { ValidatorData } from "@/ValidatorData.js";
+import { ServiceIndex } from "@/genericTypes.js";
 import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
-import { AuthorizerQueue } from "@/states/AuthorizerQueue.js";
-import { PrivilegedServices } from "@/pvm/PrivilegedServices.js";
+import { PVMAccumulationState } from "./PVMAccumulationState";
 
 /**
  * `X` in the graypaper
- * (254)
+ * (272)
+ *
+ * X_bold_s = X_u.d[Xs]
  */
 export interface PVMResultContext {
   /**
+   * `d`
+   */
+  delta: Map<ServiceIndex, ServiceAccount>;
+
+  /**
    * `s`
    */
-  serviceAccount?: ServiceAccount;
+  service: ServiceIndex;
+
   /**
-   * `c`
+   * (169)
    */
-  c: AuthorizerQueue;
-  /**
-   * `v`
-   */
-  validatorKeys: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS>;
+  u: PVMAccumulationState;
+
   /**
    * `i`
    */
-  service: ServiceIndex;
+  i: ServiceIndex;
   /**
    * `t`
    */
-  transfers: DeferredTransfer[];
-  /**
-   * `n`
-   */
-  n: Map<ServiceIndex, ServiceAccount>;
-  /**
-   * `p` - privileged services
-   */
-  p: PrivilegedServices;
+  transfer: DeferredTransfer[];
 }

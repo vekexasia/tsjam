@@ -15,13 +15,13 @@ import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
 import { E_4 } from "@tsjam/codec";
 import { serviceAccountGasThreshold } from "@tsjam/utils";
-import { W0, W1 } from "@/functions/utils.js";
+import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 
 /**
  * `ΩG`
  */
-export const omega_g = regFn<[], [W0, W1]>({
+export const omega_g = regFn<[], [W7, W8]>({
   fn: {
     opCode: 0 as u8,
     identifier: "gas",
@@ -29,33 +29,28 @@ export const omega_g = regFn<[], [W0, W1]>({
     execute(context) {
       const p_gas = context.gas - (this.gasCost as bigint);
       return [
-        IxMod.w0(Number(p_gas % BigInt(2 ** 32))),
-        IxMod.w1(Number(p_gas / BigInt(2 ** 32))),
+        IxMod.w7(Number(p_gas % BigInt(2 ** 32))),
+        IxMod.w8(Number(p_gas / BigInt(2 ** 32))),
       ];
     },
   },
 });
 
 export const omega_l = regFn<
-  [Xs: ServiceAccount, s: ServiceIndex, dag_delta: Dagger<Delta>],
-  [W0, PVMSingleModMemory] | [W0]
+  [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 1 as u8,
     identifier: "lookup",
     gasCost: 10n,
-    execute(
-      context,
-      bold_s: ServiceAccount,
-      s: ServiceIndex,
-      d: Dagger<Delta>,
-    ) {
+    execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
       let a: ServiceAccount | undefined;
-      const w0 = context.registers[0];
-      if (w0 === s || w0 === 2 ** 32 - 1) {
+      const w7 = context.registers[7];
+      if (w7 === s || w7 === 2 ** 32 - 1) {
         a = bold_s;
       } else {
-        a = d.get(w0 as ServiceIndex);
+        a = d.get(w7 as ServiceIndex);
       }
       const [h0, b0, bz] = context.registers.slice(1);
       let h: Blake2bHash | undefined;
@@ -73,13 +68,13 @@ export const omega_l = regFn<
           : undefined;
 
       if (!context.memory.canWrite(b0, bz + b0)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       if (typeof v === "undefined") {
-        return [IxMod.w0(HostCallResult.NONE)];
+        return [IxMod.w7(HostCallResult.NONE)];
       }
       return [
-        IxMod.w0(v.length),
+        IxMod.w7(v.length),
         IxMod.memory(b0, v.subarray(0, Math.min(v.length, bz))),
       ];
     },
@@ -87,29 +82,25 @@ export const omega_l = regFn<
 });
 
 export const omega_r = regFn<
-  [Xs: ServiceAccount, s: ServiceIndex, dag_delta: Dagger<Delta>],
-  [W0, PVMSingleModMemory] | [W0]
+  [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 2 as u8,
     identifier: "read",
     gasCost: 10n,
-    execute(
-      context,
-      bold_s: ServiceAccount,
-      s: ServiceIndex,
-      d: Dagger<Delta>,
-    ) {
+    execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
       let a: ServiceAccount | undefined;
-      const [w0, k0, kz, b0, bz] = context.registers;
-      if (w0 === s || w0 === 2 ** 32 - 1) {
+      const w7 = context.registers[7];
+      const [k0, kz, b0, bz] = context.registers.slice(8);
+      if (w7 === s || w7 === 2 ** 32 - 1) {
         a = bold_s;
       } else {
-        a = d.get(w0 as ServiceIndex);
+        a = d.get(w7 as ServiceIndex);
       }
       let k: Hash;
       if (!context.memory.canRead(k0, kz) || !context.memory.canWrite(b0, bz)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       } else {
         const tmp = new Uint8Array(4);
         E_4.encode(BigInt(s), tmp);
@@ -121,11 +112,11 @@ export const omega_r = regFn<
       if (typeof a !== "undefined" && a.storage.has(k)) {
         v = a.storage.get(k)!;
       } else {
-        return [IxMod.w0(HostCallResult.NONE)];
+        return [IxMod.w7(HostCallResult.NONE)];
       }
 
       return [
-        IxMod.w0(v.length),
+        IxMod.w7(v.length),
         IxMod.memory(b0, v.subarray(0, Math.min(v.length, bz))),
       ];
     },
@@ -134,17 +125,17 @@ export const omega_r = regFn<
 
 export const omega_w = regFn<
   [bold_s: ServiceAccount, s: ServiceIndex],
-  Array<W0 | PVMSingleModObject<{ bold_s: ServiceAccount }>>
+  Array<W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>>
 >({
   fn: {
     opCode: 3 as u8,
     identifier: "write",
     gasCost: 10n,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
-      const [k0, kz, v0, vz] = context.registers.slice(0, 4);
+      const [k0, kz, v0, vz] = context.registers.slice(7);
       let k: Hash;
       if (!context.memory.canRead(k0, kz) || !context.memory.canRead(v0, vz)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       } else {
         const tmp = new Uint8Array(4);
         E_4.encode(BigInt(s), tmp);
@@ -166,57 +157,42 @@ export const omega_w = regFn<
       if (bold_s.storage.has(k)) {
         const at = serviceAccountGasThreshold(bold_s);
         if (at > a.balance) {
-          return [IxMod.w0(HostCallResult.FULL)];
+          return [IxMod.w7(HostCallResult.FULL)];
         }
         l = bold_s.storage.get(k)!.length;
       } else {
         l = HostCallResult.NONE;
       }
-      return [IxMod.w0(l), IxMod.obj({ bold_s: a })];
+      return [IxMod.w7(l), IxMod.obj({ bold_s: a })];
     },
   },
 });
 
 export const omega_i = regFn<
-  [
-    Xs: ServiceAccount,
-    s: ServiceIndex,
-    dag_delta: Dagger<Delta>,
-    xn: PVMResultContext["n"],
-  ],
-  [W0, PVMSingleModMemory] | [W0]
+  [s: ServiceIndex, d: Delta],
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 4 as u8,
     identifier: "info",
     gasCost: 10n,
-    execute(
-      context,
-      bold_s: ServiceAccount,
-      s: ServiceIndex,
-      d: Dagger<Delta>,
-      xn: PVMResultContext["n"],
-    ) {
-      const w0 = context.registers[0];
-      let t: ServiceAccount;
-      if (w0 === s || w0 === 2 ** 32 - 1) {
-        t = bold_s;
+    execute(context, s: ServiceIndex, d: Delta) {
+      const w7 = context.registers[7];
+      let t: ServiceAccount | undefined;
+      if (w7 === 2 ** 32 - 1) {
+        t = d.get(s);
       } else {
-        if (xn.has(w0 as ServiceIndex)) {
-          t = xn.get(w0 as ServiceIndex)!;
-        } else if (d.has(w0 as ServiceIndex)) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          t = d.get(w0 as ServiceIndex)!;
-        } else {
-          return [IxMod.w0(HostCallResult.NONE)];
-        }
+        t = d.get(w7 as ServiceIndex);
       }
-      const o = context.registers[1];
+      if (typeof t === "undefined") {
+        return [IxMod.w7(HostCallResult.NONE)];
+      }
+      const o = context.registers[8];
       const m = new Uint8Array(32); //TODO encode of t
       if (!context.memory.canWrite(o, m.length)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        return [IxMod.w0(HostCallResult.OK), IxMod.memory(o, m)];
+        return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, m)];
       }
     },
   },

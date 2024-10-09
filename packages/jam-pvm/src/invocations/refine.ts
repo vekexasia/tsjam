@@ -166,7 +166,11 @@ const F_fn: (
           ctx: {
             ...input.ctx,
             gas: input.ctx.gas - 10n,
-            registers: [HostCallResult.WHAT, ...input.ctx.registers.slice(1)],
+            registers: [
+              HostCallResult.WHAT,
+              input.ctx.registers[8],
+              ...new Array(11).fill(0 as u32),
+            ],
           } as PVMProgramExecutionContextBase,
           out: input.out,
         };

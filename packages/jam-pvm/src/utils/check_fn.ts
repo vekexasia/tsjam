@@ -1,16 +1,13 @@
-import { Dagger, Delta, ServiceIndex } from "@tsjam/types";
+import { Delta, ServiceIndex } from "@tsjam/types";
 
 /**
  * (260)
  */
-export function check_fn(
-  i: ServiceIndex,
-  dd_delta: Dagger<Delta>,
-): ServiceIndex {
-  if (dd_delta.has(i)) {
+export function check_fn(i: ServiceIndex, delta: Delta): ServiceIndex {
+  if (delta.has(i)) {
     return check_fn(
       (((i - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9)) + 2 ** 8) as ServiceIndex,
-      dd_delta,
+      delta,
     );
   } else {
     return i;
