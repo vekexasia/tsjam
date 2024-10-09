@@ -7,7 +7,8 @@ import { PVMAccumulationState } from "./PVMAccumulationState";
  * `X` in the graypaper
  * (272)
  *
- * X_bold_s = X_u.d[Xs]
+ * NOTE:there are the following virtual computed
+ * X_bold_s = X.u.delta.get(X.service)
  */
 export interface PVMResultContext {
   /**

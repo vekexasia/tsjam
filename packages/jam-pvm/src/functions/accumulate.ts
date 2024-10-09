@@ -5,9 +5,9 @@ import {
   DeferredTransfer,
   Delta,
   Hash,
+  PVMAccumulationState,
   PVMProgramExecutionContextBase,
   PVMResultContext,
-  PVMSingleModObject,
   ServiceAccount,
   ServiceIndex,
   Tagged,
@@ -96,7 +96,7 @@ export const omega_a = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
       } else {
         const c = context.memory.getBytes(o, AUTHQUEUE_MAX_SIZE * 32);
         if (w7 < CORES) {
-          const xc = x.u.authQueue.slice();
+          const xc = x.u.authQueue.slice() as AuthorizerQueue;
           const nl: Hash[] = [];
           for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
             nl.push(bytesToBigInt(c.subarray(i * 32, (i + 1) * 32)));
@@ -129,7 +129,8 @@ export const omega_d = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
       if (!context.memory.canRead(o, 336)) {
         return [IxMod.w7(HostCallResult.OOB), IxMod.obj({ x })];
       } else {
-        const validators = [] as unknown as PVMResultContext["validatorKeys"];
+        const validators =
+          [] as unknown as PVMAccumulationState["validatorKeys"];
         for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
           const c = context.memory.getBytes(o + 336 * i, 336);
           validators.push(ValidatorDataCodec.decode(c).value);
@@ -179,7 +180,7 @@ export const omega_n = regFn<
     opCode: 9 as u8,
     identifier: "new",
     gasCost: 10n,
-    execute(context, x, d_delta) {
+    execute(context, x, delta) {
       const [o, l, gl, gh, ml, mh] = context.registers.slice(7);
 
       if (!context.memory.canRead(o, 32)) {
@@ -207,16 +208,21 @@ export const omega_n = regFn<
       a.preimage_l.set(c, nm);
 
       a.balance = serviceAccountGasThreshold(a);
-      const b = x.serviceAccount!.balance - a.balance;
-      if (b < serviceAccountGasThreshold(x.serviceAccount!)) {
-        return [IxMod.w7(HostCallResult.CASH)];
-      }
+
+      const x_bold_s = x.u.delta.get(x.service)!;
 
       const bump = (a: ServiceIndex) =>
         2 ** 8 + ((a - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9));
 
       const newServiceIndex = check_fn(bump(x.service) as ServiceIndex, delta);
+      const s: ServiceAccount = {
+        ...x_bold_s,
+        balance: x_bold_s.balance - a.balance,
+      };
 
+      if (s.balance < serviceAccountGasThreshold(x_bold_s)) {
+        return [IxMod.w7(HostCallResult.CASH)];
+      }
       return [
         IxMod.w7(x.service),
         IxMod.obj({
@@ -225,14 +231,11 @@ export const omega_n = regFn<
             service: newServiceIndex,
             u: {
               ...x.u,
-              delta: new Map([ 
-              ... x.u.delta.entries(),
-              [
-
-            n: new Map([[x.service, a]]),
-            serviceAccount: {
-              ...x.serviceAccount!,
-              balance: b,
+              delta: new Map([
+                ...x.u.delta.entries(),
+                [x.i, a],
+                [x.service, s],
+              ]),
             },
           },
         }),
@@ -245,34 +248,37 @@ export const omega_n = regFn<
  * `ΩU`
  * upgrade-service host call
  */
-export const omega_u = regFn<
-  [x: PVMResultContext, s: ServiceIndex],
-  Array<W7 | XMod>
->({
+export const omega_u = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 10 as u8,
     identifier: "upgrade",
     gasCost: 10n,
-    execute(context, x, s) {
-      const [o, gh, gl, mh, ml] = context.registers;
+    execute(context, x) {
+      const [o, gh, gl, mh, ml] = context.registers.slice(7);
       const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
       const m = 2n ** 32n * BigInt(mh) + BigInt(ml);
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const newMap: PVMResultContext["n"] = new Map(x.n);
+        const x_bold_s = x.u.delta.get(x.service)!;
+        const x_bold_s_prime = { ...x_bold_s };
 
-        const a = { ...newMap.get(s)! };
-        a.codeHash = bytesToBigInt(context.memory.getBytes(o, 32));
-        a.minGasAccumulate = g;
-        a.minGasOnTransfer = m;
-        newMap.set(s, a);
+        x_bold_s_prime.codeHash = bytesToBigInt(context.memory.getBytes(o, 32));
+        x_bold_s_prime.minGasAccumulate = g;
+        x_bold_s_prime.minGasOnTransfer = m;
+
         return [
           IxMod.w7(HostCallResult.OK),
           IxMod.obj({
             x: {
               ...x,
-              n: newMap,
+              u: {
+                ...x.u,
+                delta: new Map([
+                  ...x.u.delta.entries(),
+                  [x.service, x_bold_s_prime],
+                ]),
+              },
             },
           }),
         ];
@@ -281,45 +287,44 @@ export const omega_u = regFn<
   },
 });
 
-export const omega_t = regFn<
-  [x: PVMResultContext, s: ServiceIndex, delta: Delta],
-  Array<W7 | XMod>
->({
+export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 11 as u8,
     identifier: "transfer",
     gasCost: (context: PVMProgramExecutionContextBase) => {
       return (
         10n +
-        BigInt(context.registers[1]) +
-        BigInt(context.registers[2]) * 2n ** 32n
+        BigInt(context.registers[8]) +
+        BigInt(context.registers[9]) * 2n ** 32n
       );
     },
-    execute(context, x, s, delta) {
-      const [d, al, ah, gl, gh, o] = context.registers;
+    execute(context, x) {
+      const [d, al, ah, gl, gh, o] = context.registers.slice(7);
       const a = 2n ** 32n * BigInt(ah) + BigInt(al);
       const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
       if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      if (!delta.has(d as ServiceIndex) && !x.n.has(d as ServiceIndex)) {
+
+      const bold_d = new Map([...x.delta.entries(), ...x.u.delta.entries()]);
+      if (!bold_d.has(d as ServiceIndex)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      const serviceAccount =
-        delta.get(d as ServiceIndex) ?? x.n.get(d as ServiceIndex)!;
-      if (g < serviceAccount.minGasOnTransfer) {
+
+      if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
         return [IxMod.w7(HostCallResult.LOW)];
       }
       if (context.gas < g) {
         return [IxMod.w7(HostCallResult.HIGH)];
       }
-      const b = x.serviceAccount!.balance - a;
-      if (b < serviceAccountGasThreshold(x.serviceAccount!)) {
+      const x_bold_s = x.u.delta.get(x.service)!;
+      const b = x_bold_s.balance - a;
+      if (b < serviceAccountGasThreshold(x_bold_s)) {
         return [IxMod.w7(HostCallResult.CASH)];
       }
 
       const t: DeferredTransfer = {
-        sender: s,
+        sender: x.service,
         destination: d as ServiceIndex,
         amount: toTagged(a),
         gasLimit: toTagged(g),
@@ -331,10 +336,13 @@ export const omega_t = regFn<
         IxMod.obj({
           x: {
             ...x,
-            transfers: x.transfers.slice().concat([t]),
-            serviceAccount: {
-              ...x.serviceAccount!,
-              balance: b,
+            transfer: x.transfer.slice().concat([t]),
+            u: {
+              ...x.u,
+              delta: new Map([
+                ...x.u.delta.entries(),
+                [x.service, { ...x_bold_s, balance: b }],
+              ]),
             },
           },
         }),
@@ -344,54 +352,63 @@ export const omega_t = regFn<
 });
 
 /**
- * `ΩX`
+ * `ΩQ`
  * quit-service host call
  */
-export const omega_x = regFn<
-  [x: PVMResultContext, s: ServiceIndex, delta: Delta],
-  Array<W7 | XMod>
->({
+export const omega_q = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 12 as u8,
     identifier: "quit",
     gasCost: 10n,
-    execute(context, x, s, delta) {
-      const [d, o] = context.registers;
+    execute(context, x) {
+      const [d, o] = context.registers.slice(7);
+      const x_bold_s = x.u.delta.get(x.service)!;
       const a =
-        x.serviceAccount!.balance -
-        serviceAccountGasThreshold(x.serviceAccount!) +
+        x_bold_s.balance -
+        serviceAccountGasThreshold(x_bold_s) +
         SERVICE_MIN_BALANCE;
       const g = context.gas;
-      if (d === s || d === 2 ** 32 - 1) {
-        // todo halt machine
+      const bold_d = new Map([...x.delta.entries(), ...x.u.delta.entries()]);
+      if (d === 2 ** 32 - 1) {
+        // TODO: halt machine
+        const newDelta = new Map(x.u.delta);
+        newDelta.delete(x.service);
         return [
           IxMod.w7(HostCallResult.OK),
-          IxMod.obj({ x: { ...x, serviceAccount: undefined } }),
+          IxMod.obj({
+            x: {
+              ...x,
+              u: {
+                ...x.u,
+                delta: newDelta,
+              },
+            },
+          }),
         ];
       }
 
       if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      if (!delta.has(d as ServiceIndex) && !x.n.has(d as ServiceIndex)) {
+      if (!bold_d.has(d as ServiceIndex)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      const serviceAccount =
-        delta.get(d as ServiceIndex) ?? x.n.get(d as ServiceIndex)!;
-      if (g < serviceAccount.minGasOnTransfer) {
+      if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
         return [IxMod.w7(HostCallResult.LOW)];
       }
 
-      // todo: signal pvm halt?
+      // TODO: signal pvm halt?
+      const newDelta = new Map(x.u.delta);
+      newDelta.delete(x.service);
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.obj({
           x: {
             ...x,
-            serviceAccount: undefined,
-            transfers: x.transfers.slice().concat([
+            u: { ...x.u, delta: newDelta },
+            transfer: x.transfer.slice().concat([
               {
-                sender: s as ServiceIndex,
+                sender: x.service,
                 destination: d as ServiceIndex,
                 amount: toTagged(a),
                 gasLimit: toTagged(g),

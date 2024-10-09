@@ -23,10 +23,10 @@ import {
   omega_e,
   omega_f,
   omega_n,
+  omega_q,
   omega_s,
   omega_t,
   omega_u,
-  omega_x,
 } from "@/functions/accumulate.js";
 import { applyMods } from "@/functions/utils.js";
 import {
@@ -198,13 +198,13 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          omega_t.execute(input.ctx, input.out.x, service, d_delta),
+          omega_t.execute(input.ctx, input.out.x),
         );
       case "quit":
         return applyMods(
           input.ctx,
           input.out,
-          omega_x.execute(input.ctx, input.out.x, service, d_delta),
+          omega_q.execute(input.ctx, input.out.x),
         );
       case "solicit":
         return applyMods(

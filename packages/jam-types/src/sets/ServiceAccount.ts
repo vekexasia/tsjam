@@ -41,4 +41,9 @@ export interface ServiceAccount {
    * `m` - minimum gas for the on_initialize method
    */
   minGasOnTransfer: bigint;
+
+  // NOTE: there are some `virtual` elements such as
+  // `i` - ∈ N232
+  // `l` - ∈ N264
+  // `t` - balance threshold  computed in `serviceAccountGasThreshold`
 }

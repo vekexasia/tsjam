@@ -8,7 +8,7 @@ import { ServiceAccount, u64 } from "@tsjam/types";
 /**
  * compute the gas threshold of a service account
  * @param a - the service account
- * @see (94) in the graypaper
+ * @see (95) in the graypaper
  */
 export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
   const i = 2n * BigInt(a.preimage_l.size) + BigInt(a.storage.size);
