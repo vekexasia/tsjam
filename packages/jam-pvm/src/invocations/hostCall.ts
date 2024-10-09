@@ -4,6 +4,7 @@ import {
   PVMProgram,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
+  RegularPVMExitReason,
   u32,
   u8,
 } from "@tsjam/types";
@@ -12,7 +13,7 @@ import { basicInvocation } from "@/invocations/basic.js";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * (238)
+ * (255)
  */
 export const hostCallInvocation = <X>(
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -39,8 +40,8 @@ export const hostCallInvocation = <X>(
         context: out.context as unknown as PVMProgramExecutionContext,
         out: x,
       };
-    } else {
-      // check on gas maybe?
+    } else if ("exitReason" in res && typeof res.exitReason !== "undefined") {
+      // all good we hostcall
       return hostCallInvocation(
         p,
         {
@@ -53,6 +54,12 @@ export const hostCallInvocation = <X>(
         f,
         res.out,
       );
+    } else {
+      return {
+        exitReason: res.exitReason,
+        context: out.context as unknown as PVMProgramExecutionContext,
+        out: x,
+      };
     }
   } else {
     // regular execution without host call
@@ -70,10 +77,18 @@ export type HostCallOut<X> = {
   out: X;
 };
 
+/**
+ * `Ω(X)` in the paper
+ * (256)
+ */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
   ctx: PVMProgramExecutionContextBase;
   out: X;
 }) =>
   | { pageFaultAddress: u32 }
-  | { ctx: PVMProgramExecutionContextBase; out: X };
+  | {
+      exitReason?: RegularPVMExitReason;
+      out: X;
+      ctx: PVMProgramExecutionContextBase;
+    };

@@ -10,7 +10,7 @@ const Zi = 2 ** 24;
 
 /**
  * `Y` fn in the graypaper
- * see (240)
+ * see (257)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -63,7 +63,6 @@ export const programInitialization = (
 
   // registers (246)
   const registers = [
-    0,
     2 ** 32 - 2 ** 16,
     2 ** 32 - 2 * Zq - Zi,
     0,
@@ -71,10 +70,11 @@ export const programInitialization = (
     0,
     0,
     0,
+    2 ** 32 - Zq - Zi, // 7
+    argument.length, // 8
     0,
     0,
-    2 ** 32 - Zq - Zi, // 10
-    argument.length,
+    0,
     0,
   ] as SeqOfLength<u32, 13>;
 
