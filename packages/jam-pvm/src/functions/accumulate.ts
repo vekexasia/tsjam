@@ -483,23 +483,21 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
     identifier: "forget",
     gasCost: 10n,
     execute(context, x, t) {
-      const [o, z] = context.registers;
+      const [o, z] = context.registers.slice(7);
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
+      const x_bold_s = x.u.delta.get(x.service)!;
       const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
-      const a_l: ServiceAccount["preimage_l"] = new Map(
-        x.serviceAccount!.preimage_l,
-      );
-      const a_p: ServiceAccount["preimage_p"] = new Map(
-        x.serviceAccount!.preimage_p,
-      );
+      const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
+      const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
+
       if (a_l.get(h)?.get(toTagged(z))?.length === 1) {
         a_l.get(h)!.get(toTagged(z))!.push(t);
       } else if (a_l.get(h)?.get(toTagged(z))?.length === 3) {
         const [x, y] = a_l.get(h)!.get(toTagged(z))!;
         if (y < t - PREIMAGE_EXPIRATION) {
-          // todo: check
+          // last bracket
           a_l.get(h)!.set(toTagged(z), toTagged([x, y, t]));
         } else {
           return [IxMod.w7(HostCallResult.HUH)];
@@ -517,16 +515,29 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
         }
       } else if (a_l.get(h)?.get(toTagged(z))?.length !== 0) {
         return [IxMod.w7(HostCallResult.HUH)];
+      } else {
+        // zero length or undefined
+        a_p.delete(h);
       }
+
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.obj({
           x: {
             ...x,
-            serviceAccount: {
-              ...x.serviceAccount!,
-              preimage_l: a_l,
-              preimage_p: a_p,
+            u: {
+              ...x.u,
+              delta: new Map([
+                ...x.u.delta.entries(),
+                [
+                  x.service,
+                  {
+                    ...x.u.delta.get(x.service)!,
+                    preimage_l: a_l,
+                    preimage_p: a_p,
+                  },
+                ],
+              ]),
             },
           },
         }),
