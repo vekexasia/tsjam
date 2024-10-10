@@ -60,7 +60,7 @@ export const accumulateInvocation = (
   const iRes = I_fn(pvmAccState, s);
   // first case of 274
   if (pvmAccState.delta.has(s)) {
-    return [iRes, [], undefined, toTagged(0n)];
+    return [iRes.u, [], undefined, toTagged(0n)];
   }
 
   const args = encodeWithCodec(
@@ -186,13 +186,13 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          omega_n.execute(input.ctx, input.out.x, d_delta),
+          omega_n.execute(input.ctx, input.out.x),
         );
       case "upgrade":
         return applyMods(
           input.ctx,
           input.out,
-          omega_u.execute(input.ctx, input.out.x, service),
+          omega_u.execute(input.ctx, input.out.x),
         );
       case "transfer":
         return applyMods(

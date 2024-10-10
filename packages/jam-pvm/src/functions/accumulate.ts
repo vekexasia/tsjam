@@ -172,15 +172,12 @@ export const omega_c = regFn<
  * `ΩN`
  * new-service host call
  */
-export const omega_n = regFn<
-  [x: PVMResultContext, dd_delta: Dagger<Delta>],
-  Array<W7 | XMod>
->({
+export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 9 as u8,
     identifier: "new",
     gasCost: 10n,
-    execute(context, x, delta) {
+    execute(context, x) {
       const [o, l, gl, gh, ml, mh] = context.registers.slice(7);
 
       if (!context.memory.canRead(o, 32)) {
@@ -214,7 +211,10 @@ export const omega_n = regFn<
       const bump = (a: ServiceIndex) =>
         2 ** 8 + ((a - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9));
 
-      const newServiceIndex = check_fn(bump(x.service) as ServiceIndex, delta);
+      const newServiceIndex = check_fn(
+        bump(x.service) as ServiceIndex,
+        x.delta,
+      );
       const s: ServiceAccount = {
         ...x_bold_s,
         balance: x_bold_s.balance - a.balance,

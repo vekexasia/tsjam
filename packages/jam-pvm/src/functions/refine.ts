@@ -13,7 +13,7 @@ import {
   u64,
   u8,
 } from "@tsjam/types";
-import { W0, W1 } from "@/functions/utils.js";
+import { W7, W8 } from "@/functions/utils.js";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
@@ -56,34 +56,34 @@ export type RefineContext = {
  */
 export const omega_h = regFn<
   [s: ServiceIndex, delta: Delta, t: Tau],
-  [W0, PVMSingleModMemory] | [W0]
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 15 as u8,
     identifier: "historical_lookup",
     gasCost: 10n,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
-      const [w0, h0, b0, bz] = context.registers;
+      const [w7, h0, b0, bz] = context.registers.slice(7);
       if (!context.memory.canWrite(b0, bz)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       let a: ServiceAccount | undefined;
-      if (w0 === 2 ** 32 - 1 && delta.has(s)) {
+      if (w7 === 2 ** 32 - 1 && delta.has(s)) {
         a = delta.get(s);
-      } else if (delta.has(w0 as ServiceIndex)) {
-        a = delta.get(w0 as ServiceIndex);
+      } else if (delta.has(w7 as ServiceIndex)) {
+        a = delta.get(w7 as ServiceIndex);
       }
       if (typeof a === "undefined" || !context.memory.canRead(h0, 32)) {
-        return [IxMod.w0(HostCallResult.NONE)];
+        return [IxMod.w7(HostCallResult.NONE)];
       }
       const h: Hash = bytesToBigInt(context.memory.getBytes(h0, 32));
       const v = historicalLookup(a, t, h);
       if (typeof v === "undefined") {
-        return [IxMod.w0(HostCallResult.NONE)];
+        return [IxMod.w7(HostCallResult.NONE)];
       }
 
       return [
-        IxMod.w0(v.length),
+        IxMod.w7(v.length),
         IxMod.memory(b0, v.subarray(0, Math.min(bz, v.length))),
       ];
     },
@@ -96,27 +96,27 @@ export const omega_h = regFn<
  */
 export const omega_y = regFn<
   [i: ExportSegment[]],
-  [W0, PVMSingleModMemory] | [W0]
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 16 as u8,
     identifier: "import",
     gasCost: 10n,
     execute(context, i) {
-      const [w0, o, w2] = context.registers;
-      if (w0 >= i.length) {
-        return [IxMod.w0(HostCallResult.NONE)];
+      const [w7, o, w2] = context.registers.slice(7);
+      if (w7 >= i.length) {
+        return [IxMod.w7(HostCallResult.NONE)];
       }
-      const v = i[w0];
+      const v = i[w7];
       const l = Math.min(
         w2,
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
 
       if (!context.memory.canWrite(o, l)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
-      return [IxMod.w0(HostCallResult.OK), IxMod.memory(o, v.subarray(0, l))];
+      return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, v.subarray(0, l))];
     },
   },
 });
@@ -127,30 +127,30 @@ export const omega_y = regFn<
  */
 export const omega_z = regFn<
   [ctx: RefineContext, segmentOffset: number],
-  Array<W0 | PVMSingleModObject<RefineContext>>
+  Array<W7 | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 17 as u8,
     identifier: "export",
     gasCost: 10n,
     execute(context, refineCtx, offset) {
-      const [p, w1] = context.registers;
+      const [p, w8] = context.registers.slice(7);
       const z = Math.min(
-        w1,
+        w8,
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
       if (!context.memory.canRead(p, z)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       if (offset + refineCtx.e.length >= 11 /* Wx */) {
-        return [IxMod.w0(HostCallResult.FULL)];
+        return [IxMod.w7(HostCallResult.FULL)];
       }
       const x = new Uint8Array(
         Math.ceil(z / (ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE)),
       ).fill(0);
       x.set(context.memory.getBytes(p, z));
       return [
-        IxMod.w0(HostCallResult.OK),
+        IxMod.w7(HostCallResult.OK),
         IxMod.obj({ ...refineCtx, e: [...refineCtx.e, x] }),
       ];
     },
@@ -163,16 +163,16 @@ export const omega_z = regFn<
  */
 export const omega_m = regFn<
   [refineCtx: RefineContext],
-  [W0, PVMSingleModObject<RefineContext>] | [W0]
+  Array<W7 | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 18 as u8,
     identifier: "machine",
     gasCost: 10n,
     execute(context, refineCtx) {
-      const [p0, pz, i] = context.registers;
+      const [p0, pz, i] = context.registers.slice(7);
       if (!context.memory.canWrite(p0, pz)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       const p = context.memory.getBytes(p0, pz);
       const sortedKeys = [...refineCtx.m.keys()].sort((a, b) => a - b);
@@ -185,7 +185,7 @@ export const omega_m = regFn<
       const newM = new Map(refineCtx.m);
       newM.set(n, { programCode: p, memory: mem, instructionPointer: i });
       return [
-        IxMod.w0(n), // new Service index?
+        IxMod.w7(n), // new Service index?
         IxMod.obj({ ...refineCtx, m: newM }),
       ];
     },
@@ -198,26 +198,26 @@ export const omega_m = regFn<
  */
 export const omega_p = regFn<
   [refineCtx: RefineContext],
-  [W0, PVMSingleModMemory] | [W0]
+  Array<W7 | PVMSingleModMemory>
 >({
   fn: {
     opCode: 19 as u8,
     identifier: "peek",
     gasCost: 10n,
     execute(context, refineCtx) {
-      const [n, a, b, l] = context.registers;
+      const [n, a, b, l] = context.registers.slice(7);
       if (!refineCtx.m.has(n)) {
-        return [IxMod.w0(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.WHO)];
       }
       if (!refineCtx.m.get(n)!.memory.canRead(b, l)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       if (!context.memory.canWrite(a, l)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
 
       return [
-        IxMod.w0(HostCallResult.OK),
+        IxMod.w7(HostCallResult.OK),
         IxMod.memory(a, refineCtx.m.get(n)!.memory.getBytes(b, l)),
       ];
     },
@@ -230,26 +230,26 @@ export const omega_p = regFn<
  */
 export const omega_o = regFn<
   [RefineContext],
-  [W0, PVMSingleModObject<RefineContext>] | [W0]
+  Array<W7 | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 20 as u8,
     identifier: "poke",
     gasCost: 10n,
     execute(context, refineCtx) {
-      const [n, a, b, l] = context.registers;
+      const [n, a, b, l] = context.registers.slice(7);
       if (!refineCtx.m.has(n)) {
-        return [IxMod.w0(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.WHO)];
       }
       const u = refineCtx.m.get(n)!.memory;
 
       if (!context.memory.canRead(a, l)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       const s = context.memory.getBytes(a, l);
 
       if (!context.memory.canRead(a, l)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
       p_u.addACL({ from: b, to: (b + l) as u32, writable: true });
@@ -261,7 +261,7 @@ export const omega_o = regFn<
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
       });
 
-      return [IxMod.w0(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
+      return [IxMod.w7(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
     },
   },
 });
@@ -272,19 +272,19 @@ export const omega_o = regFn<
  */
 export const omega_k = regFn<
   [RefineContext],
-  Array<W0 | W1 | PVMSingleModMemory | PVMSingleModObject<RefineContext>>
+  Array<W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 21 as u8,
     identifier: "invoke",
     gasCost: 10n,
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
-      const [n, o] = context.registers;
+      const [n, o] = context.registers.slice(7);
       if (!context.memory.canWrite(o, 60)) {
-        return [IxMod.w0(HostCallResult.OOB)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       if (!refineCtx.m.has(n)) {
-        return [IxMod.w0(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.WHO)];
       }
       const g = E_8.decode(context.memory.getBytes(o, 8)).value;
       // registers
@@ -335,21 +335,21 @@ export const omega_k = regFn<
       assert(typeof res.exitReason !== "undefined", "exit reason is undefined");
       if (typeof res.exitReason === "number") {
         return [
-          IxMod.w0(res.exitReason),
+          IxMod.w7(res.exitReason),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
         ];
       } else if (res.exitReason.type === "host-call") {
         return [
-          IxMod.w0(0), // fixme "host",
-          IxMod.w1(res.exitReason.opCode),
+          IxMod.w7(0), // fixme "host",
+          IxMod.w8(res.exitReason.opCode),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
         ];
       } else {
         return [
-          IxMod.w0(1), // fixme "fault",
-          IxMod.w1(res.exitReason.memoryLocationIn),
+          IxMod.w7(1), // fixme "fault",
+          IxMod.w8(res.exitReason.memoryLocationIn),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
         ];
@@ -364,22 +364,22 @@ export const omega_k = regFn<
  */
 export const omega_x = regFn<
   [RefineContext],
-  Array<W0 | PVMSingleModObject<RefineContext>>
+  Array<W7 | PVMSingleModObject<RefineContext>>
 >({
   fn: {
     opCode: 22 as u8,
     identifier: "expunge",
     gasCost: 10n,
     execute(context, refineCtx) {
-      const [n] = context.registers;
+      const [n] = context.registers.slice(7);
       if (!refineCtx.m.has(n)) {
-        return [IxMod.w0(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.WHO)];
       }
       const entry = refineCtx.m.get(n)!;
       const newM = new Map(refineCtx.m);
       newM.delete(n);
       return [
-        IxMod.w0(entry.instructionPointer),
+        IxMod.w7(entry.instructionPointer),
         IxMod.obj({ ...refineCtx, m: newM }),
       ];
     },
