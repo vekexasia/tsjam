@@ -1,5 +1,5 @@
 import { Tau } from "@/Tau";
-import { Hash } from "@/genericTypes";
+import { Hash, WorkPackageHash } from "@/genericTypes";
 
 /**
  * gives a snapshotof what was the situation when the work report was created
@@ -38,5 +38,5 @@ export type RefinementContext = {
    * it may define a required "parent" work package
    * some kind of dependency of the work package
    */
-  requiredWorkPackage?: Hash;
+  requiredWorkPackage?: WorkPackageHash;
 };

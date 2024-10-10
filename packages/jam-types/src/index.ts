@@ -22,6 +22,8 @@ export * from "./sets/WorkResult.js";
 
 export * from "./states/AuthorizerQueue.js";
 export * from "./states/AuthorizerPool.js";
+export * from "./states/AccumulationQueue.js";
+export * from "./states/AccumulationHistory.js";
 export * from "./states/Delta.js";
 export * from "./states/DisputesState.js";
 export * from "./states/rho.js";
