@@ -6,6 +6,7 @@ import {
   CoreIndex,
   Hash,
   Tagged,
+  WorkPackageHash,
 } from "@/genericTypes";
 import { WorkResult } from "@/sets/WorkResult";
 import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
@@ -39,7 +40,7 @@ export type WorkReport = {
   /**
    * `l`
    */
-  segmentRootLookup: Map<Hash, Hash>;
+  segmentRootLookup: Map<WorkPackageHash, Hash>;
   /**
    * `r`
    */

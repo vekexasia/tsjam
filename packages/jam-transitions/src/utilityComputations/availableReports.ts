@@ -6,11 +6,13 @@ import {
   AvailableWorkReports,
   Dagger,
   EA_Extrinsic,
+  Hash,
   RHO,
+  Tau,
   WorkPackageHash,
   WorkReport,
 } from "@tsjam/types";
-import { CORES, MINIMUM_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, MINIMUM_VALIDATORS } from "@tsjam/constants";
 import { toTagged } from "@tsjam/utils";
 
 /**
@@ -98,22 +100,85 @@ const E_Fn = (
   return toRet;
 };
 
+/**
+ * `WQ` in the paper
+ * (162) Section 12.2
+ */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
-  accHistory: AccumulationHistory,
+  accHistory: Map<WorkPackageHash, Hash>,
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
-    w.map((wr) => {
-      const deps: WorkPackageHash[] = [];
-      if (typeof wr.refinementContext.requiredWorkPackage !== "undefined") {
-        deps.push(wr.refinementContext.requiredWorkPackage);
-      }
-
-      // TODO: use E_Fn
-      return {
-        workReport: wr,
-        dependencies: deps,
-      };
-    }),
+    E_Fn(
+      w
+        .filter((wr) => {
+          return (
+            typeof wr.refinementContext.requiredWorkPackage !== "undefined" ||
+            wr.segmentRootLookup.size > 0
+          );
+        })
+        .map((wr) => {
+          const deps = new Set<WorkPackageHash>(wr.segmentRootLookup.keys());
+          if (typeof wr.refinementContext.requiredWorkPackage !== "undefined") {
+            deps.add(wr.refinementContext.requiredWorkPackage);
+          }
+          return { workReport: wr, dependencies: deps };
+        }),
+      new Map(accHistory.map((a) => [...a.entries()]).flat()),
+    ),
   );
+};
+const P_fn = (r: WorkReport[]): Map<WorkPackageHash, Hash> => {
+  return new Map(
+    r.map((wr) => [
+      wr.workPackageSpecification.workPackageHash,
+      wr.workPackageSpecification.segmentRoot,
+    ]),
+  );
+};
+export const computeAccumulationPriority = (
+  r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
+  a: Map<WorkPackageHash, Hash>,
+): WorkReport[] => {
+  const g = r
+    .filter(({ dependencies }) => dependencies.size() === 0)
+    .map(({ workReport }) => workReport);
+  if (g.length === 0) {
+    return [];
+  }
+  const pg = P_fn(g);
+
+  return [
+    ...g,
+    ...computeAccumulationPriority(
+      E_Fn(r, pg),
+      new Map([...a.entries(), ...pg.entries()]),
+    ),
+  ];
+};
+
+/**
+ * `W*` in the paper
+ * (168)
+ */
+export const accumulatableReports = (
+  w_mark: ReturnType<typeof noPrereqAvailableReports>,
+  w_q: ReturnType<typeof withPrereqAvailableReports>,
+  accumulationQueue: AccumulationQueue,
+  accHistory: AccumulationHistory,
+  tau: Tau, // Ht
+) => {
+  const m = tau % EPOCH_LENGTH;
+
+  return [
+    ...w_mark,
+    computeAccumulationPriority(
+      [
+        ...accumulationQueue.slice(m).flat(),
+        ...accumulationQueue.slice(0, m).flat(),
+        ...w_q,
+      ],
+      accHistoryUnion(accHistory),
+    ),
+  ];
 };
