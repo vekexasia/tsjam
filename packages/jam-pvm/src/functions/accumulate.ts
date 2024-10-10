@@ -432,23 +432,22 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
     identifier: "solicit",
     gasCost: 10n,
     execute(context, x, tau) {
-      const [o, z] = context.registers;
+      const [o, z] = context.registers.slice(7);
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
-      const a_l: ServiceAccount["preimage_l"] = new Map(
-        x.serviceAccount!.preimage_l,
-      );
-      const a: ServiceAccount = {
-        ...x.serviceAccount!,
-        preimage_l: a_l,
-      };
+      const x_bold_s = x.u.delta.get(x.service)!;
+      const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       if (typeof a_l.get(h)?.get(toTagged(z)) === "undefined") {
         a_l.set(h, new Map([[toTagged(z), toTagged([])]]));
       } else {
         a_l.get(h)!.get(toTagged(z))!.push(tau);
       }
+      const a: ServiceAccount = {
+        ...x_bold_s,
+        preimage_l: a_l,
+      };
       const newL = a_l.get(h)!.get(toTagged(z))!.length;
       if (newL !== 3 && newL !== 0) {
         // third case of `a`
@@ -462,7 +461,10 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
           IxMod.obj({
             x: {
               ...x,
-              serviceAccount: a,
+              u: {
+                ...x.u,
+                delta: new Map([...x.u.delta.entries(), [x.service, a]]),
+              },
             },
           }),
         ];
