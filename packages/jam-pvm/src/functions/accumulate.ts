@@ -1,9 +1,7 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
   AuthorizerQueue,
-  Dagger,
   DeferredTransfer,
-  Delta,
   Hash,
   PVMAccumulationState,
   PVMProgramExecutionContextBase,
@@ -306,7 +304,10 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
-      const bold_d = new Map([...x.delta.entries(), ...x.u.delta.entries()]);
+      const bold_d = new Map<ServiceIndex, ServiceAccount>([
+        ...x.delta.entries(),
+        ...x.u.delta.entries(),
+      ]);
       if (!bold_d.has(d as ServiceIndex)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
@@ -368,7 +369,10 @@ export const omega_q = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
         serviceAccountGasThreshold(x_bold_s) +
         SERVICE_MIN_BALANCE;
       const g = context.gas;
-      const bold_d = new Map([...x.delta.entries(), ...x.u.delta.entries()]);
+      const bold_d = new Map<ServiceIndex, ServiceAccount>([
+        ...x.delta.entries(),
+        ...x.u.delta.entries(),
+      ]);
       if (d === 2 ** 32 - 1) {
         // TODO: halt machine
         const newDelta = new Map(x.u.delta);

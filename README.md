@@ -12,7 +12,6 @@
 - [ ] migrate to neverthrow
 - [ ] cli
 - [ ] Database integration
-- [ ] authorizer queeue fix in types 
 
 abandoned:
 

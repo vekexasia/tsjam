@@ -180,7 +180,7 @@ if (import.meta.vitest) {
       it("load_imm", () => {
         const context = createEvContext();
         (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(context, load_imm, 1, 0x1234);
+        const { p_context } = runTestIx(context, load_imm, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(0x1234);
       });
       it("load_u8", () => {
@@ -189,7 +189,7 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
           0xaaaa,
         ]);
-        const { p_context } = runTestIx(context, load_u8, 1, 0x1234);
+        const { p_context } = runTestIx(context, load_u8, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(0xaaaa);
       });
       it("load_u16", () => {
@@ -198,7 +198,7 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12]),
         );
-        const { p_context } = runTestIx(context, load_u16, 1, 0x1234);
+        const { p_context } = runTestIx(context, load_u16, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(0x1234);
         expect((p_context.memory.getBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.getBytes as Mock).mock.calls[0]).toEqual([
@@ -211,7 +211,7 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12, 0x00, 0x01]),
         );
-        const { p_context } = runTestIx(context, load_u32, 1, 0x1234);
+        const { p_context } = runTestIx(context, load_u32, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(0x01001234);
         expect((p_context.memory.getBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.getBytes as Mock).mock.calls[0]).toEqual([
@@ -222,12 +222,12 @@ if (import.meta.vitest) {
         const context = createEvContext();
         (context.execution.memory.canRead as Mock).mockReturnValue(true);
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([127]);
-        let { p_context } = runTestIx(context, load_i8, 1, 0x1234);
+        let { p_context } = runTestIx(context, load_i8, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(127);
         // test negative
         (p_context.memory.getBytes as Mock).mockReturnValueOnce([Z_inv(1, -2)]);
 
-        p_context = runTestIx(context, load_i8, 1, 0x1234).p_context;
+        p_context = runTestIx(context, load_i8, 1, 0x1234 as u32).p_context;
         expect(Z4(p_context.registers[1])).toBe(-2);
         expect((p_context.memory.getBytes as Mock).mock.calls).toHaveLength(2);
       });
@@ -237,7 +237,7 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0x34, 0x12]),
         );
-        const { p_context } = runTestIx(context, load_i16, 1, 0x1234);
+        const { p_context } = runTestIx(context, load_i16, 1, 0x1234 as u32);
         expect(p_context.registers[1]).toBe(0x1234);
         expect((p_context.memory.getBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.getBytes as Mock).mock.calls[0]).toEqual([
@@ -247,14 +247,19 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
           new Uint8Array([0xff, 0xff]),
         );
-        const p_context2 = runTestIx(context, load_i16, 1, 0x1234).p_context;
+        const p_context2 = runTestIx(
+          context,
+          load_i16,
+          1,
+          0x1234 as u32,
+        ).p_context;
         expect(Z4(p_context2.registers[1])).toBe(-1);
       });
       it("store_u8", () => {
         const context = createEvContext();
         context.execution.registers[1] = 0x2211 as u32;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(context, store_u8, 1, 0x1234);
+        const { p_context } = runTestIx(context, store_u8, 1, 0x1234 as u32);
         expect((p_context.memory.setBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.setBytes as Mock).mock.calls[0]).toEqual([
           0x1234,
@@ -265,7 +270,7 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[1] = 0x332211 as u32;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(context, store_u16, 1, 0x1234);
+        const { p_context } = runTestIx(context, store_u16, 1, 0x1234 as u32);
         expect((p_context.memory.setBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.setBytes as Mock).mock.calls[0]).toEqual([
           0x1234,
@@ -276,7 +281,7 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[1] = 0x44332211 as u32;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(context, store_u32, 1, 0x1234);
+        const { p_context } = runTestIx(context, store_u32, 1, 0x1234 as u32);
         expect((p_context.memory.setBytes as Mock).mock.calls).toHaveLength(1);
         expect((p_context.memory.setBytes as Mock).mock.calls[0]).toEqual([
           0x1234,

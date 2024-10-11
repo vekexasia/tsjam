@@ -304,7 +304,7 @@ if (import.meta.vitest) {
           store_ind_u8,
           0,
           1,
-          0x01,
+          0x01 as u32,
         );
         expect(exitReason).toBeUndefined();
         expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
@@ -321,7 +321,7 @@ if (import.meta.vitest) {
           store_ind_u16,
           0,
           1,
-          0x01,
+          0x01 as u32,
         );
         expect(exitReason).toBeUndefined();
         expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
@@ -338,7 +338,7 @@ if (import.meta.vitest) {
           store_ind_u32,
           0,
           1,
-          0x01,
+          0x01 as u32,
         );
         expect(exitReason).toBeUndefined();
         expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
@@ -350,7 +350,13 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([0x20]);
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
-        const { p_context } = runTestIx(context, load_ind_u8, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          load_ind_u8,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(0x20);
         expect((p_context.memory.getBytes as Mock).mock.calls).toEqual([
           [0x1021, 1],
@@ -363,7 +369,13 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
-        const { p_context } = runTestIx(context, load_ind_u16, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          load_ind_u16,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(0x1020);
         expect((p_context.memory.getBytes as Mock).mock.calls).toEqual([
           [0x1021, 2],
@@ -376,7 +388,13 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
-        const { p_context } = runTestIx(context, load_ind_u32, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          load_ind_u32,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(0x10203040);
         expect((p_context.memory.getBytes as Mock).mock.calls).toEqual([
           [0x1021, 4],
@@ -389,7 +407,13 @@ if (import.meta.vitest) {
         ]);
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
-        const { p_context } = runTestIx(context, load_ind_i8, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          load_ind_i8,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(Z4_inv(-1));
         expect((p_context.memory.getBytes as Mock).mock.calls).toEqual([
           [0x1021, 1],
@@ -403,7 +427,13 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010 as u32;
         context.execution.registers[1] = 0 as u32;
-        const { p_context } = runTestIx(context, load_ind_i16, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          load_ind_i16,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(Z4_inv(-1));
         expect((p_context.memory.getBytes as Mock).mock.calls).toEqual([
           [0x1021, 2],
@@ -412,34 +442,40 @@ if (import.meta.vitest) {
       it("add_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0xffffffff as u32;
-        const { p_context } = runTestIx(context, add_imm, 1, 0, 3);
+        const { p_context } = runTestIx(context, add_imm, 1, 0, 3 as u32);
         expect(p_context.registers[1]).toBe(2);
       });
       it("and_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101 as u32;
-        const { p_context } = runTestIx(context, and_imm, 1, 0, 0b110);
+        const { p_context } = runTestIx(context, and_imm, 1, 0, 0b110 as u32);
         expect(p_context.registers[1]).toBe(0b100);
       });
       it("xor_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101 as u32;
-        const { p_context } = runTestIx(context, xor_imm, 1, 0, 0b110);
+        const { p_context } = runTestIx(context, xor_imm, 1, 0, 0b110 as u32);
         expect(p_context.registers[1]).toBe(0b011);
       });
       it("or_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101 as u32;
-        const { p_context } = runTestIx(context, or_imm, 1, 0, 0b110);
+        const { p_context } = runTestIx(context, or_imm, 1, 0, 0b110 as u32);
         expect(p_context.registers[1]).toBe(0b111);
       });
       it("mul_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = (2 ** 31) as u32;
-        const { p_context } = runTestIx(context, mul_imm, 1, 0, 2);
+        const { p_context } = runTestIx(context, mul_imm, 1, 0, 2 as u32);
         expect(p_context.registers[1]).toBe(0);
 
-        const { p_context: p_context2 } = runTestIx(context, mul_imm, 1, 0, 3);
+        const { p_context: p_context2 } = runTestIx(
+          context,
+          mul_imm,
+          1,
+          0,
+          3 as u32,
+        );
         expect(p_context2.registers[1]).toBe(2 ** 31);
       });
       it("mul_upper_s_s_imm", () => {
@@ -468,13 +504,25 @@ if (import.meta.vitest) {
       it("mul_upper_u_u_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = (2 ** 30) as u32;
-        const { p_context } = runTestIx(context, mul_upper_u_u_imm, 1, 0, 8);
+        const { p_context } = runTestIx(
+          context,
+          mul_upper_u_u_imm,
+          1,
+          0,
+          8 as u32,
+        );
         expect(p_context.registers[1]).toBe(2);
       });
       it("set_lt_u_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x10 as u32;
-        const { p_context } = runTestIx(context, set_lt_u_imm, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          set_lt_u_imm,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(1);
 
         context.execution.registers[0] = 0x11 as u32;
@@ -483,7 +531,7 @@ if (import.meta.vitest) {
           set_lt_u_imm,
           1,
           0,
-          0x11,
+          0x11 as u32,
         );
         expect(p_context2.registers[1]).toBe(0);
       });
@@ -523,7 +571,13 @@ if (import.meta.vitest) {
       it("set_gt_u_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x11 as u32;
-        const { p_context } = runTestIx(context, set_gt_u_imm, 1, 0, 0x11);
+        const { p_context } = runTestIx(
+          context,
+          set_gt_u_imm,
+          1,
+          0,
+          0x11 as u32,
+        );
         expect(p_context.registers[1]).toBe(0);
 
         context.execution.registers[0] = 0x12 as u32;
@@ -532,7 +586,7 @@ if (import.meta.vitest) {
           set_gt_u_imm,
           1,
           0,
-          0x11,
+          0x11 as u32,
         );
         expect(p_context2.registers[1]).toBe(1);
       });
@@ -573,7 +627,13 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0 as u32;
         context.execution.registers[1] = 1 as u32;
 
-        const { p_context } = runTestIx(context, cmov_iz_imm, 0, 1, 0x10);
+        const { p_context } = runTestIx(
+          context,
+          cmov_iz_imm,
+          0,
+          1,
+          0x10 as u32,
+        );
         expect(p_context.registers[0]).toBe(0x0);
 
         context.execution.registers[1] = 0 as u32;
@@ -582,7 +642,7 @@ if (import.meta.vitest) {
           cmov_iz_imm,
           0,
           1,
-          0x10,
+          0x10 as u32,
         );
         expect(p_context2.registers[0]).toBe(0x10);
       });
@@ -590,7 +650,13 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[0] = 0 as u32;
         context.execution.registers[1] = 1 as u32;
-        const { p_context } = runTestIx(context, cmov_nz_imm, 0, 1, 0x10);
+        const { p_context } = runTestIx(
+          context,
+          cmov_nz_imm,
+          0,
+          1,
+          0x10 as u32,
+        );
         expect(p_context.registers[0]).toBe(0x10);
 
         context.execution.registers[0] = 0 as u32;
@@ -600,20 +666,20 @@ if (import.meta.vitest) {
           cmov_nz_imm,
           0,
           1,
-          0x10,
+          0x10 as u32,
         );
         expect(p_context2.registers[0]).toBe(0x0);
       });
       it("neg_add_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 10 as u32;
-        const { p_context } = runTestIx(context, neg_add_imm, 1, 0, 11);
+        const { p_context } = runTestIx(context, neg_add_imm, 1, 0, 11 as u32);
         expect(p_context.registers[1]).toBe(1);
       });
       it("shlo_l_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = (2 ** 31) as u32;
-        const { p_context } = runTestIx(context, shlo_l_imm, 1, 0, 33);
+        const { p_context } = runTestIx(context, shlo_l_imm, 1, 0, 33 as u32);
         expect(p_context.registers[1]).toBe(0);
 
         context.execution.registers[0] = 1 as u32;
@@ -622,14 +688,20 @@ if (import.meta.vitest) {
           shlo_l_imm,
           1,
           0,
-          1,
+          1 as u32,
         );
         expect(p_context2.registers[1]).toBe(2);
       });
       it("shlo_l_imm_alt", () => {
         const context = createEvContext();
         context.execution.registers[0] = 33 as u32;
-        const { p_context } = runTestIx(context, shlo_l_imm_alt, 1, 0, 1);
+        const { p_context } = runTestIx(
+          context,
+          shlo_l_imm_alt,
+          1,
+          0,
+          1 as u32,
+        );
         expect(p_context.registers[1]).toBe(2);
 
         context.execution.registers[0] = 1 as u32;
@@ -645,7 +717,7 @@ if (import.meta.vitest) {
       it("shlo_r_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x80000000 as u32;
-        const { p_context } = runTestIx(context, shlo_r_imm, 1, 0, 1);
+        const { p_context } = runTestIx(context, shlo_r_imm, 1, 0, 1 as u32);
         expect(p_context.registers[1]).toBe(0x40000000);
       });
       it("shlo_r_imm_alt", () => {
@@ -656,14 +728,14 @@ if (import.meta.vitest) {
           shlo_r_imm_alt,
           1,
           0,
-          0x80000000,
+          0x80000000 as u32,
         );
         expect(p_context.registers[1]).toBe(0x40000000);
       });
       it("shar_r_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = Z4_inv(-1 * 2 ** 31) as u32;
-        const { p_context } = runTestIx(context, shar_r_imm, 1, 0, 33);
+        const { p_context } = runTestIx(context, shar_r_imm, 1, 0, 33 as u32);
         expect(p_context.registers[1]).toBe(Z4_inv(-1 * 2 ** 30));
       });
       it("shar_r_imm_alt", () => {
@@ -674,7 +746,7 @@ if (import.meta.vitest) {
           shar_r_imm_alt,
           1,
           0,
-          0x80000000,
+          0x80000000 as u32,
         );
         expect(p_context.registers[1]).toBe(Z4_inv(-1 * 2 ** 30));
       });
