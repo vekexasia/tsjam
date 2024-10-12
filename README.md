@@ -12,7 +12,7 @@
 - [ ] migrate to neverthrow
 - [ ] cli
 - [ ] Database integration
-
+- [ ] rollup build does not fail when tsc errors:
 abandoned:
 
 - [x] rewrite crypto to use bigint entirely instead of relying on UInt8Array

@@ -1,9 +1,12 @@
-import { RefinementContext, Tau } from "@tsjam/types";
+import { RefinementContext, Tau, WorkPackageHash } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
-import { HashCodec } from "@/identity.js";
+import { GenericBytesBigIntCodec, HashCodec } from "@/identity.js";
 import { E_4 } from "@/ints/E_subscr.js";
-import { OptHashCodec } from "@/optional.js";
+import { OptBytesBigIntCodec } from "@/optional.js";
 
+export const OptWorkHashCodec = OptBytesBigIntCodec<WorkPackageHash, 32>(
+  GenericBytesBigIntCodec<WorkPackageHash, 32>(32),
+);
 /**
  * Appendix C formula (283)
  * it defines codec for the RefinementContext or member of `X` set
@@ -30,7 +33,7 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
       BigInt(value.lookupAnchor.timeSlot),
       bytes.subarray(offset, offset + 4),
     );
-    offset += OptHashCodec.encode(
+    offset += OptWorkHashCodec.encode(
       value.requiredWorkPackage,
       bytes.subarray(offset),
     );
@@ -55,7 +58,7 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
       ) as Tau,
     };
     offset += 36;
-    const requiredWorkPackage = OptHashCodec.decode(bytes.subarray(offset));
+    const requiredWorkPackage = OptWorkHashCodec.decode(bytes.subarray(offset));
     return {
       value: {
         anchor,
@@ -66,7 +69,7 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
     };
   },
   encodedSize(value: RefinementContext): number {
-    return 32 * 4 + 4 + OptHashCodec.encodedSize(value.requiredWorkPackage);
+    return 32 * 4 + 4 + OptWorkHashCodec.encodedSize(value.requiredWorkPackage);
   },
 };
 

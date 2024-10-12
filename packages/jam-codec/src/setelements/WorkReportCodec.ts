@@ -1,4 +1,11 @@
-import { Blake2bHash, CoreIndex, WorkReport, WorkResult } from "@tsjam/types";
+import {
+  Blake2bHash,
+  CoreIndex,
+  Hash,
+  WorkPackageHash,
+  WorkReport,
+  WorkResult,
+} from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
@@ -7,8 +14,10 @@ import { E_2 } from "@/ints/E_subscr.js";
 import { AvailabilitySpecificationCodec } from "@/setelements/AvailabilitySpecificationCodec.js";
 import { HashCodec } from "@/identity.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import { buildKeyValueCodec } from "@/dicts/keyValue";
 
 const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
+const lookupCodec = buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec);
 export const WorkReportCodec: JamCodec<WorkReport> = {
   encode(value: WorkReport, bytes: Uint8Array): number {
     // s
@@ -73,6 +82,10 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
     );
     offset += authorizerOutput.readBytes;
 
+    // l
+    const segmentRootLookup = lookupCodec.decode(bytes.subarray(offset));
+    offset += segmentRootLookup.readBytes;
+
     // r
     const results = resultsCodec.decode(bytes.subarray(offset));
     offset += results.readBytes;
@@ -83,6 +96,7 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
         authorizerOutput: authorizerOutput.value,
         refinementContext: refinementContext.value,
         workPackageSpecification: workPackageSpecification.value,
+        segmentRootLookup: segmentRootLookup.value,
         results: results.value as WorkReport["results"],
       },
       readBytes: offset,
@@ -127,6 +141,7 @@ if (import.meta.vitest) {
         coreIndex: json.core_index,
         authorizerHash: hextToBigInt(json.authorizer_hash),
         authorizerOutput: hexToBytes(json.auth_output),
+        segmentRootLookup: new Map(),
         results: json.results.map(
           (r: never): WorkResult => workResultFromJSON(r),
         ),

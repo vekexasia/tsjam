@@ -1,3 +1,4 @@
+import { transferInvocation } from "@tsjam/pvm";
 import {
   DeferredTransfer,
   Delta,
@@ -5,19 +6,17 @@ import {
   Posterior,
   ServiceIndex,
 } from "@tsjam/types";
-import { newSTF } from "@tsjam/utils";
+import { newSTF, toPosterior } from "@tsjam/utils";
 
-type Input = {
-  accummulationResult: Map<ServiceIndex, AccResultItem>;
-};
-// (168) (261)
+// (179)
 export const deltaToPosterior = newSTF<
   DoubleDagger<Delta>,
-  Input,
+  { bold_t: DeferredTransfer[] }, // As of (176)
   Posterior<Delta>
 >((input, curState) => {
-  const R = (t: DeferredTransfer[], d: ServiceIndex) => {
-    t.slice()
+  const R = (d: ServiceIndex) => {
+    return input.bold_t
+      .slice()
       .sort((a, b) => {
         if (a.sender === b.sender) {
           return a.destination - b.destination;
@@ -29,7 +28,10 @@ export const deltaToPosterior = newSTF<
 
   const p_delta: Delta = new Map();
 
-  const omegatres = omega_t();
-  const R = new Map<ServiceIndex, AccResultItem["t"]>();
-  return null;
+  [...curState.keys()].forEach((service) => {
+    const x = transferInvocation(curState, service, R(service));
+    p_delta.set(service, x);
+  });
+
+  return toPosterior(p_delta);
 });

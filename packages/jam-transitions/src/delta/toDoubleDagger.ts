@@ -11,5 +11,6 @@ export const deltaToDoubleDagger = newSTF<
   PVMAccumulationState, // return of `∆+
   DoubleDagger<Delta>
 >((input): DoubleDagger<Delta> => {
-  return toDoubleDagger(input.delta);
+  // FIXME: this is wrong
+  throw new Error("Not implemented");
 });

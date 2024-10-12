@@ -1,7 +1,8 @@
 import { Hash } from "@tsjam/types";
 import {
+  HashCodec,
   JamCodec,
-  OptHashCodec,
+  OptBytesBigIntCodec,
   createArrayLengthDiscriminator,
 } from "@tsjam/codec";
 
@@ -46,4 +47,4 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 };
 
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
-  createArrayLengthDiscriminator(OptHashCodec);
+  createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));

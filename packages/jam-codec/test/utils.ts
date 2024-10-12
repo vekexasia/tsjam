@@ -46,6 +46,7 @@ export const assurancesExtrinsicFromJSON = (json: any): EA_Extrinsic => {
 export const guaranteesExtrinsicFromJSON = (json: any): EG_Extrinsic => {
   return json.map((e: any): EG_Extrinsic[0] => ({
     workReport: {
+      segmentRootLookup: new Map(),
       workPackageSpecification: {
         workPackageHash: hextToBigInt(e.report.package_spec.hash),
         bundleLength: e.report.package_spec.len,

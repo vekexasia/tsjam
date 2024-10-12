@@ -18,5 +18,4 @@ export * from "./AuthorizerPool.js";
 export * from "./disputesState.js";
 export * from "./validatorStatistics.js";
 
-export * from "./utilityComputations/availableReports.js";
 export * from "./utilityComputations/w.js";

@@ -41,7 +41,6 @@ export const OptBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
 ): JamCodec<K | undefined> => {
   return new Optional(k);
 };
-export const OptHashCodec = OptBytesBigIntCodec<Hash, 32>(HashCodec);
 
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");

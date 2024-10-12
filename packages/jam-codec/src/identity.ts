@@ -25,7 +25,10 @@ export const IdentityCodec: JamCodec<Uint8Array> = {
   },
 };
 
-const GenericBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
+export const GenericBytesBigIntCodec = <
+  K extends BigIntBytes<T>,
+  T extends number,
+>(
   num: T,
 ): JamCodec<K> => ({
   decode(bytes: Uint8Array): { value: K; readBytes: number } {
