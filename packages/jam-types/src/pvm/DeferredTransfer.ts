@@ -8,6 +8,9 @@ import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 export type DeferredTransfer = {
   sender: ServiceIndex;
   destination: ServiceIndex;
+  /**
+   * `a`
+   */
   amount: u64;
   memo: ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>;
   gasLimit: u64;
