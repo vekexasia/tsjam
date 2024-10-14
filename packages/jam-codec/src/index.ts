@@ -1,9 +1,9 @@
-import { JamCodec } from "@/codec.js";
-
 export * from "@/ints/e.js";
 export * from "@/ints/e4star.js";
 export * from "@/ints/E_subscr.js";
 export * from "@/validatorDataCodec.js";
+export * from "@/utils.js";
+
 export * from "@/bitSequence.js";
 export * from "@/optional.js";
 export * from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
@@ -32,17 +32,3 @@ export * from "./block/header/unsigned.js";
 export * from "./block/header/signed.js";
 export * from "./block/block.js";
 export * from "./PVMProgramCodec.js";
-
-/**
- * encode with codec a value by also creating the buffer
- * @param codec - the codec to use
- * @param value - the value to encode
- */
-export const encodeWithCodec = <T>(
-  codec: JamCodec<T>,
-  value: T,
-): Uint8Array => {
-  const buffer = new Uint8Array(codec.encodedSize(value));
-  codec.encode(value, buffer);
-  return buffer;
-};

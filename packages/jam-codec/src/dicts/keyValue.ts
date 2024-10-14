@@ -4,7 +4,8 @@ import {
   LengthDiscriminator,
 } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { Hash } from "@tsjam/types";
-import { HashCodec, encodeWithCodec } from "..";
+import { HashCodec } from "@/identity.js";
+import { encodeWithCodec } from "@/utils.js";
 
 /**
  * Base keyvalue codec.

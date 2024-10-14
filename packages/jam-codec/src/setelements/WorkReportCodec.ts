@@ -14,7 +14,7 @@ import { E_2 } from "@/ints/E_subscr.js";
 import { AvailabilitySpecificationCodec } from "@/setelements/AvailabilitySpecificationCodec.js";
 import { HashCodec } from "@/identity.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { buildKeyValueCodec } from "@/dicts/keyValue";
+import { buildKeyValueCodec } from "@/dicts/keyValue.js";
 
 const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
 const lookupCodec = buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec);
