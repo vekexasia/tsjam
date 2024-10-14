@@ -2,6 +2,7 @@ export * from "./pvmMemory.js";
 export * from "./parseProgram.js";
 export * from "./instructions/index.js";
 export * from "./instructions/ixdb.js";
+export * from "./utils/utilityFunctions.js";
 export * from "./invocations/accumulate.js";
 export * from "./invocations/onTransfer.js";
 export * from "./invocations/isAuthorized.js";

@@ -1,26 +1,33 @@
 import {
   AccumulationHistory,
   AccumulationQueue,
+  AuthorizerQueue,
   AvailableNoPrereqWorkReports,
   AvailableWithPrereqWorkReports,
   AvailableWorkReports,
   Dagger,
   DeferredTransfer,
   Delta,
+  DoubleDagger,
   EA_Extrinsic,
   Hash,
   PVMAccumulationOp,
   PVMAccumulationState,
+  Posterior,
+  PrivilegedServices,
   RHO,
+  SafroleState,
   ServiceIndex,
+  Tagged,
   Tau,
   WorkPackageHash,
   WorkReport,
   u64,
 } from "@tsjam/types";
 import { CORES, EPOCH_LENGTH, MINIMUM_VALIDATORS } from "@tsjam/constants";
-import { toTagged } from "@tsjam/utils";
-import { accumulateInvocation } from "..";
+import { toPosterior, toTagged } from "@tsjam/utils";
+import { accumulateInvocation } from "@/invocations/accumulate.js";
+import { deltaToPosterior } from "@tsjam/transitions";
 
 /**
  * (130) `W` in the paper section
@@ -135,6 +142,8 @@ export const withPrereqAvailableReports = (
     ),
   );
 };
+
+//TODO: this is being used also in transitions but currently being copied over
 const P_fn = (r: WorkReport[]): Map<WorkPackageHash, Hash> => {
   return new Map(
     r.map((wr) => [
@@ -143,6 +152,7 @@ const P_fn = (r: WorkReport[]): Map<WorkPackageHash, Hash> => {
     ]),
   );
 };
+
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
   a: Map<WorkPackageHash, Hash>,
@@ -179,7 +189,7 @@ export const accumulatableReports = (
 
   return [
     ...w_mark,
-    computeAccumulationPriority(
+    ...computeAccumulationPriority(
       [
         ...accumulationQueue.slice(m).flat(),
         ...accumulationQueue.slice(0, m).flat(),
@@ -187,7 +197,7 @@ export const accumulatableReports = (
       ],
       accHistoryUnion(accHistory),
     ),
-  ];
+  ] as Tagged<WorkReport[], "W*">;
 };
 
 /**
@@ -237,6 +247,45 @@ export const outerAccumulation = (
     t_star.concat(t),
     new Set([...b_star.values(), ...b.values()]),
   ];
+};
+
+/**
+ * Integrate state to calculate several posterior state
+ * as defined in (176) and (177)
+ */
+export const stateIntegration = (
+  w_star: Tagged<WorkReport[], "W*">,
+  tau: Tau, // Ht
+  d_delta: Dagger<Delta>,
+  privServices: PrivilegedServices,
+  authQueue: AuthorizerQueue,
+  iota: SafroleState["iota"],
+) => {
+  const [, o, bold_t, C] = outerAccumulation(
+    3n as u64,
+    w_star,
+    {
+      delta: d_delta,
+      privServices,
+      authQueue,
+      validatorKeys: iota,
+    },
+    privServices.g,
+    tau,
+  );
+
+  const p_delta = deltaToPosterior.apply(
+    { bold_t },
+    o.delta as DoubleDagger<Delta>,
+  );
+
+  return {
+    p_privServices: toPosterior(o.privServices),
+    p_delta,
+    p_iota: o.validatorKeys as unknown as Posterior<SafroleState["iota"]>,
+    p_authQueue: toPosterior(o.authQueue),
+    beefyCommitment: C,
+  };
 };
 
 /**

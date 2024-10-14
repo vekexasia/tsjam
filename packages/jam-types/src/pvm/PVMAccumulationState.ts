@@ -14,7 +14,11 @@ export interface PVMAccumulationState {
   /**
    * `i` - the upcoming validator keys `ι`
    */
-  validatorKeys: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS>;
+  validatorKeys: SeqOfLength<
+    ValidatorData,
+    typeof NUMBER_OF_VALIDATORS,
+    string
+  >;
   /**
    * `q` - the authorizer queue
    */

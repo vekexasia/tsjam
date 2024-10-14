@@ -69,6 +69,7 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
           "src/**/*.ts",
           "test/**/*.ts",
         ],
+        noEmitOnError: true,
         ...(typescriptOptions || {}),
       }),
 
