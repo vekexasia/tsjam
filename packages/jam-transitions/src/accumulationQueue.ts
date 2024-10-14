@@ -6,7 +6,32 @@ import {
   Posterior,
   Tau,
 } from "@tsjam/types";
-import { EPOCH_LENGTH } from "@vekexasia/jam-constants";
+import { EPOCH_LENGTH } from "@tsjam/constants";
+
+export const accumulationQueueToPosterior = newSTF<
+  AccumulationQueue,
+  {
+    p_accHistory: Posterior<AccumulationHistory>;
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    w_q: AvailableWithPrereqWorkReports;
+  }
+>((input, curState) => {
+  const m = input.tau % EPOCH_LENGTH;
+
+  const toRet = [...curState] as unknown as Posterior<AccumulationQueue>;
+  for (let i = 0; i < EPOCH_LENGTH; i++) {
+    const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
+    if (i === 0) {
+      toRet[index] = E_Fn(input.w_q, input.p_accHistory[EPOCH_LENGTH - 1]);
+    } else if (i < input.p_tau - input.tau) {
+      toRet[index] = [];
+    } else {
+      toRet[index] = E_Fn(toRet[index], input.p_accHistory[EPOCH_LENGTH - 1]);
+    }
+  }
+  return toRet;
+});
 
 /**
  * NOTE: this is duplicated from pvm
@@ -48,27 +73,3 @@ const E_Fn = (
   }
   return toRet;
 };
-export const accumulationQueueToPosterior = newSTF<
-  AccumulationQueue,
-  {
-    p_accHistory: Posterior<AccumulationHistory>;
-    tau: Tau;
-    p_tau: Posterior<Tau>;
-    w_q: AvailableWithPrereqWorkReports;
-  }
->((input, curState) => {
-  const m = input.tau % EPOCH_LENGTH;
-
-  const toRet = [...curState] as unknown as Posterior<AccumulationQueue>;
-  for (let i = 0; i < EPOCH_LENGTH; i++) {
-    const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
-    if (i === 0) {
-      toRet[index] = E_Fn(input.w_q, input.p_accHistory[EPOCH_LENGTH - 1]);
-    } else if (i < input.p_tau - input.tau) {
-      toRet[index] = [];
-    } else {
-      toRet[index] = E_Fn(toRet[index], input.p_accHistory[EPOCH_LENGTH - 1]);
-    }
-  }
-  return toRet;
-});

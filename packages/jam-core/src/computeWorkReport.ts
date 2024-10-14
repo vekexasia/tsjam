@@ -61,6 +61,8 @@ export const computeWorkReport = (
     authorizerHash: pac.pa,
     authorizerOutput: o,
     refinementContext: pac.context,
+    // FIXME: (196)
+    segmentRootLookup: null as unknown as Map<WorkPackageHash, Hash>,
     workPackageSpecification: A_fn(
       pac,
       els.map((a) => a.out).flat() as ExportSegment[],

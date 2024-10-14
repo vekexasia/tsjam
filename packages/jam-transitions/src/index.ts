@@ -1,5 +1,5 @@
+export * from "./AuthorizerPool.js";
 export * from "./delta/toDagger.js";
-export * from "./delta/toDoubleDagger.js";
 export * from "./delta/toPosterior.js";
 
 export * from "./recenthistory/toDagger.js";
@@ -13,9 +13,9 @@ export * from "./safrole/keys.js";
 export * from "./safrole/stateUpdater.js";
 export * from "./safrole/tickets.js";
 
-export * from "./AuthorizerQueue.js";
-export * from "./AuthorizerPool.js";
 export * from "./disputesState.js";
 export * from "./validatorStatistics.js";
 
 export * from "./utilityComputations/w.js";
+export * from "./accumulationQueue.js";
+export * from "./accumulationHistory.js";

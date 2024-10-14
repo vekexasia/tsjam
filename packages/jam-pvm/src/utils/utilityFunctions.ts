@@ -210,7 +210,7 @@ export const outerAccumulation = (
   gasLimits: Map<ServiceIndex, u64>,
   tau: Tau,
 ): [
-  gas: u64,
+  nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
   Set<{ service: ServiceIndex; hash: Hash }>,
@@ -242,50 +242,11 @@ export const outerAccumulation = (
   );
 
   return [
-    toTagged(BigInt(i) + j),
+    i + j,
     o_prime,
     t_star.concat(t),
     new Set([...b_star.values(), ...b.values()]),
   ];
-};
-
-/**
- * Integrate state to calculate several posterior state
- * as defined in (176) and (177)
- */
-export const stateIntegration = (
-  w_star: Tagged<WorkReport[], "W*">,
-  tau: Tau, // Ht
-  d_delta: Dagger<Delta>,
-  privServices: PrivilegedServices,
-  authQueue: AuthorizerQueue,
-  iota: SafroleState["iota"],
-) => {
-  const [, o, bold_t, C] = outerAccumulation(
-    3n as u64,
-    w_star,
-    {
-      delta: d_delta,
-      privServices,
-      authQueue,
-      validatorKeys: iota,
-    },
-    privServices.g,
-    tau,
-  );
-
-  const p_delta = deltaToPosterior.apply(
-    { bold_t },
-    o.delta as DoubleDagger<Delta>,
-  );
-
-  return {
-    p_privServices: toPosterior(o.privServices),
-    p_delta,
-    p_iota: o.validatorKeys as unknown as Posterior<SafroleState["iota"]>,
-    p_authQueue: toPosterior(o.authQueue),
-    beefyCommitment: C,
-  };
 };
 
 /**

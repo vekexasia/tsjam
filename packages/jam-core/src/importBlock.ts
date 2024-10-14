@@ -1,7 +1,12 @@
 import {
+  AccumulationHistory,
+  AccumulationQueue,
   AuthorizerPool,
   AuthorizerQueue,
+  AvailableWithPrereqWorkReports,
   Delta,
+  DoubleDagger,
+  Hash,
   IDisputesState,
   JamBlock,
   MerkeTreeRoot,
@@ -9,17 +14,21 @@ import {
   RHO,
   RecentHistory,
   SafroleState,
+  ServiceIndex,
+  Tagged,
+  Tau,
   ValidatorStatistics,
+  WorkReport,
   u64,
 } from "@tsjam/types";
 import {
   RHO2DoubleDagger,
   RHO_2_Dagger,
   RHO_toPosterior,
+  accumulationHistoryToPosterior,
+  accumulationQueueToPosterior,
   authorizerPool_toPosterior,
-  authorizerQueue_toPosterior,
   deltaToDagger,
-  deltaToDoubleDagger,
   deltaToPosterior,
   disputesSTF,
   recentHistoryToDagger,
@@ -31,7 +40,7 @@ import { toPosterior, toTagged } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { assertEGValid } from "@/validateEG.js";
-import { accumulateInvocation } from "@tsjam/pvm";
+import { outerAccumulation } from "@tsjam/pvm";
 
 let safroleState: SafroleState = null as unknown as SafroleState;
 let recentHistory: RecentHistory = null as unknown as RecentHistory;
@@ -44,8 +53,13 @@ let authorizerQueue: AuthorizerQueue = null as unknown as AuthorizerQueue;
 let authorizerPool: AuthorizerPool = null as unknown as AuthorizerPool;
 let privilegedServices: PrivilegedServices =
   null as unknown as PrivilegedServices;
+const accumulationHistory: AccumulationHistory =
+  null as unknown as AccumulationHistory;
+let accumulationQueue: AccumulationQueue = null as unknown as AccumulationQueue;
+export let beefyCommitment: Set<{ service: ServiceIndex; hash: Hash }> =
+  new Set();
 
-export const importBlock = (block: JamBlock) => {
+export const importBlock = (block: JamBlock, tau: Tau) => {
   const headerHash = Hashing.blake2b(
     encodeWithCodec(UnsignedHeaderCodec, block.header),
   );
@@ -106,18 +120,58 @@ export const importBlock = (block: JamBlock) => {
     delta,
   );
 
-  const dd_delta = deltaToDoubleDagger.apply(
+  /**
+   * Integrate state to calculate several posterior state
+   * as defined in (176) and (177)
+   */
+  //TODO: w star and w_q
+  const w_q: AvailableWithPrereqWorkReports =
+    [] as unknown as AvailableWithPrereqWorkReports;
+  const w_star = [] as unknown as Tagged<WorkReport[], "W*">;
+
+  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
+    3n as u64,
+    w_star,
     {
-      accummulationResult: new Map(), //todo
+      delta: d_delta,
+      privServices: privilegedServices,
+      authQueue: authorizerQueue,
+      validatorKeys: safroleState.iota,
     },
-    d_delta,
+    privilegedServices.g,
+    tau,
   );
+
+  const p_privilegedServices = toPosterior(o.privServices);
+  const p_authorizerQueue = toPosterior(o.authQueue);
+  const dd_delta = o.delta as DoubleDagger<Delta>;
+  const p_iota = toPosterior(o.validatorKeys);
 
   const p_delta = deltaToPosterior.apply(
     {
-      accummulationResult: new Map(), //todo
+      bold_t,
     },
     dd_delta,
+  );
+
+  const p_accumulationHistory = accumulationHistoryToPosterior.apply(
+    {
+      nAccumulatedWork,
+      w_star,
+      tau,
+    },
+    accumulationHistory,
+  );
+
+  const p_accumulationQueue = accumulationQueueToPosterior.apply(
+    {
+      p_accHistory: p_accumulationHistory,
+      p_tau: toPosterior(block.header.timeSlotIndex),
+      tau,
+
+      w_q,
+    },
+    accumulationQueue,
   );
 
   const d_recentHistory = recentHistoryToDagger.apply(
@@ -145,23 +199,6 @@ export const importBlock = (block: JamBlock) => {
     validatorStatistics,
   );
 
-  const xares = accumulateInvocation(
-    d_delta,
-    privilegedServices.a,
-    0n as u64, // todo gas according to (162)
-    [],
-    {
-      tau: safroleState.tau,
-      iota: safroleState.iota,
-      authQueue: authorizerQueue,
-      privilegedServices: privilegedServices,
-    },
-  );
-  const p_authorizerQueue = authorizerQueue_toPosterior.apply(
-    xares,
-    authorizerQueue,
-  );
-
   const p_authorizerPool = authorizerPool_toPosterior.apply(
     {
       p_queue: p_authorizerQueue,
@@ -171,37 +208,9 @@ export const importBlock = (block: JamBlock) => {
     authorizerPool,
   );
 
-  // (164) privilegedServices update
-  const privservRes = accumulateInvocation(
-    d_delta,
-    privilegedServices.m,
-    0n as u64, // todo gas according to (162)
-    [],
-    {
-      tau: safroleState.tau,
-      iota: safroleState.iota,
-      authQueue: authorizerQueue,
-      privilegedServices,
-    },
-  );
+  newSafroleState.iota = p_iota as unknown as SafroleState["iota"];
 
-  // (164) iota update
-  const iotaRes = accumulateInvocation(
-    d_delta,
-    privilegedServices.v,
-    0n as u64, // todo gas according to (162)
-    [],
-    {
-      tau: safroleState.tau,
-      iota: newSafroleState.iota, // iota here is only used to polyfill the result it's not actually used in computation
-      authQueue: authorizerQueue,
-      privilegedServices,
-    },
-  );
-
-  newSafroleState.iota =
-    iotaRes.validatorKeys as unknown as SafroleState["iota"];
-
+  accumulationQueue = p_accumulationQueue;
   //todo assign
   safroleState = newSafroleState;
   disputesState = p_disputesState;
@@ -211,5 +220,6 @@ export const importBlock = (block: JamBlock) => {
   validatorStatistics = p_validatorStatistics;
   authorizerQueue = p_authorizerQueue;
   authorizerPool = p_authorizerPool;
-  privilegedServices = privservRes.p;
+  privilegedServices = p_privilegedServices;
+  beefyCommitment = C;
 };
