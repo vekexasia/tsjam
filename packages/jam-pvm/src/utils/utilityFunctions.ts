@@ -1,22 +1,17 @@
 import {
   AccumulationHistory,
   AccumulationQueue,
-  AuthorizerQueue,
   AvailableNoPrereqWorkReports,
   AvailableWithPrereqWorkReports,
   AvailableWorkReports,
   Dagger,
   DeferredTransfer,
   Delta,
-  DoubleDagger,
   EA_Extrinsic,
   Hash,
   PVMAccumulationOp,
   PVMAccumulationState,
-  Posterior,
-  PrivilegedServices,
   RHO,
-  SafroleState,
   ServiceIndex,
   Tagged,
   Tau,
@@ -25,11 +20,11 @@ import {
   u64,
 } from "@tsjam/types";
 import { CORES, EPOCH_LENGTH, MINIMUM_VALIDATORS } from "@tsjam/constants";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@/invocations/accumulate.js";
-import { deltaToPosterior } from "@tsjam/transitions";
 
 /**
+ *
  * (130) `W` in the paper section
  * 11.2.2
  * @param ea - Availability Extrinsic
