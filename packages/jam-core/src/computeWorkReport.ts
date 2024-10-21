@@ -224,4 +224,4 @@ const importedSegmentRetriever: (
   h: Hash,
   index: number,
 ) => ExportSegment = () => null as unknown as ExportSegment; // todo
-const blobPreimageRetriever: (h: Hash) => Uint8Array = () => new Uint8Array(); // todo
+const blobPreimageRetriever: (h: Hash) => Uint8Array = () => new Uint8Array(); // todg

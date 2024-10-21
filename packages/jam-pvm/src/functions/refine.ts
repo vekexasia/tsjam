@@ -6,6 +6,7 @@ import {
   PVMProgramExecutionContextBase,
   PVMSingleModMemory,
   PVMSingleModObject,
+  RegularPVMExitReason,
   ServiceAccount,
   ServiceIndex,
   Tau,
@@ -18,6 +19,7 @@ import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
   HostCallResult,
+  InnerPVMResultCode,
 } from "@tsjam/constants";
 import { bytesToBigInt, historicalLookup } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
@@ -64,7 +66,7 @@ export const omega_h = regFn<
     gasCost: 10n,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
       const [w7, h0, b0, bz] = context.registers.slice(7);
-      if (!context.memory.canWrite(b0, bz)) {
+      if (context.memory.canRead(h0, 32) || !context.memory.canWrite(b0, bz)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       let a: ServiceAccount | undefined;
@@ -73,7 +75,7 @@ export const omega_h = regFn<
       } else if (delta.has(w7 as ServiceIndex)) {
         a = delta.get(w7 as ServiceIndex);
       }
-      if (typeof a === "undefined" || !context.memory.canRead(h0, 32)) {
+      if (typeof a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
       const h: Hash = bytesToBigInt(context.memory.getBytes(h0, 32));
@@ -334,8 +336,17 @@ export const omega_k = regFn<
 
       assert(typeof res.exitReason !== "undefined", "exit reason is undefined");
       if (typeof res.exitReason === "number") {
+        let exitReason = 0;
+        if (res.exitReason === RegularPVMExitReason.OutOfGas) {
+          exitReason = InnerPVMResultCode.OOG;
+        } else if (res.exitReason === RegularPVMExitReason.Halt) {
+          exitReason = InnerPVMResultCode.HALT;
+        } else if (res.exitReason === RegularPVMExitReason.Panic) {
+          exitReason = InnerPVMResultCode.PANIC;
+        }
+
         return [
-          IxMod.w7(res.exitReason),
+          IxMod.w7(exitReason),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
         ];

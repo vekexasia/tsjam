@@ -65,4 +65,8 @@ export enum InnerPVMResultCode {
    * The invocation completed with a host-call fault
    */
   HOST = 3,
+  /**
+   * The invocation completed by running out of gas
+   */
+  OOG = 4,
 }

@@ -8,10 +8,10 @@ import {
 } from "@tsjam/types";
 import { newSTF, toPosterior } from "@tsjam/utils";
 
-// (179)
+// (180)
 export const deltaToPosterior = newSTF<
   DoubleDagger<Delta>,
-  { bold_t: DeferredTransfer[] }, // As of (176)
+  { bold_t: DeferredTransfer[] }, // As of (177)
   Posterior<Delta>
 >((input, curState) => {
   const R = (d: ServiceIndex) => {

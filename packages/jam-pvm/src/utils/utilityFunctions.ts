@@ -148,6 +148,10 @@ const P_fn = (r: WorkReport[]): Map<WorkPackageHash, Hash> => {
   );
 };
 
+/**
+ * (165) in the paper
+ * defined in `Q`
+ */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
   a: Map<WorkPackageHash, Hash>,
@@ -303,6 +307,9 @@ export const parallelizedAccAccumulation = (
   return [toTagged(u), newState, t, b];
 };
 
+/**
+ * `∆1` fn
+ */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
   w: WorkReport[],
@@ -324,10 +331,10 @@ export const singleServiceAccumulation = (
   for (const wr of w) {
     for (const r of wr.results) {
       p.push({
-        authorizationOutput: wr.authorizerOutput,
-        output: r.output,
-        payloadHash: r.payloadHash,
-        packageHash: wr.workPackageSpecification.workPackageHash,
+        authorizationOutput: wr.authorizerOutput, // o
+        output: r.output, // o
+        payloadHash: r.payloadHash, // l
+        packageHash: wr.workPackageSpecification.workPackageHash, // (ws)h
       });
     }
   }
