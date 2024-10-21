@@ -352,7 +352,7 @@ export const omega_k = regFn<
         ];
       } else if (res.exitReason.type === "host-call") {
         return [
-          IxMod.w7(0), // fixme "host",
+          IxMod.w7(InnerPVMResultCode.HOST), // fixme "host",
           IxMod.w8(res.exitReason.opCode),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
