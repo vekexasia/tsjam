@@ -2,6 +2,7 @@ import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import {
   BandersnatchKey,
+  BandersnatchRingRoot,
   BandersnatchSignature,
   BigIntBytes,
   ED25519PublicKey,
@@ -67,3 +68,8 @@ export const Ed25519SignatureCodec = GenericBytesBigIntCodec<
   ED25519Signature,
   64
 >(64);
+
+export const BandersnatchRingRootCodec = GenericBytesBigIntCodec<
+  BandersnatchRingRoot,
+  144
+>(144);

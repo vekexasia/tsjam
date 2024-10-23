@@ -28,7 +28,13 @@ export * from "@/setelements/WorkPackageCodec.js";
 export * from "@/setelements/WorkReportCodec.js";
 export * from "@/setelements/WorkResultCodec.js";
 
+export * from "@/state/AuthorizerQueueCodec.js";
+export * from "@/state/AuthorizerPoolCodec.js";
+
 export * from "./block/header/unsigned.js";
 export * from "./block/header/signed.js";
 export * from "./block/block.js";
 export * from "./PVMProgramCodec.js";
+export * from "./ticketIdentifierCodec.js";
+
+export * from "./dicts/keyValue.js";

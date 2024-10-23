@@ -1,11 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import {
-  Blake2bHash,
-  ED25519PublicKey,
-  JamHeader,
-  Tau,
-  TicketIdentifier,
-} from "@tsjam/types";
+import { Blake2bHash, ED25519PublicKey, JamHeader, Tau } from "@tsjam/types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
@@ -80,10 +74,7 @@ const offendersCodec = createArrayLengthDiscriminator({
   },
 });
 export const winningTicketsCodec = new Optional(
-  createSequenceCodec<TicketIdentifier, typeof EPOCH_LENGTH>(
-    EPOCH_LENGTH,
-    TicketIdentifierCodec,
-  ),
+  createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec),
 );
 export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {

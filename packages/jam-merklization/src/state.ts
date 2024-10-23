@@ -1,0 +1,335 @@
+/**
+ * Appendix D
+ */
+
+import {
+  AuthorizerPoolCodec,
+  AuthorizerQueueCodec,
+  BandersnatchCodec,
+  BandersnatchRingRootCodec,
+  E,
+  E_1,
+  E_4,
+  E_4_int,
+  E_8,
+  Ed25519PubkeyCodec,
+  HashCodec,
+  JamCodec,
+  Optional,
+  TicketIdentifierCodec,
+  ValidatorDataCodec,
+  WorkReportCodec,
+  buildGenericKeyValueCodec,
+  createArrayLengthDiscriminator,
+  encodeWithCodec,
+} from "@tsjam/codec";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  AccumulationQueue,
+  Hash,
+  JamState,
+  RHO,
+  ServiceIndex,
+  SingleValidatorStatistics,
+  Tau,
+  WorkPackageHash,
+  WorkReport,
+  u64,
+} from "@tsjam/types";
+import { bytesToBigInt } from "@tsjam/utils";
+import { createSequenceCodec } from "@tsjam/codec";
+import { b } from "vitest/dist/suite-a18diDsI.js";
+/**
+ * (314) in graypaper
+ */
+const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
+  if (_s instanceof Uint8Array) {
+    const h: Uint8Array = _s;
+    const s = i;
+    const n = encodeWithCodec(E_4, BigInt(s));
+    return bytesToBigInt(
+      new Uint8Array([
+        n[0],
+        h[0],
+        n[1],
+        h[1],
+        n[2],
+        h[2],
+        n[3],
+        h[3],
+        ...h.subarray(4),
+      ]),
+    );
+  }
+  if (typeof _s === "number") {
+    // its ServiceIndex
+    const n = encodeWithCodec(E_4, BigInt(_s));
+    return bytesToBigInt(
+      new Uint8Array([i, ...n, ...new Array(32 - 4 - 1).fill(0)]),
+    );
+  }
+  return bytesToBigInt(new Uint8Array([1, ...new Array(31).fill(0), i]));
+};
+
+export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
+  const toRet = new Map<Hash, Uint8Array>();
+
+  toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec, state.authPool));
+  toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec, state.authQueue));
+  // β - recentHistory
+  // TODO:
+
+  const gamma_sCodec = createSequenceCodec(
+    EPOCH_LENGTH,
+    typeof state.safroleState.gamma_s[0] === "bigint"
+      ? (BandersnatchCodec as JamCodec<unknown>)
+      : (TicketIdentifierCodec as JamCodec<unknown>),
+  );
+
+  toRet.set(
+    C_fn(4),
+    new Uint8Array([
+      ...encodeWithCodec(
+        createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
+        state.safroleState.gamma_k,
+      ),
+      ...encodeWithCodec(BandersnatchRingRootCodec, state.safroleState.gamma_z),
+      ...encodeWithCodec(
+        E_1,
+        typeof state.safroleState.gamma_s[0] === "bigint" ? 1n : 0n,
+      ),
+      ...encodeWithCodec(gamma_sCodec, state.safroleState.gamma_s),
+      ...encodeWithCodec(
+        createArrayLengthDiscriminator(TicketIdentifierCodec),
+        state.safroleState.gamma_a,
+      ),
+    ]),
+  );
+
+  // 5
+  // TODO: sorting of verticts
+  toRet.set(
+    C_fn(5),
+    new Uint8Array([
+      ...encodeWithCodec(
+        createArrayLengthDiscriminator(HashCodec),
+        [...state.disputes.psi_g.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+      ),
+      ...encodeWithCodec(
+        createArrayLengthDiscriminator(HashCodec),
+        [...state.disputes.psi_b.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+      ),
+      ...encodeWithCodec(
+        createArrayLengthDiscriminator(HashCodec),
+        [...state.disputes.psi_w.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+      ),
+      ...encodeWithCodec(
+        createArrayLengthDiscriminator(Ed25519PubkeyCodec),
+        [...state.disputes.psi_o.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+      ),
+    ]),
+  );
+
+  // 6
+  toRet.set(
+    C_fn(6),
+    new Uint8Array([
+      ...encodeWithCodec(HashCodec, state.safroleState.eta[0]),
+      ...encodeWithCodec(HashCodec, state.safroleState.eta[1]),
+      ...encodeWithCodec(HashCodec, state.safroleState.eta[2]),
+      ...encodeWithCodec(HashCodec, state.safroleState.eta[3]),
+    ]),
+  );
+
+  // 7
+  toRet.set(
+    C_fn(7),
+    encodeWithCodec(
+      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
+      state.safroleState.iota,
+    ),
+  );
+
+  // 8
+  toRet.set(
+    C_fn(8),
+    encodeWithCodec(
+      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
+      state.safroleState.kappa,
+    ),
+  );
+
+  // 9
+  toRet.set(
+    C_fn(9),
+    encodeWithCodec(
+      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
+      state.safroleState.lambda,
+    ),
+  );
+
+  // 10
+
+  const singleRHOCodec: JamCodec<{ workReport: WorkReport; reportTime: Tau }> =
+    {
+      encode(value, bytes) {
+        let offset = 0;
+        offset += WorkReportCodec.encode(value.workReport, bytes);
+        offset += E_4.encode(BigInt(value.reportTime), bytes.subarray(offset));
+        return offset;
+      },
+      decode(bytes) {
+        const wr = WorkReportCodec.decode(bytes);
+        const rt = E_4.decode(bytes.subarray(wr.readBytes));
+        return {
+          value: { workReport: wr.value, reportTime: Number(rt.value) as Tau },
+          readBytes: wr.readBytes + rt.readBytes,
+        };
+      },
+      encodedSize(value) {
+        return (
+          WorkReportCodec.encodedSize(value.workReport) +
+          E_4.encodedSize(BigInt(value.reportTime))
+        );
+      },
+    };
+
+  const rhoCodec = createSequenceCodec(CORES, new Optional(singleRHOCodec));
+  toRet.set(C_fn(10), encodeWithCodec(rhoCodec, state.rho));
+
+  // 11
+  toRet.set(C_fn(11), encodeWithCodec(E_4, BigInt(state.tau)));
+
+  // 12
+  toRet.set(
+    C_fn(12),
+    new Uint8Array([
+      ...encodeWithCodec(E_4_int, state.privServices.m),
+      ...encodeWithCodec(E_4_int, state.privServices.a),
+      ...encodeWithCodec(E_4_int, state.privServices.v),
+      ...encodeWithCodec(
+        buildGenericKeyValueCodec(E_4_int, E_8, (a, b) => a - b),
+        state.privServices.g,
+      ),
+    ]),
+  );
+
+  const svscodec: JamCodec<SingleValidatorStatistics> = {
+    encode(value, bytes) {
+      let offset = 0;
+      offset += E_4_int.encode(value.blocksProduced, bytes.subarray(offset));
+      offset += E_4_int.encode(value.ticketsIntroduced, bytes.subarray(offset));
+      offset += E_4_int.encode(
+        value.preimagesIntroduced,
+        bytes.subarray(offset),
+      );
+      offset += E_4_int.encode(
+        value.totalOctetsIntroduced,
+        bytes.subarray(offset),
+      );
+      offset += E_4_int.encode(value.guaranteedReports, bytes.subarray(offset));
+      offset += E_4_int.encode(
+        value.availabilityAssurances,
+        bytes.subarray(offset),
+      );
+      return offset;
+    },
+    decode(bytes) {
+      const blocksProduced = E_4_int.decode(bytes);
+      const ticketsIntroduced = E_4_int.decode(bytes.subarray(4));
+      const preimagesIntroduced = E_4_int.decode(bytes.subarray(8));
+      const totalOctetsIntroduced = E_4_int.decode(bytes.subarray(12));
+      const guaranteedReports = E_4_int.decode(bytes.subarray(16));
+      const availabilityAssurances = E_4_int.decode(bytes.subarray(20));
+
+      return {
+        value: {
+          blocksProduced: blocksProduced.value,
+          ticketsIntroduced: ticketsIntroduced.value,
+          preimagesIntroduced: preimagesIntroduced.value,
+          totalOctetsIntroduced: totalOctetsIntroduced.value,
+          guaranteedReports: guaranteedReports.value,
+          availabilityAssurances: availabilityAssurances.value,
+        },
+        readBytes: 24,
+      };
+    },
+    encodedSize() {
+      return 0;
+    },
+  };
+
+  // 13
+  toRet.set(
+    C_fn(13),
+    encodeWithCodec(
+      createSequenceCodec(
+        2,
+        createSequenceCodec(NUMBER_OF_VALIDATORS, svscodec),
+      ),
+      state.validatorStatistics,
+    ),
+  );
+
+  // 14
+  toRet.set(
+    C_fn(14),
+    encodeWithCodec(
+      createSequenceCodec(
+        EPOCH_LENGTH,
+        createArrayLengthDiscriminator<{
+          workReport: WorkReport;
+          dependencies: Set<WorkPackageHash>;
+        }>({
+          encode(value, bytes) {
+            let offset = 0;
+            offset += WorkReportCodec.encode(value.workReport, bytes);
+            offset += createArrayLengthDiscriminator(HashCodec).encode(
+              [...value.dependencies].sort((a, b) => (a - b < 0 ? -1 : 1)),
+              bytes.subarray(offset),
+            );
+            return offset;
+          },
+          decode(bytes) {
+            const wr = WorkReportCodec.decode(bytes);
+            const deps = createArrayLengthDiscriminator(HashCodec).decode(
+              bytes.subarray(wr.readBytes),
+            );
+            return {
+              value: {
+                workReport: wr.value,
+                dependencies: new Set(deps.value as WorkPackageHash[]),
+              },
+              readBytes: wr.readBytes + deps.readBytes,
+            };
+          },
+          encodedSize(value) {
+            return (
+              WorkReportCodec.encodedSize(value.workReport) +
+              createArrayLengthDiscriminator(HashCodec).encodedSize([
+                ...value.dependencies,
+              ])
+            );
+          },
+        }),
+      ),
+      state.accumulationQueue,
+    ),
+  );
+
+  // 15 - accumulationHistory
+  toRet.set(
+    C_fn(15),
+    encodeWithCodec(
+      createSequenceCodec(
+        EPOCH_LENGTH,
+        buildGenericKeyValueCodec(HashCodec, HashCodec, (a, b) =>
+          a - b < 0 ? -1 : 1,
+        ),
+      ),
+      state.accumulationHistory,
+    ),
+  );
+
+  // TODO: delta
+};

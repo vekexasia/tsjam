@@ -82,6 +82,19 @@ export function buildKeyValueCodec<K extends Hash, V>(
   );
 }
 
+/**
+ * builds a generic dictionaty codec by providing all items
+ */
+export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
+  keyCodec: JamCodec<K>,
+  valueCodec: JamCodec<V>,
+  keySorter: (a: K, b: K) => number,
+): JamCodec<X> {
+  return new LengthDiscriminator(
+    new KeyValue(keyCodec, valueCodec, keySorter),
+  ) as unknown as JamCodec<X>;
+}
+
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;

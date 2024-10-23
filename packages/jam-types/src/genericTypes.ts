@@ -76,7 +76,7 @@ export type UpToSeq<
   T,
   L extends number,
   Tag extends string = `UpToSeq${L}`,
-> = Tagged<T[], Tag, { maxLength: L }>;
+> = Tagged<T[], Tag | `UpToSeq${L}`, { maxLength: L }>;
 /**
  * Defines type of a sequnce having exactly L elements
  */
@@ -84,20 +84,24 @@ export type SeqOfLength<
   T,
   L extends number,
   Tag extends string = `Seq${L}`,
-> = Tagged<T[], Tag, { length: L }>;
+> = Tagged<T[], Tag | `Seq${L}`, { length: L }>;
 
 export type MinSeqLength<
   T,
   L extends number,
   Tag extends string = `UpToSeq${L}`,
-> = Tagged<T[], Tag, { minLength: L }>;
+> = Tagged<T[], Tag | `UpToSeq${L}`, { minLength: L }>;
 
 export type BoundedSeq<
   T,
   Min extends number,
   Max extends number,
   Tag extends string = `BoundedSeq${Min}-${Max}`,
-> = Tagged<T[], Tag, { minLength: Min; maxLength: Max }>;
+> = Tagged<
+  T[],
+  Tag | `BoundedSeq${Min}-${Max}`,
+  { minLength: Min; maxLength: Max }
+>;
 
 export type CoreIndex = Tagged<number, "CoreIndex", { maxValue: typeof CORES }>;
 export type ValidatorIndex = Tagged<

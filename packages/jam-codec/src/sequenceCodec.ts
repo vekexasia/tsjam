@@ -2,10 +2,14 @@ import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import { SeqOfLength } from "@tsjam/types";
 
-export const createSequenceCodec = <T, K extends number>(
-  howMany: number,
+export const createSequenceCodec = <
+  T,
+  K extends number,
+  X extends SeqOfLength<T, K>,
+>(
+  howMany: K,
   codec: JamCodec<T>,
-): JamCodec<SeqOfLength<T, K>> => {
+): JamCodec<X> => {
   return {
     encode(value: T[], bytes: Uint8Array): number {
       assert(
@@ -26,7 +30,7 @@ export const createSequenceCodec = <T, K extends number>(
         values.push(decoded.value);
         offset += decoded.readBytes;
       }
-      return { value: values as SeqOfLength<T, K>, readBytes: offset };
+      return { value: values as X, readBytes: offset };
     },
     encodedSize: (value) => {
       return value.reduce((acc, item) => acc + codec.encodedSize(item), 0);

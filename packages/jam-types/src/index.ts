@@ -3,6 +3,8 @@ export * from "./header.js";
 export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
 export * from "./STF.js";
+export * from "./State.js";
+
 export * from "./extrinsics/assurances.js";
 export * from "./extrinsics/disputes.js";
 export * from "./extrinsics/guarantees.js";
