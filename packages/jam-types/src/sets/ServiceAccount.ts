@@ -4,6 +4,10 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
  * (89) in the graypaper
+ *  NOTE: there are some `virtual` elements such as
+ * `i` - ∈ N232
+ * `l` - ∈ N264
+ * `t` - balance threshold  computed in `serviceAccountGasThreshold`
  */
 export interface ServiceAccount {
   /**
@@ -41,9 +45,4 @@ export interface ServiceAccount {
    * `m` - minimum gas for the on_initialize method
    */
   minGasOnTransfer: bigint;
-
-  // NOTE: there are some `virtual` elements such as
-  // `i` - ∈ N232
-  // `l` - ∈ N264
-  // `t` - balance threshold  computed in `serviceAccountGasThreshold`
 }
