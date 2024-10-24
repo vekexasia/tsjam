@@ -7,13 +7,14 @@ import {
   AuthorizerQueueCodec,
   BandersnatchCodec,
   BandersnatchRingRootCodec,
-  E,
   E_1,
   E_4,
   E_4_int,
   E_8,
+  E_M,
   Ed25519PubkeyCodec,
   HashCodec,
+  IdentityCodec,
   JamCodec,
   Optional,
   TicketIdentifierCodec,
@@ -25,20 +26,23 @@ import {
 } from "@tsjam/codec";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  AccumulationQueue,
   Hash,
   JamState,
-  RHO,
+  MerkeTreeRoot,
+  RecentHistoryItem,
   ServiceIndex,
   SingleValidatorStatistics,
   Tau,
   WorkPackageHash,
   WorkReport,
-  u64,
 } from "@tsjam/types";
-import { bytesToBigInt } from "@tsjam/utils";
+import {
+  bigintToBytes,
+  bytesToBigInt,
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
-import { b } from "vitest/dist/suite-a18diDsI.js";
 /**
  * (314) in graypaper
  */
@@ -71,13 +75,78 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   return bytesToBigInt(new Uint8Array([1, ...new Array(31).fill(0), i]));
 };
 
+const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
+  wpCodec: JamCodec<WorkPackageHash[]>;
+} = {
+  wpCodec: createArrayLengthDiscriminator(HashCodec) as unknown as JamCodec<
+    WorkPackageHash[]
+  >,
+
+  encode(value, bytes) {
+    let offset = 0;
+    offset += HashCodec.encode(value.headerHash, bytes);
+    offset += E_M.encode(value.accumulationResultMMR, bytes.subarray(offset));
+    offset += HashCodec.encode(value.stateRoot, bytes.subarray(offset));
+    offset += this.wpCodec.encode(
+      value.reportedPackages,
+      bytes.subarray(offset),
+    );
+    return offset;
+  },
+  decode(bytes) {
+    const headerHash = HashCodec.decode(bytes);
+    const accumulationResultMMR = E_M.decode(
+      bytes.subarray(headerHash.readBytes),
+    );
+    const stateRoot = HashCodec.decode(
+      bytes.subarray(headerHash.readBytes + accumulationResultMMR.readBytes),
+    );
+    const reportedPackages = this.wpCodec.decode(
+      bytes.subarray(
+        headerHash.readBytes +
+          accumulationResultMMR.readBytes +
+          stateRoot.readBytes,
+      ),
+    );
+    return {
+      value: {
+        headerHash: headerHash.value,
+        accumulationResultMMR: accumulationResultMMR.value,
+        stateRoot: stateRoot.value as MerkeTreeRoot,
+        reportedPackages:
+          reportedPackages.value as unknown as RecentHistoryItem["reportedPackages"],
+      },
+      readBytes:
+        headerHash.readBytes +
+        accumulationResultMMR.readBytes +
+        stateRoot.readBytes +
+        reportedPackages.readBytes,
+    };
+  },
+  encodedSize(value) {
+    return (
+      HashCodec.encodedSize(value.headerHash) +
+      E_M.encodedSize(value.accumulationResultMMR) +
+      HashCodec.encodedSize(value.stateRoot) +
+      this.wpCodec.encodedSize(value.reportedPackages)
+    );
+  },
+};
+
 export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
 
   toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec, state.authPool));
   toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec, state.authQueue));
+
   // β - recentHistory
-  // TODO:
+  toRet.set(
+    C_fn(3),
+    encodeWithCodec(
+      createArrayLengthDiscriminator(singleHistoryItemCodec),
+      state.recentHistory,
+    ),
+  );
 
   const gamma_sCodec = createSequenceCodec(
     EPOCH_LENGTH,
@@ -331,5 +400,51 @@ export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
     ),
   );
 
-  // TODO: delta
+  for (const [serviceIndex, serviceAccount] of state.serviceAccounts) {
+    toRet.set(
+      C_fn(255, serviceIndex),
+      new Uint8Array([
+        ...encodeWithCodec(HashCodec, serviceAccount.codeHash),
+        ...encodeWithCodec(E_8, serviceAccount.balance),
+        ...encodeWithCodec(E_8, serviceAccount.minGasAccumulate),
+        ...encodeWithCodec(E_8, serviceAccount.minGasOnTransfer),
+        ...encodeWithCodec(E_8, serviceAccountTotalOctets(serviceAccount)),
+        ...encodeWithCodec(
+          E_4_int,
+          serviceAccountItemInStorage(serviceAccount),
+        ),
+      ]),
+    );
+
+    for (const [h, v] of serviceAccount.storage) {
+      toRet.set(
+        C_fn(serviceIndex, bigintToBytes(h, 32)),
+        encodeWithCodec(IdentityCodec, v),
+      );
+    }
+
+    for (const [h, p] of serviceAccount.preimage_p) {
+      toRet.set(
+        C_fn(serviceIndex, bigintToBytes(h, 32)),
+        encodeWithCodec(IdentityCodec, p),
+      );
+    }
+
+    for (const [h, lm] of serviceAccount.preimage_l) {
+      for (const [l, t] of lm) {
+        toRet.set(
+          C_fn(
+            serviceIndex,
+            new Uint8Array([
+              ...encodeWithCodec(E_4_int, l),
+              ...bigintToBytes(~h as Hash, 32).subarray(4),
+            ]),
+          ),
+          encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
+        );
+      }
+    }
+  }
+
+  return toRet;
 };
