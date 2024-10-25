@@ -2,6 +2,7 @@ import {
   BandersnatchKey,
   BandersnatchRingRoot,
   IDisputesState,
+  JamState,
   SafroleState,
   Tagged,
   TicketIdentifier,
@@ -17,36 +18,39 @@ export const validatorEntryMap = (entry: any) => {
     metadata: Buffer.from(entry.metadata.slice(2), "hex"),
   } as unknown as ValidatorData;
 };
-export const mapTestDataToSafroleState = (testData: any): SafroleState => {
+export const mapTestDataToState = (testData: any): JamState => {
   return {
-    eta: [
+    entropy: [
       toTagged(hextToBigInt(testData.eta[0])),
       toTagged(hextToBigInt(testData.eta[1])),
       toTagged(hextToBigInt(testData.eta[2])),
       toTagged(hextToBigInt(testData.eta[3])),
     ],
-    gamma_a: testData.gamma_a.map((entry: { id: string; attempt: 0 | 1 }) => {
-      return {
-        id: hextToBigInt(entry.id),
-        attempt: entry.attempt,
-      } as TicketIdentifier;
-    }),
-    gamma_k: testData.gamma_k.map(validatorEntryMap),
-    gamma_s: (() => {
-      if ("keys" in testData.gamma_s) {
-        return testData.gamma_s.keys.map((key: string) => hextToBigInt(key));
-      }
-      return testData.gamma_s;
-    })(),
-    gamma_z: hextToBigInt(testData.gamma_z) as Tagged<
-      BandersnatchRingRoot,
-      "gamma_z"
-    >,
+    safroleState: {
+      gamma_a: testData.gamma_a.map((entry: { id: string; attempt: 0 | 1 }) => {
+        return {
+          id: hextToBigInt(entry.id),
+          attempt: entry.attempt,
+        } as TicketIdentifier;
+      }),
+      gamma_k: testData.gamma_k.map(validatorEntryMap),
+      gamma_s: (() => {
+        if ("keys" in testData.gamma_s) {
+          return testData.gamma_s.keys.map((key: string) => hextToBigInt(key));
+        }
+        return testData.gamma_s;
+      })(),
+      gamma_z: hextToBigInt(testData.gamma_z) as Tagged<
+        BandersnatchRingRoot,
+        "gamma_z"
+      >,
+    },
     iota: testData.iota.map(validatorEntryMap),
     kappa: testData.kappa.map(validatorEntryMap),
     lambda: testData.lambda.map(validatorEntryMap),
     tau: testData.tau,
-  };
+    // NOTE: there are other elements not being used for test
+  } as JamState;
 };
 
 const validatorEntryHexMap = (entry: ValidatorData) => {
@@ -57,32 +61,35 @@ const validatorEntryHexMap = (entry: ValidatorData) => {
     metadata: `0x${Buffer.from(entry.metadata).toString("hex")}`,
   };
 };
-export const safroleStateToTestData = (state: SafroleState) => {
+
+export const stateToTestData = (state: JamState) => {
   return {
-    eta: state.eta.map((entry) => `0x${entry.toString(16).padStart(64, "0")}`),
-    gamma_a: state.gamma_a.map((entry) => ({
+    eta: state.entropy.map(
+      (entry) => `0x${entry.toString(16).padStart(64, "0")}`,
+    ),
+    gamma_a: state.safroleState.gamma_a.map((entry) => ({
       id: `0x${Buffer.from(bigintToBytes(entry.id, 32)).toString("hex")}`,
       attempt: entry.attempt,
     })),
-    gamma_k: state.gamma_k.map(validatorEntryHexMap),
+    gamma_k: state.safroleState.gamma_k.map(validatorEntryHexMap),
     gamma_s: (() => {
-      if (typeof state.gamma_s[0] === "bigint") {
+      if (typeof state.safroleState.gamma_s[0] === "bigint") {
         return {
-          keys: state.gamma_s.map(
+          keys: state.safroleState.gamma_s.map(
             (key) =>
               `0x${Buffer.from(bigintToBytes(key as BandersnatchKey, 32)).toString("hex")}`,
           ),
         };
       } else {
         return {
-          tickets: state.gamma_s.map((ticket) => ({
+          tickets: state.safroleState.gamma_s.map((ticket) => ({
             id: `0x${Buffer.from(bigintToBytes((ticket as TicketIdentifier).id, 32)).toString("hex")}`,
             attempt: (ticket as TicketIdentifier).attempt,
           })),
         };
       }
     })(),
-    gamma_z: `0x${state.gamma_z.toString(16)}`,
+    gamma_z: `0x${state.safroleState.gamma_z.toString(16)}`,
     iota: state.iota.map(validatorEntryHexMap),
     kappa: state.kappa.map(validatorEntryHexMap),
     lambda: state.lambda.map(validatorEntryHexMap),

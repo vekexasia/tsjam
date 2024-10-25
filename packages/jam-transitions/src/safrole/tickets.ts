@@ -1,5 +1,6 @@
 import { bigintToBytes, newSTF, slotIndex } from "@tsjam/utils";
 import {
+  JamState,
   Posterior,
   SafroleState,
   Tau,
@@ -21,7 +22,7 @@ export const ticketExtrinsicToIdentifiersSTF = newSTF<
     p_tau: Posterior<Tau>;
     gamma_z: SafroleState["gamma_z"];
     gamma_a: SafroleState["gamma_a"];
-    p_eta: Posterior<SafroleState["eta"]>;
+    p_entropy: Posterior<JamState["entropy"]>;
   },
   TicketIdentifier[]
 >({
@@ -56,7 +57,7 @@ export const ticketExtrinsicToIdentifiersSTF = newSTF<
           input.gamma_z,
           new Uint8Array([
             ...JAM_TICKET_SEAL,
-            ...bigintToBytes(input.p_eta[2], 32),
+            ...bigintToBytes(input.p_entropy[2], 32),
             ext.entryIndex,
           ]),
         ),

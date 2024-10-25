@@ -1,4 +1,4 @@
-import { SafroleState, SignedJamHeader } from "@tsjam/types";
+import { JamState, SignedJamHeader } from "@tsjam/types";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
 import assert from "node:assert";
@@ -12,22 +12,22 @@ import { bigintToBytes, getBlockAuthorKey, isFallbackMode } from "@tsjam/utils";
 
 export const verifySeal = (
   header: SignedJamHeader,
-  state: SafroleState,
+  state: JamState,
 ): boolean => {
   const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
   const blockAuthorKey = getBlockAuthorKey(header, state);
-  if (isFallbackMode(state.gamma_s)) {
+  if (isFallbackMode(state.safroleState.gamma_s)) {
     return Bandersnatch.verifySignature(
       header.blockSeal,
       blockAuthorKey,
       encodedHeader, // message
       new Uint8Array([
         ...JAM_FALLBACK_SEAL,
-        ...bigintToBytes(state.eta[3], 32),
+        ...bigintToBytes(state.entropy[3], 32),
       ]), // context
     );
   } else {
-    const i = state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+    const i = state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
     assert(
       i.id === Bandersnatch.vrfOutputSignature(header.blockSeal),
@@ -40,7 +40,7 @@ export const verifySeal = (
       encodedHeader, // message,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
-        ...bigintToBytes(state.eta[3], 32),
+        ...bigintToBytes(state.entropy[3], 32),
         i.attempt, // i_r
       ]), // context
     );
@@ -52,7 +52,7 @@ export const verifySeal = (
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
-  state: SafroleState,
+  state: JamState,
 ): boolean => {
   const blockAuthorKey = getBlockAuthorKey(header, state);
   return Bandersnatch.verifySignature(

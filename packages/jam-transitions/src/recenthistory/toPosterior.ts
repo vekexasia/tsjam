@@ -14,16 +14,22 @@ import { bigintToExistingBytes, newSTF } from "@tsjam/utils";
 import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
 export const calculateAccumulateRoot = (
-  input: Array<{ serviceIndex: ServiceIndex; accummulationResult: Hash }>,
+  beefyCommitment: Set<{
+    serviceIndex: ServiceIndex;
+    accumulationResult: Hash;
+  }>,
 ): MerkeTreeRoot => {
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(
-    input.map((entry) => {
-      const b = new Uint8Array(32 + 4);
-      E_4.encode(BigInt(entry.serviceIndex), b);
-      bigintToExistingBytes(entry.accummulationResult, b.subarray(4));
-      return b;
-    }),
+    [...beefyCommitment.values()]
+      // sorting is set in (83)
+      .sort((a, b) => a.serviceIndex - b.serviceIndex)
+      .map((entry) => {
+        const b = new Uint8Array(32 + 4);
+        E_4.encode(BigInt(entry.serviceIndex), b);
+        bigintToExistingBytes(entry.accumulationResult, b.subarray(4));
+        return b;
+      }),
     Hashing.keccak256,
   );
   return r;

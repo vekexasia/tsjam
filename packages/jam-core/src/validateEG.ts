@@ -5,8 +5,8 @@ import {
   GuarantorsAssignment,
   Hash,
   IDisputesState,
+  JamState,
   Posterior,
-  SafroleState,
   Tau,
   Validated,
   u32,
@@ -26,10 +26,10 @@ import { PHI_FN } from "@tsjam/transitions";
 export const assertEGValid = (
   extrinsic: EG_Extrinsic,
   deps: {
-    p_eta: Posterior<SafroleState["eta"]>;
-    kappa: SafroleState["kappa"];
-    p_kappa: Posterior<SafroleState["kappa"]>;
-    p_lambda: Posterior<SafroleState["lambda"]>;
+    p_eta: Posterior<JamState["entropy"]>;
+    kappa: JamState["kappa"];
+    p_kappa: Posterior<JamState["kappa"]>;
+    p_lambda: Posterior<JamState["lambda"]>;
     p_tau: Posterior<Tau>;
     p_psi_o: Posterior<IDisputesState["psi_o"]>;
   },
@@ -140,7 +140,7 @@ const G_fn = (input: {
   entropy: Hash;
   tauOffset: u32;
   p_tau: Posterior<Tau>;
-  validatorKeys: Posterior<SafroleState["kappa"] | SafroleState["lambda"]>;
+  validatorKeys: Posterior<JamState["kappa"] | JamState["lambda"]>;
   p_psi_o: Posterior<IDisputesState["psi_o"]>;
 }) => {
   // R(c,n) = [(x + n) mod CORES | x E c]
@@ -172,10 +172,10 @@ const G_fn = (input: {
  * (135) in the graypaper
  */
 export const G_STAR_fn = (input: {
-  p_eta2: Posterior<SafroleState["eta"][2]>;
-  p_eta3: Posterior<SafroleState["eta"][3]>;
-  p_kappa: Posterior<SafroleState["kappa"]>;
-  p_lambda: Posterior<SafroleState["lambda"]>;
+  p_eta2: Posterior<JamState["entropy"][2]>;
+  p_eta3: Posterior<JamState["entropy"][3]>;
+  p_kappa: Posterior<JamState["kappa"]>;
+  p_lambda: Posterior<JamState["lambda"]>;
   p_psi_o: Posterior<IDisputesState["psi_o"]>;
   p_tau: Posterior<Tau>;
 }) => {

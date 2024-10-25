@@ -1,5 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import { BigIntBytes} from "@tsjam/types";
+import { BigIntBytes } from "@tsjam/types";
 
 /**
  * OptCodec is a codec that allows for optional values

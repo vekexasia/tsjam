@@ -1,4 +1,4 @@
-import { newSTF } from "@tsjam/utils";
+import { newSTF, toPosterior } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,
@@ -23,11 +23,15 @@ export const accumulationQueueToPosterior = newSTF<
   for (let i = 0; i < EPOCH_LENGTH; i++) {
     const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
     if (i === 0) {
-      toRet[index] = E_Fn(input.w_q, input.p_accHistory[EPOCH_LENGTH - 1]);
+      toRet[index] = toPosterior(
+        E_Fn(input.w_q, input.p_accHistory[EPOCH_LENGTH - 1]),
+      );
     } else if (i < input.p_tau - input.tau) {
-      toRet[index] = [];
+      toRet[index] = toPosterior([]);
     } else {
-      toRet[index] = E_Fn(toRet[index], input.p_accHistory[EPOCH_LENGTH - 1]);
+      toRet[index] = toPosterior(
+        E_Fn(toRet[index], input.p_accHistory[EPOCH_LENGTH - 1]),
+      );
     }
   }
   return toRet;

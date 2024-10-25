@@ -3,8 +3,9 @@ import {
   DisputeExtrinsic,
   Hash,
   IDisputesState,
+  JamState,
   Posterior,
-  SafroleState,
+  Tau,
 } from "@tsjam/types";
 import {
   JAM_GUARANTEE,
@@ -21,16 +22,16 @@ import assert from "node:assert";
 export const disputesSTF = newSTF<
   IDisputesState,
   {
-    kappa: SafroleState["kappa"];
-    lambda: SafroleState["lambda"];
+    kappa: JamState["kappa"];
+    lambda: JamState["lambda"];
     extrinsic: DisputeExtrinsic;
-    curTau: SafroleState["tau"];
+    curTau: Tau;
   }
 >({
   apply(
     input: {
-      kappa: SafroleState["kappa"];
-      lambda: SafroleState["lambda"];
+      kappa: JamState["kappa"];
+      lambda: JamState["lambda"];
       extrinsic: DisputeExtrinsic;
     },
     curState: IDisputesState,

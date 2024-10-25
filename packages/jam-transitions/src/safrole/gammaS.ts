@@ -1,6 +1,8 @@
 import {
   BandersnatchKey,
+  JamEntropy,
   JamHeader,
+  JamState,
   Posterior,
   SafroleState,
   SeqOfLength,
@@ -37,8 +39,8 @@ export const gamma_sSTF = newSTF<
     p_tau: Posterior<Tau>;
     gamma_a: SafroleState["gamma_a"];
     gamma_s: SafroleState["gamma_s"];
-    p_kappa: Posterior<SafroleState["kappa"]>;
-    p_eta: Posterior<SafroleState["eta"]>;
+    p_kappa: Posterior<JamState["kappa"]>;
+    p_eta: Posterior<JamEntropy>;
   }
 >((input) => {
   if (
@@ -95,7 +97,7 @@ if (import.meta.vitest) {
     });
     describe("fallback", () => {
       let header: JamHeader;
-      let posteriorKappa: Posterior<SafroleState["kappa"]>;
+      let posteriorKappa: Posterior<JamState["kappa"]>;
       let posteriorHeader: Posterior<JamHeader>;
       beforeEach(() => {
         state.gamma_a = toTagged(
@@ -108,8 +110,8 @@ if (import.meta.vitest) {
               banderSnatch: toTagged(BigInt(idx) as BandersnatchKey),
             });
           }),
-        ) as Posterior<SafroleState["kappa"]>;
-        posteriorHeader = toTagged(
+        ) as Posterior<JamState["kappa"]>;
+        posteriorHeader = toPosterior(
           mockHeader({ timeSlotIndex: EPOCH_LENGTH + LOTTERY_MAX_SLOT }),
         );
       });
@@ -122,7 +124,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
         );
@@ -138,7 +140,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
         );
@@ -154,7 +156,7 @@ if (import.meta.vitest) {
             gamma_a: state.gamma_a,
             gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<SafroleState["eta"]>,
+            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
         );
@@ -175,10 +177,8 @@ if (import.meta.vitest) {
                 .map((_, idx) => mockTicketIdentifier({ id: BigInt(idx) })),
             ),
             gamma_s: state.gamma_s,
-            p_kappa: toTagged([]) as unknown as Posterior<
-              SafroleState["kappa"]
-            >,
-            p_eta: [] as unknown as Posterior<SafroleState["eta"]>,
+            p_kappa: [] as unknown as Posterior<JamState["kappa"]>,
+            p_eta: [] as unknown as Posterior<JamEntropy>,
           },
           state.gamma_s,
         );

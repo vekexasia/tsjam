@@ -212,7 +212,7 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  Set<{ service: ServiceIndex; hash: Hash }>,
+  Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>,
 ] => {
   let sum = 0n;
   let i = 0;
@@ -244,7 +244,15 @@ export const outerAccumulation = (
     i + j,
     o_prime,
     t_star.concat(t),
-    new Set([...b_star.values(), ...b.values()]),
+    new Set([
+      ...[...b_star.values()].map((item) => {
+        return {
+          serviceIndex: item.service,
+          accumulationResult: item.hash,
+        };
+      }),
+      ...b.values(),
+    ]),
   ];
 };
 

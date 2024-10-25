@@ -4,9 +4,9 @@ import {
   DoubleDagger,
   EA_Extrinsic,
   JamHeader,
+  JamState,
   Posterior,
   RHO,
-  SafroleState,
 } from "@tsjam/types";
 import assert from "node:assert";
 import { Ed25519, Hashing } from "@tsjam/crypto";
@@ -22,7 +22,7 @@ export const RHO2DoubleDagger = newSTF<
   Dagger<RHO>,
   {
     ea: EA_Extrinsic;
-    p_kappa: Posterior<SafroleState["kappa"]>;
+    p_kappa: Posterior<JamState["kappa"]>;
     hp: JamHeader["previousHash"];
   },
   DoubleDagger<RHO>
@@ -78,7 +78,7 @@ export const RHO2DoubleDagger = newSTF<
   apply(
     input: {
       ea: EA_Extrinsic;
-      p_kappa: Posterior<SafroleState["kappa"]>;
+      p_kappa: Posterior<JamState["kappa"]>;
       hp: JamHeader["previousHash"];
     },
     curState: Dagger<RHO>,
@@ -92,7 +92,7 @@ export const RHO2DoubleDagger = newSTF<
         0,
       );
       if (availabilitySum <= (NUMBER_OF_VALIDATORS * 2) / 3) {
-        newState[i] = null;
+        newState[i] = undefined;
       }
     }
     return newState;

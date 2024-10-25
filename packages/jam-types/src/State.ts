@@ -1,5 +1,7 @@
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { ValidatorData } from "./ValidatorData";
+import { JamEntropy } from "./Entropy";
 import { Tau } from "./Tau";
-import { OpaqueHash } from "./genericTypes";
 import { PrivilegedServices } from "./pvm/PrivilegedServices";
 import { AccumulationHistory } from "./states/AccumulationHistory";
 import { AccumulationQueue } from "./states/AccumulationQueue";
@@ -11,6 +13,7 @@ import { RecentHistory } from "./states/RecentHistory";
 import { SafroleState } from "./states/SafroleState";
 import { ValidatorStatistics } from "./states/ValidatorStatistics";
 import { RHO } from "./states/rho";
+import { SeqOfLength } from "./genericTypes";
 
 /**
  * `σ`
@@ -32,6 +35,21 @@ export type JamState = {
   safroleState: SafroleState;
 
   /**
+   * `λ` Validator keys and metadata which were active in the prior epoch.
+   */
+  lambda: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "lambda">;
+
+  /**
+   * `κ` Validator keys and metadata which are active in the current epoch.
+   */
+  kappa: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
+
+  /**
+   * `ι` Validator keys and metadata which will be active in the next epoch.
+   */
+  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "iota">;
+
+  /**
    * `δ`
    */
   serviceAccounts: Delta;
@@ -39,7 +57,7 @@ export type JamState = {
   /**
    * `η`
    */
-  entropy: OpaqueHash;
+  entropy: JamEntropy;
 
   /**
    * `φ`

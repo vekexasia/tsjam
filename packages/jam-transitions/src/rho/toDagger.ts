@@ -27,11 +27,11 @@ export const RHO_2_Dagger = newSTF<RHO, Posterior<IDisputesState>, Dagger<RHO>>(
       const sets = new Set([...input.psi_b, ...input.psi_w]);
       const rho_dagger: RHO = toTagged(
         curState.map((a) => {
-          if (a === null) {
-            return null;
+          if (typeof a === "undefined") {
+            return undefined;
           }
           if (sets.has(a.workReport.workPackageSpecification.workPackageHash)) {
-            return null;
+            return undefined;
           }
           return a;
         }),

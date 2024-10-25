@@ -8,6 +8,7 @@ import {
   BandersnatchCodec,
   BandersnatchRingRootCodec,
   E_1,
+  E_1_int,
   E_4,
   E_4_int,
   E_8,
@@ -20,6 +21,7 @@ import {
   TicketIdentifierCodec,
   ValidatorDataCodec,
   WorkReportCodec,
+  bit,
   buildGenericKeyValueCodec,
   createArrayLengthDiscriminator,
   encodeWithCodec,
@@ -43,6 +45,93 @@ import {
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
+import assert from "node:assert";
+
+/**
+ * 318 merkelize state
+ * `Mσ`
+ */
+export const merkelizeState = (state: JamState): Hash => {
+  const stateMap = transformState(state);
+  return M_fn(
+    new Map(
+      [...stateMap.entries()].map(([k, v]) => {
+        return [bits(bigintToBytes(k, 32)), [k, v]];
+      }),
+    ),
+  );
+};
+
+const bits = (ar: Uint8Array): bit[] => {
+  const a = [...ar]
+    .map((a) => a.toString(2).padStart(8, "0").split("").map(parseInt))
+    .flat();
+  return a as bit[];
+};
+
+const bits_inv = (bits: bit[]): Uint8Array => {
+  assert(bits.length % 8 === 0);
+  const bytes = [];
+  for (let i = 0; i < bits.length / 8; i++) {
+    bytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8).join(""), 2);
+  }
+  return new Uint8Array(bytes);
+};
+
+const B_fn = (l: Hash, r: Hash): bit[] => {
+  const lb = bigintToBytes(l, 32);
+  const rb = bigintToBytes(r, 32);
+  return [0, ...bits(lb).slice(1), ...bits(rb)];
+};
+
+const L_fn = (k: Hash, v: Uint8Array): bit[] => {
+  if (v.length <= 32) {
+    return [
+      1,
+      0,
+      ...bits(encodeWithCodec(E_1_int, v.length)).slice(0, 5),
+      ...bits(bigintToBytes(k, 32)).slice(0, 247),
+      ...bits(v),
+      ...new Array(v.length - 32).fill(0),
+    ];
+  } else {
+    return [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      ...bits(bigintToBytes(k, 32)).slice(0, 247),
+      ...bits(Hashing.blake2bBuf(v)),
+    ];
+  }
+};
+
+const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
+  if (d.size === 0) {
+    return 0n as Hash;
+  } else if (d.size === 1) {
+    const [[k, v]] = d.values();
+    return Hashing.blake2b(bits_inv(L_fn(k, v)));
+  } else {
+    const l = new Map(
+      [...d.entries()]
+        .filter(([k]) => k[0] === 0)
+        .map(([k, v]) => [k.slice(1), v]),
+    );
+    const r = new Map(
+      [...d.entries()]
+        .filter(([k]) => k[0] === 1)
+        .map(([k, v]) => [k.slice(1), v]),
+    );
+    return Hashing.blake2b(bits_inv(B_fn(M_fn(l), M_fn(r))));
+  }
+};
+
 /**
  * (314) in graypaper
  */
@@ -133,7 +222,7 @@ const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
   },
 };
 
-export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
+const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
 
   toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec, state.authPool));
@@ -203,10 +292,10 @@ export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
   toRet.set(
     C_fn(6),
     new Uint8Array([
-      ...encodeWithCodec(HashCodec, state.safroleState.eta[0]),
-      ...encodeWithCodec(HashCodec, state.safroleState.eta[1]),
-      ...encodeWithCodec(HashCodec, state.safroleState.eta[2]),
-      ...encodeWithCodec(HashCodec, state.safroleState.eta[3]),
+      ...encodeWithCodec(HashCodec, state.entropy[0]),
+      ...encodeWithCodec(HashCodec, state.entropy[1]),
+      ...encodeWithCodec(HashCodec, state.entropy[2]),
+      ...encodeWithCodec(HashCodec, state.entropy[3]),
     ]),
   );
 
@@ -215,7 +304,7 @@ export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
     C_fn(7),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.safroleState.iota,
+      state.iota,
     ),
   );
 
@@ -224,7 +313,7 @@ export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
     C_fn(8),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.safroleState.kappa,
+      state.kappa,
     ),
   );
 
@@ -233,7 +322,7 @@ export const merkelizeState = (state: JamState): Map<Hash, Uint8Array> => {
     C_fn(9),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.safroleState.lambda,
+      state.lambda,
     ),
   );
 

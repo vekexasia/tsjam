@@ -1,13 +1,11 @@
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
-  Blake2bHash,
   SeqOfLength,
   Tagged,
   UpToSeq,
 } from "@/genericTypes";
 import { TicketIdentifier } from "@/sets/Ticket";
-import { Tau } from "@/Tau";
 import { ValidatorData } from "@/ValidatorData";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
@@ -15,7 +13,7 @@ import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
  * Denoted with gamma (y) in the Greek alphabet.
  * This is the basic state of the Safrole state machine.
  */
-export interface SafroleBasicState {
+export interface SafroleState {
   /**
    * epochs root, a Bandersnatch ring root composed with the one Bandersnatch key of each of the next
    * epoch’s validators, defined in gamma_k
@@ -45,27 +43,4 @@ export interface SafroleBasicState {
    * gamma_z (bandersnatch ring root)
    */
   gamma_k: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "gamma_k">;
-}
-
-/**
- *
- *
- */
-export interface SafroleState extends SafroleBasicState {
-  tau: Tau;
-  // entropy accumulator of randomness
-  // (65) in graypaper
-  eta: [_0: Blake2bHash, _1: Blake2bHash, _2: Blake2bHash, _3: Blake2bHash];
-  /**
-   * `λ` Validator keys and metadata which were active in the prior epoch.
-   */
-  lambda: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "lambda">;
-  /**
-   * `κ` Validator keys and metadata which are active in the current epoch.
-   */
-  kappa: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
-  /**
-   * `ι` Validator keys and metadata which will be active in the next epoch.
-   */
-  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "iota">;
 }

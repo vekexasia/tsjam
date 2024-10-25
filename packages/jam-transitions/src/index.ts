@@ -1,3 +1,4 @@
+export * from "./keys.js";
 export * from "./AuthorizerPool.js";
 export * from "./delta/toDagger.js";
 export * from "./delta/toPosterior.js";
@@ -9,7 +10,7 @@ export * from "./rho/index.js";
 
 export * from "./safrole/eta.js";
 export * from "./safrole/gammaA.js";
-export * from "./safrole/keys.js";
+export * from "./safrole/gammaS.js";
 export * from "./safrole/stateUpdater.js";
 export * from "./safrole/tickets.js";
 

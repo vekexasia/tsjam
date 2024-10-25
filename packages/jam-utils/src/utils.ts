@@ -2,6 +2,7 @@ import {
   BandersnatchKey,
   Dagger,
   DoubleDagger,
+  JamState,
   Posterior,
   SeqOfLength,
   Tagged,
@@ -21,14 +22,14 @@ export const toTagged = <K, Tag extends PropertyKey, Metadata>(
  * converts any value to Dagger<Value>
  */
 export const toDagger = <T>(value: T): Dagger<T> => {
-  return toTagged(value);
+  return value as Dagger<T>;
 };
 
 /**
  * converts any value to DoubleDagger<Value>
  */
 export const toDoubleDagger = <T>(value: Dagger<T>): DoubleDagger<T> => {
-  return toTagged(value);
+  return value as DoubleDagger<T>;
 };
 
 /**
@@ -37,7 +38,7 @@ export const toDoubleDagger = <T>(value: Dagger<T>): DoubleDagger<T> => {
 export const toPosterior = <T>(
   value: Dagger<T> | DoubleDagger<T> | T,
 ): Posterior<T> => {
-  return toTagged(value);
+  return value as Posterior<T>;
 };
 
 /**
@@ -57,9 +58,9 @@ export const isFallbackMode = (
  * @param header - the header of the blockj
  * @param state - the state of the safrole state machine
  */
-export const getBlockAuthorKey = (header: JamHeader, state: SafroleState) => {
-  if (isFallbackMode(state.gamma_s)) {
-    return state.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+export const getBlockAuthorKey = (header: JamHeader, state: JamState) => {
+  if (isFallbackMode(state.safroleState.gamma_s)) {
+    return state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
   } else {
     const k = state.kappa[header.blockAuthorKeyIndex];
     return k.banderSnatch;

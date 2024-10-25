@@ -4,6 +4,7 @@ import {
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModRegister,
+  RegularPVMExitReason,
 } from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 
@@ -14,7 +15,7 @@ export type W8 = PVMSingleModRegister<8>;
 
 export type XMod = PVMSingleModObject<{ x: PVMResultContext }>;
 export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
-
+export type HaltPvm = { type: "halt" };
 /**
  * applies modifications from fns output to compute new ctx and out
  * @param ctx - the current context
@@ -26,20 +27,28 @@ export const applyMods = <T extends object>(
   out: T,
   mods: Array<
     | PVMSingleModRegister<number>
+    | HaltPvm
     | XMod
     | YMod
     | PVMSingleModMemory
     | PVMSingleModObject<T>
   >,
-): { ctx: PVMProgramExecutionContextBase; out: T } => {
+): {
+  ctx: PVMProgramExecutionContextBase;
+  out: T;
+  exitReason?: RegularPVMExitReason;
+} => {
   const newCtx = {
     ...ctx,
     registers: [
       ...ctx.registers,
     ] as PVMProgramExecutionContextBase["registers"],
   };
+  let haltPVM = false;
   for (const mod of mods) {
-    if (mod.type === "register") {
+    if (mod.type === "halt") {
+      haltPVM = true;
+    } else if (mod.type === "register") {
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
       newCtx.memory = (newCtx.memory as PVMMemory).clone();
@@ -51,5 +60,9 @@ export const applyMods = <T extends object>(
       }
     }
   }
-  return { ctx: newCtx, out };
+  return {
+    ctx: newCtx,
+    out,
+    exitReason: haltPVM ? RegularPVMExitReason.Halt : undefined,
+  };
 };

@@ -30,7 +30,7 @@ import {
   serviceAccountGasThreshold,
   toTagged,
 } from "@tsjam/utils";
-import { W7, W8, XMod, YMod } from "@/functions/utils.js";
+import { HaltPvm, W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 
@@ -356,75 +356,79 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  * `ΩQ`
  * quit-service host call
  */
-export const omega_q = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
-  fn: {
-    opCode: 12 as u8,
-    identifier: "quit",
-    gasCost: 10n,
-    execute(context, x) {
-      const [d, o] = context.registers.slice(7);
-      const x_bold_s = x.u.delta.get(x.service)!;
-      const a =
-        x_bold_s.balance -
-        serviceAccountGasThreshold(x_bold_s) +
-        SERVICE_MIN_BALANCE;
-      const g = context.gas;
-      const bold_d = new Map<ServiceIndex, ServiceAccount>([
-        ...x.delta.entries(),
-        ...x.u.delta.entries(),
-      ]);
-      if (d === 2 ** 32 - 1) {
-        // TODO: halt machine
+export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
+  {
+    fn: {
+      opCode: 12 as u8,
+      identifier: "quit",
+      gasCost: 10n,
+      execute(context, x) {
+        const [d, o] = context.registers.slice(7);
+        const x_bold_s = x.u.delta.get(x.service)!;
+        const a =
+          x_bold_s.balance -
+          serviceAccountGasThreshold(x_bold_s) +
+          SERVICE_MIN_BALANCE;
+        const g = context.gas;
+        const bold_d = new Map<ServiceIndex, ServiceAccount>([
+          ...x.delta.entries(),
+          ...x.u.delta.entries(),
+        ]);
+        if (d === 2 ** 32 - 1) {
+          const newDelta = new Map(x.u.delta);
+          newDelta.delete(x.service);
+          return [
+            { type: "halt" }, // signal pvm halt
+            IxMod.w7(HostCallResult.OK),
+            IxMod.obj({
+              x: {
+                ...x,
+                u: {
+                  ...x.u,
+                  delta: newDelta,
+                },
+              },
+            }),
+          ];
+        }
+
+        if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
+          return [IxMod.w7(HostCallResult.OOB)];
+        }
+        if (!bold_d.has(d as ServiceIndex)) {
+          return [IxMod.w7(HostCallResult.WHO)];
+        }
+        if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
+          return [IxMod.w7(HostCallResult.LOW)];
+        }
+
         const newDelta = new Map(x.u.delta);
         newDelta.delete(x.service);
         return [
+          { type: "halt" }, // signal pvm halt
           IxMod.w7(HostCallResult.OK),
           IxMod.obj({
             x: {
               ...x,
-              u: {
-                ...x.u,
-                delta: newDelta,
-              },
+              u: { ...x.u, delta: newDelta },
+              transfer: x.transfer.slice().concat([
+                {
+                  sender: x.service,
+                  destination: d as ServiceIndex,
+                  amount: toTagged(a),
+                  gasLimit: toTagged(g),
+                  memo: toTagged(
+                    context.memory.getBytes(o, TRANSFER_MEMO_SIZE),
+                  ),
+                },
+              ]),
             },
           }),
         ];
-      }
-
-      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
-      if (!bold_d.has(d as ServiceIndex)) {
-        return [IxMod.w7(HostCallResult.WHO)];
-      }
-      if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
-        return [IxMod.w7(HostCallResult.LOW)];
-      }
-
-      // TODO: signal pvm halt?
-      const newDelta = new Map(x.u.delta);
-      newDelta.delete(x.service);
-      return [
-        IxMod.w7(HostCallResult.OK),
-        IxMod.obj({
-          x: {
-            ...x,
-            u: { ...x.u, delta: newDelta },
-            transfer: x.transfer.slice().concat([
-              {
-                sender: x.service,
-                destination: d as ServiceIndex,
-                amount: toTagged(a),
-                gasLimit: toTagged(g),
-                memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
-              },
-            ]),
-          },
-        }),
-      ];
+      },
     },
   },
-});
+);
 
 /**
  * `ΩS`

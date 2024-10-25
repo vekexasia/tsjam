@@ -12,6 +12,7 @@ import {
   Posterior,
   RegularPVMExitReason,
   u32,
+  u64,
 } from "@tsjam/types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 import { IxMod } from "@/instructions/utils";
@@ -120,7 +121,7 @@ export const processIxResult = (
       !context.memory.canWrite(x.data.from, x.data.data.length),
   );
   if (invalidMemWrite) {
-    p_context.gas = toTagged(context.gas - trap.gasCost - gasCost);
+    p_context.gas = toPosterior((context.gas - trap.gasCost - gasCost) as u64);
     return {
       exitReason: RegularPVMExitReason.Panic,
       p_context,
@@ -132,7 +133,7 @@ export const processIxResult = (
     result
       .filter((x): x is PVMSingleModPointer => x.type === "ip")
       .forEach((x) => {
-        p_context.instructionPointer = x.data;
+        p_context.instructionPointer = toPosterior(x.data);
       });
   } else if (typeof exitReason === "undefined") {
     // if the instruction did not jump to another instruction
@@ -156,7 +157,7 @@ export const processIxResult = (
         p_context.memory.setBytes(x.data.from, x.data.data);
       });
   }
-  p_context.gas = toTagged(context.gas - gasCost);
+  p_context.gas = (context.gas - gasCost) as u64;
 
   return {
     exitReason,

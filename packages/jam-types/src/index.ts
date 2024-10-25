@@ -50,3 +50,4 @@ export * from "./pvm/RegisterIdentifier.js";
 
 export * from "./Tau.js";
 export * from "./garantors.js";
+export * from "./Entropy.js";

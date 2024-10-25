@@ -1,26 +1,4 @@
-import {
-  AccumulationHistory,
-  AccumulationQueue,
-  AuthorizerPool,
-  AuthorizerQueue,
-  AvailableWithPrereqWorkReports,
-  Delta,
-  DoubleDagger,
-  Hash,
-  IDisputesState,
-  JamBlock,
-  MerkeTreeRoot,
-  PrivilegedServices,
-  RHO,
-  RecentHistory,
-  SafroleState,
-  ServiceIndex,
-  Tagged,
-  Tau,
-  ValidatorStatistics,
-  WorkReport,
-  u64,
-} from "@tsjam/types";
+import { Delta, DoubleDagger, JamBlock, JamState, u64 } from "@tsjam/types";
 import {
   RHO2DoubleDagger,
   RHO_2_Dagger,
@@ -28,75 +6,137 @@ import {
   accumulationHistoryToPosterior,
   accumulationQueueToPosterior,
   authorizerPool_toPosterior,
+  calculateAccumulateRoot,
   deltaToDagger,
   deltaToPosterior,
   disputesSTF,
+  entropyRotationSTF,
+  eta0STF,
+  gamma_aSTF,
+  gamma_sSTF,
   recentHistoryToDagger,
   recentHistoryToPosterior,
+  rotateKeys,
   safroleToPosterior,
+  ticketExtrinsicToIdentifiersSTF,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import { toPosterior, toTagged } from "@tsjam/utils";
-import { Hashing } from "@tsjam/crypto";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { assertEGValid } from "@/validateEG.js";
-import { outerAccumulation } from "@tsjam/pvm";
+import {
+  accHistoryUnion,
+  accumulatableReports,
+  availableReports,
+  noPrereqAvailableReports,
+  outerAccumulation,
+  withPrereqAvailableReports,
+} from "@tsjam/pvm";
 
-let safroleState: SafroleState = null as unknown as SafroleState;
-let recentHistory: RecentHistory = null as unknown as RecentHistory;
-let rho: RHO = null as unknown as RHO;
-let disputesState: IDisputesState = null as unknown as IDisputesState;
-let delta: Delta = null as unknown as Delta;
-let validatorStatistics: ValidatorStatistics =
-  null as unknown as ValidatorStatistics;
-let authorizerQueue: AuthorizerQueue = null as unknown as AuthorizerQueue;
-let authorizerPool: AuthorizerPool = null as unknown as AuthorizerPool;
-let privilegedServices: PrivilegedServices =
-  null as unknown as PrivilegedServices;
-const accumulationHistory: AccumulationHistory =
-  null as unknown as AccumulationHistory;
-let accumulationQueue: AccumulationQueue = null as unknown as AccumulationQueue;
-export let beefyCommitment: Set<{ service: ServiceIndex; hash: Hash }> =
-  new Set();
-
-export const importBlock = (block: JamBlock, tau: Tau) => {
+/**
+ * TODO: this should be an STF
+ */
+export const importBlock = (block: JamBlock, curState: JamState): JamState => {
   const headerHash = Hashing.blake2b(
     encodeWithCodec(UnsignedHeaderCodec, block.header),
   );
-  const newSafroleState = safroleToPosterior.apply(
-    {
-      h_v: block.header.entropySignature,
-      p_tau: toPosterior(block.header.timeSlotIndex),
-      et: block.extrinsics.tickets,
-    },
-    safroleState,
+  const tauTransition = {
+    tau: curState.tau,
+    p_tau: toPosterior(block.header.timeSlotIndex),
+  };
+
+  if (tauTransition.tau >= tauTransition.p_tau) {
+    throw new Error("Invalid slot");
+  }
+
+  // TODO: make these 2 a single STF with proper inputs
+  const p_entropy = entropyRotationSTF.apply(tauTransition, curState.entropy);
+  p_entropy[0] = eta0STF.apply(
+    Bandersnatch.vrfOutputSignature(block.header.blockSeal),
+    curState.entropy[0],
   );
 
   const p_disputesState = disputesSTF.apply(
     {
-      kappa: safroleState.kappa,
-      lambda: safroleState.lambda,
+      kappa: curState.kappa,
+      lambda: curState.lambda,
       extrinsic: block.extrinsics.disputes,
-      curTau: safroleState.tau,
+      curTau: curState.tau,
     },
-    disputesState,
+    curState.disputes,
   );
+  const [p_lambda, p_kappa, p_gamma_k, p_gamma_z] = rotateKeys.apply(
+    {
+      p_psi_o: toPosterior(p_disputesState.psi_o),
+      iota: curState.iota,
+      ...tauTransition,
+    },
+    [
+      curState.lambda,
+      curState.kappa,
+      curState.safroleState.gamma_k,
+      curState.safroleState.gamma_z,
+    ],
+  );
+
+  const ticketIdentifiers = ticketExtrinsicToIdentifiersSTF.apply(
+    {
+      extrinsic: block.extrinsics.tickets,
+      p_tau: tauTransition.p_tau,
+      gamma_z: curState.safroleState.gamma_z,
+      gamma_a: curState.safroleState.gamma_a,
+      p_entropy,
+    },
+    null,
+  );
+
+  const p_gamma_s = gamma_sSTF.apply(
+    {
+      ...tauTransition,
+      gamma_a: curState.safroleState.gamma_a,
+      gamma_s: curState.safroleState.gamma_s,
+      p_kappa,
+      p_eta: p_entropy,
+    },
+    curState.safroleState.gamma_s,
+  );
+
+  const p_gamma_a = gamma_aSTF.apply(
+    {
+      ...tauTransition,
+      newIdentifiers: ticketIdentifiers,
+    },
+    curState.safroleState.gamma_a,
+  );
+
+  const p_safroleState = safroleToPosterior.apply(
+    {
+      p_gamma_a,
+      p_gamma_k,
+      p_gamma_s,
+      p_gamma_z,
+    },
+    curState.safroleState,
+  );
+
   // checks guarantees are valid
   assertEGValid(block.extrinsics.reportGuarantees, {
-    p_eta: toPosterior(newSafroleState.eta),
-    kappa: safroleState.kappa,
-    p_kappa: toPosterior(newSafroleState.kappa),
-    p_lambda: toPosterior(newSafroleState.lambda),
-    p_tau: toPosterior(newSafroleState.tau),
+    //TODO:rename to p_entropy
+    p_eta: p_entropy,
+    kappa: curState.kappa,
+    p_kappa,
+    p_lambda,
+    p_tau: tauTransition.p_tau,
     p_psi_o: toPosterior(p_disputesState.psi_o),
   });
 
-  const d_rho = RHO_2_Dagger.apply(p_disputesState, rho);
+  const d_rho = RHO_2_Dagger.apply(p_disputesState, curState.rho);
 
   const dd_rho = RHO2DoubleDagger.apply(
     {
       ea: block.extrinsics.assurances,
-      p_kappa: toPosterior(newSafroleState.kappa),
+      p_kappa,
       hp: block.header.previousHash,
     },
     d_rho,
@@ -105,8 +145,8 @@ export const importBlock = (block: JamBlock, tau: Tau) => {
   const p_rho = RHO_toPosterior.apply(
     {
       EG_Extrinsic: block.extrinsics.reportGuarantees,
-      kappa: safroleState.kappa,
-      p_tau: toPosterior(newSafroleState.tau),
+      kappa: curState.kappa,
+      p_tau: tauTransition.p_tau,
     },
     dd_rho,
   );
@@ -115,31 +155,40 @@ export const importBlock = (block: JamBlock, tau: Tau) => {
     {
       EG_Extrinsic: block.extrinsics.reportGuarantees,
       EP_Extrinsic: block.extrinsics.preimages,
-      p_tau: toPosterior(newSafroleState.tau),
+      p_tau: tauTransition.p_tau,
     },
-    delta,
+    curState.serviceAccounts,
   );
 
   /**
    * Integrate state to calculate several posterior state
    * as defined in (176) and (177)
    */
-  //TODO: w star and w_q
-  const w_q: AvailableWithPrereqWorkReports =
-    [] as unknown as AvailableWithPrereqWorkReports;
-  const w_star = [] as unknown as Tagged<WorkReport[], "W*">;
+  const w = availableReports(block.extrinsics.assurances, d_rho);
+  const w_mark = noPrereqAvailableReports(w);
+  const w_q = withPrereqAvailableReports(
+    w,
+    accHistoryUnion(curState.accumulationHistory),
+  );
+  const w_star = accumulatableReports(
+    w_mark,
+    w_q,
+    curState.accumulationQueue,
+    curState.accumulationHistory,
+    curState.tau,
+  );
 
   const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
     3n as u64,
     w_star,
     {
       delta: d_delta,
-      privServices: privilegedServices,
-      authQueue: authorizerQueue,
-      validatorKeys: safroleState.iota,
+      privServices: curState.privServices,
+      authQueue: curState.authQueue,
+      validatorKeys: curState.iota,
     },
-    privilegedServices.g,
-    tau,
+    curState.privServices.g,
+    curState.tau,
   );
 
   const p_privilegedServices = toPosterior(o.privServices);
@@ -158,34 +207,33 @@ export const importBlock = (block: JamBlock, tau: Tau) => {
     {
       nAccumulatedWork,
       w_star,
-      tau,
+      tau: curState.tau,
     },
-    accumulationHistory,
+    curState.accumulationHistory,
   );
 
   const p_accumulationQueue = accumulationQueueToPosterior.apply(
     {
       p_accHistory: p_accumulationHistory,
       p_tau: toPosterior(block.header.timeSlotIndex),
-      tau,
-
+      tau: curState.tau,
       w_q,
     },
-    accumulationQueue,
+    curState.accumulationQueue,
   );
 
   const d_recentHistory = recentHistoryToDagger.apply(
     {
       hr: block.header.priorStateRoot,
     },
-    recentHistory,
+    curState.recentHistory,
   );
 
   const p_recentHistory = recentHistoryToPosterior.apply(
     {
-      accumulateRoot: null as unknown as MerkeTreeRoot, // todo
+      accumulateRoot: calculateAccumulateRoot(C),
       headerHash: headerHash,
-      workPackageHashes: [], // todo
+      workPackageHashes: [], // todo:
     },
     d_recentHistory,
   );
@@ -193,33 +241,37 @@ export const importBlock = (block: JamBlock, tau: Tau) => {
   const p_validatorStatistics = validatorStatisticsToPosterior.apply(
     {
       block: block,
-      safrole: safroleState,
-      curTau: safroleState.tau,
+      safrole: curState.safroleState,
+      curTau: curState.tau,
     },
-    validatorStatistics,
+    curState.validatorStatistics,
   );
 
   const p_authorizerPool = authorizerPool_toPosterior.apply(
     {
       p_queue: p_authorizerQueue,
       eg: toTagged(block.extrinsics.reportGuarantees),
-      p_tau: toPosterior(newSafroleState.tau),
+      p_tau: tauTransition.p_tau,
     },
-    authorizerPool,
+    curState.authPool,
   );
 
-  newSafroleState.iota = p_iota as unknown as SafroleState["iota"];
-
-  accumulationQueue = p_accumulationQueue;
-  //todo assign
-  safroleState = newSafroleState;
-  disputesState = p_disputesState;
-  rho = p_rho;
-  delta = p_delta;
-  recentHistory = p_recentHistory;
-  validatorStatistics = p_validatorStatistics;
-  authorizerQueue = p_authorizerQueue;
-  authorizerPool = p_authorizerPool;
-  privilegedServices = p_privilegedServices;
-  beefyCommitment = C;
+  return {
+    entropy: p_entropy,
+    tau: tauTransition.p_tau,
+    iota: p_iota as unknown as JamState["iota"],
+    authPool: p_authorizerPool,
+    authQueue: p_authorizerQueue,
+    safroleState: p_safroleState,
+    validatorStatistics: p_validatorStatistics,
+    rho: p_rho,
+    serviceAccounts: p_delta,
+    recentHistory: p_recentHistory,
+    accumulationQueue: p_accumulationQueue,
+    accumulationHistory: p_accumulationHistory,
+    privServices: p_privilegedServices,
+    lambda: p_lambda,
+    kappa: p_kappa,
+    disputes: p_disputesState,
+  };
 };

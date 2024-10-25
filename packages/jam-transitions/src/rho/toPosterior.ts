@@ -1,9 +1,9 @@
 import {
   DoubleDagger,
   EG_Extrinsic,
+  JamState,
   Posterior,
   RHO,
-  SafroleState,
   Tau,
 } from "@tsjam/types";
 import assert from "node:assert";
@@ -15,7 +15,7 @@ export const RHO_toPosterior = newSTF<
   DoubleDagger<RHO>,
   {
     EG_Extrinsic: EG_Extrinsic;
-    kappa: SafroleState["kappa"];
+    kappa: JamState["kappa"];
     p_tau: Posterior<Tau>;
   },
   Posterior<RHO>
@@ -26,7 +26,7 @@ export const RHO_toPosterior = newSTF<
   apply(
     input: {
       EG_Extrinsic: EG_Extrinsic;
-      kappa: SafroleState["kappa"];
+      kappa: JamState["kappa"];
       p_tau: Posterior<Tau>;
     },
     curState: DoubleDagger<RHO>,

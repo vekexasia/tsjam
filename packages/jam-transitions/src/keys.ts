@@ -1,6 +1,7 @@
 import {
   BandersnatchKey,
   IDisputesState,
+  JamState,
   OpaqueHash,
   Posterior,
   SafroleState,
@@ -61,24 +62,21 @@ if (import.meta.vitest) {
   });
 }
 // 58 and 59 in the graypaper
-export const rotateLambdaSTF = newSTF<
-  SafroleState["lambda"],
-  SafroleState["kappa"]
->(
-  (kappa): Posterior<SafroleState["lambda"]> =>
-    [...kappa] as unknown as Posterior<SafroleState["lambda"]>,
+export const rotateLambdaSTF = newSTF<JamState["lambda"], JamState["kappa"]>(
+  (kappa): Posterior<JamState["lambda"]> =>
+    [...kappa] as unknown as Posterior<JamState["lambda"]>,
 );
 
 export const rotateKappaSTF = newSTF<
-  SafroleState["kappa"],
+  JamState["kappa"],
   SafroleState["gamma_k"]
 >(
-  (input): Posterior<SafroleState["kappa"]> =>
-    [...input] as unknown as Posterior<SafroleState["kappa"]>,
+  (input): Posterior<JamState["kappa"]> =>
+    [...input] as unknown as Posterior<JamState["kappa"]>,
 );
 export const rotateGammaKSTF = newSTF<
   SafroleState["gamma_k"],
-  { iota: SafroleState["iota"]; p_psi_o: Posterior<IDisputesState["psi_o"]> }
+  { iota: JamState["iota"]; p_psi_o: Posterior<IDisputesState["psi_o"]> }
 >(
   (input): Posterior<SafroleState["gamma_k"]> =>
     // we empty the validator keys which are in ψo
@@ -95,20 +93,20 @@ export const rotateGammaZSTF = newSTF<
 });
 export const rotateKeys = newSTF<
   [
-    SafroleState["lambda"],
-    SafroleState["kappa"],
+    JamState["lambda"],
+    JamState["kappa"],
     SafroleState["gamma_k"],
     SafroleState["gamma_z"],
   ],
   {
     p_psi_o: Posterior<IDisputesState["psi_o"]>;
-    iota: SafroleState["iota"];
+    iota: JamState["iota"];
     tau: Tau;
     p_tau: Posterior<Tau>;
   },
   [
-    Posterior<SafroleState["lambda"]>,
-    Posterior<SafroleState["kappa"]>,
+    Posterior<JamState["lambda"]>,
+    Posterior<JamState["kappa"]>,
     Posterior<SafroleState["gamma_k"]>,
     Posterior<SafroleState["gamma_z"]>,
   ]
@@ -131,7 +129,7 @@ export const rotateKeys = newSTF<
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;
   const { mockState, mockDisputesState, mockValidatorData } = await import(
-    "../../test/safroleMocks.js"
+    "../test/safroleMocks.js"
   );
 
   describe("rotateValidatorKeys", () => {
@@ -147,32 +145,30 @@ if (import.meta.vitest) {
       it("should assign yk to k'", () => {
         const state = mockState({
           gamma_k: [mockValidatorData({ ed25519: 1n })],
-          kappa: [mockValidatorData({ ed25519: 2n })],
         });
-        const r = rotateKappaSTF.apply(state.gamma_k, state.kappa);
+        const kappa = [mockValidatorData({ ed25519: 2n })] as JamState["kappa"];
+        const r = rotateKappaSTF.apply(state.gamma_k, kappa);
         expect(r).toEqual(state.gamma_k);
       });
       it("should assign k to lambda'", () => {
-        const state = mockState({
-          kappa: [mockValidatorData({ ed25519: 1n })],
-        });
-        const r = rotateLambdaSTF.apply(state.kappa, state.lambda);
+        const kappa = [mockValidatorData({ ed25519: 2n })] as JamState["kappa"];
+        const lambda = [] as ValidatorData[] as JamState["lambda"];
+        const r = rotateLambdaSTF.apply(kappa, lambda);
 
-        expect(r).toEqual(state.kappa);
+        expect(r).toEqual(kappa);
       });
       it("should assign iota minus disputes to gamma_k'", () => {
-        const state = mockState({
-          iota: [
-            mockValidatorData({ ed25519: 1n }),
-            mockValidatorData({ ed25519: 2n }),
-          ],
-        });
+        const state = mockState({});
+        const iota = [
+          mockValidatorData({ ed25519: 1n }),
+          mockValidatorData({ ed25519: 2n }),
+        ] as JamState["iota"];
         const p_disputes = mockDisputesState({
           psi_o: new Set([1n]) as unknown as IDisputesState["psi_o"],
         }) as unknown as Posterior<IDisputesState>;
         const r = rotateGammaKSTF.apply(
           {
-            iota: state.iota,
+            iota,
             p_psi_o: p_disputes.psi_o as unknown as Posterior<
               IDisputesState["psi_o"]
             >,
