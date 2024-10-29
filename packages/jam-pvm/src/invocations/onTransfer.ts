@@ -39,7 +39,8 @@ export const transferInvocation = (
     return bold_s;
   }
 
-  const code = new Uint8Array(); //TODO: get preimage from bold_s.codeHash
+  const code = bold_s.preimage_p.get(bold_s.codeHash);
+  assert(typeof code !== "undefined", "Code not found in preimage");
 
   const out = argumentInvocation(
     code,

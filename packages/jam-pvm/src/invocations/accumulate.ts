@@ -43,6 +43,7 @@ import {
 } from "@/functions/general.js";
 import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
+import assert from "assert";
 
 /**
  * Accumulate State Transition Function
@@ -68,8 +69,12 @@ export const accumulateInvocation = (
     o,
   );
 
+  const serviceAccount = pvmAccState.delta.get(s)!;
+  const code = serviceAccount.preimage_p.get(serviceAccount.codeHash);
+  assert(typeof code !== "undefined", "Code not found in preimage");
+
   const mres = argumentInvocation(
-    new Uint8Array(), // TODO: get preimage from dd_delta.get(s)!.codeHash as Uint8Array,
+    code,
     10 as u32, // instructionPointer
     gas,
     args,
