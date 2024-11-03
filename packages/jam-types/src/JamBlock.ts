@@ -7,27 +7,46 @@ import {
 } from "@/index";
 import { SignedJamHeader } from "@/header";
 
+/**
+ * The Jam Block
+ * @see (13 - 0.4.5)
+ */
 export interface JamBlock {
   header: SignedJamHeader;
   extrinsics: JamBlockExtrinsics;
 }
 
+/**
+ * `E` - the exstrinsics tuple in JamBlock
+ */
 export interface JamBlockExtrinsics {
-  // Et the maximum number of tickets in a block is
-  // K=16 and it is allowed to be submitted only if current slot is less than Y=500 ( aka lottery did not end yet)
-  // @see section 6.7
+
+  /**
+   * `Et` - Tickets, used for the mechanism which manages the selection of validators for the permissioning of block authoring.
+   */
   tickets: TicketExtrinsics;
+
+  /**
+   * `Ed` - votes by validators on dispute(s) arising between them presently taking place.
+   */
   disputes: DisputeExtrinsic;
+
+  /**
+   * `Ep` - Static data which is presently being requested to be available for workloads to be able to fetch on demand
+   */
   preimages: EP_Tuple[];
 
   /**
+   * `Ea`
    * Assurances by each validator concerning which of the input data of workloads they have
    * correctly received and are storing locally. This is
    * denoted `Ea`.
    * anchored on the parent and ordered by `AssuranceExtrinsic.validatorIndex`
    */
   assurances: EA_Extrinsic;
+
   /**
+   * `Eg`
    * Reports of newly completed workloads
    * whose accuracy is guaranteed by specific validators. This is denoted `EG`.
    */
