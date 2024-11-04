@@ -22,8 +22,9 @@ import {
 import { EPOCH_LENGTH } from "@tsjam/constants";
 
 /**
- * (58) Phi function
- * returns the validator keys which are not in ψo. nullify the validator keys which are in ψo
+ * Phi function
+ * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
+ * @see (59) - 0.4.5
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper
@@ -42,31 +43,21 @@ export const PHI_FN = <T extends ValidatorData[]>(
   }) as T;
 };
 
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("isFallbackMode", () => {
-    it("should return true if gamma_s is a series of E Bandersnatch keys", () => {
-      const gamma_s = [
-        1n as BandersnatchKey,
-        2n as BandersnatchKey,
-      ] as SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
-      expect(isFallbackMode(gamma_s)).toBe(true);
-    });
-    it("should return false if gamma_s is a series of E tickets", () => {
-      const gamma_s = [
-        { id: 32n as OpaqueHash, attempt: 0 },
-        { id: 32n as OpaqueHash, attempt: 1 },
-      ] as SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
-      expect(isFallbackMode(gamma_s)).toBe(false);
-    });
-  });
-}
-// 58 and 59 in the graypaper
+/**
+ * rotate λ
+ * it uses kappa
+ * @see (58) - 0.4.5
+ */
 export const rotateLambdaSTF = newSTF<JamState["lambda"], JamState["kappa"]>(
   (kappa): Posterior<JamState["lambda"]> =>
     [...kappa] as unknown as Posterior<JamState["lambda"]>,
 );
 
+/**
+ * rotate k
+ * it uses gamma_k
+ * @see (58) - 0.4.5
+ */
 export const rotateKappaSTF = newSTF<
   JamState["kappa"],
   SafroleState["gamma_k"]
@@ -74,6 +65,13 @@ export const rotateKappaSTF = newSTF<
   (input): Posterior<JamState["kappa"]> =>
     [...input] as unknown as Posterior<JamState["kappa"]>,
 );
+
+/**
+ * rotate gamma_k
+ * @see PHI_FN
+ * @see SafroleState["gamma_k"]
+ * @see (58) - 0.4.5
+ */
 export const rotateGammaKSTF = newSTF<
   SafroleState["gamma_k"],
   { iota: JamState["iota"]; p_psi_o: Posterior<IDisputesState["psi_o"]> }
@@ -84,6 +82,12 @@ export const rotateGammaKSTF = newSTF<
       SafroleState["gamma_k"]
     >,
 );
+
+/**
+ * rotate gamma_z
+ * @see SafroleState["gamma_k"]
+ * @see (58) - 0.4.5
+ */
 export const rotateGammaZSTF = newSTF<
   SafroleState["gamma_z"],
   Posterior<SafroleState["gamma_k"]>
@@ -91,6 +95,11 @@ export const rotateGammaZSTF = newSTF<
   // gamma_z is the ring root of the posterior gamma
   return Bandersnatch.ringRoot(p_gamma_k.map((v) => v.banderSnatch));
 });
+
+/**
+ * rotates all keys
+ * @see (58) - 0.4.5
+ */
 export const rotateKeys = newSTF<
   [
     JamState["lambda"],
@@ -125,6 +134,26 @@ export const rotateKeys = newSTF<
     toPosterior(gamma_z),
   ];
 });
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("isFallbackMode", () => {
+    it("should return true if gamma_s is a series of E Bandersnatch keys", () => {
+      const gamma_s = [
+        1n as BandersnatchKey,
+        2n as BandersnatchKey,
+      ] as SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
+      expect(isFallbackMode(gamma_s)).toBe(true);
+    });
+    it("should return false if gamma_s is a series of E tickets", () => {
+      const gamma_s = [
+        { id: 32n as OpaqueHash, attempt: 0 },
+        { id: 32n as OpaqueHash, attempt: 1 },
+      ] as SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
+      expect(isFallbackMode(gamma_s)).toBe(false);
+    });
+  });
+}
 
 if (import.meta.vitest) {
   const { vi, describe, expect, it } = import.meta.vitest;

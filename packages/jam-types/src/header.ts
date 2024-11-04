@@ -31,7 +31,7 @@ export interface JamHeader {
    * It's computed by applying the `Mσ` fn to the `σ`
    * @see JamState
    */
-  priorStateRoot: MerkeTreeRoot; // Hr
+  priorStateRoot: MerkeTreeRoot;
 
   /**
    * **Hx:** The hash of the block's extrinsic data.
@@ -41,7 +41,7 @@ export interface JamHeader {
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  timeSlotIndex: Tau; // Ht
+  timeSlotIndex: Tau;
 
   /**
    * **He:** The epoch marker of the block.
@@ -67,31 +67,32 @@ export interface JamHeader {
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
    */
-  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>; // Hw
+  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>;
 
   /**
    * `Ho`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  offenders: ED25519PublicKey[]; // Ho
+  offenders: ED25519PublicKey[];
 
   /**
    * `Hi`
    */
-  blockAuthorKeyIndex: ValidatorIndex; // < V or < number of validators
+  blockAuthorKeyIndex: ValidatorIndex;
 
   /**
    * `Hv` -
    * @see (62) in section 6.4
    */
-  entropySignature: BandersnatchSignature; // Hv
+  entropySignature: BandersnatchSignature;
 }
 
 export interface SignedJamHeader extends JamHeader {
   /**
+   * `Hs`
    * The signature of the block. Must be signed by the validator associated to this time slot.
-   * da
+   *
    */
-  blockSeal: BandersnatchSignature; // Hs
+  blockSeal: BandersnatchSignature;
 }
