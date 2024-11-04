@@ -16,9 +16,10 @@ import { TicketIdentifier } from "@/sets/Ticket.js";
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
  * @see (38) 0.4.5
+ * NOTE: the following are computed values
+ * `Ha`= K'[Hi]
  */
 export interface JamHeader {
-
   /**
    * **Hp:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
@@ -27,6 +28,8 @@ export interface JamHeader {
 
   /**
    * **Hr:** The hash of the state root.
+   * It's computed by applying the `Mσ` fn to the `σ`
+   * @see JamState
    */
   priorStateRoot: MerkeTreeRoot; // Hr
 
@@ -73,8 +76,9 @@ export interface JamHeader {
    */
   offenders: ED25519PublicKey[]; // Ho
 
-  // but later Hi E Nv. so its a natural number
-  // < typeof NUMBER_OF_VALIDATORS
+  /**
+   * `Hi`
+   */
   blockAuthorKeyIndex: ValidatorIndex; // < V or < number of validators
 
   /**
