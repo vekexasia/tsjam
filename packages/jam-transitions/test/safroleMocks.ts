@@ -14,7 +14,7 @@ import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 export const mockHeader = (
   opts: Partial<UnTaggedObject<JamHeader>> = {},
 ): JamHeader => ({
-  previousHash: toTagged(opts.previousHash || 0n),
+  parent: toTagged(opts.parent || 0n),
   priorStateRoot: toTagged(opts.priorStateRoot || 0n),
   extrinsicHash: toTagged(opts.extrinsicHash || 0n),
   timeSlotIndex: toTagged(opts.timeSlotIndex || 0) as Tau,

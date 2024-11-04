@@ -1,3 +1,8 @@
+import { u32 } from "@/genericTypes";
+
+export type PVMACL = { from: u32; to: u32; writable: boolean };
+export type PVMMemoryContent = { at: u32; content: Uint8Array };
+
 /**
  * Interface middleware for the RAM of the PVM
  * implementors should take care of the memory access

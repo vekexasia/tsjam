@@ -8,37 +8,28 @@ import { JamCodec } from "@/codec.js";
 import {
   EA_Extrinsic,
   JamBlock,
+  JamHeader,
   ServiceIndex,
   TicketExtrinsics,
 } from "@tsjam/types";
 
-export const BlockCodec: JamCodec<JamBlock> = {
-  encode(value: JamBlock, bytes: Uint8Array): number {
-    let offset = SignedHeaderCodec.encode(value.header, bytes);
-    offset += codec_Et.encode(value.extrinsics.tickets, bytes.subarray(offset));
-    offset += codec_Ed.encode(
-      value.extrinsics.disputes,
-      bytes.subarray(offset),
-    );
-    offset += codec_Ep.encode(
-      value.extrinsics.preimages,
-      bytes.subarray(offset),
-    );
-    offset += codec_Ea.encode(
-      value.extrinsics.assurances,
-      bytes.subarray(offset),
-    );
+/**
+ * Codec for block extrinsic. used in both block serialiation and computing `Hx`
+ * @see JamHeader
+ */
+export const ExtrinsicsCodec: JamCodec<JamBlock["extrinsics"]> = {
+  encode(value, bytes) {
+    let offset = 0;
+    offset += codec_Et.encode(value.tickets, bytes.subarray(offset));
+    offset += codec_Ed.encode(value.disputes, bytes.subarray(offset));
+    offset += codec_Ep.encode(value.preimages, bytes.subarray(offset));
+    offset += codec_Ea.encode(value.assurances, bytes.subarray(offset));
 
-    offset += codec_Eg.encode(
-      value.extrinsics.reportGuarantees,
-      bytes.subarray(offset),
-    );
+    offset += codec_Eg.encode(value.reportGuarantees, bytes.subarray(offset));
     return offset;
   },
-  decode(bytes: Uint8Array): { value: JamBlock; readBytes: number } {
+  decode(bytes) {
     let offset = 0;
-    const header = SignedHeaderCodec.decode(bytes);
-    offset += header.readBytes;
     const tickets = codec_Et.decode(bytes.subarray(offset));
     offset += tickets.readBytes;
     const disputes = codec_Ed.decode(bytes.subarray(offset));
@@ -51,14 +42,44 @@ export const BlockCodec: JamCodec<JamBlock> = {
     offset += reportGuarantees.readBytes;
     return {
       value: {
+        tickets: tickets.value as TicketExtrinsics,
+        disputes: disputes.value,
+        preimages: preimages.value,
+        assurances: assurances.value as EA_Extrinsic,
+        reportGuarantees: reportGuarantees.value,
+      },
+      readBytes: offset,
+    };
+  },
+  encodedSize(value) {
+    return (
+      codec_Et.encodedSize(value.tickets) +
+      codec_Ed.encodedSize(value.disputes) +
+      codec_Ep.encodedSize(value.preimages) +
+      codec_Ea.encodedSize(value.assurances) +
+      codec_Eg.encodedSize(value.reportGuarantees)
+    );
+  },
+};
+
+export const BlockCodec: JamCodec<JamBlock> = {
+  encode(value: JamBlock, bytes: Uint8Array): number {
+    let offset = SignedHeaderCodec.encode(value.header, bytes);
+    offset += ExtrinsicsCodec.encode(value.extrinsics, bytes.subarray(offset));
+    return offset;
+  },
+  decode(bytes: Uint8Array): { value: JamBlock; readBytes: number } {
+    let offset = 0;
+    const header = SignedHeaderCodec.decode(bytes);
+    offset += header.readBytes;
+    const extrinsics = ExtrinsicsCodec.decode(bytes.subarray(offset));
+
+    offset += extrinsics.readBytes;
+
+    return {
+      value: {
         header: header.value,
-        extrinsics: {
-          tickets: tickets.value as TicketExtrinsics,
-          disputes: disputes.value,
-          preimages: preimages.value,
-          assurances: assurances.value as EA_Extrinsic,
-          reportGuarantees: reportGuarantees.value,
-        },
+        extrinsics: extrinsics.value,
       },
       readBytes: offset,
     };
@@ -66,11 +87,7 @@ export const BlockCodec: JamCodec<JamBlock> = {
   encodedSize(value: JamBlock): number {
     return (
       SignedHeaderCodec.encodedSize(value.header) +
-      codec_Et.encodedSize(value.extrinsics.tickets) +
-      codec_Ed.encodedSize(value.extrinsics.disputes) +
-      codec_Ep.encodedSize(value.extrinsics.preimages) +
-      codec_Ea.encodedSize(value.extrinsics.assurances) +
-      codec_Eg.encodedSize(value.extrinsics.reportGuarantees)
+      ExtrinsicsCodec.encodedSize(value.extrinsics)
     );
   },
 };

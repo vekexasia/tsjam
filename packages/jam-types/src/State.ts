@@ -18,7 +18,7 @@ import { SeqOfLength } from "./genericTypes";
 /**
  * `σ`
  * Defines the state of JAM by combining all substate components
- * (15)
+ * @see (15) - 0.4.5
  */
 export type JamState = {
   /**

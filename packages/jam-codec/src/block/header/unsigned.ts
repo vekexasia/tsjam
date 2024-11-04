@@ -79,8 +79,8 @@ export const winningTicketsCodec = new Optional(
 export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
     let offset = 0;
-    const previousHash = HashCodec.decode(bytes.subarray(offset, offset + 32));
-    offset += previousHash.readBytes;
+    const parent = HashCodec.decode(bytes.subarray(offset, offset + 32));
+    offset += parent.readBytes;
     const priorStateRoot = MerkleTreeRootCodec.decode(
       bytes.subarray(offset, offset + 32),
     );
@@ -110,7 +110,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     offset += entropySignature.readBytes;
     return {
       value: {
-        previousHash: previousHash.value,
+        parent: parent.value,
         priorStateRoot: priorStateRoot.value,
         extrinsicHash: extrinsicHash.value,
         timeSlotIndex: toTagged(Number(timeSlotIndex.value)) as Tau,
@@ -131,7 +131,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
     let offset = 0;
     offset += HashCodec.encode(
-      value.previousHash,
+      value.parent,
       bytes.subarray(offset, offset + 32),
     );
     offset += MerkleTreeRootCodec.encode(
@@ -176,7 +176,7 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
 
   encodedSize(value: JamHeader): number {
     return (
-      HashCodec.encodedSize(value.previousHash) +
+      HashCodec.encodedSize(value.parent) +
       MerkleTreeRootCodec.encodedSize(value.priorStateRoot) +
       HashCodec.encodedSize(value.extrinsicHash) +
       4 + // timeSlotIndex

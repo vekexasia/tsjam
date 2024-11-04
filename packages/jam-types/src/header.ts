@@ -15,25 +15,31 @@ import { TicketIdentifier } from "@/sets/Ticket.js";
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
+ * @see (38) 0.4.5
  */
 export interface JamHeader {
+
   /**
    * **Hp:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
-  previousHash: Hash;
+  parent: Hash;
+
   /**
    * **Hr:** The hash of the state root.
    */
   priorStateRoot: MerkeTreeRoot; // Hr
+
   /**
    * **Hx:** The hash of the block's extrinsic data.
    */
   extrinsicHash: Hash;
+
   /**
    * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
   timeSlotIndex: Tau; // Ht
+
   /**
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
@@ -59,12 +65,14 @@ export interface JamHeader {
    * and we're not changing epoch
    */
   winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>; // Hw
+
   /**
    * `Ho`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
   offenders: ED25519PublicKey[]; // Ho
+
   // but later Hi E Nv. so its a natural number
   // < typeof NUMBER_OF_VALIDATORS
   blockAuthorKeyIndex: ValidatorIndex; // < V or < number of validators

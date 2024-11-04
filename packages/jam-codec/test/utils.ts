@@ -202,7 +202,7 @@ export const headerFromJSON = (json: any): SignedJamHeader => {
     })(),
     extrinsicHash: hextToBigInt(json.extrinsic_hash),
     offenders: json.offenders_mark.map((e: any) => hextToBigInt(e)),
-    previousHash: hextToBigInt(json.parent),
+    parent: hextToBigInt(json.parent),
     priorStateRoot: hextToBigInt(json.parent_state_root),
     timeSlotIndex: json.slot,
     winningTickets: (() => {

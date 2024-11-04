@@ -1,18 +1,12 @@
-import { IPVMMemory, u32 } from "@tsjam/types";
+import { IPVMMemory, PVMACL, u32 } from "@tsjam/types";
 import assert from "node:assert";
-export type ACL = { from: u32; to: u32; writable: boolean };
 export type MemoryContent = { at: u32; content: Uint8Array };
 
-/**
- * `M` set
- * This is the implementation of (34) in the graypaper
- * providing both `V` and using `A`
- */
 export class PVMMemory implements IPVMMemory {
   #innerMemory = new Uint8Array(2 ** 32);
   constructor(
     initialMemory: MemoryContent[],
-    private acl: ACL[],
+    private acl: PVMACL[],
   ) {
     for (const { at, content } of initialMemory) {
       this.#innerMemory.set(content, at);

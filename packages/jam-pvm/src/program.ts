@@ -1,7 +1,7 @@
-import { IPVMMemory, PVMProgram, SeqOfLength, u32 } from "@tsjam/types";
+import { IPVMMemory, PVMACL, PVMProgram, SeqOfLength, u32 } from "@tsjam/types";
 import { E_2, E_3, E_4, IdentityCodec, PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
-import { ACL, MemoryContent, PVMMemory } from "@/pvmMemory.js";
+import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 
 // constants defined in (242)
 const Zp = 2 ** 14;
@@ -79,10 +79,11 @@ export const programInitialization = (
   ] as SeqOfLength<u32, 13>;
 
   // memory (263)
-  const acl: ACL[] = [];
+  const acl: PVMACL[] = [];
   const mem: MemoryContent[] = [];
   // first case
   mem.push({ at: Zq as u32, content: o.value });
+
   // we set a single acl to match both the first and second case
   // we dont need to set the memory for secodn case as it's automatically set to 0
   acl.push({

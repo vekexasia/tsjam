@@ -23,7 +23,7 @@ export const RHO2DoubleDagger = newSTF<
   {
     ea: EA_Extrinsic;
     p_kappa: Posterior<JamState["kappa"]>;
-    hp: JamHeader["previousHash"];
+    hp: JamHeader["parent"];
   },
   DoubleDagger<RHO>
 >({
@@ -79,7 +79,7 @@ export const RHO2DoubleDagger = newSTF<
     input: {
       ea: EA_Extrinsic;
       p_kappa: Posterior<JamState["kappa"]>;
-      hp: JamHeader["previousHash"];
+      hp: JamHeader["parent"];
     },
     curState: Dagger<RHO>,
   ) {

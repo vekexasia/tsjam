@@ -137,7 +137,7 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     {
       ea: block.extrinsics.assurances,
       p_kappa,
-      hp: block.header.previousHash,
+      hp: block.header.parent,
     },
     d_rho,
   );
