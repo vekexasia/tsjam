@@ -1,4 +1,11 @@
-import { Delta, DoubleDagger, JamBlock, JamState, u64 } from "@tsjam/types";
+import {
+  Delta,
+  DoubleDagger,
+  JamBlock,
+  JamState,
+  TicketIdentifier,
+  u64,
+} from "@tsjam/types";
 import {
   RHO2DoubleDagger,
   RHO_2_Dagger,
@@ -21,7 +28,12 @@ import {
   ticketExtrinsicToIdentifiersSTF,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import {
+  bigintToBytes,
+  isFallbackMode,
+  toPosterior,
+  toTagged,
+} from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { assertEGValid } from "@/validateEG.js";
@@ -33,6 +45,13 @@ import {
   outerAccumulation,
   withPrereqAvailableReports,
 } from "@tsjam/pvm";
+import {
+  EPOCH_LENGTH,
+  JAM_FALLBACK_SEAL,
+  JAM_TICKET_SEAL,
+} from "@tsjam/constants";
+import assert from "assert";
+import { verifySeal } from "./verifySeal";
 
 /**
  * TODO: this should be an STF
@@ -256,7 +275,7 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     curState.authPool,
   );
 
-  return {
+  const p_state = toPosterior({
     entropy: p_entropy,
     tau: tauTransition.p_tau,
     iota: p_iota as unknown as JamState["iota"],
@@ -273,5 +292,8 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     lambda: p_lambda,
     kappa: p_kappa,
     disputes: p_disputesState,
-  };
+  });
+
+  assert(verifySeal(block.header, p_state), "seal not verified");
+  return p_state;
 };

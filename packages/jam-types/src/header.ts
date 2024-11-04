@@ -92,7 +92,6 @@ export interface SignedJamHeader extends JamHeader {
   /**
    * `Hs`
    * The signature of the block. Must be signed by the validator associated to this time slot.
-   *
    */
   blockSeal: BandersnatchSignature;
 }
