@@ -51,7 +51,7 @@ import {
   JAM_TICKET_SEAL,
 } from "@tsjam/constants";
 import assert from "assert";
-import { verifySeal } from "./verifySeal";
+import { verifyEntropySignature, verifySeal } from "./verifySeal";
 
 /**
  * TODO: this should be an STF
@@ -295,5 +295,10 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
   });
 
   assert(verifySeal(block.header, p_state), "seal not verified");
+
+  assert(
+    verifyEntropySignature(block.header, p_state),
+    "entropy signature not verified",
+  );
   return p_state;
 };

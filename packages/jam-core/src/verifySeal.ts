@@ -47,8 +47,10 @@ export const verifySeal = (
     //
   }
 };
+
 /**
  * verify `Hv`
+ *  @see (62) - 0.4.5
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
