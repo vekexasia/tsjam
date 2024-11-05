@@ -31,6 +31,7 @@ import {
 import {
   bigintToBytes,
   isFallbackMode,
+  isNewEra,
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
@@ -300,5 +301,26 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     verifyEntropySignature(block.header, p_state),
     "entropy signature not verified",
   );
+
+  // check epoch marker He (72) - 0.4.5
+  if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
+    assert(
+      block.header.epochMarker?.entropy === p_entropy[1],
+      `entropy mismatch`,
+    );
+    for (let i = 0; i < block.header.epochMarker?.validatorKeys.length; i++) {
+      assert(
+        block.header.epochMarker!.validatorKeys[i] ===
+          p_gamma_k[i].banderSnatch,
+        `[${i}] epochmarker validators differ from posterior gamma_k`,
+      );
+    }
+  } else {
+    assert(
+      typeof block.header.epochMarker === "undefined",
+      "epochMarker defined even if not new epoch",
+    );
+  }
+
   return p_state;
 };
