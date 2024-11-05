@@ -7,6 +7,7 @@ import {
   SafroleState,
   SeqOfLength,
   Tau,
+  Ticket,
   TicketIdentifier,
 } from "@tsjam/types";
 import { E_4 } from "@tsjam/codec";
@@ -27,6 +28,24 @@ import {
   toTagged,
 } from "@tsjam/utils";
 
+/**
+ * Z fn
+ * @see (70) 0.4.5
+ * exported cause it's being used to check/produce `Hw` in Header
+ */
+export const outsideInSequencer = <
+  T extends SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+>(
+  t: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+): T => {
+  const toRet: T = [] as unknown as T;
+  // Z function (70)
+  for (let i = 0; i < EPOCH_LENGTH / 2; i++) {
+    toRet.push(t[i]);
+    toRet.push(t[EPOCH_LENGTH - i - 1]);
+  }
+  return toRet;
+};
 /**
  * it computes the posterior value of `gamma_s`
  * @see (69) and (70) in the graypaper
@@ -50,14 +69,14 @@ export const gamma_sSTF = newSTF<
   ) {
     // we've accumulated enough tickets
     // we can now compute the new posterior `gamma_s`
-    const newGammaS = [] as unknown as Posterior<
+    const newGammaS: Posterior<
       SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
-    >;
-    // Z function (70)
-    for (let i = 0; i < EPOCH_LENGTH / 2; i++) {
-      newGammaS.push(input.gamma_a[i]);
-      newGammaS.push(input.gamma_a[EPOCH_LENGTH - i - 1]);
-    }
+    > = outsideInSequencer(
+      input.gamma_a as unknown as SeqOfLength<
+        TicketIdentifier,
+        typeof EPOCH_LENGTH
+      >,
+    );
     return newGammaS;
   } else if (epochIndex(input.tau) === epochIndex(input.p_tau)) {
     return toPosterior(input.gamma_s);

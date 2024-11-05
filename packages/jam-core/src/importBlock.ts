@@ -1,8 +1,10 @@
+import { LOTTERY_MAX_SLOT } from "@tsjam/constants";
 import {
   Delta,
   DoubleDagger,
   JamBlock,
   JamState,
+  SeqOfLength,
   TicketIdentifier,
   u64,
 } from "@tsjam/types";
@@ -21,6 +23,7 @@ import {
   eta0STF,
   gamma_aSTF,
   gamma_sSTF,
+  outsideInSequencer,
   recentHistoryToDagger,
   recentHistoryToPosterior,
   rotateKeys,
@@ -29,9 +32,9 @@ import {
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import {
-  bigintToBytes,
-  isFallbackMode,
+  epochIndex,
   isNewEra,
+  slotIndex,
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
@@ -320,6 +323,35 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       typeof block.header.epochMarker === "undefined",
       "epochMarker defined even if not new epoch",
     );
+  }
+
+  //check winning tickets Hw (73) - 0.4.5
+  if (
+    epochIndex(block.header.timeSlotIndex) === curState.tau &&
+    slotIndex(curState.tau) <= LOTTERY_MAX_SLOT &&
+    LOTTERY_MAX_SLOT <= slotIndex(block.header.timeSlotIndex) &&
+    curState.safroleState.gamma_a.length === EPOCH_LENGTH
+  ) {
+    assert(typeof block.header.winningTickets !== "undefined");
+    const expectedHw = outsideInSequencer(
+      curState.safroleState.gamma_a as unknown as SeqOfLength<
+        TicketIdentifier,
+        typeof EPOCH_LENGTH
+      >,
+    );
+    assert(
+      block.header.winningTickets.length === EPOCH_LENGTH,
+      "winning tickets not E long",
+    );
+    // (73) - 0.4.5
+    for (let i = 0; i < EPOCH_LENGTH; i++) {
+      assert(
+        block.header.winningTickets[i] === expectedHw[i],
+        `[${i}] winningTicket different than expected`,
+      );
+    }
+  } else {
+    assert(typeof block.header.winningTickets === "undefined");
   }
 
   return p_state;
