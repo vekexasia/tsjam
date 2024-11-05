@@ -38,7 +38,7 @@ import {
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
-import { Bandersnatch, Hashing } from "@tsjam/crypto";
+import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { assertEGValid } from "@/validateEG.js";
 import {
@@ -49,11 +49,7 @@ import {
   outerAccumulation,
   withPrereqAvailableReports,
 } from "@tsjam/pvm";
-import {
-  EPOCH_LENGTH,
-  JAM_FALLBACK_SEAL,
-  JAM_TICKET_SEAL,
-} from "@tsjam/constants";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 import assert from "assert";
 import { verifyEntropySignature, verifySeal } from "./verifySeal";
 
