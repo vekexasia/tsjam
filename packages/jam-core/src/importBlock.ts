@@ -72,7 +72,7 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
   // TODO: make these 2 a single STF with proper inputs
   const p_entropy = entropyRotationSTF.apply(tauTransition, curState.entropy);
   p_entropy[0] = eta0STF.apply(
-    Bandersnatch.vrfOutputSignature(block.header.blockSeal),
+    block.header.entropySignature,
     curState.entropy[0],
   );
 
