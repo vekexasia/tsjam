@@ -15,6 +15,10 @@ import {
 import assert from "node:assert";
 import { Bandersnatch } from "@tsjam/crypto";
 
+/**
+ * handles Et
+ * @see (75) - 0.4.5
+ */
 export const ticketExtrinsicToIdentifiersSTF = newSTF<
   null,
   {
@@ -36,12 +40,13 @@ export const ticketExtrinsicToIdentifiersSTF = newSTF<
       throw new Error("Lottery has ended");
     }
 
-    // (75) second case
+    // (75) first case
     assert(
       input.extrinsic.length <= MAX_TICKETS_PER_BLOCK,
       "Extrinsic length must be less than MAX_TICKETS_PER_BLOCK",
     );
 
+    // (74)
     for (const ext of input.extrinsic) {
       assert(
         ext.entryIndex === 0 || ext.entryIndex === 1,
@@ -65,15 +70,15 @@ export const ticketExtrinsicToIdentifiersSTF = newSTF<
       );
     }
   },
+
   assertPStateValid(input, p_state: TicketIdentifier[]) {
     if (p_state.length === 0) {
       return; // optimization
     }
     // (78) make sure that the y terms are not already in gamma_a
-    const gamma_a_ids = input.gamma_a.map((x) => x.id);
-    // TODO this can be otpimized as gamma_a is sorted as per (79)
+    const gamma_a_ids = new Set(input.gamma_a.map((x) => x.id));
     for (const x of p_state) {
-      assert(!gamma_a_ids.includes(x.id), "Ticket id already in gamma_a");
+      assert(!gamma_a_ids.has(x.id), "Ticket id already in gamma_a");
     }
 
     p_state.reduce((prev, cur) => {
@@ -92,8 +97,8 @@ export const ticketExtrinsicToIdentifiersSTF = newSTF<
     for (const x of input.extrinsic) {
       // (76)
       n.push({
-        id: Bandersnatch.vrfOutputRingProof(x.proof),
-        attempt: x.entryIndex,
+        id: Bandersnatch.vrfOutputRingProof(x.proof), // y
+        attempt: x.entryIndex, // r
       });
     }
     return n;

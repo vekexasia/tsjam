@@ -1,5 +1,6 @@
 import {
   Dagger,
+  EG_Extrinsic,
   Hash,
   MerkeTreeRoot,
   Posterior,
@@ -13,6 +14,10 @@ import { RecentHistory, RecentHistoryItem } from "@tsjam/types";
 import { bigintToExistingBytes, newSTF } from "@tsjam/utils";
 import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
+/**
+ * (83) - 0.4.5
+ * calculate `r`
+ */
 export const calculateAccumulateRoot = (
   beefyCommitment: Set<{
     serviceIndex: ServiceIndex;
@@ -44,7 +49,7 @@ export const recentHistoryToPosterior = newSTF<
     // the result of accummulation merkle tree build
     accumulateRoot: MerkeTreeRoot;
     headerHash: Hash;
-    workPackageHashes: WorkPackageHash[];
+    eg: EG_Extrinsic;
   },
   Posterior<RecentHistory>
 >((input, curState) => {
@@ -53,6 +58,7 @@ export const recentHistoryToPosterior = newSTF<
     curState.length === 0
       ? []
       : curState[curState.length - 1].accumulationResultMMR;
+
   const b = appendMMR<Hash>(
     lastMMR,
     input.accumulateRoot,
@@ -64,14 +70,22 @@ export const recentHistoryToPosterior = newSTF<
     },
   );
 
+  const p = new Map(
+    input.eg
+      .map((a) => a.workReport)
+      .flat()
+      .map((a) => a.workPackageSpecification)
+      .flat()
+      .map((a) => [a.workPackageHash, a.segmentRoot]),
+  );
   toRet.push({
     accumulationResultMMR: b,
     headerHash: input.headerHash,
     stateRoot: 0n as MerkeTreeRoot,
-    reportedPackages:
-      input.workPackageHashes as RecentHistoryItem["reportedPackages"],
+    reportedPackages: p,
   });
 
+  // (84)
   if (toRet.length > RECENT_HISTORY_LENGTH) {
     return toRet.slice(
       toRet.length - RECENT_HISTORY_LENGTH,

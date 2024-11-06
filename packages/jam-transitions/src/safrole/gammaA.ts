@@ -8,18 +8,18 @@ type Input = {
   p_tau: Posterior<Tau>;
   newIdentifiers: TicketIdentifier[];
 };
+
 /**
- * update `gamma_a` (79)
+ * update `gamma_a`
+ * (79) - 0.4.5
  */
 export const gamma_aSTF = newSTF<SafroleState["gamma_a"], Input>({
   assertInputValid(): void {},
   assertPStateValid(input, p_gamma_a): void {
-    // we need to checj (80) so that the p_gamma_a contains all the new ticketidentifiersup
-    // in posterior gamma_a
-    const p_gamma_a_ids = p_gamma_a.map((x) => x.id);
-
+    // (80) check `n` subset of p_gamma_a
+    const p_gamma_a_ids = new Set(p_gamma_a.map((x) => x.id));
     for (const x of input.newIdentifiers) {
-      assert(p_gamma_a_ids.includes(x.id), "Ticket not in posterior gamma_a");
+      assert(p_gamma_a_ids.has(x.id), "Ticket not in posterior gamma_a");
     }
   },
 
@@ -38,7 +38,6 @@ export const gamma_aSTF = newSTF<SafroleState["gamma_a"], Input>({
   },
 });
 
-// TESTS
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { mockState, mockTicketIdentifier } = await import(

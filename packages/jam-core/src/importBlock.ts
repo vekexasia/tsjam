@@ -252,7 +252,7 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     {
       accumulateRoot: calculateAccumulateRoot(C),
       headerHash: headerHash,
-      workPackageHashes: [], // todo:
+      eg: block.extrinsics.reportGuarantees,
     },
     d_recentHistory,
   );

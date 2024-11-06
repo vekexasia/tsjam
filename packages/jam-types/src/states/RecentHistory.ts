@@ -1,35 +1,38 @@
 import { Hash, MerkeTreeRoot, UpToSeq, WorkPackageHash } from "@/genericTypes";
-import { CORES } from "@tsjam/constants";
+import { CORES, RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
 /*
  * @see section 7
- * (80)
+ * (81) - 0.4.5
  */
-
 export interface RecentHistoryItem {
   /**
    * `h`
    */
   headerHash: Hash;
-  /**
-   * `s`
-   */
-  stateRoot: MerkeTreeRoot;
+
   /**
    * `b`
    */
   accumulationResultMMR: Array<Hash | undefined>;
+
   /**
-   * `p` the hash of each work report that made into the block. there is no more than the number of
-   * cores C which is 341
+   * `s`
    */
-  reportedPackages: UpToSeq<WorkPackageHash, typeof CORES>;
+  stateRoot: MerkeTreeRoot;
+
+  /**
+   * `p`
+   *  dictionary from workpackagehash to erasureroot
+   */
+  reportedPackages: Map<WorkPackageHash, Hash>;
 }
 
 /**
- * maxLength is H which is the size of the recent history
- * H = 8
  * @see section 7
  * they're ordered so that entry 0 is the most recent
  */
-export type RecentHistory = UpToSeq<RecentHistoryItem, 8>;
+export type RecentHistory = UpToSeq<
+  RecentHistoryItem,
+  typeof RECENT_HISTORY_LENGTH
+>;

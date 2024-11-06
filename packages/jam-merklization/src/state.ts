@@ -23,6 +23,7 @@ import {
   WorkReportCodec,
   bit,
   buildGenericKeyValueCodec,
+  buildKeyValueCodec,
   createArrayLengthDiscriminator,
   encodeWithCodec,
 } from "@tsjam/codec";
@@ -165,11 +166,9 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
 };
 
 const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
-  wpCodec: JamCodec<WorkPackageHash[]>;
+  wpCodec: JamCodec<Map<WorkPackageHash, Hash>>;
 } = {
-  wpCodec: createArrayLengthDiscriminator(HashCodec) as unknown as JamCodec<
-    WorkPackageHash[]
-  >,
+  wpCodec: buildKeyValueCodec(HashCodec),
 
   encode(value, bytes) {
     let offset = 0;
