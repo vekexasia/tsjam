@@ -4,7 +4,7 @@ import { toTagged } from "@/utils.js";
 
 /**
  * `Λ` in the graypaper
- * (93)
+ * (94) - 0.4.5
  * @param a - the service account
  * @param tau - the timeslot for the lookup
  * @param hash - the hash to look up
@@ -17,7 +17,7 @@ export const historicalLookup = (
   const ap = a.preimage_p.get(hash);
   if (
     typeof ap !== "undefined" &&
-    IFn(a.preimage_l.get(hash)!.get(toTagged(ap.length as u32))!, tau)
+    I_Fn(a.preimage_l.get(hash)!.get(toTagged(ap.length as u32))!, tau)
   ) {
     return a.preimage_p.get(hash)!;
   }
@@ -26,7 +26,7 @@ export const historicalLookup = (
 /**
  * Checks based on the length of the preimage and tau if it is valid
  */
-const IFn = (l: UpToSeq<u32, 3, "Nt">, t: Tau) => {
+const I_Fn = (l: UpToSeq<u32, 3, "Nt">, t: Tau) => {
   switch (l.length) {
     case 0:
       return false;

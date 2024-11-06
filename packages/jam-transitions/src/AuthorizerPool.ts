@@ -15,18 +15,21 @@ type Input = {
   p_queue: Posterior<AuthorizerQueue>;
   p_tau: Posterior<Tau>;
 };
-// (85) and (86)
+
+// (86) and (87) - 0.4.5
 export const authorizerPool_toPosterior = newSTF<AuthorizerPool, Input>(
   (input: Input, curState: AuthorizerPool): Posterior<AuthorizerPool> => {
     const newState = [];
+
     for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
-      const fromPool = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
+      const fromQueue = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
       let hashes: Hash[];
       const firstWReport = input.eg.find(
         (w) => w.workReport.coreIndex === core,
       );
       if (typeof firstWReport === "undefined") {
-        hashes = [...curState[core], fromPool];
+        // F(c) results in queue[c]
+        hashes = [...curState[core], fromQueue];
       } else {
         // F(c) says we need to remove the leftmost workReport.hash from the curState
         const h = firstWReport.workReport.authorizerHash;
@@ -34,7 +37,7 @@ export const authorizerPool_toPosterior = newSTF<AuthorizerPool, Input>(
         hashes = [
           ...curState[core].slice(0, index),
           ...curState[core].slice(index + 1),
-          fromPool,
+          fromQueue,
         ];
       }
       newState.push(hashes.reverse().slice(0, AUTHPOOL_SIZE).reverse());

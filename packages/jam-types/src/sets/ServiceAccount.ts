@@ -5,18 +5,18 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  * The analogous to a Smart Contract in ETH.
  * (89) in the graypaper
  *  NOTE: there are some `virtual` elements such as
- * `i` - ∈ N232
- * `l` - ∈ N264
+ * `i` - ∈ N232 => computed in `serviceAccountItemInStorage`
+ * `l` - ∈ N264 => computed in `serviceAccountTotalOctets`
  * `t` - balance threshold  computed in `serviceAccountGasThreshold`
  */
 export interface ServiceAccount {
   /**
-   * `s` - should be a storage Dictionary in the form of Hash =&gt; Uint8Array
+   * `s` - key value storage. It is set from service accumulation
    */
   storage: Map<Hash, Uint8Array>;
 
   /**
-   * `p` - preimage lookup dictionaries in the form of Hash =&gt; Uint8Array
+   * `p` - designed to be queried in core.
    */
   preimage_p: Map<Hash, Uint8Array>;
 
@@ -29,18 +29,22 @@ export interface ServiceAccount {
    * once all three elements are valued. we remove the first 2 only after a certain period has passed (to be defined)
    */
   preimage_l: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">>>;
+
   /**
    * `c` - code hash
    */
   codeHash: Tagged<Hash, "code-hash">;
+
   /**
    * `b` - balance
    */
   balance: bigint;
+
   /**
    * `g` - gas
    */
   minGasAccumulate: bigint;
+
   /**
    * `m` - minimum gas for the on_initialize method
    */

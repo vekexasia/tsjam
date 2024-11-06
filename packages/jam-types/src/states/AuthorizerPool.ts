@@ -3,8 +3,9 @@ import { AUTHPOOL_SIZE, CORES } from "@tsjam/constants";
 
 // [ H:O ]C
 /**
- * `α` (84)
- * it gets populated by the authorizer queue below.
+ * `α`
+ * (84) - 0.4.5
+ * it gets populated by the authorizer queue.
  * for each block:
  * - if there is a workreport is being submitted, then the pool new value would be (pool - workreport) + AuthorizerQueue[coreIndex][Ht] modulo 80
  * - if there is no workreport, then the pool new value would be (pool + AuthorizerQueue[coreIndex][Ht]) modulo 80
