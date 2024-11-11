@@ -72,7 +72,7 @@ export const disputesSTF: STF<
     if (!input.extrinsic.verdicts.some((v) => v.hash === culprit.hash)) {
       return err(DisputesToPosteriorError.CULPRIT_HASH_MUST_REFERENCE_VERDICT);
     }
-    return ok(null);
+    return ok(null as unknown as Posterior<IDisputesState>);
   });
   if (_checkculprit.some((res) => res.isErr())) {
     return _checkculprit.find((res) => res.isErr())!;
@@ -97,7 +97,7 @@ export const disputesSTF: STF<
     if (!verified) {
       return err(DisputesToPosteriorError.FAULT_SIGNATURE_INVALID);
     }
-    return ok(null);
+    return ok(null as unknown as Posterior<IDisputesState>);
   });
   if (_checkfaults.some((res) => res.isErr())) {
     return _checkfaults.find((res) => res.isErr())!;
