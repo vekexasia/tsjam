@@ -1,22 +1,25 @@
-import { newSTF, toPosterior } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,
   AvailableWithPrereqWorkReports,
   Posterior,
+  STF,
   Tau,
 } from "@tsjam/types";
 import { EPOCH_LENGTH } from "@tsjam/constants";
+import { ok } from "neverthrow";
 
-export const accumulationQueueToPosterior = newSTF<
+export const accumulationQueueToPosterior: STF<
   AccumulationQueue,
   {
     p_accHistory: Posterior<AccumulationHistory>;
     tau: Tau;
     p_tau: Posterior<Tau>;
     w_q: AvailableWithPrereqWorkReports;
-  }
->((input, curState) => {
+  },
+  null
+> = (input, curState) => {
   const m = input.tau % EPOCH_LENGTH;
 
   const toRet = [...curState] as unknown as Posterior<AccumulationQueue>;
@@ -34,8 +37,8 @@ export const accumulationQueueToPosterior = newSTF<
       );
     }
   }
-  return toRet;
-});
+  return ok(toRet);
+};
 
 /**
  * NOTE: this is duplicated from pvm

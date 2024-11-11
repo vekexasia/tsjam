@@ -1,10 +1,11 @@
-import { bigintToBytes, epochIndex, newSTF } from "@tsjam/utils";
+import { bigintToBytes, epochIndex } from "@tsjam/utils";
 import {
   DisputeExtrinsic,
   Hash,
   IDisputesState,
   JamState,
   Posterior,
+  STF,
   Tau,
 } from "@tsjam/types";
 import {
@@ -14,233 +15,252 @@ import {
   NUMBER_OF_VALIDATORS,
 } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
-import assert from "node:assert";
+import { err, ok } from "neverthrow";
+
+export enum DisputesToPosteriorError {
+  ED25519_PUBLIC_KEY_MUST_NOT_BE_IN_PSI = "culprit.ed25519PublicKey must not be in psi_o",
+  CUPLRIT_SIGNATURE_INVALID = "culprit signature is invalid",
+  CULPRIT_HASH_MUST_REFERENCE_VERDICT = "culprit.hash must reference a verdict",
+  VERDICTS_MUST_BE_ORDERED_UNIQUE_BY_HASH = "verdicts must be ordered/unique by .hash",
+  FAULT_SIGNATURE_INVALID = "fault signature is invalid",
+  VERDICTS_NOT_FROM_CURRENT_EPOCH = "verdicts must be for the current or previous epoch",
+  CULPRIT_NOT_ORDERED_BY_ED25519_PUBLIC_KEY = "culprit must be ordered/unique by .ed25519PublicKey",
+  FAULTS_NOT_ORDERED_BY_ED25519_PUBLIC_KEY = "faults must be ordered/unique by .ed25519PublicKey",
+  VERDICTS_IN_PSI_G = "verdict.hash must not be in psi_g",
+  VERDICTS_IN_PSI_B = "verdict.hash must not be in psi_b",
+  VERDICTS_IN_PSI_W = "verdict.hash must not be in psi_w",
+  JUDGEMENTS_NOT_ORDERED_BY_VALIDATOR_INDEX = "judgements must be ordered/unique by .validatorIndex",
+  VERDICTS_NUM_VALIDATORS = "judgements must be 0 or 1/3 or 2/3+1 of NUM_VALIDATORS",
+  POSITIVE_VERDICTS_NOT_IN_FAULTS = "positive verdicts must be in faults",
+  NEGATIVE_VERDICTS_NOT_IN_CULPRIT = "negative verdicts must have at least 2 in culprit",
+  VERDICT_SIGNATURE_INVALID = "verdict signature is invalid",
+  VALID_REPORT_NOT_IN_PSIB_OR_IN_PSIO = "with fault validity 1, the report must be in psi_b' and not in psi_o'",
+  INVALID_REPORT_IN_PSIB_OR_NOT_IN_PSIO = "with fault validity 0, the report must NOT be in psi_b' and in psi_o'",
+  CULPRIT_NOT_IN_PSIB = "culprit must be in psi_b'",
+}
 
 /**
  * Computes state transition for disputes state
  */
-export const disputesSTF = newSTF<
+export const disputesSTF: STF<
   IDisputesState,
   {
     kappa: JamState["kappa"];
     lambda: JamState["lambda"];
     extrinsic: DisputeExtrinsic;
     curTau: Tau;
-  }
->({
-  apply(
-    input: {
-      kappa: JamState["kappa"];
-      lambda: JamState["lambda"];
-      extrinsic: DisputeExtrinsic;
-    },
-    curState: IDisputesState,
-  ) {
-    const V: Array<{ reportHash: Hash; votes: number }> =
-      input.extrinsic.verdicts.map((verdict) => {
-        return {
-          reportHash: verdict.hash,
-          votes: verdict.judgements.reduce(
-            (acc, curr) => acc + curr.validity,
-            0,
-          ),
-        };
-      });
-    return {
-      // (112) of the graypaper
-      psi_g: new Set([
-        ...curState.psi_g,
-        ...V.filter(
-          ({ votes }) => votes == (NUMBER_OF_VALIDATORS * 2) / 3 + 1,
-        ).map(({ reportHash }) => reportHash),
-      ]),
-
-      // (113) of the graypaper
-      psi_b: new Set([
-        ...curState.psi_b,
-        ...V.filter(({ votes }) => votes == 0).map(
-          ({ reportHash }) => reportHash,
-        ),
-      ]),
-
-      // (114) of the graypaper
-      psi_w: new Set([
-        ...curState.psi_w,
-        ...V.filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3).map(
-          ({ reportHash }) => reportHash,
-        ),
-      ]),
-
-      // (115) of the graypaper
-      psi_o: new Set([
-        ...curState.psi_o,
-        ...input.extrinsic.culprit.map(
-          ({ ed25519PublicKey }) => ed25519PublicKey,
-        ),
-        ...input.extrinsic.faults.map(
-          ({ ed25519PublicKey }) => ed25519PublicKey,
-        ),
-      ]),
-    } as Posterior<IDisputesState>;
   },
-
-  assertInputValid(input, curState) {
-    // enforce culprit keys are not in psi_o and signture is valid
-    // (102)
-    input.extrinsic.culprit.forEach((culprit) => {
-      if (curState.psi_o.has(culprit.ed25519PublicKey)) {
-        throw new Error("culprit.ed25519PublicKey must not be in psi_o");
-      }
-      const verified = Ed25519.verifySignature(
-        culprit.signature,
-        culprit.ed25519PublicKey,
-        new Uint8Array([...JAM_GUARANTEE, ...bigintToBytes(culprit.hash, 32)]),
-      );
-      assert(verified, "culprit signature is invalid");
-      // each culprit should reference a verdict
-      if (!input.extrinsic.verdicts.some((v) => v.hash === culprit.hash)) {
-        throw new Error("culprit.hash must reference a verdict");
-      }
-    });
-
-    // enforce faults keys are not in psi_o and signature is valid
-    // (102)
-    input.extrinsic.faults.forEach((fault) => {
-      if (curState.psi_o.has(fault.ed25519PublicKey)) {
-        throw new Error("fault.ed25519PublicKey must not be in psi_o");
-      }
-      const verified = Ed25519.verifySignature(
-        fault.signature,
-        fault.ed25519PublicKey,
-        new Uint8Array([
-          ...(fault.validity === 1 ? JAM_VALID : JAM_INVALID),
-          ...bigintToBytes(fault.hash, 32),
-        ]),
-      );
-      assert(verified, "culprit signature is invalid");
-    });
-
-    // enforce verdicts are ordered and not duplicated by report hash
-    // (103)
-    input.extrinsic.verdicts.length === 0 ||
-      input.extrinsic.verdicts.reduce((prev, curr) => {
-        if (prev.hash >= curr.hash) {
-          throw new Error("verdicts must be ordered/unique by .hash");
-        }
-        return curr;
-      });
-
-    input.extrinsic.verdicts.forEach((verdict) => {
-      if (verdict.epochIndex < epochIndex(input.curTau) - 1) {
-        throw new Error("verdicts must be for the current or previous epoch");
-      }
-    });
-
-    // enforce culprit are ordered by ed25519PublicKey
-    // (104)
-    input.extrinsic.culprit.length === 0 ||
-      input.extrinsic.culprit.reduce((prev, curr) => {
-        if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
-          throw new Error(
-            "culprit must be ordered/unique by .ed25519PublicKey",
-          );
-        }
-        return curr;
-      });
-
-    // enforce faults are ordered by ed25519PublicKey
-    // (104)
-    input.extrinsic.faults.length === 0 ||
-      input.extrinsic.faults.reduce((prev, curr) => {
-        if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
-          throw new Error("faults must be ordered/unique by .ed25519PublicKey");
-        }
-        return curr;
-      });
-
-    // ensure verdict report hashes are not in psi_g or psi_b or psi_w
-    // aka not in the set of work reports that were judged to be valid, bad or wonky already
-    // (105)
-    input.extrinsic.verdicts.forEach((verdict) => {
-      if (
-        curState.psi_g.has(verdict.hash) ||
-        curState.psi_b.has(verdict.hash) ||
-        curState.psi_w.has(verdict.hash)
-      ) {
-        throw new Error("verdict.hash must not be in psi_g, psi_b or psi_w");
-      }
-    });
-
-    // ensure judgements are ordered by validatorIndex
-    // (106)
-    input.extrinsic.verdicts.forEach((verdict) => {
-      verdict.judgements.reduce((prev, curr) => {
-        if (prev.validatorIndex >= curr.validatorIndex) {
-          throw new Error(
-            "judgements must be ordered/unique by .validatorIndex",
-          );
-        }
-        return curr;
-      });
-    });
-
-    // ensure that judgements are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
-    // (107) and (108)
-    // first compute `V`
-    const V: Array<{ reportHash: Hash; votes: number }> =
-      input.extrinsic.verdicts.map((verdict) => {
-        return {
-          reportHash: verdict.hash,
-          votes: verdict.judgements.reduce(
-            (acc, curr) => acc + curr.validity,
-            0,
-          ),
-        };
-      });
-    if (
-      !V.every((v) => {
-        switch (v.votes) {
-          case 0:
-          case NUMBER_OF_VALIDATORS / 3:
-          case (2 * NUMBER_OF_VALIDATORS) / 3 + 1:
-            return true;
-          default:
-            return false;
-        }
-      })
-    ) {
-      throw new Error(
-        "judgements must be 0 or 1/3 or 2/3+1 of NUM_VALIDATORS" +
-          NUMBER_OF_VALIDATORS,
+  DisputesToPosteriorError
+> = (input, curState) => {
+  // enforce culprit keys are not in psi_o and signture is valid
+  // (102)
+  const _checkculprit = input.extrinsic.culprit.map((culprit) => {
+    if (curState.psi_o.has(culprit.ed25519PublicKey)) {
+      return err(
+        DisputesToPosteriorError.ED25519_PUBLIC_KEY_MUST_NOT_BE_IN_PSI,
       );
     }
-
-    const negativeVerdicts = V.filter((v) => v.votes === 0);
-    const positiveVerdicts = V.filter(
-      (v) => v.votes === (2 * NUMBER_OF_VALIDATORS) / 3 + 1,
+    const verified = Ed25519.verifySignature(
+      culprit.signature,
+      culprit.ed25519PublicKey,
+      new Uint8Array([...JAM_GUARANTEE, ...bigintToBytes(culprit.hash, 32)]),
     );
+    if (!verified) {
+      return err(DisputesToPosteriorError.CUPLRIT_SIGNATURE_INVALID);
+    }
+    // each culprit should reference a verdict
+    if (!input.extrinsic.verdicts.some((v) => v.hash === culprit.hash)) {
+      return err(DisputesToPosteriorError.CULPRIT_HASH_MUST_REFERENCE_VERDICT);
+    }
+    return ok(null);
+  });
+  if (_checkculprit.some((res) => res.isErr())) {
+    return _checkculprit.find((res) => res.isErr())!;
+  }
 
-    // ensure any positive verdicts are in faults
-    // (109)
-    positiveVerdicts.forEach((v) => {
-      if (!input.extrinsic.faults.some((f) => f.hash === v.reportHash)) {
-        throw new Error("positive verdicts must be in faults");
+  // enforce faults keys are not in psi_o and signature is valid
+  // (102)
+  const _checkfaults = input.extrinsic.faults.map((fault) => {
+    if (curState.psi_o.has(fault.ed25519PublicKey)) {
+      return err(
+        DisputesToPosteriorError.ED25519_PUBLIC_KEY_MUST_NOT_BE_IN_PSI,
+      );
+    }
+    const verified = Ed25519.verifySignature(
+      fault.signature,
+      fault.ed25519PublicKey,
+      new Uint8Array([
+        ...(fault.validity === 1 ? JAM_VALID : JAM_INVALID),
+        ...bigintToBytes(fault.hash, 32),
+      ]),
+    );
+    if (!verified) {
+      return err(DisputesToPosteriorError.FAULT_SIGNATURE_INVALID);
+    }
+    return ok(null);
+  });
+  if (_checkfaults.some((res) => res.isErr())) {
+    return _checkfaults.find((res) => res.isErr())!;
+  }
+
+  // enforce verdicts are ordered and not duplicated by report hash
+  // (103)
+
+  const currentEpoch = epochIndex(input.curTau);
+  if (
+    input.extrinsic.verdicts.length > 0 &&
+    input.extrinsic.verdicts[0].epochIndex < currentEpoch - 1
+  ) {
+    return err(DisputesToPosteriorError.VERDICTS_NOT_FROM_CURRENT_EPOCH);
+  }
+  for (let i = 1; i < input.extrinsic.verdicts.length; i++) {
+    const [prev, curr] = [
+      input.extrinsic.verdicts[i - 1],
+      input.extrinsic.verdicts[i],
+    ];
+    if (prev.hash >= curr.hash) {
+      return err(
+        DisputesToPosteriorError.VERDICTS_MUST_BE_ORDERED_UNIQUE_BY_HASH,
+      );
+    }
+    if (curr.epochIndex < currentEpoch - 1) {
+      return err(DisputesToPosteriorError.VERDICTS_NOT_FROM_CURRENT_EPOCH);
+    }
+  }
+
+  // enforce culprit are ordered by ed25519PublicKey
+  // (104)
+  if (input.extrinsic.culprit.length > 0) {
+    for (let i = 1; i < input.extrinsic.culprit.length; i++) {
+      const [prev, curr] = [
+        input.extrinsic.culprit[i - 1],
+        input.extrinsic.culprit[i],
+      ];
+      if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
+        return err(
+          DisputesToPosteriorError.CULPRIT_NOT_ORDERED_BY_ED25519_PUBLIC_KEY,
+        );
       }
-    });
+    }
+  }
 
-    // ensure any negative verdicts have at least 2 in cuprit
-    // (110)
-    negativeVerdicts.forEach((v) => {
+  // enforce faults are ordered by ed25519PublicKey
+  // (104)
+  if (input.extrinsic.faults.length > 0) {
+    for (let i = 1; i < input.extrinsic.faults.length; i++) {
+      const [prev, curr] = [
+        input.extrinsic.faults[i - 1],
+        input.extrinsic.faults[i],
+      ];
+      if (prev.ed25519PublicKey >= curr.ed25519PublicKey) {
+        return err(
+          DisputesToPosteriorError.FAULTS_NOT_ORDERED_BY_ED25519_PUBLIC_KEY,
+        );
+      }
+    }
+  }
+
+  // ensure verdict report hashes are not in psi_g or psi_b or psi_w
+  // aka not in the set of work reports that were judged to be valid, bad or wonky already
+  // (105)
+  for (const verdict of input.extrinsic.verdicts) {
+    if (curState.psi_g.has(verdict.hash)) {
+      return err(DisputesToPosteriorError.VERDICTS_IN_PSI_G);
+    }
+    if (curState.psi_b.has(verdict.hash)) {
+      return err(DisputesToPosteriorError.VERDICTS_IN_PSI_B);
+    }
+    if (curState.psi_w.has(verdict.hash)) {
+      return err(DisputesToPosteriorError.VERDICTS_IN_PSI_W);
+    }
+  }
+
+  // ensure judgements are ordered by validatorIndex
+  // (106)
+  if (
+    false ===
+    input.extrinsic.verdicts.every((verdict) => {
+      for (let i = 1; i < verdict.judgements.length; i++) {
+        if (
+          verdict.judgements[i - 1].validatorIndex >=
+          verdict.judgements[i].validatorIndex
+        ) {
+          return false;
+        }
+      }
+      return true;
+    })
+  ) {
+    return err(
+      DisputesToPosteriorError.JUDGEMENTS_NOT_ORDERED_BY_VALIDATOR_INDEX,
+    );
+  }
+
+  // ensure that judgements are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
+  // (107) and (108)
+  // first compute `V`
+  const V: Array<{ reportHash: Hash; votes: number }> =
+    input.extrinsic.verdicts.map((verdict) => {
+      return {
+        reportHash: verdict.hash,
+        votes: verdict.judgements.reduce((acc, curr) => acc + curr.validity, 0),
+      };
+    });
+  if (
+    !V.every((v) => {
+      switch (v.votes) {
+        case 0:
+        case NUMBER_OF_VALIDATORS / 3:
+        case (2 * NUMBER_OF_VALIDATORS) / 3 + 1:
+          return true;
+        default:
+          return false;
+      }
+    })
+  ) {
+    return err(DisputesToPosteriorError.VERDICTS_NUM_VALIDATORS);
+  }
+
+  const negativeVerdicts = V.filter((v) => v.votes === 0);
+  const positiveVerdicts = V.filter(
+    (v) => v.votes === (2 * NUMBER_OF_VALIDATORS) / 3 + 1,
+  );
+
+  // ensure any positive verdicts are in faults
+  // (109)
+  if (
+    false ===
+    positiveVerdicts.every((v) => {
+      if (!input.extrinsic.faults.some((f) => f.hash === v.reportHash)) {
+        return false;
+      }
+      return true;
+    })
+  ) {
+    return err(DisputesToPosteriorError.POSITIVE_VERDICTS_NOT_IN_FAULTS);
+  }
+
+  // ensure any negative verdicts have at least 2 in cuprit
+  // (110)
+  if (
+    false ===
+    negativeVerdicts.every((v) => {
       if (
         input.extrinsic.culprit.filter((c) => c.hash === v.reportHash).length <
         2
       ) {
-        throw new Error("negative verdicts must have at least 2 in culprit");
+        return false;
       }
-    });
+      return true;
+    })
+  ) {
+    return err(DisputesToPosteriorError.NEGATIVE_VERDICTS_NOT_IN_CULPRIT);
+  }
 
-    // verify all signatures
-    input.extrinsic.verdicts.forEach((verdict) => {
+  // verify all signatures
+  if (
+    false ===
+    input.extrinsic.verdicts.every((verdict) => {
       const validatorSet =
         verdict.epochIndex === epochIndex(input.curTau)
           ? input.kappa
@@ -265,39 +285,76 @@ export const disputesSTF = newSTF<
           message,
         );
         if (!signatureVerified) {
-          throw new Error("judgement signature is invalid");
+          return false;
         }
+        return true;
       });
-    });
+    })
+  ) {
+    return err(DisputesToPosteriorError.VERDICT_SIGNATURE_INVALID);
+  }
 
-    return V;
-  },
+  const p_state = {
+    // (112) of the graypaper
+    psi_g: new Set([
+      ...curState.psi_g,
+      ...V.filter(
+        ({ votes }) => votes == (NUMBER_OF_VALIDATORS * 2) / 3 + 1,
+      ).map(({ reportHash }) => reportHash),
+    ]),
 
-  assertPStateValid(input, p_state) {
-    // perform some other last checks
-    // (102) of the graypaper states that faults reports should be in psi_b' if `r`
-    input.extrinsic.faults.forEach(({ hash, validity }) => {
-      if (validity == 1) {
-        if (!(p_state.psi_b.has(hash) && !p_state.psi_g.has(hash))) {
-          throw new Error(
-            "with fault validity 1, the report must be in psi_b' and not in psi_o'",
-          );
-        }
-      } else {
-        if (!(!p_state.psi_b.has(hash) && p_state.psi_g.has(hash))) {
-          throw new Error(
-            "with fault validity 0, the report must NOT be in psi_b' and in psi_o'",
-          );
-        }
+    // (113) of the graypaper
+    psi_b: new Set([
+      ...curState.psi_b,
+      ...V.filter(({ votes }) => votes == 0).map(
+        ({ reportHash }) => reportHash,
+      ),
+    ]),
+
+    // (114) of the graypaper
+    psi_w: new Set([
+      ...curState.psi_w,
+      ...V.filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3).map(
+        ({ reportHash }) => reportHash,
+      ),
+    ]),
+
+    // (115) of the graypaper
+    psi_o: new Set([
+      ...curState.psi_o,
+      ...input.extrinsic.culprit.map(
+        ({ ed25519PublicKey }) => ed25519PublicKey,
+      ),
+      ...input.extrinsic.faults.map(({ ed25519PublicKey }) => ed25519PublicKey),
+    ]),
+  } as Posterior<IDisputesState>;
+
+  // perform some other last checks
+  // (102) of the graypaper states that faults reports should be in psi_b' if `r`
+  for (let i = 0; i < input.extrinsic.faults.length; i++) {
+    const { hash, validity } = input.extrinsic.faults[i];
+    if (validity == 1) {
+      if (!(p_state.psi_b.has(hash) && !p_state.psi_g.has(hash))) {
+        return err(
+          DisputesToPosteriorError.VALID_REPORT_NOT_IN_PSIB_OR_IN_PSIO,
+        );
       }
-    });
-
-    // (101) of the graypaper culrpit reports should be in psi_b'
-    input.extrinsic.culprit.forEach(({ hash }) => {
-      if (!p_state.psi_b.has(hash)) {
-        throw new Error("culprit must be in psi_b'");
+    } else {
+      if (!(!p_state.psi_b.has(hash) && p_state.psi_g.has(hash))) {
+        return err(
+          DisputesToPosteriorError.INVALID_REPORT_IN_PSIB_OR_NOT_IN_PSIO,
+        );
       }
-    });
-    // todo: missing 111
-  },
-});
+    }
+  }
+
+  // (101) of the graypaper culrpit reports should be in psi_b'
+  for (let i = 0; i < input.extrinsic.culprit.length; i++) {
+    const { hash } = input.extrinsic.culprit[i];
+    if (!p_state.psi_b.has(hash)) {
+      return err(DisputesToPosteriorError.CULPRIT_NOT_IN_PSIB);
+    }
+  }
+  // todo: missing 111
+  return ok(p_state);
+};

@@ -5,10 +5,11 @@ import {
   EG_Extrinsic,
   Hash,
   Posterior,
+  STF,
   Tau,
 } from "@tsjam/types";
-import { newSTF } from "@tsjam/utils";
 import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE } from "@tsjam/constants";
+import { Ok, ok } from "neverthrow";
 
 type Input = {
   eg: EG_Extrinsic;
@@ -17,31 +18,30 @@ type Input = {
 };
 
 // (86) and (87) - 0.4.5
-export const authorizerPool_toPosterior = newSTF<AuthorizerPool, Input>(
-  (input: Input, curState: AuthorizerPool): Posterior<AuthorizerPool> => {
-    const newState = [];
+export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, null> = (
+  input: Input,
+  curState: AuthorizerPool,
+): Ok<Posterior<AuthorizerPool>, null> => {
+  const newState = [];
 
-    for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
-      const fromQueue = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
-      let hashes: Hash[];
-      const firstWReport = input.eg.find(
-        (w) => w.workReport.coreIndex === core,
-      );
-      if (typeof firstWReport === "undefined") {
-        // F(c) results in queue[c]
-        hashes = [...curState[core], fromQueue];
-      } else {
-        // F(c) says we need to remove the leftmost workReport.hash from the curState
-        const h = firstWReport.workReport.authorizerHash;
-        const index = curState[core].findIndex((hash) => hash === h);
-        hashes = [
-          ...curState[core].slice(0, index),
-          ...curState[core].slice(index + 1),
-          fromQueue,
-        ];
-      }
-      newState.push(hashes.reverse().slice(0, AUTHPOOL_SIZE).reverse());
+  for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
+    const fromQueue = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
+    let hashes: Hash[];
+    const firstWReport = input.eg.find((w) => w.workReport.coreIndex === core);
+    if (typeof firstWReport === "undefined") {
+      // F(c) results in queue[c]
+      hashes = [...curState[core], fromQueue];
+    } else {
+      // F(c) says we need to remove the leftmost workReport.hash from the curState
+      const h = firstWReport.workReport.authorizerHash;
+      const index = curState[core].findIndex((hash) => hash === h);
+      hashes = [
+        ...curState[core].slice(0, index),
+        ...curState[core].slice(index + 1),
+        fromQueue,
+      ];
     }
-    return curState as Posterior<AuthorizerPool>;
-  },
-);
+    newState.push(hashes.reverse().slice(0, AUTHPOOL_SIZE).reverse());
+  }
+  return ok(curState as Posterior<AuthorizerPool>);
+};

@@ -4,16 +4,19 @@ import {
   Delta,
   DoubleDagger,
   Posterior,
+  STF,
   ServiceIndex,
 } from "@tsjam/types";
-import { newSTF, toPosterior } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
+import { ok } from "neverthrow";
 
 // (180)
-export const deltaToPosterior = newSTF<
+export const deltaToPosterior: STF<
   DoubleDagger<Delta>,
   { bold_t: DeferredTransfer[] }, // As of (177)
+  null,
   Posterior<Delta>
->((input, curState) => {
+> = (input, curState) => {
   const R = (d: ServiceIndex) => {
     return input.bold_t
       .slice()
@@ -33,5 +36,5 @@ export const deltaToPosterior = newSTF<
     p_delta.set(service, x);
   });
 
-  return toPosterior(p_delta);
-});
+  return ok(toPosterior(p_delta));
+};

@@ -1,14 +1,17 @@
-import { newSTF, toPosterior } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
+import { STF } from "@tsjam/types";
 import { AccumulationHistory, Tagged, Tau, WorkReport } from "@tsjam/types";
 import { EPOCH_LENGTH } from "@tsjam/constants";
+import { ok } from "neverthrow";
 
 /**
  * (180) and 181
  */
-export const accumulationHistoryToPosterior = newSTF<
+export const accumulationHistoryToPosterior: STF<
   AccumulationHistory,
-  { nAccumulatedWork: number; w_star: Tagged<WorkReport[], "W*">; tau: Tau }
->((input, curState) => {
+  { nAccumulatedWork: number; w_star: Tagged<WorkReport[], "W*">; tau: Tau },
+  null
+> = (input, curState) => {
   const P_fn = (r: WorkReport[]) => {
     return new Map(
       r.map((wr) => [
@@ -24,5 +27,5 @@ export const accumulationHistoryToPosterior = newSTF<
   for (let i = 0; i < EPOCH_LENGTH - 1; i++) {
     p_state[i] = curState[i + 1];
   }
-  return toPosterior(p_state as AccumulationHistory);
-});
+  return ok(toPosterior(p_state as AccumulationHistory));
+};
