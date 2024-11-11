@@ -4,15 +4,16 @@ import {
   Hash,
   MerkeTreeRoot,
   Posterior,
+  STF,
   ServiceIndex,
-  WorkPackageHash,
 } from "@tsjam/types";
 import { appendMMR, wellBalancedBinaryMerkleRoot } from "@tsjam/merklization";
 import { E_4 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { RecentHistory, RecentHistoryItem } from "@tsjam/types";
-import { bigintToExistingBytes, newSTF } from "@tsjam/utils";
+import { RecentHistory } from "@tsjam/types";
+import { bigintToExistingBytes } from "@tsjam/utils";
 import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
+import { ok } from "neverthrow";
 
 /**
  * (83) - 0.4.5
@@ -43,7 +44,7 @@ export const calculateAccumulateRoot = (
 /**
  * see (83) (162) (163)
  */
-export const recentHistoryToPosterior = newSTF<
+export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,
   {
     // the result of accummulation merkle tree build
@@ -51,8 +52,9 @@ export const recentHistoryToPosterior = newSTF<
     headerHash: Hash;
     eg: EG_Extrinsic;
   },
+  never,
   Posterior<RecentHistory>
->((input, curState) => {
+> = (input, curState) => {
   const toRet = curState.slice();
   const lastMMR =
     curState.length === 0
@@ -87,9 +89,11 @@ export const recentHistoryToPosterior = newSTF<
 
   // (84)
   if (toRet.length > RECENT_HISTORY_LENGTH) {
-    return toRet.slice(
-      toRet.length - RECENT_HISTORY_LENGTH,
-    ) as Posterior<RecentHistory>;
+    return ok(
+      toRet.slice(
+        toRet.length - RECENT_HISTORY_LENGTH,
+      ) as Posterior<RecentHistory>,
+    );
   }
-  return toRet as Posterior<RecentHistory>;
-});
+  return ok(toRet as Posterior<RecentHistory>);
+};
