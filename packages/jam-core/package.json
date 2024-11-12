@@ -34,7 +34,8 @@
     "@tsjam/pvm": "*",
     "@tsjam/transitions": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*"
+    "@tsjam/utils": "*",
+    "neverthrow": "^8.0.0"
   },
   "license": "MIT"
 }

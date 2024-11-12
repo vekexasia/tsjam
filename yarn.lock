@@ -977,6 +977,7 @@ __metadata:
     "@tsjam/transitions": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
+    neverthrow: "npm:^8.0.0"
   languageName: unknown
   linkType: soft
 

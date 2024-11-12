@@ -11,7 +11,6 @@ import {
   Validated,
   u32,
 } from "@tsjam/types";
-import assert from "node:assert";
 import {
   CORES,
   JAM_GUARANTEE,
@@ -22,82 +21,88 @@ import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { FisherYatesH } from "@tsjam/crypto";
 import { PHI_FN } from "@tsjam/transitions";
+import { Result, err, ok } from "neverthrow";
+
+export enum EGError {
+  EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES = "Extrinsic length must be less than CORES",
+  CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "core index must be unique and ordered",
+  CORE_INDEX_NOT_IN_BOUNDS = "core index not in bounds",
+  CREDS_MUST_BE_BETWEEN_2_AND_3 = "credential length must be between 2 and 3",
+  VALIDATOR_INDEX_MUST_BE_IN_BOUNDS = "validator index must be 0 <= x < V",
+  VALIDATOR_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "validator index must be unique and ordered",
+  SIGNATURE_INVALID = "EG signature is invalid",
+  CORE_INDEX_MISMATCH = "Core index mismatch",
+  TIMESLOT_BOUNDS_1 = "Time slot must be within bounds, R * floor(tau'/R) - 1 <= t",
+  TIMESLOT_BOUNDS_2 = "Time slot must be within bounds, t <= tau'",
+}
 
 export const assertEGValid = (
   extrinsic: EG_Extrinsic,
   deps: {
-    p_eta: Posterior<JamState["entropy"]>;
+    p_entropy: Posterior<JamState["entropy"]>;
     kappa: JamState["kappa"];
     p_kappa: Posterior<JamState["kappa"]>;
     p_lambda: Posterior<JamState["lambda"]>;
     p_tau: Posterior<Tau>;
     p_psi_o: Posterior<IDisputesState["psi_o"]>;
   },
-): Validated<EG_Extrinsic> => {
+): Result<Validated<EG_Extrinsic>, EGError> => {
   if (extrinsic.length === 0) {
-    return extrinsic as Validated<EG_Extrinsic>; // optimization
+    return ok(extrinsic as Validated<EG_Extrinsic>); // optimization
   }
   // (136)
-  assert(extrinsic.length <= CORES, "Extrinsic length must be less than CORES");
+  if (extrinsic.length > CORES) {
+    return err(EGError.EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES);
+  }
 
   // (137) - make sure they're ordered and uniqueby coreindex
-  extrinsic.reduce((acc, next) => {
-    assert(
-      next.workReport.coreIndex > acc.workReport.coreIndex,
-      "core index must be unique and ordered",
-    );
-    assert(
-      next.workReport.coreIndex < CORES && next.workReport.coreIndex >= 0,
-      "core index not in bounds",
-    );
-    return next;
-  });
+  for (let i = 1; i < extrinsic.length; i++) {
+    const [prev, next] = [extrinsic[i - 1], extrinsic[i]];
+    if (prev.workReport.coreIndex >= next.workReport.coreIndex) {
+      return err(EGError.CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED);
+    }
+    if (next.workReport.coreIndex >= CORES || next.workReport.coreIndex < 0) {
+      return err(EGError.CORE_INDEX_NOT_IN_BOUNDS);
+    }
+  }
 
-  extrinsic.forEach((ext) => {
+  for (const ext of extrinsic) {
     // 136
-    assert(
-      ext.credential.length >= 2 && ext.credential.length <= 3,
-      "credential length must be between 2 and 3",
-    );
-    ext.credential.forEach((cred) => {
-      assert(
-        cred.validatorIndex >= 0 || cred.validatorIndex < NUMBER_OF_VALIDATORS,
-        "validator index must be 0 <= x < V",
-      );
-    });
-    // 138
-    ext.credential.reduce((prev, next) => {
-      assert(
-        next.validatorIndex > prev.validatorIndex,
-        "validator index must be unique and ordered",
-      );
-      return next;
-    });
-
-    const { workReport, credential } = ext;
+    if (ext.credential.length < 2 || ext.credential.length > 3) {
+      return err(EGError.CREDS_MUST_BE_BETWEEN_2_AND_3);
+    }
     // check signature (139)
     const wrh = Hashing.blake2bBuf(
-      encodeWithCodec(WorkReportCodec, workReport),
+      encodeWithCodec(WorkReportCodec, ext.workReport),
     );
-
     const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
 
-    credential.forEach(({ signature, validatorIndex }) => {
+    // 138 and 139
+    for (const cred of ext.credential) {
+      if (
+        cred.validatorIndex < 0 ||
+        cred.validatorIndex >= NUMBER_OF_VALIDATORS
+      ) {
+        return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
+      }
+
       const isValid = Ed25519.verifySignature(
-        signature,
-        deps.kappa[validatorIndex].ed25519,
+        cred.signature,
+        deps.kappa[cred.validatorIndex].ed25519,
         messageToSign,
       );
-      assert(isValid, "EG signature is invalid");
-    });
-  });
+      if (!isValid) {
+        return err(EGError.SIGNATURE_INVALID);
+      }
+    }
+  }
 
   // (139) check second expression
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
-  extrinsic.forEach(({ workReport, timeSlot, credential }) => {
+  for (const { workReport, timeSlot, credential } of extrinsic) {
     let G: GuarantorsAssignment = G_STAR_fn({
-      p_eta2: toPosterior(deps.p_eta[2]),
-      p_eta3: toPosterior(deps.p_eta[3]),
+      p_eta2: toPosterior(deps.p_entropy[2]),
+      p_eta3: toPosterior(deps.p_entropy[3]),
       p_kappa: deps.p_kappa,
       p_lambda: deps.p_lambda,
       p_psi_o: deps.p_psi_o,
@@ -105,7 +110,7 @@ export const assertEGValid = (
     });
     if (curRotation === Math.floor(timeSlot / VALIDATOR_CORE_ROTATION)) {
       G = G_fn({
-        entropy: deps.p_eta[2],
+        entropy: deps.p_entropy[2],
         p_tau: deps.p_tau,
         tauOffset: 0 as u32,
         validatorKeys: deps.p_kappa,
@@ -113,23 +118,25 @@ export const assertEGValid = (
       });
     }
 
-    credential.forEach(({ validatorIndex }) => {
-      assert(
-        workReport.coreIndex === G.validatorsAssignedCore[validatorIndex],
-        "Core index must match",
-      );
+    for (const { validatorIndex } of credential) {
+      if (
+        workReport.coreIndex !== G.validatorsAssignedCore[validatorIndex] ||
+        VALIDATOR_CORE_ROTATION * curRotation - 1 > timeSlot ||
+        timeSlot > deps.p_tau
+      ) {
+        return err(EGError.CORE_INDEX_MISMATCH);
+      }
+
       // And
-      assert(
-        VALIDATOR_CORE_ROTATION * curRotation - 1 <= timeSlot,
-        "Time slot must be within bounds, R * floor(tau'/R) - 1 <= t",
-      );
-      assert(
-        timeSlot <= deps.p_tau,
-        "Time slot must be within bounds, t <= tau'",
-      );
-    });
-  });
-  return extrinsic as Validated<EG_Extrinsic>;
+      if (VALIDATOR_CORE_ROTATION * curRotation - 1 > timeSlot) {
+        return err(EGError.TIMESLOT_BOUNDS_1);
+      }
+      if (timeSlot > deps.p_tau) {
+        return err(EGError.TIMESLOT_BOUNDS_2);
+      }
+    }
+  }
+  return ok(extrinsic as Validated<EG_Extrinsic>);
 };
 
 /**
