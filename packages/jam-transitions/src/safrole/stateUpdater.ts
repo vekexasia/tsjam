@@ -1,22 +1,26 @@
-import { Posterior, SafroleState } from "@tsjam/types";
-import { newSTF, toPosterior } from "@tsjam/utils";
+import { Posterior, STF, SafroleState } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
+import { ok } from "neverthrow";
 
-export const safroleToPosterior = newSTF<
+export const safroleToPosterior: STF<
   SafroleState,
   {
     p_gamma_z: Posterior<SafroleState["gamma_z"]>;
     p_gamma_k: Posterior<SafroleState["gamma_k"]>;
     p_gamma_s: Posterior<SafroleState["gamma_s"]>;
     p_gamma_a: Posterior<SafroleState["gamma_a"]>;
-  }
->((input) => {
-  return computeNewSafroleState(
-    input.p_gamma_s,
-    input.p_gamma_a,
-    input.p_gamma_z,
-    input.p_gamma_k,
+  },
+  never
+> = (input, _) => {
+  return ok(
+    computeNewSafroleState(
+      input.p_gamma_s,
+      input.p_gamma_a,
+      input.p_gamma_z,
+      input.p_gamma_k,
+    ),
   );
-});
+};
 
 export const computeNewSafroleState = (
   p_gamma_s: Posterior<SafroleState["gamma_s"]>,

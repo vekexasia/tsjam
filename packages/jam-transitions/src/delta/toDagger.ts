@@ -13,7 +13,7 @@ import { Hashing } from "@tsjam/crypto";
 import { toTagged } from "@tsjam/utils";
 import { _w } from "@/utilityComputations/w.js";
 import { MAX_GAS_ACCUMULATION } from "@tsjam/constants";
-import { Result, err, ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 
 type Input = {
   // We are not using the native type to avoid circular dependencies

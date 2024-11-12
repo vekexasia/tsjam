@@ -91,10 +91,10 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const kappa = test.pre_state.kappa.map(validatorEntryMap);
   const lambda = test.pre_state.lambda.map(validatorEntryMap);
   const preDisputesState = disputesStateFromTest(test.pre_state.psi);
-  const post = disputesSTF.apply(
+  const post = disputesSTF(
     { kappa: kappa, lambda, curTau: test.pre_state.tau, extrinsic },
     preDisputesState,
-  );
+  )._unsafeUnwrap();
   const postDisputesState = disputesStateToTest(post);
   expect(postDisputesState).toEqual(test.post_state.psi);
   // todo: miss check on rho which is present in tests

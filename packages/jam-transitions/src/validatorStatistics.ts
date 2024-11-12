@@ -1,7 +1,8 @@
-import { isNewEra, newSTF } from "@tsjam/utils";
+import { isNewEra } from "@tsjam/utils";
 import {
   JamBlock,
   Posterior,
+  STF,
   SafroleState,
   SeqOfLength,
   SingleValidatorStatistics,
@@ -9,19 +10,21 @@ import {
   ValidatorStatistics,
 } from "@tsjam/types";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { ok } from "neverthrow";
 
 /**
  * computes the posterior validator statistics as depicted in
  * section 13
  */
-export const validatorStatisticsToPosterior = newSTF<
+export const validatorStatisticsToPosterior: STF<
   ValidatorStatistics,
   {
     block: JamBlock;
     safrole: SafroleState;
     curTau: Tau;
-  }
->((input, state) => {
+  },
+  never
+> = (input, state) => {
   let pi_0 = [...state[0]] as ValidatorStatistics[0];
   // (171)
   if (isNewEra(input.block.header.timeSlotIndex, input.curTau)) {
@@ -78,5 +81,5 @@ export const validatorStatisticsToPosterior = newSTF<
     };
   }
 
-  return [pi_0, state[1]] as unknown as Posterior<ValidatorStatistics>;
-});
+  return ok([pi_0, state[1]] as unknown as Posterior<ValidatorStatistics>);
+};

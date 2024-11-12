@@ -4,10 +4,10 @@ import {
   JamHeader,
   JamState,
   Posterior,
+  STF,
   SafroleState,
   SeqOfLength,
   Tau,
-  Ticket,
   TicketIdentifier,
 } from "@tsjam/types";
 import { E_4 } from "@tsjam/codec";
@@ -22,11 +22,11 @@ import {
   epochIndex,
   isFallbackMode,
   isNewNextEra,
-  newSTF,
   slotIndex,
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
+import { ok } from "neverthrow";
 
 /**
  * Z fn
@@ -51,7 +51,7 @@ export const outsideInSequencer = <
  * @see (69) and (70) in the graypaper
  * @see rotateEntropy
  */
-export const gamma_sSTF = newSTF<
+export const gamma_sSTF: STF<
   SafroleState["gamma_s"],
   {
     tau: Tau;
@@ -60,8 +60,9 @@ export const gamma_sSTF = newSTF<
     gamma_s: SafroleState["gamma_s"];
     p_kappa: Posterior<JamState["kappa"]>;
     p_eta: Posterior<JamEntropy>;
-  }
->((input) => {
+  },
+  never
+> = (input) => {
   if (
     isNewNextEra(input.p_tau, input.tau) &&
     input.gamma_a.length === EPOCH_LENGTH &&
@@ -77,9 +78,9 @@ export const gamma_sSTF = newSTF<
         typeof EPOCH_LENGTH
       >,
     );
-    return newGammaS;
+    return ok(newGammaS);
   } else if (epochIndex(input.tau) === epochIndex(input.p_tau)) {
-    return toPosterior(input.gamma_s);
+    return ok(toPosterior(input.gamma_s));
   } else {
     // we're in fallback mode
     // F(eta'_2, kappa' ) (69)
@@ -97,9 +98,9 @@ export const gamma_sSTF = newSTF<
       const index = E_4.decode(h_4).value % BigInt(input.p_kappa.length);
       newGammaS.push(input.p_kappa[Number(index)].banderSnatch);
     }
-    return newGammaS;
+    return ok(newGammaS);
   }
-});
+};
 
 if (import.meta.vitest) {
   const { vi, describe, beforeEach, expect, it } = import.meta.vitest;
@@ -136,7 +137,7 @@ if (import.meta.vitest) {
       });
       it("fallsback if gamma a is not `EPOCH_LENGTH` long", () => {
         state.gamma_a = toTagged([]);
-        const posterior = gamma_sSTF.apply(
+        const posterior = gamma_sSTF(
           {
             tau: header.timeSlotIndex,
             p_tau: toPosterior(posteriorHeader.timeSlotIndex),
@@ -146,13 +147,13 @@ if (import.meta.vitest) {
             p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
-        );
+        )._unsafeUnwrap();
         expect(isFallbackMode(posterior)).toBeTruthy();
         expect(posterior.length).toEqual(EPOCH_LENGTH);
         expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
       });
       it("fallsback if epoch skipped", () => {
-        const posterior = gamma_sSTF.apply(
+        const posterior = gamma_sSTF(
           {
             tau: header.timeSlotIndex,
             p_tau: (EPOCH_LENGTH * 2) as Posterior<Tau>,
@@ -162,13 +163,13 @@ if (import.meta.vitest) {
             p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
-        );
+        )._unsafeUnwrap();
         expect(isFallbackMode(posterior)).toBeTruthy();
         expect(posterior.length).toEqual(EPOCH_LENGTH);
         expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
       });
       it("fallsback if epoch slot index is less than `LOTTERY_MAX_SLOT`", () => {
-        const posterior = gamma_sSTF.apply(
+        const posterior = gamma_sSTF(
           {
             tau: header.timeSlotIndex,
             p_tau: (EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1) as Posterior<Tau>,
@@ -178,7 +179,7 @@ if (import.meta.vitest) {
             p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
           },
           state.gamma_s,
-        );
+        )._unsafeUnwrap();
         expect(isFallbackMode(posterior)).toBeTruthy();
         expect(posterior.length).toEqual(EPOCH_LENGTH);
         expect(Hashing.blake2bBuf).toHaveBeenCalledTimes(EPOCH_LENGTH);
@@ -186,7 +187,7 @@ if (import.meta.vitest) {
     });
     describe("normal", () => {
       it("should return ticketidentifiers if not in fallback mode", () => {
-        const posterior = gamma_sSTF.apply(
+        const posterior = gamma_sSTF(
           {
             tau: LOTTERY_MAX_SLOT as Posterior<Tau>,
             p_tau: EPOCH_LENGTH as Posterior<Tau>,
@@ -200,7 +201,7 @@ if (import.meta.vitest) {
             p_eta: [] as unknown as Posterior<JamEntropy>,
           },
           state.gamma_s,
-        );
+        )._unsafeUnwrap();
         expect(posterior.length).toEqual(EPOCH_LENGTH);
         expect(isFallbackMode(posterior)).toBeFalsy();
         expect((posterior[0] as TicketIdentifier).id).toEqual(0n);
