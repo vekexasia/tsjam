@@ -4,7 +4,7 @@ export * from "./historicalLookup.js";
 export * from "./Timekeeping.js";
 export * from "./utils.js";
 export * from "./serviceAccountVirtualElements.js";
-import { Err, Ok, Result, err, ok } from "neverthrow";
+import { Err, Ok } from "neverthrow";
 
 declare module "neverthrow" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

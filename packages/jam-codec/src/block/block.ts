@@ -8,7 +8,6 @@ import { JamCodec } from "@/codec.js";
 import {
   EA_Extrinsic,
   JamBlock,
-  JamHeader,
   ServiceIndex,
   TicketExtrinsics,
 } from "@tsjam/types";

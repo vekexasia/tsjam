@@ -41,11 +41,10 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
 import { IDisputesState, TicketExtrinsics } from "@tsjam/types";
 import { hexToBytes, hextToBigInt, toPosterior, toTagged } from "@tsjam/utils";
 import {
-  entropyRotationSTF,
   etToIdentifiers,
-  eta0STF,
   gamma_aSTF,
   gamma_sSTF,
+  rotateEntropy,
   rotateKeys,
   safroleToPosterior,
 } from "@tsjam/transitions";
@@ -68,16 +67,10 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     p_tau: toPosterior(test.input.slot),
   };
 
-  // TODO: make these 2 a single STF with proper inputs
-  const [, p_entropy] = entropyRotationSTF(
-    tauTransition,
+  const [, p_entropy] = rotateEntropy(
+    { ...tauTransition, headerEntropySig: hextToBigInt(test.input.entropy) },
     curState.entropy,
   ).safeRet();
-  const [, entropy0] = eta0STF(
-    hextToBigInt(test.input.entropy),
-    curState.entropy[0],
-  ).safeRet();
-  p_entropy[0] = entropy0;
 
   const p_disputesState: IDisputesState = {
     psi_o: new Set(),

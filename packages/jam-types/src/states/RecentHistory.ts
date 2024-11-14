@@ -1,5 +1,5 @@
 import { Hash, MerkeTreeRoot, UpToSeq, WorkPackageHash } from "@/genericTypes";
-import { CORES, RECENT_HISTORY_LENGTH } from "@tsjam/constants";
+import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
 /*
  * @see section 7

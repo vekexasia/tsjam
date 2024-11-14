@@ -31,7 +31,7 @@ export enum DeltaToDaggerError {
   GAS_LIMIT_EXCEEDED = "Gas limit exceeded for accummulation",
   PREIMAGE_ALREADY_PROVIDED = "preimage already provided",
   SERVICE_INDEX_NOT_FOUND = "service index not found",
-  PREIMAGE_LENGTH_ALREADY_PROVIDED = "preimage already provided",
+  PREIMAGE_LENGTH_ALREADY_PROVIDED = "preimage length already provided",
   PREIMAGES_NOT_SORTED = "preimages should be sorted",
 }
 

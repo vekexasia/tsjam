@@ -20,7 +20,6 @@ export interface JamBlock {
  * `E` - the exstrinsics tuple in JamBlock
  */
 export interface JamBlockExtrinsics {
-
   /**
    * `Et` - Tickets, used for the mechanism which manages the selection of validators for the permissioning of block authoring.
    */

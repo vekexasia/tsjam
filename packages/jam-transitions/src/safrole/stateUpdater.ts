@@ -11,6 +11,7 @@ export const safroleToPosterior: STF<
     p_gamma_a: Posterior<SafroleState["gamma_a"]>;
   },
   never
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 > = (input, _) => {
   return ok(
     computeNewSafroleState(

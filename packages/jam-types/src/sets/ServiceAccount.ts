@@ -5,8 +5,8 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  * The analogous to a Smart Contract in ETH.
  * (89) in the graypaper
  *  NOTE: there are some `virtual` elements such as
- * `i` - ∈ N232 => computed in `serviceAccountItemInStorage`
- * `l` - ∈ N264 => computed in `serviceAccountTotalOctets`
+ * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
+ * `l` - ∈ N264 = computed in `serviceAccountTotalOctets`
  * `t` - balance threshold  computed in `serviceAccountGasThreshold`
  */
 export interface ServiceAccount {

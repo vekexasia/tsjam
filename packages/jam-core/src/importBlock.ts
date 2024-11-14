@@ -1,12 +1,10 @@
 import { LOTTERY_MAX_SLOT } from "@tsjam/constants";
-import { Err, Ok, err, ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 import {
   Delta,
   DoubleDagger,
   JamBlock,
-  JamEntropy,
   JamState,
-  Posterior,
   STF,
   SeqOfLength,
   TicketIdentifier,
@@ -30,14 +28,13 @@ import {
   deltaToDagger,
   deltaToPosterior,
   disputesSTF,
-  entropyRotationSTF,
   etToIdentifiers,
-  eta0STF,
   gamma_aSTF,
   gamma_sSTF,
   outsideInSequencer,
   recentHistoryToDagger,
   recentHistoryToPosterior,
+  rotateEntropy,
   rotateKeys,
   safroleToPosterior,
   validatorStatisticsToPosterior,
@@ -102,22 +99,10 @@ export const importBlock: STF<
   if (tauTransition.tau >= tauTransition.p_tau) {
     return err(ImportBlockError.InvalidSlot);
   }
-  const [entropyError, p_entropy] = entropyRotationSTF(
-    tauTransition,
+  const [, p_entropy] = rotateEntropy(
+    { ...tauTransition, headerEntropySig: block.header.entropySignature },
     curState.entropy,
-  )
-    .andThen((p_entropy) =>
-      eta0STF(block.header.entropySignature, curState.entropy[0]).map(
-        (eta0) =>
-          [eta0, ...p_entropy.slice(1)] as unknown as Posterior<JamEntropy>,
-      ),
-    )
-    .safeRet();
-
-  if (entropyError) {
-    // should be dead code
-    return err(entropyError);
-  }
+  ).safeRet();
 
   const [p_disp_error, p_disputesState] = disputesSTF(
     {

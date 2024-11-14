@@ -15,7 +15,7 @@ import { Bandersnatch } from "@tsjam/crypto";
 import { afterAll, beforeEach } from "vitest";
 import { isFallbackMode, isNewEra, toPosterior, toTagged } from "@tsjam/utils";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { Result, err, ok } from "neverthrow";
+import { Result, ok } from "neverthrow";
 
 /**
  * Phi function
