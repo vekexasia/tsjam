@@ -18,10 +18,10 @@ type Input = {
 };
 
 // (86) and (87) - 0.4.5
-export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, null> = (
+export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, never> = (
   input: Input,
   curState: AuthorizerPool,
-): Ok<Posterior<AuthorizerPool>, null> => {
+): Ok<Posterior<AuthorizerPool>, never> => {
   const newState = [];
 
   for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {

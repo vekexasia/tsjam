@@ -14,7 +14,7 @@ import { ok } from "neverthrow";
 export const deltaToPosterior: STF<
   DoubleDagger<Delta>,
   { bold_t: DeferredTransfer[] }, // As of (177)
-  null,
+  never,
   Posterior<Delta>
 > = (input, curState) => {
   const R = (d: ServiceIndex) => {

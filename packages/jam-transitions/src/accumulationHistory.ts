@@ -10,7 +10,7 @@ import { ok } from "neverthrow";
 export const accumulationHistoryToPosterior: STF<
   AccumulationHistory,
   { nAccumulatedWork: number; w_star: Tagged<WorkReport[], "W*">; tau: Tau },
-  null
+  never
 > = (input, curState) => {
   const P_fn = (r: WorkReport[]) => {
     return new Map(

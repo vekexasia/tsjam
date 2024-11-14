@@ -1072,6 +1072,7 @@ __metadata:
     "@tsjam/types": "workspace:*"
     "@vekexasia/bigint-uint8array": "npm:^1.1.1"
     bigint-buffer: "npm:^1.1.5"
+    neverthrow: "npm:^8.0.0"
   languageName: unknown
   linkType: soft
 

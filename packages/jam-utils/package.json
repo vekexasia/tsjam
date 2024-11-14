@@ -33,5 +33,8 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "neverthrow": "^8.0.0"
+  }
 }

@@ -38,21 +38,16 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   });
   return toRet;
 });
-import {
-  DisputeExtrinsic,
-  IDisputesState,
-  TicketExtrinsics,
-} from "@tsjam/types";
+import { IDisputesState, TicketExtrinsics } from "@tsjam/types";
 import { hexToBytes, hextToBigInt, toPosterior, toTagged } from "@tsjam/utils";
 import {
-  disputesSTF,
   entropyRotationSTF,
+  etToIdentifiers,
   eta0STF,
   gamma_aSTF,
   gamma_sSTF,
   rotateKeys,
   safroleToPosterior,
-  ticketExtrinsicToIdentifiersSTF,
 } from "@tsjam/transitions";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
@@ -74,11 +69,15 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   };
 
   // TODO: make these 2 a single STF with proper inputs
-  const p_entropy = entropyRotationSTF.apply(tauTransition, curState.entropy);
-  p_entropy[0] = eta0STF.apply(
+  const [, p_entropy] = entropyRotationSTF(
+    tauTransition,
+    curState.entropy,
+  ).safeRet();
+  const [, entropy0] = eta0STF(
     hextToBigInt(test.input.entropy),
     curState.entropy[0],
-  );
+  ).safeRet();
+  p_entropy[0] = entropy0;
 
   const p_disputesState: IDisputesState = {
     psi_o: new Set(),
@@ -87,7 +86,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     psi_w: new Set(),
   };
 
-  const [p_lambda, p_kappa, p_gamma_k, p_gamma_z] = rotateKeys.apply(
+  const [, [p_lambda, p_kappa, p_gamma_k, p_gamma_z]] = rotateKeys(
     {
       p_psi_o: toPosterior(p_disputesState.psi_o),
       iota: curState.iota,
@@ -99,20 +98,16 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       curState.safroleState.gamma_k,
       curState.safroleState.gamma_z,
     ],
-  );
+  ).safeRet();
 
-  const ticketIdentifiers = ticketExtrinsicToIdentifiersSTF.apply(
-    {
-      extrinsic: tickets,
-      p_tau: tauTransition.p_tau,
-      gamma_z: curState.safroleState.gamma_z,
-      gamma_a: curState.safroleState.gamma_a,
-      p_entropy,
-    },
-    null,
-  );
+  const ticketIdentifiers = etToIdentifiers(tickets, {
+    p_tau: tauTransition.p_tau,
+    gamma_z: curState.safroleState.gamma_z,
+    gamma_a: curState.safroleState.gamma_a,
+    p_entropy,
+  })._unsafeUnwrap();
 
-  const p_gamma_s = gamma_sSTF.apply(
+  const p_gamma_s = gamma_sSTF(
     {
       ...tauTransition,
       gamma_a: curState.safroleState.gamma_a,
@@ -121,17 +116,17 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       p_eta: p_entropy,
     },
     curState.safroleState.gamma_s,
-  );
+  )._unsafeUnwrap();
 
-  const p_gamma_a = gamma_aSTF.apply(
+  const p_gamma_a = gamma_aSTF(
     {
       ...tauTransition,
       newIdentifiers: ticketIdentifiers,
     },
     curState.safroleState.gamma_a,
-  );
+  )._unsafeUnwrap();
 
-  const p_safroleState = safroleToPosterior.apply(
+  const p_safroleState = safroleToPosterior(
     {
       p_gamma_a,
       p_gamma_k,
@@ -139,7 +134,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       p_gamma_z,
     },
     curState.safroleState,
-  );
+  )._unsafeUnwrap();
 
   const normalizedPostState = stateToTestData({
     ...curState,

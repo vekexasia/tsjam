@@ -1,17 +1,28 @@
 import { LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import { Err, Ok, err, ok } from "neverthrow";
 import {
   Delta,
   DoubleDagger,
   JamBlock,
+  JamEntropy,
   JamState,
+  Posterior,
+  STF,
   SeqOfLength,
   TicketIdentifier,
   u64,
 } from "@tsjam/types";
 import {
+  DeltaToDaggerError,
+  DisputesToPosteriorError,
+  ETError,
+  GammaAError,
   RHO2DoubleDagger,
+  RHO2DoubleDaggerError,
   RHO_2_Dagger,
+  RHO_2_DaggerError,
   RHO_toPosterior,
+  RhoToPosteriorError,
   accumulationHistoryToPosterior,
   accumulationQueueToPosterior,
   authorizerPool_toPosterior,
@@ -20,6 +31,7 @@ import {
   deltaToPosterior,
   disputesSTF,
   entropyRotationSTF,
+  etToIdentifiers,
   eta0STF,
   gamma_aSTF,
   gamma_sSTF,
@@ -28,7 +40,6 @@ import {
   recentHistoryToPosterior,
   rotateKeys,
   safroleToPosterior,
-  ticketExtrinsicToIdentifiersSTF,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import {
@@ -40,7 +51,7 @@ import {
 } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
-import { assertEGValid } from "@/validateEG.js";
+import { EGError, assertEGValid } from "@/validateEG.js";
 import {
   accHistoryUnion,
   accumulatableReports,
@@ -50,13 +61,36 @@ import {
   withPrereqAvailableReports,
 } from "@tsjam/pvm";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import assert from "assert";
 import { verifyEntropySignature, verifySeal } from "./verifySeal";
+
+export enum ImportBlockError {
+  InvalidSlot = "Invalid slot",
+  InvalidSeal = "Invalid seal",
+  InvalidEntropySignature = "Invalid entropy signature",
+  InvalidEntropy = "Invalid entropy",
+  InvalidEpochMarker = "Epoch marker set but not in new epoch",
+  InvalidEpochMarkerValidator = "Epoch marker validator key mismatch",
+  WinningTicketsNotEnoughLong = "Winning tickets not EPOCH long",
+  WinningTicketsNotExpected = "Winning tickets set but not expected",
+  WinningTicketMismatch = "WInning ticket mismatch",
+}
 
 /**
  * TODO: this should be an STF
  */
-export const importBlock = (block: JamBlock, curState: JamState): JamState => {
+export const importBlock: STF<
+  JamState,
+  JamBlock,
+  | ImportBlockError
+  | RhoToPosteriorError
+  | DeltaToDaggerError
+  | GammaAError
+  | EGError
+  | ETError
+  | RHO_2_DaggerError
+  | RHO2DoubleDaggerError
+  | DisputesToPosteriorError
+> = (block, curState) => {
   const headerHash = Hashing.blake2b(
     encodeWithCodec(UnsignedHeaderCodec, block.header),
   );
@@ -66,17 +100,26 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
   };
 
   if (tauTransition.tau >= tauTransition.p_tau) {
-    throw new Error("Invalid slot");
+    return err(ImportBlockError.InvalidSlot);
+  }
+  const [entropyError, p_entropy] = entropyRotationSTF(
+    tauTransition,
+    curState.entropy,
+  )
+    .andThen((p_entropy) =>
+      eta0STF(block.header.entropySignature, curState.entropy[0]).map(
+        (eta0) =>
+          [eta0, ...p_entropy.slice(1)] as unknown as Posterior<JamEntropy>,
+      ),
+    )
+    .safeRet();
+
+  if (entropyError) {
+    // should be dead code
+    return err(entropyError);
   }
 
-  // TODO: make these 2 a single STF with proper inputs
-  const p_entropy = entropyRotationSTF.apply(tauTransition, curState.entropy);
-  p_entropy[0] = eta0STF.apply(
-    block.header.entropySignature,
-    curState.entropy[0],
-  );
-
-  const p_disputesState = disputesSTF.apply(
+  const [p_disp_error, p_disputesState] = disputesSTF(
     {
       kappa: curState.kappa,
       lambda: curState.lambda,
@@ -84,8 +127,12 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       curTau: curState.tau,
     },
     curState.disputes,
-  );
-  const [p_lambda, p_kappa, p_gamma_k, p_gamma_z] = rotateKeys.apply(
+  ).safeRet();
+  if (p_disp_error) {
+    return err(p_disp_error);
+  }
+
+  const [rotationError, [p_lambda, p_kappa, p_gamma_k, p_gamma_z]] = rotateKeys(
     {
       p_psi_o: toPosterior(p_disputesState.psi_o),
       iota: curState.iota,
@@ -97,20 +144,25 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       curState.safroleState.gamma_k,
       curState.safroleState.gamma_z,
     ],
-  );
+  ).safeRet();
+  if (rotationError) {
+    return err(rotationError);
+  }
 
-  const ticketIdentifiers = ticketExtrinsicToIdentifiersSTF.apply(
+  const [etError, ticketIdentifiers] = etToIdentifiers(
+    block.extrinsics.tickets,
     {
-      extrinsic: block.extrinsics.tickets,
       p_tau: tauTransition.p_tau,
       gamma_z: curState.safroleState.gamma_z,
       gamma_a: curState.safroleState.gamma_a,
       p_entropy,
     },
-    null,
-  );
+  ).safeRet();
+  if (etError) {
+    return err(etError);
+  }
 
-  const p_gamma_s = gamma_sSTF.apply(
+  const [gamma_sErr, p_gamma_s] = gamma_sSTF(
     {
       ...tauTransition,
       gamma_a: curState.safroleState.gamma_a,
@@ -119,17 +171,23 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       p_eta: p_entropy,
     },
     curState.safroleState.gamma_s,
-  );
+  ).safeRet();
+  if (gamma_sErr) {
+    return err(gamma_sErr);
+  }
 
-  const p_gamma_a = gamma_aSTF.apply(
+  const [gamma_aErr, p_gamma_a] = gamma_aSTF(
     {
       ...tauTransition,
       newIdentifiers: ticketIdentifiers,
     },
     curState.safroleState.gamma_a,
-  );
+  ).safeRet();
+  if (gamma_aErr) {
+    return err(gamma_aErr);
+  }
 
-  const p_safroleState = safroleToPosterior.apply(
+  const [, p_safroleState] = safroleToPosterior(
     {
       p_gamma_a,
       p_gamma_k,
@@ -137,49 +195,63 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       p_gamma_z,
     },
     curState.safroleState,
-  );
+  ).safeRet();
 
-  // checks guarantees are valid
-  assertEGValid(block.extrinsics.reportGuarantees, {
-    //TODO:rename to p_entropy
-    p_eta: p_entropy,
-    kappa: curState.kappa,
-    p_kappa,
-    p_lambda,
-    p_tau: tauTransition.p_tau,
-    p_psi_o: toPosterior(p_disputesState.psi_o),
-  });
-
-  const d_rho = RHO_2_Dagger.apply(p_disputesState, curState.rho);
-
-  const dd_rho = RHO2DoubleDagger.apply(
+  const [egError, validatedEG] = assertEGValid(
+    block.extrinsics.reportGuarantees,
     {
-      ea: block.extrinsics.assurances,
+      p_tau: tauTransition.p_tau,
+      kappa: curState.kappa,
       p_kappa,
-      hp: block.header.parent,
+      p_lambda,
+      p_entropy,
+      p_psi_o: toPosterior(p_disputesState.psi_o),
     },
-    d_rho,
-  );
+  ).safeRet();
+  if (egError) {
+    return err(egError);
+  }
 
-  const p_rho = RHO_toPosterior.apply(
+  const [rhoDaggErr, d_rho] = RHO_2_Dagger(
+    p_disputesState,
+    curState.rho,
+  ).safeRet();
+  if (rhoDaggErr) {
+    return err(rhoDaggErr);
+  }
+
+  const [rhoDDaggErr, dd_rho] = RHO2DoubleDagger(
+    { ea: block.extrinsics.assurances, p_kappa, hp: block.header.parent },
+    d_rho,
+  ).safeRet();
+  if (rhoDDaggErr) {
+    return err(rhoDDaggErr);
+  }
+
+  const [rhoPostErr, p_rho] = RHO_toPosterior(
     {
-      EG_Extrinsic: block.extrinsics.reportGuarantees,
+      EG_Extrinsic: validatedEG,
       kappa: curState.kappa,
       p_tau: tauTransition.p_tau,
     },
     dd_rho,
-  );
+  ).safeRet();
+  if (rhoPostErr) {
+    return err(rhoPostErr);
+  }
 
-  const d_delta = deltaToDagger.apply(
+  const [deltaDaggErr, d_delta] = deltaToDagger(
     {
-      EG_Extrinsic: block.extrinsics.reportGuarantees,
+      EG_Extrinsic: validatedEG,
       EP_Extrinsic: block.extrinsics.preimages,
       p_tau: tauTransition.p_tau,
     },
     curState.serviceAccounts,
-  );
-
-  /**
+  ).safeRet();
+  if (deltaDaggErr) {
+    return err(deltaDaggErr);
+  }
+  /*
    * Integrate state to calculate several posterior state
    * as defined in (176) and (177)
    */
@@ -196,7 +268,6 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     curState.accumulationHistory,
     curState.tau,
   );
-
   const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
     3n as u64,
     w_star,
@@ -214,24 +285,23 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
   const p_authorizerQueue = toPosterior(o.authQueue);
   const dd_delta = o.delta as DoubleDagger<Delta>;
   const p_iota = toPosterior(o.validatorKeys);
-
-  const p_delta = deltaToPosterior.apply(
+  const [, p_delta] = deltaToPosterior(
     {
       bold_t,
     },
     dd_delta,
-  );
+  ).safeRet();
 
-  const p_accumulationHistory = accumulationHistoryToPosterior.apply(
+  const [, p_accumulationHistory] = accumulationHistoryToPosterior(
     {
       nAccumulatedWork,
       w_star,
       tau: curState.tau,
     },
     curState.accumulationHistory,
-  );
+  ).safeRet();
 
-  const p_accumulationQueue = accumulationQueueToPosterior.apply(
+  const [, p_accumulationQueue] = accumulationQueueToPosterior(
     {
       p_accHistory: p_accumulationHistory,
       p_tau: toPosterior(block.header.timeSlotIndex),
@@ -239,41 +309,41 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
       w_q,
     },
     curState.accumulationQueue,
-  );
+  ).safeRet();
 
-  const d_recentHistory = recentHistoryToDagger.apply(
+  const [, d_recentHistory] = recentHistoryToDagger(
     {
       hr: block.header.priorStateRoot,
     },
     curState.recentHistory,
-  );
+  ).safeRet();
 
-  const p_recentHistory = recentHistoryToPosterior.apply(
+  const [, p_recentHistory] = recentHistoryToPosterior(
     {
       accumulateRoot: calculateAccumulateRoot(C),
       headerHash: headerHash,
       eg: block.extrinsics.reportGuarantees,
     },
     d_recentHistory,
-  );
+  ).safeRet();
 
-  const p_validatorStatistics = validatorStatisticsToPosterior.apply(
+  const [, p_validatorStatistics] = validatorStatisticsToPosterior(
     {
       block: block,
       safrole: curState.safroleState,
       curTau: curState.tau,
     },
     curState.validatorStatistics,
-  );
+  ).safeRet();
 
-  const p_authorizerPool = authorizerPool_toPosterior.apply(
+  const [, p_authorizerPool] = authorizerPool_toPosterior(
     {
       p_queue: p_authorizerQueue,
       eg: toTagged(block.extrinsics.reportGuarantees),
       p_tau: tauTransition.p_tau,
     },
     curState.authPool,
-  );
+  ).safeRet();
 
   const p_state = toPosterior({
     entropy: p_entropy,
@@ -294,31 +364,30 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     disputes: p_disputesState,
   });
 
-  assert(verifySeal(block.header, p_state), "seal not verified");
+  if (!verifySeal(block.header, p_state)) {
+    return err(ImportBlockError.InvalidSeal);
+  }
 
-  assert(
-    verifyEntropySignature(block.header, p_state),
-    "entropy signature not verified",
-  );
+  if (!verifyEntropySignature(block.header, p_state)) {
+    return err(ImportBlockError.InvalidEntropySignature);
+  }
 
   // check epoch marker He (72) - 0.4.5
   if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
-    assert(
-      block.header.epochMarker?.entropy === p_entropy[1],
-      `entropy mismatch`,
-    );
+    if (block.header.epochMarker?.entropy !== p_entropy[1]) {
+      return err(ImportBlockError.InvalidEntropy);
+    }
     for (let i = 0; i < block.header.epochMarker?.validatorKeys.length; i++) {
-      assert(
-        block.header.epochMarker!.validatorKeys[i] ===
-          p_gamma_k[i].banderSnatch,
-        `[${i}] epochmarker validators differ from posterior gamma_k`,
-      );
+      if (
+        block.header.epochMarker!.validatorKeys[i] !== p_gamma_k[i].banderSnatch
+      ) {
+        return err(ImportBlockError.InvalidEpochMarkerValidator);
+      }
     }
   } else {
-    assert(
-      typeof block.header.epochMarker === "undefined",
-      "epochMarker defined even if not new epoch",
-    );
+    if (typeof block.header.epochMarker !== "undefined") {
+      return err(ImportBlockError.InvalidEpochMarker);
+    }
   }
 
   //check winning tickets Hw (73) - 0.4.5
@@ -328,27 +397,25 @@ export const importBlock = (block: JamBlock, curState: JamState): JamState => {
     LOTTERY_MAX_SLOT <= slotIndex(block.header.timeSlotIndex) &&
     curState.safroleState.gamma_a.length === EPOCH_LENGTH
   ) {
-    assert(typeof block.header.winningTickets !== "undefined");
+    if (block.header.winningTickets?.length !== EPOCH_LENGTH) {
+      return err(ImportBlockError.WinningTicketsNotEnoughLong);
+    }
     const expectedHw = outsideInSequencer(
       curState.safroleState.gamma_a as unknown as SeqOfLength<
         TicketIdentifier,
         typeof EPOCH_LENGTH
       >,
     );
-    assert(
-      block.header.winningTickets.length === EPOCH_LENGTH,
-      "winning tickets not E long",
-    );
     // (73) - 0.4.5
     for (let i = 0; i < EPOCH_LENGTH; i++) {
-      assert(
-        block.header.winningTickets[i] === expectedHw[i],
-        `[${i}] winningTicket different than expected`,
-      );
+      if (block.header.winningTickets[i] !== expectedHw[i]) {
+        return err(ImportBlockError.WinningTicketMismatch);
+      }
     }
   } else {
-    assert(typeof block.header.winningTickets === "undefined");
+    if (typeof block.header.winningTickets !== "undefined") {
+      return err(ImportBlockError.WinningTicketsNotExpected);
+    }
   }
-
-  return p_state;
+  return ok(p_state);
 };

@@ -7,6 +7,7 @@ import {
   STF,
   Tagged,
   Tau,
+  Validated,
   u32,
 } from "@tsjam/types";
 import { Hashing } from "@tsjam/crypto";
@@ -23,7 +24,7 @@ type Input = {
   // EG extrinsic is not a direct depenedency
   // but it's needed to calculate `w` at 141 from which
   // we assert the gas limit for accumulation phase
-  EG_Extrinsic: EG_Extrinsic;
+  EG_Extrinsic: Validated<EG_Extrinsic>;
 };
 
 export enum DeltaToDaggerError {

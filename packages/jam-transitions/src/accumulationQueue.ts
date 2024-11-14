@@ -18,7 +18,7 @@ export const accumulationQueueToPosterior: STF<
     p_tau: Posterior<Tau>;
     w_q: AvailableWithPrereqWorkReports;
   },
-  null
+  never
 > = (input, curState) => {
   const m = input.tau % EPOCH_LENGTH;
 
