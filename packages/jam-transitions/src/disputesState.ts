@@ -265,7 +265,7 @@ export const disputesSTF: STF<
         verdict.epochIndex === epochIndex(input.curTau)
           ? input.kappa
           : input.lambda;
-      verdict.judgements.forEach((judgement) => {
+      return verdict.judgements.every((judgement) => {
         const validatorPubKey = validatorSet[judgement.validatorIndex].ed25519;
         let message: Uint8Array;
         if (judgement.validity === 1) {

@@ -91,10 +91,13 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const kappa = test.pre_state.kappa.map(validatorEntryMap);
   const lambda = test.pre_state.lambda.map(validatorEntryMap);
   const preDisputesState = disputesStateFromTest(test.pre_state.psi);
-  const post = disputesSTF(
+  const [err, post] = disputesSTF(
     { kappa: kappa, lambda, curTau: test.pre_state.tau, extrinsic },
     preDisputesState,
-  )._unsafeUnwrap();
+  ).safeRet();
+  if (typeof err !== "undefined") {
+    throw new Error(err);
+  }
   const postDisputesState = disputesStateToTest(post);
   expect(postDisputesState).toEqual(test.post_state.psi);
   // todo: miss check on rho which is present in tests
@@ -165,11 +168,11 @@ describe("disputes-test-vectors", () => {
     it("progress_with_faults-4", () => test("progress_with_faults-4"));
     it("progress_with_faults-5", () =>
       expect(() => test("progress_with_faults-5")).toThrow(
-        "verdict.hash must not be in psi_g, psi_b or psi_w",
+        "verdict.hash must not be in psi_w",
       ));
     it("progress_with_faults-6", () =>
       expect(() => test("progress_with_faults-6")).toThrow(
-        "fault.ed25519PublicKey must not be in psi_o",
+        "culprit.ed25519PublicKey must not be in psi_o",
       ));
     it("progress_with_faults-7", () =>
       expect(() => test("progress_with_faults-7")).toThrow(
@@ -179,7 +182,7 @@ describe("disputes-test-vectors", () => {
       test("progress_invalidates_avail_assignments-1"));
     it("progress_with_bad_signatures-1", () =>
       expect(() => test("progress_with_bad_signatures-1")).toThrow(
-        "judgement signature is invalid",
+        "verdict signature is invalid",
       ));
     it("progress_with_bad_signatures-2", () =>
       expect(() => test("progress_with_bad_signatures-2")).toThrow(
@@ -258,11 +261,11 @@ describe("disputes-test-vectors", () => {
     it("progress_with_faults-4", () => test("progress_with_faults-4"));
     it("progress_with_faults-5", () =>
       expect(() => test("progress_with_faults-5")).toThrow(
-        "verdict.hash must not be in psi_g, psi_b or psi_w",
+        "verdict.hash must not be in psi_w",
       ));
     it("progress_with_faults-6", () =>
       expect(() => test("progress_with_faults-6")).toThrow(
-        "fault.ed25519PublicKey must not be in psi_o",
+        "culprit.ed25519PublicKey must not be in psi_o",
       ));
     it("progress_with_faults-7", () =>
       expect(() => test("progress_with_faults-7")).toThrow(
@@ -272,7 +275,7 @@ describe("disputes-test-vectors", () => {
       test("progress_invalidates_avail_assignments-1"));
     it("progress_with_bad_signatures-1", () =>
       expect(() => test("progress_with_bad_signatures-1")).toThrow(
-        "judgement signature is invalid",
+        "verdict signature is invalid",
       ));
     it("progress_with_bad_signatures-2", () =>
       expect(() => test("progress_with_bad_signatures-2")).toThrow(
