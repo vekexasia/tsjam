@@ -2,20 +2,16 @@ import { JamCodec } from "@/codec.js";
 import assert from "assert";
 
 /**
- * Encodes a set as defined in 307 or C.1.7
+ * Encodes a set - notice that the codec itself can not decode
+ * (C.12 - 0.5.0)
  */
-export const createSetCodec = <T, N extends number>(
+export const createSetCodec = <T>(
   itemCodec: JamCodec<T>,
   sorter: (a: T, b: T) => number,
-  n: N,
 ): JamCodec<Set<T>> => {
   return {
     encode(value, bytes) {
       const sortedValues = [...value.values()].sort(sorter);
-      assert(
-        sortedValues.length === n,
-        `Invalid set length ${sortedValues.length} - ${n}`,
-      );
       let offset = 0;
       for (const v of sortedValues) {
         offset += itemCodec.encode(v, bytes.subarray(offset));
@@ -23,9 +19,12 @@ export const createSetCodec = <T, N extends number>(
       return offset;
     },
     decode(bytes) {
+      // NOTE: there is no indication this can work.
+      // It will successfully decode only if itemCodec is capable of decoding
+      // a bytearrray longer than the actual encoded value.
       let offset = 0;
       const value = new Set<T>();
-      for (let i = 0; i < n; i++) {
+      while (offset < bytes.length) {
         const decoded = itemCodec.decode(bytes.subarray(offset));
         value.add(decoded.value);
         offset += decoded.readBytes;
