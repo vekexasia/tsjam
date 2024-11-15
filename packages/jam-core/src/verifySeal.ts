@@ -1,4 +1,12 @@
-import { JamState, Posterior, SignedJamHeader } from "@tsjam/types";
+import {
+  JamBlock,
+  JamEntropy,
+  JamState,
+  Posterior,
+  SafroleState,
+  SignedJamHeader,
+} from "@tsjam/types";
+import { Result, err, ok } from "neverthrow";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
 import assert from "node:assert";
@@ -8,7 +16,12 @@ import {
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
 } from "@tsjam/constants";
-import { bigintToBytes, getBlockAuthorKey, isFallbackMode } from "@tsjam/utils";
+import {
+  bigintToBytes,
+  getBlockAuthorKey,
+  isFallbackMode,
+  isNewEra,
+} from "@tsjam/utils";
 
 export const verifySeal = (
   header: SignedJamHeader,
@@ -66,4 +79,39 @@ export const verifyEntropySignature = (
       ...bigintToBytes(Bandersnatch.vrfOutputSignature(header.blockSeal), 32),
     ]),
   );
+};
+
+export enum EpochMarkerError {
+  InvalidEntropy = "InvalidEntropy",
+  InvalidEpochMarkerValidator = "InvalidEpochMarkerValidator",
+  InvalidEpochMarker = "InvalidEpochMarker",
+}
+
+/**
+ * Verifies epoch marker `He` is valid
+ * (6.27 - 0.5.0)
+ */
+export const verifyEpochMarker = (
+  block: JamBlock,
+  curState: JamState,
+  p_entropy: Posterior<JamEntropy>,
+  p_gamma_k: Posterior<SafroleState["gamma_k"]>,
+): Result<undefined, EpochMarkerError> => {
+  if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
+    if (block.header.epochMarker?.entropy !== p_entropy[1]) {
+      return err(EpochMarkerError.InvalidEntropy);
+    }
+    for (let i = 0; i < block.header.epochMarker!.validatorKeys.length; i++) {
+      if (
+        block.header.epochMarker!.validatorKeys[i] !== p_gamma_k[i].banderSnatch
+      ) {
+        return err(EpochMarkerError.InvalidEpochMarkerValidator);
+      }
+    }
+  } else {
+    if (typeof block.header.epochMarker !== "undefined") {
+      return err(EpochMarkerError.InvalidEpochMarker);
+    }
+  }
+  return ok(undefined);
 };

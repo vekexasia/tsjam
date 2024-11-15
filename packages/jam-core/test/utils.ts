@@ -1,10 +1,14 @@
 import {
   AccumulationHistory,
   AccumulationQueue,
+  AuthorizerPool,
+  AuthorizerQueue,
   BandersnatchKey,
   BandersnatchRingRoot,
+  Hash,
   IDisputesState,
   JamState,
+  RecentHistory,
   Tagged,
   TicketIdentifier,
   ValidatorData,
@@ -58,13 +62,33 @@ export const mapTestDataToState = (testData: any): JamState => {
     },
     rho: [] as unknown as JamState["rho"],
     serviceAccounts: new Map(),
-    accumulationHistory: new Array(600).map(
-      () => new Set(),
-    ) as AccumulationHistory,
-    accumulationQueue: new Array(600).map(
-      () => [],
-    ) as unknown as AccumulationQueue,
+    accumulationHistory: new Array(600)
+      .fill(null)
+      .map(() => new Set()) as AccumulationHistory,
+    accumulationQueue: new Array(600)
+      .fill(null)
+      .map(() => []) as unknown as AccumulationQueue,
     privServices: { m: 0, a: 0, v: 0, g: new Map() },
+    recentHistory: new Array(80).fill(null).map(() => ({
+      stateRoot: toTagged(0n),
+      headerHash: toTagged(0n),
+      reportedPackages: new Map(),
+      accumulationResultMMR: [],
+    })) as RecentHistory,
+    validatorStatistics: [null, null].map(() =>
+      new Array(testData.iota.length).fill({
+        blocksProduced: 0,
+        ticketsIntroduced: 0,
+        preimagesIntroduced: 0,
+        totalOctetsIntroduced: 0,
+        guaranteedReports: 0,
+        availabilityAssurances: 0,
+      }),
+    ),
+    authPool: new Array(381).fill([]) as AuthorizerPool,
+    authQueue: new Array(381).fill(
+      new Array(80).fill(0n as Hash),
+    ) as AuthorizerQueue,
   } as JamState;
 };
 

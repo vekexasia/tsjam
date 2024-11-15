@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
 import { mapTestDataToState, stateToTestData } from "./utils.js";
+import { ok } from "neverthrow";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -14,7 +15,30 @@ const mocks = vi.hoisted(() => {
     },
   };
 });
+vi.mock("@/verifySeal", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@/verifySeal")>();
 
+  const toRet = {
+    ...orig,
+  };
+  Object.defineProperty(toRet, "verifySeal", {
+    get() {
+      return () => true;
+    },
+  });
+  Object.defineProperty(toRet, "verifyEntropySignature", {
+    get() {
+      return () => true;
+    },
+  });
+
+  Object.defineProperty(toRet, "verifyEpochMarker", {
+    get() {
+      return () => ok(undefined);
+    },
+  });
+  return toRet;
+});
 vi.mock("@tsjam/crypto", async (importOriginal) => {
   const origCrytpo = await importOriginal<typeof import("@tsjam/crypto")>();
   const toRet = {
@@ -70,9 +94,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       "utf-8",
     ),
   );
-  // mock Bandersnatch.vrfOutputSignature
-  //
-  //
   const curState = mapTestDataToState(test.pre_state);
   const [err, newState] = importBlock(
     {
@@ -184,10 +205,10 @@ describe("safrole-test-vectors", () => {
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
-    // it("enact-epoch-change-with-no-tickets-2", () =>
-    //   expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
-    //     "Invalid slot",
-    //   ));
+    it("enact-epoch-change-with-no-tickets-2", () =>
+      expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
+        "Invalid slot",
+      ));
 
     it("enact-epoch-change-with-no-tickets-3", () =>
       test("enact-epoch-change-with-no-tickets-3"));

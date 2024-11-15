@@ -39,18 +39,11 @@ import {
   safroleToPosterior,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import {
-  epochIndex,
-  isNewEra,
-  slotIndex,
-  toPosterior,
-  toTagged,
-} from "@tsjam/utils";
+import { epochIndex, slotIndex, toPosterior, toTagged } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid } from "@/validateEG.js";
 import {
-  accHistoryUnion,
   accumulatableReports,
   availableReports,
   noPrereqAvailableReports,
@@ -58,7 +51,12 @@ import {
   withPrereqAvailableReports,
 } from "@tsjam/pvm";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { verifyEntropySignature, verifySeal } from "./verifySeal";
+import {
+  EpochMarkerError,
+  verifyEntropySignature,
+  verifyEpochMarker,
+  verifySeal,
+} from "@/verifySeal";
 
 export enum ImportBlockError {
   InvalidSlot = "Invalid slot",
@@ -84,6 +82,7 @@ export const importBlock: STF<
   | RHO_2_DaggerError
   | RHO2DoubleDaggerError
   | DisputesToPosteriorError
+  | EpochMarkerError
 > = (block, curState) => {
   const tauTransition = {
     tau: curState.tau,
@@ -349,22 +348,9 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidEntropySignature);
   }
 
-  // check epoch marker He (72) - 0.4.5
-  if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
-    if (block.header.epochMarker?.entropy !== p_entropy[1]) {
-      return err(ImportBlockError.InvalidEntropy);
-    }
-    for (let i = 0; i < block.header.epochMarker?.validatorKeys.length; i++) {
-      if (
-        block.header.epochMarker!.validatorKeys[i] !== p_gamma_k[i].banderSnatch
-      ) {
-        return err(ImportBlockError.InvalidEpochMarkerValidator);
-      }
-    }
-  } else {
-    if (typeof block.header.epochMarker !== "undefined") {
-      return err(ImportBlockError.InvalidEpochMarker);
-    }
+  const x = verifyEpochMarker(block, curState, p_entropy, p_gamma_k);
+  if (x.isErr()) {
+    return err(x.error);
   }
 
   //check winning tickets Hw (73) - 0.4.5
