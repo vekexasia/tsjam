@@ -135,7 +135,7 @@ if (import.meta.vitest) {
       bin = getCodecFixtureFile("block.bin");
     });
 
-    it("should encode properly", () => {
+    it("block should encode properly", () => {
       const bytes = new Uint8Array(BlockCodec.encodedSize(item));
       BlockCodec.encode(item, bytes);
       expect(bytes).toEqual(bin);

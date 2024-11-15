@@ -8,6 +8,33 @@ import { HashCodec } from "@/identity.js";
 import { encodeWithCodec } from "@/utils.js";
 
 /**
+ * builds a dictionary codec when using map with Hash as key
+ * (C.12 - 0.5.0)
+ */
+export function buildKeyValueCodec<K extends Hash, V>(
+  valueCodec: JamCodec<V>,
+  keySorter: (a: Hash, b: Hash) => number = (a, b) =>
+    a - b < 0n ? -1 : a - b > 0n ? 1 : 0,
+): JamCodec<Map<K, V>> {
+  return new LengthDiscriminator(
+    new KeyValue(HashCodec as unknown as JamCodec<K>, valueCodec, keySorter),
+  );
+}
+
+/**
+ * builds a generic dictionaty codec by providing all items
+ */
+export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
+  keyCodec: JamCodec<K>,
+  valueCodec: JamCodec<V>,
+  keySorter: (a: K, b: K) => number,
+): JamCodec<X> {
+  return new LengthDiscriminator(
+    new KeyValue(keyCodec, valueCodec, keySorter),
+  ) as unknown as JamCodec<X>;
+}
+
+/**
  * Base keyvalue codec.
  * It encodes a dictionary with orderable keys into key value pairs.
  * it's out of spec as it is. The spec defines a Variable length discriminator is needed
@@ -67,32 +94,6 @@ class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
       );
     }, 0);
   }
-}
-
-/**
- * builds a dictionary codec when using map with Hash as key
- */
-export function buildKeyValueCodec<K extends Hash, V>(
-  valueCodec: JamCodec<V>,
-  keySorter: (a: Hash, b: Hash) => number = (a, b) =>
-    a - b < 0n ? -1 : a - b > 0n ? 1 : 0,
-): JamCodec<Map<K, V>> {
-  return new LengthDiscriminator(
-    new KeyValue(HashCodec as unknown as JamCodec<K>, valueCodec, keySorter),
-  );
-}
-
-/**
- * builds a generic dictionaty codec by providing all items
- */
-export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
-  keyCodec: JamCodec<K>,
-  valueCodec: JamCodec<V>,
-  keySorter: (a: K, b: K) => number,
-): JamCodec<X> {
-  return new LengthDiscriminator(
-    new KeyValue(keyCodec, valueCodec, keySorter),
-  ) as unknown as JamCodec<X>;
 }
 
 if (import.meta.vitest) {
