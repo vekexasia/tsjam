@@ -10,6 +10,7 @@ import {
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
+// (188) - 0.4.5
 export const accumulationQueueToPosterior: STF<
   AccumulationQueue,
   {
@@ -26,12 +27,14 @@ export const accumulationQueueToPosterior: STF<
   for (let i = 0; i < EPOCH_LENGTH; i++) {
     const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
     if (i === 0) {
+      console.log("ciao");
       toRet[index] = toPosterior(
         E_Fn(input.w_q, input.p_accHistory[EPOCH_LENGTH - 1]),
       );
     } else if (i < input.p_tau - input.tau) {
       toRet[index] = toPosterior([]);
     } else {
+      console.log("miao2", curState, i, toRet[index]);
       toRet[index] = toPosterior(
         E_Fn(toRet[index], input.p_accHistory[EPOCH_LENGTH - 1]),
       );

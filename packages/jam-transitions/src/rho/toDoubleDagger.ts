@@ -38,7 +38,7 @@ export const RHO2DoubleDagger: STF<
   RHO2DoubleDaggerError,
   DoubleDagger<RHO>
 > = (input, curState) => {
-  if (input.ea.length <= NUMBER_OF_VALIDATORS) {
+  if (input.ea.length > NUMBER_OF_VALIDATORS) {
     return err(RHO2DoubleDaggerError.EA_LENGTH);
   }
   for (let i = 1; i < input.ea.length; i++) {

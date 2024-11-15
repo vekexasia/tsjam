@@ -1,4 +1,6 @@
 import {
+  AccumulationHistory,
+  AccumulationQueue,
   BandersnatchKey,
   BandersnatchRingRoot,
   IDisputesState,
@@ -49,7 +51,21 @@ export const mapTestDataToState = (testData: any): JamState => {
     kappa: testData.kappa.map(validatorEntryMap),
     lambda: testData.lambda.map(validatorEntryMap),
     tau: testData.tau,
-    // NOTE: there are other elements not being used for test
+    disputes: {
+      psi_b: new Set(),
+      psi_g: new Set(),
+      psi_o: new Set(),
+      psi_w: new Set(),
+    },
+    rho: [] as unknown as JamState["rho"],
+    serviceAccounts: new Map(),
+    accumulationHistory: new Array(600).map(
+      () => new Map(),
+    ) as AccumulationHistory,
+    accumulationQueue: new Array(600).map(
+      () => [],
+    ) as unknown as AccumulationQueue,
+    privServices: { m: 0, a: 0, v: 0, g: new Map() },
   } as JamState;
 };
 

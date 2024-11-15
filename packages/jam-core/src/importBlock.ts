@@ -46,7 +46,7 @@ import {
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
-import { Hashing } from "@tsjam/crypto";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid } from "@/validateEG.js";
 import {
@@ -72,9 +72,6 @@ export enum ImportBlockError {
   WinningTicketMismatch = "WInning ticket mismatch",
 }
 
-/**
- * TODO: this should be an STF
- */
 export const importBlock: STF<
   JamState,
   JamBlock,
@@ -88,9 +85,6 @@ export const importBlock: STF<
   | RHO2DoubleDaggerError
   | DisputesToPosteriorError
 > = (block, curState) => {
-  const headerHash = Hashing.blake2b(
-    encodeWithCodec(UnsignedHeaderCodec, block.header),
-  );
   const tauTransition = {
     tau: curState.tau,
     p_tau: toPosterior(block.header.timeSlotIndex),
@@ -100,7 +94,10 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidSlot);
   }
   const [, p_entropy] = rotateEntropy(
-    { ...tauTransition, headerEntropySig: block.header.entropySignature },
+    {
+      ...tauTransition,
+      vrfOut: Bandersnatch.vrfOutputSignature(block.header.entropySignature),
+    },
     curState.entropy,
   ).safeRet();
 
@@ -117,22 +114,19 @@ export const importBlock: STF<
     return err(p_disp_error);
   }
 
-  const [rotationError, [p_lambda, p_kappa, p_gamma_k, p_gamma_z]] = rotateKeys(
+  const [, [p_gamma_k, p_kappa, p_lambda, p_gamma_z]] = rotateKeys(
     {
       p_psi_o: toPosterior(p_disputesState.psi_o),
       iota: curState.iota,
       ...tauTransition,
     },
     [
-      curState.lambda,
-      curState.kappa,
       curState.safroleState.gamma_k,
+      curState.kappa,
+      curState.lambda,
       curState.safroleState.gamma_z,
     ],
   ).safeRet();
-  if (rotationError) {
-    return err(rotationError);
-  }
 
   const [etError, ticketIdentifiers] = etToIdentifiers(
     block.extrinsics.tickets,
@@ -146,7 +140,6 @@ export const importBlock: STF<
   if (etError) {
     return err(etError);
   }
-
   const [gamma_sErr, p_gamma_s] = gamma_sSTF(
     {
       ...tauTransition,
@@ -253,6 +246,7 @@ export const importBlock: STF<
     curState.accumulationHistory,
     curState.tau,
   );
+
   const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
     3n as u64,
     w_star,
@@ -306,7 +300,9 @@ export const importBlock: STF<
   const [, p_recentHistory] = recentHistoryToPosterior(
     {
       accumulateRoot: calculateAccumulateRoot(C),
-      headerHash: headerHash,
+      headerHash: Hashing.blake2b(
+        encodeWithCodec(UnsignedHeaderCodec, block.header),
+      ),
       eg: block.extrinsics.reportGuarantees,
     },
     d_recentHistory,

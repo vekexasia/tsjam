@@ -226,6 +226,10 @@ export const outerAccumulation = (
     }
   }
 
+  if (i == 0) {
+    return [0, accState, [], new Set()];
+  }
+
   const [g_star, o_star, t_star, b_star] = parallelizedAccAccumulation(
     accState,
     works.slice(0, i),

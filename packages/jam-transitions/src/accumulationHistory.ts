@@ -5,7 +5,7 @@ import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
- * (180) and 181
+ * (186) and 187
  */
 export const accumulationHistoryToPosterior: STF<
   AccumulationHistory,

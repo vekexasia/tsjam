@@ -48,7 +48,7 @@ export const Bandersnatch = {
    * (312)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
-    return 1n as OpaqueHash; // TODO: implement
+    return bytesToBigInt(vrfOutputHash(bigintToBytes(signature, 96)));
   },
 
   /**

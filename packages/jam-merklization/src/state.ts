@@ -480,9 +480,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        buildGenericKeyValueCodec(HashCodec, HashCodec, (a, b) =>
-          a - b < 0 ? -1 : 1,
-        ),
+        createArrayLengthDiscriminator(HashCodec)
       ),
       state.accumulationHistory,
     ),

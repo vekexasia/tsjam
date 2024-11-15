@@ -60,7 +60,7 @@ export const accumulateInvocation = (
 ): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
   const iRes = I_fn(pvmAccState, s);
   // first case of 274
-  if (pvmAccState.delta.has(s)) {
+  if (!pvmAccState.delta.has(s)) {
     return [iRes.u, [], undefined, toTagged(0n)];
   }
 

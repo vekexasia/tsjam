@@ -9,7 +9,23 @@ const mocks = vi.hoisted(() => {
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
     toTagged: (a: any) => a,
+    vrfOutputSignature: (a: any) => {
+      return a;
+    },
   };
+});
+
+vi.mock("@tsjam/crypto", async (importOriginal) => {
+  const origCrytpo = await importOriginal<typeof import("@tsjam/crypto")>();
+  const toRet = {
+    ...origCrytpo,
+  };
+  Object.defineProperty(toRet.Bandersnatch, "vrfOutputSignature", {
+    get() {
+      return mocks.vrfOutputSignature;
+    },
+  });
+  return toRet;
 });
 vi.mock("@tsjam/constants", async (importOriginal) => {
   const toRet = {
@@ -38,16 +54,15 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   });
   return toRet;
 });
-import { IDisputesState, TicketExtrinsics } from "@tsjam/types";
-import { hexToBytes, hextToBigInt, toPosterior, toTagged } from "@tsjam/utils";
 import {
-  etToIdentifiers,
-  gamma_aSTF,
-  gamma_sSTF,
-  rotateEntropy,
-  rotateKeys,
-  safroleToPosterior,
-} from "@tsjam/transitions";
+  DisputeExtrinsic,
+  EA_Extrinsic,
+  EG_Extrinsic,
+  ValidatorIndex,
+} from "@tsjam/types";
+import { hexToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
+import { importBlock } from "@/importBlock.js";
+
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(
@@ -55,89 +70,46 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       "utf-8",
     ),
   );
+  // mock Bandersnatch.vrfOutputSignature
+  //
+  //
   const curState = mapTestDataToState(test.pre_state);
-  const tickets: TicketExtrinsics = test.input.extrinsic.map(
-    (e: { attempt: number; signature: string }) => ({
-      entryIndex: e.attempt,
-      proof: hexToBytes(e.signature),
-    }),
-  );
-  const tauTransition = {
-    tau: curState.tau,
-    p_tau: toPosterior(test.input.slot),
-  };
-
-  const [, p_entropy] = rotateEntropy(
-    { ...tauTransition, headerEntropySig: hextToBigInt(test.input.entropy) },
-    curState.entropy,
+  const [err, newState] = importBlock(
+    {
+      header: {
+        parent: toTagged(0n),
+        blockSeal: toTagged(0n),
+        offenders: [],
+        extrinsicHash: toTagged(0n),
+        timeSlotIndex: test.input.slot,
+        priorStateRoot: toTagged(0n),
+        entropySignature: hextToBigInt(test.input.entropy),
+        blockAuthorKeyIndex: 0 as ValidatorIndex,
+      },
+      extrinsics: {
+        tickets: test.input.extrinsic.map(
+          (e: { attempt: number; signature: string }) => ({
+            entryIndex: e.attempt,
+            proof: hexToBytes(e.signature),
+          }),
+        ),
+        disputes: {
+          verdicts: [],
+          culprit: [],
+          faults: [],
+        } as unknown as DisputeExtrinsic,
+        preimages: [],
+        assurances: [] as unknown as EA_Extrinsic,
+        reportGuarantees: [] as unknown as EG_Extrinsic,
+      },
+    },
+    curState,
   ).safeRet();
+  if (err) {
+    throw new Error(err);
+  }
 
-  const p_disputesState: IDisputesState = {
-    psi_o: new Set(),
-    psi_b: new Set(),
-    psi_g: new Set(),
-    psi_w: new Set(),
-  };
-
-  const [, [p_lambda, p_kappa, p_gamma_k, p_gamma_z]] = rotateKeys(
-    {
-      p_psi_o: toPosterior(p_disputesState.psi_o),
-      iota: curState.iota,
-      ...tauTransition,
-    },
-    [
-      curState.lambda,
-      curState.kappa,
-      curState.safroleState.gamma_k,
-      curState.safroleState.gamma_z,
-    ],
-  ).safeRet();
-
-  const ticketIdentifiers = etToIdentifiers(tickets, {
-    p_tau: tauTransition.p_tau,
-    gamma_z: curState.safroleState.gamma_z,
-    gamma_a: curState.safroleState.gamma_a,
-    p_entropy,
-  })._unsafeUnwrap();
-
-  const p_gamma_s = gamma_sSTF(
-    {
-      ...tauTransition,
-      gamma_a: curState.safroleState.gamma_a,
-      gamma_s: curState.safroleState.gamma_s,
-      p_kappa,
-      p_eta: p_entropy,
-    },
-    curState.safroleState.gamma_s,
-  )._unsafeUnwrap();
-
-  const p_gamma_a = gamma_aSTF(
-    {
-      ...tauTransition,
-      newIdentifiers: ticketIdentifiers,
-    },
-    curState.safroleState.gamma_a,
-  )._unsafeUnwrap();
-
-  const p_safroleState = safroleToPosterior(
-    {
-      p_gamma_a,
-      p_gamma_k,
-      p_gamma_s,
-      p_gamma_z,
-    },
-    curState.safroleState,
-  )._unsafeUnwrap();
-
-  const normalizedPostState = stateToTestData({
-    ...curState,
-    entropy: p_entropy,
-    safroleState: p_safroleState,
-    kappa: p_kappa,
-    lambda: p_lambda,
-    iota: curState.iota, // TODO: this is wrong?
-    tau: tauTransition.p_tau,
-  });
+  const normalizedPostState = stateToTestData(newState);
 
   Object.keys(normalizedPostState).forEach((key) => {
     expect((normalizedPostState as any)[key], `${key}`).toEqual(
@@ -157,10 +129,10 @@ describe("safrole-test-vectors", () => {
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
-    // it("enact-epoch-change-with-no-tickets-2", () =>
-    //   expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
-    //     "Invalid slot",
-    //   ));
+    it("enact-epoch-change-with-no-tickets-2", () =>
+      expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
+        "Invalid slot",
+      ));
     it("enact-epoch-change-with-no-tickets-3", () =>
       test("enact-epoch-change-with-no-tickets-3"));
     it("enact-epoch-change-with-no-tickets-4", () =>
@@ -216,6 +188,7 @@ describe("safrole-test-vectors", () => {
     //   expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
     //     "Invalid slot",
     //   ));
+
     it("enact-epoch-change-with-no-tickets-3", () =>
       test("enact-epoch-change-with-no-tickets-3"));
     it("enact-epoch-change-with-no-tickets-4", () =>

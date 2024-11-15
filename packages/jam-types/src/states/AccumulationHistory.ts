@@ -3,9 +3,9 @@ import { Hash, SeqOfLength, WorkPackageHash } from "@/genericTypes";
 
 /**
  * `ξ` in the graypaper
- * (158) Section 12.2
+ * (162) Section 12.2
  */
 export type AccumulationHistory = SeqOfLength<
-  Map<WorkPackageHash, Hash>,
+  Set<WorkPackageHash>,
   typeof EPOCH_LENGTH
 >;
