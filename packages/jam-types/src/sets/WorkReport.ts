@@ -14,33 +14,39 @@ import { AccumulationQueue } from "..";
 
 /**
  * Identified by `W` set
- * @see section 11.1.1
+ * @see (11.2 - 0.5.0)
  */
 export type WorkReport = {
   /**
-   * identified as `s` in the paper
+   * `s`
    */
   workPackageSpecification: AvailabilitySpecification;
+
   /**
    * `x`
    */
   refinementContext: RefinementContext;
+
   /**
    * `c`
    */
   coreIndex: CoreIndex;
+
   /**
    * `a`
    */
   authorizerHash: Blake2bHash;
+
   /**
    * `o`
    */
   authorizerOutput: Uint8Array;
+
   /**
    * `l`
    */
   segmentRootLookup: Map<WorkPackageHash, Hash>;
+
   /**
    * `r`
    */
@@ -49,11 +55,13 @@ export type WorkReport = {
 
 /**
  * it's defined by the bold `W` in the paper
+ * (11.15 - 0.5.0)
  */
 export type AvailableWorkReports = Tagged<WorkReport[], "available">;
 
 /**
  * `W!` in the paper
+ * (12.4 - 0.5.0)
  */
 export type AvailableNoPrereqWorkReports = Tagged<
   WorkReport[],
@@ -62,6 +70,7 @@ export type AvailableNoPrereqWorkReports = Tagged<
 
 /**
  * `WQ` in the paper
+ * (12.5 - 0.5.0)
  */
 export type AvailableWithPrereqWorkReports = Tagged<
   Array<AccumulationQueue[0][0]>,

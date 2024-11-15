@@ -3,24 +3,17 @@ import { STF } from "@tsjam/types";
 import { AccumulationHistory, Tagged, Tau, WorkReport } from "@tsjam/types";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
+import { P_fn } from "@tsjam/pvm";
 
 /**
- * (186) and 187
+ * (12.25 - 0.5.0) & (12.26 - 0.5.0)
+ *
  */
 export const accumulationHistoryToPosterior: STF<
   AccumulationHistory,
   { nAccumulatedWork: number; w_star: Tagged<WorkReport[], "W*">; tau: Tau },
   never
 > = (input, curState) => {
-  const P_fn = (r: WorkReport[]) => {
-    return new Map(
-      r.map((wr) => [
-        wr.workPackageSpecification.workPackageHash,
-        wr.workPackageSpecification.segmentRoot,
-      ]),
-    );
-  };
-
   const w_dot_n = input.w_star.slice(0, input.nAccumulatedWork);
   const p_state = curState.slice();
   p_state[EPOCH_LENGTH - 1] = P_fn(w_dot_n);

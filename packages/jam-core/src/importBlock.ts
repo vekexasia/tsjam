@@ -235,15 +235,11 @@ export const importBlock: STF<
    */
   const w = availableReports(block.extrinsics.assurances, d_rho);
   const w_mark = noPrereqAvailableReports(w);
-  const w_q = withPrereqAvailableReports(
-    w,
-    accHistoryUnion(curState.accumulationHistory),
-  );
+  const w_q = withPrereqAvailableReports(w, curState.accumulationHistory);
   const w_star = accumulatableReports(
     w_mark,
     w_q,
     curState.accumulationQueue,
-    curState.accumulationHistory,
     curState.tau,
   );
 

@@ -1,5 +1,4 @@
 import { JamCodec } from "@/codec.js";
-import assert from "assert";
 
 /**
  * Encodes a set - notice that the codec itself can not decode

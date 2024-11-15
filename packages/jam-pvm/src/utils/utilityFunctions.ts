@@ -24,9 +24,8 @@ import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@/invocations/accumulate.js";
 
 /**
- *
- * (130) `W` in the paper section
- * 11.2.2
+ * `bold W`
+ * (11.15 - 0.5.0)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -48,6 +47,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
+ * (12.4 - 0.5.0)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -63,15 +63,18 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * (159)
+ * (12.2 - 0.5.0)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
 ): AccumulationHistory[0] => {
-  return new Map(accHistory.map((a) => [...a.entries()]).flat());
+  return toTagged(new Set(accHistory.map((a) => [...a.values()]).flat()));
 };
 
-const E_Fn = (
+/**
+ * (12.7 - 0.5.0)
+ */
+export const E_Fn = (
   r: AccumulationQueue[0],
   x: AccumulationHistory[0],
 ): AccumulationQueue[0] => {
@@ -111,11 +114,11 @@ const E_Fn = (
 
 /**
  * `WQ` in the paper
- * (162) Section 12.2
+ * (12.5 - 0.5.0)
  */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
-  accHistory: Map<WorkPackageHash, Hash>,
+  accHistory: AccumulationHistory,
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
@@ -133,28 +136,24 @@ export const withPrereqAvailableReports = (
           }
           return { workReport: wr, dependencies: deps };
         }),
-      accHistory,
+      accHistoryUnion(accHistory),
     ),
   );
 };
 
-//TODO: this is being used also in transitions but currently being copied over
-const P_fn = (r: WorkReport[]): Map<WorkPackageHash, Hash> => {
-  return new Map(
-    r.map((wr) => [
-      wr.workPackageSpecification.workPackageHash,
-      wr.workPackageSpecification.segmentRoot,
-    ]),
-  );
+/**
+ * (12.9 - 0.5.0)
+ */
+export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
+  return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
 };
 
 /**
- * (165) in the paper
- * defined in `Q`
+ * `Q` fn
+ * (12.8 - 0.5.0)
  */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
-  a: Map<WorkPackageHash, Hash>,
 ): WorkReport[] => {
   const g = r
     .filter(({ dependencies }) => dependencies.size === 0)
@@ -162,26 +161,18 @@ export const computeAccumulationPriority = (
   if (g.length === 0) {
     return [];
   }
-  const pg = P_fn(g);
 
-  return [
-    ...g,
-    ...computeAccumulationPriority(
-      E_Fn(r, pg),
-      new Map([...a.entries(), ...pg.entries()]),
-    ),
-  ];
+  return [...g, ...computeAccumulationPriority(E_Fn(r, P_fn(g)))];
 };
 
 /**
  * `W*` in the paper
- * (168)
+ * (12.11 - 0.5.0)
  */
 export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,
   w_q: ReturnType<typeof withPrereqAvailableReports>,
   accumulationQueue: AccumulationQueue,
-  accHistory: AccumulationHistory,
   tau: Tau, // Ht
 ) => {
   const m = tau % EPOCH_LENGTH;
@@ -189,12 +180,14 @@ export const accumulatableReports = (
   return [
     ...w_mark,
     ...computeAccumulationPriority(
-      [
-        ...accumulationQueue.slice(m).flat(),
-        ...accumulationQueue.slice(0, m).flat(),
-        ...w_q,
-      ],
-      accHistoryUnion(accHistory),
+      E_Fn(
+        [
+          ...accumulationQueue.slice(m).flat(),
+          ...accumulationQueue.slice(0, m).flat(),
+          ...w_q,
+        ],
+        P_fn(w_mark),
+      ),
     ),
   ] as Tagged<WorkReport[], "W*">;
 };

@@ -5,7 +5,6 @@ import {
   BandersnatchRingRoot,
   IDisputesState,
   JamState,
-  SafroleState,
   Tagged,
   TicketIdentifier,
   ValidatorData,
@@ -60,7 +59,7 @@ export const mapTestDataToState = (testData: any): JamState => {
     rho: [] as unknown as JamState["rho"],
     serviceAccounts: new Map(),
     accumulationHistory: new Array(600).map(
-      () => new Map(),
+      () => new Set(),
     ) as AccumulationHistory,
     accumulationQueue: new Array(600).map(
       () => [],

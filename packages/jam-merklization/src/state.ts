@@ -25,6 +25,7 @@ import {
   buildGenericKeyValueCodec,
   buildKeyValueCodec,
   createArrayLengthDiscriminator,
+  createSetCodec,
   encodeWithCodec,
 } from "@tsjam/codec";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
@@ -50,8 +51,9 @@ import { Hashing } from "@tsjam/crypto";
 import assert from "node:assert";
 
 /**
- * 318 merkelize state
+ * Merkelize state
  * `Mσ`
+ * (D.5 - 0.5.0)
  */
 export const merkelizeState = (state: JamState): Hash => {
   const stateMap = transformState(state);
@@ -80,12 +82,14 @@ const bits_inv = (bits: bit[]): Uint8Array => {
   return new Uint8Array(bytes);
 };
 
+// (D.3 - 0.5.0)
 const B_fn = (l: Hash, r: Hash): bit[] => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
   return [0, ...bits(lb).slice(1), ...bits(rb)];
 };
 
+// (D.4 - 0.5.0)
 const L_fn = (k: Hash, v: Uint8Array): bit[] => {
   if (v.length <= 32) {
     return [
@@ -112,6 +116,7 @@ const L_fn = (k: Hash, v: Uint8Array): bit[] => {
   }
 };
 
+// (D.6 - 0.5.0)
 const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
@@ -134,7 +139,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 };
 
 /**
- * (314) in graypaper
+ * (D.1 - 0.5.0)
  */
 const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {
@@ -221,6 +226,10 @@ const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
   },
 };
 
+/*
+ * `T(σ)`
+ * (D.2 - 0.5.0)
+ */
 const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
 
@@ -480,7 +489,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        createArrayLengthDiscriminator(HashCodec)
+        createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
       ),
       state.accumulationHistory,
     ),
