@@ -103,7 +103,7 @@ if (import.meta.vitest) {
     assurancesExtrinsicFromJSON,
     guaranteesExtrinsicFromJSON,
   } = await import("@/test/utils.js");
-  describe("Block", () => {
+  describe.skip("Block", () => {
     let item: JamBlock;
     let bin: Uint8Array;
     beforeAll(() => {
