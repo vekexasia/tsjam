@@ -37,10 +37,10 @@ export const GenericBytesBigIntCodec = <
   },
   encode(value: K, bytes: Uint8Array): number {
     assert.ok(
-      bytes.length === num,
+      bytes.length >= num,
       `GenericBytesBigIntCodec: invalid length. Expected ${num} bytes, was ${bytes.length}`,
     );
-    bigintToExistingBytes(value, bytes);
+    bigintToExistingBytes(value, bytes.subarray(0, num));
     return num;
   },
   encodedSize(): number {
