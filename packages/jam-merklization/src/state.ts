@@ -82,14 +82,14 @@ const bits_inv = (bits: bit[]): Uint8Array => {
   return new Uint8Array(bytes);
 };
 
-// (D.3 - 0.5.0)
+// $(0.5.0 - D.3)
 const B_fn = (l: Hash, r: Hash): bit[] => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
   return [0, ...bits(lb).slice(1), ...bits(rb)];
 };
 
-// (D.4 - 0.5.0)
+// $(0.5.0 - D.4)
 const L_fn = (k: Hash, v: Uint8Array): bit[] => {
   if (v.length <= 32) {
     return [
@@ -116,7 +116,7 @@ const L_fn = (k: Hash, v: Uint8Array): bit[] => {
   }
 };
 
-// (D.6 - 0.5.0)
+// $(0.5.0 - D.6)
 const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
@@ -139,7 +139,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 };
 
 /**
- * (D.1 - 0.5.0)
+ * $(0.5.0 - D.1)
  */
 const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {
@@ -228,7 +228,7 @@ const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
 
 /*
  * `T(σ)`
- * (D.2 - 0.5.0)
+ * $(0.5.0 - D.2)
  */
 const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();

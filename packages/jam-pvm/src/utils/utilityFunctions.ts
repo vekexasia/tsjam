@@ -25,7 +25,7 @@ import { accumulateInvocation } from "@/invocations/accumulate.js";
 
 /**
  * `bold W`
- * (11.15 - 0.5.0)
+ * $(0.5.0 - 11.15)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -47,7 +47,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
- * (12.4 - 0.5.0)
+ * $(0.5.0 - 12.4)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -63,7 +63,7 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * (12.2 - 0.5.0)
+ * $(0.5.0 - 12.2)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
@@ -72,7 +72,7 @@ export const accHistoryUnion = (
 };
 
 /**
- * (12.7 - 0.5.0)
+ * $(0.5.0 - 12.7)
  */
 export const E_Fn = (
   r: AccumulationQueue[0],
@@ -114,7 +114,7 @@ export const E_Fn = (
 
 /**
  * `WQ` in the paper
- * (12.5 - 0.5.0)
+ * $(0.5.0 - 12.5)
  */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -142,7 +142,7 @@ export const withPrereqAvailableReports = (
 };
 
 /**
- * (12.9 - 0.5.0)
+ * $(0.5.0 - 12.9)
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
   return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
@@ -150,7 +150,7 @@ export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
 
 /**
  * `Q` fn
- * (12.8 - 0.5.0)
+ * $(0.5.0 - 12.8)
  */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
@@ -167,7 +167,7 @@ export const computeAccumulationPriority = (
 
 /**
  * `W*` in the paper
- * (12.11 - 0.5.0)
+ * $(0.5.0 - 12.11)
  */
 export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,

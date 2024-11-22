@@ -6,7 +6,7 @@ import { ok } from "neverthrow";
 import { P_fn } from "@tsjam/pvm";
 
 /**
- * (12.25 - 0.5.0) & (12.26 - 0.5.0)
+ * $(0.5.0 - 12.25 / 12.26)
  *
  */
 export const accumulationHistoryToPosterior: STF<

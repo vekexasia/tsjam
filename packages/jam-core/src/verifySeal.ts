@@ -89,7 +89,7 @@ export enum EpochMarkerError {
 
 /**
  * Verifies epoch marker `He` is valid
- * (6.27 - 0.5.0)
+ * $(0.5.0 - 6.27)
  */
 export const verifyEpochMarker = (
   block: JamBlock,
