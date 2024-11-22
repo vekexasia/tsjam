@@ -16,7 +16,7 @@ import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
- * (83) - 0.4.5
+ * $(0.5.0 - 7.3)
  * calculate `r`
  */
 export const calculateAccumulateRoot = (

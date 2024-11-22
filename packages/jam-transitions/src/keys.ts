@@ -12,19 +12,14 @@ import {
   ValidatorData,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
-import {
-  bigintToBytes,
-  isFallbackMode,
-  isNewEra,
-  toPosterior,
-} from "@tsjam/utils";
+import { isFallbackMode, isNewEra, toPosterior } from "@tsjam/utils";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
  * Phi function
  * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
- * @see (59) - 0.4.5
+ * @see $(0.5.0 - 6.1.4)
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper

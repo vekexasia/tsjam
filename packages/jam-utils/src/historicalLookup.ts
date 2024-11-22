@@ -4,7 +4,7 @@ import { toTagged } from "@/utils.js";
 
 /**
  * `Λ` in the graypaper
- * (94) - 0.4.5
+ * $(0.5.0 - 9.7)
  * @param a - the service account
  * @param tau - the timeslot for the lookup
  * @param hash - the hash to look up

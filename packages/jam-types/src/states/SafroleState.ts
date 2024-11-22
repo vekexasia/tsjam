@@ -44,7 +44,7 @@ export interface SafroleState {
    * `γk`
    * pending set of validator that will be active in the next epoch and that determines
    * the next gamma_z
-   * @see (52) - 0.4.5
+   * @see $(0.5.0 - 6.7)
    */
   gamma_k: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "gamma_k">;
 }
