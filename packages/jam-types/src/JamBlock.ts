@@ -9,7 +9,7 @@ import { SignedJamHeader } from "@/header";
 
 /**
  * The Jam Block
- * @see (13 - 0.4.5)
+ * $(0.5.0 - 4.2)
  */
 export interface JamBlock {
   header: SignedJamHeader;
@@ -18,6 +18,7 @@ export interface JamBlock {
 
 /**
  * `E` - the exstrinsics tuple in JamBlock
+ * $(0.5.0 - 4.3)
  */
 export interface JamBlockExtrinsics {
   /**

@@ -34,6 +34,18 @@ export type ByteArrayOfLength<T extends number> = Tagged<
   { byteLength: T }
 >;
 
+// $(0.5.0 - 4.21)
+export type Balance = Tagged<u64, "balance">;
+
+// $(0.5.0 - 4.23)
+export type Gas = Tagged<u64, "gas">;
+
+// $(0.5.0 - 4.23)
+export type Z_Gas = Tagged<i64, "gas">;
+
+// $(0.5.0 - 4.23)
+export type RegisterValue = Tagged<u64, "registerValue">;
+
 /**
  * Define a bigint whose max value is 2^(8*T) - 1 (if unsigned)
  * it's used for all the keys (as they can literally be a number) and hashes

@@ -21,6 +21,7 @@ import {
   getBlockAuthorKey,
   isFallbackMode,
   isNewEra,
+  toPosterior,
 } from "@tsjam/utils";
 
 export const verifySeal = (
@@ -63,13 +64,18 @@ export const verifySeal = (
 
 /**
  * verify `Hv`
- *  @see (62) - 0.4.5
+ * @see (0.5.0 -
+ * TODO: 6.15 seems to be wrong this implementation
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
-  state: JamState,
+  state: Posterior<JamState>,
 ): boolean => {
-  const blockAuthorKey = getBlockAuthorKey(header, state);
+  const blockAuthorKey = getBlockAuthorKey(
+    header,
+    toPosterior(state.kappa),
+    state.safroleState.gamma_s,
+  );
   return Bandersnatch.verifySignature(
     header.entropySignature,
     blockAuthorKey,

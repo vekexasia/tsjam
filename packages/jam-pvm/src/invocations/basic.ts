@@ -10,7 +10,7 @@ import { pvmSingleStep } from "@/invocations/singleStep.js";
 /**
  * Basic invocation
  * `Ψ` in the graypaper
- *  @see (33) - 0.4.5
+ * $(0.5.0 - 4.22 / A.1)
  */
 export const basicInvocation = (
   p: { parsedProgram: IParsedProgram; program: PVMProgram },

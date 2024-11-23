@@ -1,5 +1,9 @@
 import { u32 } from "@/genericTypes";
 
+/*
+ * `A` - Access Control List
+ * $(0.5.0 - 4.24)
+ */
 export type PVMACL = { from: u32; to: u32; writable: boolean };
 export type PVMMemoryContent = { at: u32; content: Uint8Array };
 

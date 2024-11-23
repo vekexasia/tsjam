@@ -30,6 +30,7 @@
   "dependencies": {
     "@tsjam/codec": "*",
     "@tsjam/crypto": "*",
+    "@tsjam/constants": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },

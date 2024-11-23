@@ -87,7 +87,7 @@ export const recentHistoryToPosterior: STF<
     reportedPackages: p,
   });
 
-  // (84)
+  // $(0.5.0 - 7.4)
   if (toRet.length > RECENT_HISTORY_LENGTH) {
     return ok(
       toRet.slice(

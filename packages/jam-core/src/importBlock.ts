@@ -1,4 +1,5 @@
-import { LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import { BLOCK_TIME, LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
 import {
   Delta,
@@ -39,7 +40,13 @@ import {
   safroleToPosterior,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import { epochIndex, slotIndex, toPosterior, toTagged } from "@tsjam/utils";
+import {
+  Timekeeping,
+  epochIndex,
+  slotIndex,
+  toPosterior,
+  toTagged,
+} from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid } from "@/validateEG.js";
@@ -65,11 +72,18 @@ export enum ImportBlockError {
   InvalidEntropy = "Invalid entropy",
   InvalidEpochMarker = "Epoch marker set but not in new epoch",
   InvalidEpochMarkerValidator = "Epoch marker validator key mismatch",
+  InvalidParentHeader = "Invalid parent header",
+  InvalidParentStateRoot = "Invalid parent state root",
   WinningTicketsNotEnoughLong = "Winning tickets not EPOCH long",
   WinningTicketsNotExpected = "Winning tickets set but not expected",
   WinningTicketMismatch = "WInning ticket mismatch",
 }
 
+/**
+ * the main State Transition Function
+ * `Υ` in the paper
+ * $(0.5.0 - 4.1)
+ */
 export const importBlock: STF<
   JamState,
   JamBlock,
@@ -89,7 +103,12 @@ export const importBlock: STF<
     p_tau: toPosterior(block.header.timeSlotIndex),
   };
 
-  if (tauTransition.tau >= tauTransition.p_tau) {
+  // $(0.5.0 - 5.7)
+  if (
+    tauTransition.tau >= tauTransition.p_tau &&
+    tauTransition.p_tau * BLOCK_TIME < Timekeeping.bigT()
+    // && tauTransition.p_tau < 2 ** 32 // NOTE: this is implicit in previous line
+  ) {
     return err(ImportBlockError.InvalidSlot);
   }
   const [, p_entropy] = rotateEntropy(
@@ -339,6 +358,24 @@ export const importBlock: STF<
     kappa: p_kappa,
     disputes: p_disputesState,
   });
+
+  // $(0.5.0 - 5.2)
+  if (
+    block.header.parent !==
+    curState.recentHistory[curState.recentHistory.length - 1].headerHash
+  ) {
+    return err(ImportBlockError.InvalidParentHeader);
+  }
+
+  // $(0.5.0 - 5.8)
+  const prevMerkleRoot = merkelizeState(curState);
+  if (prevMerkleRoot !== block.header.priorStateRoot) {
+    return err(ImportBlockError.InvalidParentStateRoot);
+  }
+
+  // verify extrinsic merkle commitment
+  // TODO: implement
+  // $(0.5.0 - 5.4 / 5.5 / 5.6)
 
   if (!verifySeal(block.header, p_state)) {
     return err(ImportBlockError.InvalidSeal);

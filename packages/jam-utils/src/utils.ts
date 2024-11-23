@@ -6,9 +6,10 @@ import {
   Posterior,
   SeqOfLength,
   Tagged,
+  ValidatorData,
 } from "@tsjam/types";
 import { JamHeader, SafroleState } from "@tsjam/types";
-import { EPOCH_LENGTH } from "@tsjam/constants";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 /**
  * simple utility function to go from untagged to tagged
  */
@@ -57,13 +58,21 @@ export const isFallbackMode = (
  * `Ha` in the graypaper
  * @param header - the header of the blockj
  * @param state - the state of the safrole state machine
+ *
+ * @returns undefined in case blockAuthorKeyIndex is invalid and not within
+ * $(0.5.0 - 5.9)
  */
-export const getBlockAuthorKey = (header: JamHeader, state: JamState) => {
-  if (isFallbackMode(state.safroleState.gamma_s)) {
-    return state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+
+export const getBlockAuthorKey = (
+  header: JamHeader,
+  p_kappa: Posterior<JamState["kappa"]>,
+  gamma_s: SafroleState["gamma_s"],
+): BandersnatchKey | undefined => {
+  if (isFallbackMode(gamma_s)) {
+    return gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
   } else {
-    const k = state.kappa[header.blockAuthorKeyIndex];
-    return k.banderSnatch;
+    const k: ValidatorData | undefined = p_kappa[header.blockAuthorKeyIndex];
+    return k?.banderSnatch;
   }
 };
 

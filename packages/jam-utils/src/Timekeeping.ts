@@ -7,8 +7,7 @@ import { Posterior, Tau } from "@tsjam/types";
  */
 export class Timekeeping {
   static getJamSlotSinceEpoch() {
-    const now = (Date.now() / 1000) | 0;
-    return ((now - JAM_COMMON_ERA) / 6) | 0;
+    return (this.bigT() / 6) | 0;
   }
 
   static getJamEpoch() {
@@ -17,6 +16,15 @@ export class Timekeeping {
 
   static getJamSlotSinceEpochFromNow() {
     return this.getJamSlotSinceEpoch() % 36;
+  }
+
+  /**
+   * `T` in the graypaper
+   * see section 4.4 - Time
+   */
+  static bigT() {
+    const now = (Date.now() / 1000) | 0;
+    return now - JAM_COMMON_ERA;
   }
 }
 /**
