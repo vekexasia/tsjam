@@ -66,14 +66,9 @@ export const isFallbackMode = (
 export const getBlockAuthorKey = (
   header: JamHeader,
   p_kappa: Posterior<JamState["kappa"]>,
-  gamma_s: SafroleState["gamma_s"],
 ): BandersnatchKey | undefined => {
-  if (isFallbackMode(gamma_s)) {
-    return gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
-  } else {
-    const k: ValidatorData | undefined = p_kappa[header.blockAuthorKeyIndex];
-    return k?.banderSnatch;
-  }
+  const k: ValidatorData | undefined = p_kappa[header.blockAuthorKeyIndex];
+  return k?.banderSnatch;
 };
 
 /**

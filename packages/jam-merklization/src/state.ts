@@ -53,7 +53,7 @@ import assert from "node:assert";
 /**
  * Merkelize state
  * `Mσ`
- * (D.5 - 0.5.0)
+ * $(0.5.0 - D.5)
  */
 export const merkelizeState = (state: JamState): Hash => {
   const stateMap = transformState(state);
@@ -235,7 +235,6 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
 
   toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec, state.authPool));
   toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec, state.authQueue));
-
   // β - recentHistory
   toRet.set(
     C_fn(3),
@@ -335,7 +334,6 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 10
-
   const singleRHOCodec: JamCodec<{ workReport: WorkReport; reportTime: Tau }> =
     {
       encode(value, bytes) {
@@ -383,30 +381,39 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const svscodec: JamCodec<SingleValidatorStatistics> = {
     encode(value, bytes) {
       let offset = 0;
-      offset += E_4_int.encode(value.blocksProduced, bytes.subarray(offset));
-      offset += E_4_int.encode(value.ticketsIntroduced, bytes.subarray(offset));
+      offset += E_4_int.encode(
+        value.blocksProduced,
+        bytes.subarray(offset, offset + 4),
+      );
+      offset += E_4_int.encode(
+        value.ticketsIntroduced,
+        bytes.subarray(offset, offset + 4),
+      );
       offset += E_4_int.encode(
         value.preimagesIntroduced,
-        bytes.subarray(offset),
+        bytes.subarray(offset, offset + 4),
       );
       offset += E_4_int.encode(
         value.totalOctetsIntroduced,
-        bytes.subarray(offset),
+        bytes.subarray(offset, offset + 4),
       );
-      offset += E_4_int.encode(value.guaranteedReports, bytes.subarray(offset));
+      offset += E_4_int.encode(
+        value.guaranteedReports,
+        bytes.subarray(offset, offset + 4),
+      );
       offset += E_4_int.encode(
         value.availabilityAssurances,
-        bytes.subarray(offset),
+        bytes.subarray(offset, offset + 4),
       );
       return offset;
     },
     decode(bytes) {
-      const blocksProduced = E_4_int.decode(bytes);
-      const ticketsIntroduced = E_4_int.decode(bytes.subarray(4));
-      const preimagesIntroduced = E_4_int.decode(bytes.subarray(8));
-      const totalOctetsIntroduced = E_4_int.decode(bytes.subarray(12));
-      const guaranteedReports = E_4_int.decode(bytes.subarray(16));
-      const availabilityAssurances = E_4_int.decode(bytes.subarray(20));
+      const blocksProduced = E_4_int.decode(bytes.subarray(0, 4));
+      const ticketsIntroduced = E_4_int.decode(bytes.subarray(4, 8));
+      const preimagesIntroduced = E_4_int.decode(bytes.subarray(8, 12));
+      const totalOctetsIntroduced = E_4_int.decode(bytes.subarray(12, 16));
+      const guaranteedReports = E_4_int.decode(bytes.subarray(16, 20));
+      const availabilityAssurances = E_4_int.decode(bytes.subarray(20, 24));
 
       return {
         value: {
@@ -421,7 +428,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
       };
     },
     encodedSize() {
-      return 0;
+      return 24;
     },
   };
 

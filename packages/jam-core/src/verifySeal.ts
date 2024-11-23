@@ -24,33 +24,50 @@ import {
   toPosterior,
 } from "@tsjam/utils";
 
+/**
+ * Verify Hs
+ * $(0.5.0 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
+ */
 export const verifySeal = (
   header: SignedJamHeader,
   p_state: Posterior<JamState>,
 ): boolean => {
   const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
-  const blockAuthorKey = getBlockAuthorKey(header, p_state);
+  const ha = getBlockAuthorKey(header, toPosterior(p_state.kappa));
+  if (typeof ha === "undefined") {
+    // invalid block author key
+    return false;
+  }
+  // $(0.5.0 - 6.16)
   if (isFallbackMode(p_state.safroleState.gamma_s)) {
-    return Bandersnatch.verifySignature(
+    const verified = Bandersnatch.verifySignature(
       header.blockSeal,
-      blockAuthorKey,
+      ha,
       encodedHeader, // message
       new Uint8Array([
         ...JAM_FALLBACK_SEAL,
         ...bigintToBytes(p_state.entropy[3], 32),
       ]), // context
     );
+    if (!verified) {
+      return false;
+    }
+    const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
+    if (i !== ha) {
+      return false;
+    }
+    return true;
   } else {
+    // $(0.5.0 - 6.15)
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
-    assert(
-      i.id === Bandersnatch.vrfOutputSignature(header.blockSeal),
-      "invalid ticket identity",
-    );
+    if (i.id !== Bandersnatch.vrfOutputSignature(header.blockSeal)) {
+      return false;
+    }
 
     return Bandersnatch.verifySignature(
       header.blockSeal,
-      blockAuthorKey,
+      ha,
       encodedHeader, // message,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
@@ -64,21 +81,20 @@ export const verifySeal = (
 
 /**
  * verify `Hv`
- * @see (0.5.0 -
- * TODO: 6.15 seems to be wrong this implementation
+ * @see (0.5.0 - 6.17 - 6.18)
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
   state: Posterior<JamState>,
 ): boolean => {
-  const blockAuthorKey = getBlockAuthorKey(
-    header,
-    toPosterior(state.kappa),
-    state.safroleState.gamma_s,
-  );
+  const ha = getBlockAuthorKey(header, toPosterior(state.kappa));
+  if (typeof ha === "undefined") {
+    // invalid block author key
+    return false;
+  }
   return Bandersnatch.verifySignature(
     header.entropySignature,
-    blockAuthorKey,
+    ha,
     new Uint8Array([]), // message - empty to not bias the entropy
     new Uint8Array([
       ...JAM_ENTROPY,

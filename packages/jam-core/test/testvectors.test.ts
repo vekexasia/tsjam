@@ -86,6 +86,7 @@ import {
 } from "@tsjam/types";
 import { hexToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
 import { importBlock } from "@/importBlock.js";
+import { merkelizeState } from "@tsjam/merklization";
 
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
@@ -103,7 +104,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         offenders: [],
         extrinsicHash: toTagged(0n),
         timeSlotIndex: test.input.slot,
-        priorStateRoot: toTagged(0n),
+        priorStateRoot: toTagged(merkelizeState(curState)),
         entropySignature: hextToBigInt(test.input.entropy),
         blockAuthorKeyIndex: 0 as ValidatorIndex,
       },

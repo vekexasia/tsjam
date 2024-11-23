@@ -25,7 +25,7 @@ export const RHO_2_Dagger: STF<
 > = (input, curState) => {
   const hashes = new Set<Hash>(
     curState
-      .filter((a) => a !== null)
+      .filter((a) => typeof a !== "undefined")
       .map((a) => {
         return a!.workReport.workPackageSpecification.workPackageHash;
       }),

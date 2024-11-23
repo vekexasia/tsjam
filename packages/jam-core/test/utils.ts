@@ -1,3 +1,4 @@
+import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AccumulationHistory,
   AccumulationQueue,
@@ -61,12 +62,12 @@ export const mapTestDataToState = (testData: any): JamState => {
       psi_o: new Set(),
       psi_w: new Set(),
     },
-    rho: [] as unknown as JamState["rho"],
+    rho: new Array(381).fill(undefined) as unknown as JamState["rho"],
     serviceAccounts: new Map(),
-    accumulationHistory: new Array(600)
+    accumulationHistory: new Array(EPOCH_LENGTH)
       .fill(null)
       .map(() => new Set()) as AccumulationHistory,
-    accumulationQueue: new Array(600)
+    accumulationQueue: new Array(EPOCH_LENGTH)
       .fill(null)
       .map(() => []) as unknown as AccumulationQueue,
     privServices: { m: 0, a: 0, v: 0, g: new Map() },
