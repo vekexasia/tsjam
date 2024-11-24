@@ -50,7 +50,6 @@ export const E_sub_int = <T extends number>(sub: number): JamCodec<T> => ({
     if (bytes.length < sub) {
       const padded = new Uint8Array(sub).fill(0);
       padded.set(bytes);
-      console.log("padded", padded, LittleEndian.decode(padded));
       const r = LittleEndian.decode(padded);
       return {
         value: Number(r.value) as T,

@@ -1,11 +1,12 @@
-import { AvailabilitySpecification, WorkPackageHash } from "@tsjam/types";
+import { AvailabilitySpecification, WorkPackageHash, u16 } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
-import { E_4 } from "@/ints/E_subscr.js";
+import { E_2_int, E_4 } from "@/ints/E_subscr.js";
 
 /**
  *
  * `S` set member codec
+ * $(0.5.0 - C.22)
  */
 export const AvailabilitySpecificationCodec: JamCodec<AvailabilitySpecification> =
   {
@@ -25,6 +26,10 @@ export const AvailabilitySpecificationCodec: JamCodec<AvailabilitySpecification>
       offset += HashCodec.encode(
         value.segmentRoot,
         bytes.subarray(offset, offset + 32),
+      );
+      offset += E_2_int.encode(
+        value.segmentCount,
+        bytes.subarray(offset, offset + 2),
       );
       return offset;
     },
@@ -49,6 +54,9 @@ export const AvailabilitySpecificationCodec: JamCodec<AvailabilitySpecification>
         bytes.subarray(offset, offset + 32),
       ).value;
       offset += 32;
+      const segmentCount = E_2_int.decode(bytes.subarray(offset, offset + 2))
+        .value as u16;
+      offset += 2;
       return {
         value: {
           workPackageHash,
@@ -56,11 +64,12 @@ export const AvailabilitySpecificationCodec: JamCodec<AvailabilitySpecification>
             bundleLength as AvailabilitySpecification["bundleLength"],
           erasureRoot,
           segmentRoot,
+          segmentCount,
         },
         readBytes: offset,
       };
     },
     encodedSize(): number {
-      return 32 + 4 + 32 + 32;
+      return 32 + 4 + 32 + 32 + 2;
     },
   };

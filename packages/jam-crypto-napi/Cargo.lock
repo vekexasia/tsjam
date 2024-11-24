@@ -56,7 +56,7 @@ dependencies = [
 [[package]]
 name = "ark-ec-vrfs"
 version = "0.1.0"
-source = "git+https://github.com/davxy/ark-ec-vrfs?rev=ea35e22#ea35e224f79c6f920e3816ae2e3cfdb02e2e8448"
+source = "git+https://github.com/davxy/ark-ec-vrfs?rev=36cdc90#36cdc903af113d5a4d32218fc8e86c956d592a4f"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",
@@ -177,20 +177,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-transcript"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "563084372d89271122bd743ef0a608179726f5fad0566008ba55bd0f756489b8"
-dependencies = [
- "ark-ff",
- "ark-serialize",
- "ark-std",
- "digest",
- "rand_core",
- "sha3",
-]
-
-[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -241,7 +227,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/davxy/ring-proof?rev=86e3ce0#86e3ce052c1598a4c4bfac246fb5af6bfa5b8a94"
+source = "git+https://github.com/davxy/ring-proof?branch=extended#1080a5dabf12da701542c68bc643e67b4e72e9e5"
 dependencies = [
  "ark-ec",
  "ark-ff",
@@ -250,6 +236,8 @@ dependencies = [
  "ark-std",
  "fflonk",
  "getrandom_or_panic",
+ "merlin",
+ "rand_chacha",
  "rayon",
 ]
 
@@ -666,18 +654,18 @@ checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 [[package]]
 name = "ring"
 version = "0.1.0"
-source = "git+https://github.com/davxy/ring-proof?rev=86e3ce0#86e3ce052c1598a4c4bfac246fb5af6bfa5b8a94"
+source = "git+https://github.com/davxy/ring-proof?branch=extended#1080a5dabf12da701542c68bc643e67b4e72e9e5"
 dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-poly",
  "ark-serialize",
  "ark-std",
- "ark-transcript",
  "arrayvec",
  "blake2",
  "common",
  "fflonk",
+ "merlin",
  "rayon",
 ]
 
@@ -705,16 +693,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
-]
-
-[[package]]
-name = "sha3"
-version = "0.10.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75872d278a8f37ef87fa0ddbda7802605cb18344497949862c0d4dcb291eba60"
-dependencies = [
- "digest",
- "keccak",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-import { Hash, Tagged, WorkPackageHash } from "@/genericTypes";
+import { Hash, Tagged, WorkPackageHash, u16 } from "@/genericTypes";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 
 /**
@@ -35,4 +35,9 @@ export type AvailabilitySpecification = {
    * It is also discussed in section 14.
    */
   segmentRoot: Hash;
+
+  /**
+   * Exported segment count
+   */
+  segmentCount: u16;
 };

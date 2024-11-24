@@ -48,12 +48,13 @@ export const assurancesExtrinsicFromJSON = (json: any): EA_Extrinsic => {
 export const guaranteesExtrinsicFromJSON = (json: any): EG_Extrinsic => {
   return json.map((e: any): EG_Extrinsic[0] => ({
     workReport: {
-      segmentRootLookup: new Map(),
+      segmentRootLookup: new Map(), // TODO:this is not mapped as test cases are
       workPackageSpecification: {
         workPackageHash: hextToBigInt(e.report.package_spec.hash),
-        bundleLength: e.report.package_spec.len,
-        erasureRoot: hextToBigInt(e.report.package_spec.root),
-        segmentRoot: hextToBigInt(e.report.package_spec.segments),
+        bundleLength: e.report.package_spec.length,
+        erasureRoot: hextToBigInt(e.report.package_spec.erasure_root),
+        segmentRoot: hextToBigInt(e.report.package_spec.exports_root),
+        segmentCount: e.report.package_spec.exports_count,
       },
       refinementContext: {
         anchor: {
@@ -72,10 +73,10 @@ export const guaranteesExtrinsicFromJSON = (json: any): EG_Extrinsic => {
       authorizerOutput: hexToBytes(e.report.auth_output),
       results: e.report.results.map(
         (r: any): WorkResult => ({
-          serviceIndex: r.service,
+          serviceIndex: r.service_id,
           codeHash: hextToBigInt(r.code_hash),
           payloadHash: hextToBigInt(r.payload_hash),
-          gasPrioritization: BigInt(r.gas_ratio) as u64,
+          gasPrioritization: BigInt(r.gas) as u64,
           output: (() => {
             if (r.result.ok) {
               return hexToBytes(r.result.ok);
@@ -166,10 +167,10 @@ export const contextFromJSON = (json: any): RefinementContext => {
 
 export const workResultFromJSON = (r: any): WorkResult => {
   return {
-    serviceIndex: r.service,
+    serviceIndex: r.service_id,
     codeHash: hextToBigInt(r.code_hash),
     payloadHash: hextToBigInt(r.payload_hash),
-    gasPrioritization: BigInt(r.gas_ratio) as u64,
+    gasPrioritization: BigInt(r.gas) as u64,
     output: (() => {
       if (r.result.ok) {
         return hexToBytes(r.result.ok);

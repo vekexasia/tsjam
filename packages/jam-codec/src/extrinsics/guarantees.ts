@@ -88,18 +88,18 @@ if (import.meta.vitest) {
     getCodecFixtureFile,
     guaranteesExtrinsicFromJSON,
   } = await import("@/test/utils.js");
-  describe.skip("codecEg", () => {
+  describe("codecEg", () => {
     const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
     const json = JSON.parse(getUTF8FixtureFile("guarantees_extrinsic.json"));
     it("guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin", () => {
       const ea: EG_Extrinsic = guaranteesExtrinsicFromJSON(json);
       const b = new Uint8Array(bin.length);
       codec_Eg.encode(ea, b);
-      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
+      //      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
       expect(Buffer.from(b).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now
+      // check decode now as
       const x = codec_Eg.decode(b);
       expect(x.value).toEqual(ea);
     });

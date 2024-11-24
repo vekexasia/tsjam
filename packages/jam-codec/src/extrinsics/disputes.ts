@@ -225,7 +225,7 @@ if (import.meta.vitest) {
       expect(Buffer.from(b).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now
+      // check decode now a
       const x = codec_Ed.decode(b);
       expect(x.value.verdicts).toEqual(ed.verdicts);
       expect(x.value.culprit).toEqual(ed.culprit);

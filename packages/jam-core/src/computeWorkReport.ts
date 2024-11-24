@@ -11,6 +11,7 @@ import {
   WorkPackageWithAuth,
   WorkReport,
   WorkResult,
+  u16,
 } from "@tsjam/types";
 import { isAuthorized, refineInvocation } from "@tsjam/pvm";
 import {
@@ -113,6 +114,7 @@ const A_fn = (
   );
 
   return {
+    segmentCount: 0 as u16, // FIXME: this is wrong just comply with TS
     workPackageHash: Hashing.blake2b(encodeWithCodec(WorkPackageCodec, pac)),
     bundleLength: toTagged(blob.length),
     segmentRoot: constantDepthBinaryTree(exportedSegments),
