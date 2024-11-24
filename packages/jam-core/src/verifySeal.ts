@@ -9,7 +9,6 @@ import {
 import { Result, err, ok } from "neverthrow";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
-import assert from "node:assert";
 import {
   EPOCH_LENGTH,
   JAM_ENTROPY,

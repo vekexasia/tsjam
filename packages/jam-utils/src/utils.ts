@@ -9,7 +9,7 @@ import {
   ValidatorData,
 } from "@tsjam/types";
 import { JamHeader, SafroleState } from "@tsjam/types";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 /**
  * simple utility function to go from untagged to tagged
  */

@@ -1,5 +1,5 @@
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { Hash, SeqOfLength, WorkPackageHash } from "@/genericTypes";
+import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 
 /**
  * `ξ` in the graypaper
