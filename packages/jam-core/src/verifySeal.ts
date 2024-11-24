@@ -4,7 +4,10 @@ import {
   JamState,
   Posterior,
   SafroleState,
+  SeqOfLength,
   SignedJamHeader,
+  Tau,
+  TicketIdentifier,
 } from "@tsjam/types";
 import { Result, err, ok } from "neverthrow";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
@@ -14,14 +17,18 @@ import {
   JAM_ENTROPY,
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
+  LOTTERY_MAX_SLOT,
 } from "@tsjam/constants";
 import {
   bigintToBytes,
   getBlockAuthorKey,
   isFallbackMode,
   isNewEra,
+  isSameEra,
+  slotIndex,
   toPosterior,
 } from "@tsjam/utils";
+import { outsideInSequencer } from "@tsjam/transitions";
 
 /**
  * Verify Hs
@@ -132,6 +139,48 @@ export const verifyEpochMarker = (
   } else {
     if (typeof block.header.epochMarker !== "undefined") {
       return err(EpochMarkerError.InvalidEpochMarker);
+    }
+  }
+  return ok(undefined);
+};
+
+export enum WinningTicketsError {
+  WinningTicketsNotEnoughLong = "WinningTicketsNotEnoughLong",
+  WinningTicketsNotExpected = "WinningTicketsNotExpected",
+  WinningTicketMismatch = "WinningTicketMismatch",
+}
+
+// check winning tickets Hw
+// $(0.5.0 - 6.28)
+export const verifyWinningTickets = (
+  block: JamBlock,
+  curState: JamState,
+  tauTransition: { p_tau: Posterior<Tau>; tau: Tau },
+): Result<undefined, WinningTicketsError> => {
+  if (
+    isSameEra(tauTransition.p_tau, tauTransition.tau) &&
+    slotIndex(curState.tau) <= LOTTERY_MAX_SLOT &&
+    LOTTERY_MAX_SLOT <= slotIndex(tauTransition.p_tau) &&
+    curState.safroleState.gamma_a.length === EPOCH_LENGTH
+  ) {
+    if (block.header.winningTickets?.length !== EPOCH_LENGTH) {
+      console.log(block.header.winningTickets);
+      return err(WinningTicketsError.WinningTicketsNotEnoughLong);
+    }
+    const expectedHw = outsideInSequencer(
+      curState.safroleState.gamma_a as unknown as SeqOfLength<
+        TicketIdentifier,
+        typeof EPOCH_LENGTH
+      >,
+    );
+    for (let i = 0; i < EPOCH_LENGTH; i++) {
+      if (block.header.winningTickets[i] !== expectedHw[i]) {
+        return err(WinningTicketsError.WinningTicketMismatch);
+      }
+    }
+  } else {
+    if (typeof block.header.winningTickets !== "undefined") {
+      return err(WinningTicketsError.WinningTicketsNotExpected);
     }
   }
   return ok(undefined);

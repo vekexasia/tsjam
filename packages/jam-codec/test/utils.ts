@@ -197,6 +197,7 @@ export const headerFromJSON = (json: any): SignedJamHeader => {
       }
       return {
         entropy: hextToBigInt(json.epoch_mark.entropy),
+        entropy2: hextToBigInt(json.epoch_mark.tickets_entropy),
         validatorKeys: json.epoch_mark.validators.map((e: any) =>
           hextToBigInt(e),
         ),

@@ -46,6 +46,10 @@ export const isNewEra = (newSlotIndex: number, curSlotIndex: number) => {
   return epochIndex(newSlotIndex) > epochIndex(curSlotIndex);
 };
 
+export const isSameEra = (newSlotIndex: number, curSlotIndex: number) => {
+  return epochIndex(newSlotIndex) === epochIndex(curSlotIndex);
+};
+
 /**
  * check if the header is the first block of a new **next** era
  * Similar to {@link isNewEra} but checks if the new era is the next era

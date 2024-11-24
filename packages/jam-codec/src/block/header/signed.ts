@@ -3,6 +3,7 @@ import { SignedJamHeader } from "@tsjam/types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
 import { BandersnatchSignatureCodec } from "@/identity.js";
+import { encodeWithCodec } from "@/utils";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -80,9 +81,8 @@ if (import.meta.vitest) {
       });
 
       it("should encode properly", () => {
-        const bytes = new Uint8Array(SignedHeaderCodec.encodedSize(item));
-        SignedHeaderCodec.encode(item, bytes);
-        const off = 362;
+        const bytes = encodeWithCodec(SignedHeaderCodec, item);
+        const off = 0;
         expect(Buffer.from(bytes).subarray(off).toString("hex")).toBe(
           Buffer.from(bin).subarray(off).toString("hex"),
         );

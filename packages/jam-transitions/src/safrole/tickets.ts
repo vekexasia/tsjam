@@ -41,17 +41,17 @@ export const etToIdentifiers = (
     return ok([]); // optimization
   }
 
-  // (75) first case
+  // $(0.5.0 - 6.30) | first case
   if (slotIndex(input.p_tau) >= LOTTERY_MAX_SLOT) {
     return err(ETError.LOTTERY_ENDED);
   }
 
-  // (75) first case
+  // $(0.5.0 - 6.30) | first case
   if (et.length > MAX_TICKETS_PER_BLOCK) {
     return err(ETError.MAX_TICKETS_EXCEEDED);
   }
 
-  // (74)
+  // $(0.5.0 - 6.29) | we validate the ticket
   for (const extrinsic of et) {
     if (extrinsic.entryIndex !== 0 && extrinsic.entryIndex !== 1) {
       return err(ETError.INVALID_ENTRY_INDEX);
@@ -70,16 +70,23 @@ export const etToIdentifiers = (
     }
   }
 
+  // $(0.5.0 - 6.31)
   const n: TicketIdentifier[] = [];
   for (const x of et) {
-    // (76)
     n.push({
       id: Bandersnatch.vrfOutputRingProof(x.proof), // y
       attempt: x.entryIndex, // r
     });
   }
 
-  // (78) make sure that the y terms are not already in gamma_a
+  // $(0.5.0 - 6.32) | tickets should be in order and unique
+  for (let i = 1; i < n.length; i++) {
+    if (n[i - 1].id >= n[i].id) {
+      return err(ETError.UNSORTED_VRF_PROOFS);
+    }
+  }
+
+  // $(0.5.0 - 6.33) | make sure ticket were not submitted already
   const gamma_a_ids = new Set(input.gamma_a.map((x) => x.id));
   for (const x of n) {
     if (gamma_a_ids.has(x.id)) {
@@ -87,14 +94,5 @@ export const etToIdentifiers = (
     }
   }
 
-  for (let i = 1; i < n.length; i++) {
-    // (77)
-    if (n[i - 1].id >= n[i].id) {
-      return err(ETError.UNSORTED_VRF_PROOFS);
-    }
-  }
-
   return ok(n);
-  // we need to check (80) as well but that is in gamma_aSTF
-  // as it would be acircular dependency to have p_gamma_a as input here
 };

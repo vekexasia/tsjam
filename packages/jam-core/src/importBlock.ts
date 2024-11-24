@@ -1,4 +1,4 @@
-import { BLOCK_TIME, LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import { BLOCK_TIME } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
 import {
@@ -7,8 +7,6 @@ import {
   JamBlock,
   JamState,
   STF,
-  SeqOfLength,
-  TicketIdentifier,
   u64,
 } from "@tsjam/types";
 import {
@@ -32,7 +30,6 @@ import {
   etToIdentifiers,
   gamma_aSTF,
   gamma_sSTF,
-  outsideInSequencer,
   recentHistoryToDagger,
   recentHistoryToPosterior,
   rotateEntropy,
@@ -40,13 +37,7 @@ import {
   safroleToPosterior,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import {
-  Timekeeping,
-  epochIndex,
-  slotIndex,
-  toPosterior,
-  toTagged,
-} from "@tsjam/utils";
+import { Timekeeping, toPosterior, toTagged } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid } from "@/validateEG.js";
@@ -57,12 +48,13 @@ import {
   outerAccumulation,
   withPrereqAvailableReports,
 } from "@tsjam/pvm";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   EpochMarkerError,
+  WinningTicketsError,
   verifyEntropySignature,
   verifyEpochMarker,
   verifySeal,
+  verifyWinningTickets,
 } from "@/verifySeal";
 
 export enum ImportBlockError {
@@ -97,6 +89,7 @@ export const importBlock: STF<
   | RHO2DoubleDaggerError
   | DisputesToPosteriorError
   | EpochMarkerError
+  | WinningTicketsError
 > = (block, curState) => {
   const tauTransition = {
     tau: curState.tau,
@@ -390,32 +383,10 @@ export const importBlock: STF<
     return err(x.error);
   }
 
-  //check winning tickets Hw (73) - 0.4.5
-  if (
-    epochIndex(block.header.timeSlotIndex) === curState.tau &&
-    slotIndex(curState.tau) <= LOTTERY_MAX_SLOT &&
-    LOTTERY_MAX_SLOT <= slotIndex(block.header.timeSlotIndex) &&
-    curState.safroleState.gamma_a.length === EPOCH_LENGTH
-  ) {
-    if (block.header.winningTickets?.length !== EPOCH_LENGTH) {
-      return err(ImportBlockError.WinningTicketsNotEnoughLong);
-    }
-    const expectedHw = outsideInSequencer(
-      curState.safroleState.gamma_a as unknown as SeqOfLength<
-        TicketIdentifier,
-        typeof EPOCH_LENGTH
-      >,
-    );
-    // (73) - 0.4.5
-    for (let i = 0; i < EPOCH_LENGTH; i++) {
-      if (block.header.winningTickets[i] !== expectedHw[i]) {
-        return err(ImportBlockError.WinningTicketMismatch);
-      }
-    }
-  } else {
-    if (typeof block.header.winningTickets !== "undefined") {
-      return err(ImportBlockError.WinningTicketsNotExpected);
-    }
+  const wt = verifyWinningTickets(block, curState, tauTransition);
+  if (wt.isErr()) {
+    return err(wt.error);
   }
+
   return ok(p_state);
 };

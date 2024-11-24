@@ -5,14 +5,14 @@ import {
   Tau,
   TicketIdentifier,
 } from "@tsjam/types";
-import assert from "node:assert";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { isNewEra } from "@tsjam/utils";
-import { ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 
 type Input = {
   tau: Tau;
   p_tau: Posterior<Tau>;
+  // n in the paper
   newIdentifiers: TicketIdentifier[];
 };
 
@@ -21,7 +21,7 @@ export enum GammaAError {
 }
 /**
  * update `gamma_a`
- * (79) - 0.4.5
+ * $(0.5.0 - 6.34 / 6.35)
  */
 export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
   input: Input,
@@ -39,10 +39,13 @@ export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
     .sort((a, b) => (a.id - b.id < 0 ? -1 : 1))
     .slice(0, EPOCH_LENGTH) as Posterior<SafroleState["gamma_a"]>;
 
-  // (80) check `n` subset of p_gamma_a
+  // $(0.5.0 - 6.35) | check `n` subset of p_gamma_a
   const p_gamma_a_ids = new Set(toRet.map((x) => x.id));
   for (const x of input.newIdentifiers) {
-    assert(p_gamma_a_ids.has(x.id), "Ticket not in posterior gamma_a");
+    if (!p_gamma_a_ids.has(x.id)) {
+      // invalid ticket has been submitted.
+      return err(GammaAError.TICKET_NOT_IN_POSTERIOR_GAMMA_A);
+    }
   }
   return ok(toRet);
 };

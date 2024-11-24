@@ -37,6 +37,12 @@ vi.mock("@/verifySeal", async (importOriginal) => {
       return () => ok(undefined);
     },
   });
+
+  Object.defineProperty(toRet, "verifyWinningTickets", {
+    get() {
+      return () => ok(undefined);
+    },
+  });
   return toRet;
 });
 vi.mock("@tsjam/crypto", async (importOriginal) => {

@@ -47,12 +47,12 @@ export interface JamHeader {
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
    * hence the length of kb or validatorKeys is `epoch-length`
-   * @see section 5.1
+   * $(0.5.0 - 5.10)
    */
   epochMarker?: {
-    // 4 byte see (65) on section 6.5
     // coming from eta
     entropy: Blake2bHash;
+    entropy2: Blake2bHash;
     // 32 byte bandersnatch sequence (ordered) coming from gamma_k
     validatorKeys: SeqOfLength<
       BandersnatchKey,

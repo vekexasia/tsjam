@@ -22,21 +22,23 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     readBytes: number;
   } {
     const entropy = HashCodec.decode(bytes.subarray(0, 32));
+    const entropy2 = HashCodec.decode(bytes.subarray(32, 64));
     const validatorKeys = [] as unknown as NonNullable<
       JamHeader["epochMarker"]
     >["validatorKeys"];
     for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
       validatorKeys.push(
-        BandersnatchCodec.decode(bytes.subarray(32 + i * 32, 32 + (i + 1) * 32))
+        BandersnatchCodec.decode(bytes.subarray(64 + i * 32, 64 + (i + 1) * 32))
           .value,
       );
     }
     return {
       value: {
         entropy: entropy.value as Blake2bHash,
+        entropy2: entropy2.value as Blake2bHash,
         validatorKeys,
       },
-      readBytes: 32 + NUMBER_OF_VALIDATORS * 32,
+      readBytes: 64 + NUMBER_OF_VALIDATORS * 32,
     };
   },
   encode(
@@ -52,7 +54,10 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
       value.entropy,
       bytes.subarray(offset, offset + 32),
     );
-
+    offset += HashCodec.encode(
+      value.entropy2,
+      bytes.subarray(offset, offset + 32),
+    );
     offset += value.validatorKeys.reduce((acc, key) => {
       BandersnatchCodec.encode(key, bytes.subarray(acc, acc + 32));
       return acc + 32;
@@ -60,7 +65,7 @@ const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
     return offset;
   },
   encodedSize(): number {
-    return 32 + NUMBER_OF_VALIDATORS * 32;
+    return 64 + NUMBER_OF_VALIDATORS * 32;
   },
 };
 const optHeCodec = new Optional(epochMarkerCodec);

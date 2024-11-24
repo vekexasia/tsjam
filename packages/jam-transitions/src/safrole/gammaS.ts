@@ -19,9 +19,9 @@ import {
 } from "@tsjam/constants";
 import {
   bigintToBytes,
-  epochIndex,
   isFallbackMode,
   isNewNextEra,
+  isSameEra,
   slotIndex,
   toPosterior,
   toTagged,
@@ -29,27 +29,8 @@ import {
 import { ok } from "neverthrow";
 
 /**
- * Z fn
- * @see (70) 0.4.5
- * exported cause it's being used to check/produce `Hw` in Header
- */
-export const outsideInSequencer = <
-  T extends SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
->(
-  t: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
-): T => {
-  const toRet: T = [] as unknown as T;
-  // Z function (70)
-  for (let i = 0; i < EPOCH_LENGTH / 2; i++) {
-    toRet.push(t[i]);
-    toRet.push(t[EPOCH_LENGTH - i - 1]);
-  }
-  return toRet;
-};
-/**
  * it computes the posterior value of `gamma_s`
- * @see (69) and (70) in the graypaper
- * @see rotateEntropy
+ * $(0.5.0 - 6.24)
  */
 export const gamma_sSTF: STF<
   SafroleState["gamma_s"],
@@ -64,9 +45,9 @@ export const gamma_sSTF: STF<
   never
 > = (input) => {
   if (
-    isNewNextEra(input.p_tau, input.tau) &&
-    input.gamma_a.length === EPOCH_LENGTH &&
-    slotIndex(input.tau) >= LOTTERY_MAX_SLOT
+    isNewNextEra(input.p_tau, input.tau) && // e' = e + 1
+    input.gamma_a.length === EPOCH_LENGTH && // |ya| = E
+    slotIndex(input.tau) >= LOTTERY_MAX_SLOT // m >= Y
   ) {
     // we've accumulated enough tickets
     // we can now compute the new posterior `gamma_s`
@@ -79,16 +60,16 @@ export const gamma_sSTF: STF<
       >,
     );
     return ok(newGammaS);
-  } else if (epochIndex(input.tau) === epochIndex(input.p_tau)) {
+  } else if (isSameEra(input.tau, input.p_tau)) {
     return ok(toPosterior(input.gamma_s));
   } else {
     // we're in fallback mode
-    // F(eta'_2, kappa' ) (69)
+    // F(eta'_2, kappa' ) $(0.5.0 - 6.24)
     const newGammaS = [] as unknown as Posterior<
       SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
     >;
     const p_eta2 = bigintToBytes(input.p_eta[2], 32);
-    // (71)
+    // $(0.5.0 - 6.26)
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const e4Buf = new Uint8Array(4);
       E_4.encode(BigInt(i), e4Buf);
@@ -100,6 +81,25 @@ export const gamma_sSTF: STF<
     }
     return ok(newGammaS);
   }
+};
+
+/**
+ * Z fn
+ * exported cause it's being used to check/produce `Hw` in Header
+ * $(0.5.0 - 6.25)
+ */
+export const outsideInSequencer = <
+  T extends SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+>(
+  t: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+): T => {
+  const toRet: T = [] as unknown as T;
+  // Z function (70)
+  for (let i = 0; i < EPOCH_LENGTH / 2; i++) {
+    toRet.push(t[i]);
+    toRet.push(t[EPOCH_LENGTH - i - 1]);
+  }
+  return toRet;
 };
 
 if (import.meta.vitest) {
