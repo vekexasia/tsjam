@@ -1,10 +1,6 @@
 import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
 import { Posterior, Tau } from "@tsjam/types";
 
-/**
- * Unused
- * TODO:remove if unused
- */
 export class Timekeeping {
   static getJamSlotSinceEpoch() {
     return (this.bigT() / 6) | 0;

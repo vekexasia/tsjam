@@ -47,7 +47,7 @@ import {
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
-import { Bandersnatch, Hashing } from "@tsjam/crypto";
+import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid } from "@/validateEG.js";
 import {
@@ -114,7 +114,7 @@ export const importBlock: STF<
   const [, p_entropy] = rotateEntropy(
     {
       ...tauTransition,
-      vrfOut: Bandersnatch.vrfOutputSignature(block.header.entropySignature),
+      h_v: block.header.entropySignature,
     },
     curState.entropy,
   ).safeRet();
