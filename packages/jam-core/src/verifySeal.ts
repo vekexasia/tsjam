@@ -1,6 +1,7 @@
 import {
   JamBlock,
   JamEntropy,
+  JamHeader,
   JamState,
   Posterior,
   SafroleState,
@@ -10,8 +11,16 @@ import {
   TicketIdentifier,
 } from "@tsjam/types";
 import { Result, err, ok } from "neverthrow";
-import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
-import { Bandersnatch } from "@tsjam/crypto";
+import {
+  UnsignedHeaderCodec,
+  codec_Ea,
+  codec_Ed,
+  codec_Eg_4Hx,
+  codec_Ep,
+  codec_Et,
+  encodeWithCodec,
+} from "@tsjam/codec";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import {
   EPOCH_LENGTH,
   JAM_ENTROPY,
@@ -164,7 +173,6 @@ export const verifyWinningTickets = (
     curState.safroleState.gamma_a.length === EPOCH_LENGTH
   ) {
     if (block.header.winningTickets?.length !== EPOCH_LENGTH) {
-      console.log(block.header.winningTickets);
       return err(WinningTicketsError.WinningTicketsNotEnoughLong);
     }
     const expectedHw = outsideInSequencer(
@@ -184,4 +192,40 @@ export const verifyWinningTickets = (
     }
   }
   return ok(undefined);
+};
+
+// $(0.5.0 - 5.4 / 5.5)
+export const verifyExtrinsicHash = (
+  extrinsics: JamBlock["extrinsics"],
+  hx: JamHeader["extrinsicHash"],
+) => {
+  const items = [
+    ...Hashing.blake2bBuf(encodeWithCodec(codec_Et, extrinsics.tickets)),
+    ...Hashing.blake2bBuf(encodeWithCodec(codec_Ep, extrinsics.preimages)),
+    ...Hashing.blake2bBuf(
+      encodeWithCodec(codec_Eg_4Hx, extrinsics.reportGuarantees),
+    ),
+    ...Hashing.blake2bBuf(encodeWithCodec(codec_Ea, extrinsics.assurances)),
+    ...Hashing.blake2bBuf(encodeWithCodec(codec_Ed, extrinsics.disputes)),
+  ];
+  const preimage = new Uint8Array(items);
+
+  if (hx !== Hashing.blake2b(preimage)) {
+    console.log(Buffer.from(bigintToBytes(hx, 32)).toString("hex"));
+
+    console.log(Buffer.from(Hashing.blake2bBuf(preimage)).toString("hex"));
+    console.log(
+      [
+        Hashing.blake2bBuf(encodeWithCodec(codec_Et, extrinsics.tickets)),
+        Hashing.blake2bBuf(encodeWithCodec(codec_Ep, extrinsics.preimages)),
+        Hashing.blake2bBuf(
+          encodeWithCodec(codec_Eg_4Hx, extrinsics.reportGuarantees),
+        ),
+        Hashing.blake2bBuf(encodeWithCodec(codec_Ea, extrinsics.assurances)),
+        Hashing.blake2bBuf(encodeWithCodec(codec_Ed, extrinsics.disputes)),
+      ].map((i) => Buffer.from(i).toString("hex")),
+    );
+    return false;
+  }
+  return true;
 };
