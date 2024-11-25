@@ -1,9 +1,11 @@
 import { EG_Extrinsic, ValidatorIndex, u32 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { Ed25519SignatureCodec } from "@/identity.js";
+import { Ed25519SignatureCodec, HashCodec } from "@/identity.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
 import { WorkReportCodec } from "@/setelements/WorkReportCodec.js";
+import { Hashing } from "@tsjam/crypto";
+import { encodeWithCodec } from "@/utils.js";
 
 const signaturesCodec = createArrayLengthDiscriminator<
   EG_Extrinsic[0]["credential"][0]
@@ -39,6 +41,7 @@ const signaturesCodec = createArrayLengthDiscriminator<
     );
   },
 });
+
 const codecSingleGuarantee: JamCodec<EG_Extrinsic[0]> = {
   encode(value: EG_Extrinsic[0], bytes: Uint8Array): number {
     let offset = WorkReportCodec.encode(value.workReport, bytes);
@@ -77,8 +80,36 @@ const codecSingleGuarantee: JamCodec<EG_Extrinsic[0]> = {
   },
 };
 
+// $(0.5.0 - 5.6)
+const codecSingleGuaranteeForExtrinsicHash: JamCodec<EG_Extrinsic[0]> = {
+  encode(value, bytes) {
+    bytes.set(
+      Hashing.blake2bBuf(encodeWithCodec(WorkReportCodec, value.workReport)),
+    );
+    let offset = 32;
+    offset += E_4.encode(
+      BigInt(value.timeSlot),
+      bytes.subarray(offset, offset + 4),
+    );
+    offset += signaturesCodec.encode(value.credential, bytes.subarray(offset));
+    return offset;
+  },
+  decode() {
+    throw new Error(
+      "codecSingleGuaranteeForExtrinsicHash is not meant to be decoded",
+    );
+  },
+  encodedSize(value) {
+    return 32 + 4 + signaturesCodec.encodedSize(value.credential);
+  },
+};
+
 export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
   codecSingleGuarantee,
+) as unknown as JamCodec<EG_Extrinsic>;
+
+export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
+  codecSingleGuaranteeForExtrinsicHash,
 ) as unknown as JamCodec<EG_Extrinsic>;
 
 if (import.meta.vitest) {
@@ -95,7 +126,7 @@ if (import.meta.vitest) {
       const ea: EG_Extrinsic = guaranteesExtrinsicFromJSON(json);
       const b = new Uint8Array(bin.length);
       codec_Eg.encode(ea, b);
-      //      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
+      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
       expect(Buffer.from(b).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

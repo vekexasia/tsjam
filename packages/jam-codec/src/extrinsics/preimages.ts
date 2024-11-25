@@ -5,12 +5,16 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 import { EP_Tuple, ServiceIndex } from "@tsjam/types";
 import { E_4 } from "@/ints/E_subscr.js";
 
+/**
+ * $(0.5.0 - C.17)
+ */
 const preimageCodec = new LengthDiscriminator({
   ...IdentityCodec,
   decode(bytes: Uint8Array, length: number) {
     return IdentityCodec.decode(bytes.subarray(0, length));
   },
 });
+
 /**
  * Codec for a single item in the extrinsic payload
  */

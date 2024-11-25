@@ -30,7 +30,8 @@
   "dependencies": {
     "@tsjam/constants": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*"
+    "@tsjam/utils": "*",
+    "@tsjam/crypto": "*"
   },
   "license": "MIT"
 }

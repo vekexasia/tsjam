@@ -16,71 +16,10 @@ import { E_2, E_4 } from "@/ints/E_subscr.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { toTagged } from "@tsjam/utils";
 
-const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
-  decode(bytes: Uint8Array): {
-    value: NonNullable<JamHeader["epochMarker"]>;
-    readBytes: number;
-  } {
-    const entropy = HashCodec.decode(bytes.subarray(0, 32));
-    const entropy2 = HashCodec.decode(bytes.subarray(32, 64));
-    const validatorKeys = [] as unknown as NonNullable<
-      JamHeader["epochMarker"]
-    >["validatorKeys"];
-    for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-      validatorKeys.push(
-        BandersnatchCodec.decode(bytes.subarray(64 + i * 32, 64 + (i + 1) * 32))
-          .value,
-      );
-    }
-    return {
-      value: {
-        entropy: entropy.value as Blake2bHash,
-        entropy2: entropy2.value as Blake2bHash,
-        validatorKeys,
-      },
-      readBytes: 64 + NUMBER_OF_VALIDATORS * 32,
-    };
-  },
-  encode(
-    value: NonNullable<JamHeader["epochMarker"]>,
-    bytes: Uint8Array,
-  ): number {
-    assert.ok(
-      value.validatorKeys.length === NUMBER_OF_VALIDATORS,
-      `expected ${NUMBER_OF_VALIDATORS} validator keys, got ${value.validatorKeys.length}`,
-    );
-    let offset = 0;
-    offset += HashCodec.encode(
-      value.entropy,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += HashCodec.encode(
-      value.entropy2,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += value.validatorKeys.reduce((acc, key) => {
-      BandersnatchCodec.encode(key, bytes.subarray(acc, acc + 32));
-      return acc + 32;
-    }, offset);
-    return offset;
-  },
-  encodedSize(): number {
-    return 64 + NUMBER_OF_VALIDATORS * 32;
-  },
-};
-const optHeCodec = new Optional(epochMarkerCodec);
-const offendersCodec = createArrayLengthDiscriminator({
-  ...Ed25519PubkeyCodec,
-  encode(value: ED25519PublicKey, bytes: Uint8Array): number {
-    return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
-  },
-  decode(bytes: Uint8Array) {
-    return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
-  },
-});
-export const winningTicketsCodec = new Optional(
-  createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec),
-);
+/**
+ * `Eu` codec
+ * $(0.5.0 - C.20)
+ */
 export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
   decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
     let offset = 0;
@@ -193,3 +132,68 @@ export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
     );
   },
 };
+const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
+  decode(bytes: Uint8Array): {
+    value: NonNullable<JamHeader["epochMarker"]>;
+    readBytes: number;
+  } {
+    const entropy = HashCodec.decode(bytes.subarray(0, 32));
+    const entropy2 = HashCodec.decode(bytes.subarray(32, 64));
+    const validatorKeys = [] as unknown as NonNullable<
+      JamHeader["epochMarker"]
+    >["validatorKeys"];
+    for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
+      validatorKeys.push(
+        BandersnatchCodec.decode(bytes.subarray(64 + i * 32, 64 + (i + 1) * 32))
+          .value,
+      );
+    }
+    return {
+      value: {
+        entropy: entropy.value as Blake2bHash,
+        entropy2: entropy2.value as Blake2bHash,
+        validatorKeys,
+      },
+      readBytes: 64 + NUMBER_OF_VALIDATORS * 32,
+    };
+  },
+  encode(
+    value: NonNullable<JamHeader["epochMarker"]>,
+    bytes: Uint8Array,
+  ): number {
+    assert.ok(
+      value.validatorKeys.length === NUMBER_OF_VALIDATORS,
+      `expected ${NUMBER_OF_VALIDATORS} validator keys, got ${value.validatorKeys.length}`,
+    );
+    let offset = 0;
+    offset += HashCodec.encode(
+      value.entropy,
+      bytes.subarray(offset, offset + 32),
+    );
+    offset += HashCodec.encode(
+      value.entropy2,
+      bytes.subarray(offset, offset + 32),
+    );
+    offset += value.validatorKeys.reduce((acc, key) => {
+      BandersnatchCodec.encode(key, bytes.subarray(acc, acc + 32));
+      return acc + 32;
+    }, offset);
+    return offset;
+  },
+  encodedSize(): number {
+    return 64 + NUMBER_OF_VALIDATORS * 32;
+  },
+};
+const optHeCodec = new Optional(epochMarkerCodec);
+const offendersCodec = createArrayLengthDiscriminator({
+  ...Ed25519PubkeyCodec,
+  encode(value: ED25519PublicKey, bytes: Uint8Array): number {
+    return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
+  },
+  decode(bytes: Uint8Array) {
+    return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
+  },
+});
+export const winningTicketsCodec = new Optional(
+  createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec),
+);

@@ -14,31 +14,30 @@ import {
 
 /**
  * Codec for block extrinsic. used in both block serialiation and computing `Hx`
- * @see JamHeader
+ * order is defined in $(0.5.0 - C.13)
  */
 export const ExtrinsicsCodec: JamCodec<JamBlock["extrinsics"]> = {
   encode(value, bytes) {
     let offset = 0;
     offset += codec_Et.encode(value.tickets, bytes.subarray(offset));
-    offset += codec_Ed.encode(value.disputes, bytes.subarray(offset));
     offset += codec_Ep.encode(value.preimages, bytes.subarray(offset));
-    offset += codec_Ea.encode(value.assurances, bytes.subarray(offset));
-
     offset += codec_Eg.encode(value.reportGuarantees, bytes.subarray(offset));
+    offset += codec_Ea.encode(value.assurances, bytes.subarray(offset));
+    offset += codec_Ed.encode(value.disputes, bytes.subarray(offset));
     return offset;
   },
   decode(bytes) {
     let offset = 0;
     const tickets = codec_Et.decode(bytes.subarray(offset));
     offset += tickets.readBytes;
-    const disputes = codec_Ed.decode(bytes.subarray(offset));
-    offset += disputes.readBytes;
     const preimages = codec_Ep.decode(bytes.subarray(offset));
     offset += preimages.readBytes;
-    const assurances = codec_Ea.decode(bytes.subarray(offset));
-    offset += assurances.readBytes;
     const reportGuarantees = codec_Eg.decode(bytes.subarray(offset));
     offset += reportGuarantees.readBytes;
+    const assurances = codec_Ea.decode(bytes.subarray(offset));
+    offset += assurances.readBytes;
+    const disputes = codec_Ed.decode(bytes.subarray(offset));
+    offset += disputes.readBytes;
     return {
       value: {
         tickets: tickets.value as TicketExtrinsics,
@@ -61,6 +60,10 @@ export const ExtrinsicsCodec: JamCodec<JamBlock["extrinsics"]> = {
   },
 };
 
+/**
+ * Block codec
+ * $(0.5.0 - C.13)
+ */
 export const BlockCodec: JamCodec<JamBlock> = {
   encode(value: JamBlock, bytes: Uint8Array): number {
     let offset = SignedHeaderCodec.encode(value.header, bytes);
@@ -72,7 +75,6 @@ export const BlockCodec: JamCodec<JamBlock> = {
     const header = SignedHeaderCodec.decode(bytes);
     offset += header.readBytes;
     const extrinsics = ExtrinsicsCodec.decode(bytes.subarray(offset));
-
     offset += extrinsics.readBytes;
 
     return {
@@ -103,7 +105,7 @@ if (import.meta.vitest) {
     assurancesExtrinsicFromJSON,
     guaranteesExtrinsicFromJSON,
   } = await import("@/test/utils.js");
-  describe.skip("Block", () => {
+  describe("Block", () => {
     let item: JamBlock;
     let bin: Uint8Array;
     beforeAll(() => {
@@ -138,7 +140,9 @@ if (import.meta.vitest) {
     it("block should encode properly", () => {
       const bytes = new Uint8Array(BlockCodec.encodedSize(item));
       BlockCodec.encode(item, bytes);
-      expect(bytes).toEqual(bin);
+      expect(Buffer.from(bytes).toString("hex")).toEqual(
+        Buffer.from(bin).toString("hex"),
+      );
     });
     it("should decode properly", () => {
       const { value, readBytes } = BlockCodec.decode(bin);

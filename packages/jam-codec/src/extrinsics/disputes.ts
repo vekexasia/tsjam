@@ -18,6 +18,41 @@ import {
 } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 
+/**
+ * `Ed` codec
+ * $(0.5.0 - C.18)
+ */
+export const codec_Ed: JamCodec<DisputeExtrinsic> = {
+  encode(value: DisputeExtrinsic, bytes: Uint8Array): number {
+    let offset = jCodec.encode(value.verdicts, bytes);
+    offset += cCodec.encode(value.culprit, bytes.subarray(offset));
+    offset += fCodec.encode(value.faults, bytes.subarray(offset));
+    return offset;
+  },
+  decode(bytes: Uint8Array): { value: DisputeExtrinsic; readBytes: number } {
+    const verdicts = jCodec.decode(bytes);
+    const culprit = cCodec.decode(bytes.subarray(verdicts.readBytes));
+    const faults = fCodec.decode(
+      bytes.subarray(verdicts.readBytes + culprit.readBytes),
+    );
+    return {
+      value: {
+        verdicts: verdicts.value as DisputeExtrinsic["verdicts"],
+        culprit: culprit.value,
+        faults: faults.value,
+      },
+      readBytes: verdicts.readBytes + culprit.readBytes + faults.readBytes,
+    };
+  },
+  encodedSize(value: DisputeExtrinsic): number {
+    return (
+      jCodec.encodedSize(value.verdicts) +
+      cCodec.encodedSize(value.culprit) +
+      fCodec.encodedSize(value.faults)
+    );
+  },
+};
+
 const singleJudgementCodec: JamCodec<
   DisputeExtrinsic["verdicts"][0]["judgements"][0]
 > = {
@@ -173,36 +208,6 @@ const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"][0]>({
     return 32 + E.encodedSize(BigInt(value.validity)) + 32 + 64;
   },
 });
-export const codec_Ed: JamCodec<DisputeExtrinsic> = {
-  encode(value: DisputeExtrinsic, bytes: Uint8Array): number {
-    let offset = jCodec.encode(value.verdicts, bytes);
-    offset += cCodec.encode(value.culprit, bytes.subarray(offset));
-    offset += fCodec.encode(value.faults, bytes.subarray(offset));
-    return offset;
-  },
-  decode(bytes: Uint8Array): { value: DisputeExtrinsic; readBytes: number } {
-    const verdicts = jCodec.decode(bytes);
-    const culprit = cCodec.decode(bytes.subarray(verdicts.readBytes));
-    const faults = fCodec.decode(
-      bytes.subarray(verdicts.readBytes + culprit.readBytes),
-    );
-    return {
-      value: {
-        verdicts: verdicts.value as DisputeExtrinsic["verdicts"],
-        culprit: culprit.value,
-        faults: faults.value,
-      },
-      readBytes: verdicts.readBytes + culprit.readBytes + faults.readBytes,
-    };
-  },
-  encodedSize(value: DisputeExtrinsic): number {
-    return (
-      jCodec.encodedSize(value.verdicts) +
-      cCodec.encodedSize(value.culprit) +
-      fCodec.encodedSize(value.faults)
-    );
-  },
-};
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
@@ -225,7 +230,7 @@ if (import.meta.vitest) {
       expect(Buffer.from(b).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now a
+      // check decode now
       const x = codec_Ed.decode(b);
       expect(x.value.verdicts).toEqual(ed.verdicts);
       expect(x.value.culprit).toEqual(ed.culprit);

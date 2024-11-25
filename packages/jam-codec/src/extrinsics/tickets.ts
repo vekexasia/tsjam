@@ -1,6 +1,9 @@
 import { RingVRFProof, TicketExtrinsics } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 
+/**
+ * $(0.5.0 - C.14)
+ */
 export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics[0]>({
   encode(
     value: { entryIndex: 0 | 1; proof: RingVRFProof },
