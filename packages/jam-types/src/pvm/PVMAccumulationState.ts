@@ -7,7 +7,7 @@ import { AuthorizerQueue } from "@/states/AuthorizerQueue";
 
 /**
  * `U` in the graypaper
- * (169)
+ * $(0.5.0 - 12.13)
  */
 export interface PVMAccumulationState {
   delta: Delta;

@@ -50,12 +50,12 @@ export const assertEGValid = (
   if (extrinsic.length === 0) {
     return ok(extrinsic as Validated<EG_Extrinsic>); // optimization
   }
-  // (136)
+  // $(0.5.0 - 11.22)
   if (extrinsic.length > CORES) {
     return err(EGError.EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES);
   }
 
-  // (137) - make sure they're ordered and uniqueby coreindex
+  // $(0.5.0 - 11.23) - make sure they're ordered and uniqueby coreindex
   for (let i = 1; i < extrinsic.length; i++) {
     const [prev, next] = [extrinsic[i - 1], extrinsic[i]];
     if (prev.workReport.coreIndex >= next.workReport.coreIndex) {
@@ -66,19 +66,29 @@ export const assertEGValid = (
     }
   }
 
-  for (const ext of extrinsic) {
-    // 136
-    if (ext.credential.length < 2 || ext.credential.length > 3) {
+  for (const { credential } of extrinsic) {
+    // $(0.5.0 - 11.22)
+    if (credential.length < 2 || credential.length > 3) {
       return err(EGError.CREDS_MUST_BE_BETWEEN_2_AND_3);
     }
+    // $(0.5.0 - 11.24) | creds must be ordered by their val idx
+    for (let i = 1; i < credential.length; i++) {
+      const [prev, next] = [credential[i - 1], credential[i]];
+      if (prev.validatorIndex >= next.validatorIndex) {
+        return err(EGError.VALIDATOR_INDEX_MUST_BE_UNIQUE_AND_ORDERED);
+      }
+    }
+  }
+
+  for (const ext of extrinsic) {
     // check signature (139)
     const wrh = Hashing.blake2bBuf(
       encodeWithCodec(WorkReportCodec, ext.workReport),
     );
     const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
 
-    // 138 and 139
     for (const cred of ext.credential) {
+      // $(0.5.0 - 11.22) | should be Nv
       if (
         cred.validatorIndex < 0 ||
         cred.validatorIndex >= NUMBER_OF_VALIDATORS
@@ -86,6 +96,7 @@ export const assertEGValid = (
         return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
       }
 
+      // $(0.5.0 - 11.25)
       const isValid = Ed25519.verifySignature(
         cred.signature,
         deps.kappa[cred.validatorIndex].ed25519,
@@ -97,7 +108,7 @@ export const assertEGValid = (
     }
   }
 
-  // (139) check second expression
+  // $(0.5.0 - 11.25)
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
   for (const { workReport, timeSlot, credential } of extrinsic) {
     let G: GuarantorsAssignment = G_STAR_fn({
@@ -119,11 +130,7 @@ export const assertEGValid = (
     }
 
     for (const { validatorIndex } of credential) {
-      if (
-        workReport.coreIndex !== G.validatorsAssignedCore[validatorIndex] ||
-        VALIDATOR_CORE_ROTATION * curRotation - 1 > timeSlot ||
-        timeSlot > deps.p_tau
-      ) {
+      if (workReport.coreIndex !== G.validatorsAssignedCore[validatorIndex]) {
         return err(EGError.CORE_INDEX_MISMATCH);
       }
 
@@ -140,8 +147,7 @@ export const assertEGValid = (
 };
 
 /**
- * (134) in the graypaper
- * also handles the (135) in the graypaper
+ * $(0.5.0 - 11.18 / 11.19 / 11.20)
  */
 const G_fn = (input: {
   entropy: Hash;
@@ -176,7 +182,7 @@ const G_fn = (input: {
 };
 
 /**
- * (135) in the graypaper
+ * $(0.5.0 - 11.21)
  */
 export const G_STAR_fn = (input: {
   p_eta2: Posterior<JamState["entropy"][2]>;

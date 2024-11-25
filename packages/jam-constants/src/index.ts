@@ -56,6 +56,7 @@ export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 
 /**
  * Denoted with `Xa` in the paper. It's value is `jam_available`
+ * $(0.5.0 - 11.12)
  */
 export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
 /**
@@ -74,6 +75,7 @@ export const JAM_ENTROPY = new TextEncoder().encode("jam_entropy");
 export const JAM_FALLBACK_SEAL = new TextEncoder().encode("jam_fallback_seal");
 /**
  * Denoted with `XG` in the paper. It's value is `jam_guarantee`
+ * $(0.5.0 - 11.26)
  */
 export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
 /**
@@ -91,10 +93,12 @@ export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 export const JAM_AUDIT = new TextEncoder().encode("jam_audit");
 /**
  * Denoted with `Xtrue` in the paper. It's value is `jam_valid`
+ * $(0.5.0 - 10.4)
  */
 export const JAM_VALID = new TextEncoder().encode("jam_valid");
 /**
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
+ * $(0.5.0 - 10.4)
  */
 export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 

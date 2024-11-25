@@ -2,6 +2,7 @@ import { ED25519PublicKey, Hash } from "@/genericTypes";
 
 /**
  * Section 10 of graypaper
+ * $(0.5.0 - 10.1)
  */
 export interface IDisputesState {
   /**

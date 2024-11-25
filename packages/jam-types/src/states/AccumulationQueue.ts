@@ -4,7 +4,7 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 
 /**
  * `v` in the graypaper
- * (164) Section 12.2
+ * $(0.5.0 - 12.3)
  */
 export type AccumulationQueue = SeqOfLength<
   Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,

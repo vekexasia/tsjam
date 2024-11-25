@@ -15,6 +15,7 @@ import {
   ServiceIndex,
   Tagged,
   Tau,
+  Validated,
   WorkPackageHash,
   WorkReport,
   u64,
@@ -30,7 +31,7 @@ import { accumulateInvocation } from "@/invocations/accumulate.js";
  * @param d_rho - dagger rho
  */
 export const availableReports = (
-  ea: EA_Extrinsic,
+  ea: Validated<EA_Extrinsic>,
   d_rho: Dagger<RHO>,
 ): AvailableWorkReports => {
   const W: WorkReport[] = [];
@@ -122,6 +123,7 @@ export const withPrereqAvailableReports = (
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
+      // $(0.5.0 - 12.6) | D fn calculated inline
       w
         .filter((wr) => {
           return (
@@ -175,11 +177,13 @@ export const accumulatableReports = (
   accumulationQueue: AccumulationQueue,
   tau: Tau, // Ht
 ) => {
+  // $(0.5.0 - 12.10)
   const m = tau % EPOCH_LENGTH;
 
   return [
     ...w_mark,
     ...computeAccumulationPriority(
+      // $(0.5.0 - 12.12)
       E_Fn(
         [
           ...accumulationQueue.slice(m).flat(),

@@ -43,6 +43,7 @@ export const calculateAccumulateRoot = (
 
 /**
  * see (83) (162) (163)
+ * $(0.5.0 - 7.4 / 4.7)
  */
 export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,

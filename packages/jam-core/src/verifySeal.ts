@@ -1,17 +1,22 @@
 import {
+  Dagger,
+  EA_Extrinsic,
   JamBlock,
   JamEntropy,
   JamHeader,
   JamState,
   Posterior,
+  RHO,
   SafroleState,
   SeqOfLength,
   SignedJamHeader,
   Tau,
   TicketIdentifier,
+  Validated,
 } from "@tsjam/types";
 import { Result, err, ok } from "neverthrow";
 import {
+  BitSequence,
   UnsignedHeaderCodec,
   codec_Ea,
   codec_Ed,
@@ -20,13 +25,17 @@ import {
   codec_Et,
   encodeWithCodec,
 } from "@tsjam/codec";
-import { Bandersnatch, Hashing } from "@tsjam/crypto";
+import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
 import {
+  CORES,
   EPOCH_LENGTH,
+  JAM_AVAILABLE,
   JAM_ENTROPY,
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+  WORK_TIMEOUT,
 } from "@tsjam/constants";
 import {
   bigintToBytes,
@@ -198,7 +207,7 @@ export const verifyWinningTickets = (
 export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],
   hx: JamHeader["extrinsicHash"],
-) => {
+): hx is Validated<JamHeader["extrinsicHash"]> => {
   const items = [
     ...Hashing.blake2bBuf(encodeWithCodec(codec_Et, extrinsics.tickets)),
     ...Hashing.blake2bBuf(encodeWithCodec(codec_Ep, extrinsics.preimages)),
@@ -211,21 +220,108 @@ export const verifyExtrinsicHash = (
   const preimage = new Uint8Array(items);
 
   if (hx !== Hashing.blake2b(preimage)) {
-    console.log(Buffer.from(bigintToBytes(hx, 32)).toString("hex"));
-
-    console.log(Buffer.from(Hashing.blake2bBuf(preimage)).toString("hex"));
-    console.log(
-      [
-        Hashing.blake2bBuf(encodeWithCodec(codec_Et, extrinsics.tickets)),
-        Hashing.blake2bBuf(encodeWithCodec(codec_Ep, extrinsics.preimages)),
-        Hashing.blake2bBuf(
-          encodeWithCodec(codec_Eg_4Hx, extrinsics.reportGuarantees),
-        ),
-        Hashing.blake2bBuf(encodeWithCodec(codec_Ea, extrinsics.assurances)),
-        Hashing.blake2bBuf(encodeWithCodec(codec_Ed, extrinsics.disputes)),
-      ].map((i) => Buffer.from(i).toString("hex")),
-    );
     return false;
+  }
+  return true;
+};
+
+/**
+ * Verify `Ho`
+ * $(0.5.0 - 10.20)
+ */
+export const verifyOffenders = (
+  extrinsics: JamBlock["extrinsics"],
+  ho: JamHeader["offenders"],
+): ho is Validated<JamHeader["offenders"]> => {
+  const allOffenders = new Set(ho);
+  for (const c of extrinsics.disputes.culprit) {
+    if (!allOffenders.has(c.ed25519PublicKey)) {
+      return false;
+    }
+  }
+
+  for (const f of extrinsics.disputes.faults) {
+    if (!allOffenders.has(f.ed25519PublicKey)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const verifyEA = (
+  ea: EA_Extrinsic,
+  hp: JamHeader["parent"],
+  ht: JamHeader["timeSlotIndex"],
+  p_kappa: Posterior<JamState["kappa"]>,
+  d_rho: Dagger<RHO>,
+): ea is Validated<EA_Extrinsic> => {
+  // $(0.5.0 - 11.8)
+  if (ea.length > NUMBER_OF_VALIDATORS) {
+    return false;
+  }
+  for (let i = 0; i < ea.length; i++) {
+    const a = ea[i];
+    if (a.validatorIndex >= NUMBER_OF_VALIDATORS) {
+      return false;
+    }
+    if (a.bitstring.length !== CORES) {
+      return false;
+    }
+  }
+
+  // $(0.5.0 - 11.9)
+  for (const a of ea) {
+    if (a.anchorHash !== hp) {
+      return false;
+    }
+  }
+
+  // $(0.5.0 - 11.10)
+  for (let i = 1; i < ea.length; i++) {
+    if (ea[i].validatorIndex < ea[i - 1].validatorIndex) {
+      return false;
+    }
+  }
+
+  // $(0.5.0 - 11.11)
+  for (let i = 0; i < ea.length; i++) {
+    const a = ea[i];
+    const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
+    const signatureValid = Ed25519.verifySignature(
+      a.signature,
+      p_kappa[a.validatorIndex].ed25519,
+      new Uint8Array([
+        ...JAM_AVAILABLE,
+        ...Hashing.blake2bBuf(
+          new Uint8Array([
+            ...bigintToBytes(a.anchorHash, 32),
+            ...encodedBitSequence,
+          ]),
+        ),
+      ]),
+    );
+    if (!signatureValid) {
+      return false;
+    }
+  }
+
+  // $(0.5.0 - 11.13 / 11.14)
+  for (let i = 0; i < ea.length; i++) {
+    const a = ea[i];
+    for (let c = 0; c < CORES; c++) {
+      if (a.bitstring[c] === 1) {
+        // af[c]
+        if (
+          !(
+            typeof d_rho[c] !== "undefined" &&
+            ht <= d_rho[c]!.reportTime + WORK_TIMEOUT
+          )
+        ) {
+          return false;
+        }
+      }
+    }
   }
   return true;
 };

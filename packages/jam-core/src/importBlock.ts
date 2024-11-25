@@ -15,7 +15,6 @@ import {
   ETError,
   GammaAError,
   RHO2DoubleDagger,
-  RHO2DoubleDaggerError,
   RHO_2_Dagger,
   RHO_2_DaggerError,
   RHO_toPosterior,
@@ -51,14 +50,17 @@ import {
 import {
   EpochMarkerError,
   WinningTicketsError,
+  verifyEA,
   verifyEntropySignature,
   verifyEpochMarker,
   verifyExtrinsicHash,
+  verifyOffenders,
   verifySeal,
   verifyWinningTickets,
 } from "@/verifySeal";
 
 export enum ImportBlockError {
+  InvalidEA = "Invalid EA extrinsic",
   InvalidHx = "Invalid extrinsic hash",
   InvalidSlot = "Invalid slot",
   InvalidSeal = "Invalid seal",
@@ -66,6 +68,7 @@ export enum ImportBlockError {
   InvalidEntropy = "Invalid entropy",
   InvalidEpochMarker = "Epoch marker set but not in new epoch",
   InvalidEpochMarkerValidator = "Epoch marker validator key mismatch",
+  InvalidOffenders = "Invalid offenders",
   InvalidParentHeader = "Invalid parent header",
   InvalidParentStateRoot = "Invalid parent state root",
   WinningTicketsNotEnoughLong = "Winning tickets not EPOCH long",
@@ -88,7 +91,6 @@ export const importBlock: STF<
   | EGError
   | ETError
   | RHO_2_DaggerError
-  | RHO2DoubleDaggerError
   | DisputesToPosteriorError
   | EpochMarkerError
   | WinningTicketsError
@@ -211,8 +213,20 @@ export const importBlock: STF<
     return err(rhoDaggErr);
   }
 
+  const ea = block.extrinsics.assurances;
+  const validatedEa = verifyEA(
+    ea,
+    block.header.parent,
+    block.header.timeSlotIndex,
+    p_kappa,
+    d_rho,
+  );
+  if (!validatedEa) {
+    return err(ImportBlockError.InvalidEA);
+  }
+
   const [rhoDDaggErr, dd_rho] = RHO2DoubleDagger(
-    { ea: block.extrinsics.assurances, p_kappa, hp: block.header.parent },
+    { ea, p_kappa, hp: block.header.parent },
     d_rho,
   ).safeRet();
   if (rhoDDaggErr) {
@@ -246,7 +260,7 @@ export const importBlock: STF<
    * Integrate state to calculate several posterior state
    * as defined in (176) and (177)
    */
-  const w = availableReports(block.extrinsics.assurances, d_rho);
+  const w = availableReports(ea, d_rho);
   const w_mark = noPrereqAvailableReports(w);
   const w_q = withPrereqAvailableReports(w, curState.accumulationHistory);
   const w_star = accumulatableReports(
@@ -393,5 +407,10 @@ export const importBlock: STF<
   if (!verifyExtrinsicHash(block.extrinsics, block.header.extrinsicHash)) {
     return err(ImportBlockError.InvalidHx);
   }
+
+  if (!verifyOffenders(block.extrinsics, block.header.offenders)) {
+    return err(ImportBlockError.InvalidOffenders);
+  }
+
   return ok(p_state);
 };

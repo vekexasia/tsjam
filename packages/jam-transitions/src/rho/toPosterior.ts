@@ -18,7 +18,7 @@ export enum RhoToPosteriorError {
 }
 
 /**
- * (152) in the greypaper
+ * $(0.5.0 - 11.42)
  */
 export const RHO_toPosterior: STF<
   DoubleDagger<RHO>,
@@ -35,9 +35,9 @@ export const RHO_toPosterior: STF<
     // (141)
     const w = _w(input.EG_Extrinsic);
 
-    // (143) - no reports can be placed in core when there is something pending
+    // $(0.5.0 - 11.28) | no reports can be placed in core when there is something pending
     // and that pending stuff is not expird
-    // TODO is missing a piece
+    // TODO: is missing a piece
     for (let i = 0; i < w.length; i++) {
       const { coreIndex } = w[i];
       if (
@@ -50,19 +50,19 @@ export const RHO_toPosterior: STF<
       }
     }
 
-    // (144)
+    // $(0.5.0 - 11.30)
     const x = w.map(({ refinementContext }) => refinementContext);
     const p = w.map(
       ({ workPackageSpecification }) =>
         workPackageSpecification.workPackageHash,
     );
 
-    // (145)
+    // $(0.5.0 - 11.31)
     if (p.length !== new Set(p).size) {
       return err(RhoToPosteriorError.WORK_PACKAGE_HASH_NOT_UNIQUE);
     }
 
-    // (147) each lookup anchor block within `L` timeslot
+    // $(0.5.0 - 11.33) each lookup anchor block within `L` timeslot
     for (const refinementContext of x) {
       if (
         refinementContext.lookupAnchor.timeSlot <
@@ -73,13 +73,13 @@ export const RHO_toPosterior: STF<
     }
   }
 
-  // (157) - 0.4.5
+  // $(0.5.0 - 11.42)
   return ok(
     curState.map((w, coreIndex: number) => {
       const ext = input.EG_Extrinsic.find(
         ({ workReport }) => workReport.coreIndex === coreIndex,
       );
-      if (ext === undefined) {
+      if (typeof ext === "undefined") {
         return w;
       }
       return {

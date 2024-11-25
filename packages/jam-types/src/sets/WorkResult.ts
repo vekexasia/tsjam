@@ -5,6 +5,7 @@ import { WorkOutput } from "@/sets/WorkOutput";
  * Identified by `L` set
  *
  * @see section 11.1.4
+ * $(0.5.0 - 11.6)
  */
 export type WorkResult = {
   /**
@@ -18,17 +19,18 @@ export type WorkResult = {
    * it must be predicted within the work-report according to (153)
    */
   codeHash: Hash;
+
   /**
    * `l` - The hash of the payload (l) which produced this result
    * in the refine stage
    */
   payloadHash: Hash;
+
   /**
    * `g` -The gas prioritization **ratio**.
-   * TODO: understand what is this.
-   * There is an explanation ad 01:00:00 in the video section 10-13
    */
   gasPrioritization: u64;
+
   /**
    * `o` - The output of the service
    */

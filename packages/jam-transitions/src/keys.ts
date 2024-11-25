@@ -41,6 +41,7 @@ export const PHI_FN = <T extends ValidatorData[]>(
 /**
  * rotates all keys
  * @see (58) - 0.4.5
+ * $(0.5.0 - 4.10 / 4.11 / 6.13)
  */
 export const rotateKeys: STF<
   [

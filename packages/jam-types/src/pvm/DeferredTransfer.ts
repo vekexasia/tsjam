@@ -3,7 +3,7 @@ import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 
 /**
  * `T` set in graypaper
- * (161)
+ * $(0.5.0 - 12.14)
  */
 export type DeferredTransfer = {
   sender: ServiceIndex;
