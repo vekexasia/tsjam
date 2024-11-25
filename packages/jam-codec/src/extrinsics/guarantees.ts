@@ -1,6 +1,6 @@
 import { EG_Extrinsic, ValidatorIndex, u32 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { Ed25519SignatureCodec, HashCodec } from "@/identity.js";
+import { Ed25519SignatureCodec } from "@/identity.js";
 import { E_2, E_4 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
 import { WorkReportCodec } from "@/setelements/WorkReportCodec.js";
