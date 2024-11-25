@@ -53,11 +53,13 @@ import {
   WinningTicketsError,
   verifyEntropySignature,
   verifyEpochMarker,
+  verifyExtrinsicHash,
   verifySeal,
   verifyWinningTickets,
 } from "@/verifySeal";
 
 export enum ImportBlockError {
+  InvalidHx = "Invalid extrinsic hash",
   InvalidSlot = "Invalid slot",
   InvalidSeal = "Invalid seal",
   InvalidEntropySignature = "Invalid entropy signature",
@@ -388,5 +390,8 @@ export const importBlock: STF<
     return err(wt.error);
   }
 
+  if (!verifyExtrinsicHash(block.extrinsics, block.header.extrinsicHash)) {
+    return err(ImportBlockError.InvalidHx);
+  }
   return ok(p_state);
 };

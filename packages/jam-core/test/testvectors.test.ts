@@ -43,6 +43,12 @@ vi.mock("@/verifySeal", async (importOriginal) => {
       return () => ok(undefined);
     },
   });
+
+  Object.defineProperty(toRet, "verifyExtrinsicHash", {
+    get() {
+      return () => true;
+    },
+  });
   return toRet;
 });
 vi.mock("@tsjam/crypto", async (importOriginal) => {
