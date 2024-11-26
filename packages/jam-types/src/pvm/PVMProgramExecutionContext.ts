@@ -1,5 +1,5 @@
 import { IPVMMemory } from "@/pvm/IPVMMemory.js";
-import { SeqOfLength, u32, u64 } from "@/genericTypes.js";
+import { Gas, SeqOfLength, u32 } from "@/genericTypes.js";
 
 /**
  * This is the context passed to instructions for evaluation.
@@ -17,7 +17,7 @@ export interface PVMProgramExecutionContextBase {
   /**
    * `ξ`
    */
-  gas: u64;
+  gas: Gas;
   /**
    * `ω`
    */

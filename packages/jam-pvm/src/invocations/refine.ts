@@ -2,6 +2,7 @@ import { HostCallExecutor } from "@/invocations/hostCall.js";
 import {
   Delta,
   ExportSegment,
+  Gas,
   Hash,
   PVMProgramExecutionContextBase,
   RefinementContext,
@@ -12,7 +13,6 @@ import {
   WorkOutput,
   WorkPackageHash,
   u32,
-  u64,
 } from "@tsjam/types";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import {
@@ -34,7 +34,7 @@ import { argumentInvocation } from "@/invocations/argument.js";
 
 export const refineInvocation = (
   serviceCodeHash: Hash, // `c`
-  gas: u64,
+  gas: Gas,
   serviceIndex: ServiceIndex,
   workPackageHash: WorkPackageHash,
   workPayload: Uint8Array, // `y`

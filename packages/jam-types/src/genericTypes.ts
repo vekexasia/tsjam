@@ -121,6 +121,7 @@ export type ValidatorIndex = Tagged<
   "ValidatorIndex",
   { maxValue: typeof NUMBER_OF_VALIDATORS }
 >;
+// $(0.5.0 - 9.1)
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;

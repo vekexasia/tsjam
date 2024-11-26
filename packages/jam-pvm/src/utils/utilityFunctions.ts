@@ -8,6 +8,7 @@ import {
   DeferredTransfer,
   Delta,
   EA_Extrinsic,
+  Gas,
   Hash,
   PVMAccumulationOp,
   PVMAccumulationState,
@@ -331,9 +332,9 @@ export const singleServiceAccumulation = (
   b: Hash | undefined;
   u: u64;
 } => {
-  let g = f.get(s) || toTagged(0n);
+  let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
-    wr.results.forEach((r) => (g = toTagged(g + r.gasPrioritization))),
+    wr.results.forEach((r) => (g = (g + r.gasPrioritization) as Gas)),
   );
 
   const p: PVMAccumulationOp[] = [];

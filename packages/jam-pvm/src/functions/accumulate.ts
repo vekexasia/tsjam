@@ -2,6 +2,7 @@ import { regFn } from "@/functions/fnsdb.js";
 import {
   AuthorizerQueue,
   DeferredTransfer,
+  Gas,
   Hash,
   PVMAccumulationState,
   PVMProgramExecutionContextBase,
@@ -12,7 +13,6 @@ import {
   Tau,
   UpToSeq,
   u32,
-  u64,
   u8,
 } from "@tsjam/types";
 import {
@@ -48,13 +48,13 @@ export const omega_e = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
       if (!context.memory.canRead(o, 12 * n)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const g = new Map<ServiceIndex, u64>();
+        const g = new Map<ServiceIndex, Gas>();
         const buf = context.memory.getBytes(o, 12 * n);
         for (let i = 0; i < n; i++) {
           const data = buf.subarray(i * 12, (i + 1) * 12);
           const key = E_4.decode(data).value;
           const value = E_8.decode(data.subarray(4)).value;
-          g.set(Number(key) as ServiceIndex, value as u64);
+          g.set(Number(key) as ServiceIndex, value as Gas);
         }
         return [
           IxMod.w7(HostCallResult.OK),

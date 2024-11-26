@@ -1,6 +1,7 @@
 import {
   DeferredTransfer,
   Delta,
+  Gas,
   PVMProgramExecutionContextBase,
   ServiceAccount,
   ServiceIndex,
@@ -18,7 +19,6 @@ import {
 } from "@/functions/general";
 import { HostCallResult } from "@tsjam/constants";
 import { applyMods } from "@/functions/utils";
-import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { HostCallExecutor } from "./hostCall";
 
@@ -45,7 +45,7 @@ export const transferInvocation = (
   const out = argumentInvocation(
     code,
     15 as u32,
-    toTagged(transfers.reduce((acc, a) => acc + a.gasLimit, 0n)),
+    transfers.reduce((acc, a) => acc + a.gasLimit, 0n) as Gas,
     new Uint8Array(), // TODO: encode transfers
     F_fn(d, s),
     bold_s,
@@ -98,7 +98,7 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
         return {
           ctx: {
             ...input.ctx,
-            gas: toTagged(input.ctx.gas - 10n),
+            gas: (input.ctx.gas - 10n) as Gas,
             registers: [
               HostCallResult.WHAT,
               input.ctx.registers[8],

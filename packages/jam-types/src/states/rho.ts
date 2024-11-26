@@ -5,7 +5,7 @@ import { Tau } from "@/Tau.js";
 
 /**
  * `ρ`
- * (116)
+ * $(0.5.0 - 11.1)
  */
 export type RHO = SeqOfLength<
   | {

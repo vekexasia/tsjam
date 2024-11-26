@@ -1,5 +1,6 @@
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import {
+  Gas,
   IParsedProgram,
   PVMExitReason,
   PVMModification,
@@ -12,7 +13,6 @@ import {
   Posterior,
   RegularPVMExitReason,
   u32,
-  u64,
 } from "@tsjam/types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 import { IxMod } from "@/instructions/utils";
@@ -42,7 +42,7 @@ export const pvmSingleStep = (
       exitReason: RegularPVMExitReason.Panic,
       p_context: toPosterior({
         ...ctx,
-        gas: toTagged(ctx.gas - trap.gasCost),
+        gas: (ctx.gas - trap.gasCost) as Gas,
       }),
     };
   }
@@ -121,7 +121,7 @@ export const processIxResult = (
       !context.memory.canWrite(x.data.from, x.data.data.length),
   );
   if (invalidMemWrite) {
-    p_context.gas = toPosterior((context.gas - trap.gasCost - gasCost) as u64);
+    p_context.gas = toPosterior((context.gas - trap.gasCost - gasCost) as Gas);
     return {
       exitReason: RegularPVMExitReason.Panic,
       p_context,
@@ -157,7 +157,7 @@ export const processIxResult = (
         p_context.memory.setBytes(x.data.from, x.data.data);
       });
   }
-  p_context.gas = (context.gas - gasCost) as u64;
+  p_context.gas = (context.gas - gasCost) as Gas;
 
   return {
     exitReason,

@@ -1,4 +1,4 @@
-import { RegularPVMExitReason, u32, u64 } from "@tsjam/types";
+import { Gas, RegularPVMExitReason, u32, u64 } from "@tsjam/types";
 import {
   HostCallExecutor,
   HostCallOut,
@@ -13,7 +13,7 @@ import { programInitialization } from "@/program.js";
 export const argumentInvocation = <X>(
   p: Uint8Array,
   instructionPointer: u32, // ı
-  gas: u64, // ξ
+  gas: Gas, // ξ
   args: Uint8Array, // a
   f: HostCallExecutor<X>,
   x: X,

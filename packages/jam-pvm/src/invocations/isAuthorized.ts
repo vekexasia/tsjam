@@ -1,11 +1,11 @@
 import {
   CoreIndex,
+  Gas,
   PVMProgramExecutionContext,
   PVMResultContext,
   RegularPVMExitReason,
   WorkPackage,
   u32,
-  u64,
 } from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { E_4, WorkPackageCodec } from "@tsjam/codec";
@@ -49,7 +49,7 @@ export const isAuthorized = (
 /**
  * TODO set the correct value
  */
-const Gi = 0n as u64;
+const Gi = 0n as Gas;
 
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
@@ -69,7 +69,7 @@ const F_Fn: HostCallExecutor<unknown> = (input) => {
   }
   return {
     ctx: {
-      gas: (input.ctx.gas - 10n) as u64,
+      gas: (input.ctx.gas - 10n) as Gas,
       registers: [
         HostCallResult.WHAT,
         input.ctx.registers.slice(1),

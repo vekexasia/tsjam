@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import {
+  Gas,
   IPVMMemory,
   IParsedProgram,
   PVMIx,
@@ -27,7 +28,7 @@ export const createEvContext = (): {
 } => ({
   execution: {
     instructionPointer: toTagged(0),
-    gas: toTagged(0n),
+    gas: 0n as Gas,
     memory: mockMemory(),
     registers: new Array(13).fill(0 as u8) as SeqOfLength<u32, 13>,
   },

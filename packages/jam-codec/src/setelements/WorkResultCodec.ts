@@ -1,6 +1,6 @@
 import { E_4, E_8 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
-import { ServiceIndex, WorkResult, u64 } from "@tsjam/types";
+import { Gas, ServiceIndex, WorkResult } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import { WorkOutputCodec } from "@/setelements/WorkOutputCodec.js";
 
@@ -40,7 +40,7 @@ export const WorkResultCodec: JamCodec<WorkResult> = {
     ).value;
     offset += 32;
     const gasPrioritization = E_8.decode(bytes.subarray(offset, offset + 8))
-      .value as u64;
+      .value as Gas;
     offset += 8;
     const output = WorkOutputCodec.decode(bytes.subarray(offset));
     offset += output.readBytes;

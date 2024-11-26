@@ -7,7 +7,7 @@ import { toTagged } from "@tsjam/utils";
 import { PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { basicInvocation } from "@/invocations/basic.js";
-import { RegularPVMExitReason } from "@tsjam/types";
+import { Gas, RegularPVMExitReason } from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 
 describe("allixs", () => {
@@ -65,7 +65,7 @@ describe("testcases", () => {
         }),
       ),
     );
-    context.execution.gas = toTagged(BigInt(json["initial-gas"]));
+    context.execution.gas = toTagged(BigInt(json["initial-gas"]) as Gas);
     context.execution.instructionPointer = toTagged(json["initial-pc"]);
     context.execution.registers = json["initial-regs"];
 
@@ -98,7 +98,7 @@ describe("testcases", () => {
     expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
   };
   // read all fixtures directory
-  const files = fs.readdirSync(`${__dirname}/fixtures`).filter((a) => {
+  const files = fs.readdirSync(`${__dirname}/fixtures`).filter(() => {
     return true; //a.startsWith("inst_load_u8_trap");
   });
   for (const file of files) {

@@ -1,6 +1,7 @@
 import {
   DeferredTransfer,
   Delta,
+  Gas,
   Hash,
   PVMAccumulationOp,
   PVMAccumulationState,
@@ -54,7 +55,7 @@ import assert from "assert";
 export const accumulateInvocation = (
   pvmAccState: PVMAccumulationState,
   s: ServiceIndex,
-  gas: u64,
+  gas: Gas,
   o: PVMAccumulationOp[],
   tau: Tau,
 ): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {

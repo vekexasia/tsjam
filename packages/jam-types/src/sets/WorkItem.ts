@@ -1,4 +1,4 @@
-import { Hash, ServiceIndex, u32, u64 } from "@/genericTypes";
+import { Gas, Hash, ServiceIndex, u32 } from "@/genericTypes";
 
 /**
  * Identified by `I` set
@@ -24,7 +24,7 @@ export interface WorkItem {
   /**
    * `g`
    */
-  gasLimit: u64;
+  gasLimit: Gas;
 
   /**
    * `i`

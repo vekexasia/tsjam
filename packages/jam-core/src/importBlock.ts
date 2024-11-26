@@ -18,7 +18,6 @@ import {
   RHO_2_Dagger,
   RHO_2_DaggerError,
   RHO_toPosterior,
-  RhoToPosteriorError,
   accumulationHistoryToPosterior,
   accumulationQueueToPosterior,
   authorizerPool_toPosterior,
@@ -85,7 +84,6 @@ export const importBlock: STF<
   JamState,
   JamBlock,
   | ImportBlockError
-  | RhoToPosteriorError
   | DeltaToDaggerError
   | GammaAError
   | EGError
@@ -190,21 +188,6 @@ export const importBlock: STF<
     curState.safroleState,
   ).safeRet();
 
-  const [egError, validatedEG] = assertEGValid(
-    block.extrinsics.reportGuarantees,
-    {
-      p_tau: tauTransition.p_tau,
-      kappa: curState.kappa,
-      p_kappa,
-      p_lambda,
-      p_entropy,
-      p_psi_o: toPosterior(p_disputesState.psi_o),
-    },
-  ).safeRet();
-  if (egError) {
-    return err(egError);
-  }
-
   const [rhoDaggErr, d_rho] = RHO_2_Dagger(
     p_disputesState,
     curState.rho,
@@ -231,6 +214,22 @@ export const importBlock: STF<
   ).safeRet();
   if (rhoDDaggErr) {
     return err(rhoDDaggErr);
+  }
+
+  const [egError, validatedEG] = assertEGValid(
+    block.extrinsics.reportGuarantees,
+    {
+      dd_rho,
+      p_tau: tauTransition.p_tau,
+      kappa: curState.kappa,
+      p_kappa,
+      p_lambda,
+      p_entropy,
+      p_psi_o: toPosterior(p_disputesState.psi_o),
+    },
+  ).safeRet();
+  if (egError) {
+    return err(egError);
   }
 
   const [rhoPostErr, p_rho] = RHO_toPosterior(

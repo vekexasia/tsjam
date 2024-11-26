@@ -1,4 +1,4 @@
-import { ServiceIndex, u64 } from "@/genericTypes.js";
+import { Gas, ServiceIndex } from "@/genericTypes.js";
 
 export type PrivilegedServices = {
   /**
@@ -14,7 +14,8 @@ export type PrivilegedServices = {
    */
   v: ServiceIndex;
   /**
-   * gas limits
+   * map of services which are automatically accumulated in each block
+   * along with their gas limits
    */
-  g: Map<ServiceIndex, u64>;
+  g: Map<ServiceIndex, Gas>;
 };

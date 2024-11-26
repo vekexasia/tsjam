@@ -2,6 +2,7 @@ import { regFn } from "@/functions/fnsdb.js";
 import {
   Delta,
   ExportSegment,
+  Gas,
   Hash,
   PVMProgramExecutionContextBase,
   PVMSingleModMemory,
@@ -11,7 +12,6 @@ import {
   ServiceIndex,
   Tau,
   u32,
-  u64,
   u8,
 } from "@tsjam/types";
 import { W7, W8 } from "@/functions/utils.js";
@@ -302,7 +302,7 @@ export const omega_k = regFn<
 
       const pvmCtx = {
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
-        gas: g as u64,
+        gas: g as Gas,
         registers: w as PVMProgramExecutionContextBase["registers"],
         memory: refineCtx.m.get(n)!.memory.clone(),
       };

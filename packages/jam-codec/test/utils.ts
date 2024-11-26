@@ -1,21 +1,16 @@
 import * as fs from "node:fs";
-import {
-  bigintToBytes,
-  hexToBytes,
-  hextToBigInt,
-  toTagged,
-} from "@tsjam/utils";
+import { hexToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
 import {
   AssuranceExtrinsic,
   DisputeExtrinsic,
   EA_Extrinsic,
   EG_Extrinsic,
+  Gas,
   RefinementContext,
   SignedJamHeader,
   WorkError,
   WorkItem,
   WorkResult,
-  u64,
 } from "@tsjam/types";
 
 export const getCodecFixtureFile = (filename: string): Uint8Array => {
@@ -76,7 +71,7 @@ export const guaranteesExtrinsicFromJSON = (json: any): EG_Extrinsic => {
           serviceIndex: r.service_id,
           codeHash: hextToBigInt(r.code_hash),
           payloadHash: hextToBigInt(r.payload_hash),
-          gasPrioritization: BigInt(r.gas) as u64,
+          gasPrioritization: BigInt(r.gas) as Gas,
           output: (() => {
             if (r.result.ok) {
               return hexToBytes(r.result.ok);
@@ -133,7 +128,7 @@ export const workItemFromJSON = (json: any): WorkItem => {
     serviceIndex: json.service,
     codeHash: hextToBigInt(json.code_hash),
     payload: hexToBytes(json.payload),
-    gasLimit: toTagged(BigInt(json.gas_limit)),
+    gasLimit: BigInt(json.gas_limit) as Gas,
     importedDataSegments: json.import_segments.map((e: any) => {
       return {
         root: hextToBigInt(e.tree_root),
@@ -170,7 +165,7 @@ export const workResultFromJSON = (r: any): WorkResult => {
     serviceIndex: r.service_id,
     codeHash: hextToBigInt(r.code_hash),
     payloadHash: hextToBigInt(r.payload_hash),
-    gasPrioritization: BigInt(r.gas) as u64,
+    gasPrioritization: BigInt(r.gas) as Gas,
     output: (() => {
       if (r.result.ok) {
         return hexToBytes(r.result.ok);

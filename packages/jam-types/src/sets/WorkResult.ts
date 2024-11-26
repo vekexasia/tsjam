@@ -1,4 +1,4 @@
-import { Hash, ServiceIndex, u64 } from "@/genericTypes";
+import { Gas, Hash, ServiceIndex } from "@/genericTypes";
 import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
@@ -29,7 +29,7 @@ export type WorkResult = {
   /**
    * `g` -The gas prioritization **ratio**.
    */
-  gasPrioritization: u64;
+  gasPrioritization: Gas;
 
   /**
    * `o` - The output of the service
