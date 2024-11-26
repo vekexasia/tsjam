@@ -2,6 +2,7 @@ import { slotIndex, toPosterior } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,
+  Delta,
   DoubleDagger,
   EG_Extrinsic,
   G_Star,
@@ -46,9 +47,11 @@ export enum EGError {
   TIMESLOT_BOUNDS_2 = "Time slot must be within bounds, t <= tau'",
   WORK_PACKAGE_HASH_NOT_UNIQUE = "Work package hash must be unique",
   WORKPACKAGE_IN_PIPELINE = "Work Package alredy known",
+  SRLWP_NOTKNOWN = "Reported Segment Root lookup not known",
   LOOKUP_ANCHOR_NOT_WITHIN_L = "Lookup anchor block must be within L timeslots",
   REPORT_PENDING_AVAILABILITY = "Bit may be set if the corresponding core has a report pending availability",
   LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "Lookup anchor timeslot mismatch",
+  WRONG_CODEHASH = "Wrong codehash",
 }
 
 export const assertEGValid = (
@@ -56,6 +59,7 @@ export const assertEGValid = (
   deps: {
     headerLookupHistory: HeaderLookupHistory;
     recentHistory: RecentHistory;
+    delta: Delta;
     accumulationHistory: AccumulationHistory;
     accumulationQueue: AccumulationQueue;
     rho: RHO;
@@ -247,7 +251,6 @@ export const assertEGValid = (
   const rhk = new Set(
     deps.recentHistory.map((r) => [...r.reportedPackages.keys()]).flat(),
   );
-
   const ahs = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
   );
@@ -257,6 +260,60 @@ export const assertEGValid = (
       return err(EGError.WORKPACKAGE_IN_PIPELINE);
     }
   }
+
+  // $(0.5.0 - 11.38)
+  const pSet = new Set(p);
+  deps.recentHistory
+    .map((r) => [...r.reportedPackages.keys()])
+    .flat()
+    .forEach((reportedHash) => pSet.add(reportedHash));
+
+  for (const _w of w) {
+    const _p = new Set([..._w.segmentRootLookup.keys()]);
+    if (_w.refinementContext.requiredWorkPackage) {
+      _p.add(_w.refinementContext.requiredWorkPackage);
+    }
+    for (const _pp of _p.values()) {
+      if (!pSet.has(_pp)) {
+        return err(EGError.SRLWP_NOTKNOWN);
+      }
+    }
+  }
+
+  {
+    // $(0.5.0 - 11.39)
+    const p = new Map(
+      extrinsic
+        .map((e) => e.workReport.workPackageSpecification)
+        .map((wPSpec) => [wPSpec.workPackageHash, wPSpec.segmentRoot]),
+    );
+
+    // $(0.5.0 - 11.40)
+    const recentAndCurrentWP = new Map(
+      deps.recentHistory
+        .map((rh) => [...rh.reportedPackages.entries()])
+        .flat()
+        .concat([...p.entries()]),
+    );
+    for (const _w of w) {
+      for (const [wph, h] of _w.segmentRootLookup) {
+        const entry = recentAndCurrentWP.get(wph);
+        if (typeof entry === "undefined" || entry !== h) {
+          return err(EGError.SRLWP_NOTKNOWN);
+        }
+      }
+    }
+  }
+
+  // $(0.5.0 - 11.41)
+  for (const _w of w) {
+    for (const r of _w.results) {
+      if (r.codeHash !== deps.delta.get(r.serviceIndex)?.codeHash) {
+        return err(EGError.WRONG_CODEHASH);
+      }
+    }
+  }
+
   return ok(extrinsic as Validated<EG_Extrinsic>);
 };
 
