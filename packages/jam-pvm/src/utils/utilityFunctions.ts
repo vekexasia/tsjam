@@ -199,9 +199,10 @@ export const accumulatableReports = (
 
 /**
  * `∆+`
+ * $(0.5.0 - 12.16)
  */
 export const outerAccumulation = (
-  gasLimit: u64,
+  gasLimit: Gas,
   works: WorkReport[],
   accState: PVMAccumulationState,
   gasLimits: Map<ServiceIndex, u64>,
@@ -210,6 +211,7 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
+  // $(0.5.0 - 12.15)
   Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>,
 ] => {
   let sum = 0n;
@@ -235,7 +237,7 @@ export const outerAccumulation = (
     tau,
   );
   const [j, o_prime, t, b] = outerAccumulation(
-    toTagged(gasLimit - g_star),
+    (gasLimit - g_star) as Gas,
     works.slice(i),
     o_star,
     new Map(),
@@ -260,6 +262,7 @@ export const outerAccumulation = (
 
 /**
  * `∆*` fn
+ * $(0.5.0 - 12.17)
  */
 export const parallelizedAccAccumulation = (
   o: PVMAccumulationState,
@@ -319,6 +322,7 @@ export const parallelizedAccAccumulation = (
 
 /**
  * `∆1` fn
+ * $(0.5.0 - 12.19)
  */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
@@ -327,6 +331,7 @@ export const singleServiceAccumulation = (
   s: ServiceIndex,
   tau: Tau,
 ): {
+  // `O` tuple defined in $(0.5.0 - 12.18)
   o: PVMAccumulationState;
   t: DeferredTransfer[];
   b: Hash | undefined;

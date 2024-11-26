@@ -4,6 +4,9 @@ import { OpaqueHashCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 import assert from "node:assert";
 
+/**
+ * $(0.5.0 - C.27)
+ */
 export const TicketIdentifierCodec: JamCodec<TicketIdentifier> = {
   encode: function (value: TicketIdentifier, bytes: Uint8Array): number {
     assert(bytes.length >= this.encodedSize(value));

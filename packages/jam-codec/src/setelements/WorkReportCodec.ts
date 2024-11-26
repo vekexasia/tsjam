@@ -19,6 +19,10 @@ import { encodeWithCodec } from "@/utils.js";
 
 const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
 const lookupCodec = buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec);
+
+/**
+ * $(0.5.0 - C.24)
+ */
 export const WorkReportCodec: JamCodec<WorkReport> = {
   encode(value: WorkReport, bytes: Uint8Array): number {
     // s

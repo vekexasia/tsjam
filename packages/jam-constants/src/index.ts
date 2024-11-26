@@ -153,3 +153,23 @@ export const ERASURECODE_BASIC_SIZE = 684;
  * `Ws` in the paper
  */
 export const ERASURECODE_EXPORTED_SIZE = 6;
+
+/**
+ * `GA`
+ */
+export const TOTAL_GAS_ACCUMULATION_PER_CORE = 100000n;
+
+/**
+ * `GI`
+ */
+export const TOTAL_GAS_IS_AUTHORIZED = 1000000n;
+
+/**
+ * `GR`
+ */
+export const TOTAL_GAS_REFINE = 500000000n;
+
+/**
+ * `GT`
+ */
+export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 341000000n;

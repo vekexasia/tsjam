@@ -104,6 +104,9 @@ const codecSingleGuaranteeForExtrinsicHash: JamCodec<EG_Extrinsic[0]> = {
   },
 };
 
+/**
+ * $(0.5.0 - C.16)
+ */
 export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
   codecSingleGuarantee,
 ) as unknown as JamCodec<EG_Extrinsic>;

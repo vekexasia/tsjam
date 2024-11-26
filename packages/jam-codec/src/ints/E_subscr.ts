@@ -3,8 +3,8 @@ import { LittleEndian } from "@/ints/littleEndian";
 import assert from "node:assert";
 
 /**
- * @see (273) appendix C of the spec
  * @param sub - the number of bytes to encode
+ * $(0.5.0 - C.5)
  */
 export const E_sub = (sub: number): JamCodec<bigint> => ({
   encode: (value: bigint, bytes: Uint8Array): number => {

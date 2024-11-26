@@ -8,8 +8,8 @@ export const OptWorkHashCodec = OptBytesBigIntCodec<WorkPackageHash, 32>(
   GenericBytesBigIntCodec<WorkPackageHash, 32>(32),
 );
 /**
- * Appendix C formula (283)
  * it defines codec for the RefinementContext or member of `X` set
+ * $(0.5.0 - C.21)
  */
 export const RefinementContextCodec: JamCodec<RefinementContext> = {
   encode(value: RefinementContext, bytes: Uint8Array): number {

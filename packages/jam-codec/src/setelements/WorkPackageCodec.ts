@@ -8,6 +8,10 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
 
 const workItemsCodec = createArrayLengthDiscriminator(WorkItemCodec);
+
+/**
+ * $(0.5.0 - C.25)
+ */
 export const WorkPackageCodec: JamCodec<WorkPackage> = {
   encode(value: WorkPackage, bytes: Uint8Array): number {
     let offset = LengthDiscrimantedIdentity.encode(

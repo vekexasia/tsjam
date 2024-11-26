@@ -4,6 +4,9 @@ import { Gas, ServiceIndex, WorkResult } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import { WorkOutputCodec } from "@/setelements/WorkOutputCodec.js";
 
+/**
+ * $(0.5.0 - C.23)
+ */
 export const WorkResultCodec: JamCodec<WorkResult> = {
   encode(value: WorkResult, bytes: Uint8Array): number {
     let offset = E_4.encode(BigInt(value.serviceIndex), bytes.subarray(0, 4));

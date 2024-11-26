@@ -3,6 +3,7 @@ import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.j
 
 /**
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements
+ * $(0.5.0 - C.8)
  */
 export const createArrayLengthDiscriminator = <T>(
   singleItemCodec: JamCodec<T>,

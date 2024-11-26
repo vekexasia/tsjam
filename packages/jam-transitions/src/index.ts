@@ -1,7 +1,7 @@
 export * from "./keys.js";
 export * from "./AuthorizerPool.js";
-export * from "./delta/toDagger.js";
 export * from "./delta/toPosterior.js";
+export * from "./delta/toDoubleDagger.js";
 
 export * from "./recenthistory/toDagger.js";
 export * from "./recenthistory/toPosterior.js";

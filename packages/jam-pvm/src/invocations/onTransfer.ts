@@ -22,6 +22,9 @@ import { applyMods } from "@/functions/utils";
 import assert from "node:assert";
 import { HostCallExecutor } from "./hostCall";
 
+/**
+ * $(0.5.0 - B.14 / B.15)
+ */
 export const transferInvocation = (
   d: Delta,
   s: ServiceIndex,
@@ -53,6 +56,9 @@ export const transferInvocation = (
   return out.out;
 };
 
+/**
+ * $(0.5.0 - B.16)
+ */
 const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   (d: Delta, s: ServiceIndex) =>
   (input: {

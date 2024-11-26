@@ -4,75 +4,9 @@ import { HashCodec } from "@/identity.js";
 import { E_2, E_4, E_8 } from "@/ints/E_subscr.js";
 import { JamCodec } from "@/codec.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-
-const xxCodec = createArrayLengthDiscriminator<
-  WorkItem["exportedDataSegments"][0]
->({
-  encode(
-    value: WorkItem["exportedDataSegments"][0],
-    bytes: Uint8Array,
-  ): number {
-    let offset = HashCodec.encode(value.blobHash, bytes.subarray(0, 32));
-    offset += E_4.encode(
-      BigInt(value.length),
-      bytes.subarray(offset, offset + 4),
-    );
-    return offset;
-  },
-  decode(bytes: Uint8Array): {
-    value: WorkItem["exportedDataSegments"][0];
-    readBytes: number;
-  } {
-    let offset = 0;
-    const blobHash = HashCodec.decode(
-      bytes.subarray(offset, offset + 32),
-    ).value;
-    offset += 32;
-    const index = Number(E_4.decode(bytes.subarray(offset, offset + 4)).value);
-    offset += 4;
-    return {
-      value: { blobHash, length: index as u32 },
-      readBytes: offset,
-    };
-  },
-  encodedSize(): number {
-    return 32 + 4;
-  },
-});
-const xiCodec = createArrayLengthDiscriminator<
-  WorkItem["importedDataSegments"][0]
->({
-  encode(
-    value: WorkItem["importedDataSegments"][0],
-    bytes: Uint8Array,
-  ): number {
-    let offset = HashCodec.encode(value.root, bytes.subarray(0, 32));
-    offset += E_2.encode(
-      BigInt(value.index),
-      bytes.subarray(offset, offset + 2),
-    );
-    return offset;
-  },
-  decode(bytes: Uint8Array): {
-    value: WorkItem["importedDataSegments"][0];
-    readBytes: number;
-  } {
-    let offset = 0;
-    const root = HashCodec.decode(bytes.subarray(offset, offset + 32)).value;
-    offset += 32;
-    const index = Number(E_2.decode(bytes.subarray(offset, offset + 2)).value);
-    offset += 2;
-    return {
-      value: { root, index: index as u32 },
-      readBytes: offset,
-    };
-  },
-  encodedSize(): number {
-    return 32 + 2;
-  },
-});
 /**
  * @see Appendix C formula (288)
+ * $(0.5.0 - C.26)
  */
 export const WorkItemCodec: JamCodec<WorkItem> = {
   encode(value: WorkItem, bytes: Uint8Array): number {
@@ -148,6 +82,73 @@ export const WorkItemCodec: JamCodec<WorkItem> = {
     );
   },
 };
+
+const xxCodec = createArrayLengthDiscriminator<
+  WorkItem["exportedDataSegments"][0]
+>({
+  encode(
+    value: WorkItem["exportedDataSegments"][0],
+    bytes: Uint8Array,
+  ): number {
+    let offset = HashCodec.encode(value.blobHash, bytes.subarray(0, 32));
+    offset += E_4.encode(
+      BigInt(value.length),
+      bytes.subarray(offset, offset + 4),
+    );
+    return offset;
+  },
+  decode(bytes: Uint8Array): {
+    value: WorkItem["exportedDataSegments"][0];
+    readBytes: number;
+  } {
+    let offset = 0;
+    const blobHash = HashCodec.decode(
+      bytes.subarray(offset, offset + 32),
+    ).value;
+    offset += 32;
+    const index = Number(E_4.decode(bytes.subarray(offset, offset + 4)).value);
+    offset += 4;
+    return {
+      value: { blobHash, length: index as u32 },
+      readBytes: offset,
+    };
+  },
+  encodedSize(): number {
+    return 32 + 4;
+  },
+});
+const xiCodec = createArrayLengthDiscriminator<
+  WorkItem["importedDataSegments"][0]
+>({
+  encode(
+    value: WorkItem["importedDataSegments"][0],
+    bytes: Uint8Array,
+  ): number {
+    let offset = HashCodec.encode(value.root, bytes.subarray(0, 32));
+    offset += E_2.encode(
+      BigInt(value.index),
+      bytes.subarray(offset, offset + 2),
+    );
+    return offset;
+  },
+  decode(bytes: Uint8Array): {
+    value: WorkItem["importedDataSegments"][0];
+    readBytes: number;
+  } {
+    let offset = 0;
+    const root = HashCodec.decode(bytes.subarray(offset, offset + 32)).value;
+    offset += 32;
+    const index = Number(E_2.decode(bytes.subarray(offset, offset + 2)).value);
+    offset += 2;
+    return {
+      value: { root, index: index as u32 },
+      readBytes: offset,
+    };
+  },
+  encodedSize(): number {
+    return 32 + 2;
+  },
+});
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;

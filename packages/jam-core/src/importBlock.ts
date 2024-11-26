@@ -1,16 +1,14 @@
-import { BLOCK_TIME } from "@tsjam/constants";
+import {
+  BLOCK_TIME,
+  CORES,
+  TOTAL_GAS_ACCUMULATION_ALL_CORES,
+  TOTAL_GAS_ACCUMULATION_PER_CORE,
+} from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
+import { Dagger, Delta, Gas, JamBlock, JamState, STF } from "@tsjam/types";
 import {
-  Delta,
-  DoubleDagger,
-  JamBlock,
-  JamState,
-  STF,
-  u64,
-} from "@tsjam/types";
-import {
-  DeltaToDaggerError,
+  DeltaToPosteriorError,
   DisputesToPosteriorError,
   ETError,
   GammaAError,
@@ -22,7 +20,7 @@ import {
   accumulationQueueToPosterior,
   authorizerPool_toPosterior,
   calculateAccumulateRoot,
-  deltaToDagger,
+  deltaToDoubleDagger,
   deltaToPosterior,
   disputesSTF,
   etToIdentifiers,
@@ -85,7 +83,6 @@ export const importBlock: STF<
   JamState,
   JamBlock,
   | ImportBlockError
-  | DeltaToDaggerError
   | GammaAError
   | EGError
   | ETError
@@ -93,6 +90,7 @@ export const importBlock: STF<
   | DisputesToPosteriorError
   | EpochMarkerError
   | WinningTicketsError
+  | DeltaToPosteriorError
 > = (block, curState) => {
   const tauTransition = {
     tau: curState.tau,
@@ -218,6 +216,7 @@ export const importBlock: STF<
     block.extrinsics.reportGuarantees,
     {
       headerLookupHistory: curState.headerLookupHistory,
+      delta: curState.serviceAccounts,
       recentHistory: curState.recentHistory,
       accumulationHistory: curState.accumulationHistory,
       accumulationQueue: curState.accumulationQueue,
@@ -247,17 +246,6 @@ export const importBlock: STF<
     return err(rhoPostErr);
   }
 
-  const [deltaDaggErr, d_delta] = deltaToDagger(
-    {
-      EG_Extrinsic: validatedEG,
-      EP_Extrinsic: block.extrinsics.preimages,
-      p_tau: tauTransition.p_tau,
-    },
-    curState.serviceAccounts,
-  ).safeRet();
-  if (deltaDaggErr) {
-    return err(deltaDaggErr);
-  }
   /*
    * Integrate state to calculate several posterior state
    * as defined in (176) and (177)
@@ -272,11 +260,19 @@ export const importBlock: STF<
     curState.tau,
   );
 
+  // $(0.5.0 - 12.20)
+  const g: Gas = [
+    TOTAL_GAS_ACCUMULATION_ALL_CORES,
+    TOTAL_GAS_ACCUMULATION_PER_CORE * BigInt(CORES) +
+      [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
+  ].reduce((a, b) => (a < b ? b : a)) as Gas;
+
+  // $(0.5.0 - 12.21)
   const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
-    3n as u64,
+    g,
     w_star,
     {
-      delta: d_delta,
+      delta: curState.serviceAccounts,
       privServices: curState.privServices,
       authQueue: curState.authQueue,
       validatorKeys: curState.iota,
@@ -285,16 +281,28 @@ export const importBlock: STF<
     curState.tau,
   );
 
+  // $(0.5.0 - 12.22)
   const p_privilegedServices = toPosterior(o.privServices);
-  const p_authorizerQueue = toPosterior(o.authQueue);
-  const dd_delta = o.delta as DoubleDagger<Delta>;
+  const d_delta = o.delta as Dagger<Delta>;
   const p_iota = toPosterior(o.validatorKeys);
-  const [, p_delta] = deltaToPosterior(
+  const p_authorizerQueue = toPosterior(o.authQueue);
+
+  const [, dd_delta] = deltaToDoubleDagger(
+    { transfers: bold_t },
+    d_delta,
+  ).safeRet();
+
+  const [pDeltaError, p_delta] = deltaToPosterior(
     {
-      bold_t,
+      EP_Extrinsic: block.extrinsics.preimages,
+      delta: curState.serviceAccounts,
+      p_tau: tauTransition.p_tau,
     },
     dd_delta,
   ).safeRet();
+  if (pDeltaError) {
+    return err(pDeltaError);
+  }
 
   const [, p_accumulationHistory] = accumulationHistoryToPosterior(
     {

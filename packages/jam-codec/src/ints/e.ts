@@ -4,7 +4,7 @@ import { E_8, E_sub } from "@/ints/E_subscr.js";
 
 /**
  * E encoding allows for variable size encoding for numbers up to 2^64
- * @see (274) appendix C of the spec
+ * $(0.5.0 - C.6)
  */
 export const E: JamCodec<bigint> = {
   encode: (value: bigint, bytes: Uint8Array): number => {
