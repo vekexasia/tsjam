@@ -28,6 +28,7 @@ import {
   etToIdentifiers,
   gamma_aSTF,
   gamma_sSTF,
+  headerLookupHistorySTF,
   recentHistoryToDagger,
   recentHistoryToPosterior,
   rotateEntropy,
@@ -208,17 +209,16 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidEA);
   }
 
-  const [rhoDDaggErr, dd_rho] = RHO2DoubleDagger(
+  const [, dd_rho] = RHO2DoubleDagger(
     { ea, p_kappa, hp: block.header.parent },
     d_rho,
   ).safeRet();
-  if (rhoDDaggErr) {
-    return err(rhoDDaggErr);
-  }
 
   const [egError, validatedEG] = assertEGValid(
     block.extrinsics.reportGuarantees,
     {
+      headerLookupHistory: curState.headerLookupHistory,
+      recentHistory: curState.recentHistory,
       dd_rho,
       p_tau: tauTransition.p_tau,
       kappa: curState.kappa,
@@ -319,12 +319,13 @@ export const importBlock: STF<
     curState.recentHistory,
   ).safeRet();
 
+  const headerHash = Hashing.blake2b(
+    encodeWithCodec(UnsignedHeaderCodec, block.header),
+  );
   const [, p_recentHistory] = recentHistoryToPosterior(
     {
       accumulateRoot: calculateAccumulateRoot(C),
-      headerHash: Hashing.blake2b(
-        encodeWithCodec(UnsignedHeaderCodec, block.header),
-      ),
+      headerHash,
       eg: block.extrinsics.reportGuarantees,
     },
     d_recentHistory,
@@ -348,6 +349,14 @@ export const importBlock: STF<
     curState.authPool,
   ).safeRet();
 
+  const [, p_headerLookupHistory] = headerLookupHistorySTF(
+    {
+      header: block.header,
+      headerHash,
+    },
+    curState.headerLookupHistory,
+  ).safeRet();
+
   const p_state = toPosterior({
     entropy: p_entropy,
     tau: tauTransition.p_tau,
@@ -365,6 +374,7 @@ export const importBlock: STF<
     lambda: p_lambda,
     kappa: p_kappa,
     disputes: p_disputesState,
+    headerLookupHistory: p_headerLookupHistory,
   });
 
   // $(0.5.0 - 5.2)

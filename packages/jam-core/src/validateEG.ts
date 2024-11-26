@@ -5,10 +5,12 @@ import {
   G_Star,
   GuarantorsAssignment,
   Hash,
+  HeaderLookupHistory,
   IDisputesState,
   JamState,
   Posterior,
   RHO,
+  RecentHistory,
   Tau,
   Validated,
   u32,
@@ -21,13 +23,14 @@ import {
   VALIDATOR_CORE_ROTATION,
   WORK_TIMEOUT,
 } from "@tsjam/constants";
-import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
+import { E_M, WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { FisherYatesH } from "@tsjam/crypto";
 import { PHI_FN, _w } from "@tsjam/transitions";
 import { Result, err, ok } from "neverthrow";
 
 export enum EGError {
+  ANCHOR_NOT_IN_RECENTHISTORY = "Anchor not in recent history",
   EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES = "Extrinsic length must be less than CORES",
   CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "core index must be unique and ordered",
   CORE_INDEX_NOT_IN_BOUNDS = "core index not in bounds",
@@ -41,11 +44,14 @@ export enum EGError {
   WORK_PACKAGE_HASH_NOT_UNIQUE = "Work package hash must be unique",
   LOOKUP_ANCHOR_NOT_WITHIN_L = "Lookup anchor block must be within L timeslots",
   REPORT_PENDING_AVAILABILITY = "Bit may be set if the corresponding core has a report pending availability",
+  LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "Lookup anchor timeslot mismatch",
 }
 
 export const assertEGValid = (
   extrinsic: EG_Extrinsic,
   deps: {
+    headerLookupHistory: HeaderLookupHistory;
+    recentHistory: RecentHistory;
     dd_rho: DoubleDagger<RHO>;
     p_entropy: Posterior<JamState["entropy"]>;
     kappa: JamState["kappa"];
@@ -180,12 +186,38 @@ export const assertEGValid = (
     return err(EGError.WORK_PACKAGE_HASH_NOT_UNIQUE);
   }
 
-  // $(0.5.0 - 11.33) each lookup anchor block within `L` timeslot
+  const recentWithBeefy = deps.recentHistory.map((r) => ({
+    ...r,
+    beefy: Hashing.keccak256(encodeWithCodec(E_M, r.accumulationResultMMR)),
+  }));
   for (const refinementContext of x) {
+    // $(0.5.0 - 11.32)
+    const y = recentWithBeefy.find(
+      (_y) =>
+        _y.headerHash === refinementContext.anchor.headerHash &&
+        _y.stateRoot === refinementContext.anchor.posteriorStateRoot &&
+        refinementContext.anchor.posteriorBeefyRoot == _y.beefy,
+    );
+    if (typeof y === "undefined") {
+      return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
+    }
+
+    // $(0.5.0 - 11.33) each lookup anchor block within `L` timeslot
     if (
       refinementContext.lookupAnchor.timeSlot <
       deps.p_tau - MAXIMUM_AGE_LOOKUP_ANCHOR
     ) {
+      return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
+    }
+
+    // $(0.5.0 - 11.34)
+    const lookupHeader = deps.headerLookupHistory.get(
+      refinementContext.lookupAnchor.timeSlot,
+    );
+    if (typeof lookupHeader === "undefined") {
+      return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
+    }
+    if (lookupHeader.hash !== refinementContext.lookupAnchor.headerHash) {
       return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
     }
   }

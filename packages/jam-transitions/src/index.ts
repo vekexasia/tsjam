@@ -20,3 +20,4 @@ export * from "./validatorStatistics.js";
 export * from "./utilityComputations/w.js";
 export * from "./accumulationQueue.js";
 export * from "./accumulationHistory.js";
+export * from "./headerLookupHistory.js";

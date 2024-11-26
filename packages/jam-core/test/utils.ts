@@ -94,6 +94,7 @@ export const mapTestDataToState = (testData: any): JamState => {
     authQueue: new Array(381).fill(
       new Array(80).fill(0n as Hash),
     ) as AuthorizerQueue,
+    headerLookupHistory: new Map(),
   } as JamState;
 };
 

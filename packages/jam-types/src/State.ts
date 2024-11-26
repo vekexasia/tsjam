@@ -14,6 +14,7 @@ import { SafroleState } from "./states/SafroleState";
 import { ValidatorStatistics } from "./states/ValidatorStatistics";
 import { RHO } from "./states/rho";
 import { SeqOfLength } from "./genericTypes";
+import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
 
 /**
  * `σ`
@@ -98,4 +99,9 @@ export type JamState = {
    * `τ` - the most recent block timeslot
    */
   tau: Tau;
+
+  /**
+   * NOTE: this is not included in gp but used as per type doc
+   */
+  headerLookupHistory: HeaderLookupHistory;
 };
