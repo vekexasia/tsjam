@@ -1,5 +1,7 @@
 import { slotIndex, toPosterior } from "@tsjam/utils";
 import {
+  AccumulationHistory,
+  AccumulationQueue,
   DoubleDagger,
   EG_Extrinsic,
   G_Star,
@@ -13,6 +15,7 @@ import {
   RecentHistory,
   Tau,
   Validated,
+  WorkPackageHash,
   u32,
 } from "@tsjam/types";
 import {
@@ -42,6 +45,7 @@ export enum EGError {
   TIMESLOT_BOUNDS_1 = "Time slot must be within bounds, R * floor(tau'/R) - 1 <= t",
   TIMESLOT_BOUNDS_2 = "Time slot must be within bounds, t <= tau'",
   WORK_PACKAGE_HASH_NOT_UNIQUE = "Work package hash must be unique",
+  WORKPACKAGE_IN_PIPELINE = "Work Package alredy known",
   LOOKUP_ANCHOR_NOT_WITHIN_L = "Lookup anchor block must be within L timeslots",
   REPORT_PENDING_AVAILABILITY = "Bit may be set if the corresponding core has a report pending availability",
   LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "Lookup anchor timeslot mismatch",
@@ -52,6 +56,9 @@ export const assertEGValid = (
   deps: {
     headerLookupHistory: HeaderLookupHistory;
     recentHistory: RecentHistory;
+    accumulationHistory: AccumulationHistory;
+    accumulationQueue: AccumulationQueue;
+    rho: RHO;
     dd_rho: DoubleDagger<RHO>;
     p_entropy: Posterior<JamState["entropy"]>;
     kappa: JamState["kappa"];
@@ -222,6 +229,34 @@ export const assertEGValid = (
     }
   }
 
+  // $(0.5.0 - 11.35)
+  const q: Set<WorkPackageHash> = new Set(
+    deps.accumulationQueue
+      .flat()
+      .map((a) => a.workReport.refinementContext.requiredWorkPackage)
+      .filter((rwp) => typeof rwp !== "undefined"),
+  );
+
+  // $(0.5.0 - 11.36)
+  const a: Set<WorkPackageHash> = new Set(
+    deps.rho
+      .map((a) => a?.workReport.refinementContext.requiredWorkPackage)
+      .filter((a) => typeof a !== "undefined"),
+  );
+
+  const rhk = new Set(
+    deps.recentHistory.map((r) => [...r.reportedPackages.keys()]).flat(),
+  );
+
+  const ahs = new Set(
+    deps.accumulationHistory.map((a) => [...a.values()]).flat(),
+  );
+  // $(0.5.0 - 11.37)
+  for (const _p of p) {
+    if (q.has(_p) || a.has(_p) || rhk.has(_p) || ahs.has(_p)) {
+      return err(EGError.WORKPACKAGE_IN_PIPELINE);
+    }
+  }
   return ok(extrinsic as Validated<EG_Extrinsic>);
 };
 
