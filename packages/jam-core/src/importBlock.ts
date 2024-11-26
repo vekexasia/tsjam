@@ -219,6 +219,9 @@ export const importBlock: STF<
     {
       headerLookupHistory: curState.headerLookupHistory,
       recentHistory: curState.recentHistory,
+      accumulationHistory: curState.accumulationHistory,
+      accumulationQueue: curState.accumulationQueue,
+      rho: curState.rho,
       dd_rho,
       p_tau: tauTransition.p_tau,
       kappa: curState.kappa,

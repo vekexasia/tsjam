@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@tsjam/constants": "*",
+    "@tsjam/crypto": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*",
-    "@tsjam/crypto": "*"
+    "@tsjam/utils": "*"
   },
   "license": "MIT"
 }
