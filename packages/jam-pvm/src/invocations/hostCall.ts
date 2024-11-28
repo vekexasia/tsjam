@@ -13,7 +13,7 @@ import { basicInvocation } from "@/invocations/basic.js";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * (255)
+ * $(0.5.0 - A.27)
  */
 export const hostCallInvocation = <X>(
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -79,7 +79,7 @@ export type HostCallOut<X> = {
 
 /**
  * `Ω(X)` in the paper
- * (256)
+ * $(0.5.0 - A.28)
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;

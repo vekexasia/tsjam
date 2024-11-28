@@ -4,6 +4,7 @@ import { PVMProgram } from "@/pvm/PVMProgram.js";
 import { IParsedProgram } from "@/pvm/IParsedProgram.js";
 import { PVMModification } from "@/pvm/PVMModifications.js";
 import { PVMExitReason } from "@/pvm/PVMExitReason.js";
+import { Gas } from "@/genericTypes";
 
 /**
  * A generic PVM instruction that can take any number of arguments
@@ -29,7 +30,7 @@ export interface PVMIx<
     ...args: Args
   ): Result<PVMModification[], EvaluateErr>;
 
-  readonly gasCost: bigint;
+  readonly gasCost: Gas;
   readonly opCode: number;
   readonly identifier: string;
 }

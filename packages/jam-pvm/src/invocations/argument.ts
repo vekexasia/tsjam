@@ -8,7 +8,7 @@ import { programInitialization } from "@/program.js";
 
 /**
  * `ΨM` in the paper
- * (247)
+ * $(0.5.0 - A.36)
  */
 export const argumentInvocation = <X>(
   p: Uint8Array,
@@ -39,6 +39,7 @@ type ArgumentInvocationOut<X> = {
   out: X;
 };
 
+// $(0.5.0 - A.37)
 const R_fn = <X>(input: HostCallOut<X>): ArgumentInvocationOut<X> => {
   if (input.exitReason === RegularPVMExitReason.OutOfGas) {
     return { exitReason: RegularPVMExitReason.OutOfGas, out: input.out };

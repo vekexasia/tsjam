@@ -1,4 +1,4 @@
-import { PVMIx, PVMIxExecutionError, u8 } from "@tsjam/types";
+import { Gas, PVMIx, PVMIxExecutionError, u8 } from "@tsjam/types";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown[], PVMIxExecutionError>>(),
@@ -70,7 +70,7 @@ if (import.meta.vitest) {
           evaluate() {
             return ok([]);
           },
-          gasCost: 1n,
+          gasCost: 1n as Gas,
         },
       });
       expect(Ixdb.byCode.get(0 as u8)).toBe(ix);
@@ -82,7 +82,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
-          gasCost: 1n,
+          gasCost: 1n as Gas,
           decode() {
             return ok([]);
           },
@@ -96,7 +96,7 @@ if (import.meta.vitest) {
           opCode: 0 as u8,
           identifier: "test2",
           ix: {
-            gasCost: 1n,
+            gasCost: 1n as Gas,
             decode() {
               return ok([]);
             },
@@ -112,7 +112,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
-          gasCost: 1n,
+          gasCost: 1n as Gas,
           decode() {
             return ok([]);
           },
@@ -126,7 +126,7 @@ if (import.meta.vitest) {
           opCode: 1 as u8,
           identifier: "test",
           ix: {
-            gasCost: 1n,
+            gasCost: 1n as Gas,
             decode() {
               return ok([]);
             },
@@ -142,7 +142,7 @@ if (import.meta.vitest) {
         opCode: 0 as u8,
         identifier: "test",
         ix: {
-          gasCost: 1n,
+          gasCost: 1n as Gas,
           decode() {
             return ok([]);
           },

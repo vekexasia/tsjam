@@ -26,8 +26,12 @@ export const validatorStatisticsToPosterior: STF<
   never
 > = (input, state) => {
   let pi_0 = [...state[0]] as ValidatorStatistics[0];
-  // (171)
+  let pi_1 = [...state[1]] as ValidatorStatistics[0];
+
+  // $(0.5.0 - 13.2)
   if (isNewEra(input.block.header.timeSlotIndex, input.curTau)) {
+    // $(0.5.0 - 13.3) | second bracket
+    pi_1 = pi_0;
     pi_0 = new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
       return {
         blocksProduced: 0,
@@ -55,6 +59,7 @@ export const validatorStatisticsToPosterior: STF<
 
   for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
     const curV = i === input.block.header.blockAuthorKeyIndex;
+    // $(0.5.0 - 13.4)
     pi_0[i] = {
       blocksProduced: pi_0[i].blocksProduced + (curV ? 1 : 0),
       ticketsIntroduced:
@@ -81,5 +86,5 @@ export const validatorStatisticsToPosterior: STF<
     };
   }
 
-  return ok([pi_0, state[1]] as unknown as Posterior<ValidatorStatistics>);
+  return ok([pi_0, pi_1] as unknown as Posterior<ValidatorStatistics>);
 };

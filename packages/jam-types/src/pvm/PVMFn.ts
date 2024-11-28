@@ -1,3 +1,4 @@
+import { Gas } from "@/genericTypes";
 import { PVMProgramExecutionContextBase } from "@/pvm/PVMProgramExecutionContext.js";
 
 /**
@@ -10,7 +11,7 @@ export interface PVMFn<
   CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
 > {
   execute(context: CTX, ...args: Args): Out;
-  gasCost: bigint | ((ctx: CTX, ...args: Args) => bigint);
+  gasCost: Gas | ((ctx: CTX, ...args: Args) => Gas);
   opCode: number;
   identifier: string;
 }

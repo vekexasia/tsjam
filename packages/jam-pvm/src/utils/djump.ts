@@ -12,6 +12,7 @@ const ZA = 4;
  * djump(a) method defined in `225`
  * @param context - the current evaluating context
  * @param a - the address to jump to
+ * $(0.5.0 - A.13)
  */
 export const djump = (
   context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],

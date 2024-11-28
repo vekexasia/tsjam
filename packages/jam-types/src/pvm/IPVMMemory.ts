@@ -18,14 +18,14 @@ export interface IPVMMemory {
    * @param offset - offset to write the value to
    * @param bytes - the value to write
    */
-  setBytes(offset: number, bytes: Uint8Array): void;
+  setBytes(offset: number | bigint, bytes: Uint8Array): void;
   /**
    * @throws in case there is an issue accessing the memory
    * @param offset - the offset to write the value to
    * @param length - the length of the bytes to read
    */
-  getBytes(offset: number, length: number): Uint8Array;
+  getBytes(offset: number | bigint, length: number | bigint): Uint8Array;
 
-  canRead(offset: number, length: number): boolean;
-  canWrite(offset: number, length: number): boolean;
+  canRead(offset: number | bigint, length: number | bigint): boolean;
+  canWrite(offset: number | bigint, length: number | bigint): boolean;
 }

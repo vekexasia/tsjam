@@ -4,29 +4,35 @@ import assert from "node:assert";
  * Z(n, a) = a if a &lt; 2^(8n-1) else a - 2^(8n)
  * @param n - the number of bytes
  * @param a - the number to convert
- * @see (221) in graypaper
+ * $(0.5.0 - A.7)
  */
-export const Z = <T extends number>(n: number, a: number) => {
-  assert(n >= 0, "n in Z(n) must be positive");
-  const limit = 2 ** (8 * n - 1);
+export const Z = <T extends bigint>(n: number, a: bigint) => {
+  assert(n >= 0, "n in Z(n) must be positive aaaaa");
+  if (n == 0) {
+    return 0n as T;
+  }
+  const limit = 2n ** (8n * BigInt(n) - 1n);
   if (a >= limit) {
-    return (a - limit * 2) as T;
+    return (a - limit * 2n) as T;
   }
   return a as T;
 };
+
 /**
  * Z_inv(n, a) = (2^(8n) + a) mod 2^(8n)
  * @param n - the number of bytes
  * @param a - the number to convert
- * @see (222) in graypaper
+ * $(0.5.0 - A.8)
  */
-export const Z_inv = <T extends number>(n: number, a: number) => {
+export const Z_inv = <T extends bigint>(n: number, a: bigint) => {
   assert(n >= 0, "n in Z_inv(n) must be positive");
-  return ((2 ** (8 * n) + a) % 2 ** (8 * n)) as T;
+  return ((2n ** (8n * BigInt(n)) + a) % 2n ** (8n * BigInt(n))) as T;
 };
 
-export const Z4 = <T extends number>(a: number) => Z<T>(4, a);
-export const Z4_inv = <T extends number>(a: number) => Z_inv<T>(4, a);
+export const Z4 = <T extends number>(a: number | bigint) =>
+  Number(Z(4, BigInt(a))) as T;
+export const Z4_inv = <T extends number>(a: number | bigint) =>
+  Number(Z_inv(4, BigInt(a))) as T;
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

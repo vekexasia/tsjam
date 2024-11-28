@@ -1,4 +1,4 @@
-import { PVMFn, u8 } from "@tsjam/types";
+import { Gas, PVMFn, u8 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 
 export const FnsDb = {
@@ -42,7 +42,7 @@ if (import.meta.vitest) {
           execute() {
             return {} as never;
           },
-          gasCost: 1n,
+          gasCost: 1n as Gas,
         },
       });
       expect(FnsDb.byCode.get(0 as u8)).toBe(fn);
@@ -53,7 +53,7 @@ if (import.meta.vitest) {
         fn: {
           opCode: 0 as u8,
           identifier: "test",
-          gasCost: 1n,
+          gasCost: 1n as Gas,
           execute() {
             return {} as never;
           },
@@ -64,7 +64,7 @@ if (import.meta.vitest) {
           fn: {
             opCode: 0 as u8,
             identifier: "test2",
-            gasCost: 1n,
+            gasCost: 1n as Gas,
             execute() {
               return {} as never;
             },
@@ -77,7 +77,7 @@ if (import.meta.vitest) {
         fn: {
           opCode: 0 as u8,
           identifier: "test",
-          gasCost: 1n,
+          gasCost: 1n as Gas,
           execute() {
             return {} as never;
           },
@@ -88,7 +88,7 @@ if (import.meta.vitest) {
           fn: {
             opCode: 1 as u8,
             identifier: "test",
-            gasCost: 1n,
+            gasCost: 1n as Gas,
             execute() {
               return {} as never;
             },

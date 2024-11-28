@@ -7,8 +7,8 @@ import {
   PVMIxExecutionError,
   PVMProgram,
   PVMProgramExecutionContext,
+  RegisterValue,
   SeqOfLength,
-  u32,
   u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -30,7 +30,10 @@ export const createEvContext = (): {
     instructionPointer: toTagged(0),
     gas: 0n as Gas,
     memory: mockMemory(),
-    registers: new Array(13).fill(0 as u8) as SeqOfLength<u32, 13>,
+    registers: new Array(13).fill(0n as RegisterValue) as SeqOfLength<
+      RegisterValue,
+      13
+    >,
   },
   program: {
     j: [],

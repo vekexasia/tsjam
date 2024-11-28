@@ -1,11 +1,12 @@
 import {
+  Gas,
   PVMIxExecutionError,
   RegularPVMExitReason,
-  u32,
   u8,
 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 import { err, ok } from "neverthrow";
+import { IxMod } from "../utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fallthrough = regIx<[]>({
@@ -17,11 +18,9 @@ const fallthrough = regIx<[]>({
       return ok([]);
     },
     evaluate(context) {
-      return ok([
-        { type: "ip", data: (context.execution.instructionPointer + 1) as u32 },
-      ]);
+      return ok([IxMod.ip(context.execution.instructionPointer + 1)]);
     },
-    gasCost: 1n,
+    gasCost: 1n as Gas,
   },
 });
 
@@ -44,6 +43,6 @@ export const trap = regIx<[]>({
         ),
       );
     },
-    gasCost: 1n,
+    gasCost: 1n as Gas,
   },
 });

@@ -1,7 +1,9 @@
 import {
+  Gas,
   PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
+  RegisterValue,
   u32,
   u8,
 } from "@tsjam/types";
@@ -12,10 +14,11 @@ import { regIx } from "@/instructions/ixdb.js";
 import { E_sub } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 
+// $(0.5.0 - A.21)
 const decode = (
   bytes: Uint8Array,
 ): Result<
-  [register: RegisterIdentifier, vx: u32, offset: u32],
+  [register: RegisterIdentifier, vx: RegisterValue, offset: u32],
   PVMIxDecodeError
 > => {
   if (bytes.length === 0) {
@@ -30,9 +33,8 @@ const decode = (
   const vx = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
   // this is not vy as in the paper since we 're missing the current instruction pointer
   // at this stage. to get vy = ip + offset
-  const offset = Z(
-    ly,
-    Number(E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
+  const offset = Number(
+    Z(ly, E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
   ) as u32;
   return ok([ra, vx, offset]);
 };
@@ -40,10 +42,10 @@ const decode = (
 const create1Reg1IMM1OffsetIx = (
   identifier: u8,
   name: string,
-  evaluate: PVMIxEvaluateFN<[RegisterIdentifier, u32, u32]>,
+  evaluate: PVMIxEvaluateFN<[RegisterIdentifier, RegisterValue, u32]>,
   blockTermination?: true,
 ) => {
-  return regIx<[RegisterIdentifier, u32, u32]>({
+  return regIx<[RegisterIdentifier, RegisterValue, u32]>({
     opCode: identifier,
     identifier: name,
     blockTermination,
@@ -54,7 +56,7 @@ const create1Reg1IMM1OffsetIx = (
         const vy = (context.execution.instructionPointer + offset) as u32;
         return evaluate(context, ri, vx, vy);
       },
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -191,7 +193,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 1), 0x12, 0x00, 0x00, 0x11]),
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x12);
+      expect(vx).toEqual(0x12n);
       expect(offset).toEqual(0x110000);
     });
     it("should put 0 in vx if lx is 0", () => {
@@ -199,7 +201,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 0), 0x11]),
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0);
+      expect(vx).toEqual(0n);
       expect(offset).toEqual(0x11);
     });
     it("should max use 4 if lx > 4 and 1 for offset", () => {
@@ -207,7 +209,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 6), 0x12, 0x00, 0x00, 0x11, 1]),
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x11000012);
+      expect(vx).toEqual(0x11000012n);
       expect(offset).toEqual(1);
     });
     it("should discard extra bytes", () => {
@@ -226,7 +228,7 @@ if (import.meta.vitest) {
         ]),
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0x11000012);
+      expect(vx).toEqual(0x11000012n);
       expect(offset).toEqual(0);
     });
     it("should decode when lx is 0 and no other bytes", () => {
@@ -234,7 +236,7 @@ if (import.meta.vitest) {
         Uint8Array.from([encodeRaLx(1, 0)]),
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
-      expect(vx).toEqual(0);
+      expect(vx).toEqual(0n);
       expect(offset).toEqual(0);
     });
     describe("errors", () => {

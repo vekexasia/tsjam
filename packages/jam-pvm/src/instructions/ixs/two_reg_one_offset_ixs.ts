@@ -1,7 +1,9 @@
 import {
+  Gas,
   PVMIxEvaluateFN,
   PVMModification,
   RegisterIdentifier,
+  RegisterValue,
   i32,
   u32,
   u8,
@@ -11,6 +13,8 @@ import { branch } from "@/utils/branch.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_sub } from "@tsjam/codec";
 import { Result, ok } from "neverthrow";
+
+// $(0.5.0 - A.24)
 const decode = (
   bytes: Uint8Array,
 ): Result<
@@ -20,10 +24,9 @@ const decode = (
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
-  const offset: i32 = Z(
-    lX,
-    Number(E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
-  );
+  const offset = Number(
+    Z(lX, E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
+  ) as i32;
   return ok([rA, rB, offset]);
 };
 const create = (
@@ -41,7 +44,7 @@ const create = (
     ix: {
       decode,
       evaluate,
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -152,8 +155,8 @@ if (import.meta.vitest) {
         context = createEvContext();
       });
       it("branch_eq", () => {
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xdeadbeef as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xdeadbeefn as RegisterValue;
         branch_eq.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -161,7 +164,7 @@ if (import.meta.vitest) {
           2 as i32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
-        context.execution.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[1] = 0xdeadbeeen as RegisterValue;
         branch_eq.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -171,8 +174,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, false);
       });
       it("branch_ne", () => {
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xdeadbeef as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xdeadbeefn as RegisterValue;
         branch_ne.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -180,7 +183,7 @@ if (import.meta.vitest) {
           2 as i32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.execution.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[1] = 0xdeadbeeen as RegisterValue;
         branch_ne.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -190,8 +193,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, true);
       });
       it("branch_lt_u", () => {
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xdeadbeeen as RegisterValue;
         branch_lt_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -199,7 +202,7 @@ if (import.meta.vitest) {
           2 as i32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.execution.registers[1] = 0xdeadbeff as u32;
+        context.execution.registers[1] = 0xdeadbeffn as RegisterValue;
         branch_lt_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -209,8 +212,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenCalledWith(context, 2, true);
       });
       it("branch_lt_s", () => {
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xdeadbeeen as RegisterValue;
         branch_lt_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -218,7 +221,7 @@ if (import.meta.vitest) {
           2 as i32,
         );
         expect(branch).toHaveBeenCalledWith(context, 2, false);
-        context.execution.registers[1] = 0xdeadbeff as u32;
+        context.execution.registers[1] = 0xdeadbeffn as RegisterValue;
         branch_lt_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -228,8 +231,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
       });
       it("branch_ge_u", () => {
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xdeadbeeen as RegisterValue;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -238,7 +241,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
 
-        context.execution.registers[0] = 0xdeadbeee as u32;
+        context.execution.registers[0] = 0xdeadbeeen as RegisterValue;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -247,7 +250,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
 
-        context.execution.registers[0] = 0xdeadbeed as u32;
+        context.execution.registers[0] = 0xdeadbeedn as RegisterValue;
         branch_ge_u.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -257,8 +260,8 @@ if (import.meta.vitest) {
         expect(branch).toHaveBeenNthCalledWith(2, context, 2, false);
       });
       it("branch_ge_s", () => {
-        context.execution.registers[0] = Z4_inv(-2);
-        context.execution.registers[1] = Z4_inv(-2);
+        context.execution.registers[0] = BigInt(Z4_inv(-2)) as RegisterValue;
+        context.execution.registers[1] = BigInt(Z4_inv(-2)) as RegisterValue;
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -267,7 +270,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenCalledWith(context, 2, true);
 
-        context.execution.registers[0] = Z4_inv(-1);
+        context.execution.registers[0] = BigInt(Z4_inv(-1)) as RegisterValue;
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -276,7 +279,7 @@ if (import.meta.vitest) {
         );
         expect(branch).toHaveBeenNthCalledWith(1, context, 2, true);
 
-        context.execution.registers[0] = Z4_inv(-3);
+        context.execution.registers[0] = BigInt(Z4_inv(-3)) as RegisterValue;
         branch_ge_s.evaluate(
           context,
           0 as RegisterIdentifier,

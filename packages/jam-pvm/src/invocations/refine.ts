@@ -32,6 +32,9 @@ import { omega_g } from "@/functions/general.js";
 import { historicalLookup } from "@tsjam/utils";
 import { argumentInvocation } from "@/invocations/argument.js";
 
+/**
+ * $(0.5.0 - B.4)
+ */
 export const refineInvocation = (
   serviceCodeHash: Hash, // `c`
   gas: Gas,
@@ -42,7 +45,7 @@ export const refineInvocation = (
   authorizerHash: Hash, // `a`
   authorizerOutput: Uint8Array, // `o`
   importSegments: ExportSegment[], // `i`
-  workData: Uint8Array[], // `d`
+  workData: Uint8Array[], // `x`
   exportSegmentOffset: number, // `ς`
   deps: {
     delta: Delta;
@@ -57,12 +60,15 @@ export const refineInvocation = (
     refinementContext.lookupAnchor.timeSlot,
     serviceCodeHash,
   );
+  // first matching case
   if (!deps.delta.has(serviceIndex) || typeof lookupResult === "undefined") {
     return { result: WorkError.Bad, out: [] };
   }
+  // second metching case
   if (lookupResult.length > SERVICECODE_MAX_SIZE) {
     return { result: WorkError.Big, out: [] };
   }
+
   // encode
   const a = new Uint8Array();
   const argOut = argumentInvocation(

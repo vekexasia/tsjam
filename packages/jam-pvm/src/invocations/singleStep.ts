@@ -25,7 +25,7 @@ type Output = {
 /**
  * SingleStep State Transition Function
  * Ψ1 in the graypaper
- * (217)
+ * $(0.5.0 - A.5)
  */
 export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },

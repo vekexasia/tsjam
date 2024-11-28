@@ -1,8 +1,6 @@
 import {
-  Dagger,
   Delta,
   DoubleDagger,
-  EG_Extrinsic,
   EP_Extrinsic,
   Hash,
   Posterior,
@@ -10,7 +8,6 @@ import {
   ServiceIndex,
   Tagged,
   Tau,
-  Validated,
   u32,
 } from "@tsjam/types";
 import { Hashing } from "@tsjam/crypto";

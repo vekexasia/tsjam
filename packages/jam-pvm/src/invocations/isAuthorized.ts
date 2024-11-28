@@ -3,6 +3,7 @@ import {
   Gas,
   PVMProgramExecutionContext,
   PVMResultContext,
+  RegisterValue,
   RegularPVMExitReason,
   WorkPackage,
   u32,
@@ -18,6 +19,7 @@ import { IxMod } from "@/instructions/utils";
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
+ * $(0.5.0 - B.1)
  */
 export const isAuthorized = (
   p: WorkPackage,
@@ -51,11 +53,12 @@ export const isAuthorized = (
  */
 const Gi = 0n as Gas;
 
+// $(0.5.0 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     const r = processIxResult(
       { ...input.ctx, instructionPointer: 4 as u32 },
-      [IxMod.gas(omega_g.gasCost as bigint), ...omega_g.execute(input.ctx)],
+      [IxMod.gas(omega_g.gasCost as Gas), ...omega_g.execute(input.ctx)],
       0,
     );
     return {
@@ -71,7 +74,7 @@ const F_Fn: HostCallExecutor<unknown> = (input) => {
     ctx: {
       gas: (input.ctx.gas - 10n) as Gas,
       registers: [
-        HostCallResult.WHAT,
+        BigInt(HostCallResult.WHAT) as RegisterValue,
         input.ctx.registers.slice(1),
       ] as PVMProgramExecutionContext["registers"],
       memory: input.ctx.memory,

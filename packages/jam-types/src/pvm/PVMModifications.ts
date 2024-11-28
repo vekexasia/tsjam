@@ -1,4 +1,4 @@
-import { u32, u64 } from "@/genericTypes.js";
+import { RegisterValue, u32, u64 } from "@/genericTypes.js";
 
 export type PVMSingleMod<T, K> = { type: T; data: K };
 export type PVMSingleModGas = PVMSingleMod<"gas", u64>;
@@ -11,7 +11,7 @@ export type PVMSingleModMemory = PVMSingleMod<
 export type PVMSingleModObject<T> = PVMSingleMod<"object", T>;
 export type PVMSingleModRegister<T extends number> = PVMSingleMod<
   "register",
-  { index: T; value: u32 }
+  { index: T; value: RegisterValue }
 >;
 export type PVMModification =
   | PVMSingleModPointer

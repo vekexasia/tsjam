@@ -2,6 +2,7 @@ import { regFn } from "@/functions/fnsdb.js";
 import {
   Blake2bHash,
   Delta,
+  Gas,
   Hash,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -23,7 +24,7 @@ export const omega_g = regFn<[], [W7, W8]>({
   fn: {
     opCode: 0 as u8,
     identifier: "gas",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context) {
       const p_gas = context.gas - (this.gasCost as bigint);
       return [
@@ -41,14 +42,14 @@ export const omega_l = regFn<
   fn: {
     opCode: 1 as u8,
     identifier: "lookup",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
       let a: ServiceAccount | undefined;
       const w7 = context.registers[7];
-      if (w7 === s || w7 === 2 ** 32 - 1) {
+      if (Number(w7) === s || w7 === 2n ** 64n - 1n) {
         a = bold_s;
       } else {
-        a = d.get(w7 as ServiceIndex);
+        a = d.get(Number(w7) as ServiceIndex);
       }
       const [h0, b0, bz] = context.registers.slice(1);
       let h: Blake2bHash | undefined;
@@ -73,7 +74,7 @@ export const omega_l = regFn<
       }
       return [
         IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(v.length, bz))),
+        IxMod.memory(b0, v.subarray(0, Math.min(v.length, Number(bz)))),
       ];
     },
   },
@@ -86,15 +87,15 @@ export const omega_r = regFn<
   fn: {
     opCode: 2 as u8,
     identifier: "read",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
       let a: ServiceAccount | undefined;
       const w7 = context.registers[7];
       const [k0, kz, b0, bz] = context.registers.slice(8);
-      if (w7 === s || w7 === 2 ** 32 - 1) {
+      if (Number(w7) === s || w7 === 2n ** 64n - 1n) {
         a = bold_s;
       } else {
-        a = d.get(w7 as ServiceIndex);
+        a = d.get(Number(w7) as ServiceIndex);
       }
       let k: Hash;
       if (!context.memory.canRead(k0, kz) || !context.memory.canWrite(b0, bz)) {
@@ -115,7 +116,7 @@ export const omega_r = regFn<
 
       return [
         IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(v.length, bz))),
+        IxMod.memory(b0, v.subarray(0, Math.min(v.length, Number(bz)))),
       ];
     },
   },
@@ -128,7 +129,7 @@ export const omega_w = regFn<
   fn: {
     opCode: 3 as u8,
     identifier: "write",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(7);
       let k: Hash;
@@ -145,7 +146,7 @@ export const omega_w = regFn<
         ...bold_s,
         storage: new Map(bold_s.storage),
       };
-      if (vz === 0) {
+      if (vz === 0n) {
         a.storage.delete(k);
       } else {
         a.storage.set(k, context.memory.getBytes(v0, vz));
@@ -173,14 +174,14 @@ export const omega_i = regFn<
   fn: {
     opCode: 4 as u8,
     identifier: "info",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, d: Delta) {
       const w7 = context.registers[7];
       let t: ServiceAccount | undefined;
-      if (w7 === 2 ** 32 - 1) {
+      if (w7 === 2n ** 64n - 1n) {
         t = d.get(s);
       } else {
-        t = d.get(w7 as ServiceIndex);
+        t = d.get(Number(w7) as ServiceIndex);
       }
       if (typeof t === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];

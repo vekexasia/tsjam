@@ -1,4 +1,5 @@
 import {
+  Gas,
   PVMIxExecutionError,
   PVMSingleModGas,
   PVMSingleModMemory,
@@ -6,9 +7,9 @@ import {
   PVMSingleModPointer,
   PVMSingleModRegister,
   PVMSingleSelfGas,
+  RegisterValue,
   RegularPVMExitReason,
   u32,
-  u64,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 
@@ -32,28 +33,28 @@ export const IxMod = {
     type: "self-gas",
     data: undefined,
   }),
-  gas: (value: bigint): PVMSingleModGas => ({
+  gas: (value: Gas): PVMSingleModGas => ({
     type: "gas",
-    data: value as u64,
+    data: value,
   }),
   reg: <T extends number>(
     register: T,
-    value: number,
+    value: number | bigint,
   ): PVMSingleModRegister<T> => {
     return {
       type: "register",
       data: {
         index: register,
-        value: value as u32,
+        value: BigInt(value) as RegisterValue,
       },
     };
   },
-  w7: (value: number) => IxMod.reg(7, value),
-  w8: (value: number) => IxMod.reg(8, value),
-  memory: (from: number, data: Uint8Array): PVMSingleModMemory => ({
+  w7: (value: number | bigint) => IxMod.reg(7, value),
+  w8: (value: number | bigint) => IxMod.reg(8, value),
+  memory: (from: number | bigint, data: Uint8Array): PVMSingleModMemory => ({
     type: "memory",
     data: {
-      from: from as u32,
+      from: Number(from) as u32,
       data,
     },
   }),

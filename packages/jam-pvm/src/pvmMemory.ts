@@ -15,20 +15,27 @@ export class PVMMemory implements IPVMMemory {
   addACL(acl: { from: u32; to: u32; writable: boolean }): void {
     this.acl.push(acl);
   }
-  setBytes(offset: number, bytes: Uint8Array): void {
-    assert(this.canWrite(offset, bytes.length), "Memory is not writeable");
+  setBytes(_offset: number | bigint, bytes: Uint8Array): void {
+    assert(this.canWrite(_offset, bytes.length), "Memory is not writeable");
+    const offset = Number(_offset);
     this.#innerMemory.set(bytes, offset);
   }
-  getBytes(offset: number, length: number): Uint8Array {
+  getBytes(_offset: number | bigint, _length: number | bigint): Uint8Array {
+    const offset = Number(_offset);
+    const length = Number(_length);
     assert(this.canRead(offset, length), "Memory is not readable");
     return this.#innerMemory.subarray(offset, offset + length);
   }
-  canRead(offset: number, length: number): boolean {
+  canRead(_offset: number | bigint, _length: number | bigint): boolean {
+    const offset = Number(_offset);
+    const length = Number(_length);
     return !!this.acl.find(
       (acl) => offset >= acl.from && offset + length < acl.to,
     );
   }
-  canWrite(offset: number, length: number): boolean {
+  canWrite(_offset: number | bigint, _length: number | bigint): boolean {
+    const offset = Number(_offset);
+    const length = Number(_length);
     return !!this.acl.find(
       (acl) => offset >= acl.from && offset + length < acl.to && acl.writable,
     );

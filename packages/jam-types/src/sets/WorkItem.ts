@@ -3,7 +3,7 @@ import { Gas, Hash, ServiceIndex, u32 } from "@/genericTypes";
 /**
  * Identified by `I` set
  * @see section 14.3
- * @see formula (175)
+ * $(0.5.0 - 14.3)
  */
 export interface WorkItem {
   /**

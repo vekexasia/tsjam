@@ -2,7 +2,7 @@ import {
   DisputeExtrinsic,
   EA_Extrinsic,
   EG_Extrinsic,
-  EP_Tuple,
+  EP_Extrinsic,
   TicketExtrinsics,
 } from "@/index";
 import { SignedJamHeader } from "@/header";
@@ -34,7 +34,7 @@ export interface JamBlockExtrinsics {
   /**
    * `Ep` - Static data which is presently being requested to be available for workloads to be able to fetch on demand
    */
-  preimages: EP_Tuple[];
+  preimages: EP_Extrinsic;
 
   /**
    * `Ea`

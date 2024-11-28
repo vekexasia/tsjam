@@ -1,13 +1,14 @@
-import { PVMIxDecodeError, PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
+import { Gas, PVMIxDecodeError, PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4 } from "@tsjam/codec";
+import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 
 /**
  * decode the full instruction from the bytes.
  * the byte array is chunked to include only the bytes of the instruction
+ * $(0.5.0 - A.17)
  */
 export const decode = (
   bytes: Uint8Array,
@@ -19,17 +20,18 @@ export const decode = (
   if (bytes.length < offset + lX + (lX == 0 ? 1 : 0)) {
     return err(new PVMIxDecodeError("not enough bytes"));
   }
-  const first: u32 = readVarIntFromBuffer(
-    bytes.subarray(offset, offset + lX),
-    lX as u8,
-  );
+  const first: u32 = Number(
+    readVarIntFromBuffer(bytes.subarray(offset, offset + lX), lX as u8),
+  ) as u32;
   offset += lX;
 
   const secondArgLength = Math.min(4, Math.max(0, bytes.length - offset));
-  const second: u32 = readVarIntFromBuffer(
-    bytes.subarray(1 + lX, 1 + lX + secondArgLength),
-    secondArgLength as u8,
-  );
+  const second: u32 = Number(
+    readVarIntFromBuffer(
+      bytes.subarray(1 + lX, 1 + lX + secondArgLength),
+      secondArgLength as u8,
+    ),
+  ) as u32;
   return ok([first, second]);
 };
 
@@ -44,7 +46,7 @@ const create = (
     ix: {
       decode,
       evaluate,
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -76,6 +78,14 @@ const store_imm_u32 = create(
     return ok([IxMod.memory(offset, tmp)]);
   },
 );
+
+// const store_imm_u64 = create(
+//   -1 as u8, // FIXME: this is not a valid opcode
+//   "store_imm_u64",
+//   (context, offset, value) => {
+//     return ok([IxMod.memory(offset, encodeWithCodec(E_8, BigInt(value)))]);
+//   },
+// );
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

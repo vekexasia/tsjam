@@ -1,14 +1,16 @@
 import { Result, err, ok } from "neverthrow";
 import {
+  Gas,
   PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
-  u32,
+  RegisterValue,
   u8,
 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 import { IxMod } from "@/instructions/utils.js";
 
+// $(0.5.0 - A.22)
 const decode = (
   bytes: Uint8Array,
 ): Result<[RegisterIdentifier, RegisterIdentifier], PVMIxDecodeError> => {
@@ -31,7 +33,7 @@ const create = (
     ix: {
       decode,
       evaluate,
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -76,13 +78,13 @@ if (import.meta.vitest) {
     describe("ixs", () => {
       it("move_reg", () => {
         const context = createEvContext();
-        context.execution.registers[0] = 0xbacce6a0 as u32;
+        context.execution.registers[0] = 0xbacce6a0n as RegisterValue;
         move_reg.evaluate(
           context,
           1 as RegisterIdentifier,
           0 as RegisterIdentifier,
         );
-        expect(context.execution.registers[1]).toBe(0xbacce6a0);
+        expect(context.execution.registers[1]).toBe(0xbacce6a0n);
       });
       it.skip("sbrk");
     });

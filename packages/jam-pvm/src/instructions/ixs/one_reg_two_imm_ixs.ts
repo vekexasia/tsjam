@@ -1,7 +1,9 @@
 import {
+  Gas,
   PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
+  RegisterValue,
   u32,
   u8,
 } from "@tsjam/types";
@@ -9,7 +11,9 @@ import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_2, E_4 } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
+import { IxMod } from "../utils";
 
+// $(0.5.0 - A.20)
 export const decode = (
   bytes: Uint8Array,
 ): Result<
@@ -25,9 +29,9 @@ export const decode = (
     return err(new PVMIxDecodeError("not enough bytes"));
   }
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
-  const vx = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
-  const vy = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
-  return ok([ra, vx, vy]);
+  const vx = Number(readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8));
+  const vy = Number(readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8));
+  return ok([ra, vx as u32, vy as u32]);
 };
 
 const create = (
@@ -41,7 +45,7 @@ const create = (
     ix: {
       decode,
       evaluate,
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -50,16 +54,8 @@ const store_imm_ind_u8 = create(
   26 as u8,
   "store_imm_ind_u8",
   (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + vx;
-    return ok([
-      {
-        type: "memory",
-        data: {
-          from: location as u32,
-          data: new Uint8Array([vy % 0xff]),
-        },
-      },
-    ]);
+    const location = context.execution.registers[ri] + BigInt(vx);
+    return ok([IxMod.memory(location, new Uint8Array([vy % 0xff]))]);
   },
 );
 
@@ -67,11 +63,11 @@ const store_imm_ind_u16 = create(
   54 as u8,
   "store_imm_ind_u16",
   (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + vx;
+    const location = context.execution.registers[ri] + BigInt(vx);
     const value = vy % 0xffff;
     const tmp = new Uint8Array(2);
     E_2.encode(BigInt(value), tmp);
-    return ok([{ type: "memory", data: { from: location as u32, data: tmp } }]);
+    return ok([IxMod.memory(location, tmp)]);
   },
 );
 
@@ -79,11 +75,11 @@ const store_imm_ind_u32 = create(
   13 as u8,
   "store_imm_ind_u32",
   (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + vx;
+    const location = context.execution.registers[ri] + BigInt(vx);
     const value = vy % 0xffffffff;
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(value), tmp);
-    return ok([{ type: "memory", data: { from: location as u32, data: tmp } }]);
+    return ok([IxMod.memory(location, tmp)]);
   },
 );
 
@@ -135,7 +131,7 @@ if (import.meta.vitest) {
     describe("ixs", () => {
       it("store_imm_ind_u8", () => {
         const context = createEvContext();
-        context.execution.registers[10] = 0x1000 as u32;
+        context.execution.registers[10] = 0x1000n as RegisterValue;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
         const { p_context } = runTestIx(
           context,
@@ -150,7 +146,7 @@ if (import.meta.vitest) {
       });
       it("store_imm_ind_u16", () => {
         const context = createEvContext();
-        context.execution.registers[10] = 0x1000 as u32;
+        context.execution.registers[10] = 0x1000n as RegisterValue;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
         const { p_context } = runTestIx(
           context,
@@ -165,7 +161,7 @@ if (import.meta.vitest) {
       });
       it("store_imm_ind_u32", () => {
         const context = createEvContext();
-        context.execution.registers[10] = 0x1000 as u32;
+        context.execution.registers[10] = 0x1000n as RegisterValue;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
         const { p_context } = runTestIx(
           context,

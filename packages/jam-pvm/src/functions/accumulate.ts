@@ -42,14 +42,14 @@ export const omega_e = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 5 as u8,
     identifier: "empower",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
       const [m, a, v, o, n] = context.registers.slice(7);
-      if (!context.memory.canRead(o, 12 * n)) {
+      if (!context.memory.canRead(Number(o), 12 * Number(n))) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
         const g = new Map<ServiceIndex, Gas>();
-        const buf = context.memory.getBytes(o, 12 * n);
+        const buf = context.memory.getBytes(Number(o), 12 * Number(n));
         for (let i = 0; i < n; i++) {
           const data = buf.subarray(i * 12, (i + 1) * 12);
           const key = E_4.decode(data).value;
@@ -64,9 +64,9 @@ export const omega_e = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
               u: {
                 ...x.u,
                 privServices: {
-                  m: m as ServiceIndex,
-                  a: a as ServiceIndex,
-                  v: v as ServiceIndex,
+                  m: Number(m) as ServiceIndex,
+                  a: Number(a) as ServiceIndex,
+                  v: Number(v) as ServiceIndex,
                   g,
                 },
               },
@@ -86,9 +86,9 @@ export const omega_a = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 6 as u8,
     identifier: "assign",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
-      const [w7, o] = context.registers.slice(7);
+      const [w7, o] = context.registers.slice(7, 9).map((a) => Number(a));
       if (!context.memory.canRead(o, AUTHQUEUE_MAX_SIZE * 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
@@ -121,9 +121,9 @@ export const omega_d = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 7 as u8,
     identifier: "designate",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
-      const [o] = context.registers.slice(7);
+      const [o] = context.registers.slice(7, 8).map((a) => Number(a));
       if (!context.memory.canRead(o, 336)) {
         return [IxMod.w7(HostCallResult.OOB), IxMod.obj({ x })];
       } else {
@@ -153,7 +153,7 @@ export const omega_c = regFn<
   fn: {
     opCode: 8 as u8,
     identifier: "checkpoint",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
       const p_y = x;
       const gasAfter = context.gas - (this.gasCost as bigint);
@@ -174,7 +174,7 @@ export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 9 as u8,
     identifier: "new",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
       const [o, l, gl, gh, ml, mh] = context.registers.slice(7);
 
@@ -184,8 +184,8 @@ export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
       const c: ServiceAccount["codeHash"] = bytesToBigInt(
         context.memory.getBytes(o, 32),
       );
-      const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
-      const m = 2n ** 32n * BigInt(mh) + BigInt(ml);
+      const g = 2n ** 32n * gh + gl;
+      const m = 2n ** 32n * mh + ml;
       const a: ServiceAccount = {
         storage: new Map<Hash, Uint8Array>(),
         preimage_p: new Map<Hash, Uint8Array>(),
@@ -199,7 +199,7 @@ export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
         minGasOnTransfer: m,
       };
       const nm: Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">> = new Map();
-      nm.set(toTagged(l), toTagged([]));
+      nm.set(toTagged(Number(l) as u32), toTagged([]));
       a.preimage_l.set(c, nm);
 
       a.balance = serviceAccountGasThreshold(a);
@@ -250,7 +250,7 @@ export const omega_u = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   fn: {
     opCode: 10 as u8,
     identifier: "upgrade",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x) {
       const [o, gh, gl, mh, ml] = context.registers.slice(7);
       const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
@@ -290,11 +290,9 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
     opCode: 11 as u8,
     identifier: "transfer",
     gasCost: (context: PVMProgramExecutionContextBase) => {
-      return (
-        10n +
+      return (10n +
         BigInt(context.registers[8]) +
-        BigInt(context.registers[9]) * 2n ** 32n
-      );
+        BigInt(context.registers[9]) * 2n ** 32n) as Gas;
     },
     execute(context, x) {
       const [d, al, ah, gl, gh, o] = context.registers.slice(7);
@@ -308,11 +306,11 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
         ...x.delta.entries(),
         ...x.u.delta.entries(),
       ]);
-      if (!bold_d.has(d as ServiceIndex)) {
+      if (!bold_d.has(Number(d) as ServiceIndex)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
 
-      if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
+      if (g < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
         return [IxMod.w7(HostCallResult.LOW)];
       }
       if (context.gas < g) {
@@ -326,7 +324,7 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
 
       const t: DeferredTransfer = {
         sender: x.service,
-        destination: d as ServiceIndex,
+        destination: Number(d) as ServiceIndex,
         amount: toTagged(a),
         gasLimit: toTagged(g),
         memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
@@ -361,7 +359,7 @@ export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
     fn: {
       opCode: 12 as u8,
       identifier: "quit",
-      gasCost: 10n,
+      gasCost: 10n as Gas,
       execute(context, x) {
         const [d, o] = context.registers.slice(7);
         const x_bold_s = x.u.delta.get(x.service)!;
@@ -374,7 +372,7 @@ export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
           ...x.delta.entries(),
           ...x.u.delta.entries(),
         ]);
-        if (d === 2 ** 32 - 1) {
+        if (d === 2n ** 32n - 1n) {
           const newDelta = new Map(x.u.delta);
           newDelta.delete(x.service);
           return [
@@ -395,10 +393,10 @@ export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
         if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
           return [IxMod.w7(HostCallResult.OOB)];
         }
-        if (!bold_d.has(d as ServiceIndex)) {
+        if (!bold_d.has(Number(d) as ServiceIndex)) {
           return [IxMod.w7(HostCallResult.WHO)];
         }
-        if (g < bold_d.get(d as ServiceIndex)!.minGasOnTransfer) {
+        if (g < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
           return [IxMod.w7(HostCallResult.LOW)];
         }
 
@@ -414,7 +412,7 @@ export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
               transfer: x.transfer.slice().concat([
                 {
                   sender: x.service,
-                  destination: d as ServiceIndex,
+                  destination: Number(d) as ServiceIndex,
                   amount: toTagged(a),
                   gasLimit: toTagged(g),
                   memo: toTagged(
@@ -438,7 +436,7 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
   fn: {
     opCode: 13 as u8,
     identifier: "solicit",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x, tau) {
       const [o, z] = context.registers.slice(7);
       if (!context.memory.canRead(o, 32)) {
@@ -447,16 +445,19 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
       const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
       const x_bold_s = x.u.delta.get(x.service)!;
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
-      if (typeof a_l.get(h)?.get(toTagged(z)) === "undefined") {
-        a_l.set(h, new Map([[toTagged(z), toTagged([])]]));
+      if (typeof a_l.get(h)?.get(toTagged(Number(z) as u32)) === "undefined") {
+        a_l.set(h, new Map([[toTagged(Number(z) as u32), toTagged([])]]));
       } else {
-        a_l.get(h)!.get(toTagged(z))!.push(tau);
+        a_l
+          .get(h)!
+          .get(toTagged(Number(z) as u32))!
+          .push(tau);
       }
       const a: ServiceAccount = {
         ...x_bold_s,
         preimage_l: a_l,
       };
-      const newL = a_l.get(h)!.get(toTagged(z))!.length;
+      const newL = a_l.get(h)!.get(toTagged(Number(z) as u32))!.length;
       if (newL !== 3 && newL !== 0) {
         // third case of `a`
         // we either have 1 or 2 elements or more than 3
@@ -489,9 +490,10 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
   fn: {
     opCode: 14 as u8,
     identifier: "forget",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, x, t) {
-      const [o, z] = context.registers.slice(7);
+      const [o, _z] = context.registers.slice(7);
+      const z = Number(_z) as Tagged<u32, "length">;
       if (!context.memory.canRead(o, 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
@@ -500,20 +502,20 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
 
-      if (a_l.get(h)?.get(toTagged(z))?.length === 1) {
-        a_l.get(h)!.get(toTagged(z))!.push(t);
-      } else if (a_l.get(h)?.get(toTagged(z))?.length === 3) {
-        const [x, y] = a_l.get(h)!.get(toTagged(z))!;
+      if (a_l.get(h)?.get(z)?.length === 1) {
+        a_l.get(h)!.get(z)!.push(t);
+      } else if (a_l.get(h)?.get(z)?.length === 3) {
+        const [x, y] = a_l.get(h)!.get(z)!;
         if (y < t - PREIMAGE_EXPIRATION) {
           // last bracket
-          a_l.get(h)!.set(toTagged(z), toTagged([x, y, t]));
+          a_l.get(h)!.set(z, toTagged([x, y, t]));
         } else {
           return [IxMod.w7(HostCallResult.HUH)];
         }
-      } else if (a_l.get(h)?.get(toTagged(z))?.length === 2) {
-        const [, y] = a_l.get(h)!.get(toTagged(z))!;
+      } else if (a_l.get(h)?.get(z)?.length === 2) {
+        const [, y] = a_l.get(h)!.get(z)!;
         if (y < t - PREIMAGE_EXPIRATION) {
-          a_l.get(h)!.delete(toTagged(z));
+          a_l.get(h)!.delete(z);
           if (a_l.get(h)!.size === 0) {
             a_l.delete(h);
           }
@@ -521,7 +523,7 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
         } else {
           return [IxMod.w7(HostCallResult.HUH)];
         }
-      } else if (a_l.get(h)?.get(toTagged(z))?.length !== 0) {
+      } else if (a_l.get(h)?.get(z)?.length !== 0) {
         return [IxMod.w7(HostCallResult.HUH)];
       } else {
         // zero length or undefined

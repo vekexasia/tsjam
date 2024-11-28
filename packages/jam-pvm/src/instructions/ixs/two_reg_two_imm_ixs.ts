@@ -1,7 +1,9 @@
 import {
+  Gas,
   PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
+  RegisterValue,
   u32,
   u8,
 } from "@tsjam/types";
@@ -10,6 +12,7 @@ import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Result, err, ok } from "neverthrow";
 
+// $(0.5.0 - A.25)
 const decode = (
   bytes: Uint8Array,
 ): Result<
@@ -27,13 +30,12 @@ const decode = (
   if (bytes.length < 2 + lX) {
     return err(new PVMIxDecodeError("not enough bytes [2]"));
   }
-  const vX = readVarIntFromBuffer(bytes.subarray(2, 2 + lX), lX as u8);
-  const vY = readVarIntFromBuffer(
-    bytes.subarray(2 + lX, 2 + lX + lY),
-    lY as u8,
+  const vX = Number(readVarIntFromBuffer(bytes.subarray(2, 2 + lX), lX as u8));
+  const vY = Number(
+    readVarIntFromBuffer(bytes.subarray(2 + lX, 2 + lX + lY), lY as u8),
   );
 
-  return ok([rA, rB, vX, vY]);
+  return ok([rA, rB, vX as u32, vY as u32]);
 };
 
 const create = (
@@ -53,7 +55,7 @@ const create = (
     ix: {
       decode,
       evaluate,
-      gasCost: 1n,
+      gasCost: 1n as Gas,
     },
   });
 };
@@ -62,11 +64,11 @@ export const load_imm_jump_ind = create(
   42 as u8,
   "load_imm_jump_ind",
   (context, rA, rB, vx, vy) => {
-    context.execution.registers[rA] = vx;
+    context.execution.registers[rA] = BigInt(vx) as RegisterValue;
 
     return djump(
       context,
-      ((context.execution.registers[rB] + vy) % 2 ** 32) as u32,
+      Number((context.execution.registers[rB] + BigInt(vy)) % 2n ** 32n) as u32,
     );
   },
   true,
@@ -115,8 +117,8 @@ if (import.meta.vitest) {
     describe("ixs", () => {
       it("load_imm_jump_ind", () => {
         const context = createEvContext();
-        context.execution.registers[0] = 0xdeadbeef as u32;
-        context.execution.registers[1] = 0xfffffffe as u32;
+        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
+        context.execution.registers[1] = 0xfffffffen as RegisterValue;
         load_imm_jump_ind.evaluate(
           context,
           0 as RegisterIdentifier,
@@ -125,7 +127,7 @@ if (import.meta.vitest) {
           0x00000003 as u32,
         );
         expect(djump).toHaveBeenCalledWith(context, 1);
-        expect(context.execution.registers[0]).toBe(0xdeadbeef);
+        expect(context.execution.registers[0]).toBe(0xdeadbeefn);
       });
     });
   });

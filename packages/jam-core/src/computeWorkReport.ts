@@ -35,8 +35,7 @@ import {
 import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 
 /**
- * `Ξ` fn
- * @see (182) in section 14.4
+ * `Ξ` fn section 14.4
  * @see I_fn
  * @see R_fn
  * @see A_fn
@@ -48,10 +47,12 @@ export const computeWorkReport = (
   core: CoreIndex,
   deps: { delta: Delta; tau: Tau },
 ): WorkReport => {
+  // $(0.5.0 - 14.10) | first matching case
   const o = isAuthorized(pac, core);
   if (!(o instanceof Uint8Array)) {
     throw new Error("unexpected");
   }
+
   const els = new Array(pac.workItems.length).fill(0).map((_, j) => {
     const { result: r, out: e } = I_fn(pac, j, o, deps);
     const workResult = C_fn(pac.workItems[j], r);
@@ -75,7 +76,7 @@ export const computeWorkReport = (
 /**
  * compute availability specifier
  * @returns AvailabilitySpecification
- * @see (185) in section 14.4.1
+ * $(0.5.0 - 14.15)
  */
 const A_fn = (
   pac: WorkPackageWithAuth,
@@ -124,7 +125,7 @@ const A_fn = (
 
 /**
  * Paged Proof
- * (181) P_fn
+ * $(0.5.0 - 14.9)
  */
 const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
@@ -200,7 +201,7 @@ export const M_fn = (workItem: WorkItem) => {
 };
 
 /**
- * (184) X_fn
+ * $(0.5.0 - 14.13)
  */
 export const X_fn = (workItem: WorkItem) => {
   return workItem.exportedDataSegments.map(({ blobHash }) => {
@@ -210,6 +211,7 @@ export const X_fn = (workItem: WorkItem) => {
 
 /**
  * (179) `C` constructs WorkResult from item and output
+ * $(0.5.0 - 14.7)
  */
 export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   return {

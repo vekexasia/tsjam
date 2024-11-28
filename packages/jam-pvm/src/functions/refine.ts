@@ -63,14 +63,15 @@ export const omega_h = regFn<
   fn: {
     opCode: 15 as u8,
     identifier: "historical_lookup",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
-      const [w7, h0, b0, bz] = context.registers.slice(7);
+      const [_w7, h0, b0, bz] = context.registers.slice(7);
+      const w7 = Number(_w7);
       if (context.memory.canRead(h0, 32) || !context.memory.canWrite(b0, bz)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       let a: ServiceAccount | undefined;
-      if (w7 === 2 ** 32 - 1 && delta.has(s)) {
+      if (_w7 === 2n ** 64n - 1n && delta.has(s)) {
         a = delta.get(s);
       } else if (delta.has(w7 as ServiceIndex)) {
         a = delta.get(w7 as ServiceIndex);
@@ -86,7 +87,7 @@ export const omega_h = regFn<
 
       return [
         IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(bz, v.length))),
+        IxMod.memory(b0, v.subarray(0, Math.min(Number(bz), v.length))),
       ];
     },
   },
@@ -103,15 +104,16 @@ export const omega_y = regFn<
   fn: {
     opCode: 16 as u8,
     identifier: "import",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, i) {
       const [w7, o, w2] = context.registers.slice(7);
+      const _w7 = Number(w7);
       if (w7 >= i.length) {
         return [IxMod.w7(HostCallResult.NONE)];
       }
-      const v = i[w7];
+      const v = i[_w7];
       const l = Math.min(
-        w2,
+        Number(w2),
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
 
@@ -134,11 +136,11 @@ export const omega_z = regFn<
   fn: {
     opCode: 17 as u8,
     identifier: "export",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
       const [p, w8] = context.registers.slice(7);
       const z = Math.min(
-        w8,
+        Number(w8),
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
       if (!context.memory.canRead(p, z)) {
@@ -170,7 +172,7 @@ export const omega_m = regFn<
   fn: {
     opCode: 18 as u8,
     identifier: "machine",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [p0, pz, i] = context.registers.slice(7);
       if (!context.memory.canWrite(p0, pz)) {
@@ -185,7 +187,11 @@ export const omega_m = regFn<
       }
       const mem = new PVMMemory([], []);
       const newM = new Map(refineCtx.m);
-      newM.set(n, { programCode: p, memory: mem, instructionPointer: i });
+      newM.set(n, {
+        programCode: p,
+        memory: mem,
+        instructionPointer: Number(i) as u32,
+      });
       return [
         IxMod.w7(n), // new Service index?
         IxMod.obj({ ...refineCtx, m: newM }),
@@ -205,13 +211,13 @@ export const omega_p = regFn<
   fn: {
     opCode: 19 as u8,
     identifier: "peek",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [n, a, b, l] = context.registers.slice(7);
-      if (!refineCtx.m.has(n)) {
+      if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      if (!refineCtx.m.get(n)!.memory.canRead(b, l)) {
+      if (!refineCtx.m.get(Number(n))!.memory.canRead(b, l)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       if (!context.memory.canWrite(a, l)) {
@@ -220,7 +226,7 @@ export const omega_p = regFn<
 
       return [
         IxMod.w7(HostCallResult.OK),
-        IxMod.memory(a, refineCtx.m.get(n)!.memory.getBytes(b, l)),
+        IxMod.memory(a, refineCtx.m.get(Number(n))!.memory.getBytes(b, l)),
       ];
     },
   },
@@ -237,9 +243,10 @@ export const omega_o = regFn<
   fn: {
     opCode: 20 as u8,
     identifier: "poke",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, refineCtx) {
-      const [n, a, b, l] = context.registers.slice(7);
+      const [_n, a, b, l] = context.registers.slice(7);
+      const n = Number(_n);
       if (!refineCtx.m.has(n)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
@@ -254,7 +261,11 @@ export const omega_o = regFn<
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
-      p_u.addACL({ from: b, to: (b + l) as u32, writable: true });
+      p_u.addACL({
+        from: Number(b) as u32,
+        to: Number(b + l) as u32,
+        writable: true,
+      });
       p_u.setBytes(b, s);
       const p_m = new Map(refineCtx.m);
       p_m.set(n, {
@@ -279,9 +290,10 @@ export const omega_k = regFn<
   fn: {
     opCode: 21 as u8,
     identifier: "invoke",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
-      const [n, o] = context.registers.slice(7);
+      const [_n, o] = context.registers.slice(7);
+      const n = Number(_n);
       if (!context.memory.canWrite(o, 60)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
@@ -292,8 +304,9 @@ export const omega_k = regFn<
       // registers
       const w = new Array(13)
         .fill(0)
-        .map((_, i) =>
-          Number(E_4.decode(context.memory.getBytes(o + 8 + 4 * i, 4)).value),
+        .map(
+          (_, i) =>
+            E_4.decode(context.memory.getBytes(Number(o) + 8 + 4 * i, 4)).value,
         );
       const program = PVMProgramCodec.decode(
         refineCtx.m.get(n)!.programCode,
@@ -380,9 +393,10 @@ export const omega_x = regFn<
   fn: {
     opCode: 22 as u8,
     identifier: "expunge",
-    gasCost: 10n,
+    gasCost: 10n as Gas,
     execute(context, refineCtx) {
-      const [n] = context.registers.slice(7);
+      const [_n] = context.registers.slice(7);
+      const n = Number(_n) as u32;
       if (!refineCtx.m.has(n)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
