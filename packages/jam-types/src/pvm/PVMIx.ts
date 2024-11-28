@@ -2,12 +2,18 @@ import { Result } from "neverthrow";
 import { PVMProgramExecutionContext } from "@/pvm/PVMProgramExecutionContext.js";
 import { PVMProgram } from "@/pvm/PVMProgram.js";
 import { IParsedProgram } from "@/pvm/IParsedProgram.js";
-import { PVMModification } from "@/pvm/PVMModifications.js";
 import { PVMExitReason } from "@/pvm/PVMExitReason.js";
 import { Gas } from "@/genericTypes";
+import { RegisterIdentifier } from "./RegisterIdentifier";
+import {
+  PVMSingleModPointer,
+  PVMSingleModGas,
+  PVMSingleModMemory,
+  PVMSingleModRegister,
+} from "./PVMModifications";
 
 /**
- * A generic PVM instruction that can take any number of arguments
+ * * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
 export interface PVMIx<
@@ -28,7 +34,15 @@ export interface PVMIx<
       parsedProgram: IParsedProgram;
     },
     ...args: Args
-  ): Result<PVMModification[], EvaluateErr>;
+  ): Result<
+    Array<
+      | PVMSingleModPointer
+      | PVMSingleModGas
+      | PVMSingleModMemory
+      | PVMSingleModRegister<RegisterIdentifier>
+    >,
+    EvaluateErr
+  >;
 
   readonly gasCost: Gas;
   readonly opCode: number;
@@ -47,7 +61,12 @@ export class PVMIxDecodeError {
  */
 export class PVMIxExecutionError {
   constructor(
-    public readonly mods: PVMModification[],
+    public readonly mods: Array<
+      | PVMSingleModPointer
+      | PVMSingleModGas
+      | PVMSingleModMemory
+      | PVMSingleModRegister<RegisterIdentifier>
+    >,
     public readonly type: PVMExitReason,
     public readonly reason: string,
     public readonly accountTrapCost: boolean,

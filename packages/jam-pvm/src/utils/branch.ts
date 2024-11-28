@@ -2,7 +2,7 @@ import { Result, err, ok } from "neverthrow";
 import {
   PVMIx,
   PVMIxExecutionError,
-  PVMModification,
+  PVMSingleModPointer,
   RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
@@ -21,7 +21,7 @@ export const branch = (
   context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],
   address: u32,
   condition: boolean | 0 | 1,
-): Result<PVMModification[], PVMIxExecutionError> => {
+): Result<Array<PVMSingleModPointer>, PVMIxExecutionError> => {
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that
@@ -37,5 +37,5 @@ export const branch = (
       ),
     );
   }
-  return ok([{ type: "ip", data: address }]);
+  return ok([IxMod.ip(address)]);
 };

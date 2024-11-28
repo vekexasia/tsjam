@@ -12,14 +12,14 @@ import {
   u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { processIxResult } from "@/invocations/singleStep.js";
+import { applyMods } from "@/functions/utils";
 
 const mockMemory = (): IPVMMemory => ({
   setBytes: vi.fn(),
   getBytes: vi.fn(),
   canRead: vi.fn(),
   canWrite: vi.fn(),
-  clone: vi.fn(),
+  clone: vi.fn().mockReturnThis(),
 });
 export const createEvContext = (): {
   execution: PVMProgramExecutionContext;
@@ -58,5 +58,5 @@ export const runTestIx = <T extends unknown[]>(
   if (r.isErr()) {
     throw new Error(`Error in ix: ${r.error}`);
   }
-  return processIxResult(ctx.execution, r.value, 0);
+  return applyMods(ctx.execution, {} as object, r.value);
 };

@@ -1,8 +1,14 @@
+import assert from "assert";
 import {
+  Gas,
+  PVMExitReasonMod,
+  PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
   PVMResultContext,
+  PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
+  PVMSingleModPointer,
   PVMSingleModRegister,
   RegularPVMExitReason,
 } from "@tsjam/types";
@@ -15,26 +21,31 @@ export type W8 = PVMSingleModRegister<8>;
 
 export type XMod = PVMSingleModObject<{ x: PVMResultContext }>;
 export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
-export type HaltPvm = { type: "halt" };
+
 /**
  * applies modifications from fns output to compute new ctx and out
  * @param ctx - the current context
  * @param out - the current out
  * @param mods - the modifications to apply
  */
-export const applyMods = <T extends object>(
-  ctx: PVMProgramExecutionContextBase,
+export const applyMods = <
+  T extends object,
+  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
+>(
+  ctx: CTX,
   out: T,
   mods: Array<
     | PVMSingleModRegister<number>
-    | HaltPvm
+    | PVMSingleModPointer
+    | PVMExitReasonMod
     | XMod
     | YMod
     | PVMSingleModMemory
     | PVMSingleModObject<T>
+    | PVMSingleModGas
   >,
 ): {
-  ctx: PVMProgramExecutionContextBase;
+  ctx: CTX;
   out: T;
   exitReason?: RegularPVMExitReason;
 } => {
@@ -44,17 +55,36 @@ export const applyMods = <T extends object>(
       ...ctx.registers,
     ] as PVMProgramExecutionContextBase["registers"],
   };
-  let haltPVM = false;
+  let exitReason: RegularPVMExitReason | undefined;
   for (const mod of mods) {
-    if (mod.type === "halt") {
-      haltPVM = true;
+    if (mod.type === "ip") {
+      assert(
+        typeof (newCtx as unknown as PVMProgramExecutionContext)
+          .instructionPointer === "number",
+      );
+      (newCtx as unknown as PVMProgramExecutionContext).instructionPointer =
+        mod.data;
+    } else if (mod.type === "gas") {
+      newCtx.gas = (newCtx.gas - mod.data) as Gas;
+    } else if (mod.type === "exit") {
+      if (mod.data === RegularPVMExitReason.Halt) {
+        exitReason = RegularPVMExitReason.Halt;
+        break;
+      } else if (mod.data === RegularPVMExitReason.OutOfGas) {
+        exitReason = RegularPVMExitReason.OutOfGas;
+        break;
+      }
     } else if (mod.type === "register") {
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
+      if (!newCtx.memory.canWrite(mod.data.from, mod.data.data.length)) {
+        exitReason = RegularPVMExitReason.Panic;
+        break;
+      }
       newCtx.memory = (newCtx.memory as PVMMemory).clone();
       newCtx.memory.setBytes(mod.data.from, mod.data.data);
     } else if (mod.type === "object") {
-      for (const key in mod.data) {
+      for (const key of Object.keys(mod.data)) {
         // @ts-expect-error - we know that key is a key of T
         out[key] = mod.data[key];
       }
@@ -63,6 +93,6 @@ export const applyMods = <T extends object>(
   return {
     ctx: newCtx,
     out,
-    exitReason: haltPVM ? RegularPVMExitReason.Halt : undefined,
+    exitReason,
   };
 };

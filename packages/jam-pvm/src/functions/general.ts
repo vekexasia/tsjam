@@ -20,7 +20,7 @@ import { IxMod } from "@/instructions/utils.js";
 /**
  * `ΩG`
  */
-export const omega_g = regFn<[], [W7, W8]>({
+export const omega_g = regFn<[], W7 | W8>({
   fn: {
     opCode: 0 as u8,
     identifier: "gas",
@@ -37,7 +37,7 @@ export const omega_g = regFn<[], [W7, W8]>({
 
 export const omega_l = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
-  Array<W7 | PVMSingleModMemory>
+  W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 1 as u8,
@@ -82,7 +82,7 @@ export const omega_l = regFn<
 
 export const omega_r = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
-  Array<W7 | PVMSingleModMemory>
+  W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 2 as u8,
@@ -124,7 +124,7 @@ export const omega_r = regFn<
 
 export const omega_w = regFn<
   [bold_s: ServiceAccount, s: ServiceIndex],
-  Array<W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>>
+  W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
 >({
   fn: {
     opCode: 3 as u8,
@@ -169,7 +169,7 @@ export const omega_w = regFn<
 
 export const omega_i = regFn<
   [s: ServiceIndex, d: Delta],
-  Array<W7 | PVMSingleModMemory>
+  W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 4 as u8,

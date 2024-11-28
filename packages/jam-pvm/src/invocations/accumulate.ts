@@ -49,7 +49,7 @@ import assert from "assert";
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * (274)
+ * $(0.5.0 - B.8)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -88,8 +88,7 @@ export const accumulateInvocation = (
 };
 
 /**
- *
- * see (256)
+ * $(0.5.0 - B.9)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationState,
@@ -110,23 +109,26 @@ const I_fn = (
   };
 };
 
+/**
+ * $(0.5.0 - B.10)
+ */
 const F_fn: (
   service: ServiceIndex,
   tau: Tau,
 ) => HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }> =
   (service: ServiceIndex, tau: Tau) => (input) => {
-    const fn = FnsDb.byCode.get(input.hostCallOpcode)!;
+    const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
     const bold_d = new Map([
       ...input.out.x.u.delta.entries(),
       ...input.out.x.delta.entries(),
     ]);
     const bold_s = input.out.x.u.delta.get(service)!;
-    switch (fn.identifier) {
+    switch (fnIdentifier) {
       case "read": {
         const { ctx, out } = applyMods(
           input.ctx,
           input.out,
-          omega_r.execute(
+          omega_r(
             input.ctx,
             input.out.x.u.delta.get(service)!,
             input.out.x.service,
@@ -139,7 +141,7 @@ const F_fn: (
         const m = applyMods<{ bold_s: ServiceAccount }>(
           input.ctx,
           { bold_s },
-          omega_w.execute(input.ctx, bold_s, input.out.x.service),
+          omega_w(input.ctx, bold_s, input.out.x.service),
         );
         return G_fn(m.ctx, m.out.bold_s, input.out);
       }
@@ -147,89 +149,61 @@ const F_fn: (
         const m = applyMods(
           input.ctx,
           input.out,
-          omega_l.execute(input.ctx, bold_s, input.out.x.service, bold_d),
+          omega_l(input.ctx, bold_s, input.out.x.service, bold_d),
         );
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "gas": {
-        const m = applyMods(input.ctx, input.out, omega_g.execute(input.ctx));
+        const m = applyMods(input.ctx, input.out, omega_g(input.ctx));
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "info": {
         const m = applyMods(
           input.ctx,
           input.out,
-          omega_i.execute(input.ctx, input.out.x.service, bold_d),
+          omega_i(input.ctx, input.out.x.service, bold_d),
         );
 
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "empower":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_e.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_e(input.ctx, input.out.x));
       case "assign":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_a.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_a(input.ctx, input.out.x));
       case "designate":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_d.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_d(input.ctx, input.out.x));
       case "checkpoint":
         return applyMods(
           input.ctx,
           input.out,
-          omega_c.execute(input.ctx, input.out.x, input.out.y),
+          omega_c(input.ctx, input.out.x, input.out.y),
         );
       case "new":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_n.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_n(input.ctx, input.out.x));
       case "upgrade":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_u.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_u(input.ctx, input.out.x));
       case "transfer":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_t.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_t(input.ctx, input.out.x));
       case "quit":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_q.execute(input.ctx, input.out.x),
-        );
+        return applyMods(input.ctx, input.out, omega_q(input.ctx, input.out.x));
       case "solicit":
         return applyMods(
           input.ctx,
           input.out,
-          omega_s.execute(input.ctx, input.out.x, tau),
+          omega_s(input.ctx, input.out.x, tau),
         );
       case "forget":
         return applyMods(
           input.ctx,
           input.out,
-          omega_f.execute(input.ctx, input.out.x, tau),
+          omega_f(input.ctx, input.out.x, tau),
         );
     }
     throw new Error("not implemented");
   };
 //
 /**
- * (258)
+ * $(0.5.0 - B.11)
  */
 const G_fn = (
   context: PVMProgramExecutionContextBase,
@@ -245,6 +219,9 @@ const G_fn = (
   };
 };
 
+/**
+ * $(0.5.0 - B.12)
+ */
 const C_fn = (
   gas: u64,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,

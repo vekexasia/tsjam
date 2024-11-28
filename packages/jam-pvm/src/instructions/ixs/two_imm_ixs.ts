@@ -135,34 +135,24 @@ if (import.meta.vitest) {
       it("store_imm_u8", () => {
         const context = createEvContext();
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(context, store_imm_u8, 0x100, 0x4422);
-        expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
+        const { ctx } = runTestIx(context, store_imm_u8, 0x100, 0x4422);
+        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x100, new Uint8Array([0x22])],
         ]);
       });
       it("store_imm_u16", () => {
         const context = createEvContext();
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(
-          context,
-          store_imm_u16,
-          0x100,
-          0x44221133,
-        );
-        expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
+        const { ctx } = runTestIx(context, store_imm_u16, 0x100, 0x44221133);
+        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x100, new Uint8Array([0x33, 0x11])],
         ]);
       });
       it("store_imm_u32", () => {
         const context = createEvContext();
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { p_context } = runTestIx(
-          context,
-          store_imm_u32,
-          0x100,
-          0x44221133,
-        );
-        expect((p_context.memory.setBytes as Mock).mock.calls).toEqual([
+        const { ctx } = runTestIx(context, store_imm_u32, 0x100, 0x44221133);
+        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x100, new Uint8Array([0x33, 0x11, 0x22, 0x44])],
         ]);
       });

@@ -1,7 +1,6 @@
 import {
   Gas,
   PVMIxEvaluateFN,
-  PVMModification,
   RegisterIdentifier,
   RegisterValue,
   i32,
@@ -135,7 +134,7 @@ if (import.meta.vitest) {
   const b = await import("@/utils/branch.js");
   describe("two_reg_one_offset_ixs", () => {
     beforeAll(() => {
-      vi.spyOn(b, "branch").mockReturnValue(ok([] as PVMModification[]));
+      vi.spyOn(b, "branch").mockReturnValue(ok([] as unknown as never));
     });
     describe("decode", () => {
       it("should decode rA, rB and offset properly", () => {

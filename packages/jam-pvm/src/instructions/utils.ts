@@ -1,12 +1,14 @@
 import {
   Gas,
+  PVMExitHaltMod,
+  PVMExitOutOfGasMod,
+  PVMExitPanicMod,
   PVMIxExecutionError,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
-  PVMSingleSelfGas,
   RegisterValue,
   RegularPVMExitReason,
   u32,
@@ -29,13 +31,13 @@ export const IxMod = {
     type: "ip",
     data: toTagged(value),
   }),
-  selfGas: (): PVMSingleSelfGas => ({
-    type: "self-gas",
-    data: undefined,
+  skip: (ip: u32, amont: number): PVMSingleModPointer => ({
+    type: "ip",
+    data: toTagged(ip + amont),
   }),
-  gas: (value: Gas): PVMSingleModGas => ({
+  gas: (value: bigint): PVMSingleModGas => ({
     type: "gas",
-    data: value,
+    data: value as Gas,
   }),
   reg: <T extends number>(
     register: T,
@@ -57,6 +59,18 @@ export const IxMod = {
       from: Number(from) as u32,
       data,
     },
+  }),
+  outOfGas: (): PVMExitOutOfGasMod => ({
+    type: "exit",
+    data: RegularPVMExitReason.OutOfGas,
+  }),
+  halt: (): PVMExitHaltMod => ({
+    type: "exit",
+    data: RegularPVMExitReason.Halt,
+  }),
+  panic: (): PVMExitPanicMod => ({
+    type: "exit",
+    data: RegularPVMExitReason.Panic,
   }),
   obj: <T>(data: T): PVMSingleModObject<T> => ({
     type: "object",

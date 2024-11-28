@@ -21,6 +21,7 @@ import { HostCallResult } from "@tsjam/constants";
 import { applyMods } from "@/functions/utils";
 import assert from "node:assert";
 import { HostCallExecutor } from "./hostCall";
+import { IxMod } from "@/instructions/utils";
 
 /**
  * $(0.5.0 - B.14 / B.15)
@@ -66,27 +67,27 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
     ctx: PVMProgramExecutionContextBase;
     out: ServiceAccount;
   }) => {
-    const fn = FnsDb.byCode.get(input.hostCallOpcode)!;
-    switch (fn.identifier) {
+    const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
+    switch (fnIdentifier) {
       case "lookup": {
         return applyMods(
           input.ctx,
           input.out,
-          omega_l.execute(input.ctx, input.out, s, d),
+          omega_l(input.ctx, input.out, s, d),
         );
       }
       case "read": {
         return applyMods(
           input.ctx,
           input.out,
-          omega_r.execute(input.ctx, input.out, s, d),
+          omega_r(input.ctx, input.out, s, d),
         );
       }
       case "write": {
         const m = applyMods<{ bold_s: ServiceAccount }>(
           input.ctx,
           { bold_s: input.out },
-          omega_w.execute(input.ctx, input.out, s),
+          omega_w(input.ctx, input.out, s),
         );
         return {
           ctx: m.ctx,
@@ -94,24 +95,16 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
         };
       }
       case "gas": {
-        return applyMods(input.ctx, input.out, omega_g.execute(input.ctx));
+        return applyMods(input.ctx, input.out, omega_g(input.ctx));
       }
       case "info": {
-        const res = omega_i.execute(input.ctx, s, d);
+        const res = omega_i(input.ctx, s, d);
         return applyMods(input.ctx, input.out, res);
       }
       default:
-        return {
-          ctx: {
-            ...input.ctx,
-            gas: (input.ctx.gas - 10n) as Gas,
-            registers: [
-              HostCallResult.WHAT,
-              input.ctx.registers[8],
-              ...new Array(11).fill(0),
-            ] as PVMProgramExecutionContextBase["registers"],
-          },
-          out: input.out,
-        };
+        return applyMods(input.ctx, input.out, [
+          IxMod.gas(10n),
+          IxMod.reg(7, HostCallResult.WHAT),
+        ]);
     }
   };

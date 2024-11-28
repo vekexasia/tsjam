@@ -1,20 +1,15 @@
 import { toPosterior } from "@tsjam/utils";
 import {
-  Gas,
   IParsedProgram,
   PVMExitReason,
-  PVMModification,
   PVMProgram,
   PVMProgramExecutionContext,
   PVMSingleModGas,
-  PVMSingleModMemory,
-  PVMSingleModPointer,
-  PVMSingleModRegister,
   Posterior,
   RegularPVMExitReason,
-  u32,
 } from "@tsjam/types";
 import { trap } from "@/instructions/ixs/no_arg_ixs.js";
+import { applyMods } from "@/functions/utils";
 import { IxMod } from "@/instructions/utils";
 
 type Output = {
@@ -40,14 +35,11 @@ export const pvmSingleStep = (
     // out of bounds ix pointer or invalid ix
     return {
       exitReason: RegularPVMExitReason.Panic,
-      p_context: toPosterior({
-        ...ctx,
-        gas: (ctx.gas - trap.gasCost) as Gas,
-      }),
+      p_context: toPosterior(applyMods(ctx, {}, [IxMod.gas(trap.gasCost)]).ctx),
     };
   }
 
-  const skip = p.parsedProgram.skip(ctx.instructionPointer);
+  const skip = p.parsedProgram.skip(ctx.instructionPointer) + 1;
   const byteArgs = p.program.c.subarray(
     ctx.instructionPointer + 1,
     typeof skip !== "undefined"
@@ -56,12 +48,16 @@ export const pvmSingleStep = (
   );
   const args = ix.decode(byteArgs);
   if (args.isErr()) {
-    return processIxResult(
-      ctx,
-      [IxMod.gas(trap.gasCost), IxMod.gas(ix.gasCost)],
-      skip,
-      RegularPVMExitReason.Panic,
-    );
+    const o = applyMods(ctx, {} as object, [
+      IxMod.skip(ctx.instructionPointer, skip),
+      IxMod.gas(trap.gasCost),
+      IxMod.gas(ix.gasCost),
+      IxMod.panic(),
+    ]);
+    return {
+      p_context: toPosterior(o.ctx),
+      exitReason: o.exitReason,
+    };
   }
 
   const context = {
@@ -72,96 +68,27 @@ export const pvmSingleStep = (
 
   const r = ix.evaluate(context, ...args.value);
   if (r.isErr()) {
-    const mods: PVMModification[] = [];
+    const mods: PVMSingleModGas[] = [];
     if (r.error.accountTrapCost) {
       mods.push(IxMod.gas(trap.gasCost));
     }
 
-    return processIxResult(
-      ctx,
-      [...r.error.mods, ...mods, IxMod.gas(ix.gasCost)],
-      skip,
-      r.error.type,
-    );
-  }
-  return processIxResult(ctx, [IxMod.gas(ix.gasCost), ...r.value], skip);
-};
-
-/**
- * computes the new context after the ix has been applied
- * @param context - the current context
- * @param result - the result of the ix evaluation
- * @param gasCost - the gas cost of the ix
- * @param skip - the result of skip fn
- * @returns the new context
- */
-export const processIxResult = (
-  context: PVMProgramExecutionContext,
-  result: PVMModification[],
-  skip: number,
-  exitReason?: PVMExitReason,
-): {
-  exitReason?: PVMExitReason;
-  p_context: Posterior<PVMProgramExecutionContext>;
-} => {
-  // compute p_context
-  const p_context: Posterior<PVMProgramExecutionContext> = toPosterior({
-    ...context,
-    registers:
-      context.registers.slice() as PVMProgramExecutionContext["registers"],
-  });
-
-  const gasCost = result
-    .filter((x): x is PVMSingleModGas => x.type === "gas")
-    .reduce((acc, x) => acc + x.data, 0n);
-
-  const invalidMemWrite = result.some(
-    (x) =>
-      x.type === "memory" &&
-      !context.memory.canWrite(x.data.from, x.data.data.length),
-  );
-  if (invalidMemWrite) {
-    p_context.gas = toPosterior((context.gas - trap.gasCost - gasCost) as Gas);
-    return {
-      exitReason: RegularPVMExitReason.Panic,
-      p_context,
-    };
+    const rMod = applyMods(ctx, {} as object, [
+      ...r.error.mods,
+      ...mods,
+      IxMod.gas(ix.gasCost),
+    ]);
+    return { p_context: toPosterior(rMod.ctx), exitReason: rMod.exitReason };
   }
 
-  // instruction pointer
-  if (result.some((x) => x.type === "ip")) {
-    result
-      .filter((x): x is PVMSingleModPointer => x.type === "ip")
-      .forEach((x) => {
-        p_context.instructionPointer = toPosterior(x.data);
-      });
-  } else if (typeof exitReason === "undefined") {
-    // if the instruction did not jump to another instruction
-    // we default to skip
-    p_context.instructionPointer = (context.instructionPointer +
-      (skip ? skip + 1 : 0)) as u32;
-  }
-
-  if (result.some((x) => x.type === "register")) {
-    result
-      .filter((x): x is PVMSingleModRegister<number> => x.type === "register")
-      .forEach((x) => {
-        p_context.registers[x.data.index] = x.data.value;
-      });
-  }
-
-  if (result.some((x) => x.type === "memory")) {
-    result
-      .filter((x): x is PVMSingleModMemory => x.type === "memory")
-      .forEach((x) => {
-        p_context.memory.setBytes(x.data.from, x.data.data);
-      });
-  }
-  p_context.gas = (context.gas - gasCost) as Gas;
-
+  const rMod = applyMods(ctx, {} as object, [
+    IxMod.gas(ix.gasCost),
+    ...r.value,
+    IxMod.skip(ctx.instructionPointer, skip),
+  ]);
   return {
-    exitReason,
-    p_context: p_context,
+    p_context: toPosterior(rMod.ctx),
+    exitReason: rMod.exitReason,
   };
 };
 

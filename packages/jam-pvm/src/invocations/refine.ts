@@ -31,6 +31,7 @@ import { applyMods } from "@/functions/utils.js";
 import { omega_g } from "@/functions/general.js";
 import { historicalLookup } from "@tsjam/utils";
 import { argumentInvocation } from "@/invocations/argument.js";
+import { IxMod } from "@/instructions/utils";
 
 /**
  * $(0.5.0 - B.4)
@@ -100,6 +101,9 @@ export const refineInvocation = (
   };
 };
 
+/**
+ * $(0.5.0 - B.5)
+ */
 const F_fn: (
   service: ServiceIndex,
   delta: Delta,
@@ -115,70 +119,42 @@ const F_fn: (
     exportSegmentOffset: number,
   ) =>
   (input) => {
-    const fn = FnsDb.byCode.get(input.hostCallOpcode)!;
-    switch (fn.identifier) {
+    const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
+    switch (fnIdentifier) {
       case "historical_lookup":
         return applyMods(
           input.ctx,
           input.out,
-          omega_h.execute(input.ctx, service, delta, tau),
+          omega_h(input.ctx, service, delta, tau),
         );
       case "import":
         return applyMods(
           input.ctx,
           input.out,
-          omega_y.execute(input.ctx, exportedSegments),
+          omega_y(input.ctx, exportedSegments),
         );
       case "export":
         return applyMods(
           input.ctx,
           input.out,
-          omega_z.execute(input.ctx, input.out, exportSegmentOffset),
+          omega_z(input.ctx, input.out, exportSegmentOffset),
         );
       case "gas":
-        return applyMods(input.ctx, input.out, omega_g.execute(input.ctx));
+        return applyMods(input.ctx, input.out, omega_g(input.ctx));
       case "machine":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_m.execute(input.ctx, input.out),
-        );
+        return applyMods(input.ctx, input.out, omega_m(input.ctx, input.out));
       case "peek":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_p.execute(input.ctx, input.out),
-        );
+        return applyMods(input.ctx, input.out, omega_p(input.ctx, input.out));
       case "poke":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_o.execute(input.ctx, input.out),
-        );
+        return applyMods(input.ctx, input.out, omega_o(input.ctx, input.out));
       case "invoke":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_k.execute(input.ctx, input.out),
-        );
+        return applyMods(input.ctx, input.out, omega_k(input.ctx, input.out));
       case "expunge":
-        return applyMods(
-          input.ctx,
-          input.out,
-          omega_x.execute(input.ctx, input.out),
-        );
+        return applyMods(input.ctx, input.out, omega_x(input.ctx, input.out));
       default:
-        return {
-          ctx: {
-            ...input.ctx,
-            gas: input.ctx.gas - 10n,
-            registers: [
-              HostCallResult.WHAT,
-              input.ctx.registers[8],
-              ...new Array(11).fill(0 as u32),
-            ],
-          } as PVMProgramExecutionContextBase,
-          out: input.out,
-        };
+        return applyMods(input.ctx, input.out, [
+          IxMod.gas(10n),
+          IxMod.reg(7, HostCallResult.WHAT),
+        ]);
     }
   };

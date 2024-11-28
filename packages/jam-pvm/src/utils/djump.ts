@@ -2,7 +2,7 @@ import { Result, err, ok } from "neverthrow";
 import {
   PVMIx,
   PVMIxExecutionError,
-  PVMModification,
+  PVMSingleModPointer,
   RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
@@ -17,7 +17,7 @@ const ZA = 4;
 export const djump = (
   context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],
   a: u32,
-): Result<PVMModification[], PVMIxExecutionError> => {
+): Result<PVMSingleModPointer[], PVMIxExecutionError> => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
     return err(

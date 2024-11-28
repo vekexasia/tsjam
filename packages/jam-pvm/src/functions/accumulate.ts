@@ -4,6 +4,7 @@ import {
   DeferredTransfer,
   Gas,
   Hash,
+  PVMExitReasonMod,
   PVMAccumulationState,
   PVMProgramExecutionContextBase,
   PVMResultContext,
@@ -30,7 +31,7 @@ import {
   serviceAccountGasThreshold,
   toTagged,
 } from "@tsjam/utils";
-import { HaltPvm, W7, W8, XMod, YMod } from "@/functions/utils.js";
+import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 
@@ -38,7 +39,7 @@ import { check_fn } from "@/utils/check_fn";
  * `ΩE`
  * empower service host call
  */
-export const omega_e = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_e = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 5 as u8,
     identifier: "empower",
@@ -82,7 +83,7 @@ export const omega_e = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  * `ΩA`
  * assign core host call
  */
-export const omega_a = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 6 as u8,
     identifier: "assign",
@@ -117,7 +118,7 @@ export const omega_a = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  * `ΩD`
  * designate validators host call
  */
-export const omega_d = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_d = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 7 as u8,
     identifier: "designate",
@@ -148,7 +149,7 @@ export const omega_d = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  */
 export const omega_c = regFn<
   [x: PVMResultContext, y: PVMResultContext],
-  Array<W7 | W8 | YMod>
+  W7 | W8 | YMod
 >({
   fn: {
     opCode: 8 as u8,
@@ -170,7 +171,7 @@ export const omega_c = regFn<
  * `ΩN`
  * new-service host call
  */
-export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 9 as u8,
     identifier: "new",
@@ -246,7 +247,7 @@ export const omega_n = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  * `ΩU`
  * upgrade-service host call
  */
-export const omega_u = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 10 as u8,
     identifier: "upgrade",
@@ -285,7 +286,7 @@ export const omega_u = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
   },
 });
 
-export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
+export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 11 as u8,
     identifier: "transfer",
@@ -354,85 +355,84 @@ export const omega_t = regFn<[x: PVMResultContext], Array<W7 | XMod>>({
  * `ΩQ`
  * quit-service host call
  */
-export const omega_q = regFn<[x: PVMResultContext], Array<HaltPvm | W7 | XMod>>(
-  {
-    fn: {
-      opCode: 12 as u8,
-      identifier: "quit",
-      gasCost: 10n as Gas,
-      execute(context, x) {
-        const [d, o] = context.registers.slice(7);
-        const x_bold_s = x.u.delta.get(x.service)!;
-        const a =
-          x_bold_s.balance -
-          serviceAccountGasThreshold(x_bold_s) +
-          SERVICE_MIN_BALANCE;
-        const g = context.gas;
-        const bold_d = new Map<ServiceIndex, ServiceAccount>([
-          ...x.delta.entries(),
-          ...x.u.delta.entries(),
-        ]);
-        if (d === 2n ** 32n - 1n) {
-          const newDelta = new Map(x.u.delta);
-          newDelta.delete(x.service);
-          return [
-            { type: "halt" }, // signal pvm halt
-            IxMod.w7(HostCallResult.OK),
-            IxMod.obj({
-              x: {
-                ...x,
-                u: {
-                  ...x.u,
-                  delta: newDelta,
-                },
-              },
-            }),
-          ];
-        }
-
-        if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
-          return [IxMod.w7(HostCallResult.OOB)];
-        }
-        if (!bold_d.has(Number(d) as ServiceIndex)) {
-          return [IxMod.w7(HostCallResult.WHO)];
-        }
-        if (g < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
-          return [IxMod.w7(HostCallResult.LOW)];
-        }
-
+export const omega_q = regFn<
+  [x: PVMResultContext],
+  PVMExitReasonMod | W7 | XMod
+>({
+  fn: {
+    opCode: 12 as u8,
+    identifier: "quit",
+    gasCost: 10n as Gas,
+    execute(context, x) {
+      const [d, o] = context.registers.slice(7);
+      const x_bold_s = x.u.delta.get(x.service)!;
+      const a =
+        x_bold_s.balance -
+        serviceAccountGasThreshold(x_bold_s) +
+        SERVICE_MIN_BALANCE;
+      const g = context.gas;
+      const bold_d = new Map<ServiceIndex, ServiceAccount>([
+        ...x.delta.entries(),
+        ...x.u.delta.entries(),
+      ]);
+      if (d === 2n ** 32n - 1n) {
         const newDelta = new Map(x.u.delta);
         newDelta.delete(x.service);
         return [
-          { type: "halt" }, // signal pvm halt
           IxMod.w7(HostCallResult.OK),
           IxMod.obj({
             x: {
               ...x,
-              u: { ...x.u, delta: newDelta },
-              transfer: x.transfer.slice().concat([
-                {
-                  sender: x.service,
-                  destination: Number(d) as ServiceIndex,
-                  amount: toTagged(a),
-                  gasLimit: toTagged(g),
-                  memo: toTagged(
-                    context.memory.getBytes(o, TRANSFER_MEMO_SIZE),
-                  ),
-                },
-              ]),
+              u: {
+                ...x.u,
+                delta: newDelta,
+              },
             },
           }),
+          IxMod.halt(),
         ];
-      },
+      }
+
+      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
+        return [IxMod.w7(HostCallResult.OOB)];
+      }
+      if (!bold_d.has(Number(d) as ServiceIndex)) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+      if (g < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
+        return [IxMod.w7(HostCallResult.LOW)];
+      }
+
+      const newDelta = new Map(x.u.delta);
+      newDelta.delete(x.service);
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({
+          x: {
+            ...x,
+            u: { ...x.u, delta: newDelta },
+            transfer: x.transfer.slice().concat([
+              {
+                sender: x.service,
+                destination: Number(d) as ServiceIndex,
+                amount: toTagged(a),
+                gasLimit: toTagged(g),
+                memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
+              },
+            ]),
+          },
+        }),
+        IxMod.halt(),
+      ];
     },
   },
-);
+});
 
 /**
  * `ΩS`
  * solicit-preimage host call
  */
-export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
+export const omega_s = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
   fn: {
     opCode: 13 as u8,
     identifier: "solicit",
@@ -486,7 +486,7 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
  * `ΩF`
  * forget preimage host call
  */
-export const omega_f = regFn<[x: PVMResultContext, t: Tau], Array<W7 | XMod>>({
+export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
   fn: {
     opCode: 14 as u8,
     identifier: "forget",

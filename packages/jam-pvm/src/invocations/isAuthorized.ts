@@ -1,9 +1,7 @@
 import {
   CoreIndex,
   Gas,
-  PVMProgramExecutionContext,
   PVMResultContext,
-  RegisterValue,
   RegularPVMExitReason,
   WorkPackage,
   u32,
@@ -12,9 +10,9 @@ import { argumentInvocation } from "@/invocations/argument.js";
 import { E_4, WorkPackageCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
-import { processIxResult } from "@/invocations/singleStep.js";
 import { HostCallResult } from "@tsjam/constants";
 import { IxMod } from "@/instructions/utils";
+import { applyMods } from "@/functions/utils";
 
 /**
  * `ΨI` in the paper
@@ -56,29 +54,10 @@ const Gi = 0n as Gas;
 // $(0.5.0 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
-    const r = processIxResult(
-      { ...input.ctx, instructionPointer: 4 as u32 },
-      [IxMod.gas(omega_g.gasCost as Gas), ...omega_g.execute(input.ctx)],
-      0,
-    );
-    return {
-      ctx: {
-        gas: r.p_context.gas,
-        registers: r.p_context.registers,
-        memory: r.p_context.memory,
-      },
-      out: input.out,
-    };
+    return applyMods(input.ctx, input.out as never, omega_g(input.ctx));
   }
-  return {
-    ctx: {
-      gas: (input.ctx.gas - 10n) as Gas,
-      registers: [
-        BigInt(HostCallResult.WHAT) as RegisterValue,
-        input.ctx.registers.slice(1),
-      ] as PVMProgramExecutionContext["registers"],
-      memory: input.ctx.memory,
-    },
-    out: input.out,
-  };
+  return applyMods(input.ctx, input.out as never, [
+    IxMod.gas(10n),
+    IxMod.reg(7, HostCallResult.WHAT),
+  ]);
 };

@@ -58,7 +58,7 @@ export type RefineContext = {
  */
 export const omega_h = regFn<
   [s: ServiceIndex, delta: Delta, t: Tau],
-  Array<W7 | PVMSingleModMemory>
+  W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 15 as u8,
@@ -97,10 +97,7 @@ export const omega_h = regFn<
  * `ΩY` in the graypaper
  * import segment host cal
  */
-export const omega_y = regFn<
-  [i: ExportSegment[]],
-  Array<W7 | PVMSingleModMemory>
->({
+export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
   fn: {
     opCode: 16 as u8,
     identifier: "import",
@@ -131,7 +128,7 @@ export const omega_y = regFn<
  */
 export const omega_z = regFn<
   [ctx: RefineContext, segmentOffset: number],
-  Array<W7 | PVMSingleModObject<RefineContext>>
+  W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
     opCode: 17 as u8,
@@ -167,7 +164,7 @@ export const omega_z = regFn<
  */
 export const omega_m = regFn<
   [refineCtx: RefineContext],
-  Array<W7 | PVMSingleModObject<RefineContext>>
+  W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
     opCode: 18 as u8,
@@ -206,7 +203,7 @@ export const omega_m = regFn<
  */
 export const omega_p = regFn<
   [refineCtx: RefineContext],
-  Array<W7 | PVMSingleModMemory>
+  W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 19 as u8,
@@ -238,7 +235,7 @@ export const omega_p = regFn<
  */
 export const omega_o = regFn<
   [RefineContext],
-  Array<W7 | PVMSingleModObject<RefineContext>>
+  W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
     opCode: 20 as u8,
@@ -285,7 +282,7 @@ export const omega_o = regFn<
  */
 export const omega_k = regFn<
   [RefineContext],
-  Array<W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>>
+  W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>
 >({
   fn: {
     opCode: 21 as u8,
@@ -303,7 +300,7 @@ export const omega_k = regFn<
       const g = E_8.decode(context.memory.getBytes(o, 8)).value;
       // registers
       const w = new Array(13)
-        .fill(0)
+        .fill(0n)
         .map(
           (_, i) =>
             E_4.decode(context.memory.getBytes(Number(o) + 8 + 4 * i, 4)).value,
@@ -388,7 +385,7 @@ export const omega_k = regFn<
  */
 export const omega_x = regFn<
   [RefineContext],
-  Array<W7 | PVMSingleModObject<RefineContext>>
+  W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
     opCode: 22 as u8,
