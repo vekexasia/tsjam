@@ -1,7 +1,7 @@
 import { Gas, PVMIxDecodeError, PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
+import { E_2, E_4 } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 

@@ -107,7 +107,6 @@ export const E_Fn = (
   const toRet: AccumulationQueue[0] = [];
   for (const { workReport, dependencies } of filteredR) {
     const newDeps = new Set(dependencies);
-    workReport.workPackageSpecification.workPackageHash;
     keys.forEach((a) => newDeps.delete(a));
     toRet.push({ workReport, dependencies: newDeps });
   }

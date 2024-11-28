@@ -18,8 +18,12 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
     output: [
       {
         format: `${isEsm ? "esm" : "cjs"}`,
-        file: `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`,
-        // dir : 'dist',
+        file: typescriptOptions?.compilerOptions?.emitDeclarationOnly
+          ? undefined
+          : `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`,
+        dir: typescriptOptions?.compilerOptions?.emitDeclarationOnly
+          ? "dist/types_tmp"
+          : undefined,
         // entryFileNames: `${isBrowser ? 'browser' : 'node'}.${isEsm ? 'esm' : 'cjs'}.${isEsm ? 'm' : ''}js`,
         // chunkFileNames: `includes/${isBrowser ? 'browser' : 'node'}.${isEsm ? 'esm' : 'cjs'}[hash].js`,
         // compact: true,

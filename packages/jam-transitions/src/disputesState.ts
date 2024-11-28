@@ -12,7 +12,6 @@ import {
   JAM_GUARANTEE,
   JAM_INVALID,
   JAM_VALID,
-  MINIMUM_VALIDATORS,
   NUMBER_OF_VALIDATORS,
 } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";

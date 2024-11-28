@@ -24,7 +24,6 @@ const fallthrough = regIx<[]>({
   },
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const trap = regIx<[]>({
   opCode: 0 as u8,
   identifier: "trap",

@@ -163,6 +163,7 @@ const shlo_l = create(55 as u8, "shlo_l", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, (wA << wB % 32n) % 2n ** 32n)]);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r = create(51 as u8, "shlo_r", (context, wA, wB, rD) => {
   // FIXME: shlow_right for bigint
   throw new Error("FIXME: ");

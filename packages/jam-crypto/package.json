@@ -34,12 +34,12 @@
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
     "blake2b-wasm": "^2.4.0",
-    "fast-shuffle": "^6.1.0",
+    "fast-shuffle": "^6.1.1",
     "keccak-wasm": "^0.11.2",
-    "sodium-native": "^4.1.1"
+    "sodium-native": "^4.3.1"
   },
   "devDependencies": {
-    "@types/blake2b-wasm": "^2",
+    "@types/blake2b-wasm": "^2.4.3",
     "@types/sodium-native": "^2.3.9"
   }
 }
