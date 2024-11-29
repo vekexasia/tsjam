@@ -29,9 +29,9 @@ import {
 } from "@tsjam/constants";
 import { E_M, WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
 import { Ed25519, Hashing } from "@tsjam/crypto";
-import { FisherYatesH } from "@tsjam/crypto";
 import { PHI_FN, _w } from "@tsjam/transitions";
 import { Result, err, ok } from "neverthrow";
+import { FisherYatesH } from "./fisherYates";
 
 export enum EGError {
   ANCHOR_NOT_IN_RECENTHISTORY = "Anchor not in recent history",

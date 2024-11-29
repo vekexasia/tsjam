@@ -47,6 +47,8 @@ export const computeWorkReport = (
   core: CoreIndex,
   deps: { delta: Delta; tau: Tau },
 ): WorkReport => {
+  //
+
   // $(0.5.0 - 14.10) | first matching case
   const o = isAuthorized(pac, core);
   if (!(o instanceof Uint8Array)) {
