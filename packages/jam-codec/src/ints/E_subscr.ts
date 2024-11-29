@@ -1,27 +1,29 @@
 import { JamCodec } from "@/codec";
 import { LittleEndian } from "@/ints/littleEndian";
+import { u16, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 
 /**
  * @param sub - the number of bytes to encode
  * $(0.5.0 - C.5)
  */
-export const E_sub = (sub: number): JamCodec<bigint> => ({
-  encode: (value: bigint, bytes: Uint8Array): number => {
+export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
+  encode: (value: T, bytes: Uint8Array): number => {
     assert(
       bytes.length === sub,
       `bytes length=${bytes.length} must match sub=${sub}`,
     );
     return LittleEndian.encode(value, bytes.subarray(0, sub));
   },
-  decode: (bytes: Uint8Array): { value: bigint; readBytes: number } => {
+  decode: (bytes: Uint8Array): { value: T; readBytes: number } => {
     if (bytes.length < sub) {
       const padded = new Uint8Array(sub).fill(0);
       padded.set(bytes);
-      console.log("padded", padded, LittleEndian.decode(padded));
-      return LittleEndian.decode(padded);
+      return <{ value: T; readBytes: number }>LittleEndian.decode(padded);
     }
-    return LittleEndian.decode(bytes.subarray(0, sub));
+    return <{ value: T; readBytes: number }>(
+      LittleEndian.decode(bytes.subarray(0, sub))
+    );
   },
   encodedSize: (): number => {
     return sub;
@@ -67,7 +69,6 @@ export const E_sub_int = <T extends number>(sub: number): JamCodec<T> => ({
   },
 });
 
-export const E_1_int = E_sub_int(1);
-export const E_2_int = E_sub_int(2);
-export const E_3_int = E_sub_int(3);
-export const E_4_int = E_sub_int(4);
+export const E_1_int = E_sub_int<u8>(1);
+export const E_2_int = E_sub_int<u16>(2);
+export const E_4_int = E_sub_int<u32>(4);

@@ -1,4 +1,4 @@
-import { SeqOfLength } from "@/genericTypes.js";
+import { SeqOfLength, u32 } from "@/genericTypes.js";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
@@ -12,29 +12,32 @@ export type ValidatorStatistics = SeqOfLength<
   2
 >;
 
+/**
+ * data types (u32) is given by the codec
+ */
 export type SingleValidatorStatistics = {
   /**
    * `b`
    */
-  blocksProduced: number;
+  blocksProduced: u32;
   /**
    * `t`
    */
-  ticketsIntroduced: number;
+  ticketsIntroduced: u32;
   /**
    * `p`
    */
-  preimagesIntroduced: number;
+  preimagesIntroduced: u32;
   /**
    * `d`
    */
-  totalOctetsIntroduced: number;
+  totalOctetsIntroduced: u32;
   /**
    * `g`
    */
-  guaranteedReports: number;
+  guaranteedReports: u32;
   /**
    * `a`
    */
-  availabilityAssurances: number;
+  availabilityAssurances: u32;
 };

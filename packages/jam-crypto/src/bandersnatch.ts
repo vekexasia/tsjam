@@ -14,6 +14,7 @@ import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 export const Bandersnatch = {
   /**
    * `F_{pubkey}^{message}(context) `
+   * $(0.5.0 - G.1)
    * @param signature - the signature to verify
    * @param pubkey - the public key to verify the signature with
    * @param message - the message that was signed
@@ -30,6 +31,7 @@ export const Bandersnatch = {
 
   /**
    * `F_{privkey}^{message}(context) `
+   * $(0.5.0 - G.1)
    * @param context - the context of the signature
    * @param message - the message to sign
    * @param privkey - the private key to sign with
@@ -45,7 +47,7 @@ export const Bandersnatch = {
   /**
    * `Y` function in the graypaper
    * The alias/output/entropy function of a Bandersnatch vrf signature/proof. See section 3.8 and appendix
-   * (312)
+   * $(0.5.0 - G.2)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
     return bytesToBigInt(vrfOutputHash(bigintToBytes(signature, 96)));
@@ -53,7 +55,7 @@ export const Bandersnatch = {
 
   /**
    * `Y` function in the graypaper
-   * (311)
+   * $(0.5.0 - G.5)
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
     return bytesToBigInt(vrfOutputHash(ringProof));
@@ -75,7 +77,7 @@ export const Bandersnatch = {
 
   /**
    * `O` function in the graypaper
-   * @see (310) in the graypaper
+   * $(0.5.0 - G.3)
    */
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
     const inputBuf = Buffer.alloc(input.length * 32);

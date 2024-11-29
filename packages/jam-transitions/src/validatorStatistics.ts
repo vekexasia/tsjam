@@ -8,6 +8,7 @@ import {
   SingleValidatorStatistics,
   Tau,
   ValidatorStatistics,
+  u32,
 } from "@tsjam/types";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { ok } from "neverthrow";
@@ -61,28 +62,34 @@ export const validatorStatisticsToPosterior: STF<
     const curV = i === input.block.header.blockAuthorKeyIndex;
     // $(0.5.0 - 13.4)
     pi_0[i] = {
-      blocksProduced: pi_0[i].blocksProduced + (curV ? 1 : 0),
-      ticketsIntroduced:
-        pi_0[i].ticketsIntroduced +
-        (curV ? input.block.extrinsics.tickets.length : 0),
-      preimagesIntroduced:
-        pi_0[i].preimagesIntroduced +
-        (curV ? input.block.extrinsics.preimages.length : 0),
-      totalOctetsIntroduced:
-        pi_0[i].totalOctetsIntroduced +
-        (curV
-          ? input.block.extrinsics.preimages.reduce(
-              (acc, a) => acc + a.preimage.length,
-              0,
-            )
-          : 0),
-      guaranteedReports:
-        pi_0[i].guaranteedReports +
-        (reporterSet.has(input.block.header.blockAuthorKeyIndex) ? 1 : 0),
-      availabilityAssurances:
-        pi_0[i].availabilityAssurances +
-        input.block.extrinsics.assurances.filter((a) => a.validatorIndex === i)
-          .length,
+      blocksProduced: <u32>(pi_0[i].blocksProduced + (curV ? 1 : 0)),
+      ticketsIntroduced: <u32>(
+        (pi_0[i].ticketsIntroduced +
+          (curV ? input.block.extrinsics.tickets.length : 0))
+      ),
+      preimagesIntroduced: <u32>(
+        (pi_0[i].preimagesIntroduced +
+          (curV ? input.block.extrinsics.preimages.length : 0))
+      ),
+      totalOctetsIntroduced: <u32>(
+        (pi_0[i].totalOctetsIntroduced +
+          (curV
+            ? input.block.extrinsics.preimages.reduce(
+                (acc, a) => acc + a.preimage.length,
+                0,
+              )
+            : 0))
+      ),
+      guaranteedReports: <u32>(
+        (pi_0[i].guaranteedReports +
+          (reporterSet.has(input.block.header.blockAuthorKeyIndex) ? 1 : 0))
+      ),
+      availabilityAssurances: <u32>(
+        (pi_0[i].availabilityAssurances +
+          input.block.extrinsics.assurances.filter(
+            (a) => a.validatorIndex === i,
+          ).length)
+      ),
     };
   }
 

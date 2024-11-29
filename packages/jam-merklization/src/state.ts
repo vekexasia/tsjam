@@ -37,6 +37,7 @@ import {
   ServiceIndex,
   SingleValidatorStatistics,
   Tau,
+  u8,
   WorkPackageHash,
   WorkReport,
 } from "@tsjam/types";
@@ -95,7 +96,7 @@ const L_fn = (k: Hash, v: Uint8Array): bit[] => {
     return [
       1,
       0,
-      ...bits(encodeWithCodec(E_1_int, v.length)).slice(0, 5),
+      ...bits(encodeWithCodec(E_1_int, <u8>v.length)).slice(0, 5),
       ...bits(bigintToBytes(k, 32)).slice(0, 247),
       ...bits(v),
       ...new Array(v.length - 32).fill(0),

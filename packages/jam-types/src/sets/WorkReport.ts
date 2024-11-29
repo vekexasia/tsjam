@@ -5,11 +5,12 @@ import {
   BoundedSeq,
   CoreIndex,
   Hash,
+  SeqOfLength,
   Tagged,
   WorkPackageHash,
 } from "@/genericTypes";
 import { WorkResult } from "@/sets/WorkResult";
-import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
+import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 import { AccumulationQueue } from "..";
 
 /**
@@ -75,4 +76,13 @@ export type AvailableNoPrereqWorkReports = Tagged<
 export type AvailableWithPrereqWorkReports = Tagged<
   Array<AccumulationQueue[0][0]>,
   "available-yes-prerequisites"
+>;
+
+/**
+ * `bold Q`
+ * $(0.5.0 - 17.1)
+ */
+export type AuditRequiredWorkReports = SeqOfLength<
+  WorkReport | undefined,
+  typeof CORES
 >;

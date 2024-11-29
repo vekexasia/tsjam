@@ -7,7 +7,8 @@ import { Hash } from "@tsjam/types";
 const leaf: Uint8Array = new TextEncoder().encode("leaf");
 
 /**
- * (299) `M`
+ * `M`
+ * $(0.5.0 - E.4)
  */
 export const constantDepthBinaryTree = (
   elements: Uint8Array[],
@@ -17,7 +18,8 @@ export const constantDepthBinaryTree = (
 };
 
 /**
- * (302) `C` function
+ * `C` function
+ * $(0.5.0 - E.7)
  * hashes all data and pads the array to the next power of 2
  * @param elements - preimage elements
  * @param hashFn - the hashing function
@@ -37,6 +39,9 @@ const C_fn = (
   return toRet;
 };
 
+/**
+ * $(0.5.0 - E.5)
+ */
 export const J_fn = (
   elements: Uint8Array[],
   index: number,
@@ -46,7 +51,8 @@ export const J_fn = (
 };
 
 /**
- * (301) `J_subx`
+ * `J_subx`
+ * $(0.5.0 - E.6)
  * @param x - slice
  * @param elements - elements
  * @param index - the index to trace

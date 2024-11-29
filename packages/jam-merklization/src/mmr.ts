@@ -7,7 +7,8 @@ import {
 } from "@tsjam/codec";
 
 /**
- * section E.2 (301) `A`
+ * section E.2 `A`
+ * $(0.5.0 - E.8)
  * @param peeks - the current MMR
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
@@ -46,5 +47,8 @@ const replace = <T>(elements: T[], index: number, value: T) => {
   return toRet;
 };
 
+/**
+ * $(0.5.0 - E.9)
+ */
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
   createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));

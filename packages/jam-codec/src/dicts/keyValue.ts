@@ -9,7 +9,7 @@ import { encodeWithCodec } from "@/utils.js";
 
 /**
  * builds a dictionary codec when using map with Hash as key
- * $(0.5.0 - C.12)
+ * $(0.5.0 - C.11)
  */
 export function buildKeyValueCodec<K extends Hash, V>(
   valueCodec: JamCodec<V>,
