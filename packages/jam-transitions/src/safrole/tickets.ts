@@ -11,13 +11,14 @@ import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
   MAX_TICKETS_PER_BLOCK,
+  MAX_TICKETS_PER_VALIDATOR,
 } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
 import { Result, err, ok } from "neverthrow";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
-  INVALID_ENTRY_INDEX = "Entry index must be 0 or 1",
+  INVALID_ENTRY_INDEX = "Invalid Entry index must be 0<=x<N",
   INVALID_VRF_PROOF = "Invalid VRF proof",
   MAX_TICKETS_EXCEEDED = "Extrinsic length must be less than MAX_TICKETS_PER_BLOCK",
   TICKET_IN_GAMMA_A = "Ticket id already in gamma_a",
@@ -53,7 +54,10 @@ export const etToIdentifiers = (
 
   // $(0.5.0 - 6.29) | we validate the ticket
   for (const extrinsic of et) {
-    if (extrinsic.entryIndex !== 0 && extrinsic.entryIndex !== 1) {
+    if (
+      extrinsic.entryIndex < 0 ||
+      extrinsic.entryIndex >= MAX_TICKETS_PER_VALIDATOR
+    ) {
       return err(ETError.INVALID_ENTRY_INDEX);
     }
     const sig = Bandersnatch.verifyVrfProof(

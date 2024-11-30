@@ -102,7 +102,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(postDisputesState).toEqual(test.post_state.psi);
   // todo: miss check on rho which is present in tests
 };
-describe.skip("disputes-test-vectors", () => {
+describe("disputes-test-vectors", () => {
   describe("tiny", () => {
     const test = (name: string) => buildTest(name, "tiny");
     beforeEach(() => {
@@ -193,7 +193,7 @@ describe.skip("disputes-test-vectors", () => {
     it("progress_with_verdict_signatures_from_previous_set-2", () =>
       expect(() =>
         test("progress_with_verdict_signatures_from_previous_set-2"),
-      ).toThrow("verdicts must be for the current or previous epoch"));
+      ).toThrow("epochIndex is wrong"));
   });
 
   describe("full", () => {
@@ -286,6 +286,6 @@ describe.skip("disputes-test-vectors", () => {
     it("progress_with_verdict_signatures_from_previous_set-2", () =>
       expect(() =>
         test("progress_with_verdict_signatures_from_previous_set-2"),
-      ).toThrow("verdicts must be for the current or previous epoch"));
+      ).toThrow("epochIndex is wrong"));
   });
 });

@@ -139,6 +139,7 @@ export const stateToTestData = (state: JamState) => {
     kappa: state.kappa.map(validatorEntryHexMap),
     lambda: state.lambda.map(validatorEntryHexMap),
     tau: state.tau,
+    post_offenders: [],
   };
 };
 

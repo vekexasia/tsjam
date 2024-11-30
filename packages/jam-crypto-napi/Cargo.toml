@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
 napi = { version = "2.16.9", default-features = false, features = ["napi4"] }
 napi-derive = "2.16.9"
-ark-ec-vrfs ={ git = "https://github.com/davxy/ark-ec-vrfs", rev = "36cdc90", features = ["bandersnatch", "ring", "parallel"] }
+ark-ec-vrfs ={ git = "https://github.com/davxy/ark-ec-vrfs", rev = "e491b41", features = ["bandersnatch", "ring", "parallel"] }
 
 [build-dependencies]
 napi-build = "2.1.3"

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => {
     MAX_TICKETS_PER_BLOCK: 16,
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
+    MAX_TICKETS_PER_VALIDATOR: 2,
     toTagged: (a: any) => a,
     vrfOutputSignature: (a: any) => {
       return a;
@@ -88,6 +89,12 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
       return mocks.EPOCH_LENGTH;
     },
   });
+  Object.defineProperty(toRet, "MAX_TICKETS_PER_VALIDATOR", {
+    get() {
+      return mocks.MAX_TICKETS_PER_VALIDATOR;
+    },
+  });
+
   return toRet;
 });
 import {
@@ -160,6 +167,7 @@ describe("safrole-test-vectors", () => {
       mocks.LOTTERY_MAX_SLOT = 500;
       mocks.EPOCH_LENGTH = 600;
       mocks.NUMBER_OF_VALIDATORS = 1023;
+      mocks.MAX_TICKETS_PER_VALIDATOR = 2;
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
@@ -175,7 +183,7 @@ describe("safrole-test-vectors", () => {
     it("skip-epochs-1", () => test("skip-epochs-1"));
     it("publish-tickets-no-mark-1", () =>
       expect(() => test("publish-tickets-no-mark-1")).toThrow(
-        "Entry index must be 0 or 1",
+        "Entry index must be 0<=x<N",
       ));
     it("publish-tickets-no-mark-2", () => test("publish-tickets-no-mark-2"));
     it("publish-tickets-no-mark-3", () =>
@@ -215,6 +223,7 @@ describe("safrole-test-vectors", () => {
       mocks.LOTTERY_MAX_SLOT = 10;
       mocks.EPOCH_LENGTH = 12;
       mocks.NUMBER_OF_VALIDATORS = 6;
+      mocks.MAX_TICKETS_PER_VALIDATOR = 3;
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
@@ -231,7 +240,7 @@ describe("safrole-test-vectors", () => {
     it("skip-epochs-1", () => test("skip-epochs-1"));
     it("publish-tickets-no-mark-1", () =>
       expect(() => test("publish-tickets-no-mark-1")).toThrow(
-        "Entry index must be 0 or 1",
+        "Entry index must be 0<=x<N",
       ));
     it("publish-tickets-no-mark-2", () => test("publish-tickets-no-mark-2"));
     it("publish-tickets-no-mark-3", () =>
