@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Block production and chain growth. Aka Safrole",
   "scripts": {
-    "build": "rollup --config ../../build/rollup.config.mjs",
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
     "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",

@@ -4,7 +4,6 @@ import {
   ExportSegment,
   Gas,
   Hash,
-  PVMProgramExecutionContextBase,
   RefinementContext,
   RegularPVMExitReason,
   ServiceIndex,
