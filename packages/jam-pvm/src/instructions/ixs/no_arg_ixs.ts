@@ -10,7 +10,7 @@ import { IxMod } from "../utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fallthrough = regIx<[]>({
-  opCode: 17 as u8,
+  opCode: 1 as u8,
   identifier: "fallthrough",
   blockTermination: true,
   ix: {

@@ -4,6 +4,7 @@ import "./ixs/no_arg_ixs.js";
 import "./ixs/one_offset_ixs.js";
 import "./ixs/one_reg_one_imm_ixs.js";
 import "./ixs/one_reg_one_imm_one_offset_ixs.js";
+import "./ixs/one_reg_one_extended_imm_ixs.js";
 import "./ixs/one_reg_two_imm_ixs.js";
 import "./ixs/three_reg_ixs.js";
 import "./ixs/two_imm_ixs.js";

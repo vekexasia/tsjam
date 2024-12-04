@@ -61,7 +61,7 @@ const create = (
 };
 
 export const load_imm_jump_ind = create(
-  42 as u8,
+  160 as u8,
   "load_imm_jump_ind",
   (context, rA, rB, vx, vy) => {
     context.execution.registers[rA] = BigInt(vx) as RegisterValue;

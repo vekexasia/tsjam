@@ -49,7 +49,7 @@ const create = (
 };
 
 export const branch_eq = create(
-  24 as u8,
+  150 as u8,
   "branch_eq",
   (context, rA, rB, offset) => {
     return branch(
@@ -62,7 +62,7 @@ export const branch_eq = create(
 );
 
 export const branch_ne = create(
-  30 as u8,
+  151 as u8,
   "branch_ne",
   (context, rA, rB, offset) => {
     return branch(
@@ -75,7 +75,7 @@ export const branch_ne = create(
 );
 
 export const branch_lt_u = create(
-  47 as u8,
+  152 as u8,
   "branch_lt_u",
   (context, rA, rB, offset) => {
     return branch(
@@ -88,7 +88,7 @@ export const branch_lt_u = create(
 );
 
 export const branch_lt_s = create(
-  48 as u8,
+  153 as u8,
   "branch_lt_s",
   (context, rA, rB, offset) => {
     return branch(
@@ -102,7 +102,7 @@ export const branch_lt_s = create(
 );
 
 export const branch_ge_u = create(
-  41 as u8,
+  154 as u8,
   "branch_ge_u",
   (context, rA, rB, offset) => {
     return branch(
@@ -115,7 +115,7 @@ export const branch_ge_u = create(
 );
 
 export const branch_ge_s = create(
-  43 as u8,
+  155 as u8,
   "branch_ge_s",
   (context, rA, rB, offset) => {
     return branch(

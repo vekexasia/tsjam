@@ -14,7 +14,7 @@ const decode = (bytes: Uint8Array): Result<[offset: bigint], never> => {
 };
 
 const jump = regIx<[offset: bigint]>({
-  opCode: 5 as u8,
+  opCode: 40 as u8,
   identifier: "jump",
   blockTermination: true,
   ix: {

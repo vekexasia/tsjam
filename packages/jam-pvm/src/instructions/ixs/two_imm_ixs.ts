@@ -1,7 +1,7 @@
 import { Gas, PVMIxDecodeError, PVMIxEvaluateFN, u32, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4 } from "@tsjam/codec";
+import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 
@@ -52,7 +52,7 @@ const create = (
 };
 
 const store_imm_u8 = create(
-  62 as u8,
+  30 as u8,
   "store_imm_u8",
   (context, offset, value) => {
     return ok([IxMod.memory(offset, new Uint8Array([value % 256]))]);
@@ -60,7 +60,7 @@ const store_imm_u8 = create(
 );
 
 const store_imm_u16 = create(
-  79 as u8,
+  31 as u8,
   "store_imm_u16",
   (context, offset, value) => {
     const tmp = new Uint8Array(2);
@@ -70,7 +70,7 @@ const store_imm_u16 = create(
 );
 
 const store_imm_u32 = create(
-  38 as u8,
+  32 as u8,
   "store_imm_u32",
   (context, offset, value) => {
     const tmp = new Uint8Array(4);
@@ -79,13 +79,14 @@ const store_imm_u32 = create(
   },
 );
 
-// const store_imm_u64 = create(
-//   -1 as u8, // FIXME: this is not a valid opcode
-//   "store_imm_u64",
-//   (context, offset, value) => {
-//     return ok([IxMod.memory(offset, encodeWithCodec(E_8, BigInt(value)))]);
-//   },
-// );
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const store_imm_u64 = create(
+  33 as u8,
+  "store_imm_u64",
+  (context, offset, value) => {
+    return ok([IxMod.memory(offset, encodeWithCodec(E_8, BigInt(value)))]);
+  },
+);
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

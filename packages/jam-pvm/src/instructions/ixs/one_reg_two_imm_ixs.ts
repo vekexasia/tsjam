@@ -9,7 +9,7 @@ import {
 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { E_2, E_4 } from "@tsjam/codec";
+import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 
@@ -51,7 +51,7 @@ const create = (
 };
 
 const store_imm_ind_u8 = create(
-  26 as u8,
+  70 as u8,
   "store_imm_ind_u8",
   (context, ri, vx, vy) => {
     const location = context.execution.registers[ri] + BigInt(vx);
@@ -60,7 +60,7 @@ const store_imm_ind_u8 = create(
 );
 
 const store_imm_ind_u16 = create(
-  54 as u8,
+  71 as u8,
   "store_imm_ind_u16",
   (context, ri, vx, vy) => {
     const location = context.execution.registers[ri] + BigInt(vx);
@@ -72,14 +72,23 @@ const store_imm_ind_u16 = create(
 );
 
 const store_imm_ind_u32 = create(
-  13 as u8,
+  72 as u8,
   "store_imm_ind_u32",
   (context, ri, vx, vy) => {
     const location = context.execution.registers[ri] + BigInt(vx);
-    const value = vy % 0xffffffff;
-    const tmp = new Uint8Array(4);
-    E_4.encode(BigInt(value), tmp);
-    return ok([IxMod.memory(location, tmp)]);
+    const value = BigInt(vy % 0xffffffff);
+    return ok([IxMod.memory(location, encodeWithCodec(E_4, value))]);
+  },
+);
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const store_imm_ind_u64 = create(
+  73 as u8,
+  "store_imm_ind_u64",
+  (context, ri, vx, vy) => {
+    const location = context.execution.registers[ri] + BigInt(vx);
+    const value = vy;
+    return ok([IxMod.memory(location, encodeWithCodec(E_8, BigInt(value)))]);
   },
 );
 

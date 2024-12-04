@@ -6,7 +6,7 @@ import { regIx } from "@/instructions/ixdb.js";
 
 // $(0.5.0 - A.15)
 export const ecalli = regIx<[u8]>({
-  opCode: 78 as u8,
+  opCode: 10 as u8,
   identifier: "ecalli",
   ix: {
     decode(bytes: Uint8Array) {

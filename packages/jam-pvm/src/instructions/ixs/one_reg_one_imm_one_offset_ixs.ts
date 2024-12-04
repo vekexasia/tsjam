@@ -62,7 +62,7 @@ const create1Reg1IMM1OffsetIx = (
 };
 
 export const load_imm_jump = create1Reg1IMM1OffsetIx(
-  6 as u8,
+  80 as u8,
   "load_imm_jump",
   (context, ri, vx, vy) => {
     const br = branch(context, vy, true);
@@ -78,7 +78,7 @@ export const load_imm_jump = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_eq_imm = create1Reg1IMM1OffsetIx(
-  7 as u8,
+  81 as u8,
   "branch_eq_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] === vx);
@@ -87,7 +87,7 @@ export const branch_eq_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_ne_imm = create1Reg1IMM1OffsetIx(
-  15 as u8,
+  82 as u8,
   "branch_ne_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] != vx);
@@ -96,7 +96,7 @@ export const branch_ne_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_lt_u_imm = create1Reg1IMM1OffsetIx(
-  44 as u8,
+  83 as u8,
   "branch_lt_u_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] < vx);
@@ -105,7 +105,7 @@ export const branch_lt_u_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_le_u_imm = create1Reg1IMM1OffsetIx(
-  59 as u8,
+  84 as u8,
   "branch_le_u_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] <= vx);
@@ -114,7 +114,7 @@ export const branch_le_u_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_ge_u_imm = create1Reg1IMM1OffsetIx(
-  52 as u8,
+  85 as u8,
   "branch_ge_u_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] >= vx);
@@ -123,7 +123,7 @@ export const branch_ge_u_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_gt_u_imm = create1Reg1IMM1OffsetIx(
-  50 as u8,
+  86 as u8,
   "branch_gt_u_imm",
   (context, ri, vx, vy) => {
     return branch(context, vy, context.execution.registers[ri] > vx);
@@ -132,7 +132,7 @@ export const branch_gt_u_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_lt_s_imm = create1Reg1IMM1OffsetIx(
-  32 as u8,
+  87 as u8,
   "branch_lt_s_imm",
   (context, ri, vx, vy) => {
     return branch(
@@ -145,7 +145,7 @@ export const branch_lt_s_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_le_s_imm = create1Reg1IMM1OffsetIx(
-  46 as u8,
+  88 as u8,
   "branch_le_s_imm",
   (context, ri, vx, vy) => {
     return branch(
@@ -158,7 +158,7 @@ export const branch_le_s_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_ge_s_imm = create1Reg1IMM1OffsetIx(
-  45 as u8,
+  89 as u8,
   "branch_ge_s_imm",
   (context, ri, vx, vy) => {
     return branch(
@@ -171,7 +171,7 @@ export const branch_ge_s_imm = create1Reg1IMM1OffsetIx(
 );
 
 export const branch_gt_s_imm = create1Reg1IMM1OffsetIx(
-  53 as u8,
+  90 as u8,
   "branch_gt_s_imm",
   (context, ri, vx, vy) => {
     return branch(

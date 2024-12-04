@@ -16,7 +16,7 @@ import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
-import { E_2, E_4 } from "@tsjam/codec";
+import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { IxMod, MemoryUnreadable } from "@/instructions/utils.js";
 
 type InputType = [register: RegisterIdentifier, value: u64];
@@ -50,7 +50,7 @@ const create1Reg1IMMIx = (
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const jump_ind = create1Reg1IMMIx(
-  19 as u8,
+  50 as u8,
   "jump_ind",
   (context, ri, vx) => {
     const wa = context.execution.registers[ri];
@@ -61,11 +61,11 @@ const jump_ind = create1Reg1IMMIx(
 );
 
 // ### Load unsigned
-const load_imm = create1Reg1IMMIx(4 as u8, "load_imm", (context, ri, vx) => {
+const load_imm = create1Reg1IMMIx(51 as u8, "load_imm", (context, ri, vx) => {
   return ok([IxMod.reg(ri, vx)]);
 });
 
-const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
+const load_u8 = create1Reg1IMMIx(52 as u8, "load_u8", (context, ri, vx) => {
   if (!context.execution.memory.canRead(vx, 1)) {
     return err(new MemoryUnreadable(Number(vx) as u32, 1));
   }
@@ -75,7 +75,7 @@ const load_u8 = create1Reg1IMMIx(60 as u8, "load_u8", (context, ri, vx) => {
   ]);
 });
 
-const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
+const load_u16 = create1Reg1IMMIx(54 as u8, "load_u16", (context, ri, vx) => {
   if (!context.execution.memory.canRead(vx, 2)) {
     return err(new MemoryUnreadable(Number(vx) as u32, 2));
   }
@@ -87,7 +87,7 @@ const load_u16 = create1Reg1IMMIx(76 as u8, "load_u16", (context, ri, vx) => {
   ]);
 });
 
-const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
+const load_u32 = create1Reg1IMMIx(56 as u8, "load_u32", (context, ri, vx) => {
   if (!context.execution.memory.canRead(vx, 4)) {
     return err(new MemoryUnreadable(Number(vx) as u32, 4));
   }
@@ -99,8 +99,18 @@ const load_u32 = create1Reg1IMMIx(10 as u8, "load_u32", (context, ri, vx) => {
   ]);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const load_u64 = create1Reg1IMMIx(58 as u8, "load_u64", (context, ri, vx) => {
+  if (!context.execution.memory.canRead(vx, 8)) {
+    return err(new MemoryUnreadable(Number(vx) as u32, 8));
+  }
+  return ok([
+    IxMod.reg(ri, E_8.decode(context.execution.memory.getBytes(vx, 8)).value),
+  ]);
+});
+
 // ### Load signed
-const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
+const load_i8 = create1Reg1IMMIx(53 as u8, "load_i8", (context, ri, vx) => {
   if (!context.execution.memory.canRead(vx, 1)) {
     return err(new MemoryUnreadable(Number(vx) as u32, 1));
   }
@@ -112,7 +122,8 @@ const load_i8 = create1Reg1IMMIx(74 as u8, "load_i8", (context, ri, vx) => {
     ),
   ]);
 });
-const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
+
+const load_i16 = create1Reg1IMMIx(55 as u8, "load_i16", (context, ri, vx) => {
   if (!context.execution.memory.canRead(vx, 2)) {
     return err(new MemoryUnreadable(Number(vx) as u32, 2));
   }
@@ -125,9 +136,23 @@ const load_i16 = create1Reg1IMMIx(66 as u8, "load_i16", (context, ri, vx) => {
   ]);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const load_i32 = create1Reg1IMMIx(57 as u8, "load_i32", (context, ri, vx) => {
+  if (!context.execution.memory.canRead(vx, 2)) {
+    return err(new MemoryUnreadable(Number(vx) as u32, 2));
+  }
+
+  return ok([
+    IxMod.reg(
+      ri,
+      Z4_inv(Z(4, E_4.decode(context.execution.memory.getBytes(vx, 4)).value)),
+    ),
+  ]);
+});
+
 // ### Store
 
-const store_u8 = create1Reg1IMMIx(71 as u8, "store_u8", (context, ri, vx) => {
+const store_u8 = create1Reg1IMMIx(59 as u8, "store_u8", (context, ri, vx) => {
   return ok([
     IxMod.memory(
       vx,
@@ -136,17 +161,24 @@ const store_u8 = create1Reg1IMMIx(71 as u8, "store_u8", (context, ri, vx) => {
   ]);
 });
 
-const store_u16 = create1Reg1IMMIx(69 as u8, "store_u16", (context, ri, vx) => {
+const store_u16 = create1Reg1IMMIx(60 as u8, "store_u16", (context, ri, vx) => {
   const wa = Number(context.execution.registers[ri] % 2n ** 16n) as u16;
   const tmp = new Uint8Array(2);
   E_2.encode(BigInt(wa), tmp);
   return ok([IxMod.memory(vx, tmp)]);
 });
-const store_u32 = create1Reg1IMMIx(22 as u8, "store_u32", (context, ri, vx) => {
+
+const store_u32 = create1Reg1IMMIx(61 as u8, "store_u32", (context, ri, vx) => {
   const wa = Number(context.execution.registers[ri] % 2n ** 32n) as u32;
   const tmp = new Uint8Array(4);
   E_4.encode(BigInt(wa), tmp);
   return ok([IxMod.memory(vx, tmp)]);
+});
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const store_u64 = create1Reg1IMMIx(62 as u8, "store_u64", (context, ri, vx) => {
+  const wa = context.execution.registers[ri];
+  return ok([IxMod.memory(vx, encodeWithCodec(E_8, wa))]);
 });
 
 if (import.meta.vitest) {

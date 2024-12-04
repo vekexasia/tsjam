@@ -38,13 +38,13 @@ const create = (
   });
 };
 
-const move_reg = create(82 as u8, "move_reg", (context, rd, ra) => {
+const move_reg = create(100 as u8, "move_reg", (context, rd, ra) => {
   context.execution.registers[rd] = context.execution.registers[ra];
   return ok([IxMod.reg(rd, context.execution.registers[ra])]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const sbrk = create(87 as u8, "sbrk", (context, rd, ra) => {
+const sbrk = create(101 as u8, "sbrk", (context, rd, ra) => {
   // TODO: implement sbrk (space break)
   return ok([]);
 });

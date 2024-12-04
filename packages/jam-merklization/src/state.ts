@@ -520,6 +520,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     );
 
     for (const [h, v] of serviceAccount.storage) {
+      // TODO: fix
       toRet.set(
         C_fn(serviceIndex, bigintToBytes(h, 32)),
         encodeWithCodec(IdentityCodec, v),
@@ -527,6 +528,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     }
 
     for (const [h, p] of serviceAccount.preimage_p) {
+      // TODO:fix
       toRet.set(
         C_fn(serviceIndex, bigintToBytes(h, 32)),
         encodeWithCodec(IdentityCodec, p),
@@ -534,6 +536,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     }
 
     for (const [h, lm] of serviceAccount.preimage_l) {
+      // TODO:fix
       for (const [l, t] of lm) {
         toRet.set(
           C_fn(
