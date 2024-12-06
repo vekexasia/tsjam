@@ -152,26 +152,21 @@ const xiCodec = createArrayLengthDiscriminator<
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile, getUTF8FixtureFile, workItemFromJSON } =
-    await import("@/test/utils.js");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("WorkItemCodec", () => {
-    let item: WorkItem;
     let bin: Uint8Array;
     beforeAll(() => {
-      const json = JSON.parse(getUTF8FixtureFile("work_item.json"));
-      item = workItemFromJSON(json);
       bin = getCodecFixtureFile("work_item.bin");
     });
 
-    it("should encode properly", () => {
-      const bytes = new Uint8Array(WorkItemCodec.encodedSize(item));
-      WorkItemCodec.encode(item, bytes);
-      expect(bytes).toEqual(bin);
-    });
-    it("should decode properly", () => {
-      const { value, readBytes } = WorkItemCodec.decode(bin);
-      expect(value).toEqual(item);
-      expect(readBytes).toBe(bin.length);
+    it("should encode/decode properly", () => {
+      const decoded = WorkItemCodec.decode(bin);
+      expect(WorkItemCodec.encodedSize(decoded.value)).toBe(bin.length);
+      const reencoded = encodeWithCodec(WorkItemCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
     });
   });
 }

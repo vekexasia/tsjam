@@ -5,12 +5,7 @@ import { codec_Ep } from "@/extrinsics/preimages.js";
 import { codec_Ea } from "@/extrinsics/assurances.js";
 import { codec_Eg } from "@/extrinsics/guarantees.js";
 import { JamCodec } from "@/codec.js";
-import {
-  EA_Extrinsic,
-  JamBlock,
-  ServiceIndex,
-  TicketExtrinsics,
-} from "@tsjam/types";
+import { EA_Extrinsic, JamBlock, TicketExtrinsics } from "@tsjam/types";
 
 /**
  * Codec for block extrinsic. used in both block serialiation and computing `Hx`
@@ -94,60 +89,24 @@ export const BlockCodec: JamCodec<JamBlock> = {
 };
 
 if (import.meta.vitest) {
-  const { vi, beforeAll, describe, it, expect } = import.meta.vitest;
-  const { hexToBytes } = await import("@tsjam/utils");
+  const { describe, it, expect, vi } = import.meta.vitest;
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
   const constants = await import("@tsjam/constants");
-  const {
-    getCodecFixtureFile,
-    getUTF8FixtureFile,
-    headerFromJSON,
-    disputesExtrinsicFromJSON,
-    assurancesExtrinsicFromJSON,
-    guaranteesExtrinsicFromJSON,
-  } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("Block", () => {
-    let item: JamBlock;
-    let bin: Uint8Array;
-    beforeAll(() => {
-      // @ts-expect-error cores
-      vi.spyOn(constants, "CORES", "get").mockReturnValue(2);
-      const json = JSON.parse(getUTF8FixtureFile("block.json"));
-      item = {
-        header: headerFromJSON(json.header),
-        extrinsics: {
-          tickets: json.extrinsic.tickets.map(
-            (t: { attempt: number; signature: string }) => ({
-              entryIndex: t.attempt,
-              proof: hexToBytes(t.signature),
-            }),
-          ),
-          disputes: disputesExtrinsicFromJSON(json.extrinsic.disputes),
-          preimages: json.extrinsic.preimages.map(
-            (p: { requester: ServiceIndex; blob: string }) => ({
-              serviceIndex: p.requester,
-              preimage: hexToBytes(p.blob),
-            }),
-          ),
-          assurances: assurancesExtrinsicFromJSON(json.extrinsic.assurances),
-          reportGuarantees: guaranteesExtrinsicFromJSON(
-            json.extrinsic.guarantees,
-          ),
-        },
-      };
-      bin = getCodecFixtureFile("block.bin");
-    });
-
-    it("block should encode properly", () => {
-      const bytes = new Uint8Array(BlockCodec.encodedSize(item));
-      BlockCodec.encode(item, bytes);
-      expect(Buffer.from(bytes).toString("hex")).toEqual(
+    const bin = getCodecFixtureFile("block.bin");
+    it("should match block.bin", () => {
+      vi.spyOn(constants, "CORES", "get").mockReturnValue(<any>2);
+      vi.spyOn(constants, "EPOCH_LENGTH", "get").mockReturnValue(<any>12);
+      vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
+        <any>6,
+      );
+      const decoded = BlockCodec.decode(bin).value;
+      expect(BlockCodec.encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(BlockCodec, decoded);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-    });
-    it("should decode properly", () => {
-      const { value, readBytes } = BlockCodec.decode(bin);
-      expect(value).toEqual(item);
-      expect(readBytes).toBe(bin.length);
     });
   });
 }

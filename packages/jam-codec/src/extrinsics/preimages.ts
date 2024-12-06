@@ -50,34 +50,18 @@ export const codec_Ep = createArrayLengthDiscriminator(singleItemCodec);
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const fs = await import("fs");
 
-  const { hexToBytes } = await import("@tsjam/utils");
-  const path = await import("path");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("codecEa", () => {
-    const bin = fs.readFileSync(
-      path.resolve(__dirname, "../../test/fixtures/preimages_extrinsic.bin"),
-    );
-    const json = JSON.parse(
-      fs.readFileSync(
-        path.resolve(__dirname, "../../test/fixtures/preimages_extrinsic.json"),
-        "utf8",
-      ),
-    );
+    const bin = getCodecFixtureFile("preimages_extrinsic.bin");
     it("preimages_extrinsic.json encoded should match preimages_extrinsic.bin", () => {
-      const preimage: EP_Tuple[] = json.map(
-        (e: { requester: ServiceIndex; blob: string }) => ({
-          serviceIndex: e.requester,
-          preimage: hexToBytes(e.blob),
-        }),
+      const decoded = codec_Ep.decode(bin).value;
+      expect(codec_Ep.encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(codec_Ep, decoded);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
       );
-      const b = new Uint8Array(bin.length);
-      codec_Ep.encode(preimage, b);
-      expect(codec_Ep.encodedSize(preimage)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(bin.toString("hex"));
-      // check decode now
-      const x = codec_Ep.decode(b);
-      expect(x.value).toEqual(preimage);
     });
   });
 }

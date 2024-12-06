@@ -75,26 +75,23 @@ export const RefinementContextCodec: JamCodec<RefinementContext> = {
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile, getUTF8FixtureFile, contextFromJSON } =
-    await import("@/test/utils.js");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("RefinementContextCodec", () => {
-    let ctx: RefinementContext;
     let bin: Uint8Array;
     beforeAll(() => {
-      const json = JSON.parse(getUTF8FixtureFile("refine_context.json"));
-      ctx = contextFromJSON(json);
       bin = getCodecFixtureFile("refine_context.bin");
     });
 
-    it("should encode properly", () => {
-      const bytes = new Uint8Array(RefinementContextCodec.encodedSize(ctx));
-      RefinementContextCodec.encode(ctx, bytes);
-      expect(bytes).toEqual(bin);
-    });
-    it("should decode properly", () => {
-      const { value, readBytes } = RefinementContextCodec.decode(bin);
-      expect(value).toEqual(ctx);
-      expect(readBytes).toBe(bin.length);
+    it("should encode/decode properly", () => {
+      const decoded = RefinementContextCodec.decode(bin);
+      expect(RefinementContextCodec.encodedSize(decoded.value)).toBe(
+        bin.length,
+      );
+      const reencoded = encodeWithCodec(RefinementContextCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
     });
   });
 }

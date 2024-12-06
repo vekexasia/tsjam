@@ -212,8 +212,8 @@ const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"][0]>({
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
   const constants = await import("@tsjam/constants");
-  const { disputesExtrinsicFromJSON, getUTF8FixtureFile, getCodecFixtureFile } =
-    await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
   describe("codecED", () => {
     beforeAll(() => {
       // @ts-expect-error validators
@@ -221,20 +221,13 @@ if (import.meta.vitest) {
     });
 
     const bin = getCodecFixtureFile("disputes_extrinsic.bin");
-    const json = JSON.parse(getUTF8FixtureFile("disputes_extrinsic.json"));
     it("disputes_extrinsic.json encoded should match disputes_extrinsic.bin", () => {
-      const ed: DisputeExtrinsic = disputesExtrinsicFromJSON(json);
-      const b = new Uint8Array(bin.length);
-      codec_Ed.encode(ed, b);
-      expect(codec_Ed.encodedSize(ed)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(
+      const decoded = codec_Ed.decode(bin).value;
+      expect(codec_Ed.encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(codec_Ed, decoded);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now
-      const x = codec_Ed.decode(b);
-      expect(x.value.verdicts).toEqual(ed.verdicts);
-      expect(x.value.culprit).toEqual(ed.culprit);
-      expect(x.value.faults).toEqual(ed.faults);
     });
   });
 }

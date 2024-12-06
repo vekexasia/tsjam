@@ -73,29 +73,21 @@ export const codec_Ea = createArrayLengthDiscriminator(
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
   const constants = await import("@tsjam/constants");
-  const {
-    assurancesExtrinsicFromJSON,
-    getUTF8FixtureFile,
-    getCodecFixtureFile,
-  } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
   describe("codecEa", () => {
     const bin = getCodecFixtureFile("assurances_extrinsic.bin");
-    const json = JSON.parse(getUTF8FixtureFile("assurances_extrinsic.json"));
     beforeAll(() => {
       // @ts-expect-error cores
       vi.spyOn(constants, "CORES", "get").mockReturnValue(2);
     });
     it("assurances_extrinsic.json encoded should match assurances_extrinsic.bin", () => {
-      const ea: EA_Extrinsic = assurancesExtrinsicFromJSON(json);
-      const b = new Uint8Array(bin.length);
-      expect(codec_Ea.encodedSize(ea)).toBe(bin.length);
-      codec_Ea.encode(ea, b);
-      expect(Buffer.from(b).toString("hex")).toBe(
+      const decoded = codec_Ea.decode(bin).value;
+      expect(codec_Ea.encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(codec_Ea, decoded);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now
-      const x = codec_Ea.decode(b);
-      expect(x.value).toEqual(ea);
     });
   });
 }

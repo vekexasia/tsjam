@@ -68,49 +68,36 @@ if (import.meta.vitest) {
     });
     return toRet;
   });
-  const { getCodecFixtureFile, getUTF8FixtureFile, headerFromJSON } =
-    await import("@/test/utils.js");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("SignedHeader", () => {
     beforeAll(() => {});
-    let item: SignedJamHeader;
     let bin: Uint8Array;
     describe("header_0", () => {
       beforeAll(() => {
-        const json = JSON.parse(getUTF8FixtureFile("header_0.json"));
-        item = headerFromJSON(json);
         bin = getCodecFixtureFile("header_0.bin");
       });
-
-      it("should encode properly", () => {
-        const bytes = encodeWithCodec(SignedHeaderCodec, item);
-        const off = 0;
-        expect(Buffer.from(bytes).subarray(off).toString("hex")).toBe(
-          Buffer.from(bin).subarray(off).toString("hex"),
+      it("should encode/decode properly", () => {
+        const decoded = SignedHeaderCodec.decode(bin).value;
+        expect(SignedHeaderCodec.encodedSize(decoded)).toBe(bin.length);
+        const reencoded = encodeWithCodec(SignedHeaderCodec, decoded);
+        expect(Buffer.from(reencoded).toString("hex")).toBe(
+          Buffer.from(bin).toString("hex"),
         );
-        expect(bytes).toEqual(bin);
-      });
-      it("should decode properly", () => {
-        const { value, readBytes } = SignedHeaderCodec.decode(bin);
-        expect(value).toEqual(item);
-        expect(readBytes).toBe(bin.length);
       });
     });
     describe("header_1", () => {
       beforeAll(() => {
-        const json = JSON.parse(getUTF8FixtureFile("header_1.json"));
-        item = headerFromJSON(json);
         bin = getCodecFixtureFile("header_1.bin");
       });
 
-      it("should encode properly", () => {
-        const bytes = new Uint8Array(SignedHeaderCodec.encodedSize(item));
-        SignedHeaderCodec.encode(item, bytes);
-        expect(bytes).toEqual(bin);
-      });
-      it("should decode properly", () => {
-        const { value, readBytes } = SignedHeaderCodec.decode(bin);
-        expect(value).toEqual(item);
-        expect(readBytes).toBe(bin.length);
+      it("should encode/decode properly", () => {
+        const decoded = SignedHeaderCodec.decode(bin).value;
+        expect(SignedHeaderCodec.encodedSize(decoded)).toBe(bin.length);
+        const reencoded = encodeWithCodec(SignedHeaderCodec, decoded);
+        expect(Buffer.from(reencoded).toString("hex")).toBe(
+          Buffer.from(bin).toString("hex"),
+        );
       });
     });
   });

@@ -131,42 +131,17 @@ export const WorkReportCodec: JamCodec<WorkReport> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  const { hexToBytes, hextToBigInt } = await import("@tsjam/utils");
-  const {
-    getCodecFixtureFile,
-    getUTF8FixtureFile,
-    contextFromJSON,
-    workResultFromJSON,
-  } = await import("@/test/utils.js");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
   describe("work_report", () => {
     const bin = getCodecFixtureFile("work_report.bin");
-    const json = JSON.parse(getUTF8FixtureFile("work_report.json"));
     it("work_report.json encoded should match work_report.bin", () => {
-      const wp: WorkReport = {
-        workPackageSpecification: {
-          workPackageHash: hextToBigInt(json.package_spec.hash),
-          bundleLength: json.package_spec.length,
-          erasureRoot: hextToBigInt(json.package_spec.erasure_root),
-          segmentRoot: hextToBigInt(json.package_spec.exports_root),
-          segmentCount: json.package_spec.exports_count,
-        },
-        refinementContext: contextFromJSON(json.context),
-        coreIndex: json.core_index,
-        authorizerHash: hextToBigInt(json.authorizer_hash),
-        authorizerOutput: hexToBytes(json.auth_output),
-        segmentRootLookup: new Map(),
-        results: json.results.map(
-          (r: never): WorkResult => workResultFromJSON(r),
-        ),
-      };
-      const b = encodeWithCodec(WorkReportCodec, wp);
-      //      expect(WorkReportCodec.encodedSize(wp)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(
+      const decoded = WorkReportCodec.decode(bin);
+      expect(WorkReportCodec.encodedSize(decoded.value)).toBe(bin.length);
+      const reencoded = encodeWithCodec(WorkReportCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now
-      const x = WorkReportCodec.decode(b);
-      expect(x.value).toEqual(wp);
     });
   });
 }

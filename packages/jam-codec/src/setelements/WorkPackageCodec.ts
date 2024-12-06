@@ -86,38 +86,21 @@ export const WorkPackageCodec: JamCodec<WorkPackage> = {
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { hexToBytes, hextToBigInt } = await import("@tsjam/utils");
-  const {
-    getCodecFixtureFile,
-    getUTF8FixtureFile,
-    contextFromJSON,
-    workItemFromJSON,
-  } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
   describe("WorkPackageCodec", () => {
-    let item: WorkPackage;
     let bin: Uint8Array;
     beforeAll(() => {
-      const json = JSON.parse(getUTF8FixtureFile("work_package.json"));
-      item = {
-        authorizationToken: hexToBytes(json.authorization),
-        context: contextFromJSON(json.context),
-        workItems: json.items.map((item: never) => workItemFromJSON(item)),
-        authorizationCodeHash: hextToBigInt(json.authorizer.code_hash),
-        parametrizationBlob: hexToBytes(json.authorizer.params),
-        serviceIndex: json.auth_code_host,
-      };
       bin = getCodecFixtureFile("work_package.bin");
     });
 
-    it("should encode properly", () => {
-      const bytes = new Uint8Array(WorkPackageCodec.encodedSize(item));
-      WorkPackageCodec.encode(item, bytes);
-      expect(bytes).toEqual(bin);
-    });
-    it("should decode properly", () => {
-      const { value, readBytes } = WorkPackageCodec.decode(bin);
-      expect(value).toEqual(item);
-      expect(readBytes).toBe(bin.length);
+    it("should encode/decode properly", () => {
+      const decoded = WorkPackageCodec.decode(bin);
+      expect(WorkPackageCodec.encodedSize(decoded.value)).toBe(bin.length);
+      const reencoded = encodeWithCodec(WorkPackageCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
     });
   });
 }

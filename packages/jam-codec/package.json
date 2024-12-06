@@ -17,7 +17,8 @@
         "default": "./dist/node.cjs.js"
       },
       "types": "./dist/types/index.d.ts"
-    }
+    },
+    "./test/*": "./test/*"
   },
   "engines": {
     "node": ">= 22.0.0"

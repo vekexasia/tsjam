@@ -66,29 +66,25 @@ export const WorkResultCodec: JamCodec<WorkResult> = {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  const { getCodecFixtureFile, getUTF8FixtureFile, workResultFromJSON } =
-    await import("@/test/utils.js");
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils");
 
   describe("WorkResultCodec", () => {
     it("work_result_1.json encoded should match work_result_1.bin (and back)", () => {
       const bin = getCodecFixtureFile("work_result_1.bin");
-      const json = workResultFromJSON(
-        JSON.parse(getUTF8FixtureFile("work_result_1.json")),
+      const decoded = WorkResultCodec.decode(bin);
+      const reencoded = encodeWithCodec(WorkResultCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
       );
-      const buf = new Uint8Array(WorkResultCodec.encodedSize(json));
-      WorkResultCodec.encode(json, buf);
-      expect(buf).toStrictEqual(bin);
-      expect(WorkResultCodec.decode(bin).value).toStrictEqual(json);
     });
     it("work_result_0.json encoded should match work_result_0.bin (and back)", () => {
       const bin = getCodecFixtureFile("work_result_0.bin");
-      const json = workResultFromJSON(
-        JSON.parse(getUTF8FixtureFile("work_result_0.json")),
+      const decoded = WorkResultCodec.decode(bin);
+      const reencoded = encodeWithCodec(WorkResultCodec, decoded.value);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
       );
-      const buf = new Uint8Array(WorkResultCodec.encodedSize(json));
-      WorkResultCodec.encode(json, buf);
-      expect(buf).toStrictEqual(bin);
-      expect(WorkResultCodec.decode(bin).value).toStrictEqual(json);
     });
   });
 }

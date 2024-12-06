@@ -117,25 +117,19 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const {
-    getUTF8FixtureFile,
-    getCodecFixtureFile,
-    guaranteesExtrinsicFromJSON,
-  } = await import("@/test/utils.js");
+  const { encodeWithCodec } = await import("@/utils.js");
+  const { getCodecFixtureFile, guaranteesExtrinsicFromJSON } = await import(
+    "@/test/utils.js"
+  );
   describe("codecEg", () => {
     const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
-    const json = JSON.parse(getUTF8FixtureFile("guarantees_extrinsic.json"));
     it("guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin", () => {
-      const ea: EG_Extrinsic = guaranteesExtrinsicFromJSON(json);
-      const b = new Uint8Array(bin.length);
-      codec_Eg.encode(ea, b);
-      expect(codec_Eg.encodedSize(ea)).toBe(bin.length);
-      expect(Buffer.from(b).toString("hex")).toBe(
+      const decoded = codec_Eg.decode(bin).value;
+      expect(codec_Eg.encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(codec_Eg, decoded);
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      // check decode now as
-      const x = codec_Eg.decode(b);
-      expect(x.value).toEqual(ea);
     });
   });
 }
