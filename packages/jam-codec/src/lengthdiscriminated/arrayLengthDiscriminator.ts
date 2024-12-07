@@ -5,10 +5,10 @@ import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.j
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements
  * $(0.5.0 - C.8)
  */
-export const createArrayLengthDiscriminator = <T>(
+export const createArrayLengthDiscriminator = <T, X extends T[] = T[]>(
   singleItemCodec: JamCodec<T>,
 ) => {
-  return new LengthDiscriminator<T[]>({
+  return new LengthDiscriminator<X>({
     encode: (value, bytes) => {
       return value.reduce(
         (acc, item) => acc + singleItemCodec.encode(item, bytes.subarray(acc)),
@@ -16,7 +16,7 @@ export const createArrayLengthDiscriminator = <T>(
       );
     },
     decode: (bytes, length: number) => {
-      const values: T[] = [];
+      const values: X = [] as unknown as X;
       let offset = 0;
       for (let i = 0; i < length; i++) {
         const decoded = singleItemCodec.decode(bytes.subarray(offset));
@@ -25,7 +25,7 @@ export const createArrayLengthDiscriminator = <T>(
       }
       return { value: values, readBytes: offset };
     },
-    length(value: T[]): number {
+    length(value: X): number {
       return value.length;
     },
     encodedSize: (value) => {

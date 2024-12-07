@@ -13,3 +13,60 @@ export const encodeWithCodec = <T>(
   codec.encode(value, buffer);
   return buffer;
 };
+
+type Entries<T> = {
+  [K in keyof T]: [K, JamCodec<T[K]>];
+}[keyof T];
+
+export const createCodec = <T extends object>(
+  itemsCodec: Entries<T>[],
+): JamCodec<T> => {
+  return {
+    encode(value, bytes) {
+      let offset = 0;
+      for (const [key, codec] of itemsCodec) {
+        offset += codec.encode(value[key], bytes.subarray(offset));
+      }
+      return offset;
+    },
+    decode(bytes) {
+      let offset = 0;
+      const toRet = {} as T;
+      for (const [key, codec] of itemsCodec) {
+        const { value, readBytes } = codec.decode(bytes.subarray(offset));
+        toRet[key] = value;
+        offset += readBytes;
+      }
+      return { value: toRet, readBytes: offset };
+    },
+    encodedSize(value) {
+      let size = 0;
+      for (const [key, codec] of itemsCodec) {
+        size += codec.encodedSize(value[key]);
+      }
+      return size;
+    },
+  };
+};
+
+/**
+ * transform a T codec into a U codec
+ */
+export const mapCodec = <T, U>(
+  codec: JamCodec<T>,
+  map: (v: T) => U,
+  inverse: (v: U) => T,
+): JamCodec<U> => {
+  return {
+    encode(value, bytes) {
+      return codec.encode(inverse(value), bytes);
+    },
+    decode(bytes) {
+      const { value, readBytes } = codec.decode(bytes);
+      return { value: map(value), readBytes };
+    },
+    encodedSize(value) {
+      return codec.encodedSize(inverse(value));
+    },
+  };
+};

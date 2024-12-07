@@ -1,154 +1,38 @@
-import { WorkItem, u32 } from "@tsjam/types";
+import { Gas, ServiceIndex, WorkItem, u32 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { HashCodec } from "@/identity.js";
-import { E_2, E_4, E_8 } from "@/ints/E_subscr.js";
-import { JamCodec } from "@/codec.js";
+import { E_sub_int, E_sub } from "@/ints/E_subscr.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import { createCodec } from "@/utils.js";
+
 /**
- * @see Appendix C formula (288)
  * $(0.5.0 - C.26)
  */
-export const WorkItemCodec: JamCodec<WorkItem> = {
-  encode(value: WorkItem, bytes: Uint8Array): number {
-    let offset = E_4.encode(BigInt(value.serviceIndex), bytes.subarray(0, 4));
-    offset += HashCodec.encode(
-      value.codeHash,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += LengthDiscrimantedIdentity.encode(
-      value.payload,
-      bytes.subarray(offset),
-    );
-    offset += E_8.encode(
-      BigInt(value.gasLimit),
-      bytes.subarray(offset, offset + 8),
-    );
-    offset += xiCodec.encode(
-      value.importedDataSegments,
-      bytes.subarray(offset),
-    );
-    offset += xxCodec.encode(
-      value.exportedDataSegments,
-      bytes.subarray(offset),
-    );
-
-    offset += E_2.encode(
-      BigInt(value.numberExportedSegments),
-      bytes.subarray(offset, offset + 2),
-    );
-    return offset;
-  },
-  decode(bytes: Uint8Array): { value: WorkItem; readBytes: number } {
-    let offset = 0;
-    const serviceIndex = Number(E_4.decode(bytes.subarray(offset)).value);
-    offset += 4;
-    const codeHash = HashCodec.decode(bytes.subarray(offset)).value;
-    offset += 32;
-    const payload = LengthDiscrimantedIdentity.decode(bytes.subarray(offset));
-    offset += payload.readBytes;
-    const gasLimit = E_8.decode(bytes.subarray(offset)).value;
-    offset += 8;
-    const importedDataSegments = xiCodec.decode(bytes.subarray(offset))
-      .value as WorkItem["importedDataSegments"];
-    offset += xiCodec.encodedSize(importedDataSegments);
-    const exportedDataSegments = xxCodec.decode(bytes.subarray(offset)).value;
-    offset += xxCodec.encodedSize(exportedDataSegments);
-    const numberExportedSegments = Number(
-      E_2.decode(bytes.subarray(offset)).value,
-    ) as u32;
-    offset += 2;
-    return {
-      value: {
-        serviceIndex: serviceIndex as WorkItem["serviceIndex"],
-        codeHash,
-        payload: payload.value,
-        gasLimit: gasLimit as WorkItem["gasLimit"],
-        importedDataSegments,
-        exportedDataSegments,
-        numberExportedSegments,
-      },
-      readBytes: offset,
-    };
-  },
-  encodedSize(value: WorkItem): number {
-    return (
-      4 +
-      32 +
-      LengthDiscrimantedIdentity.encodedSize(value.payload) +
-      8 +
-      xiCodec.encodedSize(value.importedDataSegments) +
-      xxCodec.encodedSize(value.exportedDataSegments) +
-      2
-    );
-  },
-};
-
-const xxCodec = createArrayLengthDiscriminator<
-  WorkItem["exportedDataSegments"][0]
->({
-  encode(
-    value: WorkItem["exportedDataSegments"][0],
-    bytes: Uint8Array,
-  ): number {
-    let offset = HashCodec.encode(value.blobHash, bytes.subarray(0, 32));
-    offset += E_4.encode(
-      BigInt(value.length),
-      bytes.subarray(offset, offset + 4),
-    );
-    return offset;
-  },
-  decode(bytes: Uint8Array): {
-    value: WorkItem["exportedDataSegments"][0];
-    readBytes: number;
-  } {
-    let offset = 0;
-    const blobHash = HashCodec.decode(
-      bytes.subarray(offset, offset + 32),
-    ).value;
-    offset += 32;
-    const index = Number(E_4.decode(bytes.subarray(offset, offset + 4)).value);
-    offset += 4;
-    return {
-      value: { blobHash, length: index as u32 },
-      readBytes: offset,
-    };
-  },
-  encodedSize(): number {
-    return 32 + 4;
-  },
-});
-const xiCodec = createArrayLengthDiscriminator<
-  WorkItem["importedDataSegments"][0]
->({
-  encode(
-    value: WorkItem["importedDataSegments"][0],
-    bytes: Uint8Array,
-  ): number {
-    let offset = HashCodec.encode(value.root, bytes.subarray(0, 32));
-    offset += E_2.encode(
-      BigInt(value.index),
-      bytes.subarray(offset, offset + 2),
-    );
-    return offset;
-  },
-  decode(bytes: Uint8Array): {
-    value: WorkItem["importedDataSegments"][0];
-    readBytes: number;
-  } {
-    let offset = 0;
-    const root = HashCodec.decode(bytes.subarray(offset, offset + 32)).value;
-    offset += 32;
-    const index = Number(E_2.decode(bytes.subarray(offset, offset + 2)).value);
-    offset += 2;
-    return {
-      value: { root, index: index as u32 },
-      readBytes: offset,
-    };
-  },
-  encodedSize(): number {
-    return 32 + 2;
-  },
-});
+export const WorkItemCodec = createCodec<WorkItem>([
+  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
+  ["codeHash", HashCodec],
+  ["payload", LengthDiscrimantedIdentity],
+  ["gasLimit", E_sub<Gas>(8)],
+  [
+    "importedDataSegments",
+    createArrayLengthDiscriminator<WorkItem["importedDataSegments"][0]>(
+      createCodec([
+        ["root", HashCodec],
+        ["index", E_sub_int<u32>(2)],
+      ]),
+    ),
+  ],
+  [
+    "exportedDataSegments",
+    createArrayLengthDiscriminator<WorkItem["exportedDataSegments"][0]>(
+      createCodec([
+        ["blobHash", HashCodec],
+        ["length", E_sub_int<u32>(4)],
+      ]),
+    ),
+  ],
+  ["numberExportedSegments", E_sub_int<u32>(2)],
+]);
 
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;

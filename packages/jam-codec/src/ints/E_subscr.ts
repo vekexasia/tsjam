@@ -10,8 +10,8 @@ import assert from "node:assert";
 export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
   encode: (value: T, bytes: Uint8Array): number => {
     assert(
-      bytes.length === sub,
-      `bytes length=${bytes.length} must match sub=${sub}`,
+      bytes.length >= sub,
+      `bytes length=${bytes.length} must be >= sub=${sub}`,
     );
     return LittleEndian.encode(value, bytes.subarray(0, sub));
   },
@@ -43,8 +43,8 @@ export const E_8 = E_sub(8);
 export const E_sub_int = <T extends number>(sub: number): JamCodec<T> => ({
   encode: (value: T, bytes: Uint8Array): number => {
     assert(
-      bytes.length === sub,
-      `bytes length=${bytes.length} must match sub=${sub}`,
+      bytes.length >= sub,
+      `bytes length=${bytes.length} must >= sub=${sub}`,
     );
     return LittleEndian.encode(BigInt(value), bytes.subarray(0, sub));
   },

@@ -5,6 +5,7 @@ import {
   BandersnatchRingRoot,
   BandersnatchSignature,
   BigIntBytes,
+  ByteArrayOfLength,
   ED25519PublicKey,
   ED25519Signature,
   Hash,
@@ -25,6 +26,26 @@ export const IdentityCodec: JamCodec<Uint8Array> = {
   encodedSize(value: Uint8Array): number {
     return value.length;
   },
+};
+
+export const fixedSizeIdentityCodec = <
+  T extends number,
+  X extends ByteArrayOfLength<T> = ByteArrayOfLength<T>,
+>(
+  size: T,
+): JamCodec<X> => {
+  return {
+    decode(bytes: Uint8Array) {
+      return { value: bytes.subarray(0, size) as X, readBytes: size };
+    },
+    encode(value: Uint8Array, bytes: Uint8Array): number {
+      bytes.set(value);
+      return value.length;
+    },
+    encodedSize(): number {
+      return size;
+    },
+  };
 };
 
 export const GenericBytesBigIntCodec = <

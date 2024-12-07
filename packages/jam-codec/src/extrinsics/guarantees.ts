@@ -118,9 +118,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic[0]>(
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { encodeWithCodec } = await import("@/utils.js");
-  const { getCodecFixtureFile, guaranteesExtrinsicFromJSON } = await import(
-    "@/test/utils.js"
-  );
+  const { getCodecFixtureFile } = await import("@/test/utils.js");
   describe("codecEg", () => {
     const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
     it("guarantees_extrinsic.json encoded should match guarantees_extrinsic.bin", () => {

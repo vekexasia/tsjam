@@ -4,129 +4,42 @@ import {
   Hash,
   WorkPackageHash,
   WorkReport,
-  WorkResult,
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
 import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
-import { E_2 } from "@/ints/E_subscr.js";
+import { E_2_int } from "@/ints/E_subscr.js";
 import { AvailabilitySpecificationCodec } from "@/setelements/AvailabilitySpecificationCodec.js";
 import { HashCodec } from "@/identity.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { buildKeyValueCodec } from "@/dicts/keyValue.js";
-import { encodeWithCodec } from "@/utils.js";
-
-const resultsCodec = createArrayLengthDiscriminator(WorkResultCodec);
-const lookupCodec = buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec);
+import { createCodec } from "@/utils";
 
 /**
  * $(0.5.0 - C.24)
  */
-export const WorkReportCodec: JamCodec<WorkReport> = {
-  encode(value: WorkReport, bytes: Uint8Array): number {
-    // s
-    let offset = AvailabilitySpecificationCodec.encode(
-      value.workPackageSpecification,
-      bytes,
-    );
-
-    // x
-    offset += RefinementContextCodec.encode(
-      value.refinementContext,
-      bytes.subarray(offset),
-    );
-
-    // c
-    offset += E_2.encode(
-      BigInt(value.coreIndex),
-      bytes.subarray(offset, offset + 2),
-    );
-
-    // a
-    offset += HashCodec.encode(
-      value.authorizerHash,
-      bytes.subarray(offset, offset + 32),
-    );
-
-    // o
-    offset += LengthDiscrimantedIdentity.encode(
-      value.authorizerOutput,
-      bytes.subarray(offset),
-    );
-
-    // l
-    offset += lookupCodec.encode(
-      value.segmentRootLookup,
-      bytes.subarray(offset),
-    );
-
-    // r
-    offset += resultsCodec.encode(value.results, bytes.subarray(offset));
-    return offset;
-  },
-  decode(bytes: Uint8Array): { value: WorkReport; readBytes: number } {
-    let offset = 0;
-    // s
-    const workPackageSpecification = AvailabilitySpecificationCodec.decode(
-      bytes.subarray(offset),
-    );
-    offset += workPackageSpecification.readBytes;
-
-    // x
-    const refinementContext = RefinementContextCodec.decode(
-      bytes.subarray(offset),
-    );
-    offset += refinementContext.readBytes;
-
-    // c
-    const coreIndex = E_2.decode(bytes.subarray(offset));
-    offset += coreIndex.readBytes;
-
-    // a
-    const authorizerHash = HashCodec.decode(bytes.subarray(offset));
-    offset += authorizerHash.readBytes;
-
-    // o
-    const authorizerOutput = LengthDiscrimantedIdentity.decode(
-      bytes.subarray(offset),
-    );
-    offset += authorizerOutput.readBytes;
-
-    // l
-    const segmentRootLookup = lookupCodec.decode(bytes.subarray(offset));
-    offset += segmentRootLookup.readBytes;
-
-    // r
-    const results = resultsCodec.decode(bytes.subarray(offset));
-    offset += results.readBytes;
-    return {
-      value: {
-        authorizerHash: authorizerHash.value as Blake2bHash,
-        coreIndex: Number(coreIndex.value) as CoreIndex,
-        authorizerOutput: authorizerOutput.value,
-        refinementContext: refinementContext.value,
-        workPackageSpecification: workPackageSpecification.value,
-        segmentRootLookup: segmentRootLookup.value,
-        results: results.value as WorkReport["results"],
-      },
-      readBytes: offset,
-    };
-  },
-  encodedSize(value: WorkReport): number {
-    return (
-      HashCodec.encodedSize(value.authorizerHash) +
-      E_2.encodedSize(BigInt(value.coreIndex)) +
-      LengthDiscrimantedIdentity.encodedSize(value.authorizerOutput) +
-      RefinementContextCodec.encodedSize(value.refinementContext) +
-      AvailabilitySpecificationCodec.encodedSize(
-        value.workPackageSpecification,
-      ) +
-      lookupCodec.encodedSize(value.segmentRootLookup) +
-      resultsCodec.encodedSize(value.results)
-    );
-  },
-};
+export const WorkReportCodec = createCodec<WorkReport>([
+  // s
+  ["workPackageSpecification", AvailabilitySpecificationCodec],
+  // x
+  ["refinementContext", RefinementContextCodec],
+  // c
+  ["coreIndex", E_2_int as unknown as JamCodec<CoreIndex>],
+  // a
+  ["authorizerHash", HashCodec as unknown as JamCodec<Blake2bHash>],
+  // o
+  ["authorizerOutput", LengthDiscrimantedIdentity],
+  // l
+  ["segmentRootLookup", buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec)],
+  // r
+  [
+    "results",
+    createArrayLengthDiscriminator(WorkResultCodec) as unknown as JamCodec<
+      WorkReport["results"]
+    >,
+  ],
+]);
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
