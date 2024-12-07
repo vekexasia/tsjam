@@ -1,199 +1,68 @@
-import { JamCodec } from "@/codec.js";
-import { Blake2bHash, ED25519PublicKey, JamHeader, Tau } from "@tsjam/types";
+import {
+  BandersnatchKey,
+  ED25519PublicKey,
+  JamHeader,
+  Tau,
+  ValidatorIndex,
+} from "@tsjam/types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
   BandersnatchSignatureCodec,
+  Blake2bHashCodec,
   Ed25519PubkeyCodec,
   HashCodec,
   MerkleTreeRootCodec,
 } from "@/identity.js";
-import assert from "node:assert";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
 import { createSequenceCodec } from "@/sequenceCodec.js";
-import { E_2, E_4 } from "@/ints/E_subscr.js";
+import { E_sub_int } from "@/ints/E_subscr.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { toTagged } from "@tsjam/utils";
+import { createCodec } from "@/utils";
 
 /**
  * `Eu` codec
  * $(0.5.0 - C.20)
  */
-export const UnsignedHeaderCodec: JamCodec<JamHeader> = {
-  decode(bytes: Uint8Array): { value: JamHeader; readBytes: number } {
-    let offset = 0;
-    const parent = HashCodec.decode(bytes.subarray(offset, offset + 32));
-    offset += parent.readBytes;
-    const priorStateRoot = MerkleTreeRootCodec.decode(
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += priorStateRoot.readBytes;
-
-    const extrinsicHash = HashCodec.decode(bytes.subarray(offset, offset + 32));
-    offset += extrinsicHash.readBytes;
-
-    const timeSlotIndex = E_4.decode(bytes.subarray(offset, offset + 4));
-    offset += timeSlotIndex.readBytes;
-
-    const epochMarker = optHeCodec.decode(bytes.subarray(offset));
-    offset += epochMarker.readBytes;
-
-    const winningTickets = winningTicketsCodec.decode(bytes.subarray(offset));
-    offset += winningTickets.readBytes;
-
-    const offenders = offendersCodec.decode(bytes.subarray(offset));
-    offset += offenders.readBytes;
-
-    const blockAuthorKey = E_2.decode(bytes.subarray(offset, offset + 2));
-    offset += blockAuthorKey.readBytes;
-
-    const entropySignature = BandersnatchSignatureCodec.decode(
-      bytes.subarray(offset, offset + 96),
-    );
-    offset += entropySignature.readBytes;
-    return {
-      value: {
-        parent: parent.value,
-        priorStateRoot: priorStateRoot.value,
-        extrinsicHash: extrinsicHash.value,
-        timeSlotIndex: toTagged(Number(timeSlotIndex.value)) as Tau,
-        epochMarker: epochMarker.value,
-        winningTickets: winningTickets.value,
-        offenders: offenders.value,
-        blockAuthorKeyIndex: toTagged(Number(blockAuthorKey.value)),
-        entropySignature: entropySignature.value,
+export const UnsignedHeaderCodec = createCodec<JamHeader>([
+  ["parent", HashCodec],
+  ["priorStateRoot", MerkleTreeRootCodec],
+  ["extrinsicHash", HashCodec],
+  ["timeSlotIndex", E_sub_int<Tau>(4)],
+  [
+    "epochMarker",
+    new Optional(
+      createCodec<NonNullable<JamHeader["epochMarker"]>>([
+        ["entropy", Blake2bHashCodec],
+        ["entropy2", Blake2bHashCodec],
+        [
+          "validatorKeys",
+          createSequenceCodec<
+            BandersnatchKey,
+            typeof NUMBER_OF_VALIDATORS,
+            NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
+          >(NUMBER_OF_VALIDATORS, BandersnatchCodec),
+        ],
+      ]),
+    ),
+  ],
+  [
+    "winningTickets",
+    new Optional(createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec)),
+  ],
+  [
+    "offenders",
+    createArrayLengthDiscriminator({
+      ...Ed25519PubkeyCodec,
+      encode(value: ED25519PublicKey, bytes: Uint8Array): number {
+        return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
       },
-      readBytes: offset,
-    };
-  },
-
-  encode(value: JamHeader, bytes: Uint8Array): number {
-    assert.ok(
-      bytes.length >= this.encodedSize(value),
-      `UnsignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
-    );
-    let offset = 0;
-    offset += HashCodec.encode(
-      value.parent,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += MerkleTreeRootCodec.encode(
-      value.priorStateRoot,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += HashCodec.encode(
-      value.extrinsicHash,
-      bytes.subarray(offset, offset + 32),
-    );
-
-    offset += E_4.encode(
-      BigInt(value.timeSlotIndex),
-      bytes.subarray(offset, offset + 4),
-    );
-
-    // He
-    offset += optHeCodec.encode(value.epochMarker, bytes.subarray(offset));
-
-    // Hw
-    offset += winningTicketsCodec.encode(
-      value.winningTickets,
-      bytes.subarray(offset),
-    );
-
-    // Hj
-    offset += offendersCodec.encode(value.offenders, bytes.subarray(offset));
-
-    // Hk
-    offset += E_2.encode(
-      BigInt(value.blockAuthorKeyIndex),
-      bytes.subarray(offset, offset + 2),
-    );
-
-    offset += BandersnatchSignatureCodec.encode(
-      value.entropySignature,
-      bytes.subarray(offset, offset + 96),
-    );
-
-    return offset;
-  },
-
-  encodedSize(value: JamHeader): number {
-    return (
-      HashCodec.encodedSize(value.parent) +
-      MerkleTreeRootCodec.encodedSize(value.priorStateRoot) +
-      HashCodec.encodedSize(value.extrinsicHash) +
-      4 + // timeSlotIndex
-      optHeCodec.encodedSize(value.epochMarker) +
-      winningTicketsCodec.encodedSize(value.winningTickets) +
-      offendersCodec.encodedSize(value.offenders) +
-      2 + // blockAuthorKey
-      BandersnatchSignatureCodec.encodedSize(value.entropySignature)
-    );
-  },
-};
-const epochMarkerCodec: JamCodec<NonNullable<JamHeader["epochMarker"]>> = {
-  decode(bytes: Uint8Array): {
-    value: NonNullable<JamHeader["epochMarker"]>;
-    readBytes: number;
-  } {
-    const entropy = HashCodec.decode(bytes.subarray(0, 32));
-    const entropy2 = HashCodec.decode(bytes.subarray(32, 64));
-    const validatorKeys = [] as unknown as NonNullable<
-      JamHeader["epochMarker"]
-    >["validatorKeys"];
-    for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-      validatorKeys.push(
-        BandersnatchCodec.decode(bytes.subarray(64 + i * 32, 64 + (i + 1) * 32))
-          .value,
-      );
-    }
-    return {
-      value: {
-        entropy: entropy.value as Blake2bHash,
-        entropy2: entropy2.value as Blake2bHash,
-        validatorKeys,
+      decode(bytes: Uint8Array) {
+        return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
       },
-      readBytes: 64 + NUMBER_OF_VALIDATORS * 32,
-    };
-  },
-  encode(
-    value: NonNullable<JamHeader["epochMarker"]>,
-    bytes: Uint8Array,
-  ): number {
-    assert.ok(
-      value.validatorKeys.length === NUMBER_OF_VALIDATORS,
-      `expected ${NUMBER_OF_VALIDATORS} validator keys, got ${value.validatorKeys.length}`,
-    );
-    let offset = 0;
-    offset += HashCodec.encode(
-      value.entropy,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += HashCodec.encode(
-      value.entropy2,
-      bytes.subarray(offset, offset + 32),
-    );
-    offset += value.validatorKeys.reduce((acc, key) => {
-      BandersnatchCodec.encode(key, bytes.subarray(acc, acc + 32));
-      return acc + 32;
-    }, offset);
-    return offset;
-  },
-  encodedSize(): number {
-    return 64 + NUMBER_OF_VALIDATORS * 32;
-  },
-};
-const optHeCodec = new Optional(epochMarkerCodec);
-const offendersCodec = createArrayLengthDiscriminator({
-  ...Ed25519PubkeyCodec,
-  encode(value: ED25519PublicKey, bytes: Uint8Array): number {
-    return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
-  },
-  decode(bytes: Uint8Array) {
-    return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
-  },
-});
-export const winningTicketsCodec = new Optional(
-  createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec),
-);
+    }),
+  ],
+  ["blockAuthorKeyIndex", E_sub_int<ValidatorIndex>(2)],
+  ["entropySignature", BandersnatchSignatureCodec],
+]);

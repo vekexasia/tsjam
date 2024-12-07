@@ -4,6 +4,7 @@ import { verifyEA } from "@/verifySeal";
 import {
   E_sub_int,
   HashCodec,
+  JamCodec,
   ValidatorDataCodec,
   WorkReportCodec,
   codec_Ea,
@@ -72,7 +73,10 @@ describe("assurances", () => {
       ["rho", RHOCodec(CORES)],
       [
         "p_kappa",
-        createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
+        createSequenceCodec(
+          NUMBER_OF_VALIDATORS,
+          ValidatorDataCodec,
+        ) as unknown as JamCodec<ValidatorData[]>,
       ],
     ]);
 

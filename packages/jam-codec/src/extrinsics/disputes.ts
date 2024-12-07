@@ -93,7 +93,7 @@ const singleJudgementCodec: JamCodec<
     return E.encodedSize(BigInt(value.validity)) + 2 + 64;
   },
 };
-const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
+const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"]>({
   encode(value: DisputeExtrinsic["verdicts"][0], bytes: Uint8Array): number {
     let offset = HashCodec.encode(value.hash, bytes.subarray(0, 32));
 
@@ -143,7 +143,7 @@ const jCodec = createArrayLengthDiscriminator<DisputeExtrinsic["verdicts"][0]>({
   },
 });
 
-const cCodec = createArrayLengthDiscriminator<DisputeExtrinsic["culprit"][0]>({
+const cCodec = createArrayLengthDiscriminator<DisputeExtrinsic["culprit"]>({
   decode(bytes: Uint8Array) {
     const hash: Hash = bytesToBigInt(bytes.subarray(0, 32));
     const ed25519PublicKey: ED25519PublicKey = bytesToBigInt(
@@ -171,7 +171,7 @@ const cCodec = createArrayLengthDiscriminator<DisputeExtrinsic["culprit"][0]>({
     return 128;
   },
 });
-const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"][0]>({
+const fCodec = createArrayLengthDiscriminator<DisputeExtrinsic["faults"]>({
   decode(bytes: Uint8Array) {
     const hash = HashCodec.decode(bytes.subarray(0, 32));
     const validity = E.decode(bytes.subarray(32));

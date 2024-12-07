@@ -6,10 +6,10 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
  * Discriminated Length array of hashes codec
  */
 export const dlArrayOfHashesCodec =
-  createArrayLengthDiscriminator<Hash>(HashCodec);
+  createArrayLengthDiscriminator<Hash[]>(HashCodec);
 
 /**
  * Discriminated Length array of Uint8Array codec
  */
 export const dlArrayOfUint8ArrayCodec =
-  createArrayLengthDiscriminator<Uint8Array>(IdentityCodec);
+  createArrayLengthDiscriminator<Uint8Array[]>(IdentityCodec);

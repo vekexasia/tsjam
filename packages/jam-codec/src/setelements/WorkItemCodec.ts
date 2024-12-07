@@ -15,7 +15,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
   ["gasLimit", E_sub<Gas>(8)],
   [
     "importedDataSegments",
-    createArrayLengthDiscriminator<WorkItem["importedDataSegments"][0]>(
+    createArrayLengthDiscriminator<WorkItem["importedDataSegments"]>(
       createCodec([
         ["root", HashCodec],
         ["index", E_sub_int<u32>(2)],
@@ -24,7 +24,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
   ],
   [
     "exportedDataSegments",
-    createArrayLengthDiscriminator<WorkItem["exportedDataSegments"][0]>(
+    createArrayLengthDiscriminator<WorkItem["exportedDataSegments"]>(
       createCodec([
         ["blobHash", HashCodec],
         ["length", E_sub_int<u32>(4)],

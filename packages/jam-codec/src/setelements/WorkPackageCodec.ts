@@ -1,4 +1,4 @@
-import { ServiceIndex, WorkItem, WorkPackage } from "@tsjam/types";
+import { ServiceIndex, WorkPackage } from "@tsjam/types";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
@@ -18,9 +18,7 @@ export const WorkPackageCodec = createCodec<WorkPackage>([
   ["context", RefinementContextCodec],
   [
     "workItems",
-    createArrayLengthDiscriminator<WorkItem, WorkPackage["workItems"]>(
-      WorkItemCodec,
-    ),
+    createArrayLengthDiscriminator<WorkPackage["workItems"]>(WorkItemCodec),
   ],
 ]);
 

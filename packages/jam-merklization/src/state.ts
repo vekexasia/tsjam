@@ -1,7 +1,6 @@
 /**
  * Appendix D
  */
-
 import {
   AuthorizerPoolCodec,
   AuthorizerQueueCodec,
@@ -451,10 +450,12 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        createArrayLengthDiscriminator<{
-          workReport: WorkReport;
-          dependencies: Set<WorkPackageHash>;
-        }>({
+        createArrayLengthDiscriminator<
+          {
+            workReport: WorkReport;
+            dependencies: Set<WorkPackageHash>;
+          }[]
+        >({
           encode(value, bytes) {
             let offset = 0;
             offset += WorkReportCodec.encode(value.workReport, bytes);

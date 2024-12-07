@@ -5,6 +5,7 @@ import {
   BandersnatchRingRoot,
   BandersnatchSignature,
   BigIntBytes,
+  Blake2bHash,
   ByteArrayOfLength,
   ED25519PublicKey,
   ED25519Signature,
@@ -71,6 +72,7 @@ export const GenericBytesBigIntCodec = <
 });
 
 export const HashCodec = GenericBytesBigIntCodec<Hash, 32>(32);
+export const Blake2bHashCodec = GenericBytesBigIntCodec<Blake2bHash, 32>(32);
 export const OpaqueHashCodec = GenericBytesBigIntCodec<OpaqueHash, 32>(32);
 export const MerkleTreeRootCodec = GenericBytesBigIntCodec<MerkeTreeRoot, 32>(
   32,

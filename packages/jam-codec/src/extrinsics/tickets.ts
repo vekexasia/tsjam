@@ -4,7 +4,7 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 /**
  * $(0.5.0 - C.14)
  */
-export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics[0]>({
+export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics>({
   encode(
     value: { entryIndex: 0 | 1; proof: RingVRFProof },
     bytes: Uint8Array,
