@@ -37,7 +37,7 @@ import {
 import { Timekeeping, toPosterior, toTagged } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
-import { EGError, assertEGValid } from "@/validateEG.js";
+import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   accumulatableReports,
   availableReports,
@@ -96,6 +96,7 @@ export const importBlock: STF<
     tau: curState.tau,
     p_tau: toPosterior(block.header.timeSlotIndex),
   };
+  const { p_tau } = tauTransition;
 
   // $(0.5.0 - 5.7)
   if (
@@ -143,7 +144,7 @@ export const importBlock: STF<
   const [etError, ticketIdentifiers] = etToIdentifiers(
     block.extrinsics.tickets,
     {
-      p_tau: tauTransition.p_tau,
+      p_tau,
       gamma_z: curState.safroleState.gamma_z,
       gamma_a: curState.safroleState.gamma_a,
       p_entropy,
@@ -222,7 +223,7 @@ export const importBlock: STF<
       accumulationQueue: curState.accumulationQueue,
       rho: curState.rho,
       dd_rho,
-      p_tau: tauTransition.p_tau,
+      p_tau,
       kappa: curState.kappa,
       p_kappa,
       p_lambda,
@@ -238,7 +239,7 @@ export const importBlock: STF<
     {
       EG_Extrinsic: validatedEG,
       kappa: curState.kappa,
-      p_tau: tauTransition.p_tau,
+      p_tau,
     },
     dd_rho,
   ).safeRet();
@@ -296,7 +297,7 @@ export const importBlock: STF<
     {
       EP_Extrinsic: block.extrinsics.preimages,
       delta: curState.serviceAccounts,
-      p_tau: tauTransition.p_tau,
+      p_tau,
     },
     dd_delta,
   ).safeRet();
@@ -316,7 +317,7 @@ export const importBlock: STF<
   const [, p_accumulationQueue] = accumulationQueueToPosterior(
     {
       p_accHistory: p_accumulationHistory,
-      p_tau: toPosterior(block.header.timeSlotIndex),
+      p_tau,
       tau: curState.tau,
       w_q,
     },
@@ -344,8 +345,18 @@ export const importBlock: STF<
 
   const [, p_validatorStatistics] = validatorStatisticsToPosterior(
     {
-      block: block,
-      safrole: curState.safroleState,
+      extrinsics: block.extrinsics,
+      reporters: garantorsReporters({
+        extrinsic: block.extrinsics.reportGuarantees,
+        p_kappa,
+        p_tau,
+        p_psi_o: toPosterior(p_disputesState.psi_o),
+        p_lambda,
+        p_entropy,
+      }),
+      authorIndex: block.header.blockAuthorKeyIndex,
+      p_kappa,
+      p_tau: toPosterior(block.header.timeSlotIndex),
       curTau: curState.tau,
     },
     curState.validatorStatistics,

@@ -46,7 +46,6 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   };
   Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
     get() {
-      console.log("NUMBER_OF_VALIDATORS");
       return mocks.NUMBER_OF_VALIDATORS;
     },
   });
@@ -114,24 +113,7 @@ describe("assurances", () => {
     expectedEAVerified: boolean,
   ) => {
     const stateCodec = createCodec<TestState>([
-      [
-        "rho",
-        mapCodec(
-          RHOCodec(CORES),
-          (t) => <RHO>t.map((e) => {
-              //  if (e) {
-              //    return { ...e, reportTime: <Tau>(e.reportTime - WORK_TIMEOUT) };
-              //  }
-              return e;
-            }),
-          (t) => <RHO>t.map((e) => {
-              //  if (e) {
-              //    return { ...e, reportTime: <Tau>(e.reportTime + WORK_TIMEOUT) };
-              //  }
-              return e;
-            }),
-        ),
-      ],
+      ["rho", RHOCodec(CORES)],
       [
         "p_kappa",
         createSequenceCodec(

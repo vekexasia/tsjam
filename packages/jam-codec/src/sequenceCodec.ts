@@ -1,11 +1,11 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import { SeqOfLength } from "@tsjam/types";
-
+type ExtractLength<T> = T extends SeqOfLength<unknown, infer B> ? B : never;
 export const createSequenceCodec = <
-  T,
-  K extends number,
   X extends SeqOfLength<T, K>,
+  K extends number = ExtractLength<X>,
+  T = X[0],
 >(
   howMany: K,
   codec: JamCodec<T>,

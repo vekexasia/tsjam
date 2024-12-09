@@ -4,6 +4,7 @@ import {
   AccumulationQueue,
   Delta,
   DoubleDagger,
+  ED25519PublicKey,
   EG_Extrinsic,
   G_Star,
   GuarantorsAssignment,
@@ -16,6 +17,7 @@ import {
   RecentHistory,
   Tau,
   Validated,
+  ValidatorData,
   WorkPackageHash,
   u32,
 } from "@tsjam/types";
@@ -53,6 +55,47 @@ export enum EGError {
   LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "Lookup anchor timeslot mismatch",
   WRONG_CODEHASH = "Wrong codehash",
 }
+/**
+ * $(0.5.2 - 11.27) | calculates R in it
+ */
+export const garantorsReporters = (input: {
+  extrinsic: EG_Extrinsic;
+  p_kappa: Posterior<JamState["kappa"]>;
+  p_lambda: Posterior<JamState["lambda"]>;
+  p_tau: Posterior<Tau>;
+  p_psi_o: Posterior<IDisputesState["psi_o"]>;
+  p_entropy: Posterior<JamState["entropy"]>;
+}) => {
+  const g_star = G_STAR_fn({
+    p_eta2: toPosterior(input.p_entropy[2]),
+    p_eta3: toPosterior(input.p_entropy[3]),
+    p_kappa: input.p_kappa,
+    p_lambda: input.p_lambda,
+    p_psi_o: input.p_psi_o,
+    p_tau: input.p_tau,
+  });
+
+  const g = G_fn({
+    entropy: input.p_entropy[2],
+    p_tau: input.p_tau,
+    tauOffset: 0 as u32,
+    validatorKeys: input.p_kappa,
+    p_psi_o: input.p_psi_o,
+  });
+
+  const reporters = new Set<ED25519PublicKey>();
+  const curRotation = Math.floor(input.p_tau / VALIDATOR_CORE_ROTATION);
+  for (const { credential, timeSlot } of input.extrinsic) {
+    let usedG: GuarantorsAssignment = g_star;
+    if (curRotation === Math.floor(timeSlot / VALIDATOR_CORE_ROTATION)) {
+      usedG = g;
+    }
+    for (const { validatorIndex } of credential) {
+      reporters.add(usedG.validatorsED22519Key[validatorIndex]);
+    }
+  }
+  return reporters;
+};
 
 export const assertEGValid = (
   extrinsic: EG_Extrinsic,
@@ -105,65 +148,64 @@ export const assertEGValid = (
     }
   }
 
-  for (const ext of extrinsic) {
-    const wrh = Hashing.blake2bBuf(
-      encodeWithCodec(WorkReportCodec, ext.workReport),
-    );
-    const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
+  const g_star = G_STAR_fn({
+    p_eta2: toPosterior(deps.p_entropy[2]),
+    p_eta3: toPosterior(deps.p_entropy[3]),
+    p_kappa: deps.p_kappa,
+    p_lambda: deps.p_lambda,
+    p_psi_o: deps.p_psi_o,
+    p_tau: deps.p_tau,
+  });
 
-    for (const cred of ext.credential) {
-      // $(0.5.0 - 11.22) | should be Nv
-      if (
-        cred.validatorIndex < 0 ||
-        cred.validatorIndex >= NUMBER_OF_VALIDATORS
-      ) {
-        return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
-      }
-
-      // $(0.5.0 - 11.25)
-      const isValid = Ed25519.verifySignature(
-        cred.signature,
-        deps.kappa[cred.validatorIndex].ed25519,
-        messageToSign,
-      );
-      if (!isValid) {
-        return err(EGError.SIGNATURE_INVALID);
-      }
-    }
-  }
+  const g = G_fn({
+    entropy: deps.p_entropy[2],
+    p_tau: deps.p_tau,
+    tauOffset: 0 as u32,
+    validatorKeys: deps.p_kappa,
+    p_psi_o: deps.p_psi_o,
+  });
 
   // $(0.5.0 - 11.25)
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
   for (const { workReport, timeSlot, credential } of extrinsic) {
-    let G: GuarantorsAssignment = G_STAR_fn({
-      p_eta2: toPosterior(deps.p_entropy[2]),
-      p_eta3: toPosterior(deps.p_entropy[3]),
-      p_kappa: deps.p_kappa,
-      p_lambda: deps.p_lambda,
-      p_psi_o: deps.p_psi_o,
-      p_tau: deps.p_tau,
-    });
-    if (curRotation === Math.floor(timeSlot / VALIDATOR_CORE_ROTATION)) {
-      G = G_fn({
-        entropy: deps.p_entropy[2],
-        p_tau: deps.p_tau,
-        tauOffset: 0 as u32,
-        validatorKeys: deps.p_kappa,
-        p_psi_o: deps.p_psi_o,
-      });
-    }
+    const wrh = Hashing.blake2bBuf(
+      encodeWithCodec(WorkReportCodec, workReport),
+    );
+    const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
 
-    for (const { validatorIndex } of credential) {
-      if (workReport.coreIndex !== G.validatorsAssignedCore[validatorIndex]) {
-        return err(EGError.CORE_INDEX_MISMATCH);
+    for (const { validatorIndex, signature } of credential) {
+      // $(0.5.0 - 11.22) | should be Nv
+      if (validatorIndex < 0 || validatorIndex >= NUMBER_OF_VALIDATORS) {
+        return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
       }
 
+      let correspondingG: GuarantorsAssignment = g_star;
+      if (curRotation === Math.floor(timeSlot / VALIDATOR_CORE_ROTATION)) {
+        correspondingG = g;
+      }
+
+      if (
+        workReport.coreIndex !==
+        correspondingG.validatorsAssignedCore[validatorIndex]
+      ) {
+        return err(EGError.CORE_INDEX_MISMATCH);
+      }
       // And
       if (VALIDATOR_CORE_ROTATION * curRotation - 1 > timeSlot) {
         return err(EGError.TIMESLOT_BOUNDS_1);
       }
       if (timeSlot > deps.p_tau) {
         return err(EGError.TIMESLOT_BOUNDS_2);
+      }
+
+      // $(0.5.0 - 11.25)
+      const isValid = Ed25519.verifySignature(
+        signature,
+        correspondingG.validatorsED22519Key[validatorIndex],
+        messageToSign,
+      );
+      if (!isValid) {
+        return err(EGError.SIGNATURE_INVALID);
       }
     }
   }

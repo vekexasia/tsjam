@@ -2,6 +2,7 @@ export * from "@/ints/e.js";
 export * from "@/ints/e4star.js";
 export * from "@/ints/E_subscr.js";
 export * from "@/validatorDataCodec.js";
+export * from "@/validatorStatisticsCodec.js";
 export * from "@/utils.js";
 
 export * from "@/bitSequence.js";
