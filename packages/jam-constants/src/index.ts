@@ -14,7 +14,7 @@ export const RECENT_HISTORY_LENGTH = 8;
  */
 export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
-export const CORES = 381;
+export const CORES = 341;
 /**
  * referred as constant `Y` in the paper
  */
