@@ -11,6 +11,8 @@ import {
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
+  Optional,
+  mapCodec,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -22,11 +24,13 @@ import {
   ValidatorData,
   JamState,
   Dagger,
+  Validated,
 } from "@tsjam/types";
 import fs from "node:fs";
 import { beforeEach } from "vitest";
-import { TestOutputCodec, RHOCodec } from "@tsjam/codec/test/utils.js";
+import { TestOutputCodec } from "@tsjam/codec/test/utils.js";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { RHO2DoubleDagger } from "@tsjam/transitions";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -42,6 +46,7 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   };
   Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
     get() {
+      console.log("NUMBER_OF_VALIDATORS");
       return mocks.NUMBER_OF_VALIDATORS;
     },
   });
@@ -53,6 +58,41 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   return toRet;
 });
 
+const RHOCodec = (cores: number): JamCodec<RHO> => {
+  const opt = new Optional(
+    createCodec<{ workReport: WorkReport; reportTime: Tau }>([
+      ["workReport", WorkReportCodec],
+      ["reportTime", E_sub_int<Tau>(4)],
+    ]),
+  );
+  const toRet: JamCodec<RHO> = {
+    encode(value, bytes) {
+      let offset = 0;
+      for (let i = 0; i < cores; i++) {
+        offset += opt.encode(value[i], bytes.subarray(offset));
+      }
+      return offset;
+    },
+    decode(bytes) {
+      const toRet = [] as unknown as RHO;
+      let offset = 0;
+      for (let i = 0; i < cores; i++) {
+        const { value, readBytes } = opt.decode(bytes.subarray(offset));
+        offset += readBytes;
+        toRet.push(value);
+      }
+      return { value: toRet, readBytes: offset };
+    },
+    encodedSize(value) {
+      let size = 0;
+      for (let i = 0; i < cores; i++) {
+        size += opt.encodedSize(value[i]);
+      }
+      return size;
+    },
+  };
+  return toRet;
+};
 export const getCodecFixtureFile = (
   filename: string,
   kind: "tiny" | "full",
@@ -68,9 +108,30 @@ export const getCodecFixtureFile = (
 };
 type TestState = { rho: RHO; p_kappa: ValidatorData[] };
 describe("assurances", () => {
-  const doTest = (filename: string, kind: "tiny" | "full") => {
+  const doTest = (
+    filename: string,
+    kind: "tiny" | "full",
+    expectedEAVerified: boolean,
+  ) => {
     const stateCodec = createCodec<TestState>([
-      ["rho", RHOCodec(CORES)],
+      [
+        "rho",
+        mapCodec(
+          RHOCodec(CORES),
+          (t) => <RHO>t.map((e) => {
+              //  if (e) {
+              //    return { ...e, reportTime: <Tau>(e.reportTime - WORK_TIMEOUT) };
+              //  }
+              return e;
+            }),
+          (t) => <RHO>t.map((e) => {
+              //  if (e) {
+              //    return { ...e, reportTime: <Tau>(e.reportTime + WORK_TIMEOUT) };
+              //  }
+              return e;
+            }),
+        ),
+      ],
       [
         "p_kappa",
         createSequenceCodec(
@@ -103,16 +164,35 @@ describe("assurances", () => {
       ],
       ["postState", stateCodec],
     ]);
+
     const decoded = newTestCodec.decode(
       getCodecFixtureFile(`${filename}.bin`, kind),
     );
-    return verifyEA(
+    expect(decoded.value.preState.p_kappa).deep.eq([
+      ...decoded.value.postState.p_kappa,
+    ]);
+    const eaVerified = verifyEA(
       decoded.value.input.ea,
       decoded.value.input.parent,
       decoded.value.input.slot,
       decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
       decoded.value.preState.rho as Dagger<RHO>,
     );
+
+    expect(expectedEAVerified).eq(eaVerified);
+    if (!eaVerified) {
+      return false;
+    }
+    const [, dd_rho] = RHO2DoubleDagger(
+      {
+        ea: decoded.value.input.ea as Validated<EA_Extrinsic>,
+        hp: decoded.value.input.parent,
+        p_kappa: decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
+      },
+      decoded.value.preState.rho as Dagger<RHO>,
+    ).safeRet();
+    expect(dd_rho, "dd_rho").deep.eq(decoded.value.postState.rho);
+    return true;
   };
   describe("tiny", () => {
     beforeEach(() => {
@@ -121,10 +201,35 @@ describe("assurances", () => {
     });
 
     it("no_assurances-1", () => {
-      expect(doTest("no_assurances-1", "tiny")).toBe(true);
+      doTest("no_assurances-1", "tiny", true);
     });
     it("some_assurances-1", () => {
-      expect(doTest("some_assurances-1", "tiny")).toBe(true);
+      doTest("some_assurances-1", "tiny", true);
+    });
+    it("no_assurances_with_stale_report-1", () => {
+      doTest("no_assurances_with_stale_report-1", "tiny", true);
+    });
+    it("assurances_with_bad_signature-1", () => {
+      doTest("assurances_with_bad_signature-1", "tiny", false);
+    });
+    it("assurances_with_bad_validator_index-1", () => {
+      doTest("assurances_with_bad_validator_index-1", "tiny", false);
+    });
+
+    it("assurance_for_not_engaged_core-1", () => {
+      doTest("assurance_for_not_engaged_core-1", "tiny", false);
+    });
+    it("assurance_with_bad_attestation_parent-1", () => {
+      doTest("assurance_with_bad_attestation_parent-1", "tiny", false);
+    });
+    it("assurances_for_stale_report-1", () => {
+      doTest("assurances_for_stale_report-1", "tiny", false);
+    });
+    it("assurers_not_sorted_or_unique-1", () => {
+      doTest("assurers_not_sorted_or_unique-1", "tiny", false);
+    });
+    it("assurers_not_sorted_or_unique-2", () => {
+      doTest("assurers_not_sorted_or_unique-2", "tiny", false);
     });
   });
 });

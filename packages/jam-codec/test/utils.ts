@@ -1,6 +1,4 @@
-import { createCodec } from "@tsjam/codec";
-import { JamCodec, WorkReportCodec, Optional, E_sub_int } from "@tsjam/codec";
-import { RHO, Tau, WorkReport } from "@tsjam/types";
+import { JamCodec } from "../src/codec.js";
 import * as fs from "node:fs";
 
 export const getCodecFixtureFile = (filename: string): Uint8Array => {
@@ -41,42 +39,6 @@ export const TestOutputCodec = <Error extends number, Output>(
           ? 1
           : outputCodec.encodedSize(value.output!))
       );
-    },
-  };
-  return toRet;
-};
-
-export const RHOCodec = (cores: number): JamCodec<RHO> => {
-  const opt = new Optional(
-    createCodec<{ workReport: WorkReport; reportTime: Tau }>([
-      ["workReport", WorkReportCodec],
-      ["reportTime", E_sub_int<Tau>(4)],
-    ]),
-  );
-  const toRet: JamCodec<RHO> = {
-    encode(value, bytes) {
-      let offset = 0;
-      for (let i = 0; i < cores; i++) {
-        offset += opt.encode(value[i], bytes.subarray(offset));
-      }
-      return offset;
-    },
-    decode(bytes) {
-      const toRet = [] as unknown as RHO;
-      let offset = 0;
-      for (let i = 0; i < cores; i++) {
-        const { value, readBytes } = opt.decode(bytes.subarray(offset));
-        offset += readBytes;
-        toRet.push(value);
-      }
-      return { value: toRet, readBytes: offset };
-    },
-    encodedSize(value) {
-      let size = 0;
-      for (let i = 0; i < cores; i++) {
-        size += opt.encodedSize(value[i]);
-      }
-      return size;
     },
   };
   return toRet;

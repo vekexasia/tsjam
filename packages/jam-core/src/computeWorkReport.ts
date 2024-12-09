@@ -178,7 +178,7 @@ const R_fn = (
   );
   return refineInvocation(
     item.codeHash,
-    item.gasLimit,
+    item.refinementGasLimit,
     item.serviceIndex,
     packageHash,
     item.payload,
@@ -213,14 +213,14 @@ export const X_fn = (workItem: WorkItem) => {
 
 /**
  * (179) `C` constructs WorkResult from item and output
- * $(0.5.0 - 14.7)
+ * $(0.5.2 - 14.8)
  */
 export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   return {
     serviceIndex: workItem.serviceIndex,
     codeHash: workItem.codeHash,
     payloadHash: Hashing.blake2b(workItem.payload),
-    gasPrioritization: workItem.gasLimit,
+    gasPrioritization: workItem.accumulationGasLimit,
     output: out,
   };
 };

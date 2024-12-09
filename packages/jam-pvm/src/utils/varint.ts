@@ -6,10 +6,10 @@ import { E_sub } from "@tsjam/codec";
  * Reads a varint from a buffer. it follows the X formula from the graypaper appendix A.
  * @param buf - buffer to read from
  * @param length - length of the varint
- * $(0.5.0 - A.11)
+ * $(0.5.2 - A.11)
  */
 export const readVarIntFromBuffer = (buf: Uint8Array, length: u8) => {
-  assert(length <= 4 && length >= 0, "length must be <= 4 and >= 0");
+  assert(length <= 8 && length >= 0, "length must be <= 8 and >= 0");
   let result = E_sub(length).decode(buf.subarray(0, length)).value;
 
   const lengthN = BigInt(length);

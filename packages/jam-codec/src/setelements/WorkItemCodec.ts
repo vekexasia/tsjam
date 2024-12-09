@@ -6,13 +6,14 @@ import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscrimi
 import { createCodec } from "@/utils.js";
 
 /**
- * $(0.5.0 - C.26)
+ * $(0.5.2 - C.26)
  */
 export const WorkItemCodec = createCodec<WorkItem>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)],
   ["codeHash", HashCodec],
   ["payload", LengthDiscrimantedIdentity],
-  ["gasLimit", E_sub<Gas>(8)],
+  ["accumulationGasLimit", E_sub<Gas>(8)],
+  // TODO: ["refinementGasLimit", E_sub<Gas>(8)],
   [
     "importedDataSegments",
     createArrayLengthDiscriminator<WorkItem["importedDataSegments"]>(

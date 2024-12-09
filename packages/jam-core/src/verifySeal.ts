@@ -135,16 +135,18 @@ export enum EpochMarkerError {
 
 /**
  * Verifies epoch marker `He` is valid
- * $(0.5.0 - 6.27)
+ * $(0.5.2 - 6.27)
  */
 export const verifyEpochMarker = (
   block: JamBlock,
   curState: JamState,
-  p_entropy: Posterior<JamEntropy>,
   p_gamma_k: Posterior<SafroleState["gamma_k"]>,
 ): Result<undefined, EpochMarkerError> => {
   if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
-    if (block.header.epochMarker?.entropy !== p_entropy[1]) {
+    if (block.header.epochMarker?.entropy !== curState.entropy[0]) {
+      return err(EpochMarkerError.InvalidEntropy);
+    }
+    if (block.header.epochMarker?.entropy2 !== curState.entropy[1]) {
       return err(EpochMarkerError.InvalidEntropy);
     }
     for (let i = 0; i < block.header.epochMarker!.validatorKeys.length; i++) {
@@ -256,7 +258,7 @@ export const verifyEA = (
   p_kappa: Posterior<JamState["kappa"]>,
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
-  // $(0.5.0 - 11.8)
+  // $(0.5.2 - 11.10)
   if (ea.length > NUMBER_OF_VALIDATORS) {
     return false;
   }
@@ -270,21 +272,21 @@ export const verifyEA = (
     }
   }
 
-  // $(0.5.0 - 11.9)
+  // $(0.5.2 - 11.11)
   for (const a of ea) {
     if (a.anchorHash !== hp) {
       return false;
     }
   }
 
-  // $(0.5.0 - 11.10)
+  // $(0.5.2 - 11.12)
   for (let i = 1; i < ea.length; i++) {
-    if (ea[i].validatorIndex < ea[i - 1].validatorIndex) {
+    if (ea[i].validatorIndex <= ea[i - 1].validatorIndex) {
       return false;
     }
   }
 
-  // $(0.5.0 - 11.11)
+  // $(0.5.2 - 11.13)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
@@ -313,10 +315,8 @@ export const verifyEA = (
       if (a.bitstring[c] === 1) {
         // af[c]
         if (
-          !(
-            typeof d_rho[c] !== "undefined" &&
-            ht <= d_rho[c]!.reportTime + WORK_TIMEOUT
-          )
+          typeof d_rho[c] === "undefined" ||
+          ht > d_rho[c]!.reportTime + WORK_TIMEOUT
         ) {
           return false;
         }

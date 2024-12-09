@@ -414,7 +414,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidEntropySignature);
   }
 
-  const x = verifyEpochMarker(block, curState, p_entropy, p_gamma_k);
+  const x = verifyEpochMarker(block, curState, p_gamma_k);
   if (x.isErr()) {
     return err(x.error);
   }
