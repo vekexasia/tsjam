@@ -15,7 +15,7 @@ import { ok } from "neverthrow";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
- * $(0.5.0 - 11.16)
+ * $(0.5.2 - 11.18)
  */
 export const RHO2DoubleDagger: STF<
   Dagger<RHO>,
@@ -33,7 +33,7 @@ export const RHO2DoubleDagger: STF<
       (a: number, b: AssuranceExtrinsic) => a + b.bitstring[i],
       0,
     );
-    if (availabilitySum <= (NUMBER_OF_VALIDATORS * 2) / 3) {
+    if (availabilitySum > (NUMBER_OF_VALIDATORS * 2) / 3) {
       newState[i] = undefined;
     }
   }
