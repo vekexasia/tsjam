@@ -1,9 +1,11 @@
 import { isNewEra } from "@tsjam/utils";
 import {
-  JamBlock,
+  ED25519PublicKey,
+  JamBlockExtrinsics,
+  JamHeader,
+  JamState,
   Posterior,
   STF,
-  SafroleState,
   SeqOfLength,
   SingleValidatorStatistics,
   Tau,
@@ -20,18 +22,21 @@ import { ok } from "neverthrow";
 export const validatorStatisticsToPosterior: STF<
   ValidatorStatistics,
   {
-    block: JamBlock;
-    safrole: SafroleState;
+    extrinsics: JamBlockExtrinsics;
+    authorIndex: JamHeader["blockAuthorKeyIndex"];
     curTau: Tau;
+    p_tau: Tau;
+    p_kappa: Posterior<JamState["kappa"]>;
+    reporters: Set<ED25519PublicKey>; // $(0.5.2 - 11.27) | R
   },
   never
 > = (input, state) => {
-  let pi_0 = [...state[0]] as ValidatorStatistics[0];
-  let pi_1 = [...state[1]] as ValidatorStatistics[0];
+  let pi_0 = [...state[0].map((a) => ({ ...a }))] as ValidatorStatistics[0];
+  let pi_1 = [...state[1].map((a) => ({ ...a }))] as ValidatorStatistics[0];
 
-  // $(0.5.0 - 13.2)
-  if (isNewEra(input.block.header.timeSlotIndex, input.curTau)) {
-    // $(0.5.0 - 13.3) | second bracket
+  // $(0.5.2 - 13.2)
+  if (isNewEra(input.p_tau, input.curTau)) {
+    // $(0.5.2 - 13.3) | second bracket
     pi_1 = pi_0;
     pi_0 = new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
       return {
@@ -48,33 +53,23 @@ export const validatorStatisticsToPosterior: STF<
     >;
   }
 
-  // todo: graypaper says we should compute R and test k'_v over it but i think it's just because R contaqins ed2559 keys
-  // and not indexes
-  const reporterSet = new Set(
-    input.block.extrinsics.reportGuarantees
-      .map((a) => {
-        return a.credential.map((c) => c.validatorIndex);
-      })
-      .flat(),
-  );
-
   for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-    const curV = i === input.block.header.blockAuthorKeyIndex;
-    // $(0.5.0 - 13.4)
+    const curV = i === input.authorIndex;
+    // $(0.5.2 - 13.4)
     pi_0[i] = {
       blocksProduced: <u32>(pi_0[i].blocksProduced + (curV ? 1 : 0)),
       ticketsIntroduced: <u32>(
         (pi_0[i].ticketsIntroduced +
-          (curV ? input.block.extrinsics.tickets.length : 0))
+          (curV ? input.extrinsics.tickets.length : 0))
       ),
       preimagesIntroduced: <u32>(
         (pi_0[i].preimagesIntroduced +
-          (curV ? input.block.extrinsics.preimages.length : 0))
+          (curV ? input.extrinsics.preimages.length : 0))
       ),
       totalOctetsIntroduced: <u32>(
         (pi_0[i].totalOctetsIntroduced +
           (curV
-            ? input.block.extrinsics.preimages.reduce(
+            ? input.extrinsics.preimages.reduce(
                 (acc, a) => acc + a.preimage.length,
                 0,
               )
@@ -82,13 +77,12 @@ export const validatorStatisticsToPosterior: STF<
       ),
       guaranteedReports: <u32>(
         (pi_0[i].guaranteedReports +
-          (reporterSet.has(input.block.header.blockAuthorKeyIndex) ? 1 : 0))
+          (input.reporters.has(input.p_kappa[i].ed25519) ? 1 : 0))
       ),
       availabilityAssurances: <u32>(
         (pi_0[i].availabilityAssurances +
-          input.block.extrinsics.assurances.filter(
-            (a) => a.validatorIndex === i,
-          ).length)
+          input.extrinsics.assurances.filter((a) => a.validatorIndex === i)
+            .length)
       ),
     };
   }
