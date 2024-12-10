@@ -224,7 +224,6 @@ export const importBlock: STF<
       rho: curState.rho,
       dd_rho,
       p_tau,
-      kappa: curState.kappa,
       p_kappa,
       p_lambda,
       p_entropy,

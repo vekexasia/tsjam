@@ -17,7 +17,6 @@ import {
   RecentHistory,
   Tau,
   Validated,
-  ValidatorData,
   WorkPackageHash,
   u32,
 } from "@tsjam/types";
@@ -108,7 +107,6 @@ export const assertEGValid = (
     rho: RHO;
     dd_rho: DoubleDagger<RHO>;
     p_entropy: Posterior<JamState["entropy"]>;
-    kappa: JamState["kappa"];
     p_kappa: Posterior<JamState["kappa"]>;
     p_lambda: Posterior<JamState["lambda"]>;
     p_tau: Posterior<Tau>;
