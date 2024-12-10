@@ -1,7 +1,46 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
-import { mapTestDataToState, stateToTestData } from "./utils.js";
+import { dummyState } from "./utils.js";
 import { ok } from "neverthrow";
+import {
+  BandersnatchKey,
+  DisputeExtrinsic,
+  ED25519PublicKey,
+  EA_Extrinsic,
+  EG_Extrinsic,
+  JamState,
+  OpaqueHash,
+  SafroleState,
+  Tau,
+  TicketExtrinsics,
+  TicketIdentifier,
+  SeqOfLength,
+  ValidatorIndex,
+  BandersnatchSignature,
+} from "@tsjam/types";
+import { isFallbackMode, toTagged } from "@tsjam/utils";
+import { importBlock } from "@/importBlock.js";
+import { merkelizeState } from "@tsjam/merklization";
+import {
+  BandersnatchCodec,
+  Blake2bHashCodec,
+  codec_Et,
+  createArrayLengthDiscriminator,
+  createCodec,
+  createSequenceCodec,
+  E_sub_int,
+  eitherOneOfCodec,
+  JamCodec,
+  OpaqueHashCodec,
+  TicketIdentifierCodec,
+  ValidatorDataCodec,
+  BandersnatchRingRootCodec,
+  Optional,
+  mapCodec,
+  Ed25519PubkeyCodec,
+} from "@tsjam/codec";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -9,6 +48,7 @@ const mocks = vi.hoisted(() => {
     MAX_TICKETS_PER_BLOCK: 16,
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
+    CORES: 341,
     MAX_TICKETS_PER_VALIDATOR: 2,
     toTagged: (a: any) => a,
     vrfOutputSignature: (a: any) => {
@@ -69,6 +109,11 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
     ...(await importOriginal<typeof import("@tsjam/constants")>()),
     ...mocks,
   };
+  Object.defineProperty(toRet, "CORES", {
+    get() {
+      return mocks.CORES;
+    },
+  });
   Object.defineProperty(toRet, "LOTTERY_MAX_SLOT", {
     get() {
       return mocks.LOTTERY_MAX_SLOT;
@@ -97,24 +142,204 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
 
   return toRet;
 });
-import {
-  DisputeExtrinsic,
-  EA_Extrinsic,
-  EG_Extrinsic,
-  ValidatorIndex,
-} from "@tsjam/types";
-import { hexToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
-import { importBlock } from "@/importBlock.js";
-import { merkelizeState } from "@tsjam/merklization";
+type TestState = {
+  tau: Tau;
+  entropy: JamState["entropy"];
+  lambda: JamState["lambda"];
+  kappa: JamState["kappa"];
+  gamma_k: SafroleState["gamma_k"];
+  iota: JamState["iota"];
+  gamma_a: SafroleState["gamma_a"];
+  gamma_s: {
+    tickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
+    keys?: SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
+  };
+  gamma_z: SafroleState["gamma_z"];
+  p_psi_o: ED25519PublicKey[];
+};
+type EpochMark = {
+  entropy: OpaqueHash;
+  ticketsEntropy: OpaqueHash;
+  validators: BandersnatchKey[]; // validator long
+};
+type TestType = {
+  input: {
+    curSlot: Tau;
+    entropy: OpaqueHash; // Y(Hv)
+    et: TicketExtrinsics;
+  };
+  preState: JamState;
+  output: {
+    error?: number;
+    ok?: {
+      epochMark?: EpochMark;
+      ticketsMark?: TicketIdentifier[]; // epoch long
+    };
+  };
+  postState: JamState;
+};
 
 const buildTest = (name: string, size: "tiny" | "full") => {
-  const test = JSON.parse(
-    fs.readFileSync(
-      `${__dirname}/../../../jamtestvectors/safrole/${size}/${name}.json`,
-      "utf-8",
-    ),
+  const NUMVALS = (size === "tiny"
+    ? 6
+    : 1023) as unknown as typeof NUMBER_OF_VALIDATORS;
+  const EPLEN = (size === "tiny" ? 12 : 600) as unknown as typeof EPOCH_LENGTH;
+  const NCOR = (size === "tiny" ? 2 : 341) as unknown as number;
+  const stateCodec = createCodec<TestState>([
+    ["tau", E_sub_int<Tau>(4)],
+    [
+      "entropy",
+      createSequenceCodec(4, Blake2bHashCodec) as unknown as JamCodec<
+        JamState["entropy"]
+      >,
+    ],
+    [
+      "lambda",
+      createSequenceCodec<JamState["lambda"]>(NUMVALS, ValidatorDataCodec),
+    ],
+    [
+      "kappa",
+      createSequenceCodec<JamState["kappa"]>(NUMVALS, ValidatorDataCodec),
+    ],
+    [
+      "gamma_k",
+      createSequenceCodec<SafroleState["gamma_k"]>(NUMVALS, ValidatorDataCodec),
+    ],
+    [
+      "iota",
+      createSequenceCodec<JamState["iota"]>(NUMVALS, ValidatorDataCodec),
+    ],
+    [
+      "gamma_a",
+      createArrayLengthDiscriminator<SafroleState["gamma_a"]>(
+        TicketIdentifierCodec,
+      ),
+    ],
+    [
+      "gamma_s",
+      eitherOneOfCodec<TestState["gamma_s"]>([
+        [
+          "tickets",
+          createSequenceCodec<
+            SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
+          >(EPLEN, TicketIdentifierCodec),
+        ],
+        [
+          "keys",
+          createSequenceCodec<
+            SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
+          >(EPLEN, BandersnatchCodec),
+        ],
+      ]),
+    ],
+    [
+      "gamma_z",
+      BandersnatchRingRootCodec as unknown as JamCodec<SafroleState["gamma_z"]>,
+    ],
+    [
+      "p_psi_o",
+      createArrayLengthDiscriminator<ED25519PublicKey[]>(Ed25519PubkeyCodec),
+    ],
+  ]);
+
+  const jamStateCodec = mapCodec<TestState, JamState>(
+    stateCodec,
+    (fromTest: TestState): JamState => {
+      return {
+        ...dummyState({ validators: NUMVALS, cores: NCOR, epoch: EPLEN }),
+        kappa: fromTest.kappa,
+        iota: fromTest.iota,
+        tau: fromTest.tau,
+        lambda: fromTest.lambda,
+        entropy: fromTest.entropy,
+        safroleState: {
+          gamma_a: fromTest.gamma_a,
+          gamma_k: fromTest.gamma_k,
+          gamma_z: fromTest.gamma_z,
+          gamma_s: ((): SafroleState["gamma_s"] => {
+            if (typeof fromTest.gamma_s.tickets !== "undefined") {
+              return fromTest.gamma_s.tickets!;
+            }
+            return fromTest.gamma_s.keys!;
+          })() as SafroleState["gamma_s"],
+        },
+      };
+    },
+    (fromJam: JamState) => {
+      return {
+        kappa: fromJam.kappa,
+        iota: fromJam.iota,
+        tau: fromJam.tau,
+        lambda: fromJam.lambda,
+        entropy: fromJam.entropy,
+        p_psi_o: [...fromJam.disputes.psi_o.values()],
+        gamma_z: fromJam.safroleState.gamma_z,
+        gamma_a: fromJam.safroleState.gamma_a,
+        gamma_k: fromJam.safroleState.gamma_k,
+        gamma_s: ((gs: SafroleState["gamma_s"]) => {
+          if (isFallbackMode(gs)) {
+            return {
+              keys: gs,
+            };
+          } else {
+            return {
+              tickets: gs,
+            };
+          }
+        })(fromJam.safroleState.gamma_s) as TestState["gamma_s"],
+      };
+    },
   );
-  const curState = mapTestDataToState(test.pre_state);
+  const testCodec = createCodec<TestType>([
+    [
+      "input",
+      createCodec<TestType["input"]>([
+        ["curSlot", E_sub_int<Tau>(4)],
+        ["entropy", OpaqueHashCodec],
+        ["et", codec_Et],
+      ]),
+    ],
+    ["preState", jamStateCodec],
+    [
+      "output",
+      eitherOneOfCodec<TestType["output"]>([
+        [
+          "ok",
+          createCodec<NonNullable<TestType["output"]["ok"]>>([
+            [
+              "epochMark",
+              new Optional(
+                createCodec<EpochMark>([
+                  ["entropy", OpaqueHashCodec],
+                  ["ticketsEntropy", OpaqueHashCodec],
+                  [
+                    "validators",
+                    createSequenceCodec(
+                      NUMVALS,
+                      BandersnatchCodec,
+                    ) as unknown as JamCodec<BandersnatchKey[]>,
+                  ],
+                ]),
+              ),
+            ] as unknown as any,
+            [
+              "ticketsMark",
+              new Optional(createSequenceCodec(EPLEN, TicketIdentifierCodec)),
+            ] as unknown as any,
+          ]) as unknown as JamCodec<NonNullable<TestType["output"]["ok"]>>,
+        ],
+        ["error", E_sub_int<number>(1)],
+      ]),
+    ],
+    ["postState", jamStateCodec],
+  ]);
+
+  const testBin = fs.readFileSync(
+    `${__dirname}/../../../jamtestvectors/safrole/${size}/${name}.bin`,
+  );
+
+  const decoded = testCodec.decode(testBin);
+
   const [err, newState] = importBlock(
     {
       header: {
@@ -122,18 +347,14 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         blockSeal: toTagged(0n),
         offenders: [],
         extrinsicHash: toTagged(0n),
-        timeSlotIndex: test.input.slot,
-        priorStateRoot: toTagged(merkelizeState(curState)),
-        entropySignature: hextToBigInt(test.input.entropy),
+        timeSlotIndex: decoded.value.input.curSlot,
+        priorStateRoot: toTagged(merkelizeState(decoded.value.preState)),
+        entropySignature: decoded.value.input
+          .entropy as unknown as BandersnatchSignature,
         blockAuthorKeyIndex: 0 as ValidatorIndex,
       },
       extrinsics: {
-        tickets: test.input.extrinsic.map(
-          (e: { attempt: number; signature: string }) => ({
-            entryIndex: e.attempt,
-            proof: hexToBytes(e.signature),
-          }),
-        ),
+        tickets: decoded.value.input.et,
         disputes: {
           verdicts: [],
           culprit: [],
@@ -144,20 +365,20 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         reportGuarantees: [] as unknown as EG_Extrinsic,
       },
     },
-    curState,
+    decoded.value.preState,
   ).safeRet();
   if (err) {
     throw new Error(err);
   }
 
-  const normalizedPostState = stateToTestData(newState);
-
-  Object.keys(normalizedPostState).forEach((key) => {
-    expect((normalizedPostState as any)[key], `${key}`).toEqual(
-      test.post_state[key],
-    );
-  });
-  expect(normalizedPostState).toEqual(test.post_state);
+  expect(newState.safroleState, "safrole").deep.eq(
+    decoded.value.postState.safroleState,
+  );
+  expect(newState.kappa).deep.eq(decoded.value.postState.kappa);
+  expect(newState.iota).deep.eq(decoded.value.postState.iota);
+  expect(newState.lambda).deep.eq(decoded.value.postState.lambda);
+  expect(newState.tau).deep.eq(decoded.value.postState.tau);
+  expect(newState.entropy).deep.eq(decoded.value.postState.entropy);
 };
 describe("safrole-test-vectors", () => {
   describe("full", () => {
@@ -168,6 +389,7 @@ describe("safrole-test-vectors", () => {
       mocks.EPOCH_LENGTH = 600;
       mocks.NUMBER_OF_VALIDATORS = 1023;
       mocks.MAX_TICKETS_PER_VALIDATOR = 2;
+      mocks.CORES = 341;
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
@@ -224,6 +446,7 @@ describe("safrole-test-vectors", () => {
       mocks.EPOCH_LENGTH = 12;
       mocks.NUMBER_OF_VALIDATORS = 6;
       mocks.MAX_TICKETS_PER_VALIDATOR = 3;
+      mocks.CORES = 2;
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));

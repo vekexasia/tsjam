@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AccumulationHistory,
@@ -6,14 +7,21 @@ import {
   AuthorizerQueue,
   BandersnatchKey,
   BandersnatchRingRoot,
+  BLSKey,
+  ByteArrayOfLength,
+  ED25519PublicKey,
   Hash,
   IDisputesState,
   JamState,
   RecentHistory,
   RecentHistoryItem,
+  SafroleState,
+  ServiceIndex,
   Tagged,
+  Tau,
   TicketIdentifier,
   ValidatorData,
+  ValidatorStatistics,
 } from "@tsjam/types";
 import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
 
@@ -24,6 +32,92 @@ export const validatorEntryMap = (entry: any) => {
     blsKey: Buffer.from(entry.bls.slice(2), "hex"),
     metadata: Buffer.from(entry.metadata.slice(2), "hex"),
   } as unknown as ValidatorData;
+};
+
+export const dummyValidator = (): ValidatorData => {
+  return {
+    banderSnatch: 0n as BandersnatchKey,
+    ed25519: 0n as ED25519PublicKey,
+    blsKey: new Uint8Array(144).fill(0) as BLSKey,
+    metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
+  } as unknown as ValidatorData;
+};
+export const dummyState = (conf: {
+  validators: number;
+  cores: number;
+  epoch: number;
+}): JamState => {
+  const { validators, cores, epoch } = conf;
+  return {
+    safroleState: {
+      gamma_a: new Array(validators)
+        .fill(null)
+        .map(dummyValidator) as unknown as SafroleState["gamma_a"],
+      gamma_k: new Array(validators)
+        .fill(null)
+        .map(dummyValidator) as unknown as SafroleState["gamma_k"],
+      gamma_s: new Array(validators)
+        .fill(null)
+        .map(dummyValidator) as unknown as SafroleState["gamma_s"],
+      gamma_z: new Uint8Array(144) as unknown as SafroleState["gamma_z"],
+    },
+    tau: 0 as Tau,
+    entropy: [0n, 0n, 0n, 0n].map(toTagged) as JamState["entropy"],
+    iota: new Array(validators)
+      .fill(null)
+      .map(dummyValidator) as unknown as JamState["iota"],
+
+    kappa: new Array(validators)
+      .fill(null)
+      .map(dummyValidator) as unknown as JamState["kappa"],
+    lambda: new Array(validators)
+      .fill(null)
+      .map(dummyValidator) as unknown as JamState["lambda"],
+    disputes: {
+      psi_b: new Set(),
+      psi_g: new Set(),
+      psi_o: new Set(),
+      psi_w: new Set(),
+    },
+    rho: new Array(cores).fill(undefined) as unknown as JamState["rho"],
+    serviceAccounts: new Map(),
+    accumulationHistory: new Array(epoch)
+      .fill(undefined)
+      .map(() => new Set()) as unknown as JamState["accumulationHistory"],
+    accumulationQueue: new Array(epoch)
+      .fill(undefined)
+      .map(() => []) as unknown as JamState["accumulationQueue"],
+    privServices: {
+      a: 0 as ServiceIndex,
+      g: new Map(),
+      m: 0 as ServiceIndex,
+      v: 0 as ServiceIndex,
+    },
+    recentHistory: new Array(80).fill(null).map(
+      () =>
+        ({
+          stateRoot: toTagged(0n),
+          headerHash: toTagged(0n),
+          reportedPackages: new Map(),
+          accumulationResultMMR: [],
+        }) as RecentHistoryItem,
+    ) as RecentHistory,
+    validatorStatistics: [null, null].map(() =>
+      new Array(validators).fill({
+        blocksProduced: 0,
+        ticketsIntroduced: 0,
+        preimagesIntroduced: 0,
+        totalOctetsIntroduced: 0,
+        guaranteedReports: 0,
+        availabilityAssurances: 0,
+      }),
+    ) as ValidatorStatistics,
+    authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
+    authQueue: new Array(cores).fill(
+      new Array(80).fill(0n as Hash),
+    ) as AuthorizerQueue,
+    headerLookupHistory: new Map(),
+  };
 };
 export const mapTestDataToState = (testData: any): JamState => {
   return {
@@ -104,42 +198,6 @@ const validatorEntryHexMap = (entry: ValidatorData) => {
     ed25519: `0x${Buffer.from(bigintToBytes(entry.ed25519, 32)).toString("hex")}`,
     bls: `0x${Buffer.from(entry.blsKey).toString("hex")}`,
     metadata: `0x${Buffer.from(entry.metadata).toString("hex")}`,
-  };
-};
-
-export const stateToTestData = (state: JamState) => {
-  return {
-    eta: state.entropy.map(
-      (entry) => `0x${entry.toString(16).padStart(64, "0")}`,
-    ),
-    gamma_a: state.safroleState.gamma_a.map((entry) => ({
-      id: `0x${Buffer.from(bigintToBytes(entry.id, 32)).toString("hex")}`,
-      attempt: entry.attempt,
-    })),
-    gamma_k: state.safroleState.gamma_k.map(validatorEntryHexMap),
-    gamma_s: (() => {
-      if (typeof state.safroleState.gamma_s[0] === "bigint") {
-        return {
-          keys: state.safroleState.gamma_s.map(
-            (key) =>
-              `0x${Buffer.from(bigintToBytes(key as BandersnatchKey, 32)).toString("hex")}`,
-          ),
-        };
-      } else {
-        return {
-          tickets: state.safroleState.gamma_s.map((ticket) => ({
-            id: `0x${Buffer.from(bigintToBytes((ticket as TicketIdentifier).id, 32)).toString("hex")}`,
-            attempt: (ticket as TicketIdentifier).attempt,
-          })),
-        };
-      }
-    })(),
-    gamma_z: `0x${state.safroleState.gamma_z.toString(16)}`,
-    iota: state.iota.map(validatorEntryHexMap),
-    kappa: state.kappa.map(validatorEntryHexMap),
-    lambda: state.lambda.map(validatorEntryHexMap),
-    tau: state.tau,
-    post_offenders: [],
   };
 };
 
