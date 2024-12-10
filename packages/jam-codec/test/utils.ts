@@ -55,7 +55,7 @@ export const logCodec = <A, B>(
     }
     return Buffer.from(bytes.subarray(0, length)).toString("hex");
   };
-  const saneValLog = (value: B) => {
+  const saneValLog: (value: B) => string = (value: B): string => {
     if (Array.isArray(value)) {
       return `Array(${value.length})[${saneValLog(value[0])}...${saneValLog(value[value.length - 1])}]`;
     }

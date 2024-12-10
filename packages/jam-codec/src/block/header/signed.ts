@@ -71,7 +71,6 @@ if (import.meta.vitest) {
   const { getCodecFixtureFile } = await import("@/test/utils.js");
   const { encodeWithCodec } = await import("@/utils");
   describe("SignedHeader", () => {
-    beforeAll(() => {});
     let bin: Uint8Array;
     describe("header_0", () => {
       beforeAll(() => {

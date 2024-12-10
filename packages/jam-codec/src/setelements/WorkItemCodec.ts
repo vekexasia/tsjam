@@ -13,7 +13,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
   ["codeHash", HashCodec],
   ["payload", LengthDiscrimantedIdentity],
   ["accumulationGasLimit", E_sub<Gas>(8)],
-  // TODO: ["refinementGasLimit", E_sub<Gas>(8)],
+  ["refinementGasLimit", E_sub<Gas>(8)],
   [
     "importedDataSegments",
     createArrayLengthDiscriminator<WorkItem["importedDataSegments"]>(
@@ -47,6 +47,7 @@ if (import.meta.vitest) {
 
     it("should encode/decode properly", () => {
       const decoded = WorkItemCodec.decode(bin);
+      expect(decoded.readBytes).toBe(bin.length);
       expect(WorkItemCodec.encodedSize(decoded.value)).toBe(bin.length);
       const reencoded = encodeWithCodec(WorkItemCodec, decoded.value);
       expect(Buffer.from(reencoded).toString("hex")).toBe(
