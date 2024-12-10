@@ -5,5 +5,5 @@ import { createSequenceCodec } from "@/sequenceCodec";
 import { CORES } from "@tsjam/constants";
 import { AuthorizerPool } from "@tsjam/types";
 
-export const AuthorizerPoolCodec: JamCodec<AuthorizerPool> =
+export const AuthorizerPoolCodec = (): JamCodec<AuthorizerPool> =>
   createSequenceCodec(CORES, createArrayLengthDiscriminator(HashCodec));

@@ -4,7 +4,7 @@ import { HashCodec } from "@/identity";
 import { JamCodec } from "@/codec";
 import { AuthorizerQueue } from "@tsjam/types";
 
-export const AuthorizerQueueCodec: JamCodec<AuthorizerQueue> =
+export const AuthorizerQueueCodec = (): JamCodec<AuthorizerQueue> =>
   createSequenceCodec(
     CORES,
     createSequenceCodec(AUTHQUEUE_MAX_SIZE, HashCodec),

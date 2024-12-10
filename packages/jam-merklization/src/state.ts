@@ -2,6 +2,7 @@
  * Appendix D
  */
 import {
+  createCodec,
   AuthorizerPoolCodec,
   AuthorizerQueueCodec,
   BandersnatchCodec,
@@ -12,6 +13,7 @@ import {
   E_4_int,
   E_8,
   E_M,
+  E_sub_int,
   Ed25519PubkeyCodec,
   HashCodec,
   IdentityCodec,
@@ -26,9 +28,10 @@ import {
   createArrayLengthDiscriminator,
   createSetCodec,
   encodeWithCodec,
+  ValidatorStatisticsCodec,
 } from "@tsjam/codec";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
+  RHO,
   Hash,
   JamState,
   MerkeTreeRoot,
@@ -39,6 +42,7 @@ import {
   u8,
   WorkPackageHash,
   WorkReport,
+  SafroleState,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -49,6 +53,7 @@ import {
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import assert from "node:assert";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * Merkelize state
@@ -233,8 +238,8 @@ const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
 const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
 
-  toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec, state.authPool));
-  toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec, state.authQueue));
+  toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec(), state.authPool));
+  toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec(), state.authQueue));
   // β - recentHistory
   toRet.set(
     C_fn(3),
@@ -244,11 +249,13 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     ),
   );
 
-  const gamma_sCodec = createSequenceCodec(
+  const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
     typeof state.safroleState.gamma_s[0] === "bigint"
-      ? (BandersnatchCodec as JamCodec<unknown>)
-      : (TicketIdentifierCodec as JamCodec<unknown>),
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (BandersnatchCodec as JamCodec<any>)
+      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (TicketIdentifierCodec as JamCodec<any>),
   );
 
   toRet.set(
@@ -334,31 +341,15 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 10
-  const singleRHOCodec: JamCodec<{ workReport: WorkReport; reportTime: Tau }> =
-    {
-      encode(value, bytes) {
-        let offset = 0;
-        offset += WorkReportCodec.encode(value.workReport, bytes);
-        offset += E_4.encode(BigInt(value.reportTime), bytes.subarray(offset));
-        return offset;
-      },
-      decode(bytes) {
-        const wr = WorkReportCodec.decode(bytes);
-        const rt = E_4.decode(bytes.subarray(wr.readBytes));
-        return {
-          value: { workReport: wr.value, reportTime: Number(rt.value) as Tau },
-          readBytes: wr.readBytes + rt.readBytes,
-        };
-      },
-      encodedSize(value) {
-        return (
-          WorkReportCodec.encodedSize(value.workReport) +
-          E_4.encodedSize(BigInt(value.reportTime))
-        );
-      },
-    };
-
-  const rhoCodec = createSequenceCodec(CORES, new Optional(singleRHOCodec));
+  const rhoCodec = createSequenceCodec(
+    CORES,
+    new Optional(
+      createCodec<NonNullable<RHO[0]>>([
+        ["workReport", WorkReportCodec],
+        ["reportTime", E_sub_int<Tau>(4)],
+      ]),
+    ),
+  );
   toRet.set(C_fn(10), encodeWithCodec(rhoCodec, state.rho));
 
   // 11
@@ -378,68 +369,11 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     ]),
   );
 
-  const svscodec: JamCodec<SingleValidatorStatistics> = {
-    encode(value, bytes) {
-      let offset = 0;
-      offset += E_4_int.encode(
-        value.blocksProduced,
-        bytes.subarray(offset, offset + 4),
-      );
-      offset += E_4_int.encode(
-        value.ticketsIntroduced,
-        bytes.subarray(offset, offset + 4),
-      );
-      offset += E_4_int.encode(
-        value.preimagesIntroduced,
-        bytes.subarray(offset, offset + 4),
-      );
-      offset += E_4_int.encode(
-        value.totalOctetsIntroduced,
-        bytes.subarray(offset, offset + 4),
-      );
-      offset += E_4_int.encode(
-        value.guaranteedReports,
-        bytes.subarray(offset, offset + 4),
-      );
-      offset += E_4_int.encode(
-        value.availabilityAssurances,
-        bytes.subarray(offset, offset + 4),
-      );
-      return offset;
-    },
-    decode(bytes) {
-      const blocksProduced = E_4_int.decode(bytes.subarray(0, 4));
-      const ticketsIntroduced = E_4_int.decode(bytes.subarray(4, 8));
-      const preimagesIntroduced = E_4_int.decode(bytes.subarray(8, 12));
-      const totalOctetsIntroduced = E_4_int.decode(bytes.subarray(12, 16));
-      const guaranteedReports = E_4_int.decode(bytes.subarray(16, 20));
-      const availabilityAssurances = E_4_int.decode(bytes.subarray(20, 24));
-
-      return {
-        value: {
-          blocksProduced: blocksProduced.value,
-          ticketsIntroduced: ticketsIntroduced.value,
-          preimagesIntroduced: preimagesIntroduced.value,
-          totalOctetsIntroduced: totalOctetsIntroduced.value,
-          guaranteedReports: guaranteedReports.value,
-          availabilityAssurances: availabilityAssurances.value,
-        },
-        readBytes: 24,
-      };
-    },
-    encodedSize() {
-      return 24;
-    },
-  };
-
   // 13
   toRet.set(
     C_fn(13),
     encodeWithCodec(
-      createSequenceCodec(
-        2,
-        createSequenceCodec(NUMBER_OF_VALIDATORS, svscodec),
-      ),
+      ValidatorStatisticsCodec(NUMBER_OF_VALIDATORS),
       state.validatorStatistics,
     ),
   );
