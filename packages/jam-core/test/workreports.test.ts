@@ -2,12 +2,10 @@ import fs from "fs";
 import {
   AuthorizerPoolCodec,
   Blake2bHashCodec,
-  buildKeyValueCodec,
   codec_Eg,
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
-  E_1_int,
   E_sub,
   E_sub_int,
   Ed25519PubkeyCodec,
@@ -40,10 +38,35 @@ import {
   u32,
   u64,
   WorkPackageHash,
+  AccumulationHistory,
+  AccumulationQueue,
+  HeaderLookupHistory,
+  ServiceAccount,
+  Delta,
 } from "@tsjam/types";
-import { it, describe, expect } from "vitest";
+import { toPosterior } from "@tsjam/utils";
+import { vi, it, describe, beforeEach } from "vitest";
 import { mapCodec } from "@tsjam/codec";
 import { logCodec } from "@tsjam/codec/test/utils.js";
+import { assertEGValid } from "@/validateEG";
+
+const mocks = vi.hoisted(() => {
+  return {
+    CORES: 341,
+  };
+});
+vi.mock("@tsjam/constants", async (importOriginal) => {
+  const toRet = {
+    ...(await importOriginal<typeof import("@tsjam/constants")>()),
+    ...mocks,
+  };
+  Object.defineProperty(toRet, "CORES", {
+    get() {
+      return mocks.CORES;
+    },
+  });
+  return toRet;
+});
 
 type TestState = {
   dd_rho: DoubleDagger<RHO>;
@@ -69,7 +92,7 @@ type TestState = {
 type Input = {
   eg: EG_Extrinsic;
   // H_t
-  tau: Tau;
+  tau: Posterior<Tau>;
 };
 type Output = {
   reportedPackages: Array<{
@@ -123,10 +146,10 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
         Posterior<JamState["entropy"]>
       >,
     ],
-    logCodec([
+    [
       "p_psi_o",
       createArrayLengthDiscriminator<ED25519PublicKey[]>(Ed25519PubkeyCodec),
-    ]),
+    ],
     [
       "blockHistory",
       createArrayLengthDiscriminator<RecentHistory>(
@@ -169,8 +192,8 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
               ["balance", E_sub<u64>(8)],
               ["minItemGas", E_sub<Gas>(8)],
               ["minMemoGas", E_sub<Gas>(8)],
-              ["bytes", E_sub<u64>(8)],
-              ["items", E_sub_int<u32>(4)],
+              logCodec(["bytes", E_sub<u64>(8)]),
+              logCodec(["items", E_sub_int<u32>(4)]),
             ]),
           ],
         ]),
@@ -183,15 +206,15 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
   );
 
   const decoded = createCodec<TestCase>([
-    logCodec([
+    [
       "input",
       createCodec<Input>([
         ["eg", codec_Eg],
-        logCodec(["tau", E_sub_int<Tau>(4)]),
+        ["tau", E_sub_int<Posterior<Tau>>(4)],
       ]),
-    ]),
-    logCodec(["preState", stateCodec]),
-    [
+    ],
+    ["preState", stateCodec],
+    logCodec([
       "output",
       eitherOneOfCodec<TestCase["output"]>([
         [
@@ -211,13 +234,40 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
         ],
         ["err", E_sub_int<number>(1)],
       ]),
-    ],
+    ]),
     ["postState", stateCodec],
   ]).decode(testBin).value;
+
+  throw new Error("baqnan");
+  const [err] = assertEGValid(decoded.input.eg, {
+    rho: decoded.preState.dd_rho,
+    dd_rho: decoded.preState.dd_rho,
+    delta: <Delta>new Map<ServiceIndex, ServiceAccount>(
+      decoded.preState.deltaServices.map(({ id, info }) => {
+        return [id, { codeHash: info.codeHash } as unknown as ServiceAccount];
+      }),
+    ),
+    p_tau: decoded.input.tau,
+    p_kappa: decoded.preState.p_kappa,
+    p_lambda: decoded.preState.p_lambda,
+    p_entropy: decoded.preState.p_entropy,
+    p_psi_o: toPosterior(new Set(decoded.preState.p_psi_o)),
+    recentHistory: decoded.preState.blockHistory,
+
+    // au: decoded.preState.authPool, //FIXME: authpool???
+    accumulationHistory: [] as unknown as AccumulationHistory,
+    accumulationQueue: [] as unknown as AccumulationQueue,
+    headerLookupHistory: new Map() as HeaderLookupHistory,
+  }).safeRet();
+
+  console.log(err);
 
   console.log(decoded.output);
 };
 describe("workreports", () => {
+  beforeEach(() => {
+    mocks.CORES = 2;
+  });
   it("anchor_not_recent-1", () => {
     buildTest("anchor_not_recent-1", "tiny");
   });
