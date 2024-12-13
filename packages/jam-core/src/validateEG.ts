@@ -288,15 +288,15 @@ export const assertEGValid = (
       .filter((a) => typeof a !== "undefined"),
   );
 
-  const rhk = new Set(
+  const kxp = new Set(
     deps.recentHistory.map((r) => [...r.reportedPackages.keys()]).flat(),
   );
-  const ahs = new Set(
+  const _x = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
   );
   // $(0.5.0 - 11.37)
   for (const _p of p) {
-    if (q.has(_p) || a.has(_p) || rhk.has(_p) || ahs.has(_p)) {
+    if (q.has(_p) || a.has(_p) || kxp.has(_p) || _x.has(_p)) {
       return err(EGError.WORKPACKAGE_IN_PIPELINE);
     }
   }

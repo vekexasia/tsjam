@@ -12,6 +12,7 @@ import {
   Hash,
   MerkeTreeRoot,
   OpaqueHash,
+  WorkPackageHash,
 } from "@tsjam/types";
 import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
 
@@ -72,6 +73,10 @@ export const GenericBytesBigIntCodec = <
 });
 
 export const HashCodec = GenericBytesBigIntCodec<Hash, 32>(32);
+export const WorkPackageHashCodec = GenericBytesBigIntCodec<
+  WorkPackageHash,
+  32
+>(32);
 export const Blake2bHashCodec = GenericBytesBigIntCodec<Blake2bHash, 32>(32);
 export const OpaqueHashCodec = GenericBytesBigIntCodec<OpaqueHash, 32>(32);
 export const MerkleTreeRootCodec = GenericBytesBigIntCodec<MerkeTreeRoot, 32>(
