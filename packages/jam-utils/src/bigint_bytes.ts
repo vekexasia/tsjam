@@ -1,5 +1,5 @@
 import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
-import { BigIntBytes } from "@tsjam/types";
+import { BigIntBytes, ByteArrayOfLength } from "@tsjam/types";
 
 /**
  * Utility to convert a BigInt to a Uint8Array
@@ -9,8 +9,10 @@ import { BigIntBytes } from "@tsjam/types";
 export const bigintToBytes = <T extends number>(
   value: BigIntBytes<T>,
   nBytes: T,
-): Uint8Array => {
-  return uncheckedConverter.bigEndianToNewArray(value, nBytes);
+): ByteArrayOfLength<T> => {
+  return <ByteArrayOfLength<T>>(
+    uncheckedConverter.bigEndianToNewArray(value, nBytes)
+  );
 };
 
 export const bigintToExistingBytes = <T extends number>(

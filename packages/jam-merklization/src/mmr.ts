@@ -1,10 +1,12 @@
-import { Hash } from "@tsjam/types";
+import { ByteArrayOfLength, Hash, PVMIxExecutionError } from "@tsjam/types";
 import {
   HashCodec,
   JamCodec,
   OptBytesBigIntCodec,
   createArrayLengthDiscriminator,
 } from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
+import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * section E.2 `A`
@@ -45,6 +47,38 @@ const replace = <T>(elements: T[], index: number, value: T) => {
   const toRet = elements.slice();
   toRet[index] = value;
   return toRet;
+};
+
+/**
+ * $(0.5.2 - E.10)
+ */
+export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
+  const peeks = _peeks
+    .filter((a) => typeof a !== "undefined")
+    .map((a) => bigintToBytes(a, 32));
+  if (peeks.length === 0) {
+    return <Hash>0n;
+  }
+  return bytesToBigInt<32, Hash>(innerMMRSuperPeak(peeks));
+};
+
+const NODE = new TextEncoder().encode("node");
+const innerMMRSuperPeak = (
+  peeks: ByteArrayOfLength<32>[],
+): ByteArrayOfLength<32> => {
+  if (peeks.length === 0) {
+    return bigintToBytes(<Hash>0n, 32);
+  }
+  if (peeks.length === 1) {
+    return peeks[0];
+  }
+  return Hashing.keccak256Buf(
+    new Uint8Array([
+      ...NODE,
+      ...innerMMRSuperPeak(peeks.slice(0, peeks.length - 1)),
+      ...peeks[peeks.length - 1],
+    ]),
+  );
 };
 
 /**

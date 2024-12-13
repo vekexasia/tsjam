@@ -43,6 +43,7 @@ import {
   WorkPackageHash,
   WorkReport,
   SafroleState,
+  ByteArrayOfLength,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -162,7 +163,7 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
         n[3],
         h[3],
         ...h.subarray(4),
-      ]),
+      ]) as unknown as ByteArrayOfLength<32>,
     );
   }
   if (typeof _s === "number") {

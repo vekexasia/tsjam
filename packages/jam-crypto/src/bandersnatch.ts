@@ -4,6 +4,7 @@ import {
   BandersnatchPrivKey,
   BandersnatchRingRoot,
   BandersnatchSignature,
+  ByteArrayOfLength,
   OpaqueHash,
   RingVRFProof,
 } from "@tsjam/types";
@@ -50,7 +51,11 @@ export const Bandersnatch = {
    * $(0.5.0 - G.2)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
-    return bytesToBigInt(vrfOutputHash(bigintToBytes(signature, 96)));
+    return bytesToBigInt(
+      vrfOutputHash(
+        bigintToBytes(signature, 96),
+      ) as unknown as ByteArrayOfLength<32>,
+    );
   },
 
   /**
@@ -58,7 +63,9 @@ export const Bandersnatch = {
    * $(0.5.0 - G.5)
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
-    return bytesToBigInt(vrfOutputHash(ringProof));
+    return bytesToBigInt(
+      vrfOutputHash(ringProof) as unknown as ByteArrayOfLength<32>,
+    );
   },
 
   verifyVrfProof(
@@ -86,6 +93,6 @@ export const Bandersnatch = {
     });
 
     const root = Buffer.from(ringRoot(inputBuf));
-    return bytesToBigInt(root) as T;
+    return bytesToBigInt(root as unknown as ByteArrayOfLength<144>) as T;
   },
 };

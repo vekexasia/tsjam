@@ -45,14 +45,16 @@ import {
   Delta,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { vi, it, describe, beforeEach } from "vitest";
+import { expect, vi, it, describe, beforeEach } from "vitest";
 import { mapCodec } from "@tsjam/codec";
 import { logCodec } from "@tsjam/codec/test/utils.js";
-import { assertEGValid } from "@/validateEG";
+import { assertEGValid, EGError } from "@/validateEG";
 
 const mocks = vi.hoisted(() => {
   return {
     CORES: 341,
+    NUMBER_OF_VALIDATORS: 1023,
+    EPOCH_LENGTH: 600,
   };
 });
 vi.mock("@tsjam/constants", async (importOriginal) => {
@@ -60,6 +62,16 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
     ...(await importOriginal<typeof import("@tsjam/constants")>()),
     ...mocks,
   };
+  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
+    get() {
+      return mocks.NUMBER_OF_VALIDATORS;
+    },
+  });
+  Object.defineProperty(toRet, "EPOCH_LENGTH", {
+    get() {
+      return mocks.EPOCH_LENGTH;
+    },
+  });
   Object.defineProperty(toRet, "CORES", {
     get() {
       return mocks.CORES;
@@ -192,8 +204,8 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
               ["balance", E_sub<u64>(8)],
               ["minItemGas", E_sub<Gas>(8)],
               ["minMemoGas", E_sub<Gas>(8)],
-              logCodec(["bytes", E_sub<u64>(8)]),
-              logCodec(["items", E_sub_int<u32>(4)]),
+              ["bytes", E_sub<u64>(8)],
+              ["items", E_sub_int<u32>(4)],
             ]),
           ],
         ]),
@@ -214,7 +226,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       ]),
     ],
     ["preState", stateCodec],
-    logCodec([
+    [
       "output",
       eitherOneOfCodec<TestCase["output"]>([
         [
@@ -234,11 +246,15 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
         ],
         ["err", E_sub_int<number>(1)],
       ]),
-    ]),
+    ],
     ["postState", stateCodec],
   ]).decode(testBin).value;
+  console.log(
+    decoded.preState.blockHistory.map((a) => {
+      return a.headerHash.toString(16);
+    }),
+  );
 
-  throw new Error("baqnan");
   const [err] = assertEGValid(decoded.input.eg, {
     rho: decoded.preState.dd_rho,
     dd_rho: decoded.preState.dd_rho,
@@ -260,15 +276,27 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     headerLookupHistory: new Map() as HeaderLookupHistory,
   }).safeRet();
 
-  console.log(err);
-
   console.log(decoded.output);
+  if (err) {
+    throw new Error(err);
+  }
 };
 describe("workreports", () => {
+  const set = "tiny";
   beforeEach(() => {
     mocks.CORES = 2;
+    mocks.NUMBER_OF_VALIDATORS = 6;
+    mocks.EPOCH_LENGTH = 12;
+  });
+  it("report_curr_rotation-1", () => {
+    expect(() => buildTest("report_curr_rotation-1", set)).to.not.throw();
   });
   it("anchor_not_recent-1", () => {
-    buildTest("anchor_not_recent-1", "tiny");
+    expect(() => buildTest("anchor_not_recent-1", set)).toThrow(
+      EGError.ANCHOR_NOT_IN_RECENTHISTORY,
+    );
+  });
+  it("bad_beefy_mmr-1", () => {
+    expect(buildTest("bad_beefy_mmr-1", set)).toBe(1);
   });
 });

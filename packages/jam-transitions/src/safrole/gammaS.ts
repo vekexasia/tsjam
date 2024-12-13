@@ -1,5 +1,6 @@
 import {
   BandersnatchKey,
+  ByteArrayOfLength,
   JamEntropy,
   JamHeader,
   JamState,
@@ -112,7 +113,7 @@ if (import.meta.vitest) {
     beforeEach(() => {
       state = mockState({});
       vi.spyOn(Hashing, "blake2bBuf").mockImplementation(
-        () => new Uint8Array(32),
+        () => new Uint8Array(32) as unknown as ByteArrayOfLength<32>,
       );
     });
     describe("fallback", () => {

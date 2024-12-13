@@ -1,4 +1,5 @@
 import {
+  ByteArrayOfLength,
   ED25519PrivateKey,
   ED25519PublicKey,
   ED25519Signature,
@@ -32,6 +33,6 @@ export const Ed25519 = {
       Buffer.from(message),
       Buffer.from(bigintToBytes(privkey, 64)),
     );
-    return bytesToBigInt(signatureBuf);
+    return bytesToBigInt(signatureBuf as unknown as ByteArrayOfLength<64>);
   },
 };

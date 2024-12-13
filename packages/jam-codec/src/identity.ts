@@ -57,7 +57,12 @@ export const GenericBytesBigIntCodec = <
   num: T,
 ): JamCodec<K> => ({
   decode(bytes: Uint8Array): { value: K; readBytes: number } {
-    return { value: bytesToBigInt(bytes.subarray(0, num)), readBytes: num };
+    return {
+      value: bytesToBigInt(
+        bytes.subarray(0, num) as unknown as ByteArrayOfLength<T>,
+      ),
+      readBytes: num,
+    };
   },
   encode(value: K, bytes: Uint8Array): number {
     assert.ok(
