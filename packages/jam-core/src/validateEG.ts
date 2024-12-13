@@ -33,6 +33,7 @@ import { Ed25519, Hashing } from "@tsjam/crypto";
 import { PHI_FN, _w } from "@tsjam/transitions";
 import { Result, err, ok } from "neverthrow";
 import { FisherYatesH } from "./fisherYates";
+import { MMRSuperPeak } from "@tsjam/merklization";
 
 export enum EGError {
   ANCHOR_NOT_IN_RECENTHISTORY = "Anchor not in recent history",
@@ -239,7 +240,7 @@ export const assertEGValid = (
 
   const recentWithBeefy = deps.recentHistory.map((r) => ({
     ...r,
-    beefy: Hashing.keccak256(encodeWithCodec(E_M, r.accumulationResultMMR)),
+    beefy: MMRSuperPeak(r.accumulationResultMMR),
   }));
   for (const refinementContext of x) {
     // $(0.5.0 - 11.32)
