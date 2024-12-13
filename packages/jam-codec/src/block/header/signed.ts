@@ -3,7 +3,6 @@ import { SignedJamHeader } from "@tsjam/types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
 import { BandersnatchSignatureCodec } from "@/identity.js";
-import { encodeWithCodec } from "@/utils";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -50,15 +49,27 @@ if (import.meta.vitest) {
     return {
       NUMBER_OF_VALIDATORS: 6,
       EPOCH_LENGTH: 12,
+      MINIMUM_VALIDATORS: (6 * 2) / 3 + 1,
+      CORES: 2,
     };
   });
   vi.mock("@tsjam/constants", async (importOriginal) => {
     const toRet = {
       ...(await importOriginal<typeof import("@tsjam/constants")>()),
     };
+    Object.defineProperty(toRet, "CORES", {
+      get() {
+        return constantMocks.CORES;
+      },
+    });
     Object.defineProperty(toRet, "EPOCH_LENGTH", {
       get() {
         return constantMocks.EPOCH_LENGTH;
+      },
+    });
+    Object.defineProperty(toRet, "MINIMUM_VALIDATORS", {
+      get() {
+        return constantMocks.MINIMUM_VALIDATORS;
       },
     });
     Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {

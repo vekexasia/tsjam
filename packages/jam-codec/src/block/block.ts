@@ -28,16 +28,10 @@ export const BlockCodec = createCodec<JamBlock>([
 if (import.meta.vitest) {
   const { describe, it, expect, vi } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/utils.js");
-  const constants = await import("@tsjam/constants");
   const { encodeWithCodec } = await import("@/utils");
   describe("Block", () => {
     const bin = getCodecFixtureFile("block.bin");
     it("should match block.bin", () => {
-      vi.spyOn(constants, "CORES", "get").mockReturnValue(<any>2);
-      vi.spyOn(constants, "EPOCH_LENGTH", "get").mockReturnValue(<any>12);
-      vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
-        <any>6,
-      );
       const decoded = BlockCodec.decode(bin).value;
       expect(BlockCodec.encodedSize(decoded)).toBe(bin.length);
       const reencoded = encodeWithCodec(BlockCodec, decoded);

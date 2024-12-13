@@ -1,6 +1,6 @@
-import { DisputeExtrinsic, ValidatorIndex, u32 } from "@tsjam/types";
-import { MINIMUM_VALIDATORS, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { E_4, E_4_int, E_sub_int } from "@/ints/E_subscr.js";
+import { DisputeExtrinsic, ValidatorIndex } from "@tsjam/types";
+import { MINIMUM_VALIDATORS } from "@tsjam/constants";
+import { E_4_int, E_sub_int } from "@/ints/E_subscr.js";
 import {
   Ed25519PubkeyCodec,
   Ed25519SignatureCodec,
