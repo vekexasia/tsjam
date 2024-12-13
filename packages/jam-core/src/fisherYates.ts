@@ -12,7 +12,7 @@ export const FisherYates = <T>(arr: T[], entropies: number[]) => {
   let index = 0;
   const toRet = <T[]>[];
   while (l > 0) {
-    index = entropies[index] % l;
+    index = entropies[sliced.length - l] % l;
     toRet.push(sliced[index]);
     sliced[index] = sliced[l - 1];
     l--;
@@ -47,3 +47,17 @@ const Q = (l: number, entropy: Hash): u32[] => {
   }
   return toRet;
 };
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+  describe("fisheryates", () => {
+    it("test", () => {
+      const entropy =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
+      const arr = [0, 1, 2, 3, 4, 5, 6, 7];
+      expect(FisherYatesH(arr, entropy as Hash)).deep.eq([
+        1, 2, 6, 0, 7, 4, 3, 5,
+      ]);
+    });
+  });
+}
