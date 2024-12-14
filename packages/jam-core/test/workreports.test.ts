@@ -43,6 +43,7 @@ import {
   HeaderLookupHistory,
   ServiceAccount,
   Delta,
+  JamHeader,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
@@ -55,6 +56,7 @@ const mocks = vi.hoisted(() => {
     CORES: 341,
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
+    VALIDATOR_CORE_ROTATION: 10,
   };
 });
 vi.mock("@tsjam/constants", async (importOriginal) => {
@@ -62,6 +64,12 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
     ...(await importOriginal<typeof import("@tsjam/constants")>()),
     ...mocks,
   };
+
+  Object.defineProperty(toRet, "VALIDATOR_CORE_ROTATION", {
+    get() {
+      return mocks.VALIDATOR_CORE_ROTATION;
+    },
+  });
   Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
     get() {
       return mocks.NUMBER_OF_VALIDATORS;
@@ -249,11 +257,6 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     ],
     ["postState", stateCodec],
   ]).decode(testBin).value;
-  console.log(
-    decoded.preState.blockHistory.map((a) => {
-      return a.headerHash.toString(16);
-    }),
-  );
 
   const [err] = assertEGValid(decoded.input.eg, {
     rho: decoded.preState.dd_rho,
@@ -273,10 +276,19 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     // au: decoded.preState.authPool, //FIXME: authpool???
     accumulationHistory: [] as unknown as AccumulationHistory,
     accumulationQueue: [] as unknown as AccumulationQueue,
-    headerLookupHistory: new Map() as HeaderLookupHistory,
+    headerLookupHistory: new Map(
+      decoded.input.eg.map((a) => {
+        return [
+          a.workReport.refinementContext.lookupAnchor.timeSlot as Tau,
+          {
+            hash: a.workReport.refinementContext.lookupAnchor.headerHash,
+            header: null as unknown as JamHeader,
+          },
+        ];
+      }),
+    ),
   }).safeRet();
 
-  console.log(decoded.output);
   if (err) {
     throw new Error(err);
   }
@@ -284,19 +296,158 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
 describe("workreports", () => {
   const set = "tiny";
   beforeEach(() => {
-    mocks.CORES = 2;
-    mocks.NUMBER_OF_VALIDATORS = 6;
-    mocks.EPOCH_LENGTH = 12;
+    if (set === "tiny") {
+      mocks.CORES = 2;
+      mocks.NUMBER_OF_VALIDATORS = 6;
+      mocks.EPOCH_LENGTH = 12;
+      mocks.VALIDATOR_CORE_ROTATION = 4;
+    }
   });
   it("report_curr_rotation-1", () => {
     expect(() => buildTest("report_curr_rotation-1", set)).to.not.throw();
+  });
+  it("report_prev_rotation-1", () => {
+    expect(() => buildTest("report_prev_rotation-1", set)).to.not.throw();
+  });
+  it("multiple_reports-1", () => {
+    expect(() => buildTest("multiple_reports-1", set)).to.not.throw();
   });
   it("anchor_not_recent-1", () => {
     expect(() => buildTest("anchor_not_recent-1", set)).toThrow(
       EGError.ANCHOR_NOT_IN_RECENTHISTORY,
     );
   });
+  it("bad_code_hash-1", () => {
+    expect(() => buildTest("bad_code_hash-1", set)).toThrow(
+      EGError.WRONG_CODEHASH,
+    );
+  });
+  it("bad_core_index-1", () => {
+    expect(() => buildTest("bad_core_index-1", set)).toThrow(
+      EGError.CORE_INDEX_MISMATCH,
+    );
+  });
+  it("bad_service_id-1", () => {
+    expect(() => buildTest("bad_service_id-1", set)).toThrow(
+      EGError.WRONG_CODEHASH,
+    );
+  });
+  it("bad_state_root-1", () => {
+    expect(() => buildTest("bad_state_root-1", set)).toThrow(
+      EGError.ANCHOR_NOT_IN_RECENTHISTORY,
+    );
+  });
+  it("bad_validator_index-1", () => {
+    expect(() => buildTest("bad_validator_index-1", set)).toThrow(
+      EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS,
+    );
+  });
+  it("core_engaged-1", () => {
+    expect(() => buildTest("core_engaged-1", set)).toThrow(
+      EGError.REPORT_PENDING_AVAILABILITY,
+    );
+  });
+  it.skip("dependency_missing-1", () => {
+    expect(() => buildTest("dependency_missing-1", set)).toThrow(
+      EGError.REPORT_PENDING_AVAILABILITY,
+    );
+  });
+  it("duplicate_package_in_recent_history-1", () => {
+    expect(() =>
+      buildTest("duplicate_package_in_recent_history-1", set),
+    ).toThrow(EGError.WORKPACKAGE_IN_PIPELINE);
+  });
+  it("future_report_slot-1", () => {
+    expect(() => buildTest("future_report_slot-1", set)).toThrow(
+      EGError.TIMESLOT_BOUNDS_2,
+    );
+  });
+
+  it("bad_signature-1", () => {
+    expect(() => buildTest("bad_signature-1", set)).toThrow(
+      EGError.SIGNATURE_INVALID,
+    );
+  });
+
+  it("high_work_report_gas-1", () => {
+    buildTest("high_work_report_gas-1", set);
+  });
+
+  it("too_high_work_report_gas-1", () => {
+    expect(() => buildTest("too_high_work_report_gas-1", set)).toThrow("gaaas");
+  });
+
+  it("service_item_gas_too_low-1", () => {
+    expect(() => buildTest("service_item_gas_too_low-1", set)).toThrow("gaaas");
+  });
+
+  it("many_dependencies-1", () => {
+    buildTest("many_dependencies-1", set);
+  });
+
+  it("too_many_dependencies-1", () => {
+    expect(() => buildTest("too_many_dependencies-1", set)).toThrow("deps");
+  });
+  it("no_enough_guarantees-1", () => {
+    expect(() => buildTest("no_enough_guarantees-1", set)).toThrow(
+      EGError.CREDS_MUST_BE_BETWEEN_2_AND_3,
+    );
+  });
+  it("not_authorized-1", () => {
+    expect(() => buildTest("not_authorized-1", set)).toThrow("authorizded");
+  });
+  it("not_authorized-2", () => {
+    expect(() => buildTest("not_authorized-2", set)).toThrow("authorizded");
+  });
+  it("not_sorted_guarantor-1", () => {
+    expect(() => buildTest("not_sorted_guarantor-1", set)).toThrow(
+      EGError.VALIDATOR_INDEX_MUST_BE_UNIQUE_AND_ORDERED,
+    );
+  });
+  it("out_of_order_guarantees-1", () => {
+    expect(() => buildTest("out_of_order_guarantees-1", set)).toThrow(
+      EGError.CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED,
+    );
+  });
+  it("reports_with_dependencies-1", () => {
+    buildTest("reports_with_dependencies-1", set);
+  });
+  it("reports_with_dependencies-2", () => {
+    buildTest("reports_with_dependencies-2", set);
+  });
+  it("reports_with_dependencies-3", () => {
+    buildTest("reports_with_dependencies-3", set);
+  });
+  it("reports_with_dependencies-4", () => {
+    buildTest("reports_with_dependencies-4", set);
+  });
+  it("reports_with_dependencies-5", () => {
+    buildTest("reports_with_dependencies-5", set);
+  });
+  it("segment_root_lookup_invalid-1", () => {
+    buildTest("segment_root_lookup_invalid-1", set);
+  })
+  it("segment_root_lookup_invalid-2", () => {
+    buildTest("segment_root_lookup_invalid-2", set);
+  })
+  it("wrong_assignment-1", () => {
+    expect(() => buildTest("wrong_assignment-1", set)).toThrow("dc");
+  });
+  it("big_work_report_output-1", () => {
+    buildTest("big_work_report_output-1", set);
+  });
+
+  it("too_big_work_report_output-1", () => {
+    buildTest("too_big_work_report_output-1", set);
+  });
+  it("report_before_last_rotation-1", () => {
+    expect(() => buildTest("report_before_last_rotation-1", set)).toThrow(
+      EGError.CORE_INDEX_MISMATCH,
+    );
+  });
   it("bad_beefy_mmr-1", () => {
-    expect(buildTest("bad_beefy_mmr-1", set)).toBe(1);
+    expect(() => buildTest("bad_beefy_mmr-1", set)).toThrow(
+      EGError.ANCHOR_NOT_IN_RECENTHISTORY,
+    );
   });
 });
