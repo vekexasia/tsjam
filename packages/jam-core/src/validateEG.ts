@@ -190,7 +190,7 @@ export const assertEGValid = (
         return err(EGError.CORE_INDEX_MISMATCH);
       }
       // And
-      if (VALIDATOR_CORE_ROTATION * curRotation - 1 > timeSlot) {
+      if (VALIDATOR_CORE_ROTATION * (curRotation - 1) > timeSlot) {
         return err(EGError.TIMESLOT_BOUNDS_1);
       }
       if (timeSlot > deps.p_tau) {
