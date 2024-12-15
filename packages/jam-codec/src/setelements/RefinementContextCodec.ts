@@ -1,8 +1,13 @@
 import { RefinementContext, Tau, WorkPackageHash } from "@tsjam/types";
-import { GenericBytesBigIntCodec, HashCodec } from "@/identity.js";
+import {
+  GenericBytesBigIntCodec,
+  HashCodec,
+  WorkPackageHashCodec,
+} from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { OptBytesBigIntCodec } from "@/optional.js";
 import { createCodec } from "@/utils";
+import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator";
 
 /**
  * it defines codec for the RefinementContext or member of `X` set
@@ -25,10 +30,8 @@ export const RefinementContextCodec = createCodec<RefinementContext>([
     ]),
   ],
   [
-    "requiredWorkPackage",
-    OptBytesBigIntCodec<WorkPackageHash, 32>(
-      GenericBytesBigIntCodec<WorkPackageHash, 32>(32),
-    ),
+    "requiredWorkPackages",
+    createArrayLengthDiscriminator(WorkPackageHashCodec),
   ],
 ]);
 

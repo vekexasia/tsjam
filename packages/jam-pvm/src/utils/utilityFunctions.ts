@@ -49,7 +49,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
- * $(0.5.0 - 12.4)
+ * $(0.5.2 - 12.4)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -57,7 +57,7 @@ export const noPrereqAvailableReports = (
   return toTagged(
     w.filter(
       (wr) =>
-        typeof wr.refinementContext.requiredWorkPackage === "undefined" &&
+        wr.refinementContext.requiredWorkPackages.length === 0 &&
         wr.segmentRootLookup.size === 0,
     ),
   );
@@ -127,15 +127,16 @@ export const withPrereqAvailableReports = (
       w
         .filter((wr) => {
           return (
-            typeof wr.refinementContext.requiredWorkPackage !== "undefined" ||
+            wr.refinementContext.requiredWorkPackages.length > 0 ||
             wr.segmentRootLookup.size > 0
           );
         })
         .map((wr) => {
           const deps = new Set<WorkPackageHash>(wr.segmentRootLookup.keys());
-          if (typeof wr.refinementContext.requiredWorkPackage !== "undefined") {
-            deps.add(wr.refinementContext.requiredWorkPackage);
-          }
+          wr.refinementContext.requiredWorkPackages.forEach((rwp) =>
+            deps.add(rwp),
+          );
+
           return { workReport: wr, dependencies: deps };
         }),
       accHistoryUnion(accHistory),

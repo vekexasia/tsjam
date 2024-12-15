@@ -4,7 +4,7 @@ import { Hash, WorkPackageHash } from "@/genericTypes";
 /**
  * gives a snapshotof what was the situation when the work report was created
  * defined by `X` set
- * $(0.5.0 - 11.4)
+ * $(0.5.2 - 11.4)
  */
 export type RefinementContext = {
   // first block of the snapshot
@@ -38,5 +38,5 @@ export type RefinementContext = {
    * it may define a required "parent" work package
    * some kind of dependency of the work package
    */
-  requiredWorkPackage?: WorkPackageHash;
+  requiredWorkPackages: WorkPackageHash[];
 };
