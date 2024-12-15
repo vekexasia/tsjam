@@ -2,6 +2,7 @@ import { slotIndex, toPosterior } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,
+  AuthorizerPool,
   Delta,
   DoubleDagger,
   ED25519PublicKey,
@@ -23,12 +24,15 @@ import {
 import {
   CORES,
   JAM_GUARANTEE,
+  MAX_WORK_PREREQUISITES,
   MAXIMUM_AGE_LOOKUP_ANCHOR,
   NUMBER_OF_VALIDATORS,
   VALIDATOR_CORE_ROTATION,
   WORK_TIMEOUT,
+  MAX_WORKREPORT_OUTPUT_SIZE,
+  TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
-import { E_M, WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
+import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { PHI_FN, _w } from "@tsjam/transitions";
 import { Result, err, ok } from "neverthrow";
@@ -36,6 +40,11 @@ import { FisherYatesH } from "./fisherYates";
 import { MMRSuperPeak } from "@tsjam/merklization";
 
 export enum EGError {
+  GAS_TOO_LOW = "Work result gasPrioritization is too low",
+  GAS_EXCEEDED_ACCUMULATION_LIMITS = "Gas exceeded maximum accumulation limit GA",
+  WORKREPORT_SIZE_EXCEEDED = "Workreport max size exceeded",
+  MISSING_AUTH = "Missing authorization in pool",
+  TOO_MANY_PREREQUISITES = "Too many work prerequisites in report",
   ANCHOR_NOT_IN_RECENTHISTORY = "Anchor not in recent history",
   EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES = "Extrinsic length must be less than CORES",
   CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "core index must be unique and ordered",
@@ -105,6 +114,7 @@ export const assertEGValid = (
     delta: Delta;
     accumulationHistory: AccumulationHistory;
     accumulationQueue: AccumulationQueue;
+    authPool: AuthorizerPool;
     rho: RHO;
     dd_rho: DoubleDagger<RHO>;
     p_entropy: Posterior<JamState["entropy"]>;
@@ -120,6 +130,30 @@ export const assertEGValid = (
   // $(0.5.0 - 11.22)
   if (extrinsic.length > CORES) {
     return err(EGError.EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES);
+  }
+
+  for (const { workReport } of extrinsic) {
+    // $(0.5.2 - 11.3) | Check the number of dependencies in the workreports
+    if (
+      workReport.segmentRootLookup.size +
+        workReport.refinementContext.requiredWorkPackages.length >
+      MAX_WORK_PREREQUISITES
+    ) {
+      return err(EGError.TOO_MANY_PREREQUISITES);
+    }
+
+    // $(0.5.2 - 11.8) | check work report total size
+
+    const totalSize =
+      workReport.authorizerOutput.length +
+      workReport.results
+        .map((r) => r.output)
+        .filter((ro) => ro instanceof Uint8Array)
+        .map((ro) => ro.length)
+        .reduce((a, b) => a + b, 0);
+    if (totalSize > MAX_WORKREPORT_OUTPUT_SIZE) {
+      return err(EGError.WORKREPORT_SIZE_EXCEEDED);
+    }
   }
 
   // $(0.5.0 - 11.23) - make sure they're ordered and uniqueby coreindex
@@ -212,11 +246,38 @@ export const assertEGValid = (
   // $(0.5.0 - 11.27)
   const w = _w(extrinsic);
 
-  // $(0.5.0 - 11.28) | no reports can be placed in core when there is something pending
+  // $(0.5.0 - 11.41) | check the result serviceIndex & codeHash match what we have in delta
+  for (const _w of w) {
+    for (const r of _w.results) {
+      if (r.codeHash !== deps.delta.get(r.serviceIndex)?.codeHash) {
+        return err(EGError.WRONG_CODEHASH);
+      }
+    }
+  }
+
+  // $(0.5.2 - 11.31) | check gas requiremens
+  for (const wr of w) {
+    const usedGas = wr.results
+      .map((r) => r.gasPrioritization)
+      .reduce((a, b) => a + b, 0n);
+    if (usedGas > TOTAL_GAS_ACCUMULATION_LOGIC) {
+      return err(EGError.GAS_EXCEEDED_ACCUMULATION_LIMITS);
+    }
+
+    for (const res of wr.results) {
+      if (
+        res.gasPrioritization <
+        deps.delta.get(res.serviceIndex)!.minGasAccumulate
+      ) {
+        return err(EGError.GAS_TOO_LOW);
+      }
+    }
+  }
+
+  // $(0.5.2 - 11.30) | no reports can be placed in core when there is something pending
   // and that pending stuff is not expird
-  // TODO: is missing a piece
   for (let i = 0; i < w.length; i++) {
-    const { coreIndex } = w[i];
+    const { coreIndex, authorizerHash } = w[i];
     if (
       !(
         typeof deps.dd_rho[coreIndex] === "undefined" ||
@@ -224,6 +285,11 @@ export const assertEGValid = (
       )
     ) {
       return err(EGError.REPORT_PENDING_AVAILABILITY);
+    }
+
+    // check authorization pool
+    if (!new Set(deps.authPool[coreIndex]).has(authorizerHash)) {
+      return err(EGError.MISSING_AUTH);
     }
   }
 
@@ -274,18 +340,19 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.5.0 - 11.35)
+  // $(0.5.2 - 11.37)
   const q: Set<WorkPackageHash> = new Set(
     deps.accumulationQueue
       .flat()
-      .map((a) => a.workReport.refinementContext.requiredWorkPackage)
-      .filter((rwp) => typeof rwp !== "undefined"),
+      .map((a) => a.workReport.refinementContext.requiredWorkPackages)
+      .flat(),
   );
 
-  // $(0.5.0 - 11.36)
+  // $(0.5.2 - 11.38)
   const a: Set<WorkPackageHash> = new Set(
     deps.rho
-      .map((a) => a?.workReport.refinementContext.requiredWorkPackage)
+      .map((a) => a?.workReport.refinementContext.requiredWorkPackages)
+      .flat()
       .filter((a) => typeof a !== "undefined"),
   );
 
@@ -295,14 +362,14 @@ export const assertEGValid = (
   const _x = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
   );
-  // $(0.5.0 - 11.37)
+  // $(0.5.2 - 11.39)
   for (const _p of p) {
     if (q.has(_p) || a.has(_p) || kxp.has(_p) || _x.has(_p)) {
       return err(EGError.WORKPACKAGE_IN_PIPELINE);
     }
   }
 
-  // $(0.5.0 - 11.38)
+  // $(0.5.2 - 11.40)
   const pSet = new Set(p);
   deps.recentHistory
     .map((r) => [...r.reportedPackages.keys()])
@@ -311,9 +378,7 @@ export const assertEGValid = (
 
   for (const _w of w) {
     const _p = new Set([..._w.segmentRootLookup.keys()]);
-    if (_w.refinementContext.requiredWorkPackage) {
-      _p.add(_w.refinementContext.requiredWorkPackage);
-    }
+    _w.refinementContext.requiredWorkPackages.forEach((rwp) => _p.add(rwp));
     for (const _pp of _p.values()) {
       if (!pSet.has(_pp)) {
         return err(EGError.SRLWP_NOTKNOWN);
@@ -342,15 +407,6 @@ export const assertEGValid = (
         if (typeof entry === "undefined" || entry !== h) {
           return err(EGError.SRLWP_NOTKNOWN);
         }
-      }
-    }
-  }
-
-  // $(0.5.0 - 11.41)
-  for (const _w of w) {
-    for (const r of _w.results) {
-      if (r.codeHash !== deps.delta.get(r.serviceIndex)?.codeHash) {
-        return err(EGError.WRONG_CODEHASH);
       }
     }
   }

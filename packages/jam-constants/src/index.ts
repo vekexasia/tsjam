@@ -51,6 +51,17 @@ export const MAXIMUM_WORK_ITEMS = 4;
  * 2^11
  */
 export const MAX_WORKPACKAGE_ENTRIES = 2048;
+
+/**
+ * `Wr` in the paper
+ * $(0.5.2 - 11.9)
+ */
+export const MAX_WORKREPORT_OUTPUT_SIZE = 48 * 2 ** 10;
+
+/**
+ * `J` in the paper
+ */
+export const MAX_WORK_PREREQUISITES = 8;
 /**
  * defined in timeslots
  * @see L in the paper
@@ -162,17 +173,17 @@ export const ERASURECODE_EXPORTED_SIZE = 6;
 /**
  * `GA`
  */
-export const TOTAL_GAS_ACCUMULATION_PER_CORE = 100000n;
+export const TOTAL_GAS_ACCUMULATION_LOGIC = 10_000_000n;
+
+/**
+ * `GR`
+ */
+export const TOTAL_GAS_REFINEMENT_LOGIC = 500_000_000n;
 
 /**
  * `GI`
  */
 export const TOTAL_GAS_IS_AUTHORIZED = 1000000n;
-
-/**
- * `GR`
- */
-export const TOTAL_GAS_REFINE = 500000000n;
 
 /**
  * `GT`
