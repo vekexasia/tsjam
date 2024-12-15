@@ -2,7 +2,7 @@ import {
   BLOCK_TIME,
   CORES,
   TOTAL_GAS_ACCUMULATION_ALL_CORES,
-  TOTAL_GAS_ACCUMULATION_PER_CORE,
+  TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
@@ -222,6 +222,7 @@ export const importBlock: STF<
       accumulationHistory: curState.accumulationHistory,
       accumulationQueue: curState.accumulationQueue,
       rho: curState.rho,
+      authPool: curState.authPool,
       dd_rho,
       p_tau,
       p_kappa,
@@ -263,7 +264,7 @@ export const importBlock: STF<
   // $(0.5.0 - 12.20)
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
-    TOTAL_GAS_ACCUMULATION_PER_CORE * BigInt(CORES) +
+    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
       [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 

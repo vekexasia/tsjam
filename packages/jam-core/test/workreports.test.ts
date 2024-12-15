@@ -300,9 +300,9 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
   }
 };
 describe("workreports", () => {
-  const set = "full";
+  const set: "full" | "tiny" = "full";
   beforeEach(() => {
-    if (set === "tiny") {
+    if (set === <string>"tiny") {
       mocks.CORES = 2;
       mocks.NUMBER_OF_VALIDATORS = 6;
       mocks.EPOCH_LENGTH = 12;
