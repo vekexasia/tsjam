@@ -70,19 +70,20 @@ pub fn ring_vrf_verify(
 #[napi]
 pub fn ring_root(input: &[u8]) -> Buffer {
   let mut ring: Vec<Public> = Vec::new();
-
+  let ring_ctx = ring_context(input.len() / 32);
+  let padding_point = ring_ctx.padding_point();
   // have u8 checked to be 32 in length and have each chunk inserted into the ring
   input
     .chunks_exact(32)
     .try_for_each(|c| {
-      let pk = Public::deserialize_compressed(c).unwrap();
+      let pk = Public::deserialize_compressed(c).unwrap_or(Public::from(padding_point));
       ring.push(pk);
       Ok::<(), ()>(())
     })
     .unwrap();
 
   let pts: Vec<_> = ring.iter().map(|pk| pk.0).collect();
-  let verifier_key = ring_context(input.len() / 32).verifier_key(&pts);
+  let verifier_key = ring_ctx.verifier_key(&pts);
   let mut output: Vec<u8> = Vec::new();
   let commitment = verifier_key.commitment();
   commitment.serialize_compressed(&mut output).unwrap();

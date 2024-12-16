@@ -18,8 +18,9 @@ import {
   SeqOfLength,
   ValidatorIndex,
   BandersnatchSignature,
+  ValidatorData,
 } from "@tsjam/types";
-import { isFallbackMode, toTagged } from "@tsjam/utils";
+import { bigintToBytes, isFallbackMode, toTagged } from "@tsjam/utils";
 import { importBlock } from "@/importBlock.js";
 import { merkelizeState } from "@tsjam/merklization";
 import {
@@ -50,11 +51,38 @@ const mocks = vi.hoisted(() => {
     EPOCH_LENGTH: 600,
     CORES: 341,
     MAX_TICKETS_PER_VALIDATOR: 2,
+    psi_o: new Set<ED25519PublicKey>(),
     toTagged: (a: any) => a,
     vrfOutputSignature: (a: any) => {
       return a;
     },
   };
+});
+vi.mock("@tsjam/transitions", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@tsjam/transitions")>();
+  const toRet = {
+    ...orig,
+  };
+  Object.defineProperty(toRet, "disputesSTF", {
+    get() {
+      return () => {
+        return {
+          safeRet() {
+            return [
+              undefined,
+              {
+                psi_g: new Set(),
+                psi_b: new Set(),
+                psi_w: new Set(),
+                psi_o: mocks.psi_o,
+              },
+            ];
+          },
+        };
+      };
+    },
+  });
+  return toRet;
 });
 vi.mock("@/verifySeal", async (importOriginal) => {
   const orig = await importOriginal<typeof import("@/verifySeal")>();
@@ -72,7 +100,6 @@ vi.mock("@/verifySeal", async (importOriginal) => {
       return () => true;
     },
   });
-
   Object.defineProperty(toRet, "verifyEpochMarker", {
     get() {
       return () => ok(undefined);
@@ -245,6 +272,8 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const jamStateCodec = mapCodec<TestState, JamState>(
     stateCodec,
     (fromTest: TestState): JamState => {
+      // this is so hacky i want to cry
+      mocks.psi_o = new Set(fromTest.p_psi_o);
       return {
         ...dummyState({ validators: NUMVALS, cores: NCOR, epoch: EPLEN }),
         kappa: fromTest.kappa,
@@ -371,6 +400,22 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     throw new Error(err);
   }
 
+  const edonly = (vd: ValidatorData) =>
+    Buffer.from(bigintToBytes(vd.ed25519, 32)).toString("hex");
+  const tohex = (n: number) => (a: bigint) =>
+    Buffer.from(bigintToBytes(<any>a, n)).toString("hex");
+  expect(newState.safroleState.gamma_a, "gamma_a").deep.eq(
+    decoded.value.postState.safroleState.gamma_a,
+  );
+  expect(newState.safroleState.gamma_k.map(edonly), "gamma_k").deep.eq(
+    decoded.value.postState.safroleState.gamma_k.map(edonly),
+  );
+  expect(newState.safroleState.gamma_s, "gamma_s").deep.eq(
+    decoded.value.postState.safroleState.gamma_s,
+  );
+  expect(tohex(144)(newState.safroleState.gamma_z), "gamma_z").deep.eq(
+    tohex(144)(decoded.value.postState.safroleState.gamma_z),
+  );
   expect(newState.safroleState, "safrole").deep.eq(
     decoded.value.postState.safroleState,
   );
@@ -437,6 +482,8 @@ describe("safrole-test-vectors", () => {
       test("publish-tickets-with-mark-4"));
     it("publish-tickets-with-mark-5", () =>
       test("publish-tickets-with-mark-5"));
+    it("enact-epoch-change-with-padding-1", () =>
+      test("enact-epoch-change-with-padding-1"));
   });
   describe("tiny", () => {
     const test = (name: string) => buildTest(name, "tiny");
@@ -495,5 +542,7 @@ describe("safrole-test-vectors", () => {
       test("publish-tickets-with-mark-4"));
     it("publish-tickets-with-mark-5", () =>
       test("publish-tickets-with-mark-5"));
+    it("enact-epoch-change-with-padding-1", () =>
+      test("enact-epoch-change-with-padding-1"));
   });
 });
