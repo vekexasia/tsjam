@@ -12,7 +12,7 @@ import {
   Posterior,
   ValidatorIndex,
 } from "@tsjam/types";
-import { Ed25519, Bandersnatch } from "@tsjam/crypto";
+import { Bandersnatch } from "@tsjam/crypto";
 import { computeExtrinsicHash } from "./verifySeal";
 import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
 import { merkelizeState } from "@tsjam/merklization";
@@ -58,7 +58,7 @@ export const createBlock = (
       curState.safroleState.gamma_z,
     ],
   ).safeRet();
-  const seal: BandersnatchSignature = null as any;
+  const seal: BandersnatchSignature = null as unknown as BandersnatchSignature;
   const header: JamHeader = {
     parent:
       curState.recentHistory[curState.recentHistory.length - 1].headerHash,

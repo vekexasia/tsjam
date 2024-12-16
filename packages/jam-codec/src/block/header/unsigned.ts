@@ -1,10 +1,4 @@
-import {
-  BandersnatchKey,
-  ED25519PublicKey,
-  JamHeader,
-  Tau,
-  ValidatorIndex,
-} from "@tsjam/types";
+import { ED25519PublicKey, JamHeader, Tau, ValidatorIndex } from "@tsjam/types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,

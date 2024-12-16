@@ -2,7 +2,6 @@ import {
   Dagger,
   EA_Extrinsic,
   JamBlock,
-  JamEntropy,
   JamHeader,
   JamState,
   Posterior,

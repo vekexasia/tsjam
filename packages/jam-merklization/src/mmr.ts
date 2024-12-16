@@ -1,4 +1,4 @@
-import { ByteArrayOfLength, Hash, PVMIxExecutionError } from "@tsjam/types";
+import { ByteArrayOfLength, Hash } from "@tsjam/types";
 import {
   HashCodec,
   JamCodec,

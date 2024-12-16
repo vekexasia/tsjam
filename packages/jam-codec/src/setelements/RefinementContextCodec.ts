@@ -1,11 +1,6 @@
-import { RefinementContext, Tau, WorkPackageHash } from "@tsjam/types";
-import {
-  GenericBytesBigIntCodec,
-  HashCodec,
-  WorkPackageHashCodec,
-} from "@/identity.js";
+import { RefinementContext, Tau } from "@tsjam/types";
+import { HashCodec, WorkPackageHashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
-import { OptBytesBigIntCodec } from "@/optional.js";
 import { createCodec } from "@/utils";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator";
 

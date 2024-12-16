@@ -26,7 +26,7 @@ export const BlockCodec = createCodec<JamBlock>([
 ]);
 
 if (import.meta.vitest) {
-  const { describe, it, expect, vi } = import.meta.vitest;
+  const { describe, it, expect } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/utils.js");
   const { encodeWithCodec } = await import("@/utils");
   describe("Block", () => {

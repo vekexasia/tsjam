@@ -37,7 +37,6 @@ import {
   MerkeTreeRoot,
   RecentHistoryItem,
   ServiceIndex,
-  SingleValidatorStatistics,
   Tau,
   u8,
   WorkPackageHash,
