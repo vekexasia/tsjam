@@ -20,7 +20,7 @@ export class Timekeeping {
    */
   static bigT() {
     const now = (Date.now() / 1000) | 0;
-    return now - JAM_COMMON_ERA;
+    return <Tau>(now - JAM_COMMON_ERA);
   }
 }
 /**

@@ -210,6 +210,10 @@ export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],
   hx: JamHeader["extrinsicHash"],
 ): hx is Validated<JamHeader["extrinsicHash"]> => {
+  return hx === computeExtrinsicHash(extrinsics);
+};
+
+export const computeExtrinsicHash = (extrinsics: JamBlock["extrinsics"]) => {
   const items = [
     ...Hashing.blake2bBuf(encodeWithCodec(codec_Et, extrinsics.tickets)),
     ...Hashing.blake2bBuf(encodeWithCodec(codec_Ep, extrinsics.preimages)),
@@ -220,11 +224,7 @@ export const verifyExtrinsicHash = (
     ...Hashing.blake2bBuf(encodeWithCodec(codec_Ed, extrinsics.disputes)),
   ];
   const preimage = new Uint8Array(items);
-
-  if (hx !== Hashing.blake2b(preimage)) {
-    return false;
-  }
-  return true;
+  return Hashing.blake2b(preimage);
 };
 
 /**

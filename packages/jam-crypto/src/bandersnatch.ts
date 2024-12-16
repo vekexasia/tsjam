@@ -49,9 +49,9 @@ export const Bandersnatch = {
    * @param privkey - the private key to sign with
    */
   sign(
-    context: Uint8Array,
-    message: Uint8Array,
     privkey: BandersnatchPrivKey,
+    message: Uint8Array,
+    context: Uint8Array,
   ): BandersnatchSignature {
     return bytesToBigInt(
       ietfVrfSign(bigintToBytes(privkey, 64), context, message),
