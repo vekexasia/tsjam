@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BandersnatchKey,
   BandersnatchPrivKey,
@@ -8,7 +7,14 @@ import {
   OpaqueHash,
   RingVRFProof,
 } from "@tsjam/types";
-import { ringRoot, vrfOutputHash, vrfVerify } from "@tsjam/crypto-napi";
+import {
+  ringRoot,
+  ringVrfOutputHash,
+  ietfVrfOutputHash,
+  ietfVrfSign,
+  ietfVrfVerify,
+  ringVrfVerify,
+} from "@tsjam/crypto-napi";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
@@ -27,7 +33,12 @@ export const Bandersnatch = {
     message: Uint8Array,
     context: Uint8Array,
   ): boolean {
-    return true; // TODO: implement
+    return ietfVrfVerify(
+      bigintToBytes(pubkey, 32),
+      context,
+      message,
+      bigintToBytes(signature, 96),
+    );
   },
 
   /**
@@ -42,7 +53,9 @@ export const Bandersnatch = {
     message: Uint8Array,
     privkey: BandersnatchPrivKey,
   ): BandersnatchSignature {
-    return 0n as BandersnatchSignature;
+    return bytesToBigInt(
+      ietfVrfSign(bigintToBytes(privkey, 64), context, message),
+    );
   },
 
   /**
@@ -52,7 +65,7 @@ export const Bandersnatch = {
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
     return bytesToBigInt(
-      vrfOutputHash(
+      ietfVrfOutputHash(
         bigintToBytes(signature, 96),
       ) as unknown as ByteArrayOfLength<32>,
     );
@@ -64,7 +77,7 @@ export const Bandersnatch = {
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
     return bytesToBigInt(
-      vrfOutputHash(ringProof) as unknown as ByteArrayOfLength<32>,
+      ringVrfOutputHash(ringProof) as unknown as ByteArrayOfLength<32>,
     );
   },
 
@@ -73,7 +86,7 @@ export const Bandersnatch = {
     ringRoot: BandersnatchRingRoot,
     context: Uint8Array,
   ): boolean {
-    return vrfVerify(
+    return ringVrfVerify(
       proof,
       context,
       new Uint8Array(0),

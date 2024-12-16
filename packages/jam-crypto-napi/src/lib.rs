@@ -4,7 +4,7 @@ mod ar;
 use ark_ec_vrfs::suites::bandersnatch::edwards as bandersnatch;
 use ark_ec_vrfs::{prelude::ark_serialize, suites::bandersnatch::edwards::RingContext};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use bandersnatch::{IetfProof, Input, Output, Public, RingProof};
+use bandersnatch::{IetfProof, Input, Output, Public, RingProof, Secret};
 use napi::bindgen_prelude::Buffer;
 use std::convert::TryInto;
 
@@ -28,15 +28,17 @@ struct RingVrfSignature {
   // This contains both the Pedersen proof and actual ring proof.
   proof: RingProof,
 }
+
+/**
+ * input point from data
+ */
 fn vrf_input_point(vrf_input_data: &[u8]) -> Input {
-  let point =
-    <bandersnatch::BandersnatchSha512Ell2 as ark_ec_vrfs::Suite>::data_to_point(vrf_input_data)
-      .unwrap();
-  Input::from(point)
+  // ignore rust `Option`
+  Input::new(vrf_input_data).unwrap()
 }
 
 #[napi]
-pub fn vrf_output_hash(signature: &[u8]) -> Buffer {
+pub fn ring_vrf_output_hash(signature: &[u8]) -> Buffer {
   let signature = RingVrfSignature::deserialize_compressed(signature).unwrap();
   let output = signature.output;
   //
@@ -44,7 +46,7 @@ pub fn vrf_output_hash(signature: &[u8]) -> Buffer {
 }
 
 #[napi]
-pub fn vrf_verify(
+pub fn ring_vrf_verify(
   signature: &[u8],
   vrf_input_data: &[u8],
   aux_data: &[u8],
@@ -93,4 +95,74 @@ fn ring_context(ring_size: usize) -> RingContext {
   let pcs_params = PcsParams::deserialize_uncompressed_unchecked(&ar::ZCASHSRS211[..]).unwrap();
   // let pcs_params = PcsParams::deserialize_uncompressed_unchecked(&mut &buf[..]).unwrap();
   RingContext::from_srs(ring_size, pcs_params).unwrap()
+}
+
+/**
+ * G.1
+ * sign 
+ */
+#[napi]
+pub fn ietf_vrf_sign(secret: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> Buffer {
+    use ark_ec_vrfs::ietf::Prover as _;
+    if secret.len() != 32 {
+        return Vec::new().into();
+    }
+
+    let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
+        s
+    } else {
+      // if for some reason secret cannot be deserialized. fail.
+        return Vec::new().into();
+    };
+
+    let input = vrf_input_point(vrf_input_data);
+    let output = secret.output(input);
+
+    let proof = secret.prove(input, output, aux_data);
+
+    let signature = IetfVrfSignature { output, proof };
+
+    let mut signature_buf = Vec::with_capacity(96); // Y96
+
+    if signature
+        .serialize_compressed(&mut signature_buf[..])
+        .is_err()
+    {
+        return Vec::new().into();
+    }
+
+    return signature_buf.into()
+}
+/**
+ * G.1
+ * verify signature with given pubkey
+ */
+#[napi]
+pub fn ietf_vrf_verify(public_key: &[u8], vrf_input_data: &[u8], aux_data: &[u8],signature: &[u8]) -> bool {
+    use ark_ec_vrfs::ietf::Verifier as _;
+    if signature.len() != 96  || public_key.len() != 32 {
+        return false;
+    }
+
+    let input = vrf_input_point(vrf_input_data);
+    let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed(signature) {
+      s
+    } else {
+      return false;
+    };
+  
+    let public_key = if let Ok(p) = Public::deserialize_compressed(public_key) {
+      p
+    } else {
+      return false;
+    };
+
+    return !public_key.verify(input, signature.output, aux_data, &signature.proof).is_err()
+}
+
+#[napi]
+pub fn ietf_vrf_output_hash(signature: &[u8]) -> Buffer {
+  let signature = IetfVrfSignature::deserialize_compressed(signature).unwrap();
+  let output = signature.output;
+  output.hash()[..32].try_into().unwrap()
 }

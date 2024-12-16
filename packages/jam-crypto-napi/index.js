@@ -310,8 +310,11 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { vrfOutputHash, vrfVerify, ringRoot } = nativeBinding
+const { ringVrfOutputHash, ringVrfVerify, ringRoot, ietfVrfSign, ietfVrfVerify, ietfVrfOutputHash } = nativeBinding
 
-module.exports.vrfOutputHash = vrfOutputHash
-module.exports.vrfVerify = vrfVerify
+module.exports.ringVrfOutputHash = ringVrfOutputHash
+module.exports.ringVrfVerify = ringVrfVerify
 module.exports.ringRoot = ringRoot
+module.exports.ietfVrfSign = ietfVrfSign
+module.exports.ietfVrfVerify = ietfVrfVerify
+module.exports.ietfVrfOutputHash = ietfVrfOutputHash
