@@ -73,51 +73,60 @@ export const merkelizeState = (state: JamState): Hash => {
 
 const bits = (ar: Uint8Array): bit[] => {
   const a = [...ar]
-    .map((a) => a.toString(2).padStart(8, "0").split("").map(parseInt))
+    .map((a) =>
+      a
+        .toString(2)
+        .padStart(8, "0")
+        .split("")
+        .map((a) => parseInt(a)),
+    )
     .flat();
   return a as bit[];
 };
 
+/*
+  this is deprecated now for a more performant version with bytes and bitwise
 const bits_inv = (bits: bit[]): Uint8Array => {
   assert(bits.length % 8 === 0);
   const bytes = [];
   for (let i = 0; i < bits.length / 8; i++) {
-    bytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8).join(""), 2);
+    const curBits = bits.slice(i * 8, i * 8 + 8).join("");
+    bytes[i] = parseInt(curBits, 2);
   }
   return new Uint8Array(bytes);
 };
+*/
 
 // $(0.5.0 - D.3)
-const B_fn = (l: Hash, r: Hash): bit[] => {
+const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
-  return [0, ...bits(lb).slice(1), ...bits(rb)];
+  return new Uint8Array([
+    lb[0] & 0b01111111,
+    ...lb.subarray(1),
+    ...rb,
+  ]) as ByteArrayOfLength<64>;
 };
 
-// $(0.5.0 - D.4)
-const L_fn = (k: Hash, v: Uint8Array): bit[] => {
+// $(0.5.0 - D.4) | implementation avoids using bits()
+// following my
+const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   if (v.length <= 32) {
-    return [
-      1,
-      0,
-      ...bits(encodeWithCodec(E_1_int, <u8>v.length)).slice(0, 5),
-      ...bits(bigintToBytes(k, 32)).slice(0, 247),
-      ...bits(v),
-      ...new Array(v.length - 32).fill(0),
-    ];
+    return new Uint8Array([
+      // NOTE: the following line is out of spec as stated in my comment
+      // https://github.com/w3f/jamtestvectors/pull/14#issuecomment-2549423040
+      // it should be 0b10000000 + (v.length >> 2)
+      0b10000000 + v.length,
+      ...bigintToBytes(k, 32).subarray(0, 31),
+      ...v,
+      ...new Array(32 - v.length).fill(0),
+    ]) as ByteArrayOfLength<64>;
   } else {
-    return [
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      ...bits(bigintToBytes(k, 32)).slice(0, 247),
-      ...bits(Hashing.blake2bBuf(v)),
-    ];
+    return new Uint8Array([
+      0b11000000,
+      ...bigintToBytes(k, 32).subarray(0, 31),
+      ...Hashing.blake2bBuf(v),
+    ]) as ByteArrayOfLength<64>;
   }
 };
 
@@ -127,7 +136,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
     return 0n as Hash;
   } else if (d.size === 1) {
     const [[k, v]] = d.values();
-    return Hashing.blake2b(bits_inv(L_fn(k, v)));
+    return Hashing.blake2b(L_fn(k, v));
   } else {
     const l = new Map(
       [...d.entries()]
@@ -139,7 +148,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
         .filter(([k]) => k[0] === 1)
         .map(([k, v]) => [k.slice(1), v]),
     );
-    return Hashing.blake2b(bits_inv(B_fn(M_fn(l), M_fn(r))));
+    return Hashing.blake2b(B_fn(M_fn(l), M_fn(r)));
   }
 };
 
@@ -489,3 +498,34 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
 
   return toRet;
 };
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+  const fs = await import("fs");
+
+  describe("merkle", () => {
+    it("test from vectors", () => {
+      const r: Array<{ input: Record<string, string>; output: string }> =
+        JSON.parse(
+          fs.readFileSync(
+            new URL(`../test/fixtures/trie.json`, import.meta.url).pathname,
+            "utf8",
+          ),
+        );
+      for (const t of r) {
+        const m = new Map<bit[], [Hash, Uint8Array]>();
+        for (const key in t.input) {
+          const keyBuf = Buffer.from(`${key}`, "hex");
+          const keyBits = bits(keyBuf);
+          const keyHash: Hash = bytesToBigInt(keyBuf, 32);
+          const value = Buffer.from(t.input[key], "hex");
+          m.set(keyBits, [keyHash, value]);
+        }
+        const res = M_fn(m);
+        expect(Buffer.from(bigintToBytes(res, 32)).toString("hex")).eq(
+          t.output,
+        );
+      }
+    });
+  });
+}
