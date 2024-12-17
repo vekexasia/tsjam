@@ -1,22 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  describe,
-  it,
-  vi,
-  beforeEach,
-  expect,
-  beforeAll,
-  afterAll,
-} from "vitest";
+import { describe, it, vi, expect, beforeAll, afterAll } from "vitest";
 import {
   E_sub_int,
   codec_Ed,
   codec_Eg,
   codec_Ep,
-  Ed25519PubkeyCodec,
   ValidatorDataCodec,
   codec_Ea,
-  createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
   ValidatorStatisticsCodec,
@@ -29,7 +19,6 @@ import {
   ValidatorStatistics,
   ValidatorIndex,
   JamBlock,
-  ED25519PublicKey,
 } from "@tsjam/types";
 import fs from "node:fs";
 import * as constants from "@tsjam/constants";
@@ -77,7 +66,6 @@ describe("statistics", () => {
         slot: Tau;
         authorIndex: ValidatorIndex;
         extrinsic: JamBlock["extrinsics"];
-        reporters: ED25519PublicKey[];
       };
       preState: TestState;
       postState: TestState;
@@ -88,7 +76,6 @@ describe("statistics", () => {
           slot: Tau;
           authorIndex: ValidatorIndex;
           extrinsic: JamBlock["extrinsics"];
-          reporters: ED25519PublicKey[];
         }>([
           ["slot", E_sub_int<Tau>(4)],
           ["authorIndex", E_sub_int<ValidatorIndex>(2)],
@@ -101,12 +88,6 @@ describe("statistics", () => {
               ["assurances", codec_Ea],
               ["disputes", codec_Ed],
             ]),
-          ],
-          [
-            "reporters",
-            createArrayLengthDiscriminator<ED25519PublicKey[]>(
-              Ed25519PubkeyCodec,
-            ),
           ],
         ]),
       ],
@@ -122,14 +103,21 @@ describe("statistics", () => {
         extrinsics: decoded.value.input.extrinsic,
         authorIndex: decoded.value.input.authorIndex,
         p_tau: decoded.value.input.slot,
-        reporters: new Set(decoded.value.input.reporters),
+        // TODO: this is a hack as `garantorReporters` is in `core` and being implicitly tested with validateEG
+        reporters: new Set(
+          decoded.value.input.extrinsic.reportGuarantees
+            .map((rg) => rg.credential)
+            .flat()
+            .map((c) => decoded.value.preState.p_kappa[c.validatorIndex])
+            .map((v) => v.ed25519),
+        ),
         curTau: decoded.value.preState.tau,
         p_kappa: decoded.value.preState.p_kappa,
       },
       decoded.value.preState.pi,
     ).safeRet();
-    expect(posterior_pi[0]).deep.eq(decoded.value.postState.pi[0]);
-    expect(posterior_pi[1]).deep.eq(decoded.value.postState.pi[1]);
+    expect(posterior_pi[0], "pi[0]").deep.eq(decoded.value.postState.pi[0]);
+    expect(posterior_pi[1], "pi[1]").deep.eq(decoded.value.postState.pi[1]);
   };
   describe("tiny", () => {
     beforeAll(() => {

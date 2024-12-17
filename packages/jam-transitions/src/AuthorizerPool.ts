@@ -17,7 +17,7 @@ type Input = {
   p_tau: Posterior<Tau>;
 };
 
-// (86) and (87) - 0.4.5
+// $(0.5.2 - 8.2 / 8.3)
 export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, never> = (
   input: Input,
   curState: AuthorizerPool,
@@ -43,5 +43,5 @@ export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, never> = (
     }
     newState.push(hashes.reverse().slice(0, AUTHPOOL_SIZE).reverse());
   }
-  return ok(curState as Posterior<AuthorizerPool>);
+  return ok(newState as Posterior<AuthorizerPool>);
 };

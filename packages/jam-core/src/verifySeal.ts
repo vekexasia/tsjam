@@ -314,8 +314,8 @@ export const verifyEA = (
       if (a.bitstring[c] === 1) {
         // af[c]
         if (
-          typeof d_rho[c] === "undefined" ||
-          ht > d_rho[c]!.reportTime + WORK_TIMEOUT
+          typeof d_rho[c] === "undefined"
+          //|| ht > d_rho[c]!.reportTime + WORK_TIMEOUT
         ) {
           return false;
         }

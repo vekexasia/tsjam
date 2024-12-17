@@ -209,7 +209,7 @@ export const importBlock: STF<
   }
 
   const [, dd_rho] = RHO2DoubleDagger(
-    { ea, p_kappa, hp: block.header.parent },
+    { ea, p_tau, p_kappa, hp: block.header.parent },
     d_rho,
   ).safeRet();
 
@@ -365,7 +365,7 @@ export const importBlock: STF<
   const [, p_authorizerPool] = authorizerPool_toPosterior(
     {
       p_queue: p_authorizerQueue,
-      eg: toTagged(block.extrinsics.reportGuarantees),
+      eg: block.extrinsics.reportGuarantees,
       p_tau: tauTransition.p_tau,
     },
     curState.authPool,
@@ -408,6 +408,7 @@ export const importBlock: STF<
   }
 
   // $(0.5.0 - 5.8)
+  // TODO: move to another place
   const prevMerkleRoot = merkelizeState(curState);
   if (prevMerkleRoot !== block.header.priorStateRoot) {
     return err(ImportBlockError.InvalidParentStateRoot);
