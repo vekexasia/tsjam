@@ -12,7 +12,7 @@ import {
   ValidatorData,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
-import { isFallbackMode, isNewEra, toPosterior } from "@tsjam/utils";
+import { isFallbackMode, isNewEra, toPosterior, toTagged } from "@tsjam/utils";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
@@ -28,7 +28,7 @@ export const PHI_FN = <T extends ValidatorData[]>(
   return validatorKeys.map((v) => {
     if (p_psi_o.has(v.ed25519)) {
       return {
-        banderSnatch: 0n as BandersnatchKey,
+        banderSnatch: toTagged(Buffer.alloc(32).fill(0)) as BandersnatchKey,
         ed25519: 0n as ValidatorData["ed25519"],
         blsKey: new Uint8Array(144) as ValidatorData["blsKey"],
         metadata: new Uint8Array(128) as ValidatorData["metadata"],
@@ -91,8 +91,8 @@ if (import.meta.vitest) {
   describe("isFallbackMode", () => {
     it("should return true if gamma_s is a series of E Bandersnatch keys", () => {
       const gamma_s = [
-        1n as BandersnatchKey,
-        2n as BandersnatchKey,
+        toTagged(Buffer.alloc(32).fill(0)) as BandersnatchKey,
+        toTagged(Buffer.alloc(32).fill(0)) as BandersnatchKey,
       ] as SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
       expect(isFallbackMode(gamma_s)).toBe(true);
     });

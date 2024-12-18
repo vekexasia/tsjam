@@ -30,6 +30,7 @@ export const IdentityCodec: JamCodec<Uint8Array> = {
   },
 };
 
+//TODO:aligh generi arguments to GenericBytesBigIntCodec
 export const fixedSizeIdentityCodec = <
   T extends number,
   X extends ByteArrayOfLength<T> = ByteArrayOfLength<T>,
@@ -91,7 +92,7 @@ export const MerkleTreeRootCodec = GenericBytesBigIntCodec<MerkeTreeRoot, 32>(
 export const Ed25519PubkeyCodec = GenericBytesBigIntCodec<ED25519PublicKey, 32>(
   32,
 );
-export const BandersnatchCodec = GenericBytesBigIntCodec<BandersnatchKey, 32>(
+export const BandersnatchCodec = fixedSizeIdentityCodec<32, BandersnatchKey>(
   32,
 );
 export const BandersnatchSignatureCodec = GenericBytesBigIntCodec<

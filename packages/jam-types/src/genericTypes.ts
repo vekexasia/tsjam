@@ -52,11 +52,10 @@ export type RegisterValue = Tagged<u64, "registerValue">;
  **/
 export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
 
-export type BandersnatchKey = Tagged<BigIntBytes<32>, "BandersnatchKey">;
-export type BandersnatchPrivKey = Tagged<
-  BigIntBytes<64>,
-  "BandersnatchPrivKey"
->;
+/**
+ * Both public and private keys are 32 bytes long
+ */
+export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
 export type WorkPackageHash = Tagged<Hash, "Blake2bHash">;

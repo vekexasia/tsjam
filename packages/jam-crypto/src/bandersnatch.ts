@@ -1,6 +1,5 @@
 import {
   BandersnatchKey,
-  BandersnatchPrivKey,
   BandersnatchRingRoot,
   BandersnatchSignature,
   ByteArrayOfLength,
@@ -35,7 +34,7 @@ export const Bandersnatch = {
     context: Uint8Array,
   ): boolean {
     return ietfVrfVerify(
-      bigintToBytes(pubkey, 32),
+      pubkey,
       context,
       message,
       bigintToBytes(signature, 96),
@@ -50,13 +49,11 @@ export const Bandersnatch = {
    * @param privkey - the private key to sign with
    */
   sign(
-    privkey: BandersnatchPrivKey,
+    privkey: BandersnatchKey,
     message: Uint8Array,
     context: Uint8Array,
   ): BandersnatchSignature {
-    return bytesToBigInt(
-      ietfVrfSign(bigintToBytes(privkey, 64), context, message),
-    );
+    return bytesToBigInt(ietfVrfSign(privkey, context, message));
   },
 
   /**
@@ -73,8 +70,8 @@ export const Bandersnatch = {
   },
 
   /** generate output from secret and context */
-  vrfOutputSeed(seed: Uint8Array, context: Uint8Array): OpaqueHash {
-    return bytesToBigInt(ietfVrfOutputHashFromSecret(seed, context));
+  vrfOutputSeed(privKey: BandersnatchKey, context: Uint8Array): OpaqueHash {
+    return bytesToBigInt(ietfVrfOutputHashFromSecret(privKey, context));
   },
 
   /**
@@ -108,7 +105,7 @@ export const Bandersnatch = {
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
     const inputBuf = Buffer.alloc(input.length * 32);
     input.forEach((key, idx) => {
-      inputBuf.set(bigintToBytes(key, 32), idx * 32);
+      inputBuf.set(key, idx * 32);
     });
 
     const root = Buffer.from(ringRoot(inputBuf));

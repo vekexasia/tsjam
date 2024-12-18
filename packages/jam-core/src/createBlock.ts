@@ -1,5 +1,4 @@
 import {
-  BandersnatchPrivKey,
   BandersnatchSignature,
   ED25519PublicKey,
   JamBlock,
@@ -12,12 +11,13 @@ import {
   Posterior,
   ValidatorIndex,
   SafroleState,
+  BandersnatchKey,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
 import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
 import { merkelizeState } from "@tsjam/merklization";
-import { rotateEntropy, rotateEta1_4, rotateKeys } from "@tsjam/transitions";
+import { rotateEta1_4, rotateKeys } from "@tsjam/transitions";
 import { JAM_ENTROPY } from "@tsjam/constants";
 import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
 
@@ -29,7 +29,7 @@ export const createBlock = (
   data: {
     previousBlock: JamBlock;
     validator: ValidatorData;
-    bandersnatchPrivateKey: BandersnatchPrivKey;
+    bandersnatchPrivateKey: BandersnatchKey;
   },
 ): JamBlock => {
   const offenders: ED25519PublicKey[] = [];
@@ -89,10 +89,7 @@ export const createBlock = (
       new Uint8Array([
         ...JAM_ENTROPY,
         ...bigintToBytes(
-          Bandersnatch.vrfOutputSeed(
-            bigintToBytes(data.bandersnatchPrivateKey, 64),
-            sealContext,
-          ),
+          Bandersnatch.vrfOutputSeed(data.bandersnatchPrivateKey, sealContext),
           32,
         ),
       ]),

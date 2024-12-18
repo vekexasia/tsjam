@@ -11,7 +11,7 @@ import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
 
 export const validatorEntryMap = (entry: any) => {
   return {
-    banderSnatch: hextToBigInt(entry.bandersnatch),
+    banderSnatch: Buffer.from(entry.bandersnatch.slice(2), "hex"),
     ed25519: hextToBigInt(entry.ed25519),
     blsKey: Buffer.from(entry.bls.slice(2), "hex"),
     metadata: Buffer.from(entry.metadata.slice(2), "hex"),
@@ -54,7 +54,7 @@ export const mapTestDataToSafroleState = (testData: any): JamState => {
 
 const validatorEntryHexMap = (entry: ValidatorData) => {
   return {
-    bandersnatch: `0x${Buffer.from(bigintToBytes(entry.banderSnatch, 32)).toString("hex")}`,
+    bandersnatch: `0x${Buffer.from(entry.banderSnatch).toString("hex")}`,
     ed25519: `0x${Buffer.from(bigintToBytes(entry.ed25519, 32)).toString("hex")}`,
     bls: `0x${Buffer.from(entry.blsKey).toString("hex")}`,
     metadata: `0x${Buffer.from(entry.metadata).toString("hex")}`,
@@ -74,8 +74,7 @@ export const safroleStateToTestData = (state: JamState) => {
       if (typeof state.safroleState.gamma_s[0] === "bigint") {
         return {
           keys: state.safroleState.gamma_s.map(
-            (key) =>
-              `0x${Buffer.from(bigintToBytes(key as BandersnatchKey, 32)).toString("hex")}`,
+            (key) => `0x${Buffer.from(key as BandersnatchKey).toString("hex")}`,
           ),
         };
       } else {

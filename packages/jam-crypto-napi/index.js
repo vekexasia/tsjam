@@ -310,9 +310,11 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { publicKey, ringVrfOutputHash, ringVrfVerify, ringRoot, ietfVrfOutputHashFromSecret, ietfVrfSign, ietfVrfVerify, ietfVrfOutputHash } = nativeBinding
+const { publicKey, secretKey, secretFromSecret, ringVrfOutputHash, ringVrfVerify, ringRoot, ietfVrfOutputHashFromSecret, ietfVrfSign, ietfVrfVerify, ietfVrfOutputHash } = nativeBinding
 
 module.exports.publicKey = publicKey
+module.exports.secretKey = secretKey
+module.exports.secretFromSecret = secretFromSecret
 module.exports.ringVrfOutputHash = ringVrfOutputHash
 module.exports.ringVrfVerify = ringVrfVerify
 module.exports.ringRoot = ringRoot

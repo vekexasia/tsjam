@@ -51,7 +51,7 @@ export const toPosterior = <T>(
 export const isFallbackMode = (
   gamma_s: SafroleState["gamma_s"],
 ): gamma_s is SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s"> => {
-  return typeof gamma_s[0] === "bigint";
+  return gamma_s[0] instanceof Uint8Array;
 };
 
 /**

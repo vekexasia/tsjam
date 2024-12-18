@@ -1,5 +1,6 @@
 import {
   BandersnatchKey,
+  BigIntBytes,
   ByteArrayOfLength,
   JamEntropy,
   JamHeader,
@@ -10,6 +11,7 @@ import {
   SeqOfLength,
   Tau,
   TicketIdentifier,
+  ValidatorData,
 } from "@tsjam/types";
 import { E_4 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
@@ -128,7 +130,10 @@ if (import.meta.vitest) {
         posteriorKappa = toTagged(
           new Array(NUMBER_OF_VALIDATORS).fill(0).map((_, idx) => {
             return mockValidatorData({
-              banderSnatch: toTagged(BigInt(idx) as BandersnatchKey),
+              banderSnatch: bigintToBytes(
+                BigInt(idx) as BigIntBytes<32>,
+                32,
+              ) as unknown as ValidatorData["banderSnatch"],
             });
           }),
         ) as Posterior<JamState["kappa"]>;

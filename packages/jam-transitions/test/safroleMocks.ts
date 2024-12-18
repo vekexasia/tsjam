@@ -1,4 +1,5 @@
 import {
+  BandersnatchKey,
   BandersnatchRingRoot,
   IDisputesState,
   JamHeader,
@@ -37,7 +38,8 @@ export const mockState = (
 export const mockValidatorData = (
   opts: Partial<UnTaggedObject<ValidatorData>> = {},
 ): ValidatorData => ({
-  banderSnatch: toTagged(opts.banderSnatch || 0n),
+  banderSnatch: (toTagged(opts.banderSnatch) ||
+    toTagged(Buffer.alloc(32).fill(0))) as unknown as BandersnatchKey,
   ed25519: toTagged(opts.ed25519 || 0n),
   blsKey: (opts.blsKey || new Uint8Array(144)) as ValidatorData["blsKey"],
   metadata: (opts.metadata || new Uint8Array(128)) as ValidatorData["metadata"],

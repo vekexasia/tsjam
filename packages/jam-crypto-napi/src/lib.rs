@@ -46,6 +46,13 @@ pub fn public_key(seed: &[u8]) -> Buffer {
     buf.into()
 }
 
+#[napi]
+pub fn secret_key(seed: &[u8]) -> Buffer {
+  let secret = Secret:: from_seed(seed);
+  let mut buf = Vec::new();
+  secret.serialize_compressed(&mut buf).unwrap();
+  buf.into()
+}
 
 #[napi]
 pub fn ring_vrf_output_hash(signature: &[u8]) -> Buffer {
@@ -112,7 +119,12 @@ fn ring_context(ring_size: usize) -> RingContext {
  * Generates `Y` without signatur
  */
 #[napi]
-pub fn ietf_vrf_output_hash_from_secret(seed: &[u8], vrf_input_data: &[u8]) -> Buffer {
+pub fn ietf_vrf_output_hash_from_secret(secret: &[u8], vrf_input_data: &[u8]) -> Buffer {
+    let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
+      s
+    } else {
+      return Vec::new().into();
+    };
     let secret = Secret::from_seed(seed);
     let input = vrf_input_point(vrf_input_data);
     let output = secret.output(input);
@@ -125,10 +137,14 @@ pub fn ietf_vrf_output_hash_from_secret(seed: &[u8], vrf_input_data: &[u8]) -> B
  * sign 
  */
 #[napi]
-pub fn ietf_vrf_sign(seed: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> Buffer {
+pub fn ietf_vrf_sign(secret: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> Buffer {
     use ark_ec_vrfs::ietf::Prover as _;
 
-    let secret = Secret::from_seed(seed);
+    let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
+      s
+    } else {
+      return Vec::new().into();
+    };
 
     let input = vrf_input_point(vrf_input_data);
     let output = secret.output(input);
