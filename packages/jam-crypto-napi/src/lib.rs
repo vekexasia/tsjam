@@ -38,6 +38,16 @@ fn vrf_input_point(vrf_input_data: &[u8]) -> Input {
 }
 
 #[napi]
+pub fn public_key(seed: &[u8]) -> Buffer {
+    let secret = Secret::from_seed(seed);
+    let public = secret.public();
+    let mut buf = Vec::new();
+    public.serialize_compressed(&mut buf).unwrap();
+    buf.into()
+}
+
+
+#[napi]
 pub fn ring_vrf_output_hash(signature: &[u8]) -> Buffer {
   let signature = RingVrfSignature::deserialize_compressed(signature).unwrap();
   let output = signature.output;
@@ -99,22 +109,26 @@ fn ring_context(ring_size: usize) -> RingContext {
 }
 
 /**
+ * Generates `Y` without signatur
+ */
+#[napi]
+pub fn ietf_vrf_output_hash_from_secret(seed: &[u8], vrf_input_data: &[u8]) -> Buffer {
+    let secret = Secret::from_seed(seed);
+    let input = vrf_input_point(vrf_input_data);
+    let output = secret.output(input);
+
+    output.hash()[..32].try_into().unwrap()
+}
+
+/**
  * G.1
  * sign 
  */
 #[napi]
-pub fn ietf_vrf_sign(secret: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> Buffer {
+pub fn ietf_vrf_sign(seed: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> Buffer {
     use ark_ec_vrfs::ietf::Prover as _;
-    if secret.len() != 32 {
-        return Vec::new().into();
-    }
 
-    let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
-        s
-    } else {
-      // if for some reason secret cannot be deserialized. fail.
-        return Vec::new().into();
-    };
+    let secret = Secret::from_seed(seed);
 
     let input = vrf_input_point(vrf_input_data);
     let output = secret.output(input);
@@ -123,16 +137,9 @@ pub fn ietf_vrf_sign(secret: &[u8], vrf_input_data: &[u8], aux_data: &[u8] ) -> 
 
     let signature = IetfVrfSignature { output, proof };
 
-    let mut signature_buf = Vec::with_capacity(96); // Y96
-
-    if signature
-        .serialize_compressed(&mut signature_buf[..])
-        .is_err()
-    {
-        return Vec::new().into();
-    }
-
-    return signature_buf.into()
+    let mut buf = Vec::new();
+    signature.serialize_compressed(&mut buf).unwrap();
+    buf.into()
 }
 /**
  * G.1

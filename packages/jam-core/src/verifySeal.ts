@@ -47,6 +47,22 @@ import {
 } from "@tsjam/utils";
 import { outsideInSequencer } from "@tsjam/transitions";
 
+export const sealSignContext = (
+  tau: Tau,
+  p_eta3: Posterior<JamState["entropy"][3]>,
+  p_gamma_s: Posterior<SafroleState["gamma_s"]>,
+) => {
+  if (isFallbackMode(p_gamma_s)) {
+    return new Uint8Array([...JAM_FALLBACK_SEAL, ...bigintToBytes(p_eta3, 32)]);
+  } else {
+    const i = p_gamma_s[tau % EPOCH_LENGTH];
+    return new Uint8Array([
+      ...JAM_TICKET_SEAL,
+      ...bigintToBytes(p_eta3, 32),
+      i.attempt, // i_r
+    ]);
+  }
+};
 /**
  * Verify Hs
  * $(0.5.0 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
@@ -55,26 +71,28 @@ export const verifySeal = (
   header: SignedJamHeader,
   p_state: Posterior<JamState>,
 ): boolean => {
-  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
   const ha = getBlockAuthorKey(header, toPosterior(p_state.kappa));
+  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
   if (typeof ha === "undefined") {
     // invalid block author key
     return false;
   }
+  const verified = Bandersnatch.verifySignature(
+    header.blockSeal,
+    ha,
+    encodedHeader, // message
+    sealSignContext(
+      header.timeSlotIndex,
+      toPosterior(p_state.entropy[3]),
+      toPosterior(p_state.safroleState.gamma_s),
+    ), // context
+  );
+  if (!verified) {
+    return false;
+  }
+
   // $(0.5.0 - 6.16)
   if (isFallbackMode(p_state.safroleState.gamma_s)) {
-    const verified = Bandersnatch.verifySignature(
-      header.blockSeal,
-      ha,
-      encodedHeader, // message
-      new Uint8Array([
-        ...JAM_FALLBACK_SEAL,
-        ...bigintToBytes(p_state.entropy[3], 32),
-      ]), // context
-    );
-    if (!verified) {
-      return false;
-    }
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     if (i !== ha) {
       return false;
@@ -87,18 +105,7 @@ export const verifySeal = (
     if (i.id !== Bandersnatch.vrfOutputSignature(header.blockSeal)) {
       return false;
     }
-
-    return Bandersnatch.verifySignature(
-      header.blockSeal,
-      ha,
-      encodedHeader, // message,
-      new Uint8Array([
-        ...JAM_TICKET_SEAL,
-        ...bigintToBytes(p_state.entropy[3], 32),
-        i.attempt, // i_r
-      ]), // context
-    );
-    //
+    return true;
   }
 };
 

@@ -517,7 +517,7 @@ if (import.meta.vitest) {
         for (const key in t.input) {
           const keyBuf = Buffer.from(`${key}`, "hex");
           const keyBits = bits(keyBuf);
-          const keyHash: Hash = bytesToBigInt(keyBuf, 32);
+          const keyHash: Hash = bytesToBigInt(keyBuf);
           const value = Buffer.from(t.input[key], "hex");
           m.set(keyBits, [keyHash, value]);
         }

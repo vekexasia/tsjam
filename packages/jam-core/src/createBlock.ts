@@ -11,13 +11,15 @@ import {
   Tau,
   Posterior,
   ValidatorIndex,
+  SafroleState,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
-import { computeExtrinsicHash } from "./verifySeal";
+import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
 import { merkelizeState } from "@tsjam/merklization";
-import { rotateKeys } from "@tsjam/transitions";
+import { rotateEntropy, rotateEta1_4, rotateKeys } from "@tsjam/transitions";
 import { JAM_ENTROPY } from "@tsjam/constants";
+import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
 
 /**
  * Creates a block given current state and some data
@@ -46,7 +48,7 @@ export const createBlock = (
 
   const [, [, p_kappa, ,]] = rotateKeys(
     {
-      p_psi_o: toPosterior(new Set()),
+      p_psi_o: toPosterior(new Set()), // TODO:
       iota: curState.iota,
       tau: curState.tau,
       p_tau,
@@ -58,13 +60,25 @@ export const createBlock = (
       curState.safroleState.gamma_z,
     ],
   ).safeRet();
-  const seal: BandersnatchSignature = null as unknown as BandersnatchSignature;
+
+  const [, [, , p_eta3]] = rotateEta1_4(
+    {
+      eta0: curState.entropy[0],
+      tau: data.previousBlock.header.timeSlotIndex,
+      p_tau,
+    },
+    [curState.entropy[1], curState.entropy[2], curState.entropy[3]],
+  ).safeRet();
+  // TODO:
+  const p_gamma_s: Posterior<SafroleState["gamma_s"]> = null as unknown as any;
+  const sealContext = sealSignContext(p_tau, toPosterior(p_eta3), p_gamma_s);
+
   const header: JamHeader = {
     parent:
       curState.recentHistory[curState.recentHistory.length - 1].headerHash,
     offenders,
     extrinsicHash: computeExtrinsicHash(extrinsics),
-    timeSlotIndex: Timekeeping.bigT(),
+    timeSlotIndex: p_tau,
     priorStateRoot: merkelizeState(curState) as MerkeTreeRoot,
     blockAuthorKeyIndex: p_kappa.findIndex(
       (a) => a.ed25519 === data.validator.ed25519,
@@ -74,10 +88,23 @@ export const createBlock = (
       new Uint8Array([]), // message
       new Uint8Array([
         ...JAM_ENTROPY,
-        ...bigintToBytes(Bandersnatch.vrfOutputSignature(seal), 32),
+        ...bigintToBytes(
+          Bandersnatch.vrfOutputSeed(
+            bigintToBytes(data.bandersnatchPrivateKey, 64),
+            sealContext,
+          ),
+          32,
+        ),
       ]),
     ),
   };
+
+  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
+  const seal: BandersnatchSignature = Bandersnatch.sign(
+    data.bandersnatchPrivateKey,
+    encodedHeader,
+    sealContext,
+  );
 
   const signedHeader: SignedJamHeader = {
     ...header,
