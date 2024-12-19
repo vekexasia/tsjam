@@ -34,7 +34,7 @@ import {
   safroleToPosterior,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
-import { Timekeeping, toPosterior, toTagged } from "@tsjam/utils";
+import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";

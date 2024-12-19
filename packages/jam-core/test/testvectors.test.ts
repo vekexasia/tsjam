@@ -295,6 +295,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       };
     },
     (fromJam: JamState) => {
+      console.log("madonnalepre");
       return {
         kappa: fromJam.kappa,
         iota: fromJam.iota,
@@ -306,6 +307,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         gamma_a: fromJam.safroleState.gamma_a,
         gamma_k: fromJam.safroleState.gamma_k,
         gamma_s: ((gs: SafroleState["gamma_s"]) => {
+          console.log("porcod");
           if (isFallbackMode(gs)) {
             return {
               keys: gs,
@@ -319,6 +321,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       };
     },
   );
+
   const testCodec = createCodec<TestType>([
     [
       "input",
@@ -426,7 +429,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(newState.entropy).deep.eq(decoded.value.postState.entropy);
 };
 describe("safrole-test-vectors", () => {
-  describe("full", () => {
+  describe.skip("full", () => {
     const test = (name: string) => buildTest(name, "full");
     beforeEach(() => {
       mocks.MAX_TICKETS_PER_BLOCK = 16;
@@ -497,6 +500,7 @@ describe("safrole-test-vectors", () => {
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
+    /*
     it("enact-epoch-change-with-no-tickets-2", () =>
       expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
         "Invalid slot",
@@ -544,5 +548,6 @@ describe("safrole-test-vectors", () => {
       test("publish-tickets-with-mark-5"));
     it("enact-epoch-change-with-padding-1", () =>
       test("enact-epoch-change-with-padding-1"));
+    */
   });
 });

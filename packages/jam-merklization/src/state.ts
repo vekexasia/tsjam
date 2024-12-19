@@ -8,7 +8,6 @@ import {
   BandersnatchCodec,
   BandersnatchRingRootCodec,
   E_1,
-  E_1_int,
   E_4,
   E_4_int,
   E_8,
@@ -38,7 +37,6 @@ import {
   RecentHistoryItem,
   ServiceIndex,
   Tau,
-  u8,
   WorkPackageHash,
   WorkReport,
   SafroleState,
@@ -52,7 +50,6 @@ import {
 } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import assert from "node:assert";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
@@ -260,7 +257,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
-    typeof state.safroleState.gamma_s[0] === "bigint"
+    state.safroleState.gamma_s[0] instanceof Uint8Array // BandersnatchKey
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (BandersnatchCodec as JamCodec<any>)
       : // eslint-disable-next-line @typescript-eslint/no-explicit-any
