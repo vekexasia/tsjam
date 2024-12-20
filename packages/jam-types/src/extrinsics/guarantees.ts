@@ -47,7 +47,7 @@ type SingleWorkReportGuarantee = {
 /**
  * Identified by `Eg`.
  * @see section 11.4
- * $(0.5.0 - 11.22)
+ * $(0.5.3 - 11.23)
  *
  */
 export type EG_Extrinsic = UpToSeq<SingleWorkReportGuarantee, typeof CORES>;

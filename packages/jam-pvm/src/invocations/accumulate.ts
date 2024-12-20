@@ -49,7 +49,7 @@ import assert from "assert";
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.5.0 - B.8)
+ * $(0.5.3 - B.8)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -88,7 +88,7 @@ export const accumulateInvocation = (
 };
 
 /**
- * $(0.5.0 - B.9)
+ * $(0.5.3 - B.9)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationState,
@@ -110,7 +110,7 @@ const I_fn = (
 };
 
 /**
- * $(0.5.0 - B.10)
+ * $(0.5.3 - B.10)
  */
 const F_fn: (
   service: ServiceIndex,
@@ -166,7 +166,8 @@ const F_fn: (
 
         return G_fn(m.ctx, bold_s, m.out);
       }
-      case "empower":
+      case "bless":
+        // TODO:fix this
         return applyMods(input.ctx, input.out, omega_e(input.ctx, input.out.x));
       case "assign":
         return applyMods(input.ctx, input.out, omega_a(input.ctx, input.out.x));
@@ -203,7 +204,7 @@ const F_fn: (
   };
 //
 /**
- * $(0.5.0 - B.11)
+ * $(0.5.3 - B.11)
  */
 const G_fn = (
   context: PVMProgramExecutionContextBase,
@@ -220,7 +221,7 @@ const G_fn = (
 };
 
 /**
- * $(0.5.0 - B.12)
+ * $(0.5.3 - B.12)
  */
 const C_fn = (
   gas: u64,

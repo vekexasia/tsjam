@@ -7,7 +7,7 @@ import { createCodec } from "@/utils";
 /**
  *
  * `S` set member codec
- * $(0.5.0 - C.22)
+ * $(0.5.3 - C.22)
  */
 export const AvailabilitySpecificationCodec =
   createCodec<AvailabilitySpecification>([

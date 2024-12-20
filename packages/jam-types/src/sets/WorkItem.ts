@@ -3,7 +3,7 @@ import { Gas, Hash, ServiceIndex, u32 } from "@/genericTypes";
 /**
  * Identified by `I` set
  * @see section 14.3
- * $(0.5.0 - 14.3 / 14.4)
+ * $(0.5.3 - 14.3 / 14.4)
  */
 export interface WorkItem {
   /**
@@ -32,11 +32,19 @@ export interface WorkItem {
   accumulationGasLimit: Gas;
 
   /**
+   * `e`
+   * - should be &lt; 2^11
+   */
+  numberExportedSegments: u32;
+
+  /**
    * `i`
    */
   importedDataSegments: Array<{
     /**
      * merkle tree root
+     * or hash of the exporting work package. (if tagged)
+     * NOTE: not yet defined
      */
     root: Hash;
     /**
@@ -52,10 +60,4 @@ export interface WorkItem {
     blobHash: Hash;
     length: u32;
   }>;
-
-  /**
-   * `e`
-   * - should be &lt; 2^11
-   */
-  numberExportedSegments: u32;
 }

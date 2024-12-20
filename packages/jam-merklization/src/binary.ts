@@ -7,7 +7,7 @@ import { Hashing } from "@tsjam/crypto";
 const prefix: Uint8Array = new TextEncoder().encode("node");
 
 /**
- * $(0.5.0 - E.1)
+ * $(0.5.3 - E.1)
  */
 export const binaryMerkleTree = <T extends Uint8Array | Hash>(
   elements: T[],
@@ -42,7 +42,7 @@ const P_sup = <T extends Uint8Array | Hash>(
 
 /**
  * `T`
- * $(0.5.0 - E.2)
+ * $(0.5.3 - E.2)
  * @param elements - the elements to trace from
  * @param index - the index of the element
  * @param hashFn - the hashfn
@@ -71,7 +71,7 @@ export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
 
 /**
  * `Mb`
- * $(0.5.0 - E.3)
+ * $(0.5.3 - E.3)
  */
 export const wellBalancedBinaryMerkleRoot = (
   elements: (Hash | Uint8Array)[],

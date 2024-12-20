@@ -44,6 +44,7 @@ import {
   ServiceAccount,
   Delta,
   JamHeader,
+  Dagger,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
@@ -278,8 +279,8 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     p_entropy: decoded.preState.p_entropy,
     p_psi_o: toPosterior(new Set(decoded.preState.p_psi_o)),
     recentHistory: decoded.preState.blockHistory,
+    d_recentHistory: decoded.preState.blockHistory as Dagger<RecentHistory>,
     authPool: decoded.preState.authPool,
-
     accumulationHistory: [] as unknown as AccumulationHistory,
     accumulationQueue: [] as unknown as AccumulationQueue,
     headerLookupHistory: new Map(

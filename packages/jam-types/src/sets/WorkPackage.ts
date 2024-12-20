@@ -6,7 +6,7 @@ import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 /**
  * Identified by `P` set
  * @see section 14.3
- * $(0.5.0 - 14.2)
+ * $(0.5.3 - 14.2)
  */
 export interface WorkPackage {
   /**

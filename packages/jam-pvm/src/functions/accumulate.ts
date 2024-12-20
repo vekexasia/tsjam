@@ -327,7 +327,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
         sender: x.service,
         destination: Number(d) as ServiceIndex,
         amount: toTagged(a),
-        gasLimit: toTagged(g),
+        gasLimit: g as Gas,
         memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
       };
 

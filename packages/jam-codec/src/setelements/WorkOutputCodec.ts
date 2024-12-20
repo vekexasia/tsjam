@@ -3,7 +3,7 @@ import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 
-// $(0.5.0  - C.28)
+// $(0.5.3  - C.28)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
   encode(value: WorkOutput, bytes: Uint8Array): number {
     let offset = 0;
@@ -21,11 +21,14 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
         case WorkError.UnexpectedTermination:
           offset = E.encode(2n, bytes);
           break;
-        case WorkError.Bad:
+        case WorkError.BadExports:
           offset = E.encode(3n, bytes);
           break;
-        case WorkError.Big:
+        case WorkError.Bad:
           offset = E.encode(4n, bytes);
+          break;
+        case WorkError.Big:
+          offset = E.encode(5n, bytes);
           break;
       }
     }
@@ -45,8 +48,13 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
           readBytes: 1,
         };
       case 3:
-        return { value: WorkError.Bad, readBytes: 1 };
+        return {
+          value: WorkError.BadExports,
+          readBytes: 1,
+        };
       case 4:
+        return { value: WorkError.Bad, readBytes: 1 };
+      case 5:
         return { value: WorkError.Big, readBytes: 1 };
     }
     throw new Error("Invalid value");

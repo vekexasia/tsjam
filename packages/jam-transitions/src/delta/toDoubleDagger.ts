@@ -4,17 +4,19 @@ import {
   DeferredTransfer,
   Delta,
   DoubleDagger,
+  Posterior,
   STF,
   ServiceIndex,
+  Tau,
 } from "@tsjam/types";
 import { ok } from "neverthrow";
 
 /**
- * $(0.5.0 - 12.24)
+ * $(0.5.3 - 12.24)
  */
 export const deltaToDoubleDagger: STF<
   Dagger<Delta>,
-  { transfers: DeferredTransfer[] },
+  { transfers: DeferredTransfer[]; p_tau: Posterior<Tau> },
   never,
   DoubleDagger<Delta>
 > = (input, curState) => {
@@ -24,6 +26,7 @@ export const deltaToDoubleDagger: STF<
       serviceIndex,
       transferInvocation(
         curState,
+        input.p_tau,
         serviceIndex,
         R_fn(input.transfers, serviceIndex),
       ),
@@ -33,7 +36,7 @@ export const deltaToDoubleDagger: STF<
 };
 
 /**
- * $(0.5.0 - 12.23)
+ * $(0.5.3 - 12.23)
  */
 const R_fn = (t: DeferredTransfer[], destination: ServiceIndex) => {
   return t

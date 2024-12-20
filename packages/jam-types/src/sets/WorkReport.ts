@@ -15,7 +15,7 @@ import { AccumulationQueue } from "..";
 
 /**
  * Identified by `W` set
- * @see $(0.5.0 - 11.2)
+ * @see $(0.5.3 - 11.2)
  */
 export type WorkReport = {
   /**
@@ -56,13 +56,13 @@ export type WorkReport = {
 
 /**
  * it's defined by the bold `W` in the paper
- * $(0.5.0 - 11.15)
+ * $(0.5.3 - 11.16)
  */
 export type AvailableWorkReports = Tagged<WorkReport[], "available">;
 
 /**
  * `W!` in the paper
- * $(0.5.0 - 12.4)
+ * $(0.5.3 - 12.4)
  */
 export type AvailableNoPrereqWorkReports = Tagged<
   WorkReport[],
@@ -71,7 +71,7 @@ export type AvailableNoPrereqWorkReports = Tagged<
 
 /**
  * `WQ` in the paper
- * $(0.5.0 - 12.5)
+ * $(0.5.3 - 12.5)
  */
 export type AvailableWithPrereqWorkReports = Tagged<
   Array<AccumulationQueue[0][0]>,
@@ -80,7 +80,7 @@ export type AvailableWithPrereqWorkReports = Tagged<
 
 /**
  * `bold Q`
- * $(0.5.0 - 17.1)
+ * $(0.5.3 - 17.1)
  */
 export type AuditRequiredWorkReports = SeqOfLength<
   WorkReport | undefined,

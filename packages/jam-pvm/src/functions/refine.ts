@@ -276,6 +276,31 @@ export const omega_o = regFn<
   },
 });
 
+export const omega_v = regFn<
+  [RefineContext],
+  W7 | PVMSingleModObject<RefineContext>
+>({
+  fn: {
+    opCode: 22 as u8,
+    identifier: "void",
+    gasCost: 10n as Gas,
+    execute(context, refineCtx) {
+      const [n, p, c] = context.registers.slice(7);
+      if (!refineCtx.m.has(Number(n))) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+      const u = refineCtx.m.get(Number(n))!.memory;
+
+      if (p + c >= 2 ** 32 || !u.canRead(p, c)) {
+        return [IxMod.w7(HostCallResult.OOB)];
+      }
+      const p_u = u.clone();
+      p_u.changeAcl({ from: <u32>Number(p), to: <u32>Number(p + c) }, "null");
+      //TODO: set
+      return [];
+    },
+  },
+});
 /**
  * `ΩK` in the graypaper
  * kick off pvm host call

@@ -11,7 +11,7 @@ import { Ixdb } from "@/instructions/ixdb.js";
 
 export class ParsedProgram implements IParsedProgram {
   #blockBeginnings: Set<u32>;
-  // $(0.5.0 - A.4)
+  // $(0.5.3 - A.4)
   #ixSkips: Map<u32, u32>;
   #ixs: Map<u32, u8> = new Map<u32, u8>();
 
@@ -55,7 +55,7 @@ export class ParsedProgram implements IParsedProgram {
 
   /**
    * Basically computes `l`
-   * $(0.5.0 - A.14)
+   * $(0.5.3 - A.14)
    */
   skip(pointer: u32): u32 {
     // we assume that the pointer is valid

@@ -16,7 +16,7 @@ import { ok } from "neverthrow";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
- * $(0.5.2 - 11.18)
+ * $(0.5.3 - 11.18)
  */
 export const RHO2DoubleDagger: STF<
   Dagger<RHO>,

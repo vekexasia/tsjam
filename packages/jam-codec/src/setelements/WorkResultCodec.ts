@@ -5,7 +5,7 @@ import { createCodec } from "@/utils";
 import { E_sub, E_sub_int } from "@/ints/E_subscr";
 
 /**
- * $(0.5.0 - C.23)
+ * $(0.5.3 - C.23)
  */
 export const WorkResultCodec = createCodec<WorkResult>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)], // s

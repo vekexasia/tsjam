@@ -49,7 +49,7 @@ export const computeWorkReport = (
 ): WorkReport => {
   //
 
-  // $(0.5.0 - 14.10) | first matching case
+  // $(0.5.3 - 14.11) | first matching case
   const o = isAuthorized(pac, core);
   if (!(o instanceof Uint8Array)) {
     throw new Error("unexpected");
@@ -78,7 +78,7 @@ export const computeWorkReport = (
 /**
  * compute availability specifier
  * @returns AvailabilitySpecification
- * $(0.5.0 - 14.15)
+ * $(0.5.3 - 14.16)
  */
 const A_fn = (
   pac: WorkPackageWithAuth,
@@ -127,7 +127,7 @@ const A_fn = (
 
 /**
  * Paged Proof
- * $(0.5.0 - 14.9)
+ * $(0.5.3 - 14.10)
  */
 const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
@@ -143,7 +143,7 @@ const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
       zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),
     );
   }
-  return toRet as Uint8Array[];
+  return toRet as ExportSegment[];
 };
 
 const I_fn = (
@@ -203,7 +203,7 @@ export const M_fn = (workItem: WorkItem) => {
 };
 
 /**
- * $(0.5.0 - 14.13)
+ * $(0.5.3 - 14.14)
  */
 export const X_fn = (workItem: WorkItem) => {
   return workItem.exportedDataSegments.map(({ blobHash }) => {
@@ -213,7 +213,7 @@ export const X_fn = (workItem: WorkItem) => {
 
 /**
  * (179) `C` constructs WorkResult from item and output
- * $(0.5.2 - 14.8)
+ * $(0.5.3 - 14.8)
  */
 export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   return {

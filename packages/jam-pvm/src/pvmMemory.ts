@@ -1,4 +1,4 @@
-import { IPVMMemory, PVMACL, u32 } from "@tsjam/types";
+import { IPVMMemory, MemoryRegion, PVMACL, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
@@ -15,6 +15,13 @@ export class PVMMemory implements IPVMMemory {
   addACL(acl: { from: u32; to: u32; writable: boolean }): void {
     this.acl.push(acl);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  changeAcl(mem: MemoryRegion, kind: "read" | "write" | "null"): void {
+    //TODO: implement
+    throw new Error("changeAcl not implemented.");
+  }
+
   setBytes(_offset: number | bigint, bytes: Uint8Array): void {
     assert(this.canWrite(_offset, bytes.length), "Memory is not writeable");
     const offset = Number(_offset);

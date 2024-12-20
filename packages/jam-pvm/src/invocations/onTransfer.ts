@@ -5,6 +5,7 @@ import {
   PVMProgramExecutionContextBase,
   ServiceAccount,
   ServiceIndex,
+  Tau,
   u32,
   u8,
 } from "@tsjam/types";
@@ -22,12 +23,32 @@ import { applyMods } from "@/functions/utils";
 import assert from "node:assert";
 import { HostCallExecutor } from "./hostCall";
 import { IxMod } from "@/instructions/utils";
+import {
+  createArrayLengthDiscriminator,
+  createCodec,
+  DeferredTransferCodec,
+  E_sub_int,
+  encodeWithCodec,
+} from "@tsjam/codec";
 
+const argumentInvocationTransferCodec = createCodec<{
+  tau: Tau;
+  serviceIndex: ServiceIndex;
+  transfers: DeferredTransfer[];
+}>([
+  ["tau", E_sub_int<Tau>(4)],
+  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
+  [
+    "transfers",
+    createArrayLengthDiscriminator<DeferredTransfer[]>(DeferredTransferCodec),
+  ],
+]);
 /**
- * $(0.5.0 - B.14 / B.15)
+ * $(0.5.3 - B.14 / B.15)
  */
 export const transferInvocation = (
   d: Delta,
+  t: Tau,
   s: ServiceIndex,
   transfers: DeferredTransfer[],
 ): ServiceAccount => {
@@ -48,9 +69,13 @@ export const transferInvocation = (
 
   const out = argumentInvocation(
     code,
-    15 as u32,
+    10 as u32,
     transfers.reduce((acc, a) => acc + a.gasLimit, 0n) as Gas,
-    new Uint8Array(), // TODO: encode transfers
+    encodeWithCodec(argumentInvocationTransferCodec, {
+      transfers,
+      tau: t,
+      serviceIndex: s,
+    }),
     F_fn(d, s),
     bold_s,
   );
@@ -58,7 +83,7 @@ export const transferInvocation = (
 };
 
 /**
- * $(0.5.0 - B.16)
+ * $(0.5.3 - B.16)
  */
 const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   (d: Delta, s: ServiceIndex) =>

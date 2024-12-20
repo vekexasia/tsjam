@@ -4,7 +4,7 @@ import { Hash, u32 } from "@tsjam/types";
 import { bigintToBytes } from "@tsjam/utils";
 
 /**
- * $(0.5.0 - F.1)
+ * $(0.5.3 - F.1)
  */
 export const FisherYates = <T>(arr: T[], entropies: number[]) => {
   const sliced = arr.slice();
@@ -21,14 +21,14 @@ export const FisherYates = <T>(arr: T[], entropies: number[]) => {
 };
 
 /**
- * $(0.5.0 - F.3)
+ * $(0.5.3 - F.3)
  */
 export const FisherYatesH = <T>(arr: T[], entropy: Hash) => {
   return FisherYates(arr, Q(arr.length, entropy));
 };
 
 /**
- * $(0.5.0 - F.2)
+ * $(0.5.3 - F.2)
  */
 const Q = (l: number, entropy: Hash): u32[] => {
   const entropyBin = bigintToBytes(entropy, 32);

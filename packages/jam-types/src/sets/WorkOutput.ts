@@ -1,6 +1,6 @@
 /**
  * defined as `J` set in the paper
- * $(0.5.0 - 11.7)
+ * $(0.5.3 - 11.7)
  */
 export enum WorkError {
   /**
@@ -15,14 +15,16 @@ export enum WorkError {
    */
   UnexpectedTermination = 1,
 
+  BadExports = 2,
+
   /**
    * Service code was not available for lookup at the lookup anchor block
    * it essentially means that `WorkResult.codeHash` preimage was not found
    */
-  Bad = 2,
+  Bad = 3,
   /**
    * Code too big (exceeded `S`)
    */
-  Big = 3,
+  Big = 4,
 }
 export type WorkOutput = Uint8Array | WorkError;

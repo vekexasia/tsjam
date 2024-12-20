@@ -21,7 +21,7 @@ import { IxMod, MemoryUnreadable } from "@/instructions/utils.js";
 
 type InputType = [register: RegisterIdentifier, value: u64];
 
-// $(0.5.0 - A.19)
+// $(0.5.3 - A.19)
 const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   assert(bytes.length > 0, "no input bytes");
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;

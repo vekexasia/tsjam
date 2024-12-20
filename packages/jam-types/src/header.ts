@@ -15,7 +15,7 @@ import { TicketIdentifier } from "@/sets/Ticket.js";
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
- * @see $(0.5.0 - 5.1)
+ * @see $(0.5.3 - 5.1)
  * NOTE: the following are computed values
  * `Ha`= K'[Hi]
  */
@@ -47,7 +47,7 @@ export interface JamHeader {
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
    * hence the length of kb or validatorKeys is `epoch-length`
-   * $(0.5.0 - 5.10)
+   * $(0.5.3 - 5.10)
    */
   epochMarker?: {
     // coming from eta
@@ -83,7 +83,6 @@ export interface JamHeader {
 
   /**
    * `Hv` -
-   * @see (62) in section 6.4
    */
   entropySignature: BandersnatchSignature;
 }

@@ -34,16 +34,16 @@ export type ByteArrayOfLength<T extends number> = Tagged<
   { byteLength: T }
 >;
 
-// $(0.5.0 - 4.21)
+// $(0.5.3 - 4.21)
 export type Balance = Tagged<u64, "balance">;
 
-// $(0.5.0 - 4.23)
+// $(0.5.3 - 4.23)
 export type Gas = Tagged<u64, "gas">;
 
-// $(0.5.0 - 4.23)
+// $(0.5.3 - 4.23)
 export type Z_Gas = Tagged<i64, "gas">;
 
-// $(0.5.0 - 4.23)
+// $(0.5.3 - 4.23)
 export type RegisterValue = Tagged<u64, "registerValue">;
 
 /**
@@ -120,7 +120,7 @@ export type ValidatorIndex = Tagged<
   "ValidatorIndex",
   { maxValue: typeof NUMBER_OF_VALIDATORS }
 >;
-// $(0.5.0 - 9.1)
+// $(0.5.3 - 9.1)
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;

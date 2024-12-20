@@ -6,7 +6,7 @@ import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengt
 
 /**
  * it defines codec for the RefinementContext or member of `X` set
- * $(0.5.0 - C.21)
+ * $(0.5.3 - C.21)
  */
 export const RefinementContextCodec = createCodec<RefinementContext>([
   [

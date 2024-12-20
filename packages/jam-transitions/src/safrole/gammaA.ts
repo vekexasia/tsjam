@@ -7,7 +7,7 @@ import {
 } from "@tsjam/types";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { isNewEra } from "@tsjam/utils";
-import { err, ok } from "neverthrow";
+import { ok, err } from "neverthrow";
 
 type Input = {
   tau: Tau;
@@ -21,7 +21,7 @@ export enum GammaAError {
 }
 /**
  * update `gamma_a`
- * $(0.5.0 - 6.34 / 6.35)
+ * $(0.5.3 - 6.34 / 6.35)
  */
 export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
   input: Input,
@@ -39,7 +39,7 @@ export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
     .sort((a, b) => (a.id - b.id < 0 ? -1 : 1))
     .slice(0, EPOCH_LENGTH) as Posterior<SafroleState["gamma_a"]>;
 
-  // $(0.5.0 - 6.35) | check `n` subset of p_gamma_a
+  // $(0.5.3 - 6.35) | check `n` subset of p_gamma_a
   const p_gamma_a_ids = new Set(toRet.map((x) => x.id));
   for (const x of input.newIdentifiers) {
     if (!p_gamma_a_ids.has(x.id)) {

@@ -11,7 +11,7 @@ import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 import { E_Fn } from "@tsjam/pvm";
 
-// $(0.5.0 - 12.27)
+// $(0.5.3 - 12.27)
 export const accumulationQueueToPosterior: STF<
   AccumulationQueue,
   {

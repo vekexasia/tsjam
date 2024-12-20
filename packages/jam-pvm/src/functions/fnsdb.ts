@@ -45,13 +45,13 @@ export const regFn = <Args extends unknown[], Out>(conf: {
     Args,
     Array<Out | PVMSingleModGas> | [PVMExitReasonMod]
   > = (ctx: PVMProgramExecutionContextBase, ...args) => {
-    // $(0.5.0 - B.17 / B.19 / B.21)
+    // $(0.5.3 - B.17 / B.19 / B.21)
     const gas =
       typeof conf.fn.gasCost === "function"
         ? conf.fn.gasCost(ctx, ...args)
         : conf.fn.gasCost;
     if (gas > ctx.gas) {
-      // $(0.5.0 - B.18 / B.20 / B.22) | first bracket
+      // $(0.5.3 - B.18 / B.20 / B.22) | first bracket
       return [IxMod.outOfGas()];
     }
     return [...conf.fn.execute(ctx, ...args), IxMod.gas(gas)];

@@ -2,7 +2,7 @@ import { PVMProgram } from "@tsjam/types";
 
 /**
  * This function returns the number of bytes to `skip` for the next instruction.
- * $(0.5.0 - A.2)
+ * $(0.5.3 - A.2)
  * @param program - the program we're evaluating
  * @param curOffset - the current offset we already evaluated
  */

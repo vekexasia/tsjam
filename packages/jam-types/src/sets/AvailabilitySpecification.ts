@@ -4,7 +4,7 @@ import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 /**
  * identified by `S` set
  * @see section 11.1.3
- * $(0.5.0 - 11.5)
+ * $(0.5.3 - 11.5)
  */
 export type AvailabilitySpecification = {
   /**

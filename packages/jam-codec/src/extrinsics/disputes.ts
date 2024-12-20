@@ -57,7 +57,7 @@ const codecEdCreator = () => {
 };
 /**
  * `Ed` codec
- * $(0.5.0 - C.18)
+ * $(0.5.3 - C.18)
  */
 export const codec_Ed = codecEdCreator();
 

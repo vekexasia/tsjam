@@ -27,7 +27,6 @@ export enum ETError {
 
 /**
  * handles Et
- * @see (75) - 0.4.5
  */
 export const etToIdentifiers = (
   et: TicketExtrinsics,
@@ -42,17 +41,17 @@ export const etToIdentifiers = (
     return ok([]); // optimization
   }
 
-  // $(0.5.0 - 6.30) | first case
+  // $(0.5.3 - 6.30) | first case
   if (slotIndex(input.p_tau) >= LOTTERY_MAX_SLOT) {
     return err(ETError.LOTTERY_ENDED);
   }
 
-  // $(0.5.0 - 6.30) | first case
+  // $(0.5.3 - 6.30) | first case
   if (et.length > MAX_TICKETS_PER_BLOCK) {
     return err(ETError.MAX_TICKETS_EXCEEDED);
   }
 
-  // $(0.5.0 - 6.29) | we validate the ticket
+  // $(0.5.3 - 6.29) | we validate the ticket
   for (const extrinsic of et) {
     if (
       extrinsic.entryIndex < 0 ||
@@ -74,7 +73,7 @@ export const etToIdentifiers = (
     }
   }
 
-  // $(0.5.0 - 6.31)
+  // $(0.5.3 - 6.31)
   const n: TicketIdentifier[] = [];
   for (const x of et) {
     n.push({
@@ -83,14 +82,14 @@ export const etToIdentifiers = (
     });
   }
 
-  // $(0.5.0 - 6.32) | tickets should be in order and unique
+  // $(0.5.3 - 6.32) | tickets should be in order and unique
   for (let i = 1; i < n.length; i++) {
     if (n[i - 1].id >= n[i].id) {
       return err(ETError.UNSORTED_VRF_PROOFS);
     }
   }
 
-  // $(0.5.0 - 6.33) | make sure ticket were not submitted already
+  // $(0.5.3 - 6.33) | make sure ticket were not submitted already
   const gamma_a_ids = new Set(input.gamma_a.map((x) => x.id));
   for (const x of n) {
     if (gamma_a_ids.has(x.id)) {

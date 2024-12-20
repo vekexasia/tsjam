@@ -21,7 +21,7 @@ type EvaluateType = [
 ];
 type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
 
-// $(0.5.0 - A.26)
+// $(0.5.3 - A.26)
 const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   if (bytes.length < 2) {
     return err(new PVMIxDecodeError("not enough bytes (2)"));

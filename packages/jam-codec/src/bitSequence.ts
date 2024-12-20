@@ -3,7 +3,7 @@ import assert from "node:assert";
 export type bit = 0 | 1;
 
 /**
- * $(0.5.0 - C.10)
+ * $(0.5.3 - C.10)
  */
 export const BitSequence: JamCodec<bit[]> = {
   encode: function (value: bit[], bytes: Uint8Array): number {

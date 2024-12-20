@@ -60,7 +60,7 @@ export const isFallbackMode = (
  * @param state - the state of the safrole state machine
  *
  * @returns undefined in case blockAuthorKeyIndex is invalid and not within
- * $(0.5.0 - 5.9)
+ * $(0.5.3 - 5.9)
  */
 
 export const getBlockAuthorKey = (

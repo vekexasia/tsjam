@@ -15,7 +15,7 @@ import { IxMod } from "@/instructions/utils";
  * @param address - the address to branch to
  * @param condition - the condition that must be true to branch
  * @param gasCost - the cost of the ix calling in case of panic
- * $(0.5.0 - A.12)
+ * $(0.5.3 - A.12)
  */
 export const branch = (
   context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],

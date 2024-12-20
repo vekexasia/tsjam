@@ -10,14 +10,13 @@ import { E_2, E_3, E_4, IdentityCodec, PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 
-// constants defined in $(0.5.2 - A.31)
-const Zp = 2 ** 14;
+// constants defined in $(0.5.3 - A.31)
 const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
 /**
  * `Y` fn in the graypaper
- * $(0.5.2 - A.29)
+ * $(0.5.3 - A.29)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -32,7 +31,7 @@ export const programInitialization = (
       memory: IPVMMemory;
       registers: SeqOfLength<RegisterValue, 13>;
     } => {
-  // $(0.5.2 - A.30) | start
+  // $(0.5.3 - A.30) | start
   let offset = 0;
   const oCardinality = E_3.decode(encodedProgram.subarray(0, 3));
   offset += oCardinality.readBytes;
@@ -57,9 +56,9 @@ export const programInitialization = (
     offset,
     offset + Number(cCardinality.value),
   );
-  // $(0.5.2 - A.30) | end
+  // $(0.5.3 - A.30) | end
 
-  // $(0.5.2 - A.33)
+  // $(0.5.3 - A.33)
   if (
     5 * Zz +
       Z_Fn(oCardinality.value) +
@@ -71,7 +70,7 @@ export const programInitialization = (
     return undefined;
   }
 
-  // registers $(0.5.2 - A.35)
+  // registers $(0.5.3 - A.35)
   const registers = [
     2n ** 32n - 2n ** 16n,
     2n ** 32n - 2n * BigInt(Zz - Zi),
@@ -88,7 +87,7 @@ export const programInitialization = (
     0n,
   ] as SeqOfLength<RegisterValue, 13>;
 
-  // memory $(0.5.2 - A.34)
+  // memory $(0.5.3 - A.34)
   const acl: PVMACL[] = [];
   const mem: MemoryContent[] = [];
   // first case
@@ -159,12 +158,12 @@ export const programInitialization = (
   };
 };
 
-// $(0.5.2 - A.32)
+// $(0.5.3 - A.32)
 const P_Fn = (x: number | bigint) => {
   return Zp * Math.ceil(Number(x) / Zp);
 };
 
-// $(0.5.2 - A.32)
+// $(0.5.3 - A.32)
 const Z_Fn = (x: number | bigint) => {
   return Zz * Math.ceil(Number(x) / Zz);
 };

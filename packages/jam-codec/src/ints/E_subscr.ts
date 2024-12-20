@@ -5,7 +5,7 @@ import assert from "node:assert";
 
 /**
  * @param sub - the number of bytes to encode
- * $(0.5.0 - C.5)
+ * $(0.5.3 - C.5)
  */
 export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
   encode: (value: T, bytes: Uint8Array): number => {

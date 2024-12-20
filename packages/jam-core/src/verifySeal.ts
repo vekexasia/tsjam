@@ -65,7 +65,7 @@ export const sealSignContext = (
 };
 /**
  * Verify Hs
- * $(0.5.0 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
+ * $(0.5.3 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
  */
 export const verifySeal = (
   header: SignedJamHeader,
@@ -91,7 +91,7 @@ export const verifySeal = (
     return false;
   }
 
-  // $(0.5.0 - 6.16)
+  // $(0.5.3 - 6.16)
   if (isFallbackMode(p_state.safroleState.gamma_s)) {
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     if (i !== ha) {
@@ -99,7 +99,7 @@ export const verifySeal = (
     }
     return true;
   } else {
-    // $(0.5.0 - 6.15)
+    // $(0.5.3 - 6.15)
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
     if (i.id !== Bandersnatch.vrfOutputSignature(header.blockSeal)) {
@@ -111,7 +111,7 @@ export const verifySeal = (
 
 /**
  * verify `Hv`
- * @see (0.5.0 - 6.17 - 6.18)
+ * @see (0.5.3 - 6.17 - 6.18)
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
@@ -141,7 +141,7 @@ export enum EpochMarkerError {
 
 /**
  * Verifies epoch marker `He` is valid
- * $(0.5.2 - 6.27)
+ * $(0.5.3 - 6.27)
  */
 export const verifyEpochMarker = (
   block: JamBlock,
@@ -177,7 +177,7 @@ export enum WinningTicketsError {
 }
 
 // check winning tickets Hw
-// $(0.5.0 - 6.28)
+// $(0.5.3 - 6.28)
 export const verifyWinningTickets = (
   block: JamBlock,
   curState: JamState,
@@ -211,7 +211,7 @@ export const verifyWinningTickets = (
   return ok(undefined);
 };
 
-// $(0.5.0 - 5.4 / 5.5)
+// $(0.5.3 - 5.4 / 5.5)
 export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],
   hx: JamHeader["extrinsicHash"],
@@ -235,7 +235,7 @@ export const computeExtrinsicHash = (extrinsics: JamBlock["extrinsics"]) => {
 
 /**
  * Verify `Ho`
- * $(0.5.0 - 10.20)
+ * $(0.5.3 - 10.20)
  */
 export const verifyOffenders = (
   extrinsics: JamBlock["extrinsics"],
@@ -264,7 +264,7 @@ export const verifyEA = (
   p_kappa: Posterior<JamState["kappa"]>,
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
-  // $(0.5.2 - 11.10)
+  // $(0.5.3 - 11.10)
   if (ea.length > NUMBER_OF_VALIDATORS) {
     return false;
   }
@@ -278,21 +278,21 @@ export const verifyEA = (
     }
   }
 
-  // $(0.5.2 - 11.11)
+  // $(0.5.3 - 11.11)
   for (const a of ea) {
     if (a.anchorHash !== hp) {
       return false;
     }
   }
 
-  // $(0.5.2 - 11.12)
+  // $(0.5.3 - 11.12)
   for (let i = 1; i < ea.length; i++) {
     if (ea[i].validatorIndex <= ea[i - 1].validatorIndex) {
       return false;
     }
   }
 
-  // $(0.5.2 - 11.13)
+  // $(0.5.3 - 11.13)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
@@ -314,7 +314,7 @@ export const verifyEA = (
     }
   }
 
-  // $(0.5.0 - 11.13 / 11.14)
+  // $(0.5.3 - 11.13 / 11.14)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     for (let c = 0; c < CORES; c++) {

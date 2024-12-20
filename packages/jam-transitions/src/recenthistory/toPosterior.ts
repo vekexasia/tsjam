@@ -16,7 +16,7 @@ import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
- * $(0.5.0 - 7.3)
+ * $(0.5.3 - 7.3)
  * calculate `r`
  */
 export const calculateAccumulateRoot = (
@@ -42,8 +42,7 @@ export const calculateAccumulateRoot = (
 };
 
 /**
- * see (83) (162) (163)
- * $(0.5.0 - 7.4 / 4.7)
+ * $(0.5.3 - 7.4 / 4.7)
  */
 export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,
@@ -88,7 +87,7 @@ export const recentHistoryToPosterior: STF<
     reportedPackages: p,
   });
 
-  // $(0.5.0 - 7.4)
+  // $(0.5.3 - 7.4)
   if (toRet.length > RECENT_HISTORY_LENGTH) {
     return ok(
       toRet.slice(

@@ -10,7 +10,7 @@ import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * section E.2 `A`
- * $(0.5.0 - E.8)
+ * $(0.5.3 - E.8)
  * @param peeks - the current MMR
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
@@ -50,7 +50,7 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 };
 
 /**
- * $(0.5.2 - E.10)
+ * $(0.5.3 - E.10)
  */
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   const peeks = _peeks
@@ -82,7 +82,7 @@ const innerMMRSuperPeak = (
 };
 
 /**
- * $(0.5.0 - E.9)
+ * $(0.5.3 - E.9)
  */
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
   createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));
