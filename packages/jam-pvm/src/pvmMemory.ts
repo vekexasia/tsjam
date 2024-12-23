@@ -1,4 +1,5 @@
-import { IPVMMemory, MemoryRegion, PVMACL, u32 } from "@tsjam/types";
+import { Zp } from "@tsjam/constants";
+import { IPVMMemory, PVMACL, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
@@ -12,14 +13,17 @@ export class PVMMemory implements IPVMMemory {
       this.#innerMemory.set(content, at);
     }
   }
-  addACL(acl: { from: u32; to: u32; writable: boolean }): void {
-    this.acl.push(acl);
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  changeAcl(mem: MemoryRegion, kind: "read" | "write" | "null"): void {
-    //TODO: implement
-    throw new Error("changeAcl not implemented.");
+  changeAcl(pageIndex: number, kind: "read" | "write" | "null"): void {
+    const index = this.acl.findIndex((a) => a.page === pageIndex);
+    if (index === -1) {
+      this.acl.push({ page: pageIndex, writable: kind === "write" });
+    } else {
+      this.acl[index].writable = kind === "write";
+      if (kind === "null") {
+        this.acl.splice(index, 1);
+      }
+    }
   }
 
   setBytes(_offset: number | bigint, bytes: Uint8Array): void {
@@ -36,16 +40,32 @@ export class PVMMemory implements IPVMMemory {
   canRead(_offset: number | bigint, _length: number | bigint): boolean {
     const offset = Number(_offset);
     const length = Number(_length);
-    return !!this.acl.find(
-      (acl) => offset >= acl.from && offset + length < acl.to,
-    );
+    const pageOffset = Math.floor(offset / Zp);
+    let pageEnd = Math.ceil((offset + length) / Zp);
+    if (pageEnd === Math.floor((offset + length) / Zp)) {
+      pageEnd--;
+    }
+    for (let p = pageOffset; p < pageEnd; p++) {
+      if (!this.acl.some((a) => a.page === p)) {
+        return false;
+      }
+    }
+    return true;
   }
   canWrite(_offset: number | bigint, _length: number | bigint): boolean {
     const offset = Number(_offset);
     const length = Number(_length);
-    return !!this.acl.find(
-      (acl) => offset >= acl.from && offset + length < acl.to && acl.writable,
-    );
+    const pageOffset = Math.floor(offset / Zp);
+    let pageEnd = Math.ceil((offset + length) / Zp);
+    if (pageEnd === Math.floor((offset + length) / Zp)) {
+      pageEnd--;
+    }
+    for (let p = pageOffset; p < pageEnd; p++) {
+      if (!this.acl.some((a) => a.page === p && a.writable)) {
+        return false;
+      }
+    }
+    return true;
   }
   clone(): this {
     return new PVMMemory(

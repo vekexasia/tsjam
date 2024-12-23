@@ -20,7 +20,7 @@ type Output = {
 /**
  * SingleStep State Transition Function
  * Ψ1 in the graypaper
- * $(0.5.0 - A.5)
+ * $(0.5.3 - A.5)
  */
 export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -81,10 +81,11 @@ export const pvmSingleStep = (
     return { p_context: toPosterior(rMod.ctx), exitReason: rMod.exitReason };
   }
 
+  // $(0.5.3 - A.6)
   const rMod = applyMods(ctx, {} as object, [
-    IxMod.gas(ix.gasCost),
+    IxMod.gas(ix.gasCost), // g′ = g − g∆
     ...r.value,
-    IxMod.skip(ctx.instructionPointer, skip),
+    IxMod.skip(ctx.instructionPointer, skip), // i'
   ]);
   return {
     p_context: toPosterior(rMod.ctx),

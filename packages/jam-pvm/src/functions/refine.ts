@@ -20,6 +20,7 @@ import {
   ERASURECODE_EXPORTED_SIZE,
   HostCallResult,
   InnerPVMResultCode,
+  Zp,
 } from "@tsjam/constants";
 import { bytesToBigInt, historicalLookup } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
@@ -123,10 +124,10 @@ export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
 });
 
 /**
- * `ΩZ` in the graypaper
+ * `ΩE` in the graypaper
  * export segment host call
  */
-export const omega_z = regFn<
+export const omega_e = regFn<
   [ctx: RefineContext, segmentOffset: number],
   W7 | PVMSingleModObject<RefineContext>
 >({
@@ -135,6 +136,7 @@ export const omega_z = regFn<
     identifier: "export",
     gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
+      // TODO:refactor
       const [p, w8] = context.registers.slice(7);
       const z = Math.min(
         Number(w8),
@@ -258,11 +260,12 @@ export const omega_o = regFn<
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
-      p_u.addACL({
-        from: Number(b) as u32,
-        to: Number(b + l) as u32,
-        writable: true,
-      });
+      // FIXME:
+      // p_u.addACL({
+      //   from: Number(b) as u32,
+      //   to: Number(b + l) as u32,
+      //   writable: true,
+      // });
       p_u.setBytes(b, s);
       const p_m = new Map(refineCtx.m);
       p_m.set(n, {
@@ -276,6 +279,49 @@ export const omega_o = regFn<
   },
 });
 
+/**
+ * `ΩZ` in the graypaper
+ * Zero inner-PVM memory host-call
+ */
+export const omega_z = regFn<
+  [RefineContext],
+  W7 | PVMSingleModObject<RefineContext>
+>({
+  fn: {
+    opCode: 21 as u8,
+    identifier: "void",
+    gasCost: 10n as Gas,
+    execute(context, refineCtx) {
+      const [n, p, c] = context.registers.slice(7);
+      if (!refineCtx.m.has(Number(n))) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+      const u = refineCtx.m.get(Number(n))!.memory;
+
+      if (p + c >= 2 ** 32 || !u.canRead(p, c)) {
+        return [IxMod.w7(HostCallResult.OOB)];
+      }
+      const p_u = u.clone();
+      for (let page = 0; page < c; page++) {
+        p_u.changeAcl(page, "write");
+        p_u.setBytes(page * Zp, new Uint8Array(Zp).fill(0));
+      }
+
+      const p_m = new Map(refineCtx.m);
+      p_m.set(Number(n), {
+        programCode: refineCtx.m.get(Number(n))!.programCode,
+        memory: p_u,
+        instructionPointer: refineCtx.m.get(Number(n))!.instructionPointer,
+      });
+      return [IxMod.w7(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
+    },
+  },
+});
+
+/**
+ * `ΩV` in the graypaper
+ * Void inner-PVM memory host-call
+ */
 export const omega_v = regFn<
   [RefineContext],
   W7 | PVMSingleModObject<RefineContext>
@@ -295,12 +341,23 @@ export const omega_v = regFn<
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
-      p_u.changeAcl({ from: <u32>Number(p), to: <u32>Number(p + c) }, "null");
-      //TODO: set
-      return [];
+      for (let page = 0; page < c; page++) {
+        p_u.changeAcl(page, "write");
+        p_u.setBytes(page * Zp, new Uint8Array(Zp).fill(0));
+        p_u.changeAcl(page, "null");
+      }
+
+      const p_m = new Map(refineCtx.m);
+      p_m.set(Number(n), {
+        programCode: refineCtx.m.get(Number(n))!.programCode,
+        memory: p_u,
+        instructionPointer: refineCtx.m.get(Number(n))!.instructionPointer,
+      });
+      return [IxMod.w7(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
     },
   },
 });
+
 /**
  * `ΩK` in the graypaper
  * kick off pvm host call

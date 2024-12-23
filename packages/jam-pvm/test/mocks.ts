@@ -19,6 +19,7 @@ const mockMemory = (): IPVMMemory => ({
   getBytes: vi.fn(),
   canRead: vi.fn(),
   canWrite: vi.fn(),
+  changeAcl: vi.fn(),
   clone: vi.fn().mockReturnThis(),
 });
 export const createEvContext = (): {

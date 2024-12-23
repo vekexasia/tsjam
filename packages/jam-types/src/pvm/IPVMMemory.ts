@@ -1,10 +1,10 @@
 import { u32 } from "@/genericTypes";
-export type MemoryRegion = { from: u32; to: u32 };
+
 /*
  * `A` - Access Control List
  * $(0.5.3 - 4.24)
  */
-export type PVMACL = MemoryRegion & { writable: boolean };
+export type PVMACL = { page: number; writable: boolean };
 export type PVMMemoryContent = { at: u32; content: Uint8Array };
 
 /**
@@ -33,5 +33,5 @@ export interface IPVMMemory {
    * Change ACL of specified region
    * being used in void, and zero refine fns
    */
-  changeAcl(memory: MemoryRegion, newKind: "read" | "write" | "null"): void;
+  changeAcl(page: number, newKind: "read" | "write" | "null"): void;
 }

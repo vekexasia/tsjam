@@ -23,6 +23,7 @@ import {
   omega_p,
   omega_x,
   omega_y,
+  omega_e,
   omega_z,
 } from "@/functions/refine.js";
 import { FnsDb } from "@/functions/fnsdb.js";
@@ -136,7 +137,7 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          omega_z(input.ctx, input.out, exportSegmentOffset),
+          omega_e(input.ctx, input.out, exportSegmentOffset),
         );
       case "gas":
         return applyMods(input.ctx, input.out, omega_g(input.ctx));
@@ -144,6 +145,8 @@ const F_fn: (
         return applyMods(input.ctx, input.out, omega_m(input.ctx, input.out));
       case "peek":
         return applyMods(input.ctx, input.out, omega_p(input.ctx, input.out));
+      case "zero":
+        return applyMods(input.ctx, input.out, omega_z(input.ctx, input.out));
       case "poke":
         return applyMods(input.ctx, input.out, omega_o(input.ctx, input.out));
       case "invoke":

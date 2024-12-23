@@ -1,3 +1,4 @@
+import { Zp } from "@tsjam/constants";
 import {
   IPVMMemory,
   PVMACL,
@@ -6,7 +7,16 @@ import {
   SeqOfLength,
   u32,
 } from "@tsjam/types";
-import { E_2, E_3, E_4, IdentityCodec, PVMProgramCodec } from "@tsjam/codec";
+import {
+  E_2,
+  E_3,
+  E_sub_int,
+  E_4,
+  IdentityCodec,
+  PVMProgramCodec,
+  E_4_int,
+  createCodec,
+} from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 
@@ -14,6 +24,17 @@ import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
+const owzsCodec = createCodec<{
+  oCard: number;
+  wCard: number;
+  z: number;
+  s: number;
+}>([
+  ["oCard", E_sub_int(3)],
+  ["wCard", E_sub_int(3)],
+  ["z", E_sub_int(2)],
+  ["s", E_sub_int(3)],
+]);
 /**
  * `Y` fn in the graypaper
  * $(0.5.3 - A.29)
@@ -32,48 +53,32 @@ export const programInitialization = (
       registers: SeqOfLength<RegisterValue, 13>;
     } => {
   // $(0.5.3 - A.30) | start
-  let offset = 0;
-  const oCardinality = E_3.decode(encodedProgram.subarray(0, 3));
-  offset += oCardinality.readBytes;
-  const wCardinality = E_3.decode(encodedProgram.subarray(offset, offset + 3));
-  offset += wCardinality.readBytes;
-  const z = E_2.decode(encodedProgram.subarray(offset, offset + 2));
-  offset += z.readBytes;
-  const s = E_3.decode(encodedProgram.subarray(offset, offset + 3));
-  offset += s.readBytes;
-  const o = IdentityCodec.decode(
-    encodedProgram.subarray(offset, offset + Number(oCardinality.value)),
-  );
-  offset += o.readBytes;
+  const {
+    readBytes: offset,
+    value: { oCard, wCard, z, s },
+  } = owzsCodec.decode(encodedProgram);
 
-  const w = IdentityCodec.decode(
-    encodedProgram.subarray(offset, offset + Number(wCardinality.value)),
+  const o = encodedProgram.subarray(offset, offset + oCard);
+  const w = encodedProgram.subarray(offset + oCard, offset + oCard + wCard);
+
+  const cCard = E_4_int.decode(
+    encodedProgram.subarray(offset + oCard + wCard, offset + oCard + wCard + 4),
   );
-  offset += w.readBytes;
-  const cCardinality = E_4.decode(encodedProgram.subarray(offset, offset + 4));
-  offset += cCardinality.readBytes;
   const c = encodedProgram.subarray(
-    offset,
-    offset + Number(cCardinality.value),
+    offset + oCard + wCard + 4,
+    offset + oCard + wCard + 4 + cCard.value,
   );
   // $(0.5.3 - A.30) | end
 
   // $(0.5.3 - A.33)
-  if (
-    5 * Zz +
-      Z_Fn(oCardinality.value) +
-      Z_Fn(wCardinality.value + z.value * BigInt(Zp)) +
-      Z_Fn(s.value) +
-      Zi >
-    2 ** 32
-  ) {
+  if (5 * Zz + Z_Fn(oCard) + Z_Fn(wCard + z * Zp) + Z_Fn(s) + Zi > 2 ** 32) {
     return undefined;
   }
 
   // registers $(0.5.3 - A.35)
   const registers = [
     2n ** 32n - 2n ** 16n,
-    2n ** 32n - 2n * BigInt(Zz - Zi),
+    2n ** 32n - 2n * BigInt(Zz) - BigInt(Zi),
     0n,
     0n,
     0n,
@@ -90,63 +95,63 @@ export const programInitialization = (
   // memory $(0.5.3 - A.34)
   const acl: PVMACL[] = [];
   const mem: MemoryContent[] = [];
-  // first case
-  mem.push({ at: Zz as u32, content: o.value });
+  const createAcl = (conf: { from: number; to: number; writable: boolean }) => {
+    for (let i = conf.from; i < conf.to; i += Zp) {
+      acl.push({ page: Math.floor(i / Zp), writable: conf.writable });
+    }
+  };
 
-  // we set a single acl to match both the first and second case
-  // we dont need to set the memory for secodn case as it's automatically set to 0
-  acl.push({
-    from: Zz as u32,
-    to: (Zz + Number(oCardinality.value) + P_Fn(oCardinality.value)) as u32,
-    writable: false,
-  });
+  // first case
+  mem.push({ at: Zz as u32, content: o });
+  createAcl({ from: Zz, to: Zz + oCard, writable: false });
+
+  // second case
+  createAcl({ from: Zz + oCard, to: Zz + P_Fn(oCard), writable: false });
 
   // third case
-  const tmpoff = (2 * Zz + Z_Fn(oCardinality.value)) as u32;
-  mem.push({ at: tmpoff, content: w.value });
-  acl.push({
-    from: tmpoff,
-    to: (tmpoff + Number(wCardinality.value)) as u32,
-    writable: true,
-  });
+  {
+    const offset = 2 * Zz + Z_Fn(oCard);
+    mem.push({ at: <u32>offset, content: w });
+    createAcl({ from: offset, to: offset + wCard, writable: true });
+  }
 
   // fourth case set to zero so only ACL is needed
-
-  acl.push({
-    from: (2 * Zz +
-      Z_Fn(oCardinality.value) +
-      Number(wCardinality.value)) as u32,
-    to: (2 * Zz +
-      Z_Fn(oCardinality.value) +
-      P_Fn(wCardinality.value) +
-      Number(z.value) * Zp) as u32,
+  createAcl({
+    from: 2 * Zz + Z_Fn(oCard) + wCard,
+    to: 2 * Zz + Z_Fn(oCard) + P_Fn(wCard) + z * Zp,
     writable: true,
   });
 
   // fifth case
-  acl.push({
-    from: (2 ** 32 - 2 * Zz - Zi - P_Fn(s.value)) as u32,
-    to: (2 ** 32 - 2 * Zz - Zi) as u32,
+  createAcl({
+    from: 2 ** 32 - 2 * Zz - Zi - P_Fn(s),
+    to: 2 ** 32 - 2 * Zz - Zi,
     writable: true,
   });
 
   // sixth case
-  mem.push({
-    at: (2 ** 32 - Zz - Zi) as u32,
-    content: argument,
-  });
-  acl.push({
-    from: (2 ** 32 - Zz - Zi) as u32,
-    to: (2 ** 32 - Zz - Zi + argument.length) as u32,
-    writable: false,
-  });
+  {
+    const offset = 2 ** 32 - Zz - Zi;
+    mem.push({
+      at: <u32>offset,
+      content: argument,
+    });
+    createAcl({
+      from: offset as u32,
+      to: offset + argument.length,
+      writable: false,
+    });
+  }
 
   // seventh case
-  acl.push({
-    from: (2 ** 32 - Zz - Zi + argument.length) as u32,
-    to: (2 ** 32 - Zz - Zi + P_Fn(argument.length)) as u32,
-    writable: true,
-  });
+  {
+    const offset = 2 ** 32 - Zz - Zi + argument.length;
+    createAcl({
+      from: offset,
+      to: 2 ** 32 - Zz - Zi + P_Fn(argument.length),
+      writable: true,
+    });
+  }
 
   const program = PVMProgramCodec.decode(c).value;
   const parsedProgram = ParsedProgram.parse(program);
