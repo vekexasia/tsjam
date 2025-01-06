@@ -12,7 +12,7 @@ import {
 } from "@tsjam/types";
 import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
-import { E_4 } from "@tsjam/codec";
+import { E_4, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { serviceAccountGasThreshold } from "@tsjam/utils";
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
@@ -136,10 +136,11 @@ export const omega_w = regFn<
       if (!context.memory.canRead(k0, kz) || !context.memory.canRead(v0, vz)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const tmp = new Uint8Array(4);
-        E_4.encode(BigInt(s), tmp);
         k = Hashing.blake2b(
-          new Uint8Array([...tmp, ...context.memory.getBytes(k0, kz)]),
+          new Uint8Array([
+            ...encodeWithCodec(E_4_int, s),
+            ...context.memory.getBytes(k0, kz),
+          ]),
         );
       }
       const a: ServiceAccount = {
@@ -152,7 +153,7 @@ export const omega_w = regFn<
         a.storage.set(k, context.memory.getBytes(v0, vz));
       }
 
-      let l: number;
+      let l: number | bigint;
       if (bold_s.storage.has(k)) {
         const at = serviceAccountGasThreshold(bold_s);
         if (at > a.balance) {

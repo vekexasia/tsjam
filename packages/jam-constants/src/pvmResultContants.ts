@@ -1,52 +1,48 @@
 /**
  * Appendix B.1: Host Call Result Constants
  */
-export enum HostCallResult {
+export const HostCallResult = {
   /**
    * The return value indicating an item does not exist.
    */
-  NONE = 2 ** 32 - 1,
+  NONE: 2n ** 64n - 1n,
   /**
    * Name unknown.
    */
-  WHAT = 2 ** 32 - 2,
+  WHAT: 2n ** 64n - 2n,
   /**
    * The return value for when a memory index is provided for reading/writing which is not accessible
    */
-  OOB = 2 ** 32 - 3,
+  OOB: 2n ** 64n - 3n,
   /**
    * Index unknown
    */
-  WHO = 2 ** 32 - 4,
+  WHO: 2n ** 64n - 4n,
   /**
    * Storage full
    */
-  FULL = 2 ** 32 - 5,
+  FULL: 2n ** 64n - 5n,
   /**
    * Core index unknown
    */
-  CORE = 2 ** 32 - 6,
+  CORE: 2n ** 64n - 6n,
   /**
    * Insufficient funds
    */
-  CASH = 2 ** 32 - 7,
+  CASH: 2n ** 64n - 7n,
   /**
    * Gas Limit too low
    */
-  LOW = 2 ** 32 - 8,
-  /**
-   * Gas Limit too high
-   */
-  HIGH = 2 ** 32 - 9,
+  LOW: 2n ** 64n - 8n,
   /**
    * The item is already solicited or cannot be forgotten
    */
-  HUH = 2 ** 32 - 10,
+  HUH: 2n ** 64n - 9n,
   /**
    * General success
    */
-  OK = 0,
-}
+  OK: 0n,
+};
 
 export enum InnerPVMResultCode {
   /**

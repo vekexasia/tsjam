@@ -15,6 +15,7 @@ import {
   UpToSeq,
   u32,
   u8,
+  u64,
 } from "@tsjam/types";
 import {
   AUTHQUEUE_MAX_SIZE,
@@ -291,31 +292,27 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
     opCode: 11 as u8,
     identifier: "transfer",
     gasCost: (context: PVMProgramExecutionContextBase) => {
-      return (10n +
-        BigInt(context.registers[8]) +
-        BigInt(context.registers[9]) * 2n ** 32n) as Gas;
+      return (10n + context.registers[9]) as Gas;
     },
     execute(context, x) {
-      const [d, al, ah, gl, gh, o] = context.registers.slice(7);
-      const a = 2n ** 32n * BigInt(ah) + BigInt(al);
-      const g = 2n ** 32n * BigInt(gh) + BigInt(gl);
-      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
+      const [d, a, l, o] = context.registers.slice(7);
 
       const bold_d = new Map<ServiceIndex, ServiceAccount>([
         ...x.delta.entries(),
         ...x.u.delta.entries(),
       ]);
+
+      const g = l as u64 as Gas;
+      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
+        return [IxMod.w7(HostCallResult.OOB)];
+      }
+
       if (!bold_d.has(Number(d) as ServiceIndex)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
 
-      if (g < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
+      if (l < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
         return [IxMod.w7(HostCallResult.LOW)];
-      }
-      if (context.gas < g) {
-        return [IxMod.w7(HostCallResult.HIGH)];
       }
       const x_bold_s = x.u.delta.get(x.service)!;
       const b = x_bold_s.balance - a;
