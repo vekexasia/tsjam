@@ -35,6 +35,9 @@ export const omega_g = regFn<[], W7 | W8>({
   },
 });
 
+/**
+ * `ΩL`
+ */
 export const omega_l = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
   W7 | PVMSingleModMemory
@@ -51,7 +54,7 @@ export const omega_l = regFn<
       } else {
         a = d.get(Number(w7) as ServiceIndex);
       }
-      const [h0, b0, bz] = context.registers.slice(1);
+      const [h0, b0, bz] = context.registers.slice(8);
       let h: Blake2bHash | undefined;
       if (!context.memory.canRead(h0, 32)) {
         h = undefined;
@@ -80,6 +83,9 @@ export const omega_l = regFn<
   },
 });
 
+/**
+ * `ΩR`
+ */
 export const omega_r = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
   W7 | PVMSingleModMemory
@@ -122,6 +128,9 @@ export const omega_r = regFn<
   },
 });
 
+/**
+ * `ΩW`
+ */
 export const omega_w = regFn<
   [bold_s: ServiceAccount, s: ServiceIndex],
   W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
@@ -168,6 +177,9 @@ export const omega_w = regFn<
   },
 });
 
+/**
+ * `ΩI`
+ */
 export const omega_i = regFn<
   [s: ServiceIndex, d: Delta],
   W7 | PVMSingleModMemory

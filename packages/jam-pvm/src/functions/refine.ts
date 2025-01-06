@@ -289,7 +289,7 @@ export const omega_z = regFn<
 >({
   fn: {
     opCode: 21 as u8,
-    identifier: "void",
+    identifier: "zero",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [n, p, c] = context.registers.slice(7);
@@ -367,7 +367,7 @@ export const omega_k = regFn<
   W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 21 as u8,
+    opCode: 23 as u8,
     identifier: "invoke",
     gasCost: 10n as Gas,
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
@@ -470,7 +470,7 @@ export const omega_x = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 22 as u8,
+    opCode: 24 as u8,
     identifier: "expunge",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {

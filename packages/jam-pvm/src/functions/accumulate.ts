@@ -26,7 +26,7 @@ import {
   SERVICE_MIN_BALANCE,
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
-import { E_4, E_8, ValidatorDataCodec } from "@tsjam/codec";
+import { E_4_int, E_8, HashCodec, ValidatorDataCodec } from "@tsjam/codec";
 import {
   bytesToBigInt,
   serviceAccountGasThreshold,
@@ -37,26 +37,28 @@ import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 
 /**
- * `ΩE`
- * empower service host call
+ * `ΩB`
+ * bless service host call
  */
-export const omega_e = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
     opCode: 5 as u8,
-    identifier: "empower",
+    identifier: "bless",
     gasCost: 10n as Gas,
     execute(context, x) {
       const [m, a, v, o, n] = context.registers.slice(7);
       if (!context.memory.canRead(Number(o), 12 * Number(n))) {
         return [IxMod.w7(HostCallResult.OOB)];
+      } else if (m > 2 ** 32 || a > 2 ** 32 || v > 2 ** 32) {
+        return [IxMod.w7(HostCallResult.WHO)];
       } else {
         const g = new Map<ServiceIndex, Gas>();
         const buf = context.memory.getBytes(Number(o), 12 * Number(n));
         for (let i = 0; i < n; i++) {
           const data = buf.subarray(i * 12, (i + 1) * 12);
-          const key = E_4.decode(data).value;
+          const key = E_4_int.decode(data).value;
           const value = E_8.decode(data.subarray(4)).value;
-          g.set(Number(key) as ServiceIndex, value as Gas);
+          g.set(key as ServiceIndex, value as Gas);
         }
         return [
           IxMod.w7(HostCallResult.OK),
@@ -90,7 +92,7 @@ export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
     identifier: "assign",
     gasCost: 10n as Gas,
     execute(context, x) {
-      const [w7, o] = context.registers.slice(7, 9).map((a) => Number(a));
+      const [w7, o] = context.registers.slice(7);
       if (!context.memory.canRead(o, AUTHQUEUE_MAX_SIZE * 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
@@ -101,7 +103,7 @@ export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
           for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
             nl.push(bytesToBigInt(c.subarray(i * 32, (i + 1) * 32)));
           }
-          xc[w7] = nl as AuthorizerQueue[0];
+          xc[Number(w7)] = nl as AuthorizerQueue[0];
 
           return [
             IxMod.w7(HostCallResult.OK),
@@ -125,14 +127,15 @@ export const omega_d = regFn<[x: PVMResultContext], W7 | XMod>({
     identifier: "designate",
     gasCost: 10n as Gas,
     execute(context, x) {
-      const [o] = context.registers.slice(7, 8).map((a) => Number(a));
+      const o = context.registers[7];
       if (!context.memory.canRead(o, 336)) {
         return [IxMod.w7(HostCallResult.OOB), IxMod.obj({ x })];
       } else {
+        // implicitly by canRead `o` should be < 2**32
         const validators =
           [] as unknown as PVMAccumulationState["validatorKeys"];
         for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-          const c = context.memory.getBytes(o + 336 * i, 336);
+          const c = context.memory.getBytes(Number(o) + 336 * i, 336);
           validators.push(ValidatorDataCodec.decode(c).value);
         }
         return [
@@ -372,7 +375,8 @@ export const omega_q = regFn<
         ...x.delta.entries(),
         ...x.u.delta.entries(),
       ]);
-      if (d === 2n ** 32n - 1n) {
+
+      if (d === 2n ** 64n - 1n || Number(d) == x.service) {
         const newDelta = new Map(x.u.delta);
         newDelta.delete(x.service);
         return [
@@ -495,7 +499,7 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const x_bold_s = x.u.delta.get(x.service)!;
-      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const h = HashCodec.decode(context.memory.getBytes(o, 32)).value;
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
 

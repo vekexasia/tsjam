@@ -21,7 +21,7 @@ import {
   omega_a,
   omega_c,
   omega_d,
-  omega_e,
+  omega_b,
   omega_f,
   omega_n,
   omega_q,
@@ -167,8 +167,7 @@ const F_fn: (
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "bless":
-        // TODO:fix this
-        return applyMods(input.ctx, input.out, omega_e(input.ctx, input.out.x));
+        return applyMods(input.ctx, input.out, omega_b(input.ctx, input.out.x));
       case "assign":
         return applyMods(input.ctx, input.out, omega_a(input.ctx, input.out.x));
       case "designate":
