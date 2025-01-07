@@ -1,10 +1,11 @@
 import { Zp } from "@tsjam/constants";
-import { IPVMMemory, PVMACL, u32 } from "@tsjam/types";
+import { IPVMMemory, PVMACL, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
 export class PVMMemory implements IPVMMemory {
   #innerMemory = new Uint8Array(2 ** 32);
+
   constructor(
     initialMemory: MemoryContent[],
     private acl: PVMACL[],
@@ -14,29 +15,35 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  changeAcl(pageIndex: number, kind: "read" | "write" | "null"): void {
+  changeAcl(pageIndex: number, kind: PVMMemoryAccessKind): this {
     const index = this.acl.findIndex((a) => a.page === pageIndex);
     if (index === -1) {
-      this.acl.push({ page: pageIndex, writable: kind === "write" });
+      assert(
+        kind === PVMMemoryAccessKind.Read || kind == PVMMemoryAccessKind.Write,
+      );
+      this.acl.push({ page: pageIndex, kind });
+    } else if (kind === PVMMemoryAccessKind.Null) {
+      this.acl.splice(index, 1);
     } else {
-      this.acl[index].writable = kind === "write";
-      if (kind === "null") {
-        this.acl.splice(index, 1);
-      }
+      this.acl[index].kind = kind;
     }
+    return this;
   }
 
-  setBytes(_offset: number | bigint, bytes: Uint8Array): void {
+  setBytes(_offset: number | bigint, bytes: Uint8Array): this {
     assert(this.canWrite(_offset, bytes.length), "Memory is not writeable");
     const offset = Number(_offset);
     this.#innerMemory.set(bytes, offset);
+    return this;
   }
+
   getBytes(_offset: number | bigint, _length: number | bigint): Uint8Array {
     const offset = Number(_offset);
     const length = Number(_length);
     assert(this.canRead(offset, length), "Memory is not readable");
     return this.#innerMemory.subarray(offset, offset + length);
   }
+
   canRead(_offset: number | bigint, _length: number | bigint): boolean {
     const offset = Number(_offset);
     const length = Number(_length);
@@ -52,6 +59,7 @@ export class PVMMemory implements IPVMMemory {
     }
     return true;
   }
+
   canWrite(_offset: number | bigint, _length: number | bigint): boolean {
     const offset = Number(_offset);
     const length = Number(_length);
@@ -61,12 +69,17 @@ export class PVMMemory implements IPVMMemory {
       pageEnd--;
     }
     for (let p = pageOffset; p < pageEnd; p++) {
-      if (!this.acl.some((a) => a.page === p && a.writable)) {
+      if (
+        !this.acl.some(
+          (a) => a.page === p && a.kind === PVMMemoryAccessKind.Write,
+        )
+      ) {
         return false;
       }
     }
     return true;
   }
+
   clone(): this {
     return new PVMMemory(
       [{ at: 0 as u32, content: this.#innerMemory }],

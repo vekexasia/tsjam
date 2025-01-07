@@ -2,21 +2,13 @@ import { Zp } from "@tsjam/constants";
 import {
   IPVMMemory,
   PVMACL,
+  PVMMemoryAccessKind,
   PVMProgram,
   RegisterValue,
   SeqOfLength,
   u32,
 } from "@tsjam/types";
-import {
-  E_2,
-  E_3,
-  E_sub_int,
-  E_4,
-  IdentityCodec,
-  PVMProgramCodec,
-  E_4_int,
-  createCodec,
-} from "@tsjam/codec";
+import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 
@@ -95,38 +87,50 @@ export const programInitialization = (
   // memory $(0.5.3 - A.34)
   const acl: PVMACL[] = [];
   const mem: MemoryContent[] = [];
-  const createAcl = (conf: { from: number; to: number; writable: boolean }) => {
+  const createAcl = (conf: {
+    from: number;
+    to: number;
+    kind: PVMMemoryAccessKind.Write | PVMMemoryAccessKind.Read;
+  }) => {
     for (let i = conf.from; i < conf.to; i += Zp) {
-      acl.push({ page: Math.floor(i / Zp), writable: conf.writable });
+      acl.push({ page: Math.floor(i / Zp), kind: conf.kind });
     }
   };
 
   // first case
   mem.push({ at: Zz as u32, content: o });
-  createAcl({ from: Zz, to: Zz + oCard, writable: false });
+  createAcl({ from: Zz, to: Zz + oCard, kind: PVMMemoryAccessKind.Read });
 
   // second case
-  createAcl({ from: Zz + oCard, to: Zz + P_Fn(oCard), writable: false });
+  createAcl({
+    from: Zz + oCard,
+    to: Zz + P_Fn(oCard),
+    kind: PVMMemoryAccessKind.Read,
+  });
 
   // third case
   {
     const offset = 2 * Zz + Z_Fn(oCard);
     mem.push({ at: <u32>offset, content: w });
-    createAcl({ from: offset, to: offset + wCard, writable: true });
+    createAcl({
+      from: offset,
+      to: offset + wCard,
+      kind: PVMMemoryAccessKind.Write,
+    });
   }
 
   // fourth case set to zero so only ACL is needed
   createAcl({
     from: 2 * Zz + Z_Fn(oCard) + wCard,
     to: 2 * Zz + Z_Fn(oCard) + P_Fn(wCard) + z * Zp,
-    writable: true,
+    kind: PVMMemoryAccessKind.Write,
   });
 
   // fifth case
   createAcl({
     from: 2 ** 32 - 2 * Zz - Zi - P_Fn(s),
     to: 2 ** 32 - 2 * Zz - Zi,
-    writable: true,
+    kind: PVMMemoryAccessKind.Write,
   });
 
   // sixth case
@@ -139,7 +143,7 @@ export const programInitialization = (
     createAcl({
       from: offset as u32,
       to: offset + argument.length,
-      writable: false,
+      kind: PVMMemoryAccessKind.Read,
     });
   }
 
@@ -149,7 +153,7 @@ export const programInitialization = (
     createAcl({
       from: offset,
       to: 2 ** 32 - Zz - Zi + P_Fn(argument.length),
-      writable: true,
+      kind: PVMMemoryAccessKind.Write,
     });
   }
 

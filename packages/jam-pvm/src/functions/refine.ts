@@ -4,6 +4,7 @@ import {
   ExportSegment,
   Gas,
   Hash,
+  PVMMemoryAccessKind,
   PVMProgramExecutionContextBase,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -244,33 +245,25 @@ export const omega_o = regFn<
     identifier: "poke",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
-      const [_n, a, b, l] = context.registers.slice(7);
+      const [_n, s, o, z] = context.registers.slice(7);
       const n = Number(_n);
-      if (!refineCtx.m.has(n)) {
+      if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
       const u = refineCtx.m.get(n)!.memory;
 
-      if (!context.memory.canRead(a, l)) {
+      if (!context.memory.canRead(s, z)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const s = context.memory.getBytes(a, l);
+      if (!u.canWrite(o, z)) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+      const bold_s = context.memory.getBytes(s, z);
 
-      if (!context.memory.canRead(a, l)) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
-      const p_u = u.clone();
-      // FIXME:
-      // p_u.addACL({
-      //   from: Number(b) as u32,
-      //   to: Number(b + l) as u32,
-      //   writable: true,
-      // });
-      p_u.setBytes(b, s);
       const p_m = new Map(refineCtx.m);
       p_m.set(n, {
         programCode: refineCtx.m.get(n)!.programCode,
-        memory: p_u,
+        memory: u.clone().setBytes(o, bold_s),
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
       });
 
@@ -303,8 +296,9 @@ export const omega_z = regFn<
       }
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {
-        p_u.changeAcl(page, "write");
-        p_u.setBytes(page * Zp, new Uint8Array(Zp).fill(0));
+        p_u
+          .changeAcl(page, PVMMemoryAccessKind.Write)
+          .setBytes(page * Zp, new Uint8Array(Zp).fill(0));
       }
 
       const p_m = new Map(refineCtx.m);
@@ -342,9 +336,10 @@ export const omega_v = regFn<
       }
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {
-        p_u.changeAcl(page, "write");
-        p_u.setBytes(page * Zp, new Uint8Array(Zp).fill(0));
-        p_u.changeAcl(page, "null");
+        p_u
+          .changeAcl(page, PVMMemoryAccessKind.Write) // needed for next line
+          .setBytes(page * Zp, new Uint8Array(Zp).fill(0))
+          .changeAcl(page, PVMMemoryAccessKind.Read);
       }
 
       const p_m = new Map(refineCtx.m);
