@@ -125,7 +125,7 @@ pub fn ietf_vrf_output_hash_from_secret(secret: &[u8], vrf_input_data: &[u8]) ->
     } else {
       return Vec::new().into();
     };
-    let secret = Secret::from_seed(seed);
+//    let secret = Secret::from_seed(seed);
     let input = vrf_input_point(vrf_input_data);
     let output = secret.output(input);
 

@@ -5,19 +5,18 @@
 
 export declare function publicKey(seed: Uint8Array): Buffer
 export declare function secretKey(seed: Uint8Array): Buffer
-export declare function secretFromSecret(secret: Uint8Array): Buffer
 export declare function ringVrfOutputHash(signature: Uint8Array): Buffer
 export declare function ringVrfVerify(signature: Uint8Array, vrfInputData: Uint8Array, auxData: Uint8Array, commitment: Buffer, ringSize: number): boolean
 export declare function ringRoot(input: Uint8Array): Buffer
 /**
  * Generates `Y` without signatur
 */
-export declare function ietfVrfOutputHashFromSecret(seed: Uint8Array, vrfInputData: Uint8Array): Buffer
+export declare function ietfVrfOutputHashFromSecret(secret: Uint8Array, vrfInputData: Uint8Array): Buffer
 /**
  * G.1
  * sign
 */
-export declare function ietfVrfSign(seed: Uint8Array, vrfInputData: Uint8Array, auxData: Uint8Array): Buffer
+export declare function ietfVrfSign(secret: Uint8Array, vrfInputData: Uint8Array, auxData: Uint8Array): Buffer
 /**
  * G.1
  * verify signature with given pubkey
