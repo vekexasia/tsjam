@@ -8,7 +8,7 @@ const leaf: Uint8Array = new TextEncoder().encode("leaf");
 
 /**
  * `M`
- * $(0.5.3 - E.4)
+ * $(0.5.5 - E.4)
  */
 export const constantDepthBinaryTree = (
   elements: Uint8Array[],
@@ -18,8 +18,53 @@ export const constantDepthBinaryTree = (
 };
 
 /**
+ * $(0.5.5 - E.5)
+ */
+export const J_fn = (
+  x: number,
+  elements: Uint8Array[],
+  index: number,
+  hashFn: HashFn = Hashing.blake2b,
+): ReturnType<HashFn>[] => {
+  return traceBinaryMerkleTree(
+    C_fn(elements, hashFn),
+    2 ** index,
+    hashFn,
+  ).slice(
+    0,
+    Math.max(0, Math.ceil(Math.log2(Math.max(1, elements.length)) - x)),
+  );
+};
+
+/**
+ * `L` - leaves
+ * $(0.5.5 - E.6)
+ * @param x - slice
+ * @param elements - elements
+ * @param index - the index to trace
+ * @param hashFn - the hashing fn
+ */
+export const L_fn = (
+  x: number,
+  elements: Uint8Array[],
+  index: number,
+  hashFn: HashFn = Hashing.blake2b,
+): ReturnType<HashFn>[] => {
+  const toRet: ReturnType<HashFn>[] = [];
+  const twoOverX = 2 ** x;
+  for (
+    let i = twoOverX * index;
+    i < twoOverX * index + twoOverX && i < elements.length;
+    i++
+  ) {
+    toRet.push(hashFn(new Uint8Array([...leaf, ...elements[i]])));
+  }
+  return toRet;
+};
+
+/**
  * `C` function
- * $(0.5.3 - E.7)
+ * $(0.5.5 - E.7)
  * hashes all data and pads the array to the next power of 2
  * @param elements - preimage elements
  * @param hashFn - the hashing function
@@ -37,35 +82,4 @@ const C_fn = (
     toRet.push(hashFn(new Uint8Array([...leaf, ...elements[i]])));
   }
   return toRet;
-};
-
-/**
- * $(0.5.3 - E.5)
- */
-export const J_fn = (
-  elements: Uint8Array[],
-  index: number,
-  hashFn: HashFn = Hashing.blake2b,
-): ReturnType<HashFn>[] => {
-  return traceBinaryMerkleTree(C_fn(elements, hashFn), index, hashFn);
-};
-
-/**
- * `J_subx`
- * $(0.5.3 - E.6)
- * @param x - slice
- * @param elements - elements
- * @param index - the index to trace
- * @param hashFn - the hashing fn
- */
-export const traceBinarySliced = (
-  x: number,
-  elements: Uint8Array[],
-  index: number,
-  hashFn: HashFn = Hashing.blake2b,
-): ReturnType<HashFn>[] => {
-  return traceBinaryMerkleTree(C_fn(elements, hashFn), index, hashFn).slice(
-    0,
-    Math.max(0, Math.ceil(Math.log2(Math.max(1, elements.length)) - x)),
-  );
 };

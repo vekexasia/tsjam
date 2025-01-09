@@ -1,9 +1,59 @@
-import { Gas, ServiceIndex, WorkItem, u32 } from "@tsjam/types";
+import {
+  Gas,
+  ExportingWorkPackageHash,
+  ServiceIndex,
+  WorkItem,
+  u32,
+  u16,
+} from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { HashCodec } from "@/identity.js";
 import { E_sub_int, E_sub } from "@/ints/E_subscr.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { createCodec } from "@/utils.js";
+import { JamCodec } from "@/codec";
+import { isHash } from "@tsjam/utils";
+
+export const importDataSegmentCodec: JamCodec<
+  WorkItem["importedDataSegments"][0]
+> = {
+  encode(value, bytes) {
+    const root = value.root;
+    if (!isHash(root)) {
+      let offset = HashCodec.encode(root.value, bytes.subarray(0, 32));
+      offset += E_sub_int<number>(2).encode(
+        value.index + 2 ** 15,
+        bytes.subarray(offset),
+      );
+      return offset;
+    } else {
+      let offset = HashCodec.encode(root, bytes.subarray(0, 32));
+      offset += E_sub_int<number>(2).encode(
+        value.index,
+        bytes.subarray(offset),
+      );
+      return offset;
+    }
+  },
+  decode(bytes) {
+    const { value: root } = HashCodec.decode(bytes.subarray(0, 32));
+    const { value: index } = E_sub_int<u16>(2).decode(bytes.subarray(32));
+    if (index > 2 ** 15) {
+      return {
+        value: {
+          root: <ExportingWorkPackageHash>{ value: root },
+          index: <u16>(index - 2 ** 15),
+        },
+        readBytes: 32 + 2,
+      };
+    } else {
+      return { value: { root, index }, readBytes: 32 + 2 };
+    }
+  },
+  encodedSize() {
+    return 32 + 2;
+  },
+};
 
 /**
  * $(0.5.3 - C.26)
@@ -17,10 +67,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
   [
     "importedDataSegments",
     createArrayLengthDiscriminator<WorkItem["importedDataSegments"]>(
-      createCodec([
-        ["root", HashCodec],
-        ["index", E_sub_int<u32>(2)],
-      ]),
+      importDataSegmentCodec,
     ),
   ],
   [

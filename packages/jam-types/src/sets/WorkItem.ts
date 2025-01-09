@@ -1,4 +1,11 @@
-import { Gas, Hash, ServiceIndex, u32 } from "@/genericTypes";
+import {
+  Gas,
+  Hash,
+  ServiceIndex,
+  u32,
+  ExportingWorkPackageHash,
+  u16,
+} from "@/genericTypes";
 
 /**
  * Identified by `I` set
@@ -44,13 +51,13 @@ export interface WorkItem {
     /**
      * merkle tree root
      * or hash of the exporting work package. (if tagged)
-     * NOTE: not yet defined
      */
-    root: Hash;
+    root: Hash | ExportingWorkPackageHash;
     /**
      * index in the merkle tree
+     * Codec specifies that its not bigger than 2^15
      */
-    index: u32;
+    index: u16;
   }>;
 
   /**

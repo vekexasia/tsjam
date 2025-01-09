@@ -57,6 +57,10 @@ export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
  */
 export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+/**
+ *  `H⊞`
+ */
+export type ExportingWorkPackageHash = { value: Hash };
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
 export type WorkPackageHash = Tagged<Hash, "Blake2bHash">;
 export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;

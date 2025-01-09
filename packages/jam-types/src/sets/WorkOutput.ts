@@ -15,6 +15,9 @@ export enum WorkError {
    */
   UnexpectedTermination = 1,
 
+  /**
+   * ⊚
+   */
   BadExports = 2,
 
   /**

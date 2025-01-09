@@ -2,6 +2,7 @@ import {
   BandersnatchKey,
   Dagger,
   DoubleDagger,
+  Hash,
   JamState,
   Posterior,
   SeqOfLength,
@@ -82,4 +83,8 @@ export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   const toRet = new Uint8Array(Math.ceil(buf.length / n) * n).fill(0);
   toRet.set(buf);
   return toRet;
+};
+
+export const isHash = <X = any>(x: Hash | X): x is Hash => {
+  return typeof x === "bigint";
 };
