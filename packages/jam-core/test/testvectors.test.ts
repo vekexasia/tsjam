@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import merklization from "@tsjam/merklization";
 import * as fs from "node:fs";
 import { dummyState } from "./utils.js";
 import { ok } from "neverthrow";
@@ -371,6 +372,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   );
 
   const decoded = testCodec.decode(testBin);
+  //  console.log(decoded.value.preState)
 
   const [err, newState] = importBlock(
     {
@@ -429,7 +431,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(newState.entropy).deep.eq(decoded.value.postState.entropy);
 };
 describe("safrole-test-vectors", () => {
-  describe.skip("full", () => {
+  describe("full", () => {
     const test = (name: string) => buildTest(name, "full");
     beforeEach(() => {
       mocks.MAX_TICKETS_PER_BLOCK = 16;
@@ -500,7 +502,6 @@ describe("safrole-test-vectors", () => {
     });
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
-    /*
     it("enact-epoch-change-with-no-tickets-2", () =>
       expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
         "Invalid slot",
@@ -548,6 +549,5 @@ describe("safrole-test-vectors", () => {
       test("publish-tickets-with-mark-5"));
     it("enact-epoch-change-with-padding-1", () =>
       test("enact-epoch-change-with-padding-1"));
-    */
   });
 });

@@ -16,6 +16,7 @@ export const recentHistoryToDagger: STF<
     return ok(curState as Dagger<RecentHistory>);
   }
   const toRet = curState.slice();
+  toRet[toRet.length - 1] = { ...toRet[toRet.length - 1] };
   toRet[toRet.length - 1].stateRoot = input.hr;
   return ok(toRet as Dagger<RecentHistory>);
 };
