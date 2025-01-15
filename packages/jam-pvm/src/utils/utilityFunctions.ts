@@ -21,7 +21,7 @@ import {
   WorkReport,
   u64,
 } from "@tsjam/types";
-import { CORES, EPOCH_LENGTH, MINIMUM_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@/invocations/accumulate.js";
 
@@ -40,7 +40,8 @@ export const availableReports = (
     const sum = ea.reduce((acc, curr) => {
       return acc + curr.bitstring[c];
     }, 0);
-    if (sum > MINIMUM_VALIDATORS) {
+
+    if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
       W.push(d_rho[c]!.workReport);
     }
   }

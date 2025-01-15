@@ -1,46 +1,40 @@
-import {
-  AssuranceExtrinsic,
-  Dagger,
-  DoubleDagger,
-  EA_Extrinsic,
-  JamHeader,
-  JamState,
-  Posterior,
-  RHO,
-  STF,
-  Validated,
-  Tau,
-} from "@tsjam/types";
-import { CORES, NUMBER_OF_VALIDATORS, WORK_TIMEOUT } from "@tsjam/constants";
+import { Dagger, DoubleDagger, Posterior, RHO, STF, Tau } from "@tsjam/types";
+import { CORES, WORK_TIMEOUT } from "@tsjam/constants";
 import { ok } from "neverthrow";
+import { availableReports } from "@tsjam/pvm";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
- * $(0.5.3 - 11.18)
+ * $(0.5.4 - 11.17)
  */
 export const RHO2DoubleDagger: STF<
   Dagger<RHO>,
   {
-    ea: Validated<EA_Extrinsic>;
-    p_kappa: Posterior<JamState["kappa"]>;
-    hp: JamHeader["parent"];
-    p_tau: Posterior<Tau>;
+    rho: RHO;
+    p_tau: Posterior<Tau>; // Ht
+    availableReports: ReturnType<typeof availableReports>;
   },
   never,
   DoubleDagger<RHO>
 > = (input, curState) => {
   const newState = [...curState] as DoubleDagger<RHO>;
-  for (let i = 0; i < CORES; i++) {
-    // recomputing bold W
-    const availabilitySum = input.ea.reduce(
-      (a: number, b: AssuranceExtrinsic) => a + b.bitstring[i],
-      0,
-    );
-    if (availabilitySum > (NUMBER_OF_VALIDATORS * 2) / 3) {
-      newState[i] = undefined;
+  for (let c = 0; c < CORES; c++) {
+    if (typeof curState[c] === "undefined") {
+      continue; // if no  workreport indagger then there is nothing to remove.
     }
-    if (curState[i] && input.p_tau >= curState[i]!.reportTime + WORK_TIMEOUT) {
-      newState[i] = undefined;
+    const [w] = input.availableReports.filter((w) => w.coreIndex === c);
+    // check if workreport from rho has now become available
+
+    if (
+      input.rho[c] &&
+      w &&
+      input.rho[c]!.workReport.authorizerHash === w.authorizerHash
+    ) {
+      newState[c] = undefined;
+    }
+
+    if (input.p_tau >= curState[c]!.reportTime + WORK_TIMEOUT) {
+      newState[c] = undefined;
     }
   }
   return ok(newState);

@@ -4,7 +4,8 @@ import { CORES } from "@tsjam/constants";
 import { Tau } from "@/Tau.js";
 
 /**
- * `ρ`
+ * `ρ` - tracks WorkReports which have been reported but not
+ *       yet available indexed by core index
  * $(0.5.3 - 11.1)
  */
 export type RHO = SeqOfLength<

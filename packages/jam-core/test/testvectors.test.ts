@@ -296,7 +296,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       };
     },
     (fromJam: JamState) => {
-      console.log("madonnalepre");
       return {
         kappa: fromJam.kappa,
         iota: fromJam.iota,
@@ -308,7 +307,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         gamma_a: fromJam.safroleState.gamma_a,
         gamma_k: fromJam.safroleState.gamma_k,
         gamma_s: ((gs: SafroleState["gamma_s"]) => {
-          console.log("porcod");
           if (isFallbackMode(gs)) {
             return {
               keys: gs,

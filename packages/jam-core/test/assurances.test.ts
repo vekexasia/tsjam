@@ -31,6 +31,7 @@ import { TestOutputCodec } from "@tsjam/codec/test/utils.js";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { RHO2DoubleDagger } from "@tsjam/transitions";
 import { toPosterior } from "@tsjam/utils";
+import { availableReports } from "@tsjam/pvm";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -107,11 +108,7 @@ export const getCodecFixtureFile = (
 };
 type TestState = { rho: RHO; p_kappa: ValidatorData[] };
 describe("assurances", () => {
-  const doTest = (
-    filename: string,
-    kind: "tiny" | "full",
-    expectedEAVerified: boolean,
-  ) => {
+  const doTest = (filename: string, kind: "tiny" | "full") => {
     const stateCodec = createCodec<TestState>([
       ["rho", RHOCodec(CORES)],
       [
@@ -160,17 +157,20 @@ describe("assurances", () => {
       decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
       decoded.value.preState.rho as Dagger<RHO>,
     );
+    const shouldBeVerified = typeof decoded.value.output.error === "undefined";
 
-    expect(eaVerified).eq(expectedEAVerified);
-    if (!eaVerified) {
-      return false;
+    expect(eaVerified).eq(shouldBeVerified);
+    if (!shouldBeVerified) {
+      return;
     }
     const [, dd_rho] = RHO2DoubleDagger(
       {
-        ea: decoded.value.input.ea as Validated<EA_Extrinsic>,
-        hp: decoded.value.input.parent,
+        rho: decoded.value.preState.rho,
         p_tau: toPosterior(decoded.value.input.slot),
-        p_kappa: decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
+        availableReports: availableReports(
+          decoded.value.input.ea as Validated<EA_Extrinsic>,
+          decoded.value.preState.rho as Dagger<RHO>,
+        ),
       },
       decoded.value.preState.rho as Dagger<RHO>,
     ).safeRet();
@@ -186,42 +186,42 @@ describe("assurances", () => {
   });
 
   it("no_assurances-1", () => {
-    doTest("no_assurances-1", set, true);
+    doTest("no_assurances-1", set);
   });
 
   it("some_assurances-1", () => {
-    doTest("some_assurances-1", set, true);
+    doTest("some_assurances-1", set);
   });
 
   it("no_assurances_with_stale_report-1", () => {
-    doTest("no_assurances_with_stale_report-1", set, true);
+    doTest("no_assurances_with_stale_report-1", set);
   });
 
   it("assurances_with_bad_signature-1", () => {
-    doTest("assurances_with_bad_signature-1", set, false);
+    doTest("assurances_with_bad_signature-1", set);
   });
 
   it("assurances_with_bad_validator_index-1", () => {
-    doTest("assurances_with_bad_validator_index-1", set, false);
+    doTest("assurances_with_bad_validator_index-1", set);
   });
 
   it("assurance_for_not_engaged_core-1", () => {
-    doTest("assurance_for_not_engaged_core-1", set, false);
+    doTest("assurance_for_not_engaged_core-1", set);
   });
 
   it("assurance_with_bad_attestation_parent-1", () => {
-    doTest("assurance_with_bad_attestation_parent-1", set, false);
+    doTest("assurance_with_bad_attestation_parent-1", set);
   });
 
   it("assurances_for_stale_report-1", () => {
-    doTest("assurances_for_stale_report-1", set, false);
+    doTest("assurances_for_stale_report-1", set);
   });
 
   it("assurers_not_sorted_or_unique-1", () => {
-    doTest("assurers_not_sorted_or_unique-1", set, false);
+    doTest("assurers_not_sorted_or_unique-1", set);
   });
 
   it("assurers_not_sorted_or_unique-2", () => {
-    doTest("assurers_not_sorted_or_unique-2", set, false);
+    doTest("assurers_not_sorted_or_unique-2", set);
   });
 });

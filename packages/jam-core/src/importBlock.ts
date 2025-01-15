@@ -208,8 +208,22 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidEA);
   }
 
+  /*
+   * Integrate state to calculate several posterior state
+   * as defined in (176) and (177)
+   */
+  const w = availableReports(ea, d_rho);
+  const w_mark = noPrereqAvailableReports(w);
+  const w_q = withPrereqAvailableReports(w, curState.accumulationHistory);
+  const w_star = accumulatableReports(
+    w_mark,
+    w_q,
+    curState.accumulationQueue,
+    curState.tau,
+  );
+
   const [, dd_rho] = RHO2DoubleDagger(
-    { ea, p_tau, p_kappa, hp: block.header.parent },
+    { p_tau, rho: curState.rho, availableReports: w },
     d_rho,
   ).safeRet();
 
@@ -254,20 +268,6 @@ export const importBlock: STF<
   if (rhoPostErr) {
     return err(rhoPostErr);
   }
-
-  /*
-   * Integrate state to calculate several posterior state
-   * as defined in (176) and (177)
-   */
-  const w = availableReports(ea, d_rho);
-  const w_mark = noPrereqAvailableReports(w);
-  const w_q = withPrereqAvailableReports(w, curState.accumulationHistory);
-  const w_star = accumulatableReports(
-    w_mark,
-    w_q,
-    curState.accumulationQueue,
-    curState.tau,
-  );
 
   // $(0.5.3 - 12.20)
   const g: Gas = [

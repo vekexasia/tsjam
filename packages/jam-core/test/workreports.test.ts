@@ -19,7 +19,7 @@ import {
   WorkPackageHashCodec,
   WorkReportCodec,
 } from "@tsjam/codec";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   Hash,
   AuthorizerPool,
@@ -40,7 +40,6 @@ import {
   WorkPackageHash,
   AccumulationHistory,
   AccumulationQueue,
-  HeaderLookupHistory,
   ServiceAccount,
   Delta,
   JamHeader,
@@ -49,7 +48,6 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
 import { mapCodec } from "@tsjam/codec";
-import { logCodec } from "@tsjam/codec/test/utils.js";
 import { assertEGValid, EGError } from "@/validateEG";
 
 const mocks = vi.hoisted(() => {
@@ -132,7 +130,6 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
   const NUMVALS = (size === "tiny"
     ? 6
     : 1023) as unknown as typeof NUMBER_OF_VALIDATORS;
-  const EPLEN = (size === "tiny" ? 12 : 600) as unknown as typeof EPOCH_LENGTH;
   const NCOR = (size === "tiny" ? 2 : 341) as unknown as typeof CORES;
   const stateCodec = createCodec<TestState>([
     [
@@ -463,6 +460,10 @@ describe("workreports", () => {
 
   it("reports_with_dependencies-5", () => {
     buildTest("reports_with_dependencies-5", set);
+  });
+
+  it("reports_with_dependencies-6", () => {
+    buildTest("reports_with_dependencies-6", set);
   });
 
   it("segment_root_lookup_invalid-1", () => {
