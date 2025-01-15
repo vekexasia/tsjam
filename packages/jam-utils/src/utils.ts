@@ -85,6 +85,6 @@ export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   return toRet;
 };
 
-export const isHash = <X = any>(x: Hash | X): x is Hash => {
+export const isHash = <X = unknown>(x: Hash | X): x is Hash => {
   return typeof x === "bigint";
 };

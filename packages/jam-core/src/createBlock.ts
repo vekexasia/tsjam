@@ -70,6 +70,7 @@ export const createBlock = (
     [curState.entropy[1], curState.entropy[2], curState.entropy[3]],
   ).safeRet();
   // TODO:
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p_gamma_s: Posterior<SafroleState["gamma_s"]> = null as unknown as any;
   const sealContext = sealSignContext(p_tau, toPosterior(p_eta3), p_gamma_s);
 

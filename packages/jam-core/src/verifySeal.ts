@@ -34,7 +34,6 @@ import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
   NUMBER_OF_VALIDATORS,
-  WORK_TIMEOUT,
 } from "@tsjam/constants";
 import {
   bigintToBytes,
