@@ -10,7 +10,7 @@ import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * section E.2 `A`
- * $(0.5.3 - E.8)
+ * $(0.5.4 - E.8)
  * @param peeks - the current MMR
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
@@ -50,7 +50,7 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 };
 
 /**
- * $(0.5.3 - E.10)
+ * $(0.5.4 - E.10)
  */
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   const peeks = _peeks
@@ -62,7 +62,7 @@ export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   return bytesToBigInt<32, Hash>(innerMMRSuperPeak(peeks));
 };
 
-const NODE = new TextEncoder().encode("node");
+const PEAK = new TextEncoder().encode("peak");
 const innerMMRSuperPeak = (
   peeks: ByteArrayOfLength<32>[],
 ): ByteArrayOfLength<32> => {
@@ -74,7 +74,7 @@ const innerMMRSuperPeak = (
   }
   return Hashing.keccak256Buf(
     new Uint8Array([
-      ...NODE,
+      ...PEAK,
       ...innerMMRSuperPeak(peeks.slice(0, peeks.length - 1)),
       ...peeks[peeks.length - 1],
     ]),
@@ -82,7 +82,7 @@ const innerMMRSuperPeak = (
 };
 
 /**
- * $(0.5.3 - E.9)
+ * $(0.5.4 - E.9)
  */
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
   createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));

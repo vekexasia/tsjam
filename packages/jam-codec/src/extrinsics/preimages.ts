@@ -6,7 +6,7 @@ import { E_sub_int } from "@/ints/E_subscr.js";
 import { createCodec } from "@/utils";
 
 /*
- * $(0.5.3 - C.15)
+ * $(0.5.4 - C.15)
  */
 export const codec_Ep = createArrayLengthDiscriminator(
   createCodec<EP_Tuple>([

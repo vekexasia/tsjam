@@ -2,7 +2,7 @@ import { JamCodec } from "@/codec.js";
 
 /**
  * Encodes a set - notice that the codec itself can not decode
- * $(0.5.3 - C.12)
+ * $(0.5.4 - C.12)
  */
 export const createSetCodec = <T>(
   itemCodec: JamCodec<T>,

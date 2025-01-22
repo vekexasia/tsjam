@@ -12,7 +12,7 @@ import {
 import { ok } from "neverthrow";
 
 /**
- * $(0.5.3 - 12.24)
+ * $(0.5.4 - 12.24)
  */
 export const deltaToDoubleDagger: STF<
   Dagger<Delta>,
@@ -36,7 +36,7 @@ export const deltaToDoubleDagger: STF<
 };
 
 /**
- * $(0.5.3 - 12.23)
+ * $(0.5.4 - 12.23)
  */
 const R_fn = (t: DeferredTransfer[], destination: ServiceIndex) => {
   return t

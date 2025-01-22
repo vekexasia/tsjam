@@ -33,7 +33,7 @@ import { ok } from "neverthrow";
 
 /**
  * it computes the posterior value of `gamma_s`
- * $(0.5.3 - 6.24)
+ * $(0.5.4 - 6.24)
  */
 export const gamma_sSTF: STF<
   SafroleState["gamma_s"],
@@ -67,12 +67,12 @@ export const gamma_sSTF: STF<
     return ok(toPosterior(input.gamma_s));
   } else {
     // we're in fallback mode
-    // F(eta'_2, kappa' ) $(0.5.3 - 6.24)
+    // F(eta'_2, kappa' ) $(0.5.4 - 6.24)
     const newGammaS = [] as unknown as Posterior<
       SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
     >;
     const p_eta2 = bigintToBytes(input.p_eta[2], 32);
-    // $(0.5.3 - 6.26)
+    // $(0.5.4 - 6.26)
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const e4Buf = new Uint8Array(4);
       E_4.encode(BigInt(i), e4Buf);
@@ -89,7 +89,7 @@ export const gamma_sSTF: STF<
 /**
  * Z fn
  * exported cause it's being used to check/produce `Hw` in Header
- * $(0.5.3 - 6.25)
+ * $(0.5.4 - 6.25)
  */
 export const outsideInSequencer = <
   T extends SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,

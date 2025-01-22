@@ -17,7 +17,7 @@ import { createCodec } from "@/utils";
 
 /**
  * `Eu` codec
- * $(0.5.3 - C.20)
+ * $(0.5.4 - C.20)
  */
 export const UnsignedHeaderCodec = createCodec<JamHeader>([
   ["parent", HashCodec],

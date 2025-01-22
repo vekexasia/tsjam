@@ -27,16 +27,16 @@ export const validatorStatisticsToPosterior: STF<
     curTau: Tau;
     p_tau: Tau;
     p_kappa: Posterior<JamState["kappa"]>;
-    reporters: Set<ED25519PublicKey>; // $(0.5.3 - 11.26) | R
+    reporters: Set<ED25519PublicKey>; // $(0.5.4 - 11.26) | R
   },
   never
 > = (input, state) => {
   let pi_0 = [...state[0].map((a) => ({ ...a }))] as ValidatorStatistics[0];
   let pi_1 = [...state[1].map((a) => ({ ...a }))] as ValidatorStatistics[0];
 
-  // $(0.5.3 - 13.2)
+  // $(0.5.4 - 13.2)
   if (isNewEra(input.p_tau, input.curTau)) {
-    // $(0.5.3 - 13.3) | second bracket
+    // $(0.5.4 - 13.3) | second bracket
     pi_1 = pi_0;
     pi_0 = new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
       return {
@@ -55,7 +55,7 @@ export const validatorStatisticsToPosterior: STF<
 
   for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
     const curV = i === input.authorIndex;
-    // $(0.5.3 - 13.4)
+    // $(0.5.4 - 13.4)
     pi_0[i] = {
       blocksProduced: <u32>(pi_0[i].blocksProduced + (curV ? 1 : 0)),
       ticketsIntroduced: <u32>(

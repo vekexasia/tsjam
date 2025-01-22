@@ -9,7 +9,7 @@ import { toTagged } from "./utils";
 /**
  * compute the gas threshold of a service account
  * @param a - the service account
- * @see (95) - 0.4.5
+ * $(0.5.4 - 9.8)
  */
 export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
   const ai = BigInt(serviceAccountItemInStorage(a));
@@ -26,15 +26,15 @@ export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
 
 /**
  * `a_i` - total number of preimage lookup dictionaries and
- *  (95) - 0.4.5
+ * $(0.5.4 - 9.8)
  */
 export const serviceAccountItemInStorage = (a: ServiceAccount): u32 => {
   return toTagged(2 * a.preimage_l.size + a.storage.size);
 };
 
 /**
- * `a_l` - total octets in the preimage lookup and storage
- * (95) - 0.4.5
+ * `a_o` - total octets in the preimage lookup and storage
+ * $(0.5.4 - 9.8)
  */
 export const serviceAccountTotalOctets = (a: ServiceAccount): u64 => {
   let sum: bigint = 0n;

@@ -8,7 +8,7 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  * `c` - actual code ap[ac] $(0.5.3 - 9.4)
  * $(0.5.3 - 9.8):
  * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
- * `l` - ∈ N264 = computed in `serviceAccountTotalOctets`
+ * `o` - ∈ N264 = computed in `serviceAccountTotalOctets`
  * `t` - balance threshold  computed in `serviceAccountGasThreshold`
  */
 export interface ServiceAccount {

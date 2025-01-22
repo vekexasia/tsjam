@@ -12,6 +12,6 @@ export type EP_Tuple = {
 /**
  * The extrinsic payload is a sequence of tuples, each containing a service index and a preimage.
  * they must be ordered and not duplicate
- * $(0.5.3 - 12.28)
+ * $(0.5.4 - 12.28)
  */
 export type EP_Extrinsic = Array<EP_Tuple>;

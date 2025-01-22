@@ -34,7 +34,7 @@ export type AssuranceExtrinsic = {
  * correctly received and are storing locally. This is
  * denoted `Ea`.
  * anchored on the parent and ordered by `AssuranceExtrinsic.validatorIndex`
- * $(0.5.3 - 11.10)
+ * $(0.5.4 - 11.10)
  */
 export type EA_Extrinsic = UpToSeq<
   AssuranceExtrinsic,

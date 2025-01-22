@@ -6,7 +6,7 @@ import { WorkReportCodec } from "@/setelements/WorkReportCodec.js";
 import { createCodec } from "@/utils.js";
 
 /**
- * $(0.5.3 - C.16)
+ * $(0.5.4 - C.16)
  */
 export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
@@ -24,7 +24,7 @@ export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
   ]),
 );
 
-// $(0.5.3 - 5.6)
+// $(0.5.4 - 5.6)
 export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
     ["workReport", WorkReportCodec],

@@ -2,7 +2,7 @@ import { u32 } from "@/genericTypes";
 
 /*
  * `A` - Access Control List
- * $(0.5.3 - 4.24)
+ * $(0.5.4 - 4.24)
  */
 export type PVMACL = {
   page: number;

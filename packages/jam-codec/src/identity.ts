@@ -16,7 +16,7 @@ import {
 } from "@tsjam/types";
 import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
 
-// $(0.5.3 - C.2)
+// $(0.5.4 - C.2)
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {
     return { value: bytes, readBytes: bytes.length };
@@ -30,7 +30,7 @@ export const IdentityCodec: JamCodec<Uint8Array> = {
   },
 };
 
-//TODO:aligh generi arguments to GenericBytesBigIntCodec
+//TODO:align generic arguments to GenericBytesBigIntCodec
 export const fixedSizeIdentityCodec = <
   T extends number,
   X extends ByteArrayOfLength<T> = ByteArrayOfLength<T>,

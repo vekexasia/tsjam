@@ -65,7 +65,7 @@ export enum EGError {
   WRONG_CODEHASH = "Wrong codehash",
 }
 /**
- * $(0.5.3 - 11.26) | calculates R in it
+ * $(0.5.4 - 11.26) | calculates R in it
  */
 export const garantorsReporters = (input: {
   extrinsic: EG_Extrinsic;
@@ -198,7 +198,7 @@ export const assertEGValid = (
     p_psi_o: deps.p_psi_o,
   });
 
-  // $(0.5.3 - 11.26)
+  // $(0.5.4 - 11.26)
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
   for (const { workReport, timeSlot, credential } of extrinsic) {
     const wrh = Hashing.blake2bBuf(
@@ -231,7 +231,7 @@ export const assertEGValid = (
         return err(EGError.TIMESLOT_BOUNDS_2);
       }
 
-      // $(0.5.3 - 11.26)
+      // $(0.5.4 - 11.26)
       const isValid = Ed25519.verifySignature(
         signature,
         correspondingG.validatorsED22519Key[validatorIndex],
