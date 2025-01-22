@@ -24,6 +24,8 @@ import {
   omega_b,
   omega_f,
   omega_n,
+  omega_j,
+  omega_y,
   omega_q,
   omega_s,
   omega_t,
@@ -184,7 +186,13 @@ const F_fn: (
         return applyMods(input.ctx, input.out, omega_u(input.ctx, input.out.x));
       case "transfer":
         return applyMods(input.ctx, input.out, omega_t(input.ctx, input.out.x));
-      case "quit":
+      case "eject":
+        return applyMods(
+          input.ctx,
+          input.out,
+          omega_j(input.ctx, input.out.x, tau),
+        );
+      case "query":
         return applyMods(input.ctx, input.out, omega_q(input.ctx, input.out.x));
       case "solicit":
         return applyMods(
@@ -198,6 +206,8 @@ const F_fn: (
           input.out,
           omega_f(input.ctx, input.out.x, tau),
         );
+      case "yield":
+        return applyMods(input.ctx, input.out, omega_y(input.ctx, input.out.x));
     }
     throw new Error("not implemented");
   };
@@ -228,10 +238,10 @@ const C_fn = (
   d: { x: PVMResultContext; y: PVMResultContext },
 ): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
-    return [d.y.u, d.y.transfer, 0n as Hash, gas];
+    return [d.y.u, d.y.transfer, d.y.y, gas];
   } else if (o.length === 32) {
     return [d.x.u, d.x.transfer, bytesToBigInt(o) as unknown as Hash, gas];
   } else {
-    return [d.x.u, d.x.transfer, 0n as Hash, gas];
+    return [d.x.u, d.x.transfer, d.x.y, gas];
   }
 };
