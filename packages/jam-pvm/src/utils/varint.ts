@@ -6,7 +6,7 @@ import { E_sub } from "@tsjam/codec";
  * Reads a varint from a buffer. it follows the X formula from the graypaper appendix A.
  * @param buf - buffer to read from
  * @param length - length of the varint
- * $(0.5.3 - A.11)
+ * $(0.5.4 - A.13)
  */
 export const readVarIntFromBuffer = (buf: Uint8Array, length: u8) => {
   assert(length <= 8 && length >= 0, "length must be <= 8 and >= 0");

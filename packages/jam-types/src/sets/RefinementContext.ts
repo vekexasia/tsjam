@@ -4,7 +4,7 @@ import { Hash, WorkPackageHash } from "@/genericTypes";
 /**
  * gives a snapshotof what was the situation when the work report was created
  * defined by `X` set
- * $(0.5.3 - 11.4)
+ * $(0.5.4 - 11.4)
  */
 export type RefinementContext = {
   // first block of the snapshot

@@ -13,6 +13,7 @@ import {
   PVMAccumulationOp,
   PVMAccumulationState,
   RHO,
+  ServiceAccount,
   ServiceIndex,
   Tagged,
   Tau,
@@ -27,7 +28,7 @@ import { accumulateInvocation } from "@/invocations/accumulate.js";
 
 /**
  * `bold W`
- * $(0.5.3 - 11.15)
+ * $(0.5.4 - 11.15)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -50,7 +51,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
- * $(0.5.3 - 12.4)
+ * $(0.5.4 - 12.4)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -66,7 +67,7 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * $(0.5.3 - 12.2)
+ * $(0.5.4 - 12.2)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
@@ -75,7 +76,7 @@ export const accHistoryUnion = (
 };
 
 /**
- * $(0.5.3 - 12.7)
+ * $(0.5.4 - 12.7)
  */
 export const E_Fn = (
   r: AccumulationQueue[0],
@@ -116,7 +117,7 @@ export const E_Fn = (
 
 /**
  * `WQ` in the paper
- * $(0.5.3 - 12.5)
+ * $(0.5.4 - 12.5)
  */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -124,7 +125,7 @@ export const withPrereqAvailableReports = (
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
-      // $(0.5.3 - 12.6) | D fn calculated inline
+      // $(0.5.4 - 12.6) | D fn calculated inline
       w
         .filter((wr) => {
           return (
@@ -146,7 +147,7 @@ export const withPrereqAvailableReports = (
 };
 
 /**
- * $(0.5.3 - 12.9)
+ * $(0.5.4 - 12.9)
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
   return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
@@ -154,7 +155,7 @@ export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
 
 /**
  * `Q` fn
- * $(0.5.3 - 12.8)
+ * $(0.5.4 - 12.8)
  */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
@@ -171,7 +172,7 @@ export const computeAccumulationPriority = (
 
 /**
  * `W*` in the paper
- * $(0.5.3 - 12.11)
+ * $(0.5.4 - 12.11)
  */
 export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,
@@ -179,13 +180,13 @@ export const accumulatableReports = (
   accumulationQueue: AccumulationQueue,
   tau: Tau, // Ht
 ) => {
-  // $(0.5.3 - 12.10)
+  // $(0.5.4 - 12.10)
   const m = tau % EPOCH_LENGTH;
 
   return [
     ...w_mark,
     ...computeAccumulationPriority(
-      // $(0.5.3 - 12.12)
+      // $(0.5.4 - 12.12)
       E_Fn(
         [
           ...accumulationQueue.slice(m).flat(),
@@ -200,7 +201,7 @@ export const accumulatableReports = (
 
 /**
  * `∆+`
- * $(0.5.3 - 12.16)
+ * $(0.5.4 - 12.16)
  */
 export const outerAccumulation = (
   gasLimit: Gas,
@@ -212,7 +213,7 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  // $(0.5.3 - 12.15)
+  // $(0.5.4 - 12.15)
   Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>,
 ] => {
   let sum = 0n;
@@ -263,7 +264,7 @@ export const outerAccumulation = (
 
 /**
  * `∆*` fn
- * $(0.5.3 - 12.17)
+ * $(0.5.4 - 12.17)
  */
 export const parallelizedAccAccumulation = (
   o: PVMAccumulationState,
@@ -299,23 +300,41 @@ export const parallelizedAccAccumulation = (
     .reduce((a, { t }) => a.concat(t), [] as DeferredTransfer[])
     .flat();
 
-  const delta: Delta = new Map([
-    ...o.delta.entries(),
-    ...[
-      ...accumulatedServices.map(({ o: op }) => [...op.delta.entries()]),
-    ].flat(),
-  ]);
-
-  // NOTE: We note that all newly added service indices, defined in the above context as ⋃s∈s K((∆1(o, w, s)o)d) ∖ s, must not conflict with the indices of existing services K(δ) or other newly added services. This should never happen, since new indices are explicitly selected to avoid such conflicts, but in the unlikely event it happens, the block must be considered invalid
+  const delta: Delta = new Map([...o.delta.entries()]);
+  // should contain "removed" services
+  const m: Set<ServiceIndex> = new Set();
+  // should contain "added/updated" services
+  const n: Delta = new Map();
+  for (let i = 0; i < bold_s_values.length; i++) {
+    const s = bold_s_values[i];
+    const acc = accumulatedServices[i];
+    for (const k of acc.o.delta.keys()) {
+      if (!delta.has(k) || k === s) {
+        n.set(k, acc.o.delta.get(k)!);
+      }
+    }
+    for (const k of delta.keys()) {
+      if (!acc.o.delta.has(k)) {
+        m.add(k);
+      }
+    }
+  }
+  const delta_prime: Delta = new Map([...delta.entries(), ...n.entries()]);
+  for (const k of m) {
+    delta_prime.delete(k);
+  }
 
   const newState: PVMAccumulationState = {
-    delta,
+    delta: delta_prime,
+    // x'
     privServices: singleServiceAccumulation(o, w, f, o.privServices.m, tau).o
       .privServices,
-    authQueue: singleServiceAccumulation(o, w, f, o.privServices.v, tau).o
-      .authQueue,
+    // i'
     validatorKeys: singleServiceAccumulation(o, w, f, o.privServices.a, tau).o
       .validatorKeys,
+    // q'
+    authQueue: singleServiceAccumulation(o, w, f, o.privServices.v, tau).o
+      .authQueue,
   };
 
   return [toTagged(u), newState, t, b];
@@ -323,7 +342,7 @@ export const parallelizedAccAccumulation = (
 
 /**
  * `∆1` fn
- * $(0.5.3 - 12.19)
+ * $(0.5.4 - 12.19)
  */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
@@ -332,7 +351,7 @@ export const singleServiceAccumulation = (
   s: ServiceIndex,
   tau: Tau,
 ): {
-  // `O` tuple defined in $(0.5.3 - 12.18)
+  // `O` tuple defined in $(0.5.4 - 12.18)
   o: PVMAccumulationState;
   t: DeferredTransfer[];
   b: Hash | undefined;

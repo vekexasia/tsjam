@@ -5,7 +5,7 @@ import { WorkOutput } from "@/sets/WorkOutput";
  * Identified by `L` set
  *
  * @see section 11.1.4
- * $(0.5.3 - 11.6)
+ * $(0.5.4 - 11.6)
  */
 export type WorkResult = {
   /**

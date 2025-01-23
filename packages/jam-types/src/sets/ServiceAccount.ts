@@ -3,10 +3,10 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
 /**
  * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
- * $(0.5.3 - 9.3)
+ * $(0.5.4 - 9.3)
  *  NOTE: there are some `virtual` elements such as
- * `c` - actual code ap[ac] $(0.5.3 - 9.4)
- * $(0.5.3 - 9.8):
+ * `c` - actual code ap[ac] $(0.5.4 - 9.4)
+ * $(0.5.4 - 9.8):
  * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
  * `o` - ∈ N264 = computed in `serviceAccountTotalOctets`
  * `t` - balance threshold  computed in `serviceAccountGasThreshold`
