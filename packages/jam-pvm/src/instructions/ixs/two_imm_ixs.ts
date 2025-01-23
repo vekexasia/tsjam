@@ -8,7 +8,7 @@ import { IxMod } from "../utils";
 /**
  * decode the full instruction from the bytes.
  * the byte array is chunked to include only the bytes of the instruction
- * $(0.5.3 - A.17)
+ * $(0.5.4 - A.19)
  */
 export const decode = (
   bytes: Uint8Array,

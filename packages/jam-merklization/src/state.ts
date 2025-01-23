@@ -55,7 +55,7 @@ import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 /**
  * Merkelize state
  * `Mσ`
- * $(0.5.3 - D.5)
+ * $(0.5.4 - D.5)
  */
 export const merkelizeState = (state: JamState): Hash => {
   const stateMap = transformState(state);
@@ -94,7 +94,7 @@ const bits_inv = (bits: bit[]): Uint8Array => {
 };
 */
 
-// $(0.5.3 - D.3)
+// $(0.5.4 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
@@ -105,7 +105,7 @@ const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   ]) as ByteArrayOfLength<64>;
 };
 
-// $(0.5.3 - D.4) | implementation avoids using bits()
+// $(0.5.4 - D.4) | implementation avoids using bits()
 // following my
 const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   if (v.length <= 32) {
@@ -127,7 +127,7 @@ const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   }
 };
 
-// $(0.5.3 - D.6)
+// $(0.5.4 - D.6)
 const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
@@ -150,7 +150,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 };
 
 /**
- * $(0.5.3 - D.1)
+ * $(0.5.4 - D.1)
  */
 const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {
@@ -239,7 +239,7 @@ const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
 
 /*
  * `T(σ)`
- * $(0.5.3 - D.2)
+ * $(0.5.4 - D.2)
  */
 const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();

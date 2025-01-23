@@ -13,7 +13,7 @@ import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { IxMod } from "@/instructions/utils.js";
 import { Result, ok } from "neverthrow";
 
-// $(0.5.3 - A.23)
+// $(0.5.4 - A.25)
 const decode = (
   bytes: Uint8Array,
 ): Result<[RegisterIdentifier, RegisterIdentifier, u32], never> => {

@@ -10,7 +10,7 @@ import {
 import { regIx } from "@/instructions/ixdb.js";
 import { IxMod } from "@/instructions/utils.js";
 
-// $(0.5.3 - A.22)
+// $(0.5.4 - A.24)
 const decode = (
   bytes: Uint8Array,
 ): Result<[RegisterIdentifier, RegisterIdentifier], PVMIxDecodeError> => {

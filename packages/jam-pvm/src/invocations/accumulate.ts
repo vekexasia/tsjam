@@ -51,7 +51,7 @@ import assert from "assert";
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.5.3 - B.8)
+ * $(0.5.4 - B.8)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -90,7 +90,7 @@ export const accumulateInvocation = (
 };
 
 /**
- * $(0.5.3 - B.9)
+ * $(0.5.4 - B.9)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationState,
@@ -103,16 +103,16 @@ const I_fn = (
     service,
     u: {
       ...pvmAccState,
-      delta: new Map([[service, pvmAccState.delta.get(service)]]) as Delta,
+      //delta: new Map([[service, pvmAccState.delta.get(service)]]) as Delta,
     },
     i: check_fn(service, pvmAccState.delta),
-
     transfer: [],
+    y: undefined,
   };
 };
 
 /**
- * $(0.5.3 - B.10)
+ * $(0.5.4 - B.10)
  */
 const F_fn: (
   service: ServiceIndex,
@@ -120,10 +120,7 @@ const F_fn: (
 ) => HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }> =
   (service: ServiceIndex, tau: Tau) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
-    const bold_d = new Map([
-      ...input.out.x.u.delta.entries(),
-      ...input.out.x.delta.entries(),
-    ]);
+    const bold_d = new Map([...input.out.x.u.delta.entries()]);
     const bold_s = input.out.x.u.delta.get(service)!;
     switch (fnIdentifier) {
       case "read": {
@@ -213,7 +210,7 @@ const F_fn: (
   };
 //
 /**
- * $(0.5.3 - B.11)
+ * $(0.5.4 - B.11)
  */
 const G_fn = (
   context: PVMProgramExecutionContextBase,
@@ -230,7 +227,7 @@ const G_fn = (
 };
 
 /**
- * $(0.5.3 - B.12)
+ * $(0.5.4 - B.12)
  */
 const C_fn = (
   gas: u64,

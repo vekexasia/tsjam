@@ -3,7 +3,7 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * `π`
- * $(0.5.3 - 13.1)
+ * $(0.5.4 - 13.1)
  * [0] is the accumulator,
  * [1] is the previous epoch's statistics
  */

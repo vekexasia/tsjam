@@ -8,7 +8,7 @@ import { programInitialization } from "@/program.js";
 
 /**
  * `ΨM` in the paper
- * $(0.5.3 - A.36)
+ * $(0.5.4 - A.38)
  */
 export const argumentInvocation = <X>(
   p: Uint8Array,
@@ -39,23 +39,23 @@ type ArgumentInvocationOut<X> = {
   out: X;
 };
 
-// $(0.5.3 - A.37)
+// $(0.5.4 - A.39)
 const R_fn = <X>(input: HostCallOut<X>): ArgumentInvocationOut<X> => {
   if (input.exitReason === RegularPVMExitReason.OutOfGas) {
     return { exitReason: RegularPVMExitReason.OutOfGas, out: input.out };
   }
   if (typeof input.exitReason === "undefined") {
     const readable = input.context.memory.canRead(
-      input.context.registers[10],
-      input.context.registers[11],
+      input.context.registers[7],
+      input.context.registers[8],
     );
     if (readable) {
       return {
         ok: [
           input.context.gas,
           input.context.memory.getBytes(
-            input.context.registers[10],
-            input.context.registers[11],
+            input.context.registers[7],
+            input.context.registers[8],
           ),
         ],
         out: input.out,

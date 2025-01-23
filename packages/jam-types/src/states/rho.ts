@@ -6,7 +6,7 @@ import { Tau } from "@/Tau.js";
 /**
  * `ρ` - tracks WorkReports which have been reported but not
  *       yet available indexed by core index
- * $(0.5.3 - 11.1)
+ * $(0.5.4 - 11.1)
  */
 export type RHO = SeqOfLength<
   | {

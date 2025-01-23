@@ -6,7 +6,7 @@ import { E_sub } from "@tsjam/codec";
 import { beforeAll } from "vitest";
 import { Result, ok } from "neverthrow";
 
-// $(0.5.3 - A.18)
+// $(0.5.4 - A.20)
 const decode = (bytes: Uint8Array): Result<[offset: bigint], never> => {
   const lx = Math.min(4, bytes.length);
   const vx = E_sub(lx).decode(bytes.subarray(0, lx)).value;

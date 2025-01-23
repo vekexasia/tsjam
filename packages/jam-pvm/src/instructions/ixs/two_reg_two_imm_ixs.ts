@@ -12,7 +12,7 @@ import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Result, err, ok } from "neverthrow";
 
-// $(0.5.3 - A.25)
+// $(0.5.4 - A.27)
 const decode = (
   bytes: Uint8Array,
 ): Result<

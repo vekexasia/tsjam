@@ -17,7 +17,7 @@ import { applyMods } from "@/functions/utils";
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
- * $(0.5.3 - B.1)
+ * $(0.5.4 - B.1)
  */
 export const isAuthorized = (
   p: WorkPackage,
@@ -51,7 +51,7 @@ export const isAuthorized = (
  */
 const Gi = 0n as Gas;
 
-// $(0.5.3 - B.2)
+// $(0.5.4 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     return applyMods(input.ctx, input.out as never, omega_g(input.ctx));

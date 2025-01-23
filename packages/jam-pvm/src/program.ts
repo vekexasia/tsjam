@@ -12,7 +12,7 @@ import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
 
-// constants defined in $(0.5.3 - A.31)
+// constants defined in $(0.5.4 - A.33)
 const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
@@ -29,7 +29,7 @@ const owzsCodec = createCodec<{
 ]);
 /**
  * `Y` fn in the graypaper
- * $(0.5.3 - A.29)
+ * $(0.5.4 - A.31)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -44,7 +44,7 @@ export const programInitialization = (
       memory: IPVMMemory;
       registers: SeqOfLength<RegisterValue, 13>;
     } => {
-  // $(0.5.3 - A.30) | start
+  // $(0.5.4 - A.32) | start
   const {
     readBytes: offset,
     value: { oCard, wCard, z, s },
@@ -60,14 +60,14 @@ export const programInitialization = (
     offset + oCard + wCard + 4,
     offset + oCard + wCard + 4 + cCard.value,
   );
-  // $(0.5.3 - A.30) | end
+  // $(0.5.4 - A.32) | end
 
-  // $(0.5.3 - A.33)
+  // $(0.5.4 - A.35)
   if (5 * Zz + Z_Fn(oCard) + Z_Fn(wCard + z * Zp) + Z_Fn(s) + Zi > 2 ** 32) {
     return undefined;
   }
 
-  // registers $(0.5.3 - A.35)
+  // registers $(0.5.4 - A.36)
   const registers = [
     2n ** 32n - 2n ** 16n,
     2n ** 32n - 2n * BigInt(Zz) - BigInt(Zi),
@@ -84,7 +84,7 @@ export const programInitialization = (
     0n,
   ] as SeqOfLength<RegisterValue, 13>;
 
-  // memory $(0.5.3 - A.34)
+  // memory $(0.5.4 - A.36)
   const acl: PVMACL[] = [];
   const mem: MemoryContent[] = [];
   const createAcl = (conf: {
@@ -167,12 +167,12 @@ export const programInitialization = (
   };
 };
 
-// $(0.5.3 - A.32)
+// $(0.5.4 - A.34)
 const P_Fn = (x: number | bigint) => {
   return Zp * Math.ceil(Number(x) / Zp);
 };
 
-// $(0.5.3 - A.32)
+// $(0.5.4 - A.34)
 const Z_Fn = (x: number | bigint) => {
   return Zz * Math.ceil(Number(x) / Zz);
 };

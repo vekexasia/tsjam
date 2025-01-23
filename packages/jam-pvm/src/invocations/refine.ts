@@ -34,7 +34,7 @@ import { argumentInvocation } from "@/invocations/argument.js";
 import { IxMod } from "@/instructions/utils";
 
 /**
- * $(0.5.3 - B.4)
+ * $(0.5.4 - B.4)
  */
 export const refineInvocation = (
   serviceCodeHash: Hash, // `c`
@@ -102,7 +102,7 @@ export const refineInvocation = (
 };
 
 /**
- * $(0.5.3 - B.5)
+ * $(0.5.4 - B.5)
  */
 const F_fn: (
   service: ServiceIndex,
