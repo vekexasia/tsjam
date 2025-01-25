@@ -36,7 +36,7 @@ export const regFn = <Args extends unknown[], Out>(conf: {
   fn: DetailedPVMFn<Args, Out[]>;
 }): PVMFn<Args, Array<Out | PVMSingleModGas> | PVMExitReasonMod[]> => {
   if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
-    throw new Error(`duplicate opCode ${conf.fn.opCode}`);
+    throw new Error(`duplicate opCode ${conf.fn.opCode} ${conf.fn.identifier}`);
   }
   if (FnsDb.byIdentifier.has(conf.fn.identifier)) {
     throw new Error(`duplicate identifier ${conf.fn.identifier}`);

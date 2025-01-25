@@ -63,7 +63,7 @@ export const omega_h = regFn<
   W7 | PVMSingleModMemory
 >({
   fn: {
-    opCode: 15 as u8,
+    opCode: 17 as u8,
     identifier: "historical_lookup",
     gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
@@ -101,7 +101,7 @@ export const omega_h = regFn<
  */
 export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
   fn: {
-    opCode: 16 as u8,
+    opCode: 18 as u8,
     identifier: "import",
     gasCost: 10n as Gas,
     execute(context, i) {
@@ -133,7 +133,7 @@ export const omega_e = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 17 as u8,
+    opCode: 19 as u8,
     identifier: "export",
     gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
@@ -170,7 +170,7 @@ export const omega_m = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 18 as u8,
+    opCode: 20 as u8,
     identifier: "machine",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -209,7 +209,7 @@ export const omega_p = regFn<
   W7 | PVMSingleModMemory
 >({
   fn: {
-    opCode: 19 as u8,
+    opCode: 21 as u8,
     identifier: "peek",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -241,7 +241,7 @@ export const omega_o = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 20 as u8,
+    opCode: 22 as u8,
     identifier: "poke",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -281,7 +281,7 @@ export const omega_z = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 21 as u8,
+    opCode: 23 as u8,
     identifier: "zero",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -321,7 +321,7 @@ export const omega_v = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 22 as u8,
+    opCode: 24 as u8,
     identifier: "void",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -362,7 +362,7 @@ export const omega_k = regFn<
   W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 23 as u8,
+    opCode: 25 as u8,
     identifier: "invoke",
     gasCost: 10n as Gas,
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
@@ -465,7 +465,7 @@ export const omega_x = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 24 as u8,
+    opCode: 26 as u8,
     identifier: "expunge",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
