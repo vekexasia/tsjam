@@ -41,12 +41,11 @@ export const gamma_sSTF: STF<
     tau: Tau;
     p_tau: Posterior<Tau>;
     gamma_a: SafroleState["gamma_a"];
-    gamma_s: SafroleState["gamma_s"];
     p_kappa: Posterior<JamState["kappa"]>;
-    p_eta: Posterior<JamEntropy>;
+    p_eta2: Posterior<JamEntropy[2]>;
   },
   never
-> = (input) => {
+> = (input, curState) => {
   if (
     isNewNextEra(input.p_tau, input.tau) && // e' = e + 1
     input.gamma_a.length === EPOCH_LENGTH && // |ya| = E
@@ -64,14 +63,14 @@ export const gamma_sSTF: STF<
     );
     return ok(newGammaS);
   } else if (isSameEra(input.tau, input.p_tau)) {
-    return ok(toPosterior(input.gamma_s));
+    return ok(toPosterior(curState));
   } else {
     // we're in fallback mode
     // F(eta'_2, kappa' ) $(0.5.4 - 6.24)
     const newGammaS = [] as unknown as Posterior<
       SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">
     >;
-    const p_eta2 = bigintToBytes(input.p_eta[2], 32);
+    const p_eta2 = bigintToBytes(input.p_eta2, 32);
     // $(0.5.4 - 6.26)
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const e4Buf = new Uint8Array(4);
@@ -148,9 +147,8 @@ if (import.meta.vitest) {
             tau: header.timeSlotIndex,
             p_tau: toPosterior(posteriorHeader.timeSlotIndex),
             gamma_a: state.gamma_a,
-            gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
+            p_eta2: toTagged(0n) as Posterior<JamEntropy[2]>,
           },
           state.gamma_s,
         )._unsafeUnwrap();
@@ -164,9 +162,8 @@ if (import.meta.vitest) {
             tau: header.timeSlotIndex,
             p_tau: (EPOCH_LENGTH * 2) as Posterior<Tau>,
             gamma_a: state.gamma_a,
-            gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
+            p_eta2: toTagged(0n) as Posterior<JamEntropy[2]>,
           },
           state.gamma_s,
         )._unsafeUnwrap();
@@ -180,9 +177,8 @@ if (import.meta.vitest) {
             tau: header.timeSlotIndex,
             p_tau: (EPOCH_LENGTH + LOTTERY_MAX_SLOT - 1) as Posterior<Tau>,
             gamma_a: state.gamma_a,
-            gamma_s: state.gamma_s,
             p_kappa: posteriorKappa,
-            p_eta: toTagged([0n, 0n, 0n, 0n]) as Posterior<JamEntropy>,
+            p_eta2: toTagged(0n) as Posterior<JamEntropy[2]>,
           },
           state.gamma_s,
         )._unsafeUnwrap();
@@ -202,9 +198,8 @@ if (import.meta.vitest) {
                 .fill(0)
                 .map((_, idx) => mockTicketIdentifier({ id: BigInt(idx) })),
             ),
-            gamma_s: state.gamma_s,
             p_kappa: [] as unknown as Posterior<JamState["kappa"]>,
-            p_eta: [] as unknown as Posterior<JamEntropy>,
+            p_eta2: toTagged(0n) as Posterior<JamEntropy[2]>,
           },
           state.gamma_s,
         )._unsafeUnwrap();

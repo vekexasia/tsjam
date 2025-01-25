@@ -35,7 +35,7 @@ import {
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
-import { Hashing } from "@tsjam/crypto";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
@@ -109,7 +109,9 @@ export const importBlock: STF<
   const [, p_entropy] = rotateEntropy(
     {
       ...tauTransition,
-      h_v: block.header.entropySignature,
+      vrfOutputHash: Bandersnatch.vrfOutputSignature(
+        block.header.entropySignature,
+      ),
     },
     curState.entropy,
   ).safeRet();
@@ -157,9 +159,8 @@ export const importBlock: STF<
     {
       ...tauTransition,
       gamma_a: curState.safroleState.gamma_a,
-      gamma_s: curState.safroleState.gamma_s,
       p_kappa,
-      p_eta: p_entropy,
+      p_eta2: toPosterior(p_entropy[2]),
     },
     curState.safroleState.gamma_s,
   ).safeRet();

@@ -10,14 +10,18 @@ import {
   Tau,
   Posterior,
   ValidatorIndex,
-  SafroleState,
   BandersnatchKey,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
 import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
 import { merkelizeState } from "@tsjam/merklization";
-import { rotateEta1_4, rotateKeys } from "@tsjam/transitions";
+import {
+  disputesSTF,
+  gamma_sSTF,
+  rotateEta1_4,
+  rotateKeys,
+} from "@tsjam/transitions";
 import { JAM_ENTROPY } from "@tsjam/constants";
 import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
 
@@ -46,9 +50,32 @@ export const createBlock = (
   } as unknown as JamBlock["extrinsics"];
   const p_tau: Posterior<Tau> = toPosterior(Timekeeping.bigT());
 
+  const [, [, p_eta2, p_eta3]] = rotateEta1_4(
+    {
+      p_tau,
+      tau: data.previousBlock.header.timeSlotIndex,
+      eta0: curState.entropy[0],
+    },
+    [curState.entropy[1], curState.entropy[2], curState.entropy[3]],
+  ).safeRet();
+
+  const [disputesError, disputes] = disputesSTF(
+    {
+      kappa: curState.kappa,
+      curTau: data.previousBlock.header.timeSlotIndex,
+      lambda: curState.lambda,
+      extrinsic: extrinsics.disputes,
+    },
+    curState.disputes,
+  ).safeRet();
+
+  if (disputesError) {
+    throw new Error("Disputes error");
+  }
+
   const [, [, p_kappa, ,]] = rotateKeys(
     {
-      p_psi_o: toPosterior(new Set()), // TODO:
+      p_psi_o: toPosterior(disputes.psi_o),
       iota: curState.iota,
       tau: curState.tau,
       p_tau,
@@ -61,18 +88,23 @@ export const createBlock = (
     ],
   ).safeRet();
 
-  const [, [, , p_eta3]] = rotateEta1_4(
+  const [, p_gammaS] = gamma_sSTF(
     {
-      eta0: curState.entropy[0],
       tau: data.previousBlock.header.timeSlotIndex,
       p_tau,
+      p_eta2: toPosterior(p_eta2),
+      gamma_a: curState.safroleState.gamma_a,
+      p_kappa,
     },
-    [curState.entropy[1], curState.entropy[2], curState.entropy[3]],
+    curState.safroleState.gamma_s,
   ).safeRet();
-  // TODO:
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const p_gamma_s: Posterior<SafroleState["gamma_s"]> = null as unknown as any;
-  const sealContext = sealSignContext(p_tau, toPosterior(p_eta3), p_gamma_s);
+
+  const sealContext = sealSignContext(p_tau, toPosterior(p_eta3), p_gammaS);
+
+  const vrfOutputHash = Bandersnatch.vrfOutputSeed(
+    data.bandersnatchPrivateKey,
+    sealContext,
+  );
 
   const header: JamHeader = {
     parent:
@@ -87,13 +119,7 @@ export const createBlock = (
     entropySignature: Bandersnatch.sign(
       data.bandersnatchPrivateKey,
       new Uint8Array([]), // message
-      new Uint8Array([
-        ...JAM_ENTROPY,
-        ...bigintToBytes(
-          Bandersnatch.vrfOutputSeed(data.bandersnatchPrivateKey, sealContext),
-          32,
-        ),
-      ]),
+      new Uint8Array([...JAM_ENTROPY, ...bigintToBytes(vrfOutputHash, 32)]),
     ),
   };
 

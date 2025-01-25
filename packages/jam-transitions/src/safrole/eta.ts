@@ -1,4 +1,4 @@
-import { JamEntropy, JamHeader, Posterior, STF, Tau } from "@tsjam/types";
+import { JamEntropy, Posterior, STF, Tau } from "@tsjam/types";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { bigintToBytes, isNewEra, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
@@ -12,11 +12,15 @@ export const rotateEntropy: STF<
   {
     tau: Tau;
     p_tau: Posterior<Tau>;
-    h_v: JamHeader["entropySignature"];
+    // or eventually vrfOutputSignature of h_v
+    vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
   },
   never
 > = (input, eta) => {
-  const [, p_eta0] = rotateEta0({ h_v: input.h_v }, eta[0]).safeRet();
+  const [, p_eta0] = rotateEta0(
+    { vrfOutputHash: input.vrfOutputHash },
+    eta[0],
+  ).safeRet();
   const [, [p_eta1, p_eta2, p_eta3]] = rotateEta1_4(
     {
       eta0: eta[0],
@@ -33,12 +37,16 @@ export const rotateEntropy: STF<
  */
 export const rotateEta0: STF<
   JamEntropy[0],
-  { h_v: JamHeader["entropySignature"] },
+  {
+    vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
+  },
   never
 > = (input, eta0) => {
-  const vrfOut = Bandersnatch.vrfOutputSignature(input.h_v);
   const p_eta0 = Hashing.blake2b(
-    new Uint8Array([...bigintToBytes(eta0, 32), ...bigintToBytes(vrfOut, 32)]),
+    new Uint8Array([
+      ...bigintToBytes(eta0, 32),
+      ...bigintToBytes(input.vrfOutputHash, 32),
+    ]),
   );
   return ok(toPosterior(p_eta0));
 };
