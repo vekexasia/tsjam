@@ -11,12 +11,13 @@ import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { djump } from "@/utils/djump.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { Result, err, ok } from "neverthrow";
+import { IxMod } from "../utils";
 
 // $(0.5.4 - A.27)
 const decode = (
   bytes: Uint8Array,
 ): Result<
-  [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32],
+  [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: bigint, vy: bigint],
   PVMIxDecodeError
 > => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
@@ -30,24 +31,25 @@ const decode = (
   if (bytes.length < 2 + lX) {
     return err(new PVMIxDecodeError("not enough bytes [2]"));
   }
-  const vX = Number(readVarIntFromBuffer(bytes.subarray(2, 2 + lX), lX as u8));
-  const vY = Number(
-    readVarIntFromBuffer(bytes.subarray(2 + lX, 2 + lX + lY), lY as u8),
+  const vX = readVarIntFromBuffer(bytes.subarray(2, 2 + lX), lX as u8);
+  const vY = readVarIntFromBuffer(
+    bytes.subarray(2 + lX, 2 + lX + lY),
+    lY as u8,
   );
 
-  return ok([rA, rB, vX as u32, vY as u32]);
+  return ok([rA, rB, vX, vY]);
 };
 
 const create = (
   identifier: u8,
   name: string,
   evaluate: PVMIxEvaluateFN<
-    [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32]
+    [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: bigint, vy: bigint]
   >,
   blockTermination?: true,
 ) => {
   return regIx<
-    [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: u32, vy: u32]
+    [rA: RegisterIdentifier, rB: RegisterIdentifier, vx: bigint, vy: bigint]
   >({
     opCode: identifier,
     identifier: name,
@@ -61,25 +63,20 @@ const create = (
 };
 
 export const load_imm_jump_ind = create(
-  160 as u8,
+  180 as u8,
   "load_imm_jump_ind",
   (context, rA, rB, vx, vy) => {
-    context.execution.registers[rA] = BigInt(vx) as RegisterValue;
-
     return djump(
       context,
-      Number((context.execution.registers[rB] + BigInt(vy)) % 2n ** 32n) as u32,
+      Number((context.execution.registers[rB] + vy) % 2n ** 32n) as u32,
+      [IxMod.reg(rA, vx)],
     );
   },
   true,
 );
 
 if (import.meta.vitest) {
-  const { vi, describe, expect, it } = import.meta.vitest;
-  vi.mock("@/utils/djump.js", () => ({
-    djump: vi.fn(),
-  }));
-  const { createEvContext } = await import("@/test/mocks.js");
+  const { describe, expect, it } = import.meta.vitest;
   describe("two_reg_two_imm_ixs", () => {
     describe("decode", () => {
       it("should fail if not enough bytes", () => {
@@ -92,22 +89,6 @@ if (import.meta.vitest) {
         expect(
           decode(new Uint8Array([0, 1]))._unsafeUnwrapErr().message,
         ).toEqual("not enough bytes [2]");
-      });
-    });
-    describe("ixs", () => {
-      it("load_imm_jump_ind", () => {
-        const context = createEvContext();
-        context.execution.registers[0] = 0xdeadbeefn as RegisterValue;
-        context.execution.registers[1] = 0xfffffffen as RegisterValue;
-        load_imm_jump_ind.evaluate(
-          context,
-          0 as RegisterIdentifier,
-          1 as RegisterIdentifier,
-          0xdeadbeef as u32,
-          0x00000003 as u32,
-        );
-        expect(djump).toHaveBeenCalledWith(context, 1);
-        expect(context.execution.registers[0]).toBe(0xdeadbeefn);
       });
     });
   });

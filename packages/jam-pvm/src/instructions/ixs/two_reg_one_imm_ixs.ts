@@ -249,7 +249,7 @@ const neg_add_imm_32 = create(
     return ok([
       IxMod.reg(
         rA,
-        (BigInt(vX) + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n,
+        X_4(vX + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n,
       ),
     ]);
   },
@@ -283,7 +283,7 @@ const shlo_l_imm_alt_32 = create(
     return ok([
       IxMod.reg(
         rA,
-        (BigInt(vX) << context.execution.registers[rB] % 32n) % 2n ** 32n,
+        X_4((vX << context.execution.registers[rB] % 32n) % 2n ** 32n),
       ),
     ]);
   },
@@ -309,7 +309,9 @@ const shar_r_imm_alt_32 = create(
     return ok([
       IxMod.reg(
         rA,
-        Z8_inv(BigInt(Z4(vX)) >> context.execution.registers[rB] % 32n),
+        Z8_inv(
+          BigInt(Z4(vX % 2n ** 32n)) >> context.execution.registers[rB] % 32n,
+        ),
       ),
     ]);
   },
@@ -378,12 +380,14 @@ const shar_r_imm_64 = create(
   153 as u8,
   "shar_r_imm_64",
   (context, rA, rB, vX) => {
-    return ok([
-      IxMod.reg(
-        rA,
-        Z8_inv(Z8(context.execution.registers[rB]) / 2n ** (BigInt(vX) % 64n)),
-      ),
-    ]);
+    const z8b = Z8(context.execution.registers[rB]);
+    const dividend = 2n ** (BigInt(vX) % 64n);
+    let result = z8b / dividend;
+    // Math.floor for negative numbers
+    if (z8b < 0n && dividend > 0n && z8b % dividend !== 0n) {
+      result -= 1n;
+    }
+    return ok([IxMod.reg(rA, Z8_inv(result))]);
   },
 );
 
@@ -602,13 +606,7 @@ if (import.meta.vitest) {
         const { ctx } = runTestIx(context, mul_imm_32, 1, 0, 2n);
         expect(ctx.registers[1]).toBe(0n);
 
-        const { ctx: p_context2 } = runTestIx(
-          context,
-          mul_imm_32,
-          1,
-          0,
-          3 as u32,
-        );
+        const { ctx: p_context2 } = runTestIx(context, mul_imm_32, 1, 0, 3n);
         expect(p_context2.registers[1]).toBe(2n ** 31n);
       });
       it("set_lt_u_imm", () => {
@@ -623,7 +621,7 @@ if (import.meta.vitest) {
           set_lt_u_imm,
           1,
           0,
-          0x11 as u32,
+          0x11n,
         );
         expect(p_context2.registers[1]).toBe(0n);
       });

@@ -19,11 +19,18 @@ export const X_fn = (n: bigint) => (x: bigint) =>
   x + (x / 2n ** (8n * n - 1n)) * (2n ** 64n - 2n ** (8n * n));
 export const X_4 = X_fn(4n);
 export const X_8 = X_fn(8n);
+
+/**
+ * page fault
+ */
 export class MemoryUnreadable extends PVMIxExecutionError {
   constructor(location: u32, amount: number) {
     super(
       [],
-      RegularPVMExitReason.Panic,
+      {
+        type: "page-fault",
+        memoryLocationIn: location,
+      },
       `memory @${location}:-${amount} is not readable`,
       true, // account Trap gas cost
     );

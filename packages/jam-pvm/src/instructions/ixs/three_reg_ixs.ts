@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Result, err, ok } from "neverthrow";
 import {
   Gas,
@@ -93,9 +94,9 @@ const div_s_32 = create(194 as u8, "div_s_32", (context, wA, wB, rD) => {
 const rem_u_32 = create(195 as u8, "rem_u_32", (context, wA, wB, rD) => {
   let newVal: number | bigint;
   if (wB % 2n ** 32n === 0n) {
-    newVal = wA;
+    newVal = X_4(wA);
   } else {
-    newVal = (wA % 2n ** 32n) % (wB % 2n ** 32n);
+    newVal = X_4((wA % 2n ** 32n) % (wB % 2n ** 32n));
   }
   return ok([IxMod.reg(rD, newVal)]);
 });
@@ -105,9 +106,9 @@ const rem_s_32 = create(196 as u8, "rem_s_32", (context, wA, wB, rD) => {
   const z4b = Z4(wB % 2n ** 32n);
   let newVal: number | bigint;
   if (z4b === 0) {
-    newVal = Z8_inv(wA);
+    newVal = Z8_inv(BigInt(z4a));
   } else if (z4a === -1 * 2 ** 31 && z4b === -1) {
-    newVal = 0 as u32;
+    newVal = 0;
   } else {
     newVal = Z8_inv(BigInt(z4a % z4b));
   }
@@ -125,26 +126,24 @@ const shlo_r_32 = create(198 as u8, "shlo_r_32", (context, wA, wB, rD) => {
 });
 
 const shar_r_32 = create(199 as u8, "shar_r_32", (context, wA, wB, rD) => {
-  const z4a = Z4(wA);
-  return ok([IxMod.reg(rD, Z4_inv(z4a / 2 ** Number(wB % 32n)))]);
+  const z4a = Z4(wA % 2n ** 32n);
+  return ok([
+    IxMod.reg(rD, Z8_inv(BigInt(Math.floor(z4a / 2 ** Number(wB % 32n))))),
+  ]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const add_64 = create(200 as u8, "add_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, (wA + wB) % 2n ** 64n)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sub_64 = create(201 as u8, "sub_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, (wA + 2n ** 64n - wB) % 2n ** 64n)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mul_64 = create(202 as u8, "mul_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, (wA * wB) % 2n ** 64n)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const div_u_64 = create(203 as u8, "div_u_64", (context, wA, wB, rD) => {
   if (wB === 0n) {
     return ok([IxMod.reg(rD, 2n ** 64n - 1n)]);
@@ -153,7 +152,6 @@ const div_u_64 = create(203 as u8, "div_u_64", (context, wA, wB, rD) => {
   }
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const div_s_64 = create(204 as u8, "div_s_64", (context, wA, wB, rD) => {
   const z8a = Z8(wA);
   const z8b = Z8(wB);
@@ -168,7 +166,6 @@ const div_s_64 = create(204 as u8, "div_s_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, newVal)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rem_u_64 = create(205 as u8, "rem_u_64", (context, wA, wB, rD) => {
   let newVal: number | bigint;
   if (wB === 0n) {
@@ -179,7 +176,6 @@ const rem_u_64 = create(205 as u8, "rem_u_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, newVal)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rem_s_64 = create(206 as u8, "rem_s_64", (context, wA, wB, rD) => {
   const z8a = Z8(wA);
   const z8b = Z8(wB);
@@ -194,20 +190,22 @@ const rem_s_64 = create(206 as u8, "rem_s_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, newVal)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_l_64 = create(207 as u8, "shlo_l_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, (wA << wB % 64n) % 2n ** 64n)]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r_64 = create(208 as u8, "shlo_r_64", (context, wA, wB, rD) => {
   return ok([IxMod.reg(rD, wA / 2n ** (wB % 64n))]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shar_r_64 = create(209 as u8, "shar_r_64", (context, wA, wB, rD) => {
   const z8a = Z8(wA);
-  return ok([IxMod.reg(rD, Z8_inv(z8a / 2n ** (wB % 64n)))]);
+  const dividend = 2n ** (wB % 64n);
+  let result = z8a / dividend;
+  if (z8a < 0n && dividend > 0n && z8a % dividend !== 0n) {
+    result -= 1n;
+  }
+  return ok([IxMod.reg(rD, Z8_inv(result))]);
 });
 
 const and = create(210 as u8, "and", (context, wA, wB, rD) => {
@@ -251,8 +249,8 @@ const set_lt_u = create(216 as u8, "set_lt_u", (context, wA, wB, rD) => {
 });
 
 const set_lt_s = create(217 as u8, "set_lt_s", (context, wA, wB, rD) => {
-  const z4a = Z4(wA);
-  const z4b = Z4(wB);
+  const z4a = Z8(wA);
+  const z4b = Z8(wB);
   return ok([IxMod.reg(rD, z4a < z4b ? 1 : 0)]);
 });
 

@@ -16,8 +16,8 @@ import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 import assert from "node:assert";
-import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
-import { IxMod, MemoryUnreadable, X_fn } from "@/instructions/utils.js";
+import { E_2, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
+import { IxMod, MemoryUnreadable, X_4, X_fn } from "@/instructions/utils.js";
 
 type InputType = [register: RegisterIdentifier, value: u64];
 
@@ -95,7 +95,7 @@ const load_u32 = create1Reg1IMMIx(56 as u8, "load_u32", (context, ri, vx) => {
   return ok([
     IxMod.reg(
       ri,
-      Number(E_4.decode(context.execution.memory.getBytes(vx, 4)).value) as u32,
+      E_4_int.decode(context.execution.memory.getBytes(vx, 4)).value,
     ),
   ]);
 });
@@ -149,7 +149,7 @@ const load_i32 = create1Reg1IMMIx(57 as u8, "load_i32", (context, ri, vx) => {
   return ok([
     IxMod.reg(
       ri,
-      Z4_inv(Z(4, E_4.decode(context.execution.memory.getBytes(vx, 4)).value)),
+      X_4(E_4.decode(context.execution.memory.getBytes(vx, 4)).value),
     ),
   ]);
 });

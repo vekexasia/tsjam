@@ -47,12 +47,11 @@ describe("pvm", () => {
     );
     context.execution.gas = toTagged(BigInt(json["initial-gas"]) as Gas);
     context.execution.instructionPointer = toTagged(json["initial-pc"]);
-    context.execution.registers = json["initial-regs"].map((reg: any) =>
+    context.execution.registers = json["initial-regs"].map((reg: number) =>
       BigInt(reg),
     );
 
     const program = PVMProgramCodec.decode(new Uint8Array(json.program));
-    console.log(program.value);
     context.program = program.value;
     context.parsedProgram = ParsedProgram.parse(program.value);
     const r = basicInvocation(
@@ -62,16 +61,22 @@ describe("pvm", () => {
       },
       context.execution,
     );
+    if (r.exitReason === RegularPVMExitReason.Panic) {
+      expect("panic").toEqual(json["expected-status"]);
+    } else if (RegularPVMExitReason.Halt === r.exitReason) {
+      expect("halt").toEqual(json["expected-status"]);
+    } else if (RegularPVMExitReason.OutOfGas === r.exitReason) {
+      expect("out-of-gas").toEqual(json["expected-status"]);
+    } else if (r.exitReason.type === "page-fault") {
+      expect("page-fault").toEqual(json["expected-status"]);
+      expect(r.exitReason.memoryLocationIn).toEqual(
+        json["expected-page-fault-address"],
+      );
+    }
+
     expect(r.context.registers).toEqual(
-      json["expected-regs"].map((reg: any) => BigInt(reg)),
+      json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
     );
-    expect(
-      r.exitReason == RegularPVMExitReason.Panic
-        ? "panic"
-        : RegularPVMExitReason.Halt == r.exitReason
-          ? "halt"
-          : "outofgas",
-    ).toEqual(json["expected-status"]);
     expect(r.context.instructionPointer, "instruction pointer").toEqual(
       json["expected-pc"],
     );
@@ -246,7 +251,6 @@ describe("pvm", () => {
     "inst_jump_indirect_with_offset_ok",
     doTest("inst_jump_indirect_with_offset_ok"),
   );
-  */
   it(
     "inst_jump_indirect_without_offset_ok",
     doTest("inst_jump_indirect_without_offset_ok"),
@@ -257,7 +261,6 @@ describe("pvm", () => {
   it("inst_load_imm", doTest("inst_load_imm"));
   it("inst_load_imm_64", doTest("inst_load_imm_64"));
   it("inst_load_imm_and_jump", doTest("inst_load_imm_and_jump"));
-  /*
   it(
     "inst_load_imm_and_jump_indirect_different_regs_with_offset_ok",
     doTest("inst_load_imm_and_jump_indirect_different_regs_with_offset_ok"),
@@ -302,6 +305,7 @@ describe("pvm", () => {
       "inst_load_imm_and_jump_indirect_misaligned_djump_same_regs_without_offset_nok",
     ),
   );
+  /*
   it(
     "inst_load_imm_and_jump_indirect_same_regs_with_offset_ok",
     doTest("inst_load_imm_and_jump_indirect_same_regs_with_offset_ok"),
@@ -484,6 +488,7 @@ describe("pvm", () => {
     "inst_shift_logical_left_imm_64",
     doTest("inst_shift_logical_left_imm_64"),
   );
+  /*/
   it(
     "inst_shift_logical_left_imm_alt_32",
     doTest("inst_shift_logical_left_imm_alt_32"),
@@ -538,6 +543,7 @@ describe("pvm", () => {
     "inst_store_imm_indirect_u32_with_offset_ok",
     doTest("inst_store_imm_indirect_u32_with_offset_ok"),
   );
+  /*
   it(
     "inst_store_imm_indirect_u32_without_offset_ok",
     doTest("inst_store_imm_indirect_u32_without_offset_ok"),
