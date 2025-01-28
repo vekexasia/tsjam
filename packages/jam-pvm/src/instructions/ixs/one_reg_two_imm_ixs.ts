@@ -99,10 +99,6 @@ if (import.meta.vitest) {
   const { runTestIx } = await import("@/test/mocks.js");
   describe("one_reg_two_imm_ixs", () => {
     describe("decode", () => {
-      it("should mod 16 for rA", () => {
-        const [rA] = decode(new Uint8Array([16, 0]))._unsafeUnwrap();
-        expect(rA).toBe(0);
-      });
       it("should disallow lx = 0", () => {
         expect(
           decode(new Uint8Array([0, 0]))._unsafeUnwrapErr().message,

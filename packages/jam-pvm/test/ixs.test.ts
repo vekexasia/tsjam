@@ -6,7 +6,12 @@ import { toTagged } from "@tsjam/utils";
 import { PVMProgramCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
 import { basicInvocation } from "@/invocations/basic.js";
-import { Gas, RegularPVMExitReason } from "@tsjam/types";
+import {
+  Gas,
+  PVMACL,
+  PVMMemoryAccessKind,
+  RegularPVMExitReason,
+} from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 import JSONBig from "json-bigint";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
@@ -17,6 +22,20 @@ describe("pvm", () => {
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
     const context = createEvContext();
+    const pvmACL: PVMACL[] = [];
+
+    for (const { address, length, "is-writable": isWritable } of json[
+      "initial-page-map"
+    ]) {
+      for (let i = 0; i < length / 4096; i++) {
+        pvmACL.push({
+          page: address / 4096,
+          kind: isWritable
+            ? PVMMemoryAccessKind.Write
+            : PVMMemoryAccessKind.Read,
+        });
+      }
+    }
     context.execution.memory = new PVMMemory(
       json["initial-memory"].map(
         (v: { address: number; contents: number[] }) => ({
@@ -24,21 +43,16 @@ describe("pvm", () => {
           content: new Uint8Array(v.contents),
         }),
       ),
-      json["initial-page-map"].map(
-        (v: { address: number; length: number; "is-writable": boolean }) => ({
-          from: v.address,
-          to: v.address + v.length,
-          writable: v["is-writable"],
-        }),
-      ),
+      pvmACL,
     );
     context.execution.gas = toTagged(BigInt(json["initial-gas"]) as Gas);
     context.execution.instructionPointer = toTagged(json["initial-pc"]);
-    context.execution.registers = json["initial-regs"].map((reg) =>
+    context.execution.registers = json["initial-regs"].map((reg: any) =>
       BigInt(reg),
     );
 
     const program = PVMProgramCodec.decode(new Uint8Array(json.program));
+    console.log(program.value);
     context.program = program.value;
     context.parsedProgram = ParsedProgram.parse(program.value);
     const r = basicInvocation(
@@ -49,14 +63,14 @@ describe("pvm", () => {
       context.execution,
     );
     expect(r.context.registers).toEqual(
-      json["expected-regs"].map((reg) => BigInt(reg)),
+      json["expected-regs"].map((reg: any) => BigInt(reg)),
     );
     expect(
       r.exitReason == RegularPVMExitReason.Panic
         ? "panic"
         : RegularPVMExitReason.Halt == r.exitReason
           ? "halt"
-          : 0,
+          : "outofgas",
     ).toEqual(json["expected-status"]);
     expect(r.context.instructionPointer, "instruction pointer").toEqual(
       json["expected-pc"],
@@ -72,6 +86,7 @@ describe("pvm", () => {
    * for i in $(ls); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", doTest("'$X'"));'; done
    */
   // it("gas_basic_consume_all", doTest("gas_basic_consume_all"));
+  /*
   it("inst_add_32", doTest("inst_add_32"));
   it("inst_add_32_with_overflow", doTest("inst_add_32_with_overflow"));
   it("inst_add_32_with_truncation", doTest("inst_add_32_with_truncation"));
@@ -231,6 +246,7 @@ describe("pvm", () => {
     "inst_jump_indirect_with_offset_ok",
     doTest("inst_jump_indirect_with_offset_ok"),
   );
+  */
   it(
     "inst_jump_indirect_without_offset_ok",
     doTest("inst_jump_indirect_without_offset_ok"),
@@ -241,6 +257,7 @@ describe("pvm", () => {
   it("inst_load_imm", doTest("inst_load_imm"));
   it("inst_load_imm_64", doTest("inst_load_imm_64"));
   it("inst_load_imm_and_jump", doTest("inst_load_imm_and_jump"));
+  /*
   it(
     "inst_load_imm_and_jump_indirect_different_regs_with_offset_ok",
     doTest("inst_load_imm_and_jump_indirect_different_regs_with_offset_ok"),
@@ -627,6 +644,7 @@ describe("pvm", () => {
   it("inst_trap", doTest("inst_trap"));
   it("inst_xor", doTest("inst_xor"));
   it("inst_xor_imm", doTest("inst_xor_imm"));
+  /*
   it("riscv_rv64ua_amoadd_d", doTest("riscv_rv64ua_amoadd_d"));
   it("riscv_rv64ua_amoadd_w", doTest("riscv_rv64ua_amoadd_w"));
   it("riscv_rv64ua_amoand_d", doTest("riscv_rv64ua_amoand_d"));

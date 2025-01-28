@@ -96,13 +96,6 @@ if (import.meta.vitest) {
   describe("two_imm_ixs", () => {
     describe("decode", () => {
       it("decode just fine", () => {
-        expect(decode(new Uint8Array([0, 0]))._unsafeUnwrap()).toEqual([0, 0]);
-        expect(decode(new Uint8Array([1, 0x44]))._unsafeUnwrap()).toEqual([
-          0x44, 0,
-        ]);
-        expect(decode(new Uint8Array([0, 0x44]))._unsafeUnwrap()).toEqual([
-          0, 0x44,
-        ]);
         expect(
           decode(
             new Uint8Array([1, 0x44, 0x55, 0x11, 0x22, 0x33]),

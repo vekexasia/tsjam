@@ -52,6 +52,7 @@ export class PVMMemory implements IPVMMemory {
     if (pageEnd === Math.floor((offset + length) / Zp)) {
       pageEnd--;
     }
+    console.log(this.acl);
     for (let p = pageOffset; p < pageEnd; p++) {
       if (!this.acl.some((a) => a.page === p)) {
         return false;

@@ -7,7 +7,7 @@ import {
   u32,
 } from "@tsjam/types";
 import { IxMod } from "@/instructions/utils";
-const ZA = 4;
+const ZA = 2;
 /**
  * djump(a) method defined in `225`
  * @param context - the current evaluating context
@@ -32,7 +32,7 @@ export const djump = (
     a === 0 ||
     a > context.program.j.length * ZA ||
     a % ZA != 0 ||
-    false /* TODO check if start of block context.program.j[jumpLocation / ZA] !== 1*/
+    false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
     return err(
       new PVMIxExecutionError(
@@ -44,5 +44,5 @@ export const djump = (
     );
   }
 
-  return ok([IxMod.ip(context.program.j[Math.floor(a / ZA)] - 1)]);
+  return ok([IxMod.ip(context.program.j[a / ZA - 1])]);
 };

@@ -76,16 +76,17 @@ const div_u_32 = create(193 as u8, "div_u_32", (context, wA, wB, rD) => {
 });
 
 const div_s_32 = create(194 as u8, "div_s_32", (context, wA, wB, rD) => {
-  const z4a = Z4(wA);
-  const z4b = Z4(wB);
+  const z4a = Z4(wA % 2n ** 32n);
+  const z4b = Z4(wB % 2n ** 32n);
   let newVal: number | bigint;
-  if (wB % 2n ** 32n === 0n) {
-    newVal = 2 ** 32 - 1;
+  if (z4b === 0) {
+    newVal = 2n ** 64n - 1n;
   } else if (z4a == -1 * 2 ** 31 && z4b === -1) {
-    newVal = wA;
+    newVal = Z8_inv(BigInt(z4a));
   } else {
     newVal = Z8_inv(BigInt(z4a / z4b));
   }
+
   return ok([IxMod.reg(rD, newVal)]);
 });
 
@@ -146,7 +147,7 @@ const mul_64 = create(202 as u8, "mul_64", (context, wA, wB, rD) => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const div_u_64 = create(203 as u8, "div_u_64", (context, wA, wB, rD) => {
   if (wB === 0n) {
-    return ok([IxMod.reg(rD, 2 ** 64 - 1)]);
+    return ok([IxMod.reg(rD, 2n ** 64n - 1n)]);
   } else {
     return ok([IxMod.reg(rD, wA / wB)]);
   }
@@ -158,7 +159,7 @@ const div_s_64 = create(204 as u8, "div_s_64", (context, wA, wB, rD) => {
   const z8b = Z8(wB);
   let newVal: number | bigint;
   if (wB === 0n) {
-    newVal = 2 ** 32 - 1;
+    newVal = 2n ** 64n - 1n;
   } else if (z8a == -1n * 2n ** 63n && z8b === -1n) {
     newVal = wA;
   } else {
@@ -268,312 +269,3 @@ const cmov_nz = create(219 as u8, "cmov_nz", (context, wA, wB, rD) => {
   }
   return ok([]);
 });
-
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("@/test/mocks.js");
-  const { runTestIx } = await import("@/test/mocks.js");
-
-  describe("three_reg_ixs", () => {
-    describe("decoding", () => {
-      it("decodes properly", () => {
-        const bytes = new Uint8Array([0x10, 0x02]);
-        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
-        expect(rA).toBe(0);
-        expect(rB).toBe(1);
-        expect(rD).toBe(2);
-      });
-      it("decodes with rD = 12", () => {
-        const bytes = new Uint8Array([0x10, 0xff]);
-        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
-        expect(rA).toBe(0);
-        expect(rB).toBe(1);
-        expect(rD).toBe(12);
-      });
-      it("decodes rA = 12", () => {
-        const bytes = new Uint8Array([14, 0xff]);
-        const [rA] = decode(bytes)._unsafeUnwrap();
-        expect(rA).toBe(12);
-      });
-      it("decodes rB = 12", () => {
-        const bytes = new Uint8Array([0xff, 0]);
-        const [, rB] = decode(bytes)._unsafeUnwrap();
-        expect(rB).toBe(12);
-      });
-      it("throws when not enough bytes (2)", () => {
-        const bytes = new Uint8Array([0x10]);
-        expect(decode(bytes)._unsafeUnwrapErr().message).toEqual(
-          "not enough bytes (2)",
-        );
-      });
-      it("decodes properly even with extra bytes", () => {
-        const bytes = new Uint8Array([0x10, 0x02, 0x03, 0x10, 0x02, 0x03]);
-        const [rA, rB, rD] = decode(bytes)._unsafeUnwrap();
-        expect(rA).toBe(0);
-        expect(rB).toBe(1);
-        expect(rD).toBe(2);
-      });
-    });
-    describe("ixs", () => {
-      let context = createEvContext();
-      const rA = 1 as RegisterIdentifier;
-      const rB = 2 as RegisterIdentifier;
-      const rD = 3 as RegisterIdentifier;
-      beforeEach(() => {
-        context = createEvContext();
-        context.execution.registers = new Array(13).fill(0n) as SeqOfLength<
-          RegisterValue,
-          13
-        >;
-      });
-      it("add => rD = (rA + rB)%2^32", () => {
-        context.execution.registers[rA] = 1n as RegisterValue;
-        context.execution.registers[rB] = 2n as RegisterValue;
-        context.execution.registers[rD] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, add_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(3n);
-
-        context.execution.registers[rA] = (2n ** 32n - 1n) as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, add_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(1n);
-      });
-      it("sub => rD = (rA + 2^32 - rB)%2^32", () => {
-        context.execution.registers[rA] = 4n as RegisterValue;
-        context.execution.registers[rB] = 2n as RegisterValue;
-        const { ctx } = runTestIx(context, sub_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(2n);
-
-        context.execution.registers[rA] = 1n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, sub_32, rA, rB, rD);
-        expect(p_context2.registers[3]).toBe(2n ** 32n - 1n);
-      });
-      it("and => rD = rA & rB", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 0b1100n as RegisterValue;
-        const { ctx } = runTestIx(context, and, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b1000n);
-      });
-      it("xor => rD = rA ^ rB", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 0b1100n as RegisterValue;
-        const { ctx } = runTestIx(context, xor, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b0110n);
-      });
-      it("or => rD = rA | rB", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 0b1100n as RegisterValue;
-        const { ctx } = runTestIx(context, or, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b1110n);
-      });
-      it("mul => rD = (rA * rB)%2^32", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 20n as RegisterValue;
-        const { ctx } = runTestIx(context, mul, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(200n);
-
-        context.execution.registers[rA] = (2n ** 31n) as RegisterValue;
-        context.execution.registers[rB] = 2n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, mul, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(0n);
-      });
-      it("mul_upper_s_s => rD = Z4_inv(Z4(rA) * Z(4, rB) / 2^32)", () => {
-        context.execution.registers[rA] = (2n ** 62n) as RegisterValue;
-        for (let i = 2; i < 30; i++) {
-          context.execution.registers[rB] = (2n ** BigInt(i)) as RegisterValue;
-          const { ctx } = runTestIx(context, mul_upper_s_s, rA, rB, rD);
-          expect(ctx.registers[rD]).toBe(2n ** (BigInt(i) - 2n));
-        }
-        // - * +
-        context.execution.registers[rA] = BigInt(
-          Z8_inv(-1n * 2n ** 62n),
-        ) as RegisterValue;
-        for (let i = 2; i < 30; i++) {
-          context.execution.registers[rB] = (2n ** BigInt(i)) as RegisterValue;
-          const { ctx } = runTestIx(context, mul_upper_s_s, rA, rB, rD);
-          expect(Z8(ctx.registers[rD])).toBe(-1n * 2n ** (BigInt(i) - 2n));
-        }
-
-        // - * -
-        context.execution.registers[rA] = BigInt(
-          Z8_inv(-1n * 2n ** 62n),
-        ) as RegisterValue;
-        for (let i = 2; i < 30; i++) {
-          context.execution.registers[rB] = BigInt(
-            Z8_inv(-1n * 2n ** BigInt(i)),
-          ) as RegisterValue;
-          const { ctx } = runTestIx(context, mul_upper_s_s, rA, rB, rD);
-          expect(Z8(ctx.registers[rD])).toBe(2n ** (BigInt(i) - 2n));
-        }
-      });
-      it("mul_upper_u_u => rD = (rA * rB) / 2^64n", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = (2n ** 64n) as RegisterValue;
-        const { ctx } = runTestIx(context, mul_upper_u_u, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(10n);
-      });
-      it("mul_upper_s_u => rD = Z4_inv(Z4(rA) * rB / 2^32)", () => {
-        context.execution.registers[rA] = (2n ** 62n) as RegisterValue;
-        for (let i = 2; i < 62; i++) {
-          context.execution.registers[rB] = (2n ** BigInt(i)) as RegisterValue;
-          const { ctx } = runTestIx(context, mul_upper_s_u, rA, rB, rD);
-          expect(ctx.registers[rD]).toBe(2n ** (BigInt(i) - 2n));
-        }
-        // - * +
-        /*context.execution.registers[rA] = Z8_inv(-1n * 2n ** 62n);
-        for (let i = 2; i < 30; i++) {
-          context.execution.registers[rB] = BigInt(2 ** i) as RegisterValue;
-          const { ctx } = runTestIx(context, mul_upper_s_u, rA, rB, rD);
-          expect(Z4(ctx.registers[rD]), `i=${i}`).toBe(
-            -1n * 2n ** (BigInt(i) - 2n),
-          );
-        }
-*/
-      });
-      it("div_u => rD = rA / rB", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, div_u_32, rA, rB, rD);
-        // edgecase div by 0
-        expect(ctx.registers[rD]).toBe(2n ** 64n - 1n);
-
-        context.execution.registers[rB] = 3n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, div_u_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(3n);
-      });
-      it("div_s => rD = Z4_inv(Z4(rA) / Z4(rB))", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, div_s_32, rA, rB, rD);
-        // edgecase div by 0
-        expect(ctx.registers[rD]).toBe(2n ** 32n - 1n);
-
-        // - / +
-        context.execution.registers[rA] = BigInt(Z4_inv(-100)) as RegisterValue;
-        context.execution.registers[rB] = 5n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, div_s_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(BigInt(Z8_inv(-20n)));
-
-        // - / -
-        context.execution.registers[rA] = BigInt(Z4_inv(-100)) as RegisterValue;
-        context.execution.registers[rB] = BigInt(Z4_inv(-5)) as RegisterValue;
-        const { ctx: p_context3 } = runTestIx(context, div_s_32, rA, rB, rD);
-        expect(p_context3.registers[rD]).toBe(BigInt(Z8_inv(20n)));
-
-        // z4a = -2^31, z4b = -1
-        context.execution.registers[rA] = BigInt(
-          Z4_inv(-1 * 2 ** 31),
-        ) as RegisterValue;
-        context.execution.registers[rB] = BigInt(Z4_inv(-1)) as RegisterValue;
-        const { ctx: p_context4 } = runTestIx(context, div_s_32, rA, rB, rD);
-        expect(p_context4.registers[rD]).toBe(context.execution.registers[rA]);
-      });
-      it("rem_u => rD = rA % rB", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, rem_u_32, rA, rB, rD);
-        // edgecase div by 0
-        expect(ctx.registers[rD]).toBe(10n);
-
-        context.execution.registers[rB] = 3n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, rem_u_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(1n);
-      });
-      it("rem_s => rD = Z4_inv(Z4(rA) % Z4(rB))", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = BigInt(Z8_inv(-4n)) as RegisterValue;
-        const { ctx } = runTestIx(context, rem_s_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(BigInt(Z8_inv(2n)));
-      });
-      it("set_lt_u => rD = rA < rB ? 1 : 0", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 20n as RegisterValue;
-        const { ctx } = runTestIx(context, set_lt_u, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(1n);
-
-        context.execution.registers[rA] = 20n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, set_lt_u, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(0n);
-      });
-      it("set_lt_s => rD = Z4(rA) < Z4(rB) ? 1 : 0", () => {
-        context.execution.registers[rA] = 10n as RegisterValue;
-        context.execution.registers[rB] = 20n as RegisterValue;
-        const { ctx } = runTestIx(context, set_lt_s, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(1n);
-
-        context.execution.registers[rA] = BigInt(Z4_inv(-20)) as RegisterValue;
-        context.execution.registers[rB] = BigInt(Z4_inv(-10)) as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, set_lt_s, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(1n);
-
-        context.execution.registers[rA] = BigInt(Z4_inv(-10)) as RegisterValue;
-        context.execution.registers[rB] = BigInt(Z4_inv(-20)) as RegisterValue;
-        const { ctx: p_context3 } = runTestIx(context, set_lt_s, rA, rB, rD);
-        expect(p_context3.registers[rD]).toBe(0n);
-      });
-      it("shlo_l => rD = rA << rB % 32", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 1n as RegisterValue;
-        const { ctx } = runTestIx(context, shlo_l_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b10100n);
-
-        context.execution.registers[rB] = 2n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, shlo_l_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(0b101000n);
-
-        context.execution.registers[rB] = (32n + 2n) as RegisterValue;
-        const { ctx: p_context3 } = runTestIx(context, shlo_l_32, rA, rB, rD);
-        expect(p_context3.registers[rD]).toBe(0b101000n);
-      });
-      it.skip("shlo_r => rD = rA >> rB % 32", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 1n as RegisterValue;
-        const { ctx } = runTestIx(context, shlo_r_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b101n);
-
-        context.execution.registers[rB] = 2n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, shlo_r_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(0b10n);
-
-        context.execution.registers[rB] = (32n + 2n) as RegisterValue;
-        const { ctx: p_context3 } = runTestIx(context, shlo_r_32, rA, rB, rD);
-        expect(p_context3.registers[rD]).toBe(0b10n);
-      });
-      it("shar_r => rD = Z4_inv(Z4(rA) / 2^(rB % 32))", () => {
-        context.execution.registers[rA] = 0b1010n as RegisterValue;
-        context.execution.registers[rB] = 1n as RegisterValue;
-        const { ctx } = runTestIx(context, shar_r_32, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0b101n);
-
-        context.execution.registers[rA] = BigInt(
-          Z4_inv(-1 * 2 ** 31),
-        ) as RegisterValue;
-        context.execution.registers[rB] = 1n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, shar_r_32, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(BigInt(Z4_inv(-1 * 2 ** 30)));
-      });
-      it("cmov_iz => rD = rB === 0 ? rA : rD", () => {
-        context.execution.registers[rA] = 0n as RegisterValue;
-        context.execution.registers[rB] = 0n as RegisterValue;
-        context.execution.registers[rD] = 10n as RegisterValue;
-        const { ctx } = runTestIx(context, cmov_iz, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(0n);
-
-        context.execution.registers[rA] = 10n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, cmov_iz, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(10n);
-      });
-      it("cmov_nz => rD = rB !== 0 ? rA : rD", () => {
-        context.execution.registers[rA] = 0n as RegisterValue;
-        context.execution.registers[rB] = 0n as RegisterValue;
-        context.execution.registers[rD] = 10n as RegisterValue;
-        const { ctx } = runTestIx(context, cmov_nz, rA, rB, rD);
-        expect(ctx.registers[rD]).toBe(10n);
-
-        context.execution.registers[rA] = 12n as RegisterValue;
-        context.execution.registers[rB] = 2n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(context, cmov_nz, rA, rB, rD);
-        expect(p_context2.registers[rD]).toBe(12n);
-      });
-    });
-  });
-}

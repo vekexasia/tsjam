@@ -19,7 +19,7 @@ type InputType = [register: RegisterIdentifier, value: u64];
 const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   assert(bytes.length > 0, "no input bytes");
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
-  const vx = E_8.decode(bytes.subarray(2, 2 + 8)).value;
+  const vx = E_8.decode(bytes.subarray(1, 1 + 8)).value;
 
   return ok([ra, vx as u64]);
 };

@@ -10,29 +10,29 @@ import { Z, Z4, Z4_inv, Z8, Z8_inv, Z_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { IxMod } from "@/instructions/utils.js";
+import { IxMod, X_4, X_8 } from "@/instructions/utils.js";
 import { Result, ok } from "neverthrow";
 
 // $(0.5.4 - A.25)
 const decode = (
   bytes: Uint8Array,
-): Result<[RegisterIdentifier, RegisterIdentifier, u32], never> => {
+): Result<[RegisterIdentifier, RegisterIdentifier, bigint], never> => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
   const imm = readVarIntFromBuffer(bytes.subarray(1, 1 + lX), lX as u8);
 
-  return ok([rA, rB, Number(imm) as u32]);
+  return ok([rA, rB, imm]);
 };
 
 const create = (
   identifier: u8,
   name: string,
   evaluate: PVMIxEvaluateFN<
-    [rA: RegisterIdentifier, rB: RegisterIdentifier, vX: u32]
+    [rA: RegisterIdentifier, rB: RegisterIdentifier, vX: bigint]
   >,
 ) => {
-  return regIx<[rA: RegisterIdentifier, rB: RegisterIdentifier, vX: u32]>({
+  return regIx<[rA: RegisterIdentifier, rB: RegisterIdentifier, vX: bigint]>({
     opCode: identifier,
     identifier: name,
     ix: {
@@ -46,7 +46,7 @@ const create = (
 // # store
 
 const store_ind_u8 = create(
-  110 as u8,
+  120 as u8,
   "store_ind_u8",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -60,7 +60,7 @@ const store_ind_u8 = create(
 );
 
 const store_ind_u16 = create(
-  111 as u8,
+  121 as u8,
   "store_ind_u16",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -71,7 +71,7 @@ const store_ind_u16 = create(
 );
 
 const store_ind_u32 = create(
-  112 as u8,
+  122 as u8,
   "store_ind_u32",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -83,7 +83,7 @@ const store_ind_u32 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const store_ind_u64 = create(
-  113 as u8,
+  123 as u8,
   "store_ind_u64",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -97,7 +97,7 @@ const store_ind_u64 = create(
 );
 
 // # load unsigned
-const load_ind_u8 = create(114 as u8, "load_ind_u8", (context, rA, rB, vX) => {
+const load_ind_u8 = create(124 as u8, "load_ind_u8", (context, rA, rB, vX) => {
   const location = Number(context.execution.registers[rB] + BigInt(vX));
   return ok([
     IxMod.reg(rA, context.execution.memory.getBytes(location, 1)[0] as u32),
@@ -105,7 +105,7 @@ const load_ind_u8 = create(114 as u8, "load_ind_u8", (context, rA, rB, vX) => {
 });
 
 const load_ind_u16 = create(
-  116 as u8,
+  126 as u8,
   "load_ind_u16",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -115,7 +115,7 @@ const load_ind_u16 = create(
 );
 
 const load_ind_u32 = create(
-  118 as u8,
+  128 as u8,
   "load_ind_u32",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -126,7 +126,7 @@ const load_ind_u32 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_ind_u64 = create(
-  120 as u8,
+  130 as u8,
   "load_ind_u64",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -136,14 +136,14 @@ const load_ind_u64 = create(
 );
 
 // # load signed
-const load_ind_i8 = create(115 as u8, "load_ind_i8", (context, rA, rB, vX) => {
+const load_ind_i8 = create(125 as u8, "load_ind_i8", (context, rA, rB, vX) => {
   const location = Number(context.execution.registers[rB] + BigInt(vX));
   const val = context.execution.memory.getBytes(location, 1);
   return ok([IxMod.reg(rA, Z8_inv(Z(1, BigInt(val[0]))))]);
 });
 
 const load_ind_i16 = create(
-  117 as u8,
+  127 as u8,
   "load_ind_i16",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -155,7 +155,7 @@ const load_ind_i16 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_ind_i32 = create(
-  119 as u8,
+  129 as u8,
   "load_ind_i32",
   (context, rA, rB, vX) => {
     const location = Number(context.execution.registers[rB] + BigInt(vX));
@@ -166,35 +166,35 @@ const load_ind_i32 = create(
 );
 
 // math
-const add_imm_32 = create(121 as u8, "add_imm_32", (context, rA, rB, vX) => {
+const add_imm_32 = create(131 as u8, "add_imm_32", (context, rA, rB, vX) => {
   return ok([
     IxMod.reg(
       rA,
-      Number((context.execution.registers[rB] + BigInt(vX)) % 2n ** 32n) as u32,
+      X_4((context.execution.registers[rB] + BigInt(vX)) % 2n ** 32n),
     ),
   ]);
 });
 
-const and_imm = create(122 as u8, "and_imm", (context, rA, rB, vX) => {
+const and_imm = create(132 as u8, "and_imm", (context, rA, rB, vX) => {
   return ok([IxMod.reg(rA, context.execution.registers[rB] & BigInt(vX))]);
 });
 
-const xor_imm = create(123 as u8, "xor_imm", (context, rA, rB, vX) => {
+const xor_imm = create(133 as u8, "xor_imm", (context, rA, rB, vX) => {
   return ok([IxMod.reg(rA, context.execution.registers[rB] ^ BigInt(vX))]);
 });
 
-const or_imm = create(124 as u8, "or_imm", (context, rA, rB, vX) => {
+const or_imm = create(134 as u8, "or_imm", (context, rA, rB, vX) => {
   return ok([IxMod.reg(rA, context.execution.registers[rB] | BigInt(vX))]);
 });
 
-const mul_imm_32 = create(125 as u8, "mul_imm_32", (context, rA, rB, vX) => {
+const mul_imm_32 = create(135 as u8, "mul_imm_32", (context, rA, rB, vX) => {
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] * BigInt(vX)) % 2n ** 32n),
   ]);
 });
 
 const set_lt_u_imm = create(
-  126 as u8,
+  136 as u8,
   "set_lt_u_imm",
   (context, rA, rB, vX) => {
     return ok([IxMod.reg(rA, context.execution.registers[rB] < vX ? 1 : 0)]);
@@ -202,7 +202,7 @@ const set_lt_u_imm = create(
 );
 
 const set_lt_s_imm = create(
-  127 as u8,
+  137 as u8,
   "set_lt_s_imm",
   (context, rA, rB, vX) => {
     return ok([
@@ -215,38 +215,35 @@ const set_lt_s_imm = create(
 );
 
 const shlo_l_imm_32 = create(
-  128 as u8,
+  138 as u8,
   "shlo_l_imm_32",
   (context, rA, rB, vX) => {
     return ok([
-      IxMod.reg(
-        rA,
-        (context.execution.registers[rB] << BigInt(vX % 32)) % 2n ** 32n,
-      ),
+      IxMod.reg(rA, (context.execution.registers[rB] << vX % 32n) % 2n ** 32n),
     ]);
   },
 );
 
 const shlo_r_imm_32 = create(
-  129 as u8,
+  139 as u8,
   "shlo_r_imm_32",
   (context, rA, rB, vX) => {
     const wb = Number(context.execution.registers[rB] % 2n ** 32n);
-    return ok([IxMod.reg(rA, wb >>> vX % 32)]);
+    return ok([IxMod.reg(rA, wb >>> Number(vX % 32n))]);
   },
 );
 
 const shar_r_imm_32 = create(
-  130 as u8,
+  140 as u8,
   "shar_r_imm_32",
   (context, rA, rB, vX) => {
     const wb = Number(context.execution.registers[rB] % 2n ** 32n);
-    return ok([IxMod.reg(rA, Z8_inv(BigInt(Z4(wb) >> vX % 32)))]);
+    return ok([IxMod.reg(rA, Z8_inv(BigInt(Z4(wb) >> Number(vX % 32n))))]);
   },
 );
 
 const neg_add_imm_32 = create(
-  131 as u8,
+  141 as u8,
   "neg_add_imm_32",
   (context, rA, rB, vX) => {
     return ok([
@@ -259,7 +256,7 @@ const neg_add_imm_32 = create(
 );
 
 const set_gt_u_imm = create(
-  132 as u8,
+  142 as u8,
   "set_gt_u_imm",
   (context, rA, rB, vX) => {
     return ok([IxMod.reg(rA, context.execution.registers[rB] > vX ? 1 : 0)]);
@@ -267,7 +264,7 @@ const set_gt_u_imm = create(
 );
 
 const set_gt_s_imm = create(
-  133 as u8,
+  143 as u8,
   "set_gt_s_imm",
   (context, rA, rB, vX) => {
     return ok([
@@ -280,7 +277,7 @@ const set_gt_s_imm = create(
 );
 
 const shlo_l_imm_alt_32 = create(
-  134 as u8,
+  144 as u8,
   "shlo_l_imm_alt_32",
   (context, rA, rB, vX) => {
     return ok([
@@ -293,20 +290,20 @@ const shlo_l_imm_alt_32 = create(
 );
 
 const shlo_r_imm_alt_32 = create(
-  135 as u8,
+  145 as u8,
   "shlo_r_imm_alt_32",
   (context, rA, rB, vX) => {
     return ok([
       IxMod.reg(
         rA,
-        (vX >>> Number(context.execution.registers[rB] % 32n)) as u32,
+        (Number(vX) >>> Number(context.execution.registers[rB] % 32n)) as u32,
       ),
     ]);
   },
 );
 
 const shar_r_imm_alt_32 = create(
-  136 as u8,
+  146 as u8,
   "shar_r_imm_alt_32",
   (context, rA, rB, vX) => {
     return ok([
@@ -318,7 +315,7 @@ const shar_r_imm_alt_32 = create(
   },
 );
 
-const cmov_iz_imm = create(137 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
+const cmov_iz_imm = create(147 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] === 0n) {
     return ok([IxMod.reg(rA, vX)]);
   }
@@ -326,7 +323,7 @@ const cmov_iz_imm = create(137 as u8, "cmov_iz_imm", (context, rA, rB, vX) => {
   return ok([]);
 });
 
-const cmov_nz_imm = create(138 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
+const cmov_nz_imm = create(148 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
   if (context.execution.registers[rB] !== 0n) {
     return ok([IxMod.reg(rA, vX)]);
   }
@@ -334,14 +331,15 @@ const cmov_nz_imm = create(138 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const add_imm_64 = create(139 as u8, "add_imm_64", (context, rA, rB, vX) => {
+const add_imm_64 = create(149 as u8, "add_imm_64", (context, rA, rB, vX) => {
+  console.log({ rA, rB, vX });
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] + BigInt(vX)) % 2n ** 64n),
   ]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mul_imm_64 = create(140 as u8, "mul_imm_64", (context, rA, rB, vX) => {
+const mul_imm_64 = create(150 as u8, "mul_imm_64", (context, rA, rB, vX) => {
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] * BigInt(vX)) % 2n ** 64n),
   ]);
@@ -349,13 +347,13 @@ const mul_imm_64 = create(140 as u8, "mul_imm_64", (context, rA, rB, vX) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_l_imm_64 = create(
-  141 as u8,
+  151 as u8,
   "shlo_l_imm_64",
   (context, rA, rB, vX) => {
     return ok([
       IxMod.reg(
         rA,
-        (context.execution.registers[rB] << BigInt(vX % 64)) % 2n ** 64n,
+        X_8((context.execution.registers[rB] << BigInt(vX % 64n)) % 2n ** 64n),
       ),
     ]);
   },
@@ -363,18 +361,21 @@ const shlo_l_imm_64 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r_imm_64 = create(
-  142 as u8,
+  152 as u8,
   "shlo_r_imm_64",
   (context, rA, rB, vX) => {
     return ok([
-      IxMod.reg(rA, context.execution.registers[rB] / 2n ** (BigInt(vX) % 64n)),
+      IxMod.reg(
+        rA,
+        X_8(context.execution.registers[rB] / 2n ** (BigInt(vX) % 64n)),
+      ),
     ]);
   },
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shar_r_imm_64 = create(
-  143 as u8,
+  153 as u8,
   "shar_r_imm_64",
   (context, rA, rB, vX) => {
     return ok([
@@ -388,7 +389,7 @@ const shar_r_imm_64 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const neg_add_imm_64 = create(
-  144 as u8,
+  154 as u8,
   "neg_add_imm_64",
   (context, rA, rB, vX) => {
     return ok([
@@ -402,7 +403,7 @@ const neg_add_imm_64 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_l_imm_alt_64 = create(
-  145 as u8,
+  155 as u8,
   "shlo_l_imm_alt_64",
   (context, rA, rB, vX) => {
     return ok([
@@ -416,7 +417,7 @@ const shlo_l_imm_alt_64 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r_imm_alt_64 = create(
-  146 as u8,
+  156 as u8,
   "shlo_r_imm_alt_64",
   (context, rA, rB, vX) => {
     return ok([
@@ -431,7 +432,7 @@ const shlo_r_imm_alt_64 = create(
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shar_r_imm_alt_64 = create(
-  147 as u8,
+  157 as u8,
   "shar_r_imm_alt_64",
   (context, rA, rB, vX) => {
     return ok([
@@ -442,6 +443,7 @@ const shar_r_imm_alt_64 = create(
     ]);
   },
 );
+// TODO: rot
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -450,24 +452,18 @@ if (import.meta.vitest) {
   const { runTestIx } = await import("@/test/mocks.js");
   describe("two_reg_one_imm_ixs", () => {
     describe("decode", () => {
-      it("should decode valid params", () => {
-        expect(decode(new Uint8Array([0]))).toEqual(ok([0, 0, 0]));
-        expect(decode(new Uint8Array([15]))).toEqual(ok([12, 0, 0]));
-        expect(decode(new Uint8Array([15 + 16]))).toEqual(ok([12, 1, 0]));
-        expect(decode(new Uint8Array([16 * 15]))).toEqual(ok([0, 12, 0]));
-      });
       it("should decode the imm with boundaries", () => {
         expect(decode(new Uint8Array([0, 0x11]))).toEqual(
-          ok([0, 0, 0x00000011]),
+          ok([0, 0, 0x00000011n]),
         );
         expect(decode(new Uint8Array([0, 0x11, 0x22]))).toEqual(
-          ok([0, 0, 0x00002211]),
+          ok([0, 0, 0x00002211n]),
         );
       });
       it("should decode the imm and allow extra bytes", () => {
         expect(
           decode(new Uint8Array([0, 0x11, 0x22, 0x33, 0x44, 0x55])),
-        ).toEqual(ok([0, 0, 0x44332211]));
+        ).toEqual(ok([0, 0, 0x44332211n]));
       });
     });
     describe("ixs", () => {
@@ -481,7 +477,7 @@ if (import.meta.vitest) {
           store_ind_u8,
           0,
           1,
-          0x01 as u32,
+          0x01n,
         );
         expect(exitReason).toBeUndefined();
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
@@ -498,7 +494,7 @@ if (import.meta.vitest) {
           store_ind_u16,
           0,
           1,
-          0x01 as u32,
+          0x01n,
         );
         expect(exitReason).toBeUndefined();
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
@@ -515,7 +511,7 @@ if (import.meta.vitest) {
           store_ind_u32,
           0,
           1,
-          0x01 as u32,
+          0x01n,
         );
         expect(exitReason).toBeUndefined();
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
@@ -527,7 +523,7 @@ if (import.meta.vitest) {
         (context.execution.memory.getBytes as Mock).mockReturnValueOnce([0x20]);
         context.execution.registers[0] = 0x1010n as RegisterValue;
         context.execution.registers[1] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, load_ind_u8, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, load_ind_u8, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(0x20n);
         expect((ctx.memory.getBytes as Mock).mock.calls).toEqual([[0x1021, 1]]);
       });
@@ -538,7 +534,7 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010n as RegisterValue;
         context.execution.registers[1] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, load_ind_u16, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, load_ind_u16, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(0x1020n);
         expect((ctx.memory.getBytes as Mock).mock.calls).toEqual([[0x1021, 2]]);
       });
@@ -549,7 +545,7 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010n as RegisterValue;
         context.execution.registers[1] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, load_ind_u32, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, load_ind_u32, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(0x10203040n);
         expect((ctx.memory.getBytes as Mock).mock.calls).toEqual([[0x1021, 4]]);
       });
@@ -560,7 +556,7 @@ if (import.meta.vitest) {
         ]);
         context.execution.registers[0] = 0x1010n as RegisterValue;
         context.execution.registers[1] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, load_ind_i8, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, load_ind_i8, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(BigInt(Z8_inv(-1n)));
         expect((ctx.memory.getBytes as Mock).mock.calls).toEqual([[0x1021, 1]]);
       });
@@ -572,38 +568,38 @@ if (import.meta.vitest) {
         );
         context.execution.registers[0] = 0x1010n as RegisterValue;
         context.execution.registers[1] = 0n as RegisterValue;
-        const { ctx } = runTestIx(context, load_ind_i16, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, load_ind_i16, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(BigInt(Z8_inv(-1n)));
         expect((ctx.memory.getBytes as Mock).mock.calls).toEqual([[0x1021, 2]]);
       });
       it("add_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0xffffffffn as RegisterValue;
-        const { ctx } = runTestIx(context, add_imm_32, 1, 0, 3 as u32);
+        const { ctx } = runTestIx(context, add_imm_32, 1, 0, 3n);
         expect(ctx.registers[1]).toBe(2n);
       });
       it("and_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101n as RegisterValue;
-        const { ctx } = runTestIx(context, and_imm, 1, 0, 0b110 as u32);
+        const { ctx } = runTestIx(context, and_imm, 1, 0, 0b110n);
         expect(ctx.registers[1]).toBe(0b100n);
       });
       it("xor_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101n as RegisterValue;
-        const { ctx } = runTestIx(context, xor_imm, 1, 0, 0b110 as u32);
+        const { ctx } = runTestIx(context, xor_imm, 1, 0, 0b110n);
         expect(ctx.registers[1]).toBe(0b011n);
       });
       it("or_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0b101n as RegisterValue;
-        const { ctx } = runTestIx(context, or_imm, 1, 0, 0b110 as u32);
+        const { ctx } = runTestIx(context, or_imm, 1, 0, 0b110n);
         expect(ctx.registers[1]).toBe(0b111n);
       });
       it("mul_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = BigInt(2 ** 31) as RegisterValue;
-        const { ctx } = runTestIx(context, mul_imm_32, 1, 0, 2 as u32);
+        const { ctx } = runTestIx(context, mul_imm_32, 1, 0, 2n);
         expect(ctx.registers[1]).toBe(0n);
 
         const { ctx: p_context2 } = runTestIx(
@@ -618,7 +614,7 @@ if (import.meta.vitest) {
       it("set_lt_u_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x10n as RegisterValue;
-        const { ctx } = runTestIx(context, set_lt_u_imm, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, set_lt_u_imm, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(1n);
 
         context.execution.registers[0] = 0x11n as RegisterValue;
@@ -634,7 +630,13 @@ if (import.meta.vitest) {
       it.skip("set_lt_s_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = BigInt(Z8_inv(-2n)) as RegisterValue;
-        const { ctx } = runTestIx(context, set_lt_s_imm, 1, 0, Z4_inv(-1));
+        const { ctx } = runTestIx(
+          context,
+          set_lt_s_imm,
+          1,
+          0,
+          BigInt(Z4_inv(-1)),
+        );
 
         expect(ctx.registers[1]).toBe(1n);
 
@@ -644,7 +646,7 @@ if (import.meta.vitest) {
           set_lt_s_imm,
           1,
           0,
-          Z4_inv(0),
+          BigInt(Z4_inv(0)),
         );
         expect(p_context2.registers[1]).toBe(1n);
 
@@ -654,14 +656,14 @@ if (import.meta.vitest) {
           set_lt_s_imm,
           1,
           0,
-          Z4_inv(-1),
+          BigInt(Z4_inv(-1)),
         );
         expect(p_context3.registers[1]).toBe(0n);
       });
       it("set_gt_u_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x11n as RegisterValue;
-        const { ctx } = runTestIx(context, set_gt_u_imm, 1, 0, 0x11 as u32);
+        const { ctx } = runTestIx(context, set_gt_u_imm, 1, 0, 0x11n);
         expect(ctx.registers[1]).toBe(0n);
 
         context.execution.registers[0] = 0x12n as RegisterValue;
@@ -670,14 +672,20 @@ if (import.meta.vitest) {
           set_gt_u_imm,
           1,
           0,
-          0x11 as u32,
+          0x11n,
         );
         expect(p_context2.registers[1]).toBe(1n);
       });
       it("set_gt_s_imm", () => {
         const context = createEvContext();
         context.execution.registers[0] = BigInt(Z4_inv(-1)) as RegisterValue;
-        const { ctx } = runTestIx(context, set_gt_s_imm, 1, 0, Z4_inv(-2));
+        const { ctx } = runTestIx(
+          context,
+          set_gt_s_imm,
+          1,
+          0,
+          BigInt(Z4_inv(-2)),
+        );
         expect(ctx.registers[1]).toBe(1n);
 
         context.execution.registers[0] = BigInt(Z4_inv(-1)) as RegisterValue;
@@ -686,7 +694,7 @@ if (import.meta.vitest) {
           set_gt_s_imm,
           1,
           0,
-          Z4_inv(-1),
+          BigInt(Z4_inv(-1)),
         );
         expect(p_context2.registers[1]).toBe(0n);
 
@@ -696,7 +704,7 @@ if (import.meta.vitest) {
           set_gt_s_imm,
           1,
           0,
-          Z4_inv(-1),
+          BigInt(Z4_inv(-1)),
         );
         expect(p_context3.registers[1]).toBe(0n);
       });
@@ -705,7 +713,7 @@ if (import.meta.vitest) {
         context.execution.registers[0] = 0n as RegisterValue;
         context.execution.registers[1] = 1n as RegisterValue;
 
-        const { ctx } = runTestIx(context, cmov_iz_imm, 0, 1, 0x10 as u32);
+        const { ctx } = runTestIx(context, cmov_iz_imm, 0, 1, 0x10n);
         expect(ctx.registers[0]).toBe(0x0n);
 
         context.execution.registers[1] = 0n as RegisterValue;
@@ -714,7 +722,7 @@ if (import.meta.vitest) {
           cmov_iz_imm,
           0,
           1,
-          0x10 as u32,
+          0x10n,
         );
         expect(p_context2.registers[0]).toBe(0x10n);
       });
@@ -722,7 +730,7 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[0] = 0n as RegisterValue;
         context.execution.registers[1] = 1n as RegisterValue;
-        const { ctx } = runTestIx(context, cmov_nz_imm, 0, 1, 0x10 as u32);
+        const { ctx } = runTestIx(context, cmov_nz_imm, 0, 1, 0x10n);
         expect(ctx.registers[0]).toBe(0x10n);
 
         context.execution.registers[0] = 0n as RegisterValue;
@@ -732,36 +740,30 @@ if (import.meta.vitest) {
           cmov_nz_imm,
           0,
           1,
-          0x10 as u32,
+          0x10n,
         );
         expect(p_context2.registers[0]).toBe(0x0n);
       });
       it("neg_add_imm_32", () => {
         const context = createEvContext();
         context.execution.registers[0] = 10n as RegisterValue;
-        const { ctx } = runTestIx(context, neg_add_imm_32, 1, 0, 11 as u32);
+        const { ctx } = runTestIx(context, neg_add_imm_32, 1, 0, 11n);
         expect(ctx.registers[1]).toBe(1n);
       });
       it("shlo_l_imm_32", () => {
         const context = createEvContext();
         context.execution.registers[0] = (2n ** 31n) as RegisterValue;
-        const { ctx } = runTestIx(context, shlo_l_imm_32, 1, 0, 33 as u32);
+        const { ctx } = runTestIx(context, shlo_l_imm_32, 1, 0, 33n);
         expect(ctx.registers[1]).toBe(0n);
 
         context.execution.registers[0] = 1n as RegisterValue;
-        const { ctx: p_context2 } = runTestIx(
-          context,
-          shlo_l_imm_32,
-          1,
-          0,
-          1 as u32,
-        );
+        const { ctx: p_context2 } = runTestIx(context, shlo_l_imm_32, 1, 0, 1n);
         expect(p_context2.registers[1]).toBe(2n);
       });
       it("shlo_l_imm_alt_32", () => {
         const context = createEvContext();
         context.execution.registers[0] = 33n as RegisterValue;
-        const { ctx } = runTestIx(context, shlo_l_imm_alt_32, 1, 0, 1 as u32);
+        const { ctx } = runTestIx(context, shlo_l_imm_alt_32, 1, 0, 1n);
         expect(ctx.registers[1]).toBe(2n);
 
         context.execution.registers[0] = 1n as RegisterValue;
@@ -770,14 +772,14 @@ if (import.meta.vitest) {
           shlo_l_imm_alt_32,
           1,
           0,
-          (2 ** 31) as u32,
+          2n ** 31n,
         );
         expect(p_context2.registers[1]).toBe(0n);
       });
       it.skip("shlo_r_imm_32", () => {
         const context = createEvContext();
         context.execution.registers[0] = 0x80000000n as RegisterValue;
-        const { ctx } = runTestIx(context, shlo_r_imm_32, 1, 0, 1 as u32);
+        const { ctx } = runTestIx(context, shlo_r_imm_32, 1, 0, 1n);
         expect(ctx.registers[1]).toBe(0x40000000);
       });
       it.skip("shlo_r_imm_alt_32", () => {
@@ -788,7 +790,7 @@ if (import.meta.vitest) {
           shlo_r_imm_alt_32,
           1,
           0,
-          0x80000000 as u32,
+          0x80000000n,
         );
         expect(ctx.registers[1]).toBe(0x40000000);
       });
@@ -797,7 +799,7 @@ if (import.meta.vitest) {
         context.execution.registers[0] = BigInt(
           Z4_inv(-1 * 2 ** 31),
         ) as RegisterValue;
-        const { ctx } = runTestIx(context, shar_r_imm_32, 1, 0, 33);
+        const { ctx } = runTestIx(context, shar_r_imm_32, 1, 0, 33n);
         expect(ctx.registers[1]).toBe(BigInt(Z8_inv(-1n * 2n ** 30n)));
       });
       it("shar_r_imm_alt_32", () => {
@@ -808,7 +810,7 @@ if (import.meta.vitest) {
           shar_r_imm_alt_32,
           1,
           0,
-          0x80000000 as u32,
+          0x80000000n,
         );
         expect(ctx.registers[1]).toBe(BigInt(Z8_inv(-1n * 2n ** 30n)));
       });

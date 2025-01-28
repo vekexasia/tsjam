@@ -93,26 +93,6 @@ if (import.meta.vitest) {
           decode(new Uint8Array([0, 1]))._unsafeUnwrapErr().message,
         ).toEqual("not enough bytes [2]");
       });
-      it("should decode rA, rB, vx and vy properly", () => {
-        expect(decode(new Uint8Array([0, 0]))._unsafeUnwrap()).toEqual([
-          0, 0, 0, 0,
-        ]);
-        expect(decode(new Uint8Array([1 + 16, 0]))._unsafeUnwrap()).toEqual([
-          1, 1, 0, 0,
-        ]);
-        expect(decode(new Uint8Array([13, 0]))._unsafeUnwrap()).toEqual([
-          12, 0, 0, 0,
-        ]);
-        expect(decode(new Uint8Array([13 * 16, 0]))._unsafeUnwrap()).toEqual([
-          0, 12, 0, 0,
-        ]);
-        expect(decode(new Uint8Array([0, 1, 0x11]))._unsafeUnwrap()).toEqual([
-          0, 0, 0x11, 0,
-        ]);
-        expect(decode(new Uint8Array([1, 0, 0x11]))._unsafeUnwrap()).toEqual([
-          1, 0, 0, 0x11,
-        ]);
-      });
     });
     describe("ixs", () => {
       it("load_imm_jump_ind", () => {

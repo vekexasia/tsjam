@@ -26,6 +26,7 @@ export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
   ctx: PVMProgramExecutionContext,
 ): Output => {
+  console.log("singleStep", ctx.instructionPointer);
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
   if (
     ctx.instructionPointer >= p.program.c.length ||
@@ -43,7 +44,7 @@ export const pvmSingleStep = (
   const byteArgs = p.program.c.subarray(
     ctx.instructionPointer + 1,
     typeof skip !== "undefined"
-      ? ctx.instructionPointer + skip + 1
+      ? ctx.instructionPointer + skip
       : p.program.c.length,
   );
   const args = ix.decode(byteArgs);
@@ -67,6 +68,7 @@ export const pvmSingleStep = (
   };
 
   const r = ix.evaluate(context, ...args.value);
+
   if (r.isErr()) {
     const mods: PVMSingleModGas[] = [];
     if (r.error.accountTrapCost) {
@@ -78,14 +80,15 @@ export const pvmSingleStep = (
       ...mods,
       IxMod.gas(ix.gasCost),
     ]);
-    return { p_context: toPosterior(rMod.ctx), exitReason: rMod.exitReason };
+    return { p_context: toPosterior(rMod.ctx), exitReason: r.error.type };
   }
 
+  console.log(r.value);
   // $(0.5.4 - A.6)
   const rMod = applyMods(ctx, {} as object, [
     IxMod.gas(ix.gasCost), // g′ = g − g∆
-    ...r.value,
     IxMod.skip(ctx.instructionPointer, skip), // i'
+    ...r.value,
   ]);
   return {
     p_context: toPosterior(rMod.ctx),

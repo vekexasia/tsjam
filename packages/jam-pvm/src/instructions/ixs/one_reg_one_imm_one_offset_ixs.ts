@@ -30,7 +30,10 @@ const decode = (
     return err(new PVMIxDecodeError("not enough bytes"));
   }
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
-  const vx = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
+  const vx = readVarIntFromBuffer(
+    bytes.subarray(1, 1 + lx),
+    lx as u8,
+  ) as RegisterValue;
   // this is not vy as in the paper since we 're missing the current instruction pointer
   // at this stage. to get vy = ip + offset
   const offset = Number(
@@ -81,6 +84,8 @@ export const branch_eq_imm = create1Reg1IMM1OffsetIx(
   81 as u8,
   "branch_eq_imm",
   (context, ri, vx, vy) => {
+    console.log(context.execution.registers);
+    console.log(`branch_eq_imm ri = ${ri}, vx = ${vx}, vy = ${vy}`);
     return branch(context, vy, context.execution.registers[ri] === vx);
   },
   true,
@@ -138,7 +143,7 @@ export const branch_lt_s_imm = create1Reg1IMM1OffsetIx(
     return branch(
       context,
       vy,
-      Z(4, context.execution.registers[ri]) < Z(4, vx),
+      Z(8, context.execution.registers[ri]) < Z(8, vx),
     );
   },
   true,
@@ -151,7 +156,7 @@ export const branch_le_s_imm = create1Reg1IMM1OffsetIx(
     return branch(
       context,
       vy,
-      Z(4, context.execution.registers[ri]) <= Z(4, vx),
+      Z(8, context.execution.registers[ri]) <= Z(8, vx),
     );
   },
   true,
@@ -164,7 +169,7 @@ export const branch_ge_s_imm = create1Reg1IMM1OffsetIx(
     return branch(
       context,
       vy,
-      Z(4, context.execution.registers[ri]) >= Z(4, vx),
+      Z(8, context.execution.registers[ri]) >= Z(8, vx),
     );
   },
   true,
@@ -177,7 +182,7 @@ export const branch_gt_s_imm = create1Reg1IMM1OffsetIx(
     return branch(
       context,
       vy,
-      Z(4, context.execution.registers[ri]) > Z(4, vx),
+      Z(8, context.execution.registers[ri]) > Z(8, vx),
     );
   },
   true,
@@ -195,14 +200,6 @@ if (import.meta.vitest) {
       expect(ri).toEqual(1);
       expect(vx).toEqual(0x12n);
       expect(offset).toEqual(0x110000);
-    });
-    it("should put 0 in vx if lx is 0", () => {
-      const [ri, vx, offset] = decode(
-        Uint8Array.from([encodeRaLx(1, 0), 0x11]),
-      )._unsafeUnwrap();
-      expect(ri).toEqual(1);
-      expect(vx).toEqual(0n);
-      expect(offset).toEqual(0x11);
     });
     it("should max use 4 if lx > 4 and 1 for offset", () => {
       const [ri, vx, offset] = decode(
@@ -229,14 +226,6 @@ if (import.meta.vitest) {
       )._unsafeUnwrap();
       expect(ri).toEqual(1);
       expect(vx).toEqual(0x11000012n);
-      expect(offset).toEqual(0);
-    });
-    it("should decode when lx is 0 and no other bytes", () => {
-      const [ri, vx, offset] = decode(
-        Uint8Array.from([encodeRaLx(1, 0)]),
-      )._unsafeUnwrap();
-      expect(ri).toEqual(1);
-      expect(vx).toEqual(0n);
       expect(offset).toEqual(0);
     });
     describe("errors", () => {

@@ -49,7 +49,7 @@ const create = (
 };
 
 export const branch_eq = create(
-  150 as u8,
+  170 as u8,
   "branch_eq",
   (context, rA, rB, offset) => {
     return branch(
@@ -62,7 +62,7 @@ export const branch_eq = create(
 );
 
 export const branch_ne = create(
-  151 as u8,
+  171 as u8,
   "branch_ne",
   (context, rA, rB, offset) => {
     return branch(
@@ -75,7 +75,7 @@ export const branch_ne = create(
 );
 
 export const branch_lt_u = create(
-  152 as u8,
+  172 as u8,
   "branch_lt_u",
   (context, rA, rB, offset) => {
     return branch(
@@ -88,21 +88,21 @@ export const branch_lt_u = create(
 );
 
 export const branch_lt_s = create(
-  153 as u8,
+  173 as u8,
   "branch_lt_s",
   (context, rA, rB, offset) => {
     return branch(
       context,
       (context.execution.instructionPointer + offset) as u32,
-      Z(4, context.execution.registers[rA]) <
-        Z(4, context.execution.registers[rB]),
+      Z(8, context.execution.registers[rA]) <
+        Z(8, context.execution.registers[rB]),
     );
   },
   true,
 );
 
 export const branch_ge_u = create(
-  154 as u8,
+  174 as u8,
   "branch_ge_u",
   (context, rA, rB, offset) => {
     return branch(
@@ -115,14 +115,14 @@ export const branch_ge_u = create(
 );
 
 export const branch_ge_s = create(
-  155 as u8,
+  175 as u8,
   "branch_ge_s",
   (context, rA, rB, offset) => {
     return branch(
       context,
       (context.execution.instructionPointer + offset) as u32,
-      Z(4, context.execution.registers[rA]) >=
-        Z(4, context.execution.registers[rB]),
+      Z(8, context.execution.registers[rA]) >=
+        Z(8, context.execution.registers[rB]),
     );
   },
   true,

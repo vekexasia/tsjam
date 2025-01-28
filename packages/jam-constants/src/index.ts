@@ -191,4 +191,4 @@ export const TOTAL_GAS_IS_AUTHORIZED = 1000000n;
  */
 export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 341000000n;
 // $(0.5.4 - 4.25)
-export const Zp = 2 ** 14;
+export const Zp = 2 ** 12;
