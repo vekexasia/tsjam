@@ -35,5 +35,9 @@
     "@tsjam/utils": "*",
     "neverthrow": "^8.1.1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/json-bigint": "^1",
+    "json-bigint": "^1.0.0"
+  }
 }
