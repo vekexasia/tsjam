@@ -4,7 +4,6 @@ import {
   PVMIxEvaluateFN,
   RegisterIdentifier,
   RegisterValue,
-  u32,
   u8,
 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
@@ -17,7 +16,7 @@ import { IxMod } from "../utils";
 export const decode = (
   bytes: Uint8Array,
 ): Result<
-  [register: RegisterIdentifier, value1: u32, value2: u32],
+  [register: RegisterIdentifier, value1: bigint, value2: bigint],
   PVMIxDecodeError
 > => {
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
@@ -29,17 +28,17 @@ export const decode = (
     return err(new PVMIxDecodeError("not enough bytes"));
   }
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
-  const vx = Number(readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8));
-  const vy = Number(readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8));
-  return ok([ra, vx as u32, vy as u32]);
+  const vx = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
+  const vy = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
+  return ok([ra, vx, vy]);
 };
 
 const create = (
   identifier: u8,
   name: string,
-  evaluate: PVMIxEvaluateFN<[ra: RegisterIdentifier, vX: u32, vY: u32]>,
+  evaluate: PVMIxEvaluateFN<[ra: RegisterIdentifier, vX: bigint, vY: bigint]>,
 ) => {
-  return regIx<[ra: RegisterIdentifier, vX: u32, vY: u32]>({
+  return regIx<[ra: RegisterIdentifier, vX: bigint, vY: bigint]>({
     opCode: identifier,
     identifier: name,
     ix: {
@@ -54,8 +53,8 @@ const store_imm_ind_u8 = create(
   70 as u8,
   "store_imm_ind_u8",
   (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + BigInt(vx);
-    return ok([IxMod.memory(location, new Uint8Array([vy % 0xff]))]);
+    const location = context.execution.registers[ri] + vx;
+    return ok([IxMod.memory(location, new Uint8Array([Number(vy % 0xffn)]))]);
   },
 );
 
@@ -63,11 +62,8 @@ const store_imm_ind_u16 = create(
   71 as u8,
   "store_imm_ind_u16",
   (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + BigInt(vx);
-    const value = vy % 0xffff;
-    const tmp = new Uint8Array(2);
-    E_2.encode(BigInt(value), tmp);
-    return ok([IxMod.memory(location, tmp)]);
+    const location = context.execution.registers[ri] + vx;
+    return ok([IxMod.memory(location, encodeWithCodec(E_2, vy % 2n ** 32n))]);
   },
 );
 
@@ -76,7 +72,7 @@ const store_imm_ind_u32 = create(
   "store_imm_ind_u32",
   (context, ri, vx, vy) => {
     const location = context.execution.registers[ri] + BigInt(vx);
-    const value = BigInt(vy % 0xffffffff);
+    const value = BigInt(vy % 0xffffffffn);
     return ok([IxMod.memory(location, encodeWithCodec(E_4, value))]);
   },
 );
@@ -114,14 +110,14 @@ if (import.meta.vitest) {
           new Uint8Array([16, 0x12, 0x11, 0x22, 0x33, 0x44]),
         )._unsafeUnwrap();
         expect(rA).toEqual(0);
-        expect(vX).toEqual(0x00000012);
-        expect(vY).toEqual(0x44332211);
+        expect(vX).toEqual(0x00000012n);
+        expect(vY).toEqual(0x44332211n);
         [rA, vX, vY] = decode(
           new Uint8Array([16 * 4, 0x12, 0x11, 0x22, 0x33, 0x44]),
         )._unsafeUnwrap();
         expect(rA).toEqual(0);
-        expect(vX).toEqual(0x33221112);
-        expect(vY).toEqual(0x00000044);
+        expect(vX).toEqual(0x33221112n);
+        expect(vY).toEqual(0x00000044n);
       });
       it("should ignore extra bytes", () => {
         const [, vX, vY] = decode(
@@ -129,8 +125,8 @@ if (import.meta.vitest) {
             16, 0x12, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
           ]),
         )._unsafeUnwrap();
-        expect(vX).toEqual(0x00000012);
-        expect(vY).toEqual(0x44332211);
+        expect(vX).toEqual(0x00000012n);
+        expect(vY).toEqual(0x44332211n);
       });
     });
     describe("ixs", () => {
@@ -138,13 +134,7 @@ if (import.meta.vitest) {
         const context = createEvContext();
         context.execution.registers[10] = 0x1000n as RegisterValue;
         (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_imm_ind_u8,
-          10,
-          0x10 as u32,
-          0x12 as u32,
-        );
+        const { ctx } = runTestIx(context, store_imm_ind_u8, 10, 0x10n, 0x12n);
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x1010, new Uint8Array([0x12])],
         ]);
@@ -157,8 +147,8 @@ if (import.meta.vitest) {
           context,
           store_imm_ind_u16,
           10,
-          0x10 as u32,
-          0x1234 as u32,
+          0x10n,
+          0x1234n,
         );
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x1010, new Uint8Array([0x34, 0x12])],
@@ -172,8 +162,8 @@ if (import.meta.vitest) {
           context,
           store_imm_ind_u32,
           10,
-          0x10 as u32,
-          0x12345678 as u32,
+          0x10n,
+          0x12345678n,
         );
         expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
           [0x1010, new Uint8Array([0x78, 0x56, 0x34, 0x12])],

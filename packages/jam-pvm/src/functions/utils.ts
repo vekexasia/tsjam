@@ -1,6 +1,7 @@
 import assert from "assert";
 import {
   Gas,
+  PVMExitReason,
   PVMExitReasonMod,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
@@ -47,7 +48,7 @@ export const applyMods = <
 ): {
   ctx: CTX;
   out: T;
-  exitReason?: RegularPVMExitReason;
+  exitReason?: PVMExitReason;
 } => {
   const newCtx = {
     ...ctx,
@@ -55,7 +56,7 @@ export const applyMods = <
       ...ctx.registers,
     ] as PVMProgramExecutionContextBase["registers"],
   };
-  let exitReason: RegularPVMExitReason | undefined;
+  let exitReason: PVMExitReason | undefined;
   for (const mod of mods) {
     if (mod.type === "ip") {
       assert(
@@ -77,8 +78,13 @@ export const applyMods = <
     } else if (mod.type === "register") {
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
-      if (!newCtx.memory.canWrite(mod.data.from, mod.data.data.length)) {
-        exitReason = RegularPVMExitReason.Panic;
+      const firstUnwrit = newCtx.memory.firstUnwriteable(
+        mod.data.from,
+        mod.data.data.length,
+      );
+      if (typeof firstUnwrit !== "undefined") {
+        exitReason = { type: "page-fault", memoryLocationIn: firstUnwrit };
+        newCtx.instructionPointer = ctx.instructionPointer;
         break;
       }
       newCtx.memory = (newCtx.memory as PVMMemory).clone();

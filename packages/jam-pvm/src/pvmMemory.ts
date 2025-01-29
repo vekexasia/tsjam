@@ -45,6 +45,13 @@ export class PVMMemory implements IPVMMemory {
   }
 
   canRead(_offset: number | bigint, _length: number | bigint): boolean {
+    return this.firstUnreadable(_offset, _length) === undefined;
+  }
+
+  firstUnreadable(
+    _offset: number | bigint,
+    _length: number | bigint,
+  ): u32 | undefined {
     const offset = Number(_offset);
     const length = Number(_length);
     const pageOffset = Math.floor(offset / Zp);
@@ -52,16 +59,22 @@ export class PVMMemory implements IPVMMemory {
     if (pageEnd === Math.floor((offset + length) / Zp)) {
       pageEnd--;
     }
-    console.log(this.acl);
     for (let p = pageOffset; p < pageEnd; p++) {
       if (!this.acl.some((a) => a.page === p)) {
-        return false;
+        return <u32>(p * Zp);
       }
     }
-    return true;
+    return undefined;
   }
 
   canWrite(_offset: number | bigint, _length: number | bigint): boolean {
+    return this.firstUnwriteable(_offset, _length) === undefined;
+  }
+
+  firstUnwriteable(
+    _offset: number | bigint,
+    _length: number | bigint,
+  ): u32 | undefined {
     const offset = Number(_offset);
     const length = Number(_length);
     const pageOffset = Math.floor(offset / Zp);
@@ -75,10 +88,10 @@ export class PVMMemory implements IPVMMemory {
           (a) => a.page === p && a.kind === PVMMemoryAccessKind.Write,
         )
       ) {
-        return false;
+        return <u32>(p * Zp);
       }
     }
-    return true;
+    return undefined;
   }
 
   clone(): this {

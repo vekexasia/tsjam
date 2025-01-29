@@ -91,7 +91,6 @@ describe("pvm", () => {
    * for i in $(ls); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", doTest("'$X'"));'; done
    */
   // it("gas_basic_consume_all", doTest("gas_basic_consume_all"));
-  /*
   it("inst_add_32", doTest("inst_add_32"));
   it("inst_add_32_with_overflow", doTest("inst_add_32_with_overflow"));
   it("inst_add_32_with_truncation", doTest("inst_add_32_with_truncation"));
@@ -488,7 +487,6 @@ describe("pvm", () => {
     "inst_shift_logical_left_imm_64",
     doTest("inst_shift_logical_left_imm_64"),
   );
-  /*/
   it(
     "inst_shift_logical_left_imm_alt_32",
     doTest("inst_shift_logical_left_imm_alt_32"),
@@ -527,6 +525,7 @@ describe("pvm", () => {
     "inst_store_imm_indirect_u16_with_offset_nok",
     doTest("inst_store_imm_indirect_u16_with_offset_nok"),
   );
+  /*
   it(
     "inst_store_imm_indirect_u16_with_offset_ok",
     doTest("inst_store_imm_indirect_u16_with_offset_ok"),
@@ -543,7 +542,6 @@ describe("pvm", () => {
     "inst_store_imm_indirect_u32_with_offset_ok",
     doTest("inst_store_imm_indirect_u32_with_offset_ok"),
   );
-  /*
   it(
     "inst_store_imm_indirect_u32_without_offset_ok",
     doTest("inst_store_imm_indirect_u32_without_offset_ok"),

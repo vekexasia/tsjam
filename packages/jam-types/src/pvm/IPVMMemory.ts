@@ -36,6 +36,14 @@ export interface IPVMMemory {
   canRead(offset: number | bigint, length: number | bigint): boolean;
   canWrite(offset: number | bigint, length: number | bigint): boolean;
 
+  firstUnreadable(
+    offset: number | bigint,
+    length: number | bigint,
+  ): u32 | undefined;
+  firstUnwriteable(
+    offset: number | bigint,
+    length: number | bigint,
+  ): u32 | undefined;
   /**
    * Change ACL of specified region
    * being used in void, and zero refine fns

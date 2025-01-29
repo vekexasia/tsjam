@@ -19,6 +19,8 @@ const mockMemory = (): IPVMMemory => ({
   getBytes: vi.fn(),
   canRead: vi.fn(),
   canWrite: vi.fn(),
+  firstUnwriteable: vi.fn(),
+  firstUnreadable: vi.fn(),
   changeAcl: vi.fn(),
   clone: vi.fn().mockReturnThis(),
 });

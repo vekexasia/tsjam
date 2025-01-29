@@ -83,7 +83,25 @@ export const pvmSingleStep = (
     return { p_context: toPosterior(rMod.ctx), exitReason: r.error.type };
   }
 
-  console.log(r.value);
+  // check for memory
+  const unallowedWrites = r.value
+    .filter((mod) => mod.type === "memory")
+    .map((mod) =>
+      ctx.memory.firstUnwriteable(mod.data.from, mod.data.data.length),
+    )
+    .filter((m) => typeof m !== "undefined");
+
+  if (unallowedWrites.length > 0) {
+    const mods: PVMSingleModGas[] = [];
+    mods.push(IxMod.gas(trap.gasCost));
+
+    const rMod = applyMods(ctx, {} as object, [...mods, IxMod.gas(ix.gasCost)]);
+    return {
+      p_context: toPosterior(rMod.ctx),
+      exitReason: { type: "page-fault", memoryLocationIn: unallowedWrites[0] },
+    };
+  }
+
   // $(0.5.4 - A.6)
   const rMod = applyMods(ctx, {} as object, [
     IxMod.gas(ix.gasCost), // g′ = g − g∆
