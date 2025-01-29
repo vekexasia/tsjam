@@ -167,11 +167,9 @@ const load_ind_i32 = create(
 
 // math
 const add_imm_32 = create(131 as u8, "add_imm_32", (context, rA, rB, vX) => {
+  console.log({ rA, rB, vX });
   return ok([
-    IxMod.reg(
-      rA,
-      X_4((context.execution.registers[rB] + BigInt(vX)) % 2n ** 32n),
-    ),
+    IxMod.reg(rA, X_4((context.execution.registers[rB] + vX) % 2n ** 32n)),
   ]);
 });
 
@@ -249,7 +247,7 @@ const neg_add_imm_32 = create(
     return ok([
       IxMod.reg(
         rA,
-        X_4(vX + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n,
+        X_4((vX + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n),
       ),
     ]);
   },

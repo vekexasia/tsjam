@@ -85,7 +85,7 @@ const div_s_32 = create(194 as u8, "div_s_32", (context, wA, wB, rD) => {
   } else if (z4a == -1 * 2 ** 31 && z4b === -1) {
     newVal = Z8_inv(BigInt(z4a));
   } else {
-    newVal = Z8_inv(BigInt(z4a / z4b));
+    newVal = Z8_inv(BigInt(Math.floor(z4a / z4b)));
   }
 
   return ok([IxMod.reg(rD, newVal)]);

@@ -21,9 +21,6 @@ export const decode = (
 > => {
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.floor(bytes[0] / 16) % 8);
-  if (lx === 0) {
-    return err(new PVMIxDecodeError("lx must be > 0"));
-  }
   if (bytes.length < lx + 1) {
     return err(new PVMIxDecodeError("not enough bytes"));
   }
@@ -95,11 +92,6 @@ if (import.meta.vitest) {
   const { runTestIx } = await import("@/test/mocks.js");
   describe("one_reg_two_imm_ixs", () => {
     describe("decode", () => {
-      it("should disallow lx = 0", () => {
-        expect(
-          decode(new Uint8Array([0, 0]))._unsafeUnwrapErr().message,
-        ).toEqual("lx must be > 0");
-      });
       it("should throw if not enough bytes", () => {
         expect(decode(new Uint8Array([16]))._unsafeUnwrapErr().message).toEqual(
           "not enough bytes",

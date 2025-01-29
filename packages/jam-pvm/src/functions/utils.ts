@@ -48,7 +48,7 @@ export const applyMods = <
 ): {
   ctx: CTX;
   out: T;
-  exitReason?: PVMExitReason;
+  exitReason?: RegularPVMExitReason;
 } => {
   const newCtx = {
     ...ctx,
@@ -56,7 +56,7 @@ export const applyMods = <
       ...ctx.registers,
     ] as PVMProgramExecutionContextBase["registers"],
   };
-  let exitReason: PVMExitReason | undefined;
+  let exitReason: RegularPVMExitReason | undefined;
   for (const mod of mods) {
     if (mod.type === "ip") {
       assert(
@@ -78,15 +78,14 @@ export const applyMods = <
     } else if (mod.type === "register") {
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
-      const firstUnwrit = newCtx.memory.firstUnwriteable(
-        mod.data.from,
-        mod.data.data.length,
+      // we assume there is no
+      assert(
+        typeof newCtx.memory.firstUnwriteable(
+          mod.data.from,
+          mod.data.data.length,
+        ) === "undefined",
+        "unwriteable memory should be handled before calling applyMods",
       );
-      if (typeof firstUnwrit !== "undefined") {
-        exitReason = { type: "page-fault", memoryLocationIn: firstUnwrit };
-        newCtx.instructionPointer = ctx.instructionPointer;
-        break;
-      }
       newCtx.memory = (newCtx.memory as PVMMemory).clone();
       newCtx.memory.setBytes(mod.data.from, mod.data.data);
     } else if (mod.type === "object") {

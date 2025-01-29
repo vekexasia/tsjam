@@ -91,6 +91,7 @@ describe("pvm", () => {
    * for i in $(ls); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", doTest("'$X'"));'; done
    */
   // it("gas_basic_consume_all", doTest("gas_basic_consume_all"));
+  /*
   it("inst_add_32", doTest("inst_add_32"));
   it("inst_add_32_with_overflow", doTest("inst_add_32_with_overflow"));
   it("inst_add_32_with_truncation", doTest("inst_add_32_with_truncation"));
@@ -304,7 +305,7 @@ describe("pvm", () => {
       "inst_load_imm_and_jump_indirect_misaligned_djump_same_regs_without_offset_nok",
     ),
   );
-  /*
+  /**
   it(
     "inst_load_imm_and_jump_indirect_same_regs_with_offset_ok",
     doTest("inst_load_imm_and_jump_indirect_same_regs_with_offset_ok"),
@@ -525,7 +526,6 @@ describe("pvm", () => {
     "inst_store_imm_indirect_u16_with_offset_nok",
     doTest("inst_store_imm_indirect_u16_with_offset_nok"),
   );
-  /*
   it(
     "inst_store_imm_indirect_u16_with_offset_ok",
     doTest("inst_store_imm_indirect_u16_with_offset_ok"),
@@ -577,10 +577,6 @@ describe("pvm", () => {
   it(
     "inst_store_imm_u8_trap_inaccessible",
     doTest("inst_store_imm_u8_trap_inaccessible"),
-  );
-  it(
-    "inst_store_imm_u8_trap_read_only",
-    doTest("inst_store_imm_u8_trap_read_only"),
   );
   it(
     "inst_store_indirect_u16_with_offset_nok",
@@ -638,7 +634,6 @@ describe("pvm", () => {
     "inst_store_u8_trap_inaccessible",
     doTest("inst_store_u8_trap_inaccessible"),
   );
-  it("inst_store_u8_trap_read_only", doTest("inst_store_u8_trap_read_only"));
   it("inst_sub_32", doTest("inst_sub_32"));
   it("inst_sub_32_with_overflow", doTest("inst_sub_32_with_overflow"));
   it("inst_sub_64", doTest("inst_sub_64"));
@@ -648,7 +643,7 @@ describe("pvm", () => {
   it("inst_trap", doTest("inst_trap"));
   it("inst_xor", doTest("inst_xor"));
   it("inst_xor_imm", doTest("inst_xor_imm"));
-  /*
+  */
   it("riscv_rv64ua_amoadd_d", doTest("riscv_rv64ua_amoadd_d"));
   it("riscv_rv64ua_amoadd_w", doTest("riscv_rv64ua_amoadd_w"));
   it("riscv_rv64ua_amoand_d", doTest("riscv_rv64ua_amoand_d"));

@@ -47,6 +47,7 @@ export const pvmSingleStep = (
       ? ctx.instructionPointer + skip
       : p.program.c.length,
   );
+  console.log(ix.identifier);
   const args = ix.decode(byteArgs);
   if (args.isErr()) {
     const o = applyMods(ctx, {} as object, [
