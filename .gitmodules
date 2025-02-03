@@ -1,3 +1,5 @@
 [submodule "jamtestvectors"]
 	path = jamtestvectors
-	url = git@github.com:w3f/jamtestvectors.git
+	url = git@github.com:davxy/jam-test-vectors.git
+[submodules "jamtestvectors"]
+	branch = polkajam-vectors
