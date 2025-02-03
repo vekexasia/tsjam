@@ -10,12 +10,14 @@ import {
   ServiceIndex,
   u8,
 } from "@tsjam/types";
+import { toSafeMemoryAddress } from "@/pvmMemory";
 import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
-import { E_4, E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { serviceAccountGasThreshold } from "@tsjam/utils";
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
+import assert from "node:assert";
 
 /**
  * `ΩG`
@@ -56,10 +58,12 @@ export const omega_l = regFn<
       }
       const [h0, b0, bz] = context.registers.slice(8);
       let h: Blake2bHash | undefined;
-      if (!context.memory.canRead(h0, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(h0), 32)) {
         h = undefined;
       } else {
-        h = Hashing.blake2b(context.memory.getBytes(h0, 32));
+        h = Hashing.blake2b(
+          context.memory.getBytes(toSafeMemoryAddress(h0), 32),
+        );
       }
 
       const v =
@@ -69,7 +73,8 @@ export const omega_l = regFn<
           ? a.preimage_p.get(h)
           : undefined;
 
-      if (!context.memory.canWrite(b0, bz + b0)) {
+      assert(bz + b0 < 2 ** 32, "lookup bz + b0 exceed ram length");
+      if (!context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz + b0))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       if (typeof v === "undefined") {
@@ -104,14 +109,23 @@ export const omega_r = regFn<
         a = d.get(Number(w7) as ServiceIndex);
       }
       let k: Hash;
-      if (!context.memory.canRead(k0, kz) || !context.memory.canWrite(b0, bz)) {
+      assert(kz < 2 ** 32, "kz >= ram size");
+      assert(bz < 2 ** 32, "bz >= ram size");
+      if (
+        !context.memory.canRead(toSafeMemoryAddress(k0), Number(kz)) ||
+        !context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz))
+      ) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const tmp = new Uint8Array(4);
-        E_4.encode(BigInt(s), tmp);
-        k = Hashing.blake2b(
-          new Uint8Array([...tmp, ...context.memory.getBytes(k0, kz)]),
+        const tmp = new Uint8Array(4 + Number(kz));
+
+        tmp.set(encodeWithCodec(E_4_int, s), 0);
+        tmp.set(
+          context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz)),
+          4,
         );
+
+        k = Hashing.blake2b(tmp);
       }
       let v: Uint8Array;
       if (typeof a !== "undefined" && a.storage.has(k)) {
@@ -142,13 +156,16 @@ export const omega_w = regFn<
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(7);
       let k: Hash;
-      if (!context.memory.canRead(k0, kz) || !context.memory.canRead(v0, vz)) {
+      if (
+        !context.memory.canRead(toSafeMemoryAddress(k0), Number(kz)) ||
+        !context.memory.canRead(toSafeMemoryAddress(v0), Number(vz))
+      ) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
         k = Hashing.blake2b(
           new Uint8Array([
             ...encodeWithCodec(E_4_int, s),
-            ...context.memory.getBytes(k0, kz),
+            ...context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz)),
           ]),
         );
       }
@@ -159,7 +176,10 @@ export const omega_w = regFn<
       if (vz === 0n) {
         a.storage.delete(k);
       } else {
-        a.storage.set(k, context.memory.getBytes(v0, vz));
+        a.storage.set(
+          k,
+          context.memory.getBytes(toSafeMemoryAddress(v0), Number(vz)),
+        );
       }
 
       let l: number | bigint;
@@ -201,7 +221,7 @@ export const omega_i = regFn<
       }
       const o = context.registers[8];
       const m = new Uint8Array(32); //TODO encode of t
-      if (!context.memory.canWrite(o, m.length)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), m.length)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
         return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, m)];

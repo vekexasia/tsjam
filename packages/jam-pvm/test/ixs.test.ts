@@ -8,7 +8,7 @@ import { ParsedProgram } from "@/parseProgram.js";
 import { basicInvocation } from "@/invocations/basic.js";
 import {
   Gas,
-  PVMACL,
+  Page,
   PVMMemoryAccessKind,
   RegularPVMExitReason,
 } from "@tsjam/types";
@@ -22,18 +22,16 @@ describe("pvm", () => {
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
     const context = createEvContext();
-    const pvmACL: PVMACL[] = [];
+    const pvmACL = new Map<Page, PVMMemoryAccessKind>();
 
     for (const { address, length, "is-writable": isWritable } of json[
       "initial-page-map"
     ]) {
       for (let i = 0; i < length / 4096; i++) {
-        pvmACL.push({
-          page: address / 4096,
-          kind: isWritable
-            ? PVMMemoryAccessKind.Write
-            : PVMMemoryAccessKind.Read,
-        });
+        pvmACL.set(
+          Math.floor(address / 4096),
+          isWritable ? PVMMemoryAccessKind.Write : PVMMemoryAccessKind.Read,
+        );
       }
     }
     context.execution.memory = new PVMMemory(

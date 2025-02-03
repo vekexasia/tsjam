@@ -26,7 +26,11 @@ export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
   ctx: PVMProgramExecutionContext,
 ): Output => {
-  console.log("singleStep", ctx.instructionPointer);
+  console.log(
+    "singleStep",
+    ctx.instructionPointer,
+    `0x${ctx.instructionPointer.toString(16)}`,
+  );
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
   if (
     ctx.instructionPointer >= p.program.c.length ||

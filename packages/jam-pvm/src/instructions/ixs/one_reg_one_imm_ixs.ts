@@ -11,7 +11,8 @@ import {
   u64,
   u8,
 } from "@tsjam/types";
-import { Z, Z4, Z4_inv, Z_inv } from "@/utils/zed.js";
+import { toSafeMemoryAddress } from "@/pvmMemory";
+import { Z4, Z_inv } from "@/utils/zed.js";
 import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
@@ -67,89 +68,106 @@ const load_imm = create1Reg1IMMIx(51 as u8, "load_imm", (context, ri, vx) => {
 });
 
 const load_u8 = create1Reg1IMMIx(52 as u8, "load_u8", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 1)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 1));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 1)) {
+    return err(new MemoryUnreadable(memoryAddress, 1));
   }
 
   return ok([
-    IxMod.reg(ri, context.execution.memory.getBytes(vx, 1)[0] as number as u32),
+    IxMod.reg(
+      ri,
+      context.execution.memory.getBytes(memoryAddress, 1)[0] as number as u32,
+    ),
   ]);
 });
 
 const load_u16 = create1Reg1IMMIx(54 as u8, "load_u16", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 2)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 2));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 2)) {
+    return err(new MemoryUnreadable(memoryAddress, 2));
   }
   return ok([
     IxMod.reg(
       ri,
-      Number(E_2.decode(context.execution.memory.getBytes(vx, 2)).value) as u32,
+      Number(
+        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
+      ) as u32,
     ),
   ]);
 });
 
 const load_u32 = create1Reg1IMMIx(56 as u8, "load_u32", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 4)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 4));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 4)) {
+    return err(new MemoryUnreadable(memoryAddress, 4));
   }
   return ok([
     IxMod.reg(
       ri,
-      E_4_int.decode(context.execution.memory.getBytes(vx, 4)).value,
+      E_4_int.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
     ),
   ]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_u64 = create1Reg1IMMIx(58 as u8, "load_u64", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 8)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 8));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  console.log("load_u64", { memoryAddress });
+  if (!context.execution.memory.canRead(memoryAddress, 8)) {
+    return err(new MemoryUnreadable(memoryAddress, 8));
   }
   return ok([
-    IxMod.reg(ri, E_8.decode(context.execution.memory.getBytes(vx, 8)).value),
+    IxMod.reg(
+      ri,
+      E_8.decode(context.execution.memory.getBytes(memoryAddress, 8)).value,
+    ),
   ]);
 });
 
 // ### Load signed
 const load_i8 = create1Reg1IMMIx(53 as u8, "load_i8", (context, ri, vx) => {
-  console.log("dioamerda", vx);
-  if (!context.execution.memory.canRead(vx, 1)) {
-    console.log(vx);
-    return err(new MemoryUnreadable(Number(vx) as u32, 1));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 1)) {
+    return err(new MemoryUnreadable(memoryAddress, 1));
   }
 
-  console.log("vx", vx, vx.toString(16));
   return ok([
     IxMod.reg(
       ri,
-      X_fn(1n)(BigInt(context.execution.memory.getBytes(vx, 1)[0])),
+      X_fn(1n)(BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0])),
     ),
   ]);
 });
 
 const load_i16 = create1Reg1IMMIx(55 as u8, "load_i16", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 2)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 2));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 2)) {
+    return err(new MemoryUnreadable(memoryAddress, 2));
   }
 
   return ok([
     IxMod.reg(
       ri,
-      X_fn(2n)(E_2.decode(context.execution.memory.getBytes(vx, 2)).value),
+      X_fn(2n)(
+        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
+      ),
     ),
   ]);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_i32 = create1Reg1IMMIx(57 as u8, "load_i32", (context, ri, vx) => {
-  if (!context.execution.memory.canRead(vx, 2)) {
-    return err(new MemoryUnreadable(Number(vx) as u32, 2));
+  const memoryAddress = toSafeMemoryAddress(vx);
+  if (!context.execution.memory.canRead(memoryAddress, 2)) {
+    return err(new MemoryUnreadable(memoryAddress, 2));
   }
 
   return ok([
     IxMod.reg(
       ri,
-      X_4(E_4.decode(context.execution.memory.getBytes(vx, 4)).value),
+      X_4(
+        E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
+      ),
     ),
   ]);
 });

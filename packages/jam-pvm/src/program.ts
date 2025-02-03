@@ -1,7 +1,7 @@
 import { Zp } from "@tsjam/constants";
 import {
   IPVMMemory,
-  PVMACL,
+  Page,
   PVMMemoryAccessKind,
   PVMProgram,
   RegisterValue,
@@ -85,7 +85,7 @@ export const programInitialization = (
   ] as SeqOfLength<RegisterValue, 13>;
 
   // memory $(0.5.4 - A.36)
-  const acl: PVMACL[] = [];
+  const acl: Map<Page, PVMMemoryAccessKind> = new Map();
   const mem: MemoryContent[] = [];
   const createAcl = (conf: {
     from: number;
@@ -93,7 +93,8 @@ export const programInitialization = (
     kind: PVMMemoryAccessKind.Write | PVMMemoryAccessKind.Read;
   }) => {
     for (let i = conf.from; i < conf.to; i += Zp) {
-      acl.push({ page: Math.floor(i / Zp), kind: conf.kind });
+      // page, kind
+      acl.set(Math.floor(i / Zp), conf.kind);
     }
   };
 

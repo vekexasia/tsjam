@@ -23,6 +23,7 @@ import {
   InnerPVMResultCode,
   Zp,
 } from "@tsjam/constants";
+import { toSafeMemoryAddress } from "@/pvmMemory.js";
 import { bytesToBigInt, historicalLookup } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
 import { E_4, E_8, PVMProgramCodec } from "@tsjam/codec";
@@ -69,7 +70,10 @@ export const omega_h = regFn<
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
       const [_w7, h0, b0, bz] = context.registers.slice(7);
       const w7 = Number(_w7);
-      if (context.memory.canRead(h0, 32) || !context.memory.canWrite(b0, bz)) {
+      if (
+        context.memory.canRead(toSafeMemoryAddress(h0), 32) ||
+        !context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz))
+      ) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       let a: ServiceAccount | undefined;
@@ -81,7 +85,9 @@ export const omega_h = regFn<
       if (typeof a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
-      const h: Hash = bytesToBigInt(context.memory.getBytes(h0, 32));
+      const h: Hash = bytesToBigInt(
+        context.memory.getBytes(toSafeMemoryAddress(h0), 32),
+      );
       const v = historicalLookup(a, t, h);
       if (typeof v === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
@@ -116,7 +122,7 @@ export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
 
-      if (!context.memory.canWrite(o, l)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), l)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, v.subarray(0, l))];
@@ -143,7 +149,7 @@ export const omega_e = regFn<
         Number(w8),
         ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
       );
-      if (!context.memory.canRead(p, z)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(p), z)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       if (offset + refineCtx.e.length >= 11 /* Wx */) {
@@ -152,7 +158,7 @@ export const omega_e = regFn<
       const x = new Uint8Array(
         Math.ceil(z / (ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE)),
       ).fill(0);
-      x.set(context.memory.getBytes(p, z));
+      x.set(context.memory.getBytes(toSafeMemoryAddress(p), z));
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.obj({ ...refineCtx, e: [...refineCtx.e, x] }),
@@ -175,17 +181,17 @@ export const omega_m = regFn<
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [p0, pz, i] = context.registers.slice(7);
-      if (!context.memory.canWrite(p0, pz)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(p0), Number(pz))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const p = context.memory.getBytes(p0, pz);
+      const p = context.memory.getBytes(toSafeMemoryAddress(p0), Number(pz));
       const sortedKeys = [...refineCtx.m.keys()].sort((a, b) => a - b);
       let n = 0;
       while (sortedKeys.length > 0 && n == sortedKeys[0]) {
         sortedKeys.shift()!;
         n++;
       }
-      const mem = new PVMMemory([], []);
+      const mem = new PVMMemory(new Map(), new Map());
       const newM = new Map(refineCtx.m);
       newM.set(n, {
         programCode: p,
@@ -217,16 +223,25 @@ export const omega_p = regFn<
       if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      if (!refineCtx.m.get(Number(n))!.memory.canRead(b, l)) {
+      if (
+        !refineCtx.m
+          .get(Number(n))!
+          .memory.canRead(toSafeMemoryAddress(b), Number(l))
+      ) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      if (!context.memory.canWrite(a, l)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(a), Number(l))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
       return [
         IxMod.w7(HostCallResult.OK),
-        IxMod.memory(a, refineCtx.m.get(Number(n))!.memory.getBytes(b, l)),
+        IxMod.memory(
+          a,
+          refineCtx.m
+            .get(Number(n))!
+            .memory.getBytes(toSafeMemoryAddress(b), Number(l)),
+        ),
       ];
     },
   },
@@ -252,18 +267,18 @@ export const omega_o = regFn<
       }
       const u = refineCtx.m.get(n)!.memory;
 
-      if (!context.memory.canRead(s, z)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(s), Number(z))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      if (!u.canWrite(o, z)) {
+      if (!u.canWrite(toSafeMemoryAddress(o), Number(z))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      const bold_s = context.memory.getBytes(s, z);
+      const bold_s = context.memory.getBytes(toSafeMemoryAddress(s), Number(z));
 
       const p_m = new Map(refineCtx.m);
       p_m.set(n, {
         programCode: refineCtx.m.get(n)!.programCode,
-        memory: u.clone().setBytes(o, bold_s),
+        memory: u.clone().setBytes(toSafeMemoryAddress(o), bold_s),
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
       });
 
@@ -291,14 +306,14 @@ export const omega_z = regFn<
       }
       const u = refineCtx.m.get(Number(n))!.memory;
 
-      if (p + c >= 2 ** 32 || !u.canRead(p, c)) {
+      if (p + c >= 2 ** 32 || !u.canRead(toSafeMemoryAddress(p), Number(c))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {
         p_u
           .changeAcl(page, PVMMemoryAccessKind.Write)
-          .setBytes(page * Zp, new Uint8Array(Zp).fill(0));
+          .setBytes(toSafeMemoryAddress(page * Zp), new Uint8Array(Zp).fill(0));
       }
 
       const p_m = new Map(refineCtx.m);
@@ -331,14 +346,14 @@ export const omega_v = regFn<
       }
       const u = refineCtx.m.get(Number(n))!.memory;
 
-      if (p + c >= 2 ** 32 || !u.canRead(p, c)) {
+      if (p + c >= 2 ** 32 || !u.canRead(toSafeMemoryAddress(p), Number(c))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {
         p_u
           .changeAcl(page, PVMMemoryAccessKind.Write) // needed for next line
-          .setBytes(page * Zp, new Uint8Array(Zp).fill(0))
+          .setBytes(toSafeMemoryAddress(page * Zp), new Uint8Array(Zp).fill(0))
           .changeAcl(page, PVMMemoryAccessKind.Read);
       }
 
@@ -368,19 +383,26 @@ export const omega_k = regFn<
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
       const [_n, o] = context.registers.slice(7);
       const n = Number(_n);
-      if (!context.memory.canWrite(o, 60)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), 60)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       if (!refineCtx.m.has(n)) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      const g = E_8.decode(context.memory.getBytes(o, 8)).value;
+      const g = E_8.decode(
+        context.memory.getBytes(toSafeMemoryAddress(o), 8),
+      ).value;
       // registers
       const w = new Array(13)
         .fill(0n)
         .map(
           (_, i) =>
-            E_4.decode(context.memory.getBytes(Number(o) + 8 + 4 * i, 4)).value,
+            E_4.decode(
+              context.memory.getBytes(
+                toSafeMemoryAddress(o + 8n + 4n * BigInt(i)),
+                4,
+              ),
+            ).value,
         );
       const program = PVMProgramCodec.decode(
         refineCtx.m.get(n)!.programCode,

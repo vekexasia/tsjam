@@ -22,16 +22,9 @@ import {
   HostCallResult,
   NUMBER_OF_VALIDATORS,
   PREIMAGE_EXPIRATION,
-  SERVICE_MIN_BALANCE,
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
-import {
-  E_4_int,
-  E_8,
-  E_sub,
-  HashCodec,
-  ValidatorDataCodec,
-} from "@tsjam/codec";
+import { E_4_int, E_8, HashCodec, ValidatorDataCodec } from "@tsjam/codec";
 import {
   bytesToBigInt,
   serviceAccountGasThreshold,
@@ -42,6 +35,7 @@ import {
 import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
+import { toSafeMemoryAddress } from "@/pvmMemory";
 
 /**
  * `ΩB`
@@ -54,13 +48,16 @@ export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x) {
       const [m, a, v, o, n] = context.registers.slice(7);
-      if (!context.memory.canRead(Number(o), 12 * Number(n))) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 12 * Number(n))) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else if (m > 2 ** 32 || a > 2 ** 32 || v > 2 ** 32) {
         return [IxMod.w7(HostCallResult.WHO)];
       } else {
         const g = new Map<ServiceIndex, Gas>();
-        const buf = context.memory.getBytes(Number(o), 12 * Number(n));
+        const buf = context.memory.getBytes(
+          toSafeMemoryAddress(o),
+          12 * Number(n),
+        );
         for (let i = 0; i < n; i++) {
           const data = buf.subarray(i * 12, (i + 1) * 12);
           const key = E_4_int.decode(data).value;
@@ -100,10 +97,15 @@ export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x) {
       const [w7, o] = context.registers.slice(7);
-      if (!context.memory.canRead(o, AUTHQUEUE_MAX_SIZE * 32)) {
+      if (
+        !context.memory.canRead(toSafeMemoryAddress(o), AUTHQUEUE_MAX_SIZE * 32)
+      ) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const c = context.memory.getBytes(o, AUTHQUEUE_MAX_SIZE * 32);
+        const c = context.memory.getBytes(
+          toSafeMemoryAddress(o),
+          AUTHQUEUE_MAX_SIZE * 32,
+        );
         if (w7 < CORES) {
           const xc = x.u.authQueue.slice() as AuthorizerQueue;
           const nl: Hash[] = [];
@@ -135,14 +137,17 @@ export const omega_d = regFn<[x: PVMResultContext], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x) {
       const o = context.registers[7];
-      if (!context.memory.canRead(o, 336)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 336)) {
         return [IxMod.w7(HostCallResult.OOB), IxMod.obj({ x })];
       } else {
         // implicitly by canRead `o` should be < 2**32
         const validators =
           [] as unknown as PVMAccumulationState["validatorKeys"];
-        for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-          const c = context.memory.getBytes(Number(o) + 336 * i, 336);
+        for (let i = 0n; i < NUMBER_OF_VALIDATORS; i++) {
+          const c = context.memory.getBytes(
+            toSafeMemoryAddress(o + 336n * i),
+            336,
+          );
           validators.push(ValidatorDataCodec.decode(c).value);
         }
         return [
@@ -186,11 +191,11 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
     execute(context, x) {
       const [o, l, g, m] = context.registers.slice(7);
 
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const c: ServiceAccount["codeHash"] = bytesToBigInt(
-        context.memory.getBytes(o, 32),
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
       );
       const a: ServiceAccount = {
         storage: new Map<Hash, Uint8Array>(),
@@ -259,13 +264,15 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x) {
       const [o, g, m] = context.registers.slice(7);
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
         const x_bold_s = x.u.delta.get(x.service)!;
         const x_bold_s_prime = { ...x_bold_s };
 
-        x_bold_s_prime.codeHash = bytesToBigInt(context.memory.getBytes(o, 32));
+        x_bold_s_prime.codeHash = bytesToBigInt(
+          context.memory.getBytes(toSafeMemoryAddress(o), 32),
+        );
         x_bold_s_prime.minGasAccumulate = g;
         x_bold_s_prime.minGasOnTransfer = m;
 
@@ -309,7 +316,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
       ]);
 
       const g = l as u64 as Gas;
-      if (!context.memory.canRead(o, TRANSFER_MEMO_SIZE)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), TRANSFER_MEMO_SIZE)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
@@ -331,7 +338,9 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
         destination: Number(d) as ServiceIndex,
         amount: toTagged(a),
         gasLimit: g as Gas,
-        memo: toTagged(context.memory.getBytes(o, TRANSFER_MEMO_SIZE)),
+        memo: toTagged(
+          context.memory.getBytes(toSafeMemoryAddress(o), TRANSFER_MEMO_SIZE),
+        ),
       };
 
       return [
@@ -367,10 +376,12 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       const [_d, o] = context.registers.slice(7);
       const d: ServiceIndex = Number(_d) as ServiceIndex;
 
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const h: Hash = bytesToBigInt(
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
+      );
       const bold_d = x.u.delta.get(Number(d) as ServiceIndex);
       // NOTE: the last check on codehash is probably wrong :) graypaper states E_32(x.service)but it does not make sense
       if (
@@ -417,11 +428,13 @@ export const omega_q = regFn<[x: PVMResultContext], W7 | W8>({
     execute(context, x) {
       const [o, z] = context.registers.slice(7);
 
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
-      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const h: Hash = bytesToBigInt(
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
+      );
       const x_bold_s = x.u.delta.get(x.service)!;
       const a = x_bold_s.preimage_l.get(h)?.get(toTagged(Number(z) as u32));
       if (typeof a === "undefined") {
@@ -453,10 +466,12 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x, tau) {
       const [o, z] = context.registers.slice(7);
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const h: Hash = bytesToBigInt(
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
+      );
       const x_bold_s = x.u.delta.get(x.service)!;
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       if (typeof a_l.get(h)?.get(toTagged(Number(z) as u32)) === "undefined") {
@@ -508,11 +523,13 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
     execute(context, x, t) {
       const [o, _z] = context.registers.slice(7);
       const z = Number(_z) as Tagged<u32, "length">;
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const x_bold_s = x.u.delta.get(x.service)!;
-      const h = HashCodec.decode(context.memory.getBytes(o, 32)).value;
+      const h = HashCodec.decode(
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
+      ).value;
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
 
@@ -577,10 +594,12 @@ export const omega_y = regFn<[x: PVMResultContext], W7 | XMod>({
     gasCost: 10n as Gas,
     execute(context, x) {
       const o = context.registers[7];
-      if (!context.memory.canRead(o, 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const h: Hash = bytesToBigInt(context.memory.getBytes(o, 32));
+      const h: Hash = bytesToBigInt(
+        context.memory.getBytes(toSafeMemoryAddress(o), 32),
+      );
       return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: { ...x, y: h } })];
     },
   },

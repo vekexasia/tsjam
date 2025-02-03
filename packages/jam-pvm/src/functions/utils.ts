@@ -1,7 +1,6 @@
 import assert from "assert";
 import {
   Gas,
-  PVMExitReason,
   PVMExitReasonMod,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
@@ -13,7 +12,7 @@ import {
   PVMSingleModRegister,
   RegularPVMExitReason,
 } from "@tsjam/types";
-import { PVMMemory } from "@/pvmMemory.js";
+import { PVMMemory, toSafeMemoryAddress } from "@/pvmMemory.js";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;

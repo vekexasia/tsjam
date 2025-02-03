@@ -7,6 +7,7 @@ import {
   u8,
 } from "@tsjam/types";
 import { Z, Z4, Z4_inv, Z8, Z8_inv, Z_inv } from "@/utils/zed.js";
+import { toSafeMemoryAddress } from "@/pvmMemory";
 import { regIx } from "@/instructions/ixdb.js";
 import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
@@ -63,9 +64,12 @@ const store_ind_u16 = create(
   121 as u8,
   "store_ind_u16",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
+    console.log({ location, vX });
     const tmp = new Uint8Array(2);
-    E_2.encode(BigInt(context.execution.registers[rA] & 0xffffn), tmp);
+    console.log(context.execution.registers[rA] & 0xffffn);
+    console.log(context.execution.registers[rA] % 2n ** 16n);
+    E_2.encode(context.execution.registers[rA] & 0xffffn, tmp);
     return ok([IxMod.memory(location, tmp)]);
   },
 );
@@ -98,7 +102,7 @@ const store_ind_u64 = create(
 
 // # load unsigned
 const load_ind_u8 = create(124 as u8, "load_ind_u8", (context, rA, rB, vX) => {
-  const location = Number(context.execution.registers[rB] + BigInt(vX));
+  const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
   return ok([
     IxMod.reg(rA, context.execution.memory.getBytes(location, 1)[0] as u32),
   ]);
@@ -108,7 +112,7 @@ const load_ind_u16 = create(
   126 as u8,
   "load_ind_u16",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const r = context.execution.memory.getBytes(location, 2);
     return ok([IxMod.reg(rA, E_2.decode(r).value)]);
   },
@@ -118,7 +122,7 @@ const load_ind_u32 = create(
   128 as u8,
   "load_ind_u32",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const r = context.execution.memory.getBytes(location, 4);
     return ok([IxMod.reg(rA, E_4.decode(r).value)]);
   },
@@ -129,7 +133,7 @@ const load_ind_u64 = create(
   130 as u8,
   "load_ind_u64",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const r = context.execution.memory.getBytes(location, 8);
     return ok([IxMod.reg(rA, E_8.decode(r).value)]);
   },
@@ -137,16 +141,17 @@ const load_ind_u64 = create(
 
 // # load signed
 const load_ind_i8 = create(125 as u8, "load_ind_i8", (context, rA, rB, vX) => {
-  const location = Number(context.execution.registers[rB] + BigInt(vX));
-  const val = context.execution.memory.getBytes(location, 1);
-  return ok([IxMod.reg(rA, Z8_inv(Z(1, BigInt(val[0]))))]);
+  const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
+  const raw = context.execution.memory.getBytes(location, 1);
+  const val = Z8_inv(Z(1, BigInt(raw[0])));
+  return ok([IxMod.reg(rA, val)]);
 });
 
 const load_ind_i16 = create(
   127 as u8,
   "load_ind_i16",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const val = context.execution.memory.getBytes(location, 2);
     const num = E_2.decode(val).value;
     return ok([IxMod.reg(rA, Z8_inv(Z(2, num)))]);
@@ -158,7 +163,7 @@ const load_ind_i32 = create(
   129 as u8,
   "load_ind_i32",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const val = context.execution.memory.getBytes(location, 4);
     const num = E_4.decode(val).value;
     return ok([IxMod.reg(rA, Z8_inv(Z(4, num)))]);
@@ -167,7 +172,6 @@ const load_ind_i32 = create(
 
 // math
 const add_imm_32 = create(131 as u8, "add_imm_32", (context, rA, rB, vX) => {
-  console.log({ rA, rB, vX });
   return ok([
     IxMod.reg(rA, X_4((context.execution.registers[rB] + vX) % 2n ** 32n)),
   ]);
@@ -332,7 +336,6 @@ const cmov_nz_imm = create(148 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const add_imm_64 = create(149 as u8, "add_imm_64", (context, rA, rB, vX) => {
-  console.log({ rA, rB, vX });
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] + BigInt(vX)) % 2n ** 64n),
   ]);
