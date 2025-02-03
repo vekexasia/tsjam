@@ -50,7 +50,7 @@ const store_ind_u8 = create(
   120 as u8,
   "store_ind_u8",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     return ok([
       IxMod.memory(
         location as u32,
@@ -65,12 +65,12 @@ const store_ind_u16 = create(
   "store_ind_u16",
   (context, rA, rB, vX) => {
     const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
-    console.log({ location, vX });
-    const tmp = new Uint8Array(2);
-    console.log(context.execution.registers[rA] & 0xffffn);
-    console.log(context.execution.registers[rA] % 2n ** 16n);
-    E_2.encode(context.execution.registers[rA] & 0xffffn, tmp);
-    return ok([IxMod.memory(location, tmp)]);
+    return ok([
+      IxMod.memory(
+        location,
+        encodeWithCodec(E_2, context.execution.registers[rA] & 0xffffn),
+      ),
+    ]);
   },
 );
 
@@ -78,7 +78,7 @@ const store_ind_u32 = create(
   122 as u8,
   "store_ind_u32",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(context.execution.registers[rA] % 2n ** 32n), tmp);
     return ok([IxMod.memory(location, tmp)]);
@@ -90,7 +90,7 @@ const store_ind_u64 = create(
   123 as u8,
   "store_ind_u64",
   (context, rA, rB, vX) => {
-    const location = Number(context.execution.registers[rB] + BigInt(vX));
+    const location = toSafeMemoryAddress(context.execution.registers[rB] + vX);
     return ok([
       IxMod.memory(
         location,
@@ -221,7 +221,10 @@ const shlo_l_imm_32 = create(
   "shlo_l_imm_32",
   (context, rA, rB, vX) => {
     return ok([
-      IxMod.reg(rA, (context.execution.registers[rB] << vX % 32n) % 2n ** 32n),
+      IxMod.reg(
+        rA,
+        X_4((context.execution.registers[rB] << vX % 32n) % 2n ** 32n),
+      ),
     ]);
   },
 );
@@ -231,7 +234,7 @@ const shlo_r_imm_32 = create(
   "shlo_r_imm_32",
   (context, rA, rB, vX) => {
     const wb = Number(context.execution.registers[rB] % 2n ** 32n);
-    return ok([IxMod.reg(rA, wb >>> Number(vX % 32n))]);
+    return ok([IxMod.reg(rA, X_4(BigInt(wb >>> Number(vX % 32n))))]);
   },
 );
 
@@ -248,12 +251,13 @@ const neg_add_imm_32 = create(
   141 as u8,
   "neg_add_imm_32",
   (context, rA, rB, vX) => {
-    return ok([
-      IxMod.reg(
-        rA,
-        X_4((vX + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n),
-      ),
-    ]);
+    let val = (vX + 2n ** 32n - context.execution.registers[rB]) % 2n ** 32n;
+    if (val < 0n) {
+      // other languages behave differently than js when modulo a negative number
+      // see comment 3 on pull 3 of jamtestvector.
+      val += 2n ** 32n;
+    }
+    return ok([IxMod.reg(rA, X_4(val))]);
   },
 );
 
@@ -448,7 +452,54 @@ const shar_r_imm_alt_64 = create(
     ]);
   },
 );
-// TODO: rot
+
+const rot_r_64_imm = create(
+  158 as u8,
+  "rot_r_64_imm",
+  (context, rA, rB, vX) => {
+    const shift = vX % 64n;
+    const mask = 2n ** 64n - 1n;
+    const value = context.execution.registers[rB];
+    const result = (value >> shift) | ((value << (64n - shift)) & mask);
+    return ok([IxMod.reg(rA, result)]);
+  },
+);
+
+const rot_r_64_imm_alt = create(
+  159 as u8,
+  "rot_r_64_imm_alt",
+  (context, rA, rB, vX) => {
+    const shift = context.execution.registers[rB] % 64n;
+    const mask = 2n ** 64n - 1n;
+    const value = vX;
+    const result = (value >> shift) | ((value << (64n - shift)) & mask);
+    return ok([IxMod.reg(rA, result)]);
+  },
+);
+
+const rot_r_32_imm = create(
+  160 as u8,
+  "rot_r_32_imm",
+  (context, rA, rB, vX) => {
+    const shift = vX % 32n;
+    const mask = 2n ** 32n - 1n;
+    const value = context.execution.registers[rB] % 2n ** 32n;
+    const result = (value >> shift) | ((value << (32n - shift)) & mask);
+    return ok([IxMod.reg(rA, X_4(result))]);
+  },
+);
+
+const rot_r_32_imm_alt = create(
+  161 as u8,
+  "rot_r_32_imm_alt",
+  (context, rA, rB, vX) => {
+    const shift = context.execution.registers[rB] % 32n;
+    const mask = 2n ** 32n - 1n;
+    const value = vX % 2n ** 32n;
+    const result = (value >> shift) | ((value << (32n - shift)) & mask);
+    return ok([IxMod.reg(rA, X_4(result))]);
+  },
+);
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

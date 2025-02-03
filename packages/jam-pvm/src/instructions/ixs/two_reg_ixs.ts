@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Result, err, ok } from "neverthrow";
 import {
   Gas,
@@ -9,6 +10,7 @@ import {
 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
 import { IxMod } from "@/instructions/utils.js";
+import { Z8_inv, Z } from "@/utils/zed";
 
 // $(0.5.4 - A.24)
 const decode = (
@@ -43,12 +45,141 @@ const move_reg = create(100 as u8, "move_reg", (context, rd, ra) => {
   return ok([IxMod.reg(rd, context.execution.registers[ra])]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sbrk = create(101 as u8, "sbrk", (context, rd, ra) => {
   // TODO: implement sbrk (space break)
   return ok([]);
 });
 
+const count_set_bits_64 = create(
+  102 as u8,
+  "count_set_bits_64",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    let sum = 0n;
+    let val: bigint = wa;
+    for (let i = 0; i < 64; i++) {
+      sum += val & 1n;
+      val >>= 1n;
+    }
+    return ok([IxMod.reg(rd, sum)]);
+  },
+);
+
+const count_set_bits_32 = create(
+  103 as u8,
+  "count_set_bits_32",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    let sum = 0n;
+    let val: bigint = wa % 2n ** 32n;
+    for (let i = 0; i < 32; i++) {
+      sum += val & 1n;
+      val >>= 1n;
+    }
+    return ok([IxMod.reg(rd, sum)]);
+  },
+);
+
+const leading_zero_bits_64 = create(
+  104 as u8,
+  "leading_zero_bits_64",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    const val: bigint = wa;
+    let count = 0n;
+    for (let i = 0; i < 64; i++) {
+      if (val & (1n << (63n - BigInt(i)))) {
+        break;
+      }
+      count++;
+    }
+    return ok([IxMod.reg(rd, count)]);
+  },
+);
+
+const leading_zero_bits_32 = create(
+  105 as u8,
+  "leading_zero_bits_32",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    const val: bigint = wa % 2n ** 32n;
+    let count = 0n;
+    for (let i = 0; i < 32; i++) {
+      if (val & (1n << (31n - BigInt(i)))) {
+        break;
+      }
+      count++;
+    }
+    return ok([IxMod.reg(rd, count)]);
+  },
+);
+
+const trailing_zero_bits_64 = create(
+  106 as u8,
+  "trailing_zero_bits_64",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    const val: bigint = wa;
+    let count = 0n;
+    for (let i = 0; i < 64; i++) {
+      if (val & (1n << BigInt(i))) {
+        break;
+      }
+      count++;
+    }
+    return ok([IxMod.reg(rd, count)]);
+  },
+);
+
+const trailing_zero_bits_32 = create(
+  107 as u8,
+  "trailing_zero_bits_32",
+  (context, rd, ra) => {
+    const wa = context.execution.registers[ra];
+    const val: bigint = wa % 2n ** 32n;
+    let count = 0n;
+    for (let i = 0; i < 32; i++) {
+      if (val & (1n << BigInt(i))) {
+        break;
+      }
+      count++;
+    }
+    return ok([IxMod.reg(rd, count)]);
+  },
+);
+
+const sign_extend_8 = create(108 as u8, "sign_extend_8", (context, rd, ra) => {
+  return ok([
+    IxMod.reg(rd, Z8_inv(Z(1, context.execution.registers[ra] % 2n ** 8n))),
+  ]);
+});
+
+const sign_extend_16 = create(
+  109 as u8,
+  "sign_extend_16",
+  (context, rd, ra) => {
+    return ok([
+      IxMod.reg(rd, Z8_inv(Z(2, context.execution.registers[ra] % 2n ** 16n))),
+    ]);
+  },
+);
+
+const zero_extend_16 = create(
+  110 as u8,
+  "zero_extend_16",
+  (context, rd, ra) => {
+    return ok([IxMod.reg(rd, context.execution.registers[ra] % 2n ** 16n)]);
+  },
+);
+
+const reverse_bytes = create(111 as u8, "reverse_bytes", (context, rd, ra) => {
+  let newVal = 0n;
+  const wa = context.execution.registers[ra];
+  for (let i = 0; i < 8; i++) {
+    newVal |= ((wa >> BigInt(i * 8)) & 0xffn) << BigInt((7 - i) * 8);
+  }
+  return ok([IxMod.reg(rd, newVal)]);
+});
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { createEvContext } = await import("@/test/mocks.js");

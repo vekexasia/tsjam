@@ -120,7 +120,6 @@ export class PVMMemory implements IPVMMemory {
 
   firstUnreadable(address: u32, length: number): u32 | undefined {
     const pages = this.#pagesInRange(address, length);
-    console.log(pages, address, length);
     for (const page of pages) {
       if (!this.acl.has(page)) {
         return <u32>(page * Zp);

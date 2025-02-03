@@ -26,11 +26,6 @@ export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
   ctx: PVMProgramExecutionContext,
 ): Output => {
-  console.log(
-    "singleStep",
-    ctx.instructionPointer,
-    `0x${ctx.instructionPointer.toString(16)}`,
-  );
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
   if (
     ctx.instructionPointer >= p.program.c.length ||
@@ -51,7 +46,7 @@ export const pvmSingleStep = (
       ? ctx.instructionPointer + skip
       : p.program.c.length,
   );
-  console.log(ix.identifier);
+  // console.log(ix.identifier);
   const args = ix.decode(byteArgs);
   if (args.isErr()) {
     const o = applyMods(ctx, {} as object, [
@@ -87,6 +82,7 @@ export const pvmSingleStep = (
     ]);
     return { p_context: toPosterior(rMod.ctx), exitReason: r.error.type };
   }
+  // console.log("ops", r.value);
 
   // check for memory
   const unallowedWrites = r.value

@@ -84,8 +84,6 @@ export const branch_eq_imm = create1Reg1IMM1OffsetIx(
   81 as u8,
   "branch_eq_imm",
   (context, ri, vx, vy) => {
-    console.log(context.execution.registers);
-    console.log(`branch_eq_imm ri = ${ri}, vx = ${vx}, vy = ${vy}`);
     return branch(context, vy, context.execution.registers[ri] === vx);
   },
   true,

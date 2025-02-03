@@ -88,8 +88,7 @@ describe("pvm", () => {
   /* NOTE: regenerate with
    * for i in $(ls); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", doTest("'$X'"));'; done
    */
-  // it("gas_basic_consume_all", doTest("gas_basic_consume_all"));
-  /*
+  it("gas_basic_consume_all", doTest("gas_basic_consume_all"));
   it("inst_add_32", doTest("inst_add_32"));
   it("inst_add_32_with_overflow", doTest("inst_add_32_with_overflow"));
   it("inst_add_32_with_truncation", doTest("inst_add_32_with_truncation"));
@@ -641,7 +640,6 @@ describe("pvm", () => {
   it("inst_trap", doTest("inst_trap"));
   it("inst_xor", doTest("inst_xor"));
   it("inst_xor_imm", doTest("inst_xor_imm"));
-  */
   it("riscv_rv64ua_amoadd_d", doTest("riscv_rv64ua_amoadd_d"));
   it("riscv_rv64ua_amoadd_w", doTest("riscv_rv64ua_amoadd_w"));
   it("riscv_rv64ua_amoand_d", doTest("riscv_rv64ua_amoand_d"));
@@ -688,6 +686,7 @@ describe("pvm", () => {
   it("riscv_rv64ui_ori", doTest("riscv_rv64ui_ori"));
   it("riscv_rv64ui_sb", doTest("riscv_rv64ui_sb"));
   it("riscv_rv64ui_sd", doTest("riscv_rv64ui_sd"));
+
   it("riscv_rv64ui_sh", doTest("riscv_rv64ui_sh"));
   it("riscv_rv64ui_simple", doTest("riscv_rv64ui_simple"));
   it("riscv_rv64ui_sll", doTest("riscv_rv64ui_sll"));
@@ -731,6 +730,7 @@ describe("pvm", () => {
   it("riscv_rv64uzbb_cpopw", doTest("riscv_rv64uzbb_cpopw"));
   it("riscv_rv64uzbb_ctz", doTest("riscv_rv64uzbb_ctz"));
   it("riscv_rv64uzbb_ctzw", doTest("riscv_rv64uzbb_ctzw"));
+
   it("riscv_rv64uzbb_max", doTest("riscv_rv64uzbb_max"));
   it("riscv_rv64uzbb_maxu", doTest("riscv_rv64uzbb_maxu"));
   it("riscv_rv64uzbb_min", doTest("riscv_rv64uzbb_min"));
@@ -742,6 +742,7 @@ describe("pvm", () => {
   it("riscv_rv64uzbb_rolw", doTest("riscv_rv64uzbb_rolw"));
   it("riscv_rv64uzbb_ror", doTest("riscv_rv64uzbb_ror"));
   it("riscv_rv64uzbb_rori", doTest("riscv_rv64uzbb_rori"));
+
   it("riscv_rv64uzbb_roriw", doTest("riscv_rv64uzbb_roriw"));
   it("riscv_rv64uzbb_rorw", doTest("riscv_rv64uzbb_rorw"));
   it("riscv_rv64uzbb_sext_b", doTest("riscv_rv64uzbb_sext_b"));

@@ -56,7 +56,6 @@ const jump_ind = create1Reg1IMMIx(
   (context, ri, vx) => {
     const wa = context.execution.registers[ri];
     const jumpLocation = Number((wa + vx) % 2n ** 32n) as u32;
-    console.log({ jumpLocation });
     return djump(context, jumpLocation);
   },
   true,
@@ -112,7 +111,6 @@ const load_u32 = create1Reg1IMMIx(56 as u8, "load_u32", (context, ri, vx) => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_u64 = create1Reg1IMMIx(58 as u8, "load_u64", (context, ri, vx) => {
   const memoryAddress = toSafeMemoryAddress(vx);
-  console.log("load_u64", { memoryAddress });
   if (!context.execution.memory.canRead(memoryAddress, 8)) {
     return err(new MemoryUnreadable(memoryAddress, 8));
   }
