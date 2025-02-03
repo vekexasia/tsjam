@@ -13,7 +13,6 @@ import {
   PVMAccumulationOp,
   PVMAccumulationState,
   RHO,
-  ServiceAccount,
   ServiceIndex,
   Tagged,
   Tau,

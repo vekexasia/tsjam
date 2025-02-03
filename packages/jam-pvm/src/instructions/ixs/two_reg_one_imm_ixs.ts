@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Gas,
   PVMIxEvaluateFN,
@@ -85,7 +86,6 @@ const store_ind_u32 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const store_ind_u64 = create(
   123 as u8,
   "store_ind_u64",
@@ -128,7 +128,6 @@ const load_ind_u32 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_ind_u64 = create(
   130 as u8,
   "load_ind_u64",
@@ -158,7 +157,6 @@ const load_ind_i16 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const load_ind_i32 = create(
   129 as u8,
   "load_ind_i32",
@@ -338,21 +336,18 @@ const cmov_nz_imm = create(148 as u8, "cmov_nz_imm", (context, rA, rB, vX) => {
   return ok([]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const add_imm_64 = create(149 as u8, "add_imm_64", (context, rA, rB, vX) => {
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] + BigInt(vX)) % 2n ** 64n),
   ]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mul_imm_64 = create(150 as u8, "mul_imm_64", (context, rA, rB, vX) => {
   return ok([
     IxMod.reg(rA, (context.execution.registers[rB] * BigInt(vX)) % 2n ** 64n),
   ]);
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_l_imm_64 = create(
   151 as u8,
   "shlo_l_imm_64",
@@ -366,7 +361,6 @@ const shlo_l_imm_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r_imm_64 = create(
   152 as u8,
   "shlo_r_imm_64",
@@ -380,7 +374,6 @@ const shlo_r_imm_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shar_r_imm_64 = create(
   153 as u8,
   "shar_r_imm_64",
@@ -396,7 +389,6 @@ const shar_r_imm_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const neg_add_imm_64 = create(
   154 as u8,
   "neg_add_imm_64",
@@ -410,7 +402,6 @@ const neg_add_imm_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_l_imm_alt_64 = create(
   155 as u8,
   "shlo_l_imm_alt_64",
@@ -424,7 +415,6 @@ const shlo_l_imm_alt_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shlo_r_imm_alt_64 = create(
   156 as u8,
   "shlo_r_imm_alt_64",
@@ -439,7 +429,6 @@ const shlo_r_imm_alt_64 = create(
   },
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shar_r_imm_alt_64 = create(
   157 as u8,
   "shar_r_imm_alt_64",

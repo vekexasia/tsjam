@@ -3,7 +3,6 @@ import {
   PVMIxDecodeError,
   PVMIxEvaluateFN,
   RegisterIdentifier,
-  RegisterValue,
   u32,
   u8,
 } from "@tsjam/types";
