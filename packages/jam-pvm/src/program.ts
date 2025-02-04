@@ -85,7 +85,8 @@ export const programInitialization = (
   ] as SeqOfLength<RegisterValue, 13>;
 
   // memory $(0.5.4 - A.36)
-  const acl: Map<Page, PVMMemoryAccessKind> = new Map();
+  const acl: Map<Page, PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write> =
+    new Map();
   const mem: MemoryContent[] = [];
   const createAcl = (conf: {
     from: number;

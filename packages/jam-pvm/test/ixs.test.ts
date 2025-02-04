@@ -22,7 +22,10 @@ describe("pvm", () => {
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
     const context = createEvContext();
-    const pvmACL = new Map<Page, PVMMemoryAccessKind>();
+    const pvmACL = new Map<
+      Page,
+      PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
+    >();
 
     for (const { address, length, "is-writable": isWritable } of json[
       "initial-page-map"
@@ -302,7 +305,6 @@ describe("pvm", () => {
       "inst_load_imm_and_jump_indirect_misaligned_djump_same_regs_without_offset_nok",
     ),
   );
-  /**
   it(
     "inst_load_imm_and_jump_indirect_same_regs_with_offset_ok",
     doTest("inst_load_imm_and_jump_indirect_same_regs_with_offset_ok"),
