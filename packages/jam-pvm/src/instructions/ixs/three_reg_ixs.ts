@@ -96,7 +96,7 @@ const div_s_32 = create(194 as u8, "div_s_32", (context, wA, wB, rD) => {
 const rem_u_32 = create(195 as u8, "rem_u_32", (context, wA, wB, rD) => {
   let newVal: number | bigint;
   if (wB % 2n ** 32n === 0n) {
-    newVal = wA;
+    newVal = X_4(wA % 2n ** 32n);
   } else {
     newVal = X_4((wA % 2n ** 32n) % (wB % 2n ** 32n));
   }
