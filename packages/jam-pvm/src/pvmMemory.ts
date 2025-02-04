@@ -11,7 +11,10 @@ export class PVMMemory implements IPVMMemory {
   #innerMemoryContent = new Map<Page, Uint8Array>();
   constructor(
     initialMemory: MemoryContent[] | Map<Page, Uint8Array>,
-    private acl: Map<Page, PVMMemoryAccessKind>,
+    private acl: Map<
+      Page,
+      PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
+    >,
   ) {
     // if initialMemory is a map, we can directly use it
     if (initialMemory instanceof Map) {
