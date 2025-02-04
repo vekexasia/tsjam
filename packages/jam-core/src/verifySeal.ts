@@ -210,7 +210,10 @@ export const verifyWinningTickets = (
   return ok(undefined);
 };
 
-// $(0.5.4 - 5.4 / 5.5)
+/**
+ * $(0.5.4 - 5.4 / 5.5)
+ * uses $(0.5.4 - 5.6) - codec_Eg_4Hx
+ */
 export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],
   hx: JamHeader["extrinsicHash"],

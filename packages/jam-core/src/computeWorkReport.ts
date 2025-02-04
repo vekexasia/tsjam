@@ -3,7 +3,6 @@ import {
   CoreIndex,
   Delta,
   ExportSegment,
-  ExportingWorkPackageHash,
   Hash,
   Tau,
   WorkError,
@@ -59,20 +58,36 @@ export const computeWorkReport = (
   if (!(o instanceof Uint8Array)) {
     throw new Error("unexpected");
   }
-
-  // TODO: this is defined in 14.13
-  const bold_l = new Map<WorkPackageHash, Hash>();
   const _deps = {
     ...deps,
-    segmentRootLookup: bold_l,
     authorizerOutput: o,
+    overline_i: pac.workItems.map((wi) => S_fn(wi, bold_l)),
   };
 
-  const els = new Array(pac.workItems.length).fill(0).map((_, j) => {
-    const { result: r, out: e } = I_fn(pac, j, _deps);
-    const workResult = C_fn(pac.workItems[j], r);
-    return { result: workResult, out: e };
-  });
+  const preTransposeEls = new Array(pac.workItems.length) // j \in N_{|p_w|}
+    .fill(0)
+    .map((_, j) => {
+      const { result: r, out: e } = I_fn(pac, j, _deps);
+      const workResult = C_fn(pac.workItems[j], r);
+      return { result: workResult, out: e };
+    });
+
+  const bold_r = <WorkReport["results"]>(
+    preTransposeEls.map(({ result }) => result)
+  );
+
+  const overline_e = preTransposeEls
+    .map(({ out: e }) => e)
+    .flat() as ExportSegment[];
+
+  // TODO: this is defined in 14.13 and 14.11
+  const bold_l = new Map<WorkPackageHash, Hash>();
+  //const key_l: ExportingWorkPackageHash[] = pac.workItems
+  //  .map((w) => w.importedDataSegments)
+  //  .flat()
+  //  .map((i) => i.root)
+  //  .filter((root) => isExportingWorkPackageHash(root));
+
   const encodedPackage = encodeWithCodec(WorkPackageCodec, pac);
 
   const s = A_fn(
@@ -96,18 +111,24 @@ export const computeWorkReport = (
         j: pac.workItems.map((wi) => inner_J_fn(wi, bold_l)).flat(),
       },
     ),
-    els.map((a) => a.out).flat() as ExportSegment[],
+    overline_e, // exported segments
   );
 
   return {
     // s
     workPackageSpecification: s,
-    authorizerHash: pac.pa,
-    authorizerOutput: o,
+    // x
     refinementContext: pac.context,
-    segmentRootLookup: bold_l,
-    results: toTagged(els.map((a) => a.result)),
+    // c
     coreIndex: core,
+    // a
+    authorizerHash: pac.pa,
+    // o
+    authorizerOutput: o,
+    // l
+    segmentRootLookup: bold_l,
+    // r
+    results: bold_r,
   };
 };
 /**
@@ -165,43 +186,33 @@ const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
 
 const I_fn = (
   pac: WorkPackageWithAuth,
-  j: number,
+  workIndex: number, // `j`
   deps: {
     delta: Delta;
     tau: Tau;
     authorizerOutput: Uint8Array;
-    segmentRootLookup: Map<WorkPackageHash, Hash>;
+    overline_i: ExportSegment[][];
   },
 ): {
-  result: WorkOutput;
-  out: Uint8Array[];
+  result: WorkOutput; // `r`
+  out: Uint8Array[]; // `e`
 } => {
-  const packageHash: WorkPackageHash = Hashing.blake2b(
-    encodeWithCodec(WorkPackageCodec, pac),
-  );
-  const w = pac.workItems[j];
+  const w = pac.workItems[workIndex];
   const l = pac.workItems
-    .slice(0, j)
+    .slice(0, workIndex)
     .map((wi) => wi.numberExportedSegments)
     .reduce((a, b) => a + b, 0);
   const re = refineInvocation(
-    w.codeHash,
-    w.refinementGasLimit,
-    w.serviceIndex,
-    packageHash,
-    w.payload,
-    pac.context,
-    pac.pa,
-    // output
+    workIndex,
+    pac,
     deps.authorizerOutput,
-    S_fn(w, deps.segmentRootLookup),
-    X_fn(w),
+    deps.overline_i,
     l,
     { delta: deps.delta, tau: deps.tau }, // deps
   );
   if (re.out.length === w.numberExportedSegments) {
     return { result: re.result, out: re.out };
-  } else if (re.result instanceof Uint8Array) {
+  } else if (!(re.result instanceof Uint8Array)) {
     return {
       result: re.result,
       out: new Array(w.numberExportedSegments)
@@ -230,7 +241,7 @@ const I_fn = (
  * $(0.5.4 - 14.12)
  */
 const L_fn = (
-  hash: Hash | ExportingWorkPackageHash,
+  hash: WorkItem["importedDataSegments"][0]["root"],
   bold_l: Map<WorkPackageHash, Hash>,
 ): Hash => {
   //bold_l = segment root dictionary

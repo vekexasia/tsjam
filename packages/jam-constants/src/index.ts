@@ -120,9 +120,13 @@ export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 
 /**
  * `GA` in the paper
- * TODO: set to correct value
  */
-export const MAX_GAS_ACCUMULATION = 1000000000n;
+export const MAX_GAS_ACCUMULATION = 10_000_000n;
+
+/**
+ * `GI` in the paper
+ */
+export const MAX_GAS_IS_AUTHORIZED = 50_000_000n;
 
 /**
  * `O` in the paper
@@ -135,21 +139,25 @@ export const AUTHPOOL_SIZE = 8;
 export const AUTHQUEUE_MAX_SIZE = 80;
 
 /**
- * `S` in the paper
+ * `WC` in the paper
  */
 export const SERVICECODE_MAX_SIZE = 40000000;
+
 /**
  * `BS` in the paper
  */
 export const SERVICE_MIN_BALANCE = 100n;
+
 /**
  * `BL` in the paper
  */
 export const SERVICE_ADDITIONAL_BALANCE_PER_OCTET = 1n;
+
 /**
  * `BI` in the paper
  */
 export const SERVICE_ADDITIONAL_BALANCE_PER_ITEM = 10n;
+
 /**
  * `M` in the paper
  * `WT` in the paper
@@ -162,12 +170,12 @@ export const TRANSFER_MEMO_SIZE = 128;
 export const PREIMAGE_EXPIRATION = 28800;
 
 /**
- * `Wc` in the paper
+ * `WE` in the paper
  */
 export const ERASURECODE_BASIC_SIZE = 684;
 
 /**
- * `Ws` in the paper
+ * `WP` in the paper
  */
 export const ERASURECODE_EXPORTED_SIZE = 6;
 

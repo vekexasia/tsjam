@@ -10,7 +10,7 @@ import { argumentInvocation } from "@/invocations/argument.js";
 import { E_4, WorkPackageCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
-import { HostCallResult } from "@tsjam/constants";
+import { HostCallResult, MAX_GAS_IS_AUTHORIZED } from "@tsjam/constants";
 import { IxMod } from "@/instructions/utils";
 import { applyMods } from "@/functions/utils";
 
@@ -29,7 +29,7 @@ export const isAuthorized = (
   const res = argumentInvocation(
     new Uint8Array(), // todo missing the preimage fetch
     0 as u32,
-    Gi,
+    MAX_GAS_IS_AUTHORIZED as Gas,
     args,
     F_Fn,
     undefined as unknown as PVMResultContext, // something is missing from the paper
@@ -45,11 +45,6 @@ export const isAuthorized = (
   }
   throw new Error("unexpected");
 };
-
-/**
- * TODO set the correct value
- */
-const Gi = 0n as Gas;
 
 // $(0.5.4 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {

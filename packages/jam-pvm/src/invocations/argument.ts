@@ -9,12 +9,12 @@ import { programInitialization } from "@/program.js";
 
 /**
  * `ΨM` in the paper
- * $(0.5.4 - A.38)
+ * $(0.6.1 - A.42)
  */
 export const argumentInvocation = <X>(
   p: Uint8Array,
   instructionPointer: u32, // ı
-  gas: Gas, // ξ
+  gas: Gas, // ϱ
   args: Uint8Array, // a
   f: HostCallExecutor<X>,
   x: X,
@@ -40,7 +40,7 @@ type ArgumentInvocationOut<X> = {
   out: X;
 };
 
-// $(0.5.4 - A.39)
+// $(0.6.1 - A.43)
 const R_fn = <X>(input: HostCallOut<X>): ArgumentInvocationOut<X> => {
   if (input.exitReason === RegularPVMExitReason.OutOfGas) {
     return { exitReason: RegularPVMExitReason.OutOfGas, out: input.out };

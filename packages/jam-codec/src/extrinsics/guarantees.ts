@@ -24,7 +24,9 @@ export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
   ]),
 );
 
-// $(0.5.4 - 5.6)
+/*
+ * $(0.5.4 - 5.6)
+ */
 export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
     ["workReport", WorkReportCodec],

@@ -688,7 +688,6 @@ describe("pvm", () => {
   it("riscv_rv64ui_ori", doTest("riscv_rv64ui_ori"));
   it("riscv_rv64ui_sb", doTest("riscv_rv64ui_sb"));
   it("riscv_rv64ui_sd", doTest("riscv_rv64ui_sd"));
-
   it("riscv_rv64ui_sh", doTest("riscv_rv64ui_sh"));
   it("riscv_rv64ui_simple", doTest("riscv_rv64ui_simple"));
   it("riscv_rv64ui_sll", doTest("riscv_rv64ui_sll"));

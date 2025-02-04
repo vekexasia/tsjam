@@ -57,14 +57,14 @@ export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
  */
 export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
+export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;
+export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
+export type WorkPackageHash = Tagged<Blake2bHash, "WorkPackageHash">;
 /**
  *  `H⊞`
  */
-export type ExportingWorkPackageHash = { value: Hash };
-export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
-export type WorkPackageHash = Tagged<Hash, "Blake2bHash">;
-export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;
-export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
+export type ExportingWorkPackageHash = { value: WorkPackageHash };
 export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
 export type ED25519PrivateKey = Tagged<BigIntBytes<64>, "ED25519PrivateKey">;
 export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;

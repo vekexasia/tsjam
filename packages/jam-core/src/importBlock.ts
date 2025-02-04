@@ -410,15 +410,10 @@ export const importBlock: STF<
   }
 
   // $(0.5.4 - 5.8)
-  // TODO: move to another place
   const prevMerkleRoot = merkelizeState(curState);
   if (prevMerkleRoot !== block.header.priorStateRoot) {
     return err(ImportBlockError.InvalidParentStateRoot);
   }
-
-  // verify extrinsic merkle commitment
-  // TODO: implement
-  // $(0.5.4 - 5.4 / 5.5 / 5.6)
 
   if (!verifySeal(block.header, p_state)) {
     return err(ImportBlockError.InvalidSeal);
@@ -438,6 +433,7 @@ export const importBlock: STF<
     return err(wt.error);
   }
 
+  // verifies 5.4 and 5.5
   if (!verifyExtrinsicHash(block.extrinsics, block.header.extrinsicHash)) {
     return err(ImportBlockError.InvalidHx);
   }

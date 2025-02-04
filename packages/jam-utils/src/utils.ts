@@ -2,6 +2,7 @@ import {
   BandersnatchKey,
   Dagger,
   DoubleDagger,
+  ExportingWorkPackageHash,
   Hash,
   JamState,
   Posterior,
@@ -85,6 +86,16 @@ export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   return toRet;
 };
 
+/**
+ * Checks if its a plain hash.
+ * Can be used to check about the workItem importedDataSegments[0].root
+ */
 export const isHash = <X = unknown>(x: Hash | X): x is Hash => {
   return typeof x === "bigint";
+};
+
+export const isExportingWorkPackageHash = (
+  x: ExportingWorkPackageHash | Hash,
+): x is ExportingWorkPackageHash => {
+  return !isHash(x);
 };

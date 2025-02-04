@@ -103,7 +103,6 @@ describe("statistics", () => {
         extrinsics: decoded.value.input.extrinsic,
         authorIndex: decoded.value.input.authorIndex,
         p_tau: decoded.value.input.slot,
-        // TODO: this is a hack as `garantorReporters` is in `core` and being implicitly tested with validateEG
         reporters: new Set(
           decoded.value.input.extrinsic.reportGuarantees
             .map((rg) => rg.credential)

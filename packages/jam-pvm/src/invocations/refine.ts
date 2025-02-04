@@ -2,7 +2,6 @@ import { HostCallExecutor } from "@/invocations/hostCall.js";
 import {
   Delta,
   ExportSegment,
-  Gas,
   Hash,
   RefinementContext,
   RegularPVMExitReason,
@@ -11,6 +10,7 @@ import {
   WorkError,
   WorkOutput,
   WorkPackageHash,
+  WorkPackageWithAuth,
   u32,
 } from "@tsjam/types";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
@@ -22,7 +22,6 @@ import {
   omega_o,
   omega_p,
   omega_x,
-  omega_y,
   omega_e,
   omega_z,
 } from "@/functions/refine.js";
@@ -32,21 +31,39 @@ import { omega_g } from "@/functions/general.js";
 import { historicalLookup } from "@tsjam/utils";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { IxMod } from "@/instructions/utils";
+import {
+  createCodec,
+  E_sub_int,
+  encodeWithCodec,
+  HashCodec,
+  IdentityCodec,
+  RefinementContextCodec,
+  WorkPackageCodec,
+  WorkPackageHashCodec,
+} from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
 
+const refine_a_Codec = createCodec<{
+  serviceIndex: ServiceIndex;
+  payload: Uint8Array;
+  packageHash: WorkPackageHash;
+  context: RefinementContext;
+  authorizerHash: Hash;
+}>([
+  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
+  ["payload", IdentityCodec],
+  ["packageHash", WorkPackageHashCodec],
+  ["context", RefinementContextCodec],
+  ["authorizerHash", HashCodec],
+]);
 /**
- * $(0.5.4 - B.4)
+ * $(0.6.1 - B.4)
  */
 export const refineInvocation = (
-  serviceCodeHash: Hash, // `c`
-  gas: Gas,
-  serviceIndex: ServiceIndex,
-  workPackageHash: WorkPackageHash,
-  workPayload: Uint8Array, // `y`
-  refinementContext: RefinementContext, // `c`
-  authorizerHash: Hash, // `a`
-  authorizerOutput: Uint8Array, // `o`
-  importSegments: ExportSegment[], // `i`
-  workData: Uint8Array[], // `x`
+  index: number, // `i`
+  workPackage: WorkPackageWithAuth, // `p`
+  authorizerOutput: Uint8Array, // `bold_o`
+  importSegments: ExportSegment[][], // `\overline{i}`
   exportSegmentOffset: number, // `ς`
   deps: {
     delta: Delta;
@@ -54,15 +71,17 @@ export const refineInvocation = (
   },
 ): {
   result: WorkOutput;
+  // exported segments
   out: RefineContext["e"];
 } => {
+  const w = workPackage.workItems[index];
   const lookupResult = historicalLookup(
-    deps.delta.get(serviceIndex)!,
-    refinementContext.lookupAnchor.timeSlot,
-    serviceCodeHash,
+    deps.delta.get(w.serviceIndex)!,
+    workPackage.context.lookupAnchor.timeSlot,
+    w.codeHash,
   );
   // first matching case
-  if (!deps.delta.has(serviceIndex) || typeof lookupResult === "undefined") {
+  if (!deps.delta.has(w.serviceIndex) || typeof lookupResult === "undefined") {
     return { result: WorkError.Bad, out: [] };
   }
   // second metching case
@@ -71,18 +90,28 @@ export const refineInvocation = (
   }
 
   // encode
-  const a = new Uint8Array();
+  const a = encodeWithCodec(refine_a_Codec, {
+    serviceIndex: w.serviceIndex,
+    payload: w.payload,
+    packageHash: Hashing.blake2b<WorkPackageHash>(
+      encodeWithCodec(WorkPackageCodec, workPackage),
+    ),
+    context: workPackage.context,
+    authorizerHash: workPackage.pa,
+  });
+
   const argOut = argumentInvocation(
     lookupResult,
-    5 as u32,
-    gas,
+    <u32>0, // instructionPointer
+    w.refinementGasLimit,
     a,
     F_fn(
-      serviceIndex,
+      w.serviceIndex,
       deps.delta,
       deps.tau,
       importSegments,
       exportSegmentOffset,
+      authorizerOutput,
     ),
     {
       m: new Map(),
@@ -108,15 +137,17 @@ const F_fn: (
   service: ServiceIndex,
   delta: Delta,
   tau: Tau,
-  exportedSegments: ExportSegment[],
+  overline_i: ExportSegment[][],
   exportSegmentOffset: number,
+  authorizerOutput: Uint8Array,
 ) => HostCallExecutor<RefineContext> =
   (
     service: ServiceIndex,
     delta: Delta,
     tau: Tau,
-    exportedSegments: ExportSegment[],
+    overline_i: ExportSegment[][],
     exportSegmentOffset: number,
+    authorizerOutput: Uint8Array,
   ) =>
   (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
@@ -128,11 +159,13 @@ const F_fn: (
           omega_h(input.ctx, service, delta, tau),
         );
       case "import":
-        return applyMods(
+      /*return applyMods(
           input.ctx,
           input.out,
           omega_y(input.ctx, exportedSegments),
         );
+        */
+      // TODO: change with fetch
       case "export":
         return applyMods(
           input.ctx,
@@ -156,7 +189,7 @@ const F_fn: (
       default:
         return applyMods(input.ctx, input.out, [
           IxMod.gas(10n),
-          IxMod.reg(7, HostCallResult.WHAT),
+          IxMod.w7(HostCallResult.WHAT),
         ]);
     }
   };
