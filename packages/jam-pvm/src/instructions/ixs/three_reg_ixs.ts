@@ -9,7 +9,7 @@ import {
   u32,
   u8,
 } from "@tsjam/types";
-import { Z4, Z8_inv } from "@/utils/zed.js";
+import { Z4, Z8, Z8_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
 import { IxMod, X_4 } from "@/instructions/utils.js";
 
