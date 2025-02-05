@@ -28,6 +28,7 @@ import {
   createSetCodec,
   encodeWithCodec,
   ValidatorStatisticsCodec,
+  WorkPackageHashCodec,
 } from "@tsjam/codec";
 import {
   RHO,
@@ -41,6 +42,7 @@ import {
   WorkReport,
   SafroleState,
   ByteArrayOfLength,
+  SeqOfLength,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -285,7 +287,6 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 5
-  // TODO: sorting of verticts
   toRet.set(
     C_fn(5),
     new Uint8Array([
@@ -385,50 +386,37 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 14
+  const sortedDepsQueue = state.accumulationQueue.map((a) =>
+    a.map((b) => ({
+      workReport: b.workReport,
+      dependencies: [...b.dependencies.values()].sort((a, b) =>
+        a - b < 0 ? -1 : 1,
+      ),
+    })),
+  );
+  // c
   toRet.set(
     C_fn(14),
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        createArrayLengthDiscriminator<
-          {
+        createArrayLengthDiscriminator(
+          createCodec<{
             workReport: WorkReport;
-            dependencies: Set<WorkPackageHash>;
-          }[]
-        >({
-          encode(value, bytes) {
-            let offset = 0;
-            offset += WorkReportCodec.encode(value.workReport, bytes);
-            offset += createArrayLengthDiscriminator(HashCodec).encode(
-              [...value.dependencies].sort((a, b) => (a - b < 0 ? -1 : 1)),
-              bytes.subarray(offset),
-            );
-            return offset;
-          },
-          decode(bytes) {
-            const wr = WorkReportCodec.decode(bytes);
-            const deps = createArrayLengthDiscriminator(HashCodec).decode(
-              bytes.subarray(wr.readBytes),
-            );
-            return {
-              value: {
-                workReport: wr.value,
-                dependencies: new Set(deps.value as WorkPackageHash[]),
-              },
-              readBytes: wr.readBytes + deps.readBytes,
-            };
-          },
-          encodedSize(value) {
-            return (
-              WorkReportCodec.encodedSize(value.workReport) +
-              createArrayLengthDiscriminator(HashCodec).encodedSize([
-                ...value.dependencies,
-              ])
-            );
-          },
-        }),
+            dependencies: WorkPackageHash[];
+          }>([
+            ["workReport", WorkReportCodec],
+            [
+              "dependencies",
+              createArrayLengthDiscriminator(WorkPackageHashCodec),
+            ],
+          ]),
+        ),
       ),
-      state.accumulationQueue,
+      sortedDepsQueue as SeqOfLength<
+        { workReport: WorkReport; dependencies: WorkPackageHash[] }[],
+        typeof EPOCH_LENGTH
+      >,
     ),
   );
 

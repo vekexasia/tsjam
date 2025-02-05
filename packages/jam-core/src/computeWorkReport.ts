@@ -305,5 +305,6 @@ export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   };
 };
 
-const merkleTreeRootRetriever: (h: Hash) => Uint8Array[] = () => []; // todokk
+// TODO:
+const merkleTreeRootRetriever: (h: Hash) => Uint8Array[] = () => [];
 const blobPreimageRetriever: (h: Hash) => Uint8Array = () => new Uint8Array(); // todg
