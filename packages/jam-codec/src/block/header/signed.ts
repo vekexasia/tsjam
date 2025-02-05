@@ -7,7 +7,7 @@ import { BandersnatchSignatureCodec } from "@/identity.js";
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
  * it does use the UnsignedHeaderCodec and appends the block seal
- * $(0.5.4 - C.19)
+ * $(0.6.1 - C.19)
  */
 export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
   decode(bytes: Uint8Array) {

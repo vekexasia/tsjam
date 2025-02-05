@@ -56,7 +56,7 @@ export const importDataSegmentCodec: JamCodec<
 };
 
 /**
- * $(0.5.4 - C.26)
+ * $(0.6.1 - C.26)
  */
 export const WorkItemCodec = createCodec<WorkItem>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)],

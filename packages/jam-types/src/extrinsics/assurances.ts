@@ -9,7 +9,6 @@ import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * The assurance extrinsic is a proof that a validator has received and is storing a piece of data.
- * @see section 11.2.1
  */
 export type AssuranceExtrinsic = {
   /**
@@ -34,7 +33,7 @@ export type AssuranceExtrinsic = {
  * correctly received and are storing locally. This is
  * denoted `Ea`.
  * anchored on the parent and ordered by `AssuranceExtrinsic.validatorIndex`
- * $(0.5.4 - 11.10)
+ * $(0.6.1 - 11.10)
  */
 export type EA_Extrinsic = UpToSeq<
   AssuranceExtrinsic,

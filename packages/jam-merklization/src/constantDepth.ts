@@ -8,7 +8,7 @@ const leaf: Uint8Array = new TextEncoder().encode("leaf");
 
 /**
  * `M`
- * $(0.5.4 - E.4)
+ * $(0.6.1 - E.4)
  */
 export const constantDepthBinaryTree = (
   elements: Uint8Array[],
@@ -18,7 +18,7 @@ export const constantDepthBinaryTree = (
 };
 
 /**
- * $(0.5.4 - E.5)
+ * $(0.6.1 - E.5)
  */
 export const J_fn = (
   x: number,
@@ -38,7 +38,7 @@ export const J_fn = (
 
 /**
  * `L` - leaves
- * $(0.5.4 - E.6)
+ * $(0.6.1 - E.6)
  * @param x - slice
  * @param elements - elements
  * @param index - the index to trace
@@ -64,7 +64,7 @@ export const L_fn = (
 
 /**
  * `C` function
- * $(0.5.4 - E.7)
+ * $(0.6.1 - E.7)
  * hashes all data and pads the array to the next power of 2
  * @param elements - preimage elements
  * @param hashFn - the hashing function

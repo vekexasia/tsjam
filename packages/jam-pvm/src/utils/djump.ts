@@ -17,7 +17,7 @@ const ZA = 2;
  * @param context - the current evaluating context
  * @param a - the address to jump to
  * @param mods - mods to apply in both cases
- * $(0.5.4 - A.15)
+ * $(0.6.1 - A.17)
  */
 export const djump = (
   context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],

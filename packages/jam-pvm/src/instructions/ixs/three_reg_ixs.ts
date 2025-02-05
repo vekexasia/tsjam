@@ -6,13 +6,11 @@ import {
   PVMIxEvaluateFN,
   RegisterIdentifier,
   RegisterValue,
-  SeqOfLength,
   u32,
   u8,
 } from "@tsjam/types";
-import { Z4, Z4_inv, Z8, Z8_inv } from "@/utils/zed.js";
+import { Z4, Z8_inv } from "@/utils/zed.js";
 import { regIx } from "@/instructions/ixdb.js";
-import { beforeEach } from "vitest";
 import { IxMod, X_4 } from "@/instructions/utils.js";
 
 type EvaluateType = [
@@ -22,7 +20,7 @@ type EvaluateType = [
 ];
 type InputType = [RegisterIdentifier, RegisterIdentifier, RegisterIdentifier];
 
-// $(0.5.4 - A.28)
+// $(0.6.1 - A.30)
 const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   if (bytes.length < 2) {
     return err(new PVMIxDecodeError("not enough bytes (2)"));
@@ -320,7 +318,7 @@ const xnor = create(226 as u8, "xnor", (context, wA, wB, rD) => {
 const max = create(227 as u8, "max", (context, wA, wB, rD) => {
   const z8a = Z8(wA);
   const z8b = Z8(wB);
-  // gp at 0.5.4  is wrong here
+  // gp at 0.6.1  is wrong here
   return ok([IxMod.reg(rD, z8a > z8b ? wA : wB)]);
 });
 

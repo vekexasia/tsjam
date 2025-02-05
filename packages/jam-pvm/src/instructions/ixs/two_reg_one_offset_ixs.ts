@@ -13,7 +13,7 @@ import { regIx } from "@/instructions/ixdb.js";
 import { E_sub } from "@tsjam/codec";
 import { Result, ok } from "neverthrow";
 
-// $(0.5.4 - A.26)
+// $(0.6.1 - A.28)
 const decode = (
   bytes: Uint8Array,
 ): Result<

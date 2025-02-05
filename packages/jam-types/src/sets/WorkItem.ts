@@ -10,7 +10,7 @@ import {
 /**
  * Identified by `I` set
  * @see section 14.3
- * $(0.5.4 - 14.3 / 14.4)
+ * $(0.6.1 - 14.3 / 14.4)
  */
 export interface WorkItem {
   /**

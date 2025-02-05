@@ -4,7 +4,7 @@ import { Gas, PVMIxExecutionError, u64, u8 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { regIx } from "@/instructions/ixdb.js";
 
-// $(0.5.4 - A.17)
+// $(0.6.1 - A.19)
 export const ecalli = regIx<[u8]>({
   opCode: 10 as u8,
   identifier: "ecalli",

@@ -1,6 +1,6 @@
 /**
  * defined as `J` set in the paper
- * $(0.5.4 - 11.7)
+ * $(0.6.1 - 11.7)
  */
 export enum WorkError {
   /**

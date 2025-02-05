@@ -42,7 +42,7 @@ export enum DisputesToPosteriorError {
 
 /**
  * Computes state transition for disputes state
- * $(0.5.4 - 4.12)
+ * $(0.6.1 - 4.12)
  */
 export const disputesSTF: STF<
   IDisputesState,
@@ -54,7 +54,7 @@ export const disputesSTF: STF<
   },
   DisputesToPosteriorError
 > = (input, curState) => {
-  // $(0.5.4 - 10.2)
+  // $(0.6.1 - 10.2)
   for (const v of input.extrinsic.verdicts) {
     if (
       v.epochIndex !== epochIndex(input.curTau) &&
@@ -69,7 +69,7 @@ export const disputesSTF: STF<
   }
 
   // enforce culprit keys are not in psi_o and signture is valid
-  // $(0.5.4 - 10.5)
+  // $(0.6.1 - 10.5)
   const _checkculprit = input.extrinsic.culprit.map((culprit) => {
     if (curState.psi_o.has(culprit.ed25519PublicKey)) {
       return err(
@@ -95,7 +95,7 @@ export const disputesSTF: STF<
   }
 
   // enforce faults keys are not in psi_o and signature is valid
-  // $(0.5.4 - 10.6)
+  // $(0.6.1 - 10.6)
   const _checkfaults = input.extrinsic.faults.map((fault) => {
     if (curState.psi_o.has(fault.ed25519PublicKey)) {
       return err(
@@ -120,7 +120,7 @@ export const disputesSTF: STF<
   }
 
   // enforce verdicts are ordered and not duplicated by report hash
-  // $(0.5.4 - 10.7)
+  // $(0.6.1 - 10.7)
   const currentEpoch = epochIndex(input.curTau);
   if (
     input.extrinsic.verdicts.length > 0 &&
@@ -144,7 +144,7 @@ export const disputesSTF: STF<
   }
 
   // enforce culprit are ordered by ed25519PublicKey
-  // $(0.5.4 - 10.8)
+  // $(0.6.1 - 10.8)
   if (input.extrinsic.culprit.length > 0) {
     for (let i = 1; i < input.extrinsic.culprit.length; i++) {
       const [prev, curr] = [
@@ -160,7 +160,7 @@ export const disputesSTF: STF<
   }
 
   // enforce faults are ordered by ed25519PublicKey
-  // $(0.5.4 - 10.8)
+  // $(0.6.1 - 10.8)
   if (input.extrinsic.faults.length > 0) {
     for (let i = 1; i < input.extrinsic.faults.length; i++) {
       const [prev, curr] = [
@@ -177,7 +177,7 @@ export const disputesSTF: STF<
 
   // ensure verdict report hashes are not in psi_g or psi_b or psi_w
   // aka not in the set of work reports that were judged to be valid, bad or wonky already
-  // $(0.5.4 - 10.9)
+  // $(0.6.1 - 10.9)
   for (const verdict of input.extrinsic.verdicts) {
     if (curState.psi_g.has(verdict.hash)) {
       return err(DisputesToPosteriorError.VERDICTS_IN_PSI_G);
@@ -191,7 +191,7 @@ export const disputesSTF: STF<
   }
 
   // ensure judgements are ordered by validatorIndex
-  // $(0.5.4 - 10.10)
+  // $(0.6.1 - 10.10)
   if (
     false ===
     input.extrinsic.verdicts.every((verdict) => {
@@ -212,7 +212,7 @@ export const disputesSTF: STF<
   }
 
   // ensure that judgements are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
-  // $(0.5.4 - 10.11 / 10.12)
+  // $(0.6.1 - 10.11 / 10.12)
   // first compute `V`
   const V: Array<{ reportHash: Hash; votes: number }> =
     input.extrinsic.verdicts.map((verdict) => {
@@ -242,7 +242,7 @@ export const disputesSTF: STF<
   );
 
   // ensure any positive verdicts are in faults
-  // $(0.5.4 - 10.13)
+  // $(0.6.1 - 10.13)
   if (
     false ===
     positiveVerdicts.every((v) => {
@@ -256,7 +256,7 @@ export const disputesSTF: STF<
   }
 
   // ensure any negative verdicts have at least 2 in cuprit
-  // $(0.5.4 - 10.14)
+  // $(0.6.1 - 10.14)
   if (
     false ===
     negativeVerdicts.every((v) => {
@@ -273,7 +273,7 @@ export const disputesSTF: STF<
   }
 
   // verify all signatures
-  // $(0.5.4 - 10.3)
+  // $(0.6.1 - 10.3)
   if (
     false ===
     input.extrinsic.verdicts.every((verdict) => {
@@ -311,7 +311,7 @@ export const disputesSTF: STF<
   }
 
   const p_state = {
-    // $(0.5.4 - 10.16)
+    // $(0.6.1 - 10.16)
     psi_g: new Set([
       ...curState.psi_g,
       ...V.filter(
@@ -319,7 +319,7 @@ export const disputesSTF: STF<
       ).map(({ reportHash }) => reportHash),
     ]),
 
-    // $(0.5.4 - 10.17)
+    // $(0.6.1 - 10.17)
     psi_b: new Set([
       ...curState.psi_b,
       ...V.filter(({ votes }) => votes == 0).map(
@@ -327,7 +327,7 @@ export const disputesSTF: STF<
       ),
     ]),
 
-    // $(0.5.4 - 10.18)
+    // $(0.6.1 - 10.18)
     psi_w: new Set([
       ...curState.psi_w,
       ...V.filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3).map(
@@ -335,7 +335,7 @@ export const disputesSTF: STF<
       ),
     ]),
 
-    // $(0.5.4 - 10.19)
+    // $(0.6.1 - 10.19)
     psi_o: new Set([
       ...curState.psi_o,
       ...input.extrinsic.culprit.map(
@@ -346,7 +346,7 @@ export const disputesSTF: STF<
   } as Posterior<IDisputesState>;
 
   // perform some other last checks
-  // $(0.5.4 - 10.6) of the graypaper states that faults reports should be in psi_b' if `r`
+  // $(0.6.1 - 10.6) of the graypaper states that faults reports should be in psi_b' if `r`
   for (let i = 0; i < input.extrinsic.faults.length; i++) {
     const { hash, validity } = input.extrinsic.faults[i];
     if (validity == 1) {
@@ -364,7 +364,7 @@ export const disputesSTF: STF<
     }
   }
 
-  // $(0.5.4 - 10.5)
+  // $(0.6.1 - 10.5)
   for (let i = 0; i < input.extrinsic.culprit.length; i++) {
     const { hash } = input.extrinsic.culprit[i];
     if (!p_state.psi_b.has(hash)) {

@@ -47,7 +47,7 @@ import assert from "assert";
  * @see A_fn
  * @see C_fn
  * @see M_fn
- * $(0.5.4 - 14.11)
+ * $(0.6.1 - 14.11)
  */
 export const computeWorkReport = (
   pac: WorkPackageWithAuth,
@@ -134,7 +134,7 @@ export const computeWorkReport = (
 /**
  * compute availability specifier
  * @returns AvailabilitySpecification
- * $(0.5.4 - 14.16)
+ * $(0.6.1 - 14.16)
  */
 const A_fn = (
   workPackageHash: WorkPackageHash,
@@ -165,7 +165,7 @@ const A_fn = (
 
 /**
  * Paged Proof
- * $(0.5.4 - 14.10)
+ * $(0.6.1 - 14.10)
  */
 const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
@@ -238,7 +238,7 @@ const I_fn = (
 };
 
 /**
- * $(0.5.4 - 14.12)
+ * $(0.6.1 - 14.12)
  */
 const L_fn = (
   hash: WorkItem["importedDataSegments"][0]["root"],
@@ -255,7 +255,7 @@ const L_fn = (
 };
 
 /**
- * $(0.5.4 - 14.14)
+ * $(0.6.1 - 14.14)
  */
 const X_fn = (workItem: WorkItem) => {
   return workItem.exportedDataSegments.map(({ blobHash }) => {
@@ -263,7 +263,7 @@ const X_fn = (workItem: WorkItem) => {
   });
 };
 /**
- * $(0.5.4 - 14.14)
+ * $(0.6.1 - 14.14)
  */
 const S_fn = (
   workItem: WorkItem,
@@ -277,7 +277,7 @@ const S_fn = (
   );
 };
 /**
- * $(0.5.4 - 14.14)
+ * $(0.6.1 - 14.14)
  */
 const inner_J_fn = (
   workItem: WorkItem,
@@ -293,7 +293,7 @@ const inner_J_fn = (
 
 /**
  * (179) `C` constructs WorkResult from item and output
- * $(0.5.4 - 14.8)
+ * $(0.6.1 - 14.8)
  */
 export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   return {

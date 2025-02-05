@@ -17,7 +17,7 @@ import { buildKeyValueCodec } from "@/dicts/keyValue.js";
 import { createCodec } from "@/utils";
 
 /**
- * $(0.5.4 - C.24)
+ * $(0.6.1 - C.24)
  */
 export const WorkReportCodec = createCodec<WorkReport>([
   // s

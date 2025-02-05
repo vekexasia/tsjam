@@ -12,7 +12,7 @@ import { regIx } from "@/instructions/ixdb.js";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 
-// $(0.5.4 - A.27)
+// $(0.6.1 - A.27)
 const decode = (
   bytes: Uint8Array,
 ): Result<

@@ -12,7 +12,7 @@ import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
 
-// $(0.5.4 - A.22)
+// $(0.6.1 - A.24)
 export const decode = (
   bytes: Uint8Array,
 ): Result<

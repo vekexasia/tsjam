@@ -19,7 +19,7 @@ import { ok } from "neverthrow";
 /**
  * Phi function
  * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
- * @see $(0.5.4 - 6.14)
+ * @see $(0.6.1 - 6.14)
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper
@@ -40,7 +40,7 @@ export const PHI_FN = <T extends ValidatorData[]>(
 
 /**
  * rotates all keys
- * $(0.5.4 - 4.10 / 4.11 / 6.13)
+ * $(0.6.1 - 4.10 / 4.11 / 6.13)
  */
 export const rotateKeys: STF<
   [

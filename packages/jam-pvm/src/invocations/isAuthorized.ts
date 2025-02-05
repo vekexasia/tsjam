@@ -10,14 +10,14 @@ import { argumentInvocation } from "@/invocations/argument.js";
 import { E_4, WorkPackageCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
-import { HostCallResult, MAX_GAS_IS_AUTHORIZED } from "@tsjam/constants";
+import { HostCallResult, TOTAL_GAS_IS_AUTHORIZED } from "@tsjam/constants";
 import { IxMod } from "@/instructions/utils";
 import { applyMods } from "@/functions/utils";
 
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
- * $(0.5.4 - B.1)
+ * $(0.6.1 - B.1)
  */
 export const isAuthorized = (
   p: WorkPackage,
@@ -29,7 +29,7 @@ export const isAuthorized = (
   const res = argumentInvocation(
     new Uint8Array(), // todo missing the preimage fetch
     0 as u32,
-    MAX_GAS_IS_AUTHORIZED as Gas,
+    TOTAL_GAS_IS_AUTHORIZED as Gas,
     args,
     F_Fn,
     undefined as unknown as PVMResultContext, // something is missing from the paper
@@ -46,7 +46,7 @@ export const isAuthorized = (
   throw new Error("unexpected");
 };
 
-// $(0.5.4 - B.2)
+// $(0.6.1 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     return applyMods(input.ctx, input.out as never, omega_g(input.ctx));

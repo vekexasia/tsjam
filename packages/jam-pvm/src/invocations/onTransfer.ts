@@ -44,7 +44,7 @@ const argumentInvocationTransferCodec = createCodec<{
   ],
 ]);
 /**
- * $(0.5.4 - B.14 / B.15)
+ * $(0.6.1 - B.14 / B.15)
  */
 export const transferInvocation = (
   d: Delta,
@@ -83,7 +83,7 @@ export const transferInvocation = (
 };
 
 /**
- * $(0.5.4 - B.16)
+ * $(0.6.1 - B.16)
  */
 const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   (d: Delta, s: ServiceIndex) =>

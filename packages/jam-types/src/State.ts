@@ -19,7 +19,7 @@ import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
 /**
  * `σ`
  * Defines the state of JAM by combining all substate components
- * $(0.5.4 - 4.4)
+ * $(0.6.1 - 4.4)
  */
 export type JamState = {
   /**

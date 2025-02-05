@@ -10,7 +10,7 @@ import {
 /**
  * Comutes `bold Q` in thye paper which is the sequence of work reports which may be required
  * to be audited by the validator
- * $(0.5.4 - 17.2)
+ * $(0.6.1 - 17.2)
  */
 export const computeRequiredWorkReports = (
   rho: RHO,

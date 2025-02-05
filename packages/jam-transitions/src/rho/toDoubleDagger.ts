@@ -5,7 +5,7 @@ import { availableReports } from "@tsjam/pvm";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
- * $(0.5.4 - 11.17)
+ * $(0.6.1 - 11.17)
  */
 export const RHO2DoubleDagger: STF<
   Dagger<RHO>,

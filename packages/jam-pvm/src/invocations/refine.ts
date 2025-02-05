@@ -131,7 +131,7 @@ export const refineInvocation = (
 };
 
 /**
- * $(0.5.4 - B.5)
+ * $(0.6.1 - B.5)
  */
 const F_fn: (
   service: ServiceIndex,

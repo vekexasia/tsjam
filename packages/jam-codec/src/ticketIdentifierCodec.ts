@@ -4,7 +4,7 @@ import { E } from "@/ints/e.js";
 import { createCodec, mapCodec } from "./utils";
 
 /**
- * $(0.5.4 - C.27)
+ * $(0.6.1 - C.27)
  */
 export const TicketIdentifierCodec = createCodec<TicketIdentifier>([
   ["id", OpaqueHashCodec],

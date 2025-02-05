@@ -77,7 +77,7 @@ export enum ImportBlockError {
 /**
  * the main State Transition Function
  * `Υ` in the paper
- * $(0.5.4 - 4.1)
+ * $(0.6.1 - 4.1)
  */
 export const importBlock: STF<
   JamState,
@@ -98,7 +98,7 @@ export const importBlock: STF<
   };
   const { p_tau } = tauTransition;
 
-  // $(0.5.4 - 5.7)
+  // $(0.6.1 - 5.7)
   if (
     tauTransition.tau >= tauTransition.p_tau &&
     tauTransition.p_tau * BLOCK_TIME < Timekeeping.bigT()
@@ -270,14 +270,14 @@ export const importBlock: STF<
     return err(rhoPostErr);
   }
 
-  // $(0.5.4 - 12.20)
+  // $(0.6.1 - 12.20)
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
       [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.5.4 - 12.21)
+  // $(0.6.1 - 12.21)
   const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
     g,
     w_star,
@@ -291,7 +291,7 @@ export const importBlock: STF<
     curState.tau,
   );
 
-  // $(0.5.4 - 12.22)
+  // $(0.6.1 - 12.22)
   const p_privilegedServices = toPosterior(o.privServices);
   const d_delta = o.delta as Dagger<Delta>;
   const p_iota = toPosterior(o.validatorKeys);
@@ -401,7 +401,7 @@ export const importBlock: STF<
     headerLookupHistory: p_headerLookupHistory,
   });
 
-  // $(0.5.4 - 5.2)
+  // $(0.6.1 - 5.2)
   if (
     block.header.parent !==
     curState.recentHistory[curState.recentHistory.length - 1].headerHash
@@ -409,7 +409,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidParentHeader);
   }
 
-  // $(0.5.4 - 5.8)
+  // $(0.6.1 - 5.8)
   const prevMerkleRoot = merkelizeState(curState);
   if (prevMerkleRoot !== block.header.priorStateRoot) {
     return err(ImportBlockError.InvalidParentStateRoot);

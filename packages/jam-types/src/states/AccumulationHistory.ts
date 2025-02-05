@@ -3,7 +3,7 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 
 /**
  * `ξ` in the graypaper
- * $(0.5.4 - 12.1)
+ * $(0.6.1 - 12.1)
  */
 export type AccumulationHistory = SeqOfLength<
   Set<WorkPackageHash>,
