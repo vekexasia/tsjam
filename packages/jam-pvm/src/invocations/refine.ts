@@ -24,6 +24,7 @@ import {
   omega_x,
   omega_e,
   omega_z,
+  omega_y,
 } from "@/functions/refine.js";
 import { FnsDb } from "@/functions/fnsdb.js";
 import { applyMods } from "@/functions/utils.js";
@@ -112,6 +113,8 @@ export const refineInvocation = (
       importSegments,
       exportSegmentOffset,
       authorizerOutput,
+      workPackage,
+      index,
     ),
     {
       m: new Map(),
@@ -140,6 +143,8 @@ const F_fn: (
   overline_i: ExportSegment[][],
   exportSegmentOffset: number,
   authorizerOutput: Uint8Array,
+  workPackage: WorkPackageWithAuth,
+  workIndex: number,
 ) => HostCallExecutor<RefineContext> =
   (
     service: ServiceIndex,
@@ -148,6 +153,8 @@ const F_fn: (
     overline_i: ExportSegment[][],
     exportSegmentOffset: number,
     authorizerOutput: Uint8Array,
+    workPackage: WorkPackageWithAuth,
+    workItemIndex: number,
   ) =>
   (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
@@ -158,14 +165,18 @@ const F_fn: (
           input.out,
           omega_h(input.ctx, service, delta, tau),
         );
-      case "import":
-      /*return applyMods(
+      case "fetch":
+        return applyMods(
           input.ctx,
           input.out,
-          omega_y(input.ctx, exportedSegments),
+          omega_y(
+            input.ctx,
+            workItemIndex,
+            workPackage,
+            authorizerOutput,
+            overline_i,
+          ),
         );
-        */
-      // TODO: change with fetch
       case "export":
         return applyMods(
           input.ctx,

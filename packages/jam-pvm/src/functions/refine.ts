@@ -3,7 +3,7 @@ import {
   Delta,
   ExportSegment,
   Gas,
-  Hash,
+  PVMExitPanicMod,
   PVMMemoryAccessKind,
   PVMProgramExecutionContextBase,
   PVMSingleModMemory,
@@ -14,6 +14,7 @@ import {
   Tau,
   u32,
   u8,
+  WorkPackageWithAuth,
 } from "@tsjam/types";
 import { W7, W8 } from "@/functions/utils.js";
 import {
@@ -21,12 +22,20 @@ import {
   ERASURECODE_EXPORTED_SIZE,
   HostCallResult,
   InnerPVMResultCode,
+  MAX_WORKPACKAGE_ENTRIES,
   Zp,
 } from "@tsjam/constants";
 import { toSafeMemoryAddress } from "@/pvmMemory.js";
-import { bytesToBigInt, historicalLookup } from "@tsjam/utils";
+import { historicalLookup, zeroPad } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
-import { E_4, E_8, PVMProgramCodec } from "@tsjam/codec";
+import {
+  E_4,
+  E_8,
+  encodeWithCodec,
+  HashCodec,
+  PVMProgramCodec,
+  WorkPackageCodec,
+} from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
 import { ParsedProgram } from "@/parseProgram.js";
 import assert from "node:assert";
@@ -61,20 +70,17 @@ export type RefineContext = {
  */
 export const omega_h = regFn<
   [s: ServiceIndex, delta: Delta, t: Tau],
-  W7 | PVMSingleModMemory
+  W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
     opCode: 17 as u8,
     identifier: "historical_lookup",
     gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
-      const [_w7, h0, b0, bz] = context.registers.slice(7);
+      const [_w7, h, o, w10, w11] = context.registers.slice(7);
       const w7 = Number(_w7);
-      if (
-        context.memory.canRead(toSafeMemoryAddress(h0), 32) ||
-        !context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz))
-      ) {
-        return [IxMod.w7(HostCallResult.OOB)];
+      if (context.memory.canRead(toSafeMemoryAddress(h), 32)) {
+        return [IxMod.panic()];
       }
       let a: ServiceAccount | undefined;
       if (_w7 === 2n ** 64n - 1n && delta.has(s)) {
@@ -85,47 +91,97 @@ export const omega_h = regFn<
       if (typeof a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
-      const h: Hash = bytesToBigInt(
-        context.memory.getBytes(toSafeMemoryAddress(h0), 32),
-      );
-      const v = historicalLookup(a, t, h);
+
+      const v = historicalLookup(
+        a,
+        t,
+        HashCodec.decode(context.memory.getBytes(toSafeMemoryAddress(h), 32))
+          .value,
+      )!;
+
       if (typeof v === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
 
-      return [
-        IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(Number(bz), v.length))),
-      ];
+      const f = Math.min(Number(w10), v.length);
+      const l = Math.min(Number(w11), v.length - f);
+
+      return [IxMod.w7(v.length), IxMod.memory(o, v.subarray(f, l))];
     },
   },
 });
 
 /**
  * `ΩY` in the graypaper
- * import segment host cal
+ * fetch
  */
-export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
+export const omega_y = regFn<
+  [
+    workItemIndex: number, // i
+    workPackage: WorkPackageWithAuth, // p
+    authOutput: Uint8Array, // bold_o
+    overline_i: ExportSegment[][], // \overline_i
+  ],
+  W7 | PVMSingleModMemory | PVMExitPanicMod
+>({
   fn: {
     opCode: 18 as u8,
-    identifier: "import",
+    identifier: "fetch",
     gasCost: 10n as Gas,
-    execute(context, i) {
-      const [w7, o, w2] = context.registers.slice(7);
-      const _w7 = Number(w7);
-      if (w7 >= i.length) {
+    execute(context, i, p, bold_o, overline_i) {
+      const [o, w8, w9, w10, w11, w12] = context.registers.slice(7);
+      const _w11 = Number(w11);
+      const _w12 = Number(w12);
+
+      let v: Uint8Array | undefined;
+      if (w10 === 0n) {
+        v = encodeWithCodec(WorkPackageCodec, p);
+      } else if (w10 === 1n) {
+        v = bold_o;
+      } else if (w10 === 2n && w11 < p.workItems.length) {
+        v = p.workItems[_w11].payload;
+      } else if (
+        w10 === 3n &&
+        w11 < p.workItems.length &&
+        w12 < p.workItems[_w11].exportedDataSegments.length &&
+        false /* TODO: what is boldx */
+      ) {
+      } else if (
+        w10 === 4n &&
+        w11 < p.workItems[i].exportedDataSegments.length &&
+        false /* TODO: see above */
+      ) {
+      } else if (
+        w10 === 5n &&
+        w11 < overline_i.length &&
+        w12 < overline_i[_w11].length
+      ) {
+        v = overline_i[_w11][_w12];
+      } else if (w10 === 6n && w11 < overline_i[i].length) {
+        v = overline_i[i][_w11];
+      }
+
+      const f = Math.min(Number(w8), (v || []).length);
+      const l = Math.min(Number(w9), (v || []).length - f);
+      let memory: PVMSingleModMemory[] = [];
+      if (
+        typeof v !== "undefined" &&
+        context.memory.canWrite(toSafeMemoryAddress(o), l)
+      ) {
+        memory = [IxMod.memory(o, v.subarray(f, l))];
+      }
+
+      if (
+        !context.memory.canRead(toSafeMemoryAddress(o), l) ||
+        (w9 == 5n && context.memory.canRead(toSafeMemoryAddress(w10), 32))
+      ) {
+        return [...memory, IxMod.panic()];
+      }
+
+      if (typeof v === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
-      const v = i[_w7];
-      const l = Math.min(
-        Number(w2),
-        ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
-      );
-
-      if (!context.memory.canWrite(toSafeMemoryAddress(o), l)) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
-      return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, v.subarray(0, l))];
+      return [IxMod.w7(v.length)];
     },
   },
 });
@@ -136,31 +192,27 @@ export const omega_y = regFn<[i: ExportSegment[]], W7 | PVMSingleModMemory>({
  */
 export const omega_e = regFn<
   [ctx: RefineContext, segmentOffset: number],
-  W7 | PVMSingleModObject<RefineContext>
+  W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
     opCode: 19 as u8,
     identifier: "export",
     gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
-      // TODO:refactor
       const [p, w8] = context.registers.slice(7);
-      const z = Math.min(
-        Number(w8),
-        ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE,
-      );
+      const WG = ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE;
+      const z = Math.min(Number(w8), WG);
+
       if (!context.memory.canRead(toSafeMemoryAddress(p), z)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
-      if (offset + refineCtx.e.length >= 11 /* Wx */) {
+      if (offset + refineCtx.e.length >= MAX_WORKPACKAGE_ENTRIES) {
         return [IxMod.w7(HostCallResult.FULL)];
       }
-      const x = new Uint8Array(
-        Math.ceil(z / (ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE)),
-      ).fill(0);
-      x.set(context.memory.getBytes(toSafeMemoryAddress(p), z));
+      const x = zeroPad(WG, context.memory.getBytes(toSafeMemoryAddress(p), z));
+
       return [
-        IxMod.w7(HostCallResult.OK),
+        IxMod.w7(offset + refineCtx.e.length),
         IxMod.obj({ ...refineCtx, e: [...refineCtx.e, x] }),
       ];
     },
@@ -173,7 +225,7 @@ export const omega_e = regFn<
  */
 export const omega_m = regFn<
   [refineCtx: RefineContext],
-  W7 | PVMSingleModObject<RefineContext>
+  W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
     opCode: 20 as u8,
@@ -182,7 +234,7 @@ export const omega_m = regFn<
     execute(context, refineCtx) {
       const [p0, pz, i] = context.registers.slice(7);
       if (!context.memory.canWrite(toSafeMemoryAddress(p0), Number(pz))) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
       const p = context.memory.getBytes(toSafeMemoryAddress(p0), Number(pz));
       const sortedKeys = [...refineCtx.m.keys()].sort((a, b) => a - b);
@@ -212,35 +264,35 @@ export const omega_m = regFn<
  */
 export const omega_p = regFn<
   [refineCtx: RefineContext],
-  W7 | PVMSingleModMemory
+  W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
     opCode: 21 as u8,
     identifier: "peek",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
-      const [n, a, b, l] = context.registers.slice(7);
+      const [n, o, s, z] = context.registers.slice(7);
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), Number(z))) {
+        return [IxMod.panic()];
+      }
       if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
       if (
         !refineCtx.m
           .get(Number(n))!
-          .memory.canRead(toSafeMemoryAddress(b), Number(l))
+          .memory.canRead(toSafeMemoryAddress(s), Number(z))
       ) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
-      if (!context.memory.canWrite(toSafeMemoryAddress(a), Number(l))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.memory(
-          a,
+          o,
           refineCtx.m
             .get(Number(n))!
-            .memory.getBytes(toSafeMemoryAddress(b), Number(l)),
+            .memory.getBytes(toSafeMemoryAddress(s), Number(z)),
         ),
       ];
     },
@@ -253,7 +305,7 @@ export const omega_p = regFn<
  */
 export const omega_o = regFn<
   [RefineContext],
-  W7 | PVMSingleModObject<RefineContext>
+  W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
     opCode: 22 as u8,
@@ -262,16 +314,16 @@ export const omega_o = regFn<
     execute(context, refineCtx) {
       const [_n, s, o, z] = context.registers.slice(7);
       const n = Number(_n);
+      if (!context.memory.canRead(toSafeMemoryAddress(s), Number(z))) {
+        return [IxMod.panic()];
+      }
       if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
       const u = refineCtx.m.get(n)!.memory;
 
-      if (!context.memory.canRead(toSafeMemoryAddress(s), Number(z))) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
       if (!u.canWrite(toSafeMemoryAddress(o), Number(z))) {
-        return [IxMod.w7(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.OOB)];
       }
       const bold_s = context.memory.getBytes(toSafeMemoryAddress(s), Number(z));
 
@@ -374,7 +426,11 @@ export const omega_v = regFn<
  */
 export const omega_k = regFn<
   [RefineContext],
-  W7 | W8 | PVMSingleModMemory | PVMSingleModObject<RefineContext>
+  | W7
+  | W8
+  | PVMSingleModMemory
+  | PVMSingleModObject<RefineContext>
+  | PVMExitPanicMod
 >({
   fn: {
     opCode: 25 as u8,
@@ -384,7 +440,7 @@ export const omega_k = regFn<
       const [_n, o] = context.registers.slice(7);
       const n = Number(_n);
       if (!context.memory.canWrite(toSafeMemoryAddress(o), 60)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
       if (!refineCtx.m.has(n)) {
         return [IxMod.w7(HostCallResult.WHO)];
