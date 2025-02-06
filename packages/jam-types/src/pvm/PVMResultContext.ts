@@ -1,4 +1,3 @@
-import { ServiceAccount } from "@/sets/ServiceAccount.js";
 import { Hash, ServiceIndex } from "@/genericTypes.js";
 import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
 import { PVMAccumulationState } from "./PVMAccumulationState";
@@ -12,17 +11,12 @@ import { PVMAccumulationState } from "./PVMAccumulationState";
  */
 export interface PVMResultContext {
   /**
-   * `d`
-   */
-  delta: Map<ServiceIndex, ServiceAccount>;
-
-  /**
    * `s`
    */
   service: ServiceIndex;
 
   /**
-   * (169)
+   * `u`
    */
   u: PVMAccumulationState;
 

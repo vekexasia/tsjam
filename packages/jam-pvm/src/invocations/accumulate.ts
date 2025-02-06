@@ -3,11 +3,14 @@ import {
   Delta,
   Gas,
   Hash,
+  JamState,
+  Posterior,
   PVMAccumulationOp,
   PVMAccumulationState,
   PVMProgramExecutionContextBase,
   PVMResultContext,
   RegularPVMExitReason,
+  SafroleState,
   ServiceAccount,
   ServiceIndex,
   Tau,
@@ -33,7 +36,9 @@ import {
 } from "@/functions/accumulate.js";
 import { applyMods } from "@/functions/utils.js";
 import {
+  E_4_int,
   E_sub_int,
+  HashCodec,
   PVMAccumulationOpCodec,
   createArrayLengthDiscriminator,
   createCodec,
@@ -49,6 +54,7 @@ import {
 import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
+import { Hashing } from "@tsjam/crypto";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
@@ -72,8 +78,12 @@ export const accumulateInvocation = (
   gas: Gas, // g
   o: PVMAccumulationOp[], // bold_o
   t: Tau, // t
+  deps: {
+    p_tau: Posterior<Tau>;
+    p_eta_0: Posterior<JamState["entropy"][0]>;
+  },
 ): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
-  const iRes = I_fn(pvmAccState, s);
+  const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   // first case
   if (!pvmAccState.delta.has(s)) {
     return [iRes.u, [], undefined, toTagged(0n)];
@@ -89,7 +99,7 @@ export const accumulateInvocation = (
     gas,
     encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
     F_fn(s, t),
-    { x: iRes, y: I_fn(pvmAccState, s) },
+    { x: iRes, y: I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau) },
   );
 
   const _o = mres.exitReason ?? mres.ok![1];
@@ -102,17 +112,37 @@ export const accumulateInvocation = (
 const I_fn = (
   pvmAccState: PVMAccumulationState,
   service: ServiceIndex,
+  p_eta_0: Posterior<JamState["entropy"][0]>,
+  p_tau: Posterior<Tau>,
 ): PVMResultContext => {
   const d: Delta = new Map(pvmAccState.delta);
   d.delete(service);
+  const newServiceIndex = <ServiceIndex>((E_4_int.decode(
+    Hashing.blake2bBuf(
+      encodeWithCodec(
+        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: Tau }>([
+          ["s", E_sub_int<ServiceIndex>(4)],
+          ["p_eta_0", HashCodec],
+          ["tau", E_sub_int<Tau>(4)],
+        ]),
+        { s: service, p_eta_0, tau: p_tau },
+      ),
+    ),
+  ).value %
+    (2 ** 32 - 2 ** 9)) +
+    2 ** 8);
+
+  const i = check_fn(
+    newServiceIndex,
+    pvmAccState.delta, // u_d
+  );
+
   return {
-    delta: d,
     service,
     u: {
-      ...pvmAccState,
-      //delta: new Map([[service, pvmAccState.delta.get(service)]]) as Delta,
+      ...pvmAccState, //TODO: create a full copy
     },
-    i: check_fn(service, pvmAccState.delta),
+    i,
     transfer: [],
     y: undefined,
   };

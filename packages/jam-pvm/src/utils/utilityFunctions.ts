@@ -10,8 +10,10 @@ import {
   EA_Extrinsic,
   Gas,
   Hash,
+  JamState,
   PVMAccumulationOp,
   PVMAccumulationState,
+  Posterior,
   RHO,
   ServiceIndex,
   Tagged,
@@ -203,11 +205,15 @@ export const accumulatableReports = (
  * $(0.6.1 - 12.16)
  */
 export const outerAccumulation = (
-  gasLimit: Gas,
-  works: WorkReport[],
-  accState: PVMAccumulationState,
-  gasLimits: Map<ServiceIndex, u64>,
-  tau: Tau,
+  gasLimit: Gas, // g
+  works: WorkReport[], // w
+  accState: PVMAccumulationState, // o
+  gasLimits: Map<ServiceIndex, u64>, // f
+  deps: {
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    p_eta_0: Posterior<JamState["entropy"][0]>;
+  },
 ): [
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
@@ -235,14 +241,14 @@ export const outerAccumulation = (
     accState,
     works.slice(0, i),
     gasLimits,
-    tau,
+    deps,
   );
   const [j, o_prime, t, b] = outerAccumulation(
     (gasLimit - g_star) as Gas,
     works.slice(i),
     o_star,
     new Map(),
-    tau,
+    deps,
   );
 
   return [
@@ -269,7 +275,11 @@ export const parallelizedAccAccumulation = (
   o: PVMAccumulationState,
   w: WorkReport[],
   f: Map<ServiceIndex, u64>,
-  tau: Tau,
+  deps: {
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    p_eta_0: Posterior<JamState["entropy"][0]>;
+  },
 ): [
   gas: u64,
   accState: PVMAccumulationState,
@@ -283,7 +293,7 @@ export const parallelizedAccAccumulation = (
   const bold_s_values = [...bold_s.values()];
 
   const accumulatedServices = bold_s_values.map((s) =>
-    singleServiceAccumulation(o, w, f, s, tau),
+    singleServiceAccumulation(o, w, f, s, deps),
   );
 
   const u = accumulatedServices.reduce((a, { u }) => a + u, 0n);
@@ -326,13 +336,13 @@ export const parallelizedAccAccumulation = (
   const newState: PVMAccumulationState = {
     delta: delta_prime,
     // x'
-    privServices: singleServiceAccumulation(o, w, f, o.privServices.m, tau).o
+    privServices: singleServiceAccumulation(o, w, f, o.privServices.m, deps).o
       .privServices,
     // i'
-    validatorKeys: singleServiceAccumulation(o, w, f, o.privServices.a, tau).o
+    validatorKeys: singleServiceAccumulation(o, w, f, o.privServices.a, deps).o
       .validatorKeys,
     // q'
-    authQueue: singleServiceAccumulation(o, w, f, o.privServices.v, tau).o
+    authQueue: singleServiceAccumulation(o, w, f, o.privServices.v, deps).o
       .authQueue,
   };
 
@@ -348,7 +358,11 @@ export const singleServiceAccumulation = (
   w: WorkReport[],
   f: Map<ServiceIndex, u64>,
   s: ServiceIndex,
-  tau: Tau,
+  deps: {
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    p_eta_0: Posterior<JamState["entropy"][0]>;
+  },
 ): {
   // `O` tuple defined in $(0.6.1 - 12.18)
   o: PVMAccumulationState;
@@ -372,6 +386,9 @@ export const singleServiceAccumulation = (
       });
     }
   }
-  const [_o, t, b, u] = accumulateInvocation(o, s, g, p, tau);
+  const [_o, t, b, u] = accumulateInvocation(o, s, g, p, deps.tau, {
+    p_tau: deps.p_tau,
+    p_eta_0: deps.p_eta_0,
+  });
   return { o: _o, t, b, u };
 };

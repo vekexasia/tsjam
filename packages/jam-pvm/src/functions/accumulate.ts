@@ -222,7 +222,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
 
       const newServiceIndex = check_fn(
         bump(x.service) as ServiceIndex,
-        x.delta,
+        x.u.delta,
       );
       const s: ServiceAccount = {
         ...x_bold_s,
@@ -311,7 +311,6 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
       const [d, a, l, o] = context.registers.slice(7);
 
       const bold_d = new Map<ServiceIndex, ServiceAccount>([
-        ...x.delta.entries(),
         ...x.u.delta.entries(),
       ]);
 
