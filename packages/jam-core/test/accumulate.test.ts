@@ -40,6 +40,9 @@ import {
   Delta,
   JamHeader,
   Dagger,
+  PrivilegedServices,
+  WorkReport,
+  MerkeTreeRoot,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
@@ -51,153 +54,68 @@ import {
   Test_ServiceInfo,
 } from "./testCodecs";
 
-const mocks = vi.hoisted(() => {
-  return {
-    CORES: 341,
-    NUMBER_OF_VALIDATORS: 1023,
-    EPOCH_LENGTH: 600,
-    VALIDATOR_CORE_ROTATION: 10,
-  };
-});
-vi.mock("@tsjam/constants", async (importOriginal) => {
-  const toRet = {
-    ...(await importOriginal<typeof import("@tsjam/constants")>()),
-    ...mocks,
-  };
-
-  Object.defineProperty(toRet, "VALIDATOR_CORE_ROTATION", {
-    get() {
-      return mocks.VALIDATOR_CORE_ROTATION;
-    },
-  });
-  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
-    get() {
-      return mocks.NUMBER_OF_VALIDATORS;
-    },
-  });
-  Object.defineProperty(toRet, "EPOCH_LENGTH", {
-    get() {
-      return mocks.EPOCH_LENGTH;
-    },
-  });
-  Object.defineProperty(toRet, "CORES", {
-    get() {
-      return mocks.CORES;
-    },
-  });
-  return toRet;
-});
-
 type TestState = {
-  dd_rho: DoubleDagger<RHO>;
-
-  p_kappa: Posterior<JamState["kappa"]>;
-  p_lambda: Posterior<JamState["lambda"]>;
-  p_entropy: Posterior<JamState["entropy"]>;
-  p_psi_o: ED25519PublicKey[];
-  blockHistory: RecentHistory;
-  authPool: AuthorizerPool;
-  deltaServices: Array<{
+  slot: Tau;
+  p_entropy_0: Posterior<JamState["entropy"][0]>;
+  accQueue: AccumulationQueue;
+  accHistory: AccumulationHistory;
+  privServices: Posterior<PrivilegedServices>;
+  accounts: {
     id: ServiceIndex;
-    info: Test_ServiceInfo;
-  }>;
+    data: {
+      service: Test_ServiceInfo;
+      preimages: Array<{ hash: Hash; blob: Uint8Array }>;
+    };
+  };
 };
+
 type Input = {
-  eg: EG_Extrinsic;
-  // H_t
-  tau: Posterior<Tau>;
+  p_tau: Posterior<Tau>;
+  reports: WorkReport[];
 };
-type Output = {
-  reportedPackages: Array<{
-    workPackageHash: WorkPackageHash;
-    segmentTreeRoot: OpaqueHash;
-  }>;
-  reporters: Array<ED25519PublicKey>;
-};
+
+type Output = MerkeTreeRoot; // accumulate Root
+
 type TestCase = {
   input: Input;
   preState: TestState;
-  output: { ok?: Output; err?: number };
+  output: { ok?: Output; err?: null };
   postState: TestState;
 };
-const buildTest = (filename: string, size: "tiny" | "full") => {
-  const NUMVALS = (size === "tiny"
-    ? 6
-    : 1023) as unknown as typeof NUMBER_OF_VALIDATORS;
-  const NCOR = (size === "tiny" ? 2 : 341) as unknown as typeof CORES;
+
+//
+//
+// TODO: use _i and _o from the testCOdec to provide the computed values of the serviseACcount
+//
+//
+
+const buildTest = (filename: string) => {
   const stateCodec = createCodec<TestState>([
+    ["slot", E_sub_int<Tau>(4)],
+    ["p_entropy_0", E_sub_int<Posterior<JamState["entropy"][0]>>(4)],
+    ["accQueue", createSeq],
+    ["accHistory", createArrayLengthDiscriminator(WorkReportCodec)],
+    ["privServices", E_sub_int<Posterior<PrivilegedServices>>(4)],
     [
-      "dd_rho",
-      createSequenceCodec<DoubleDagger<RHO>>(
-        NCOR,
-        new Optional(
-          createCodec<NonNullable<RHO[0]>>([
-            ["workReport", WorkReportCodec],
-            ["reportTime", E_sub_int<Tau>(4)],
-          ]),
-        ),
-      ),
-    ],
-    [
-      "p_kappa",
-      createSequenceCodec<Posterior<JamState["kappa"]>>(
-        NUMVALS,
-        ValidatorDataCodec,
-      ),
-    ],
-    [
-      "p_lambda",
-      createSequenceCodec<Posterior<JamState["lambda"]>>(
-        NUMVALS,
-        ValidatorDataCodec,
-      ),
-    ],
-    [
-      "p_entropy",
-      createSequenceCodec(4, Blake2bHashCodec) as unknown as JamCodec<
-        Posterior<JamState["entropy"]>
-      >,
-    ],
-    [
-      "p_psi_o",
-      createArrayLengthDiscriminator<ED25519PublicKey[]>(Ed25519PubkeyCodec),
-    ],
-    [
-      "blockHistory",
-      createArrayLengthDiscriminator<RecentHistory>(
+      "accounts",
+      createArrayLengthDiscriminator(
         createCodec([
-          ["headerHash", HashCodec],
-          [
-            "accumulationResultMMR",
-            createArrayLengthDiscriminator<
-              RecentHistoryItem["accumulationResultMMR"]
-            >(new Optional(HashCodec)),
-          ],
-          ["stateRoot", MerkleTreeRootCodec],
-          [
-            "reportedPackages",
-            mapCodec(
-              createArrayLengthDiscriminator(
-                createCodec<{ hash: WorkPackageHash; root: Hash }>([
-                  ["hash", WorkPackageHashCodec],
-                  ["root", HashCodec],
-                ]),
-              ),
-              (x) => new Map(x.map((y) => [y.hash, y.root])),
-              (y) =>
-                Array.from(y.entries()).map(([hash, root]) => ({ hash, root })),
-            ),
-          ],
-        ]),
-      ),
-    ],
-    ["authPool", AuthorizerPoolCodec()],
-    [
-      "deltaServices",
-      createArrayLengthDiscriminator<TestState["deltaServices"]>(
-        createCodec<TestState["deltaServices"][0]>([
           ["id", E_sub_int<ServiceIndex>(4)],
-          ["info", serviceInfoCodec],
+          [
+            "data",
+            createCodec([
+              ["service", serviceInfoCodec],
+              [
+                "preimages",
+                createArrayLengthDiscriminator(
+                  createCodec([
+                    ["hash", HashCodec],
+                    ["blob", codec_Eg],
+                  ]),
+                ),
+              ],
+            ]),
+          ],
         ]),
       ),
     ],
