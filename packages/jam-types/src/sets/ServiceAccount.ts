@@ -5,7 +5,7 @@ import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
  * The analogous to a Smart Contract in ETH.
  * $(0.6.1 - 9.3)
  *  NOTE: there are some `virtual` elements such as
- * `c` - actual code ap[ac] $(0.6.1 - 9.4)
+ * `bold_c` - actual code ap[ac] $(0.6.1 - 9.4)
  * $(0.6.1 - 9.8):
  * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
  * `o` - ∈ N264 = computed in `serviceAccountTotalOctets`

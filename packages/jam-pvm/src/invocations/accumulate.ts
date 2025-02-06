@@ -33,8 +33,10 @@ import {
 } from "@/functions/accumulate.js";
 import { applyMods } from "@/functions/utils.js";
 import {
+  E_sub_int,
   PVMAccumulationOpCodec,
   createArrayLengthDiscriminator,
+  createCodec,
   encodeWithCodec,
 } from "@tsjam/codec";
 import {
@@ -48,6 +50,16 @@ import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 
+const AccumulateArgsCodec = createCodec<{
+  t: Tau;
+  s: ServiceIndex;
+  o: PVMAccumulationOp[];
+}>([
+  ["t", E_sub_int<Tau>(4)],
+  ["s", E_sub_int<ServiceIndex>(4)],
+  ["o", createArrayLengthDiscriminator(PVMAccumulationOpCodec)],
+]);
+
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
@@ -55,22 +67,17 @@ import assert from "assert";
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
-  pvmAccState: PVMAccumulationState,
-  s: ServiceIndex,
-  gas: Gas,
-  o: PVMAccumulationOp[],
-  tau: Tau,
+  pvmAccState: PVMAccumulationState, // u
+  s: ServiceIndex, // s
+  gas: Gas, // g
+  o: PVMAccumulationOp[], // bold_o
+  t: Tau, // t
 ): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
   const iRes = I_fn(pvmAccState, s);
-  // first case of 274
+  // first case
   if (!pvmAccState.delta.has(s)) {
     return [iRes.u, [], undefined, toTagged(0n)];
   }
-
-  const args = encodeWithCodec(
-    createArrayLengthDiscriminator(PVMAccumulationOpCodec),
-    o,
-  );
 
   const serviceAccount = pvmAccState.delta.get(s)!;
   const code = serviceAccount.preimage_p.get(serviceAccount.codeHash);
@@ -78,10 +85,10 @@ export const accumulateInvocation = (
 
   const mres = argumentInvocation(
     code,
-    10 as u32, // instructionPointer
+    5 as u32, // instructionPointer
     gas,
-    args,
-    F_fn(s, tau),
+    encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
+    F_fn(s, t),
     { x: iRes, y: I_fn(pvmAccState, s) },
   );
 
