@@ -211,7 +211,6 @@ export const importBlock: STF<
 
   /*
    * Integrate state to calculate several posterior state
-   * as defined in (176) and (177)
    */
   const w = availableReports(ea, d_rho);
   const w_mark = noPrereqAvailableReports(w);
@@ -222,6 +221,50 @@ export const importBlock: STF<
     curState.accumulationQueue,
     curState.tau,
   );
+
+  // $(0.6.1 - 12.20)
+  const g: Gas = [
+    TOTAL_GAS_ACCUMULATION_ALL_CORES,
+    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
+      [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
+  ].reduce((a, b) => (a < b ? b : a)) as Gas;
+
+  // $(0.6.1 - 12.21)
+  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
+    g,
+    w_star,
+    {
+      delta: curState.serviceAccounts,
+      privServices: curState.privServices,
+      authQueue: curState.authQueue,
+      validatorKeys: curState.iota,
+    },
+    curState.privServices.g,
+    {
+      tau: curState.tau,
+      p_tau,
+      p_eta_0: toPosterior(p_entropy[0]),
+    },
+  );
+
+  const [, p_accumulationHistory] = accumulationHistoryToPosterior(
+    {
+      nAccumulatedWork,
+      w_star,
+      tau: curState.tau,
+    },
+    curState.accumulationHistory,
+  ).safeRet();
+
+  const [, p_accumulationQueue] = accumulationQueueToPosterior(
+    {
+      p_accHistory: p_accumulationHistory,
+      p_tau,
+      tau: curState.tau,
+      w_q,
+    },
+    curState.accumulationQueue,
+  ).safeRet();
 
   const [, dd_rho] = RHO2DoubleDagger(
     { p_tau, rho: curState.rho, availableReports: w },
@@ -270,27 +313,6 @@ export const importBlock: STF<
     return err(rhoPostErr);
   }
 
-  // $(0.6.1 - 12.20)
-  const g: Gas = [
-    TOTAL_GAS_ACCUMULATION_ALL_CORES,
-    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
-      [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
-  ].reduce((a, b) => (a < b ? b : a)) as Gas;
-
-  // $(0.6.1 - 12.21)
-  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
-    g,
-    w_star,
-    {
-      delta: curState.serviceAccounts,
-      privServices: curState.privServices,
-      authQueue: curState.authQueue,
-      validatorKeys: curState.iota,
-    },
-    curState.privServices.g,
-    curState.tau,
-  );
-
   // $(0.6.1 - 12.22)
   const p_privilegedServices = toPosterior(o.privServices);
   const d_delta = o.delta as Dagger<Delta>;
@@ -313,25 +335,6 @@ export const importBlock: STF<
   if (pDeltaError) {
     return err(pDeltaError);
   }
-
-  const [, p_accumulationHistory] = accumulationHistoryToPosterior(
-    {
-      nAccumulatedWork,
-      w_star,
-      tau: curState.tau,
-    },
-    curState.accumulationHistory,
-  ).safeRet();
-
-  const [, p_accumulationQueue] = accumulationQueueToPosterior(
-    {
-      p_accHistory: p_accumulationHistory,
-      p_tau,
-      tau: curState.tau,
-      w_q,
-    },
-    curState.accumulationQueue,
-  ).safeRet();
 
   const headerHash = Hashing.blake2b(
     encodeWithCodec(UnsignedHeaderCodec, block.header),
