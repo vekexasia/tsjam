@@ -56,6 +56,7 @@ import {
   verifySeal,
   verifyWinningTickets,
 } from "@/verifySeal";
+import { accumulateReports } from "./accumulate";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",
@@ -213,58 +214,29 @@ export const importBlock: STF<
    * Integrate state to calculate several posterior state
    */
   const w = availableReports(ea, d_rho);
-  const w_mark = noPrereqAvailableReports(w);
-  const w_q = withPrereqAvailableReports(w, curState.accumulationHistory);
-  const w_star = accumulatableReports(
-    w_mark,
-    w_q,
-    curState.accumulationQueue,
-    curState.tau,
-  );
-
-  // $(0.6.1 - 12.20)
-  const g: Gas = [
-    TOTAL_GAS_ACCUMULATION_ALL_CORES,
-    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
-      [...curState.privServices.g.values()].reduce((a, b) => a + b, 0n),
-  ].reduce((a, b) => (a < b ? b : a)) as Gas;
-
-  // $(0.6.1 - 12.21)
-  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
-    g,
-    w_star,
+  const [
+    ,
     {
-      delta: curState.serviceAccounts,
-      privServices: curState.privServices,
-      authQueue: curState.authQueue,
-      validatorKeys: curState.iota,
+      accumulateRoot,
+      p_accumulationQueue,
+      p_accumulationHistory,
+      p_privServices,
+      d_delta,
+      p_iota,
+      p_authQueue,
+      deferredTransfers,
     },
-    curState.privServices.g,
-    {
-      tau: curState.tau,
-      p_tau,
-      p_eta_0: toPosterior(p_entropy[0]),
-    },
-  );
-
-  const [, p_accumulationHistory] = accumulationHistoryToPosterior(
-    {
-      nAccumulatedWork,
-      w_star,
-      tau: curState.tau,
-    },
-    curState.accumulationHistory,
-  ).safeRet();
-
-  const [, p_accumulationQueue] = accumulationQueueToPosterior(
-    {
-      p_accHistory: p_accumulationHistory,
-      p_tau,
-      tau: curState.tau,
-      w_q,
-    },
-    curState.accumulationQueue,
-  ).safeRet();
+  ] = accumulateReports(w, {
+    tau: tauTransition.tau,
+    p_tau: tauTransition.p_tau,
+    accumulationHistory: curState.accumulationHistory,
+    accumulationQueue: curState.accumulationQueue,
+    authQueue: curState.authQueue,
+    serviceAccounts: curState.serviceAccounts,
+    privServices: curState.privServices,
+    iota: curState.iota,
+    p_entropy,
+  }).safeRet();
 
   const [, dd_rho] = RHO2DoubleDagger(
     { p_tau, rho: curState.rho, availableReports: w },
@@ -313,14 +285,8 @@ export const importBlock: STF<
     return err(rhoPostErr);
   }
 
-  // $(0.6.1 - 12.22)
-  const p_privilegedServices = toPosterior(o.privServices);
-  const d_delta = o.delta as Dagger<Delta>;
-  const p_iota = toPosterior(o.validatorKeys);
-  const p_authorizerQueue = toPosterior(o.authQueue);
-
   const [, dd_delta] = deltaToDoubleDagger(
-    { transfers: bold_t, p_tau },
+    { transfers: deferredTransfers, p_tau },
     d_delta,
   ).safeRet();
 
@@ -341,7 +307,7 @@ export const importBlock: STF<
   );
   const [, p_recentHistory] = recentHistoryToPosterior(
     {
-      accumulateRoot: calculateAccumulateRoot(C),
+      accumulateRoot,
       headerHash,
       eg: block.extrinsics.reportGuarantees,
     },
@@ -369,7 +335,7 @@ export const importBlock: STF<
 
   const [, p_authorizerPool] = authorizerPool_toPosterior(
     {
-      p_queue: p_authorizerQueue,
+      p_queue: p_authQueue,
       eg: block.extrinsics.reportGuarantees,
       p_tau: tauTransition.p_tau,
     },
@@ -389,7 +355,7 @@ export const importBlock: STF<
     tau: tauTransition.p_tau,
     iota: p_iota as unknown as JamState["iota"],
     authPool: p_authorizerPool,
-    authQueue: p_authorizerQueue,
+    authQueue: p_authQueue,
     safroleState: p_safroleState,
     validatorStatistics: p_validatorStatistics,
     rho: p_rho,
@@ -397,7 +363,7 @@ export const importBlock: STF<
     recentHistory: p_recentHistory,
     accumulationQueue: p_accumulationQueue,
     accumulationHistory: p_accumulationHistory,
-    privServices: p_privilegedServices,
+    privServices: p_privServices,
     lambda: p_lambda,
     kappa: p_kappa,
     disputes: p_disputesState,
