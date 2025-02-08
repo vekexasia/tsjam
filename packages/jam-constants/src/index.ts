@@ -187,16 +187,16 @@ export const TOTAL_GAS_ACCUMULATION_LOGIC = 10_000_000n;
 /**
  * `GR`
  */
-export const TOTAL_GAS_REFINEMENT_LOGIC = 500_000_000n;
+export const TOTAL_GAS_REFINEMENT_LOGIC = 5_000_000_000n;
 
 /**
  * `GI`
  */
-export const TOTAL_GAS_IS_AUTHORIZED = 1000000n;
+export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
 
 /**
  * `GT`
  */
-export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 341000000n;
+export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
 // $(0.6.1 - 4.25)
 export const Zp = 2 ** 12;
