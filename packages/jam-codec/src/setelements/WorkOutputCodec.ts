@@ -3,7 +3,7 @@ import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 
-// $(0.6.1  - C.30)
+// $(0.6.1  - C.29)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
   encode(value: WorkOutput, bytes: Uint8Array): number {
     let offset = 0;

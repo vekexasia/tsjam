@@ -70,3 +70,29 @@ export const mapCodec = <T, U>(
     },
   };
 };
+
+export const extendCodec = <T, U>(
+  codec: JamCodec<T>,
+  extension: JamCodec<U>,
+): JamCodec<T & U> => {
+  return {
+    encode(value, bytes) {
+      let offset = codec.encode(value, bytes);
+      offset += extension.encode(value, bytes.subarray(offset));
+      return offset;
+    },
+    decode(bytes) {
+      const { value: base, readBytes } = codec.decode(bytes);
+      const { value: ext, readBytes: extReadBytes } = extension.decode(
+        bytes.subarray(readBytes),
+      );
+      return {
+        value: { ...base, ...ext },
+        readBytes: readBytes + extReadBytes,
+      };
+    },
+    encodedSize(value) {
+      return codec.encodedSize(value) + extension.encodedSize(value);
+    },
+  };
+};

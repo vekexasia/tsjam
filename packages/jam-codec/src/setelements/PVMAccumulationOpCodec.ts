@@ -5,8 +5,8 @@ import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscrimi
 import { createCodec } from "@/utils";
 
 export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
-  ["output", WorkOutputCodec],
-  ["payloadHash", HashCodec],
   ["packageHash", HashCodec],
   ["authorizationOutput", LengthDiscrimantedIdentity],
+  ["payloadHash", HashCodec],
+  ["output", WorkOutputCodec],
 ]);
