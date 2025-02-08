@@ -22,7 +22,8 @@ export const accumulationQueueToPosterior: STF<
   },
   never
 > = (input, curState) => {
-  const m = input.tau % EPOCH_LENGTH;
+  // $(0.6.1 - 12.10)
+  const m = input.p_tau % EPOCH_LENGTH;
 
   const toRet = [...curState] as unknown as Posterior<AccumulationQueue>;
   for (let i = 0; i < EPOCH_LENGTH; i++) {

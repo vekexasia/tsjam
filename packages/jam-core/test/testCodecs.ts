@@ -5,22 +5,26 @@ import {
   E_sub,
   E_sub_int,
   HashCodec,
+  JamCodec,
   mapCodec,
   WorkPackageHashCodec,
   WorkReportCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
+  AccumulationHistory,
   AccumulationQueue,
   Gas,
   Hash,
+  Posterior,
   ServiceAccount,
   u32,
   u64,
-  WorkPackageHash,
-  WorkReport,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
+
+export const posteriorCodec = <T>(codec: JamCodec<T>) =>
+  codec as JamCodec<Posterior<T>>;
 
 export type Test_ServiceInfo = {
   codeHash: Hash; // a_c
@@ -40,26 +44,41 @@ export const serviceInfoCodec = createCodec<Test_ServiceInfo>([
   ["items", E_sub_int<u32>(4)],
 ]);
 
-export const serviceAccountFromTestServiceInfo = (
-  info: Test_ServiceInfo,
-): ServiceAccount => {
-  const toRet: ServiceAccount = {
-    balance: info.balance,
-    codeHash: toTagged(info.codeHash),
-    minGasAccumulate: info.minItemGas,
-    minGasOnTransfer: info.minMemoGas,
-    storage: undefined as any,
-    preimage_l: undefined as any,
-    preimage_p: undefined as any,
-  };
-  (toRet as any)["_i"] = info.items;
-  (toRet as any)["_o"] = info.bytes;
-  // NOTE: ^^ the above needs to be used when mocking the virtual computing functions
-  return toRet;
+export const serviceAccountFromTestInfo = (): JamCodec<ServiceAccount> => {
+  return mapCodec(
+    serviceInfoCodec,
+    (info) => {
+      const toRet: ServiceAccount = {
+        balance: info.balance,
+        codeHash: toTagged(info.codeHash),
+        minGasAccumulate: info.minItemGas,
+        minGasOnTransfer: info.minMemoGas,
+        storage: new Map(),
+        preimage_l: undefined as any,
+        preimage_p: undefined as any,
+      };
+      (toRet as any)["_i"] = info.items;
+      (toRet as any)["_o"] = info.bytes;
+      // NOTE: ^^ the above needs to be used when mocking the virtual computing functions
+      return toRet;
+    },
+    (account) => {
+      return {
+        bytes: (account as any)["_o"],
+        codeHash: account.codeHash,
+        balance: <u64>account.balance,
+        items: (account as any)["_i"],
+        minItemGas: account.minGasAccumulate,
+        minMemoGas: account.minGasOnTransfer,
+      };
+    },
+  );
 };
 
-// ReadyQueue
-export const Test_AccQueueCodec = <T extends number>(epochLength: T) =>
+// ReadyQueue | AccumulationQueue in our code
+export const Test_AccQueueCodec = (
+  epochLength: typeof EPOCH_LENGTH, // here to please typescript but any number can be passed
+): JamCodec<AccumulationQueue> =>
   createSequenceCodec(
     epochLength,
     createArrayLengthDiscriminator(
@@ -77,7 +96,10 @@ export const Test_AccQueueCodec = <T extends number>(epochLength: T) =>
     ),
   );
 
-export const Test_AccHistoryCodec = <T extends number>(epochLength: T) =>
+// AccumulatedQueue | AccumulationHistory in our code
+export const Test_AccHistoryCodec = (
+  epochLength: typeof EPOCH_LENGTH,
+): JamCodec<AccumulationHistory> =>
   createSequenceCodec(
     epochLength,
     mapCodec(

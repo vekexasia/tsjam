@@ -1,4 +1,4 @@
-import { Hash, Tagged, UpToSeq, u32 } from "@/genericTypes";
+import { Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
 
 /**
  * `A` set in the graypaper
@@ -39,16 +39,17 @@ export interface ServiceAccount {
 
   /**
    * `b` - balance
+   *
    */
-  balance: bigint;
+  balance: u64;
 
   /**
    * `g` - gas
    */
-  minGasAccumulate: bigint;
+  minGasAccumulate: Gas;
 
   /**
    * `m` - minimum gas for the on_initialize method
    */
-  minGasOnTransfer: bigint;
+  minGasOnTransfer: Gas;
 }

@@ -88,10 +88,10 @@ export const dummyState = (conf: {
       .fill(undefined)
       .map(() => []) as unknown as JamState["accumulationQueue"],
     privServices: {
-      a: 0 as ServiceIndex,
-      g: new Map(),
-      m: 0 as ServiceIndex,
-      v: 0 as ServiceIndex,
+      assign: 0 as ServiceIndex,
+      alwaysAccumulate: new Map(),
+      bless: 0 as ServiceIndex,
+      designate: 0 as ServiceIndex,
     },
     recentHistory: new Array(80).fill(null).map(
       () =>

@@ -48,7 +48,10 @@ export class PVMMemory implements IPVMMemory {
 
   #getPageMemory(page: number): Uint8Array {
     const memory = this.#innerMemoryContent.get(page);
-    assert(memory, `Page ${page} is not allocated`);
+    assert(
+      memory,
+      `Page ${page}|0x${(page * Zp).toString(16)} is not allocated`,
+    );
     return memory;
   }
 
@@ -152,6 +155,14 @@ export class PVMMemory implements IPVMMemory {
       new Map(this.#innerMemoryContent.entries()), // we crete a new identical map the setBytes will effectively clone the memory only if changes in the new instance.
       new Map(this.acl.entries()),
     ) as this;
+  }
+
+  toString() {
+    let str = "";
+    for (const [page, memory] of this.#innerMemoryContent.entries()) {
+      str += `Page ${page}|0x${(page * Zp).toString(16)}: ${Buffer.from(memory).toString("hex")}\n`;
+    }
+    return str;
   }
 }
 

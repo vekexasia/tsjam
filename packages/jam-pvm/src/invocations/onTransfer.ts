@@ -7,6 +7,7 @@ import {
   ServiceIndex,
   Tau,
   u32,
+  u64,
   u8,
 } from "@tsjam/types";
 import { argumentInvocation } from "./argument";
@@ -57,8 +58,10 @@ export const transferInvocation = (
   assert(typeof bold_s !== "undefined", "Service not found in delta");
   bold_s = {
     ...bold_s,
-    balance: bold_s.balance + transfers.reduce((acc, a) => acc + a.amount, 0n),
+    balance: (bold_s.balance +
+      transfers.reduce((acc, a) => acc + a.amount, 0n)) as u64,
   };
+  assert(bold_s.balance >= 0, "Balance cannot be negative");
 
   if (bold_s.codeHash || transfers.length === 0) {
     return bold_s;

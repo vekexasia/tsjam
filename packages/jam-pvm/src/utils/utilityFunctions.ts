@@ -226,7 +226,7 @@ export const outerAccumulation = (
   // TODO: rewrite this to a more elegant solution
   for (const w of works) {
     sum += w.results.reduce((a, r) => a + r.gasPrioritization, 0n);
-    if (sum > gasLimit) {
+    if (sum <= gasLimit) {
       i++;
     } else {
       break;
@@ -336,14 +336,24 @@ export const parallelizedAccAccumulation = (
   const newState: PVMAccumulationState = {
     delta: delta_prime,
     // x'
-    privServices: singleServiceAccumulation(o, w, f, o.privServices.m, deps).o
-      .privServices,
+    privServices: singleServiceAccumulation(o, w, f, o.privServices.bless, deps)
+      .o.privServices,
     // i'
-    validatorKeys: singleServiceAccumulation(o, w, f, o.privServices.a, deps).o
-      .validatorKeys,
+    validatorKeys: singleServiceAccumulation(
+      o,
+      w,
+      f,
+      o.privServices.assign,
+      deps,
+    ).o.validatorKeys,
     // q'
-    authQueue: singleServiceAccumulation(o, w, f, o.privServices.v, deps).o
-      .authQueue,
+    authQueue: singleServiceAccumulation(
+      o,
+      w,
+      f,
+      o.privServices.designate,
+      deps,
+    ).o.authQueue,
   };
 
   return [toTagged(u), newState, t, b];

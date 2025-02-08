@@ -1,21 +1,31 @@
-import { Gas, ServiceIndex } from "@/genericTypes.js";
-
+import { Gas, ServiceIndex } from "../genericTypes.js";
+/**
+ * `χ`
+ * $(0.6.1 - 9.9)
+ */
 export type PrivilegedServices = {
   /**
    * `m`
+   * Index of the service able to alter PrivilegedServices from block to block
    */
-  m: ServiceIndex;
+  bless: ServiceIndex;
+
   /**
    * `a`
+   * service which can alter φ
    */
-  a: ServiceIndex;
+  assign: ServiceIndex;
+
   /**
    * `v`
+   * service which can alter ι
    */
-  v: ServiceIndex;
+  designate: ServiceIndex;
+
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits
+   * `g`
    */
-  g: Map<ServiceIndex, Gas>;
+  alwaysAccumulate: Map<ServiceIndex, Gas>;
 };

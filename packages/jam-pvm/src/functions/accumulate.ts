@@ -72,10 +72,10 @@ export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
               u: {
                 ...x.u,
                 privServices: {
-                  m: Number(m) as ServiceIndex,
-                  a: Number(a) as ServiceIndex,
-                  v: Number(v) as ServiceIndex,
-                  g,
+                  bless: Number(m) as ServiceIndex,
+                  assign: Number(a) as ServiceIndex,
+                  designate: Number(v) as ServiceIndex,
+                  alwaysAccumulate: g,
                 },
               },
             },
@@ -205,9 +205,9 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
           Map<u32, u32>
         >() as unknown as ServiceAccount["preimage_l"],
         codeHash: c,
-        balance: 0n,
-        minGasAccumulate: g,
-        minGasOnTransfer: m,
+        balance: <u64>0n,
+        minGasAccumulate: g as bigint as Gas,
+        minGasOnTransfer: m as bigint as Gas,
       };
       const nm: Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">> = new Map();
       nm.set(toTagged(Number(l) as u32), toTagged([]));
@@ -226,7 +226,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
       );
       const s: ServiceAccount = {
         ...x_bold_s,
-        balance: x_bold_s.balance - a.balance,
+        balance: <u64>(x_bold_s.balance - a.balance),
       };
 
       if (s.balance < serviceAccountGasThreshold(x_bold_s)) {
@@ -273,8 +273,8 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
         x_bold_s_prime.codeHash = bytesToBigInt(
           context.memory.getBytes(toSafeMemoryAddress(o), 32),
         );
-        x_bold_s_prime.minGasAccumulate = g;
-        x_bold_s_prime.minGasOnTransfer = m;
+        x_bold_s_prime.minGasAccumulate = g as bigint as Gas;
+        x_bold_s_prime.minGasOnTransfer = m as bigint as Gas;
 
         return [
           IxMod.w7(HostCallResult.OK),
@@ -352,7 +352,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
               ...x.u,
               delta: new Map([
                 ...x.u.delta.entries(),
-                [x.service, { ...x_bold_s, balance: b }],
+                [x.service, { ...x_bold_s, balance: b as bigint as u64 }],
               ]),
             },
           },
@@ -403,7 +403,7 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
         const d_prime = new Map(x.u.delta);
         d_prime.delete(d);
         const s_prime = { ...x.u.delta.get(x.service)! };
-        s_prime.balance = s_prime.balance + bold_d.balance;
+        s_prime.balance = (s_prime.balance + bold_d.balance) as bigint as u64;
         d_prime.set(x.service, s_prime);
         return [
           IxMod.w7(HostCallResult.OK),

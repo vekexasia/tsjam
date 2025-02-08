@@ -29,6 +29,7 @@ import {
   encodeWithCodec,
   ValidatorStatisticsCodec,
   WorkPackageHashCodec,
+  PrivilegedServicesCodec,
 } from "@tsjam/codec";
 import {
   RHO,
@@ -365,15 +366,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   // 12
   toRet.set(
     C_fn(12),
-    new Uint8Array([
-      ...encodeWithCodec(E_4_int, state.privServices.m),
-      ...encodeWithCodec(E_4_int, state.privServices.a),
-      ...encodeWithCodec(E_4_int, state.privServices.v),
-      ...encodeWithCodec(
-        buildGenericKeyValueCodec(E_4_int, E_8, (a, b) => a - b),
-        state.privServices.g,
-      ),
-    ]),
+    encodeWithCodec(PrivilegedServicesCodec, state.privServices),
   );
 
   // 13

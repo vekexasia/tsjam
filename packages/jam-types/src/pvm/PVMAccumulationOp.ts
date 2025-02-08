@@ -3,7 +3,7 @@ import { Hash } from "@/genericTypes.js";
 
 /**
  * `O` set in graypaper
- * (159)
+ * $(0.6.1 - 12.18)
  */
 export type PVMAccumulationOp = {
   /**

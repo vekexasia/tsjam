@@ -5,6 +5,7 @@ import {
   codec_Eg,
   createArrayLengthDiscriminator,
   createCodec,
+  buildGenericKeyValueCodec,
   createSequenceCodec,
   E_sub_int,
   Ed25519PubkeyCodec,
@@ -46,7 +47,7 @@ import { expect, vi, it, describe, beforeEach } from "vitest";
 import { mapCodec } from "@tsjam/codec";
 import { assertEGValid, EGError } from "@/validateEG";
 import {
-  serviceAccountFromTestServiceInfo,
+  serviceAccountFromTestInfo,
   serviceInfoCodec,
   Test_ServiceInfo,
 } from "./testCodecs";
@@ -97,6 +98,7 @@ type TestState = {
   p_psi_o: ED25519PublicKey[];
   blockHistory: RecentHistory;
   authPool: AuthorizerPool;
+  delta: Delta;
   deltaServices: Array<{
     id: ServiceIndex;
     info: Test_ServiceInfo;
@@ -191,14 +193,14 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
         ]),
       ),
     ],
+
     ["authPool", AuthorizerPoolCodec()],
     [
-      "deltaServices",
-      createArrayLengthDiscriminator<TestState["deltaServices"]>(
-        createCodec<TestState["deltaServices"][0]>([
-          ["id", E_sub_int<ServiceIndex>(4)],
-          ["info", serviceInfoCodec],
-        ]),
+      "delta",
+      buildGenericKeyValueCodec(
+        E_sub_int<ServiceIndex>(4),
+        serviceAccountFromTestInfo(),
+        (a, b) => a - b,
       ),
     ],
   ]);
@@ -243,11 +245,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
   const [err] = assertEGValid(decoded.input.eg, {
     rho: decoded.preState.dd_rho,
     dd_rho: decoded.preState.dd_rho,
-    delta: <Delta>new Map<ServiceIndex, ServiceAccount>(
-      decoded.preState.deltaServices.map(({ id, info }) => {
-        return [id, serviceAccountFromTestServiceInfo(info)];
-      }),
-    ),
+    delta: decoded.preState.delta,
     p_tau: decoded.input.tau,
     p_kappa: decoded.preState.p_kappa,
     p_lambda: decoded.preState.p_lambda,

@@ -22,6 +22,7 @@ export const hostCallInvocation = <X>(
   x: X,
 ): HostCallOut<X> => {
   const out = basicInvocation(p, ctx);
+  // console.log("mem", out.context.memory.toString());
   if (
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"

@@ -22,13 +22,12 @@ import {
   Delta,
   Gas,
   JamState,
-  MerkeTreeRoot,
   Posterior,
   PrivilegedServices,
   Tau,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
-import { Ok, ok } from "neverthrow";
+import { ok } from "neverthrow";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -45,7 +44,7 @@ export const accumulateReports = (
     p_tau: Posterior<Tau>;
     privServices: PrivilegedServices;
     iota: JamState["iota"];
-    p_entropy: Posterior<JamState["entropy"]>;
+    p_eta_0: Posterior<JamState["entropy"][0]>;
   },
 ) => {
   /*
@@ -64,7 +63,10 @@ export const accumulateReports = (
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
-      [...deps.privServices.g.values()].reduce((a, b) => a + b, 0n),
+      [...deps.privServices.alwaysAccumulate.values()].reduce(
+        (a, b) => a + b,
+        0n,
+      ),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
   // $(0.6.1 - 12.21)
@@ -77,11 +79,11 @@ export const accumulateReports = (
       authQueue: deps.authQueue,
       validatorKeys: deps.iota,
     },
-    deps.privServices.g,
+    deps.privServices.alwaysAccumulate,
     {
       tau: deps.tau,
       p_tau: deps.p_tau,
-      p_eta_0: toPosterior(deps.p_entropy[0]),
+      p_eta_0: deps.p_eta_0,
     },
   );
 

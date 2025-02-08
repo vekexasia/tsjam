@@ -27,6 +27,8 @@ export const pvmSingleStep = (
   ctx: PVMProgramExecutionContext,
 ): Output => {
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
+  // console.log(`[@${ctx.instructionPointer}] - ${ix!.identifier}`);
+
   if (
     ctx.instructionPointer >= p.program.c.length ||
     ctx.instructionPointer < 0 ||

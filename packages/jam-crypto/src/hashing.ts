@@ -18,6 +18,6 @@ export const Hashing = {
     return <ByteArrayOfLength<32>>keccak256(bytes);
   },
   keccak256<T extends Hash>(bytes: Uint8Array): T {
-    return toTagged(bytesToBigInt(this.keccak256Buf(bytes)));
+    return toTagged(bytesToBigInt(Hashing.keccak256Buf(bytes)));
   },
 };

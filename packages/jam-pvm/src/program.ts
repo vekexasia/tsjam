@@ -76,8 +76,8 @@ export const programInitialization = (
     0n,
     0n,
     0n,
-    2n ** 32n - BigInt(Zz - Zi), // 7
-    argument.length, // 8
+    2n ** 32n - BigInt(Zz) - BigInt(Zi), // 7
+    BigInt(argument.length), // 8
     0n,
     0n,
     0n,
@@ -101,34 +101,31 @@ export const programInitialization = (
 
   // first case
   mem.push({ at: Zz as u32, content: o });
-  createAcl({ from: Zz, to: Zz + oCard, kind: PVMMemoryAccessKind.Read });
-
-  // second case
-  createAcl({
-    from: Zz + oCard,
-    to: Zz + P_Fn(oCard),
-    kind: PVMMemoryAccessKind.Read,
-  });
+  // first + second
+  createAcl({ from: Zz, to: Zz + P_Fn(oCard), kind: PVMMemoryAccessKind.Read });
 
   // third case
   {
     const offset = 2 * Zz + Z_Fn(oCard);
     mem.push({ at: <u32>offset, content: w });
+    // third+fourth
     createAcl({
       from: offset,
-      to: offset + wCard,
+      to: offset + P_Fn(wCard) + z * Zp,
       kind: PVMMemoryAccessKind.Write,
     });
   }
 
-  // fourth case set to zero so only ACL is needed
-  createAcl({
-    from: 2 * Zz + Z_Fn(oCard) + wCard,
-    to: 2 * Zz + Z_Fn(oCard) + P_Fn(wCard) + z * Zp,
-    kind: PVMMemoryAccessKind.Write,
-  });
-
-  // fifth case
+  // fifth cas
+  // seventh case
+  {
+    const offset = 2 ** 32 - Zz - Zi + argument.length;
+    createAcl({
+      from: offset,
+      to: 2 ** 32 - Zz - Zi + P_Fn(argument.length),
+      kind: PVMMemoryAccessKind.Write,
+    });
+  }
   createAcl({
     from: 2 ** 32 - 2 * Zz - Zi - P_Fn(s),
     to: 2 ** 32 - 2 * Zz - Zi,
@@ -142,20 +139,11 @@ export const programInitialization = (
       at: <u32>offset,
       content: argument,
     });
+    // sixth + seventh
     createAcl({
       from: offset as u32,
-      to: offset + argument.length,
+      to: offset + P_Fn(argument.length),
       kind: PVMMemoryAccessKind.Read,
-    });
-  }
-
-  // seventh case
-  {
-    const offset = 2 ** 32 - Zz - Zi + argument.length;
-    createAcl({
-      from: offset,
-      to: 2 ** 32 - Zz - Zi + P_Fn(argument.length),
-      kind: PVMMemoryAccessKind.Write,
     });
   }
 
@@ -164,7 +152,10 @@ export const programInitialization = (
   return {
     program,
     parsed: parsedProgram,
-    memory: new PVMMemory(mem, acl),
+    memory: new PVMMemory(
+      mem.filter((a) => a.content.length > 0), // we filter empty memory content cause it won't have acl
+      acl,
+    ),
     registers,
   };
 };
