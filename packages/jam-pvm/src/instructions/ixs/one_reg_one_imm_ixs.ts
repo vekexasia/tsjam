@@ -29,6 +29,7 @@ const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   const vx = <RegisterValue>readVarIntFromBuffer(bytes.subarray(1), lx as u8);
   return ok([ra, vx]);
 };
+decode.type = "OneRegOneImmIxsDecoder";
 
 const create1Reg1IMMIx = (
   opCode: u8,

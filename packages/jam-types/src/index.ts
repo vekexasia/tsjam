@@ -46,6 +46,7 @@ export * from "./pvm/PVMFn.js";
 export * from "./pvm/PVMIx.js";
 export * from "./pvm/IPVMMemory.js";
 export * from "./pvm/PVMProgram.js";
+export * from "./pvm/PVMRegisters.js";
 export * from "./pvm/PVMResultContext.js";
 export * from "./pvm/RegisterIdentifier.js";
 

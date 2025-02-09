@@ -12,6 +12,7 @@ const decode = (bytes: Uint8Array): Result<[offset: bigint], never> => {
   const vx = E_sub(lx).decode(bytes.subarray(0, lx)).value;
   return ok([Z(lx, vx)]);
 };
+decode.type = "OneOffsetIxsDecoder";
 
 const jump = regIx<[offset: bigint]>({
   opCode: 40 as u8,

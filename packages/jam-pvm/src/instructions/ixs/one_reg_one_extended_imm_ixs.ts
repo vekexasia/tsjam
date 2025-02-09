@@ -23,6 +23,7 @@ const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
 
   return ok([ra, vx as u64]);
 };
+decode.type = "OneRegOneIMMIxsDecoder";
 
 const create1Reg1ExtendedIMMIx = (
   opCode: u8,

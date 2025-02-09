@@ -35,6 +35,7 @@ export const decode = (
   return ok([first, second]);
 };
 
+decode.type = "TwoImmIxsDecoder";
 const create = (
   identifier: u8,
   name: string,

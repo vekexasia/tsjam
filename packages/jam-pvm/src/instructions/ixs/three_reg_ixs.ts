@@ -30,6 +30,7 @@ const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
   const rD = Math.min(12, bytes[1]) as RegisterIdentifier;
   return ok([rA, rB, rD]);
 };
+decode.type = "ThreeRegIxsDecoder";
 
 const create = (
   identifier: u8,

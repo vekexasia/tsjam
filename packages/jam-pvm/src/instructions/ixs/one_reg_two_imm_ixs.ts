@@ -29,6 +29,7 @@ export const decode = (
   const vy = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
   return ok([ra, vx, vy]);
 };
+decode.type = "OneRegTwoImmIxsDecoder";
 
 const create = (
   identifier: u8,

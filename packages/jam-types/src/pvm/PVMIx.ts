@@ -3,49 +3,42 @@ import { PVMProgramExecutionContext } from "@/pvm/PVMProgramExecutionContext.js"
 import { PVMProgram } from "@/pvm/PVMProgram.js";
 import { IParsedProgram } from "@/pvm/IParsedProgram.js";
 import { PVMExitReason } from "@/pvm/PVMExitReason.js";
-import { Gas } from "@/genericTypes";
+import { Gas, u8 } from "@/genericTypes";
 import { RegisterIdentifier } from "./RegisterIdentifier";
 import {
   PVMSingleModPointer,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModRegister,
+  PVMExitPanicMod,
 } from "./PVMModifications";
+export type PVMIxReturnMods = Array<
+  | PVMSingleModPointer
+  | PVMSingleModGas
+  | PVMSingleModMemory
+  | PVMSingleModRegister<RegisterIdentifier>
+  | PVMExitPanicMod
+>;
 
+export type PVMIxEvaluateFNContext = {
+  execution: PVMProgramExecutionContext;
+  program: PVMProgram;
+  parsedProgram: IParsedProgram;
+};
 /**
  * * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
-export interface PVMIx<
-  Args extends unknown[],
-  EvaluateErr extends PVMIxExecutionError,
-  DecodeErr = PVMIxDecodeError,
-> {
+export interface PVMIx<Args, EvaluateErr extends PVMIxExecutionError> {
   /**
    * decode the full instruction from the bytes.
    * the byte array is chunked to include only the bytes of the instruction (included opcode)
    */
-  decode(bytes: Uint8Array): Result<Args, DecodeErr>;
+  decode(bytes: Uint8Array, context: PVMIxEvaluateFNContext): Args;
 
-  evaluate(
-    context: {
-      execution: PVMProgramExecutionContext;
-      program: PVMProgram;
-      parsedProgram: IParsedProgram;
-    },
-    ...args: Args
-  ): Result<
-    Array<
-      | PVMSingleModPointer
-      | PVMSingleModGas
-      | PVMSingleModMemory
-      | PVMSingleModRegister<RegisterIdentifier>
-    >,
-    EvaluateErr
-  >;
-
+  evaluate(args: Args, context: PVMIxEvaluateFNContext): PVMIxReturnMods;
   readonly gasCost: Gas;
-  readonly opCode: number;
+  readonly opCode: u8;
   readonly identifier: string;
 }
 
@@ -74,6 +67,8 @@ export class PVMIxExecutionError {
 }
 
 export type PVMIxEvaluateFN<
-  Args extends unknown[],
+  Args,
   EvErr extends PVMIxExecutionError = PVMIxExecutionError,
 > = PVMIx<Args, EvErr>["evaluate"];
+
+export type PVMIxDecodeFN<Args> = PVMIx<Args, any>["decode"];

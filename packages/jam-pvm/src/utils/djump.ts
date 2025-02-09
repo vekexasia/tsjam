@@ -20,7 +20,7 @@ const ZA = 2;
  * $(0.6.1 - A.17)
  */
 export const djump = (
-  context: Parameters<PVMIx<unknown[], PVMIxExecutionError>["evaluate"]>[0],
+  context: Parameters<PVMIx<unknown, PVMIxExecutionError>["evaluate"]>[0],
   a: u32,
   mods: Array<
     | PVMSingleModPointer
