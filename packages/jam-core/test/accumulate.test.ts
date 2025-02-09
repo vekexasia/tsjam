@@ -25,7 +25,6 @@ import {
   ServiceAccount,
   Delta,
   PrivilegedServices,
-  WorkReport,
   MerkeTreeRoot,
   AvailableWorkReports,
   Hash,
@@ -37,7 +36,7 @@ import {
   Test_AccHistoryCodec,
   Test_AccQueueCodec,
 } from "./testCodecs";
-import { accumulateReports } from "@/accumulate";
+import { accumulateReports } from "@/accumulate.js";
 import { dummyState } from "./utils";
 const mocks = vi.hoisted(() => {
   return {

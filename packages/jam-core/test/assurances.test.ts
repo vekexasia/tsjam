@@ -31,7 +31,7 @@ import { TestOutputCodec } from "@tsjam/codec/test/utils.js";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { RHO2DoubleDagger } from "@tsjam/transitions";
 import { toPosterior } from "@tsjam/utils";
-import { availableReports } from "@tsjam/pvm";
+import { availableReports } from "@/accumulate";
 
 const mocks = vi.hoisted(() => {
   return {

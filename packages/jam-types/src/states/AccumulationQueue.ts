@@ -8,6 +8,6 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
  * $(0.6.1 - 12.3)
  */
 export type AccumulationQueue = SeqOfLength<
-        Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
-        typeof EPOCH_LENGTH
+  Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
+  typeof EPOCH_LENGTH
 >;

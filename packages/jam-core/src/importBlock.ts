@@ -1,12 +1,7 @@
-import {
-  BLOCK_TIME,
-  CORES,
-  TOTAL_GAS_ACCUMULATION_ALL_CORES,
-  TOTAL_GAS_ACCUMULATION_LOGIC,
-} from "@tsjam/constants";
+import { BLOCK_TIME } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
-import { Dagger, Delta, Gas, JamBlock, JamState, STF } from "@tsjam/types";
+import { JamBlock, JamState, STF } from "@tsjam/types";
 import {
   DeltaToPosteriorError,
   DisputesToPosteriorError,
@@ -16,10 +11,7 @@ import {
   RHO_2_Dagger,
   RHO_2_DaggerError,
   RHO_toPosterior,
-  accumulationHistoryToPosterior,
-  accumulationQueueToPosterior,
   authorizerPool_toPosterior,
-  calculateAccumulateRoot,
   deltaToDoubleDagger,
   deltaToPosterior,
   disputesSTF,
@@ -39,13 +31,6 @@ import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
-  accumulatableReports,
-  availableReports,
-  noPrereqAvailableReports,
-  outerAccumulation,
-  withPrereqAvailableReports,
-} from "@tsjam/pvm";
-import {
   EpochMarkerError,
   WinningTicketsError,
   verifyEA,
@@ -56,7 +41,7 @@ import {
   verifySeal,
   verifyWinningTickets,
 } from "@/verifySeal";
-import { accumulateReports } from "./accumulate";
+import { accumulateReports, availableReports } from "./accumulate";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",

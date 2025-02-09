@@ -1,7 +1,14 @@
-import { Dagger, DoubleDagger, Posterior, RHO, STF, Tau } from "@tsjam/types";
+import {
+  AvailableWorkReports,
+  Dagger,
+  DoubleDagger,
+  Posterior,
+  RHO,
+  STF,
+  Tau,
+} from "@tsjam/types";
 import { CORES, WORK_TIMEOUT } from "@tsjam/constants";
 import { ok } from "neverthrow";
-import { availableReports } from "@tsjam/pvm";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
@@ -12,7 +19,7 @@ export const RHO2DoubleDagger: STF<
   {
     rho: RHO;
     p_tau: Posterior<Tau>; // Ht
-    availableReports: ReturnType<typeof availableReports>;
+    availableReports: AvailableWorkReports;
   },
   never,
   DoubleDagger<RHO>

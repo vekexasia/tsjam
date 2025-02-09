@@ -22,7 +22,6 @@ import {
   ValidatorDataCodec,
   WorkReportCodec,
   bit,
-  buildGenericKeyValueCodec,
   buildKeyValueCodec,
   createArrayLengthDiscriminator,
   createSetCodec,
