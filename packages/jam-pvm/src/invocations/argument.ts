@@ -45,7 +45,10 @@ const R_fn = <X>(input: HostCallOut<X>): ArgumentInvocationOut<X> => {
   if (input.exitReason === RegularPVMExitReason.OutOfGas) {
     return { exitReason: RegularPVMExitReason.OutOfGas, out: input.out };
   }
-  if (typeof input.exitReason === "undefined") {
+  if (
+    typeof input.exitReason === "undefined" ||
+    input.exitReason === RegularPVMExitReason.Halt
+  ) {
     const readable = input.context.memory.canRead(
       toSafeMemoryAddress(input.context.registers[7]),
       Number(input.context.registers[8]),

@@ -14,6 +14,7 @@ import {
   u32,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
+import assert from "node:assert";
 
 export const X_fn = (n: bigint) => (x: bigint) =>
   x + (x / 2n ** (8n * n - 1n)) * (2n ** 64n - 2n ** (8n * n));
@@ -54,6 +55,7 @@ export const IxMod = {
     register: T,
     value: number | bigint,
   ): PVMSingleModRegister<T> => {
+    assert(register >= 0 && register < 13, `${register} not in bounds`);
     return {
       type: "register",
       data: {

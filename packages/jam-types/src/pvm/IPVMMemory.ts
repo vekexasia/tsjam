@@ -57,4 +57,9 @@ export interface IPVMMemory {
    * $(0.6.1 - 4.24) - acl is defined there
    */
   changeAcl(page: Page, newKind: PVMMemoryAccessKind): this;
+
+  /**
+   * Returns the first address that is writeable in the heap
+   */
+  firstWriteableInHeap(size: u32): u32 | undefined;
 }

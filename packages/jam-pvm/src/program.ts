@@ -10,7 +10,7 @@ import {
 } from "@tsjam/types";
 import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
 import { ParsedProgram } from "@/parseProgram.js";
-import { MemoryContent, PVMMemory } from "@/pvmMemory.js";
+import { MemoryContent, PVMHeap, PVMMemory } from "@/pvmMemory.js";
 
 // constants defined in $(0.6.1 - A.35)
 const Zz = 2 ** 16;
@@ -84,6 +84,11 @@ export const programInitialization = (
     0n,
   ] as SeqOfLength<RegisterValue, 13>;
 
+  const heap: PVMHeap = {
+    pointer: <u32>0,
+    end: <u32>0,
+    start: <u32>0,
+  };
   // memory $(0.6.1 - A.36)
   const acl: Map<Page, PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write> =
     new Map();
@@ -108,10 +113,20 @@ export const programInitialization = (
   {
     const offset = 2 * Zz + Z_Fn(oCard);
     mem.push({ at: <u32>offset, content: w });
+    heap.start = <u32>offset;
+    heap.pointer = <u32>(heap.start + w.length);
+    heap.end = <u32>(offset + P_Fn(wCard) + z * Zp);
+    // NOTE: this is not in graypaper but the third and fourth
+    // disequations are unsolveable otherwise.
+    // It only happens when oCard is 0
+    if (heap.end === heap.start) {
+      heap.end = <u32>(heap.end + Zp);
+    }
+
     // third+fourth
     createAcl({
-      from: offset,
-      to: offset + P_Fn(wCard) + z * Zp,
+      from: heap.start,
+      to: heap.end,
       kind: PVMMemoryAccessKind.Write,
     });
   }
@@ -149,12 +164,14 @@ export const programInitialization = (
 
   const program = PVMProgramCodec.decode(c).value;
   const parsedProgram = ParsedProgram.parse(program);
+
   return {
     program,
     parsed: parsedProgram,
     memory: new PVMMemory(
       mem.filter((a) => a.content.length > 0), // we filter empty memory content cause it won't have acl
       acl,
+      heap,
     ),
     registers,
   };

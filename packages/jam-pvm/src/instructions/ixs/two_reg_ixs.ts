@@ -6,6 +6,7 @@ import {
   PVMIxEvaluateFN,
   RegisterIdentifier,
   RegisterValue,
+  u32,
   u8,
 } from "@tsjam/types";
 import { regIx } from "@/instructions/ixdb.js";
@@ -46,8 +47,11 @@ const move_reg = create(100 as u8, "move_reg", (context, rd, ra) => {
 });
 
 const sbrk = create(101 as u8, "sbrk", (context, rd, ra) => {
-  // TODO: implement sbrk (space break)
-  return ok([]);
+  const location = context.execution.memory.firstWriteableInHeap(
+    <u32>Number(context.execution.registers[ra]),
+  )!;
+
+  return ok([IxMod.reg(rd, location)]);
 });
 
 const count_set_bits_64 = create(

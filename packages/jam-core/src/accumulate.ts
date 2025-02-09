@@ -56,7 +56,7 @@ export const accumulateReports = (
     w_mark,
     w_q,
     deps.accumulationQueue,
-    deps.tau,
+    deps.p_tau,
   );
 
   // $(0.6.1 - 12.20)

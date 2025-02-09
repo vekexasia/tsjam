@@ -75,6 +75,7 @@ export const applyMods = <
         break;
       }
     } else if (mod.type === "register") {
+      // console.log(`✏️ Reg[${mod.data.index}] = ${mod.data.value.toString(16)}`);
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
       // we assume there is no

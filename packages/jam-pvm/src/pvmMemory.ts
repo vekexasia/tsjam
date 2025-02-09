@@ -1,12 +1,12 @@
 import { Zp } from "@tsjam/constants";
-import { IPVMMemory, PVMMemoryAccessKind, u32 } from "@tsjam/types";
+import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
 /**
  * Defines the memory content of a single page
  */
-export type Page = number;
+export type PVMHeap = { start: u32; end: u32; pointer: u32 };
 export class PVMMemory implements IPVMMemory {
   #innerMemoryContent = new Map<Page, Uint8Array>();
   constructor(
@@ -15,6 +15,7 @@ export class PVMMemory implements IPVMMemory {
       Page,
       PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
     >,
+    private heap: PVMHeap,
   ) {
     // if initialMemory is a map, we can directly use it
     if (initialMemory instanceof Map) {
@@ -82,6 +83,9 @@ export class PVMMemory implements IPVMMemory {
     const memory = this.#getPageMemory(page);
     const bytesToRead = Math.min(length, Zp - offset);
     const chunk = memory.subarray(offset, offset + bytesToRead);
+    // console.log(
+    //   `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
+    // );
     if (bytesToRead !== length) {
       const sub = this.#getBytes(
         toSafeMemoryAddress(address + bytesToRead),
@@ -112,6 +116,9 @@ export class PVMMemory implements IPVMMemory {
   setBytes(address: u32, bytes: Uint8Array): this {
     assert(this.canWrite(address, bytes.length), "Memory is not writeable");
     this.#setBytes(address, bytes);
+    // console.log(
+    //   `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
+    // );
     return this;
   }
 
@@ -150,10 +157,20 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
+  // TODO: rename to sbrk properly
+  firstWriteableInHeap(size: u32): u32 | undefined {
+    if (this.heap.end - this.heap.pointer >= size) {
+      const oldPointer = this.heap.pointer;
+      this.heap.pointer = <u32>(oldPointer + size);
+      return oldPointer;
+    }
+  }
+
   clone() {
     return new PVMMemory(
       new Map(this.#innerMemoryContent.entries()), // we crete a new identical map the setBytes will effectively clone the memory only if changes in the new instance.
       new Map(this.acl.entries()),
+      { ...this.heap },
     ) as this;
   }
 

@@ -22,7 +22,6 @@ export const hostCallInvocation = <X>(
   x: X,
 ): HostCallOut<X> => {
   const out = basicInvocation(p, ctx);
-  // console.log("mem", out.context.memory.toString());
   if (
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"
@@ -42,12 +41,19 @@ export const hostCallInvocation = <X>(
         out: x,
       };
     } else if ("exitReason" in res && typeof res.exitReason !== "undefined") {
+      return {
+        exitReason: res.exitReason,
+        context: out.context as unknown as PVMProgramExecutionContext,
+        out: x,
+      };
+    } else {
       // all good we hostcall
       return hostCallInvocation(
         p,
         {
           instructionPointer: (out.context.instructionPointer +
-            p.parsedProgram.skip(out.context.instructionPointer)) as u32,
+            p.parsedProgram.skip(out.context.instructionPointer) +
+            1) as u32,
           gas: res.ctx.gas,
           registers: res.ctx.registers,
           memory: res.ctx.memory,
@@ -55,12 +61,6 @@ export const hostCallInvocation = <X>(
         f,
         res.out,
       );
-    } else {
-      return {
-        exitReason: res.exitReason,
-        context: out.context as unknown as PVMProgramExecutionContext,
-        out: x,
-      };
     }
   } else {
     // regular execution without host call

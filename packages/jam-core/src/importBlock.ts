@@ -235,7 +235,7 @@ export const importBlock: STF<
     serviceAccounts: curState.serviceAccounts,
     privServices: curState.privServices,
     iota: curState.iota,
-    p_entropy,
+    p_eta_0: toPosterior(p_entropy[0]),
   }).safeRet();
 
   const [, dd_rho] = RHO2DoubleDagger(

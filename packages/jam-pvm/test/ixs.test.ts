@@ -11,6 +11,7 @@ import {
   Page,
   PVMMemoryAccessKind,
   RegularPVMExitReason,
+  u32,
 } from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
 import JSONBig from "json-bigint";
@@ -45,6 +46,7 @@ describe("pvm", () => {
         }),
       ),
       pvmACL,
+      { start: <u32>0, end: <u32>0, pointer: <u32>0 },
     );
     context.execution.gas = toTagged(BigInt(json["initial-gas"]) as Gas);
     context.execution.instructionPointer = toTagged(json["initial-pc"]);

@@ -243,7 +243,11 @@ export const omega_m = regFn<
         sortedKeys.shift()!;
         n++;
       }
-      const mem = new PVMMemory(new Map(), new Map());
+      const mem = new PVMMemory(new Map(), new Map(), {
+        start: <u32>0,
+        end: <u32>0,
+        pointer: <u32>0,
+      });
       const newM = new Map(refineCtx.m);
       newM.set(n, {
         programCode: p,

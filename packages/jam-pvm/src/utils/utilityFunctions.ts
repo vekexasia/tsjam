@@ -83,34 +83,16 @@ export const E_Fn = (
   r: AccumulationQueue[0],
   x: AccumulationHistory[0],
 ): AccumulationQueue[0] => {
-  const keys = new Set(x.keys());
-  const filteredR = r
-    .filter(
-      (r) => !keys.has(r.workReport.workPackageSpecification.workPackageHash),
-    )
-    .filter((r) => {
-      const xwl = new Map([
-        ...x.entries(),
-        ...r.workReport.segmentRootLookup.entries(),
-      ]);
-      const wlx = new Map([
-        ...r.workReport.segmentRootLookup.entries(),
-        ...x.entries(),
-      ]);
-
-      // check they're the same
-      for (const [k, v] of xwl.entries()) {
-        if (wlx.get(k) !== v) {
-          return false;
-        }
-      }
-      return true;
-    });
-
   const toRet: AccumulationQueue[0] = [];
-  for (const { workReport, dependencies } of filteredR) {
+
+  for (const { workReport, dependencies } of r) {
+    // (ws)h ~∈ x
+    if (x.has(workReport.workPackageSpecification.workPackageHash)) {
+      continue;
+    }
+
     const newDeps = new Set(dependencies);
-    keys.forEach((a) => newDeps.delete(a));
+    x.forEach((packageHash) => newDeps.delete(packageHash));
     toRet.push({ workReport, dependencies: newDeps });
   }
   return toRet;
@@ -179,10 +161,10 @@ export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,
   w_q: ReturnType<typeof withPrereqAvailableReports>,
   accumulationQueue: AccumulationQueue,
-  tau: Tau, // Ht
+  p_tau: Posterior<Tau>, // Ht
 ) => {
   // $(0.6.1 - 12.10)
-  const m = tau % EPOCH_LENGTH;
+  const m = p_tau % EPOCH_LENGTH;
 
   return [
     ...w_mark,

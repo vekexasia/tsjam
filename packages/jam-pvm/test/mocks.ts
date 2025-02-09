@@ -23,6 +23,7 @@ const mockMemory = (): IPVMMemory => ({
   firstUnreadable: vi.fn(),
   changeAcl: vi.fn(),
   clone: vi.fn().mockReturnThis(),
+  firstWriteableInHeap: vi.fn(),
 });
 export const createEvContext = (): {
   execution: PVMProgramExecutionContext;
