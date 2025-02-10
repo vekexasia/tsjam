@@ -75,11 +75,11 @@ describe("pvm", () => {
       expect(r.exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
-    expect(r.context.registers).toEqual(
-      json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
-    );
     expect(r.context.instructionPointer, "instruction pointer").toEqual(
       json["expected-pc"],
+    );
+    expect(r.context.registers).toEqual(
+      json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
     );
     for (const { address, contents } of json["expected-memory"]) {
       expect(r.context.memory.getBytes(address, contents.length)).toEqual(

@@ -68,7 +68,7 @@ export const Ix = <
 
 /**
  * Decorator to mark an instruction as block termination
- * must be used BEFORE @Ix
+ * must be used AFTER @Ix
  */
 export const BlockTermination = (
   target: any,

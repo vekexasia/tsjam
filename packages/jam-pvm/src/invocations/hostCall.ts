@@ -3,8 +3,6 @@ import {
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
-  PVMProgramExecutionContextBase,
-  RegularPVMExitReason,
   u32,
   u8,
 } from "@tsjam/types";
@@ -90,10 +88,10 @@ export type HostCallOut<X> = {
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
-  ctx: PVMProgramExecutionContextBase;
+  ctx: PVMProgramExecutionContext;
   out: X;
 }) => {
   exitReason?: PVMExitReason;
   out: X;
-  ctx: PVMProgramExecutionContextBase;
+  ctx: PVMProgramExecutionContext;
 };

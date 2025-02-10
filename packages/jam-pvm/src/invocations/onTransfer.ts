@@ -2,7 +2,7 @@ import {
   DeferredTransfer,
   Delta,
   Gas,
-  PVMProgramExecutionContextBase,
+  PVMProgramExecutionContext,
   ServiceAccount,
   ServiceIndex,
   Tau,
@@ -92,7 +92,7 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   (d: Delta, s: ServiceIndex) =>
   (input: {
     hostCallOpcode: u8;
-    ctx: PVMProgramExecutionContextBase;
+    ctx: PVMProgramExecutionContext;
     out: ServiceAccount;
   }) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;

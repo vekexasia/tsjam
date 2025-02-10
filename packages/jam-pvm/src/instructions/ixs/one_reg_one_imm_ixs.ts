@@ -28,11 +28,11 @@ const OneRegOneImmIxDecoder = (
 export type OneRegOneImmArgs = ReturnType<typeof OneRegOneImmIxDecoder>;
 
 class OneRegOneImmIxs {
-  @BlockTermination
   @Ix(50, OneRegOneImmIxDecoder)
+  @BlockTermination
   jump_ind({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const jumpLocation = Number((wA + vX) % 2n ** 32n) as u32;
-    return [djump(context, jumpLocation)];
+    return [...djump(context, jumpLocation)];
   }
 
   // ### Load unsigned
@@ -45,7 +45,7 @@ class OneRegOneImmIxs {
   load_u8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 1)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
 
     return [
@@ -60,7 +60,7 @@ class OneRegOneImmIxs {
   load_u16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
     return [
       IxMod.reg(
@@ -75,7 +75,7 @@ class OneRegOneImmIxs {
   load_u32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 4)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
     return [
       IxMod.reg(
@@ -90,7 +90,7 @@ class OneRegOneImmIxs {
   load_u64({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 8)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
     return [
       IxMod.reg(
@@ -105,7 +105,7 @@ class OneRegOneImmIxs {
   load_i8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 1)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
 
     return [
@@ -122,7 +122,7 @@ class OneRegOneImmIxs {
   load_i16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
 
     return [
@@ -139,7 +139,7 @@ class OneRegOneImmIxs {
   load_i32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress)];
+      return [...IxMod.pageFault(memoryAddress, context.execution)];
     }
 
     return [

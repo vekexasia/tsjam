@@ -23,8 +23,8 @@ export const OneOffsetIxDecoder = (
 export type OneOffsetArgs = ReturnType<typeof OneOffsetIxDecoder>;
 
 class OneOffsetIxs {
-  @BlockTermination
   @Ix(40, OneOffsetIxDecoder)
+  @BlockTermination
   jump({ vX }: OneOffsetArgs, context: PVMIxEvaluateFNContext) {
     return branch(context, vX, true);
   }

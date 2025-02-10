@@ -17,18 +17,20 @@ const ZA = 2;
 export const djump = (
   context: PVMIxEvaluateFNContext,
   a: u32,
-): PVMSingleModPointer | PVMExitHaltMod | PVMExitPanicMod => {
+): Array<
+  PVMSingleModPointer | PVMSingleModPointer | PVMExitHaltMod | PVMExitPanicMod
+> => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
-    return IxMod.halt();
+    return [IxMod.ip(context.execution.instructionPointer), IxMod.halt()];
   } else if (
     a === 0 ||
     a > context.program.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
-    return IxMod.panic();
+    return [IxMod.ip(context.execution.instructionPointer), IxMod.panic()];
   }
 
-  return IxMod.ip(context.program.j[a / ZA - 1]);
+  return [IxMod.ip(context.program.j[a / ZA - 1])];
 };

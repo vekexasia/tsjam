@@ -22,8 +22,8 @@ export type OneRegOneExtImmArgs = ReturnType<
 >;
 
 class OneRegOneExtImmIxs {
-  @BlockTermination
   @Ix(20, OneRegOneExtImmArgsIxDecoder)
+  @BlockTermination
   load_imm_64({ rA, vX }: OneRegOneExtImmArgs) {
     return [IxMod.reg(rA, vX)];
   }

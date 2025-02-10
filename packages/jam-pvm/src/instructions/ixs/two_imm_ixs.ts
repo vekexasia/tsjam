@@ -33,7 +33,7 @@ export type TwoImmArgs = ReturnType<typeof TwoImmIxDecoder>;
 class TwoImmIxs {
   @Ix(30, TwoImmIxDecoder)
   store_imm_u8({ vX, vY }: TwoImmArgs) {
-    return [IxMod.memory(vY, new Uint8Array([vX % 256]))];
+    return [IxMod.memory(vX, new Uint8Array([Number(vY % 256n)]))];
   }
 
   @Ix(31, TwoImmIxDecoder)

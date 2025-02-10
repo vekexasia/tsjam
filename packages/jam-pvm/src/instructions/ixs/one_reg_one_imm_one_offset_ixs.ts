@@ -43,8 +43,8 @@ export type OneRegOneIMMOneOffsetArgs = ReturnType<
 >;
 
 class OneRegOneImmOneOffsetIxs {
-  @BlockTermination
   @Ix(80, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   load_imm_jump(
     { rA, vX, vY }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -52,8 +52,8 @@ class OneRegOneImmOneOffsetIxs {
     return [...branch(context, vY, true), IxMod.reg(rA, vX)];
   }
 
-  @BlockTermination
   @Ix(81, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_eq_imm(
     { wA, vX, vY }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -61,8 +61,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA === vX);
   }
 
-  @BlockTermination
   @Ix(82, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_ne_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -70,8 +70,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA != vX);
   }
 
-  @BlockTermination
   @Ix(83, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_lt_u_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -79,8 +79,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA < vX);
   }
 
-  @BlockTermination
   @Ix(84, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_le_u_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -88,8 +88,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA <= vX);
   }
 
-  @BlockTermination
   @Ix(85, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_ge_u_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -97,8 +97,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA >= vX);
   }
 
-  @BlockTermination
   @Ix(86, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_gt_u_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -106,8 +106,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, wA > vX);
   }
 
-  @BlockTermination
   @Ix(87, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_lt_s_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -115,8 +115,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, Z(8, wA) < Z(8, vX));
   }
 
-  @BlockTermination
   @Ix(88, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_le_s_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -124,8 +124,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, Z(8, wA) <= Z(8, vX));
   }
 
-  @BlockTermination
   @Ix(89, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_ge_s_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -133,8 +133,8 @@ class OneRegOneImmOneOffsetIxs {
     return branch(context, vY, Z(8, wA) >= Z(8, vX));
   }
 
-  @BlockTermination
   @Ix(90, OneRegOneIMMOneOffsetIxDecoder)
+  @BlockTermination
   branch_gt_s_imm(
     { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,

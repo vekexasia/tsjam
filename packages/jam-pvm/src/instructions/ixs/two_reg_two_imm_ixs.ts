@@ -41,12 +41,12 @@ export const TwoRegTwoImmIxDecoder = (
 export type TwoRegTwoImmIxArgs = ReturnType<typeof TwoRegTwoImmIxDecoder>;
 
 class TwoRegTwoImmIxs {
-  @BlockTermination
   @Ix(180, TwoRegTwoImmIxDecoder)
+  @BlockTermination
   load_imm_jump_ind(args: TwoRegTwoImmIxArgs, context: PVMIxEvaluateFNContext) {
     return [
       IxMod.reg(args.rA, args.vX),
-      djump(context, Number((args.wB + args.vY) % 2n ** 32n) as u32),
+      ...djump(context, Number((args.wB + args.vY) % 2n ** 32n) as u32),
     ];
   }
 }

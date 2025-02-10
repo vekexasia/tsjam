@@ -30,11 +30,8 @@ export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
  * @param mods - the modifications to apply
  * it's idempotent
  */
-export const applyMods = <
-  T extends object,
-  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
->(
-  ctx: CTX,
+export const applyMods = <T extends object>(
+  ctx: PVMProgramExecutionContext,
   out: T,
   mods: Array<
     | PVMSingleModRegister<number>
@@ -47,7 +44,7 @@ export const applyMods = <
     | PVMSingleModGas
   >,
 ): {
-  ctx: CTX;
+  ctx: PVMProgramExecutionContext;
   out: T;
   exitReason?: PVMExitReason;
 } => {
@@ -63,12 +60,7 @@ export const applyMods = <
   for (let i = 0; i < mods.length && typeof exitReason === "undefined"; i++) {
     const mod = mods[i];
     if (mod.type === "ip") {
-      assert(
-        typeof (newCtx as unknown as PVMProgramExecutionContext)
-          .instructionPointer === "number",
-      );
-      (newCtx as unknown as PVMProgramExecutionContext).instructionPointer =
-        mod.data;
+      newCtx.instructionPointer = mod.data;
     } else if (mod.type === "gas") {
       newCtx.gas = (newCtx.gas - mod.data) as Gas;
     } else if (mod.type === "exit") {
@@ -87,9 +79,10 @@ export const applyMods = <
         newCtx.memory.setBytes(mod.data.from, mod.data.data);
       } else {
         const r = applyMods(newCtx, out, [
-          ...IxMod.pageFault(firstUnwriteable),
+          ...IxMod.pageFault(firstUnwriteable, ctx),
         ]);
         exitReason = r.exitReason;
+        newCtx.instructionPointer = r.ctx.instructionPointer;
         newCtx.gas = r.ctx.gas;
       }
     } else if (mod.type === "object") {

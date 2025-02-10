@@ -7,10 +7,9 @@ import {
   Posterior,
   PVMAccumulationOp,
   PVMAccumulationState,
-  PVMProgramExecutionContextBase,
+  PVMProgramExecutionContext,
   PVMResultContext,
   RegularPVMExitReason,
-  SafroleState,
   ServiceAccount,
   ServiceIndex,
   Tau,
@@ -250,7 +249,7 @@ const F_fn: (
  * $(0.6.1 - B.11)
  */
 const G_fn = (
-  context: PVMProgramExecutionContextBase,
+  context: PVMProgramExecutionContext,
   serviceAccount: ServiceAccount,
   x: { x: PVMResultContext; y: PVMResultContext },
 ): ReturnType<

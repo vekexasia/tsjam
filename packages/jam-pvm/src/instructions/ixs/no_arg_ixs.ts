@@ -6,15 +6,15 @@ export const NoArgIxDecoder = () => null;
 export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;
 
 class NoArgIxs {
-  @BlockTermination
   @Ix(1, NoArgIxDecoder)
+  @BlockTermination
   fallthrough(_: NoArgIxArgs, context: PVMIxEvaluateFNContext) {
     return [IxMod.ip(context.execution.instructionPointer + 1)];
   }
 
-  @BlockTermination
   @Ix(0, NoArgIxDecoder)
-  trap(_: NoArgIxArgs) {
-    return [IxMod.panic()];
+  @BlockTermination
+  trap(_: NoArgIxArgs, context: PVMIxEvaluateFNContext) {
+    return [IxMod.ip(context.execution.instructionPointer), IxMod.panic()];
   }
 }

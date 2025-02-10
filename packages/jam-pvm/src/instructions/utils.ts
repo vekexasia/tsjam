@@ -5,6 +5,7 @@ import {
   PVMExitOutOfGasMod,
   PVMExitPageFaultMod,
   PVMExitPanicMod,
+  PVMProgramExecutionContext,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -34,8 +35,12 @@ export const IxMod = {
     type: "exit",
     data: { type: "host-call", opCode: opCode },
   }),
-  pageFault: (location: u32): [PVMSingleModGas, PVMExitPageFaultMod] => [
+  pageFault: (
+    location: u32,
+    context: PVMProgramExecutionContext,
+  ): [PVMSingleModGas, PVMSingleModPointer, PVMExitPageFaultMod] => [
     IxMod.gas(TRAP_COST), // trap
+    IxMod.ip(context.instructionPointer), // override any other skip
     { type: "exit", data: { type: "page-fault", address: location } },
   ],
   skip: (ip: u32, amont: number): PVMSingleModPointer => ({

@@ -27,7 +27,7 @@ export const branch = (
   }
   if (!context.parsedProgram.isBlockBeginning(address)) {
     return [
-      IxMod.ip(context.execution.instructionPointer), // stay here
+      IxMod.ip(context.execution.instructionPointer), // stay here - overrides any other ip mods before
       IxMod.panic(), // should not account for gas of panic
     ];
   }

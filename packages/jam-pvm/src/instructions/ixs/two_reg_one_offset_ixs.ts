@@ -30,8 +30,8 @@ const TwoRegOneOffsetIxDecoder = (
 export type TwoRegOneOffsetArgs = ReturnType<typeof TwoRegOneOffsetIxDecoder>;
 
 class TwoRegOneOffsetIxs {
-  @BlockTermination
   @Ix(170, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_eq(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -43,8 +43,8 @@ class TwoRegOneOffsetIxs {
     );
   }
 
-  @BlockTermination
   @Ix(171, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_ne(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -55,8 +55,9 @@ class TwoRegOneOffsetIxs {
       wA !== wB,
     );
   }
-  @BlockTermination
+
   @Ix(172, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_lt_u(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -67,8 +68,9 @@ class TwoRegOneOffsetIxs {
       wA < wB,
     );
   }
-  @BlockTermination
+
   @Ix(173, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_lt_s(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -79,8 +81,9 @@ class TwoRegOneOffsetIxs {
       Z(8, wA) < Z(8, wB),
     );
   }
-  @BlockTermination
+
   @Ix(174, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_ge_u(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
@@ -91,8 +94,9 @@ class TwoRegOneOffsetIxs {
       wA >= wB,
     );
   }
-  @BlockTermination
+
   @Ix(175, TwoRegOneOffsetIxDecoder)
+  @BlockTermination
   branch_ge_s(
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
