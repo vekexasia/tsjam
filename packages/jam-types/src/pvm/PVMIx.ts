@@ -1,4 +1,3 @@
-import { Result } from "neverthrow";
 import { PVMProgramExecutionContext } from "@/pvm/PVMProgramExecutionContext.js";
 import { PVMProgram } from "@/pvm/PVMProgram.js";
 import { IParsedProgram } from "@/pvm/IParsedProgram.js";
@@ -11,6 +10,9 @@ import {
   PVMSingleModMemory,
   PVMSingleModRegister,
   PVMExitPanicMod,
+  PVMExitHaltMod,
+  PVMExitPageFaultMod,
+  PVMExitHostCallMod,
 } from "./PVMModifications";
 export type PVMIxReturnMods = Array<
   | PVMSingleModPointer
@@ -18,6 +20,9 @@ export type PVMIxReturnMods = Array<
   | PVMSingleModMemory
   | PVMSingleModRegister<RegisterIdentifier>
   | PVMExitPanicMod
+  | PVMExitHaltMod
+  | PVMExitPageFaultMod
+  | PVMExitHostCallMod
 >;
 
 export type PVMIxEvaluateFNContext = {
@@ -29,7 +34,7 @@ export type PVMIxEvaluateFNContext = {
  * * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
-export interface PVMIx<Args, EvaluateErr extends PVMIxExecutionError> {
+export interface PVMIx<Args> {
   /**
    * decode the full instruction from the bytes.
    * the byte array is chunked to include only the bytes of the instruction (included opcode)
@@ -42,33 +47,6 @@ export interface PVMIx<Args, EvaluateErr extends PVMIxExecutionError> {
   readonly identifier: string;
 }
 
-/**
- * Represents an error indecoding pvm instruction
- */
-export class PVMIxDecodeError {
-  constructor(public message: string) {}
-}
+export type PVMIxEvaluateFN<Args> = PVMIx<Args>["evaluate"];
 
-/**
- * Base class for PVM Execution Error
- */
-export class PVMIxExecutionError {
-  constructor(
-    public readonly mods: Array<
-      | PVMSingleModPointer
-      | PVMSingleModGas
-      | PVMSingleModMemory
-      | PVMSingleModRegister<RegisterIdentifier>
-    >,
-    public readonly type: PVMExitReason,
-    public readonly reason: string,
-    public readonly accountTrapCost: boolean,
-  ) {}
-}
-
-export type PVMIxEvaluateFN<
-  Args,
-  EvErr extends PVMIxExecutionError = PVMIxExecutionError,
-> = PVMIx<Args, EvErr>["evaluate"];
-
-export type PVMIxDecodeFN<Args> = PVMIx<Args, any>["decode"];
+export type PVMIxDecodeFN<Args> = PVMIx<Args>["decode"];

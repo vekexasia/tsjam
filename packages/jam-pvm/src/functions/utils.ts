@@ -1,7 +1,8 @@
 import assert from "assert";
 import {
   Gas,
-  PVMExitReasonMod,
+  PVMExitReason,
+  PVMExitMod,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
   PVMResultContext,
@@ -10,9 +11,9 @@ import {
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
-  RegularPVMExitReason,
 } from "@tsjam/types";
 import { PVMMemory } from "@/pvmMemory.js";
+import { IxMod } from "@/instructions/utils";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -27,6 +28,7 @@ export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
  * @param ctx - the current context
  * @param out - the current out
  * @param mods - the modifications to apply
+ * it's idempotent
  */
 export const applyMods = <
   T extends object,
@@ -37,7 +39,7 @@ export const applyMods = <
   mods: Array<
     | PVMSingleModRegister<number>
     | PVMSingleModPointer
-    | PVMExitReasonMod
+    | PVMExitMod
     | XMod
     | YMod
     | PVMSingleModMemory
@@ -47,7 +49,7 @@ export const applyMods = <
 ): {
   ctx: CTX;
   out: T;
-  exitReason?: RegularPVMExitReason;
+  exitReason?: PVMExitReason;
 } => {
   const newCtx = {
     ...ctx,
@@ -55,8 +57,11 @@ export const applyMods = <
       ...ctx.registers,
     ] as PVMProgramExecutionContextBase["registers"],
   };
-  let exitReason: RegularPVMExitReason | undefined;
-  for (const mod of mods) {
+  let exitReason: PVMExitReason | undefined;
+  // we cycle through all mods and stop at the end or if
+  // exitReason is set (whichever comes first)
+  for (let i = 0; i < mods.length && typeof exitReason === "undefined"; i++) {
+    const mod = mods[i];
     if (mod.type === "ip") {
       assert(
         typeof (newCtx as unknown as PVMProgramExecutionContext)
@@ -67,27 +72,26 @@ export const applyMods = <
     } else if (mod.type === "gas") {
       newCtx.gas = (newCtx.gas - mod.data) as Gas;
     } else if (mod.type === "exit") {
-      if (mod.data === RegularPVMExitReason.Halt) {
-        exitReason = RegularPVMExitReason.Halt;
-        break;
-      } else if (mod.data === RegularPVMExitReason.OutOfGas) {
-        exitReason = RegularPVMExitReason.OutOfGas;
-        break;
-      }
+      exitReason = mod.data;
     } else if (mod.type === "register") {
       // console.log(`✏️ Reg[${mod.data.index}] = ${mod.data.value.toString(16)}`);
       newCtx.registers[mod.data.index] = mod.data.value;
     } else if (mod.type === "memory") {
-      // we assume there is no
-      assert(
-        typeof newCtx.memory.firstUnwriteable(
-          mod.data.from,
-          mod.data.data.length,
-        ) === "undefined",
-        "unwriteable memory should be handled before calling applyMods",
+      // we check for page fault before applying
+      const firstUnwriteable = newCtx.memory.firstUnwriteable(
+        mod.data.from,
+        mod.data.data.length,
       );
-      newCtx.memory = (newCtx.memory as PVMMemory).clone();
-      newCtx.memory.setBytes(mod.data.from, mod.data.data);
+      if (typeof firstUnwriteable === "undefined") {
+        newCtx.memory = (newCtx.memory as PVMMemory).clone();
+        newCtx.memory.setBytes(mod.data.from, mod.data.data);
+      } else {
+        const r = applyMods(newCtx, out, [
+          ...IxMod.pageFault(firstUnwriteable),
+        ]);
+        exitReason = r.exitReason;
+        newCtx.gas = r.ctx.gas;
+      }
     } else if (mod.type === "object") {
       for (const key of Object.keys(mod.data)) {
         // @ts-expect-error - we know that key is a key of T

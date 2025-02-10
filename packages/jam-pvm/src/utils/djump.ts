@@ -1,67 +1,34 @@
-import { Result, err, ok } from "neverthrow";
 import {
-  PVMIx,
-  PVMIxExecutionError,
-  PVMSingleModGas,
-  PVMSingleModMemory,
-  PVMSingleModRegister,
   PVMSingleModPointer,
-  RegularPVMExitReason,
-  RegisterIdentifier,
   u32,
+  PVMIxEvaluateFNContext,
+  PVMExitPanicMod,
+  PVMExitHaltMod,
 } from "@tsjam/types";
 import { IxMod } from "@/instructions/utils";
+
 const ZA = 2;
 /**
- * djump(a) method defined in `225`
+ * djump(a)
  * @param context - the current evaluating context
  * @param a - the address to jump to
- * @param mods - mods to apply in both cases
  * $(0.6.1 - A.17)
  */
 export const djump = (
-  context: Parameters<PVMIx<unknown, PVMIxExecutionError>["evaluate"]>[0],
+  context: PVMIxEvaluateFNContext,
   a: u32,
-  mods: Array<
-    | PVMSingleModPointer
-    | PVMSingleModGas
-    | PVMSingleModMemory
-    | PVMSingleModRegister<RegisterIdentifier>
-  > = [],
-): Result<
-  Array<
-    | PVMSingleModPointer
-    | PVMSingleModGas
-    | PVMSingleModMemory
-    | PVMSingleModRegister<RegisterIdentifier>
-  >,
-  PVMIxExecutionError
-> => {
+): PVMSingleModPointer | PVMExitHaltMod | PVMExitPanicMod => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
-    return err(
-      new PVMIxExecutionError(
-        mods,
-        RegularPVMExitReason.Halt,
-        "regular halt",
-        false,
-      ),
-    );
+    return IxMod.halt();
   } else if (
     a === 0 ||
     a > context.program.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
-    return err(
-      new PVMIxExecutionError(
-        mods,
-        RegularPVMExitReason.Panic,
-        "invalid jump location",
-        false,
-      ),
-    );
+    return IxMod.panic();
   }
 
-  return ok([...mods, IxMod.ip(context.program.j[a / ZA - 1])]);
+  return IxMod.ip(context.program.j[a / ZA - 1]);
 };

@@ -8,10 +8,8 @@ import {
   Posterior,
   RegularPVMExitReason,
 } from "@tsjam/types";
-import { trap } from "@/instructions/ixs/no_arg_ixs.js";
 import { applyMods } from "@/functions/utils";
-import { IxMod } from "@/instructions/utils";
-
+import { IxMod, TRAP_COST } from "@/instructions/utils";
 type Output = {
   p_context: Posterior<PVMProgramExecutionContext>;
   exitReason?: PVMExitReason;
@@ -35,9 +33,13 @@ export const pvmSingleStep = (
     typeof ix === "undefined"
   ) {
     // out of bounds ix pointer or invalid ix
+    const o = applyMods(ctx, {} as object, [
+      IxMod.gas(TRAP_COST + (ix?.gasCost ?? 0n)),
+      IxMod.panic(),
+    ]);
     return {
-      exitReason: RegularPVMExitReason.Panic,
-      p_context: toPosterior(applyMods(ctx, {}, [IxMod.gas(trap.gasCost)]).ctx),
+      p_context: toPosterior(o.ctx),
+      exitReason: o.exitReason,
     };
   }
 
@@ -48,13 +50,21 @@ export const pvmSingleStep = (
       ? ctx.instructionPointer + skip
       : p.program.c.length,
   );
-  // console.log(ix.identifier);
-  const args = ix.decode(byteArgs);
-  if (args.isErr()) {
+
+  const context = {
+    execution: ctx,
+    program: p.program,
+    parsedProgram: p.parsedProgram,
+  };
+
+  let args: unknown;
+  try {
+    args = ix.decode(byteArgs, context);
+  } catch (e: any) {
+    console.log(`Decoding error for ${ix.identifier}`, e.message);
     const o = applyMods(ctx, {} as object, [
-      IxMod.skip(ctx.instructionPointer, skip),
-      IxMod.gas(trap.gasCost),
-      IxMod.gas(ix.gasCost),
+      IxMod.skip(ctx.instructionPointer, skip), //NOTE: not sure we should skip
+      IxMod.gas(TRAP_COST + ix.gasCost),
       IxMod.panic(),
     ]);
     return {
@@ -63,54 +73,18 @@ export const pvmSingleStep = (
     };
   }
 
-  const context = {
-    execution: ctx,
-    program: p.program,
-    parsedProgram: p.parsedProgram,
-  };
+  const ixMods = ix.evaluate(args, context);
 
-  const r = ix.evaluate(context, ...args.value);
-
-  if (r.isErr()) {
-    const mods: PVMSingleModGas[] = [];
-    if (r.error.accountTrapCost) {
-      mods.push(IxMod.gas(trap.gasCost));
-    }
-
-    const rMod = applyMods(ctx, {} as object, [
-      ...r.error.mods,
-      ...mods,
-      IxMod.gas(ix.gasCost),
-    ]);
-    return { p_context: toPosterior(rMod.ctx), exitReason: r.error.type };
-  }
-  // console.log("ops", r.value);
-
-  // check for memory
-  const unallowedWrites = r.value
-    .filter((mod) => mod.type === "memory")
-    .map((mod) =>
-      ctx.memory.firstUnwriteable(mod.data.from, mod.data.data.length),
-    )
-    .filter((m) => typeof m !== "undefined");
-
-  if (unallowedWrites.length > 0) {
-    const mods: PVMSingleModGas[] = [];
-    mods.push(IxMod.gas(trap.gasCost));
-
-    const rMod = applyMods(ctx, {} as object, [...mods, IxMod.gas(ix.gasCost)]);
-    return {
-      p_context: toPosterior(rMod.ctx),
-      exitReason: { type: "page-fault", memoryLocationIn: unallowedWrites[0] },
-    };
-  }
-
+  // we apply the gas and skip.
+  // if an instruction pointer is set we apply it and override the skip inside
+  // the applyMods
   // $(0.6.1 - A.6)
   const rMod = applyMods(ctx, {} as object, [
     IxMod.gas(ix.gasCost), // g′ = g − g∆
     IxMod.skip(ctx.instructionPointer, skip), // i'
-    ...r.value,
+    ...ixMods,
   ]);
+
   return {
     p_context: toPosterior(rMod.ctx),
     exitReason: rMod.exitReason,

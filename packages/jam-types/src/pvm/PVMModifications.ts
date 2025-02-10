@@ -1,5 +1,10 @@
 import { Gas, RegisterValue, u32 } from "@/genericTypes.js";
-import { RegularPVMExitReason } from "./PVMExitReason";
+import {
+  PVMExitReason,
+  PVMExitReasonHostCall,
+  PVMExitReasonPageFault,
+  RegularPVMExitReason,
+} from "./PVMExitReason";
 
 export type PVMSingleMod<T, K> = { type: T; data: K };
 export type PVMSingleModGas = PVMSingleMod<"gas", Gas>;
@@ -13,10 +18,11 @@ export type PVMSingleModRegister<T extends number> = PVMSingleMod<
   "register",
   { index: T; value: RegisterValue }
 >;
-export type PVMExitReasonMod = PVMSingleMod<"exit", RegularPVMExitReason>;
-export type PVMExitHaltMod = PVMSingleMod<"exit", RegularPVMExitReason.Halt>;
-export type PVMExitOutOfGasMod = PVMSingleMod<
-  "exit",
-  RegularPVMExitReason.OutOfGas
->;
-export type PVMExitPanicMod = PVMSingleMod<"exit", RegularPVMExitReason.Panic>;
+export type PVMExitMod<Kind = PVMExitReason> = PVMSingleMod<"exit", Kind>;
+
+export type PVMExitReasonMod = PVMExitMod<RegularPVMExitReason>;
+export type PVMExitHaltMod = PVMExitMod<RegularPVMExitReason.Halt>;
+export type PVMExitOutOfGasMod = PVMExitMod<RegularPVMExitReason.OutOfGas>;
+export type PVMExitPanicMod = PVMExitMod<RegularPVMExitReason.Panic>;
+export type PVMExitPageFaultMod = PVMExitMod<PVMExitReasonPageFault>;
+export type PVMExitHostCallMod = PVMExitMod<PVMExitReasonHostCall>;

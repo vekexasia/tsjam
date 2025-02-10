@@ -1,6 +1,4 @@
 import {
-  Gas,
-  PVMIxEvaluateFN,
   PVMIxEvaluateFNContext,
   RegisterIdentifier,
   RegisterValue,
@@ -10,13 +8,13 @@ import {
 import { branch } from "@/utils/branch.js";
 import { Z } from "@/utils/zed.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { regIx } from "@/instructions/ixdb.js";
+import { Ix, BlockTermination } from "@/instructions/ixdb.js";
 import { E_sub } from "@tsjam/codec";
 import assert from "node:assert";
 import { IxMod } from "../utils";
 
 // $(0.6.1 - A.25
-export const OneRegOneIMMOneOffsetIxsDecoder = (
+export const OneRegOneIMMOneOffsetIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
 ) => {
@@ -41,131 +39,117 @@ export const OneRegOneIMMOneOffsetIxsDecoder = (
 };
 
 export type OneRegOneIMMOneOffsetArgs = ReturnType<
-  typeof OneRegOneIMMOneOffsetIxsDecoder
+  typeof OneRegOneIMMOneOffsetIxDecoder
 >;
 
-const create1Reg1IMM1OffsetIx = (
-  identifier: u8,
-  name: string,
-  evaluate: PVMIxEvaluateFN<OneRegOneIMMOneOffsetArgs>,
-  blockTermination?: true,
-) => {
-  return regIx(
-    {
-      opCode: identifier,
-      identifier: name,
-      decode: OneRegOneIMMOneOffsetIxsDecoder,
-      evaluate,
-      gasCost: 1n as Gas,
-    },
-    blockTermination,
-  );
-};
-
-create1Reg1IMM1OffsetIx(
-  80 as u8,
-  "load_imm_jump",
-  ({ rA, vX, vY }, context) => {
+class OneRegOneImmOneOffsetIxs {
+  @BlockTermination
+  @Ix(80, OneRegOneIMMOneOffsetIxDecoder)
+  load_imm_jump(
+    { rA, vX, vY }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return [...branch(context, vY, true), IxMod.reg(rA, vX)];
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  81 as u8,
-  "branch_eq_imm",
-  ({ wA, vX, vY }, context) => {
+  @BlockTermination
+  @Ix(81, OneRegOneIMMOneOffsetIxDecoder)
+  branch_eq_imm(
+    { wA, vX, vY }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA === vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  82 as u8,
-  "branch_ne_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(82, OneRegOneIMMOneOffsetIxDecoder)
+  branch_ne_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA != vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  83 as u8,
-  "branch_lt_u_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(83, OneRegOneIMMOneOffsetIxDecoder)
+  branch_lt_u_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA < vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  84 as u8,
-  "branch_le_u_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(84, OneRegOneIMMOneOffsetIxDecoder)
+  branch_le_u_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA <= vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  85 as u8,
-  "branch_ge_u_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(85, OneRegOneIMMOneOffsetIxDecoder)
+  branch_ge_u_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA >= vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  86 as u8,
-  "branch_gt_u_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(86, OneRegOneIMMOneOffsetIxDecoder)
+  branch_gt_u_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, wA > vX);
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  87 as u8,
-  "branch_lt_s_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(87, OneRegOneIMMOneOffsetIxDecoder)
+  branch_lt_s_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, Z(8, wA) < Z(8, vX));
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  88 as u8,
-  "branch_le_s_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(88, OneRegOneIMMOneOffsetIxDecoder)
+  branch_le_s_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, Z(8, wA) <= Z(8, vX));
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  89 as u8,
-  "branch_ge_s_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(89, OneRegOneIMMOneOffsetIxDecoder)
+  branch_ge_s_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, Z(8, wA) >= Z(8, vX));
-  },
-  true,
-);
+  }
 
-create1Reg1IMM1OffsetIx(
-  90 as u8,
-  "branch_gt_s_imm",
-  ({ vX, vY, wA }, context) => {
+  @BlockTermination
+  @Ix(90, OneRegOneIMMOneOffsetIxDecoder)
+  branch_gt_s_imm(
+    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    context: PVMIxEvaluateFNContext,
+  ) {
     return branch(context, vY, Z(8, wA) > Z(8, vX));
-  },
-  true,
-);
+  }
+}
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe.skip("decode", () => {
     const encodeRaLx = (ra: number, lx: number) => {
       return ra + lx * 16;
     };
+    // TODO: implement decode test
     /**
     it("should decode 1Reg1IMM1Offset", () => {
       const [ri, vx, offset] = decode(

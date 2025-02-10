@@ -1,21 +1,20 @@
 import {
-  Gas,
-  PVMIxDecodeError,
-  PVMIxEvaluateFN,
-  PVMProgramExecutionContext,
-  PVMRegisters,
+  PVMIxEvaluateFNContext,
   RegisterIdentifier,
   u32,
   u8,
 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
 import { djump } from "@/utils/djump.js";
-import { regIx } from "@/instructions/ixdb.js";
+import { BlockTermination, Ix, Ixdb, regIx } from "@/instructions/ixdb.js";
 import { IxMod } from "../utils";
 import assert from "node:assert";
 
-// $(0.6.1 - A.27)
-const decode = (bytes: Uint8Array, registers: PVMRegisters) => {
+// $(0.6.1 - A.29)
+export const TwoRegTwoImmIxDecoder = (
+  bytes: Uint8Array,
+  context: PVMIxEvaluateFNContext,
+) => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   assert(bytes.length >= 2, "not enough bytes [1]");
@@ -30,53 +29,41 @@ const decode = (bytes: Uint8Array, registers: PVMRegisters) => {
     lY as u8,
   );
 
-  return { rA, rB, vX, vY, wA: registers[rA], wB: registers[rB] };
-};
-decode.type = "TwoRegTwoImmIxsDecoder";
-type Args = ReturnType<typeof decode>;
-
-const create = (
-  identifier: u8,
-  name: string,
-  evaluate: PVMIxEvaluateFN<Args>,
-  blockTermination: boolean = false,
-) => {
-  return regIx<Args>({
-    opCode: identifier,
-    identifier: name,
-    blockTermination,
-    ix: {
-      decode,
-      evaluate,
-      gasCost: 1n as Gas,
-    },
-  });
+  return {
+    vX,
+    vY,
+    rA,
+    wA: context.execution.registers[rA],
+    wB: context.execution.registers[rB],
+  };
 };
 
-const load_imm_jump_ind = create(
-  180 as u8,
-  "load_imm_jump_ind",
-  ({ vY, vX, rA, wB }, context) => {
-    return djump(context, Number((wB + vY) % 2n ** 32n) as u32, [
-      IxMod.reg(rA, vX),
-    ]);
-  },
-  true,
-);
+export type TwoRegTwoImmIxArgs = ReturnType<typeof TwoRegTwoImmIxDecoder>;
 
+class TwoRegTwoImmIxs {
+  @BlockTermination
+  @Ix(180, TwoRegTwoImmIxDecoder)
+  load_imm_jump_ind(args: TwoRegTwoImmIxArgs, context: PVMIxEvaluateFNContext) {
+    return [
+      IxMod.reg(args.rA, args.vX),
+      djump(context, Number((args.wB + args.vY) % 2n ** 32n) as u32),
+    ];
+  }
+}
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+  const { createEvContext } = await import("@/test/mocks");
   describe("two_reg_two_imm_ixs", () => {
     describe("decode", () => {
       it("should fail if not enough bytes", () => {
         expect(() =>
-          decode(new Uint8Array([]), [] as unknown as PVMRegisters),
+          TwoRegTwoImmIxDecoder(new Uint8Array([]), createEvContext()),
         ).to.throw("not enough bytes [1]");
         expect(() =>
-          decode(new Uint8Array([0]), [] as unknown as PVMRegisters),
+          TwoRegTwoImmIxDecoder(new Uint8Array([0]), createEvContext()),
         ).to.throw("not enough bytes [1]");
         expect(() =>
-          decode(new Uint8Array([0, 1]), [] as unknown as PVMRegisters),
+          TwoRegTwoImmIxDecoder(new Uint8Array([0, 1]), createEvContext()),
         ).to.throw("not enough bytes [2]");
       });
     });

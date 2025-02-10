@@ -31,21 +31,27 @@ export const hostCallInvocation = <X>(
       ctx: out.context,
       out: x,
     });
-    if ("pageFaultAddress" in res) {
-      return {
-        exitReason: {
-          type: "page-fault",
-          memoryLocationIn: res.pageFaultAddress,
-        },
-        context: out.context as unknown as PVMProgramExecutionContext,
-        out: x,
-      };
-    } else if ("exitReason" in res && typeof res.exitReason !== "undefined") {
-      return {
-        exitReason: res.exitReason,
-        context: out.context as unknown as PVMProgramExecutionContext,
-        out: x,
-      };
+    if ("exitReason" in res && typeof res.exitReason !== "undefined") {
+      const exitReason = res.exitReason;
+      if (typeof exitReason === "object" && exitReason.type === "page-fault") {
+        // if page fault we need to use the context from basic invocation
+
+        return {
+          exitReason,
+          context: out.context as unknown as PVMProgramExecutionContext,
+          out: x,
+        };
+      } else {
+        // otherwise only use the instructionpointer from basic (out)
+        return {
+          exitReason,
+          context: {
+            ...res.ctx,
+            instructionPointer: out.context.instructionPointer,
+          },
+          out: res.out,
+        };
+      }
     } else {
       // all good we hostcall
       return hostCallInvocation(
@@ -86,10 +92,8 @@ export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
   ctx: PVMProgramExecutionContextBase;
   out: X;
-}) =>
-  | { pageFaultAddress: u32 }
-  | {
-      exitReason?: RegularPVMExitReason;
-      out: X;
-      ctx: PVMProgramExecutionContextBase;
-    };
+}) => {
+  exitReason?: PVMExitReason;
+  out: X;
+  ctx: PVMProgramExecutionContextBase;
+};

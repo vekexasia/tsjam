@@ -1,18 +1,25 @@
-import { Gas, PVMIx, PVMIxExecutionError, u8 } from "@tsjam/types";
+import {
+  Gas,
+  PVMIx,
+  PVMIxDecodeFN,
+  PVMIxEvaluateFNContext,
+  PVMIxReturnMods,
+  u8,
+} from "@tsjam/types";
 
 export const Ixdb = {
-  byCode: new Map<u8, PVMIx<unknown, PVMIxExecutionError>>(),
-  byIdentifier: new Map<string, PVMIx<unknown, PVMIxExecutionError>>(),
+  byCode: new Map<u8, PVMIx<unknown>>(),
+  byIdentifier: new Map<string, PVMIx<unknown>>(),
   blockTerminators: new Set<u8>(),
 };
 /**
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regIx = <T, K extends PVMIxExecutionError = PVMIxExecutionError>(
-  ix: PVMIx<T, K>,
+export const regIx = <T>(
+  ix: PVMIx<T>,
   isBlockTerminator: boolean = false,
-): PVMIx<T, K> => {
+): PVMIx<T> => {
   if (Ixdb.byCode.has(ix.opCode)) {
     throw new Error(`duplicate opCode ${ix.opCode}`);
   }
@@ -25,6 +32,51 @@ export const regIx = <T, K extends PVMIxExecutionError = PVMIxExecutionError>(
     Ixdb.blockTerminators.add(ix.opCode);
   }
   return ix;
+};
+
+/**
+ * Decorator to register an instruction
+ */
+export const Ix = <
+  Descriptor extends
+    | ((args: Args) => EvaluateReturn)
+    | ((args: Args, context: PVMIxEvaluateFNContext) => EvaluateReturn),
+  Args,
+  EvaluateReturn extends PVMIxReturnMods,
+>(
+  opCode: number,
+  decoder: PVMIxDecodeFN<Args>,
+) => {
+  return (
+    target: any,
+    propertyKey: string,
+    descriptor: TypedPropertyDescriptor<Descriptor>,
+  ) => {
+    regIx<Args>(
+      {
+        opCode: opCode as u8,
+        identifier: propertyKey,
+        decode: decoder,
+        evaluate: descriptor.value!,
+        gasCost: 1n as Gas,
+      },
+      (descriptor as any).isBlockTermination as boolean,
+    );
+    return descriptor;
+  };
+};
+
+/**
+ * Decorator to mark an instruction as block termination
+ * must be used BEFORE @Ix
+ */
+export const BlockTermination = (
+  target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor,
+) => {
+  (descriptor as any).isBlockTermination = true;
+  return descriptor;
 };
 
 // test
@@ -43,10 +95,10 @@ if (import.meta.vitest) {
           opCode: 0 as u8,
           identifier: "test",
           decode() {
-            return ok([]);
+            return [];
           },
           evaluate() {
-            return ok([]);
+            return [];
           },
           gasCost: 1n as Gas,
         },
@@ -62,10 +114,10 @@ if (import.meta.vitest) {
         identifier: "test",
         gasCost: 1n as Gas,
         decode() {
-          return ok([]);
+          return [];
         },
         evaluate() {
-          return ok([]);
+          return [];
         },
       });
       expect(() =>
@@ -74,10 +126,10 @@ if (import.meta.vitest) {
           identifier: "test2",
           gasCost: 1n as Gas,
           decode() {
-            return ok([]);
+            return [];
           },
           evaluate() {
-            return ok([]);
+            return [];
           },
         }),
       ).toThrow();
@@ -88,10 +140,10 @@ if (import.meta.vitest) {
         identifier: "test",
         gasCost: 1n as Gas,
         decode() {
-          return ok([]);
+          return [];
         },
         evaluate() {
-          return ok([]);
+          return [];
         },
       });
       expect(() =>
@@ -100,10 +152,10 @@ if (import.meta.vitest) {
           identifier: "test",
           gasCost: 1n as Gas,
           decode() {
-            return ok([]);
+            return [];
           },
           evaluate() {
-            return ok([]);
+            return [];
           },
         }),
       ).toThrow();
@@ -114,10 +166,10 @@ if (import.meta.vitest) {
         identifier: "test",
         gasCost: 1n as Gas,
         decode() {
-          return ok([]);
+          return [];
         },
         evaluate() {
-          return ok([]);
+          return [];
         },
       });
       expect(Ixdb.blockTerminators.has(0 as u8)).toBe(false);

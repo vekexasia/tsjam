@@ -72,9 +72,7 @@ describe("pvm", () => {
       expect("out-of-gas").toEqual(json["expected-status"]);
     } else if (r.exitReason.type === "page-fault") {
       expect("page-fault").toEqual(json["expected-status"]);
-      expect(r.exitReason.memoryLocationIn).toEqual(
-        json["expected-page-fault-address"],
-      );
+      expect(r.exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
     expect(r.context.registers).toEqual(

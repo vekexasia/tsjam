@@ -1,11 +1,7 @@
-import { Result, err, ok } from "neverthrow";
 import {
   PVMExitPanicMod,
-  PVMIx,
   PVMIxEvaluateFNContext,
-  PVMIxExecutionError,
   PVMSingleModPointer,
-  RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
 import { IxMod } from "@/instructions/utils";

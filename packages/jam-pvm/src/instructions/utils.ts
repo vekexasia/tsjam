@@ -1,9 +1,10 @@
 import {
   Gas,
   PVMExitHaltMod,
+  PVMExitHostCallMod,
   PVMExitOutOfGasMod,
+  PVMExitPageFaultMod,
   PVMExitPanicMod,
-  PVMIxExecutionError,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -12,6 +13,7 @@ import {
   RegisterValue,
   RegularPVMExitReason,
   u32,
+  u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
@@ -21,28 +23,21 @@ export const X_fn = (n: bigint) => (x: bigint) =>
 export const X_4 = X_fn(4n);
 export const X_8 = X_fn(8n);
 
-/**
- * page fault
- */
-export class MemoryUnreadable extends PVMIxExecutionError {
-  constructor(location: u32, amount: number) {
-    super(
-      [],
-      {
-        type: "page-fault",
-        memoryLocationIn: location,
-      },
-      `memory @${location}:-${amount} is not readable`,
-      true, // account Trap gas cost
-    );
-  }
-}
+export const TRAP_COST = 1n;
 
 export const IxMod = {
   ip: (value: number): PVMSingleModPointer => ({
     type: "ip",
     data: toTagged(value),
   }),
+  hostCall: (opCode: u8): PVMExitHostCallMod => ({
+    type: "exit",
+    data: { type: "host-call", opCode: opCode },
+  }),
+  pageFault: (location: u32): [PVMSingleModGas, PVMExitPageFaultMod] => [
+    IxMod.gas(TRAP_COST), // trap
+    { type: "exit", data: { type: "page-fault", address: location } },
+  ],
   skip: (ip: u32, amont: number): PVMSingleModPointer => ({
     type: "ip",
     data: toTagged(ip + amont),

@@ -4,7 +4,6 @@ import {
   IPVMMemory,
   IParsedProgram,
   PVMIx,
-  PVMIxExecutionError,
   PVMProgram,
   PVMProgramExecutionContext,
   RegisterValue,
@@ -54,13 +53,9 @@ export const createEvContext = (): {
 
 export const runTestIx = <T extends unknown[]>(
   ctx: ReturnType<typeof createEvContext>,
-  ix: PVMIx<T, PVMIxExecutionError>,
-  ...args: T
+  ix: PVMIx<T>,
+  args: T,
 ) => {
-  const r = ix.evaluate(ctx, ...args);
-  // FIXME: this should be properly handled
-  if (r.isErr()) {
-    throw new Error(`Error in ix: ${r.error}`);
-  }
-  return applyMods(ctx.execution, {} as object, r.value);
+  const r = ix.evaluate(args, ctx);
+  return applyMods(ctx.execution, {} as object, r);
 };

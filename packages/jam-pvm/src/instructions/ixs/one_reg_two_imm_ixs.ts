@@ -1,166 +1,88 @@
 import {
-  Gas,
-  PVMIxDecodeError,
-  PVMIxEvaluateFN,
+  PVMIxEvaluateFNContext,
   RegisterIdentifier,
   RegisterValue,
   u8,
 } from "@tsjam/types";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { regIx } from "@/instructions/ixdb.js";
+import { Ix } from "@/instructions/ixdb.js";
 import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
-import { Result, err, ok } from "neverthrow";
 import { IxMod } from "../utils";
+import assert from "node:assert";
 
 // $(0.6.1 - A.24)
-export const decode = (
+export const OneRegTwoImmIxDecoder = (
   bytes: Uint8Array,
-): Result<
-  [register: RegisterIdentifier, value1: bigint, value2: bigint],
-  PVMIxDecodeError
-> => {
+  context: PVMIxEvaluateFNContext,
+) => {
   const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.floor(bytes[0] / 16) % 8);
-  if (bytes.length < lx + 1) {
-    return err(new PVMIxDecodeError("not enough bytes"));
-  }
+  assert(bytes.length >= lx + 1, "not enough bytes");
+
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
-  const vx = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
-  const vy = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
-  return ok([ra, vx, vy]);
-};
-decode.type = "OneRegTwoImmIxsDecoder";
-
-const create = (
-  identifier: u8,
-  name: string,
-  evaluate: PVMIxEvaluateFN<[ra: RegisterIdentifier, vX: bigint, vY: bigint]>,
-) => {
-  return regIx<[ra: RegisterIdentifier, vX: bigint, vY: bigint]>({
-    opCode: identifier,
-    identifier: name,
-    ix: {
-      decode,
-      evaluate,
-      gasCost: 1n as Gas,
-    },
-  });
+  const vX = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
+  const vY = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
+  return { wA: context.execution.registers[ra], vX, vY };
 };
 
-const store_imm_ind_u8 = create(
-  70 as u8,
-  "store_imm_ind_u8",
-  (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + vx;
-    return ok([IxMod.memory(location, new Uint8Array([Number(vy % 0xffn)]))]);
-  },
-);
+export type OneRegTwoImmArgs = ReturnType<typeof OneRegTwoImmIxDecoder>;
 
-const store_imm_ind_u16 = create(
-  71 as u8,
-  "store_imm_ind_u16",
-  (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + vx;
-    return ok([IxMod.memory(location, encodeWithCodec(E_2, vy % 2n ** 32n))]);
-  },
-);
+class OneRegTwoImmIxs {
+  @Ix(70, OneRegTwoImmIxDecoder)
+  store_imm_ind_u8({ wA, vX, vY }: OneRegTwoImmArgs) {
+    const location = wA + vX;
+    return [IxMod.memory(location, new Uint8Array([Number(vY % 0xffn)]))];
+  }
 
-const store_imm_ind_u32 = create(
-  72 as u8,
-  "store_imm_ind_u32",
-  (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + BigInt(vx);
-    const value = BigInt(vy % 0xffffffffn);
-    return ok([IxMod.memory(location, encodeWithCodec(E_4, value))]);
-  },
-);
+  @Ix(71, OneRegTwoImmIxDecoder)
+  store_imm_ind_u16({ wA, vX, vY }: OneRegTwoImmArgs) {
+    const location = wA + vX;
+    return [IxMod.memory(location, encodeWithCodec(E_2, vY % 2n ** 16n))];
+  }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const store_imm_ind_u64 = create(
-  73 as u8,
-  "store_imm_ind_u64",
-  (context, ri, vx, vy) => {
-    const location = context.execution.registers[ri] + BigInt(vx);
-    const value = vy;
-    return ok([IxMod.memory(location, encodeWithCodec(E_8, BigInt(value)))]);
-  },
-);
+  @Ix(72, OneRegTwoImmIxDecoder)
+  store_imm_ind_u32({ wA, vX, vY }: OneRegTwoImmArgs) {
+    const location = wA + vX;
+    return [IxMod.memory(location, encodeWithCodec(E_4, vY % 2n ** 32n))];
+  }
+
+  @Ix(73, OneRegTwoImmIxDecoder)
+  store_imm_ind_u64({ wA, vX, vY }: OneRegTwoImmArgs) {
+    const location = wA + vX;
+    return [IxMod.memory(location, encodeWithCodec(E_8, vY))];
+  }
+}
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  type Mock = import("@vitest/spy").Mock;
   const { createEvContext } = await import("@/test/mocks.js");
-  const { runTestIx } = await import("@/test/mocks.js");
   describe("one_reg_two_imm_ixs", () => {
     describe("decode", () => {
       it("should throw if not enough bytes", () => {
-        expect(decode(new Uint8Array([16]))._unsafeUnwrapErr().message).toEqual(
-          "not enough bytes",
-        );
+        expect(() =>
+          OneRegTwoImmIxDecoder(new Uint8Array([16]), createEvContext()),
+        ).to.throw("not enough bytes");
       });
       it("should decode 1Reg2IMM", () => {
-        let [rA, vX, vY] = decode(
+        const context = createEvContext();
+        context.execution.registers[0] = <RegisterValue>1n;
+        const { wA, vX, vY } = OneRegTwoImmIxDecoder(
           new Uint8Array([16, 0x12, 0x11, 0x22, 0x33, 0x44]),
-        )._unsafeUnwrap();
-        expect(rA).toEqual(0);
+          context,
+        );
+        expect(wA).toEqual(1n);
         expect(vX).toEqual(0x00000012n);
         expect(vY).toEqual(0x44332211n);
-        [rA, vX, vY] = decode(
-          new Uint8Array([16 * 4, 0x12, 0x11, 0x22, 0x33, 0x44]),
-        )._unsafeUnwrap();
-        expect(rA).toEqual(0);
-        expect(vX).toEqual(0x33221112n);
-        expect(vY).toEqual(0x00000044n);
       });
       it("should ignore extra bytes", () => {
-        const [, vX, vY] = decode(
+        const { vX, vY } = OneRegTwoImmIxDecoder(
           new Uint8Array([
             16, 0x12, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
           ]),
-        )._unsafeUnwrap();
+          createEvContext(),
+        );
         expect(vX).toEqual(0x00000012n);
         expect(vY).toEqual(0x44332211n);
-      });
-    });
-    describe("ixs", () => {
-      it("store_imm_ind_u8", () => {
-        const context = createEvContext();
-        context.execution.registers[10] = 0x1000n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(context, store_imm_ind_u8, 10, 0x10n, 0x12n);
-        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
-          [0x1010, new Uint8Array([0x12])],
-        ]);
-      });
-      it("store_imm_ind_u16", () => {
-        const context = createEvContext();
-        context.execution.registers[10] = 0x1000n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_imm_ind_u16,
-          10,
-          0x10n,
-          0x1234n,
-        );
-        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
-          [0x1010, new Uint8Array([0x34, 0x12])],
-        ]);
-      });
-      it("store_imm_ind_u32", () => {
-        const context = createEvContext();
-        context.execution.registers[10] = 0x1000n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_imm_ind_u32,
-          10,
-          0x10n,
-          0x12345678n,
-        );
-        expect((ctx.memory.setBytes as Mock).mock.calls).toEqual([
-          [0x1010, new Uint8Array([0x78, 0x56, 0x34, 0x12])],
-        ]);
       });
     });
   });

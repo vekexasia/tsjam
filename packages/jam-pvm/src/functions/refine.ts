@@ -528,8 +528,8 @@ export const omega_k = regFn<
         ];
       } else {
         return [
-          IxMod.w7(1), // fixme "fault",
-          IxMod.w8(res.exitReason.memoryLocationIn),
+          IxMod.w7(InnerPVMResultCode.FAULT),
+          IxMod.w8(res.exitReason.address),
           IxMod.memory(newMemory.from, newMemory.newData),
           IxMod.obj({ ...refineCtx, m: mStar }),
         ];

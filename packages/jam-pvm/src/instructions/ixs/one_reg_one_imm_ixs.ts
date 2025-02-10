@@ -1,365 +1,198 @@
-import { Result, err, ok } from "neverthrow";
 import {
-  Gas,
-  PVMIxDecodeError,
-  PVMIxEvaluateFN,
-  PVMIxExecutionError,
+  PVMIxEvaluateFNContext,
   RegisterIdentifier,
   RegisterValue,
-  u16,
   u32,
-  u64,
   u8,
 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "@/pvmMemory";
 import { djump } from "@/utils/djump.js";
 import { readVarIntFromBuffer } from "@/utils/varint.js";
-import { regIx } from "@/instructions/ixdb.js";
+import { BlockTermination, Ix } from "@/instructions/ixdb.js";
 import assert from "node:assert";
-import { E_2, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
-import { IxMod, MemoryUnreadable, X_4, X_fn } from "@/instructions/utils.js";
-
-type InputType = [register: RegisterIdentifier, value: u64];
+import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
+import { IxMod, X_4, X_fn } from "@/instructions/utils.js";
 
 // $(0.6.1 - A.23)
-const decode = (bytes: Uint8Array): Result<InputType, PVMIxDecodeError> => {
-  assert(bytes.length > 0, "no input bytes");
-  const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
-  const lx = Math.min(4, Math.max(0, bytes.length - 1));
-  const vx = <RegisterValue>readVarIntFromBuffer(bytes.subarray(1), lx as u8);
-  return ok([ra, vx]);
-};
-decode.type = "OneRegOneImmIxsDecoder";
-
-const create1Reg1IMMIx = (
-  opCode: u8,
-  identifier: string,
-  evaluate: PVMIxEvaluateFN<InputType, PVMIxExecutionError>,
-  blockTermination?: true,
+const OneRegOneImmIxDecoder = (
+  bytes: Uint8Array,
+  context: PVMIxEvaluateFNContext,
 ) => {
-  return regIx({
-    opCode,
-    identifier,
-    blockTermination,
-    ix: {
-      decode,
-      evaluate,
-      gasCost: 1n as Gas,
-    },
-  });
+  assert(bytes.length > 0, "no input bytes");
+  const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
+  const lx = Math.min(4, Math.max(0, bytes.length - 1));
+  const vX = <RegisterValue>readVarIntFromBuffer(bytes.subarray(1), lx as u8);
+  return { rA, vX, wA: context.execution.registers[rA] };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const jump_ind = create1Reg1IMMIx(
-  50 as u8,
-  "jump_ind",
-  (context, ri, vx) => {
-    const wa = context.execution.registers[ri];
-    const jumpLocation = Number((wa + vx) % 2n ** 32n) as u32;
-    return djump(context, jumpLocation);
-  },
-  true,
-);
+export type OneRegOneImmArgs = ReturnType<typeof OneRegOneImmIxDecoder>;
 
-// ### Load unsigned
-const load_imm = create1Reg1IMMIx(51 as u8, "load_imm", (context, ri, vx) => {
-  return ok([IxMod.reg(ri, vx)]);
-});
-
-const load_u8 = create1Reg1IMMIx(52 as u8, "load_u8", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 1)) {
-    return err(new MemoryUnreadable(memoryAddress, 1));
+class OneRegOneImmIxs {
+  @BlockTermination
+  @Ix(50, OneRegOneImmIxDecoder)
+  jump_ind({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const jumpLocation = Number((wA + vX) % 2n ** 32n) as u32;
+    return [djump(context, jumpLocation)];
   }
 
-  return ok([
-    IxMod.reg(
-      ri,
-      context.execution.memory.getBytes(memoryAddress, 1)[0] as number as u32,
-    ),
-  ]);
-});
-
-const load_u16 = create1Reg1IMMIx(54 as u8, "load_u16", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 2)) {
-    return err(new MemoryUnreadable(memoryAddress, 2));
-  }
-  return ok([
-    IxMod.reg(
-      ri,
-      Number(
-        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
-      ) as u32,
-    ),
-  ]);
-});
-
-const load_u32 = create1Reg1IMMIx(56 as u8, "load_u32", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 4)) {
-    return err(new MemoryUnreadable(memoryAddress, 4));
-  }
-  return ok([
-    IxMod.reg(
-      ri,
-      E_4_int.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
-    ),
-  ]);
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const load_u64 = create1Reg1IMMIx(58 as u8, "load_u64", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 8)) {
-    return err(new MemoryUnreadable(memoryAddress, 8));
-  }
-  return ok([
-    IxMod.reg(
-      ri,
-      E_8.decode(context.execution.memory.getBytes(memoryAddress, 8)).value,
-    ),
-  ]);
-});
-
-// ### Load signed
-const load_i8 = create1Reg1IMMIx(53 as u8, "load_i8", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 1)) {
-    return err(new MemoryUnreadable(memoryAddress, 1));
+  // ### Load unsigned
+  @Ix(51, OneRegOneImmIxDecoder)
+  load_imm({ rA, vX }: OneRegOneImmArgs) {
+    return [IxMod.reg(rA, vX)];
   }
 
-  return ok([
-    IxMod.reg(
-      ri,
-      X_fn(1n)(BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0])),
-    ),
-  ]);
-});
+  @Ix(52, OneRegOneImmIxDecoder)
+  load_u8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 1)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
 
-const load_i16 = create1Reg1IMMIx(55 as u8, "load_i16", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 2)) {
-    return err(new MemoryUnreadable(memoryAddress, 2));
-  }
-
-  return ok([
-    IxMod.reg(
-      ri,
-      X_fn(2n)(
-        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
+    return [
+      IxMod.reg(
+        rA,
+        context.execution.memory.getBytes(memoryAddress, 1)[0] as number as u32,
       ),
-    ),
-  ]);
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const load_i32 = create1Reg1IMMIx(57 as u8, "load_i32", (context, ri, vx) => {
-  const memoryAddress = toSafeMemoryAddress(vx);
-  if (!context.execution.memory.canRead(memoryAddress, 2)) {
-    return err(new MemoryUnreadable(memoryAddress, 2));
+    ];
   }
 
-  return ok([
-    IxMod.reg(
-      ri,
-      X_4(
-        E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
+  @Ix(54, OneRegOneImmIxDecoder)
+  load_u16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 2)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
+    return [
+      IxMod.reg(
+        rA,
+        E_2_int.decode(context.execution.memory.getBytes(memoryAddress, 2))
+          .value,
       ),
-    ),
-  ]);
-});
+    ];
+  }
 
-// ### Store
+  @Ix(56, OneRegOneImmIxDecoder)
+  load_u32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 4)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
+    return [
+      IxMod.reg(
+        rA,
+        E_4_int.decode(context.execution.memory.getBytes(memoryAddress, 4))
+          .value,
+      ),
+    ];
+  }
 
-const store_u8 = create1Reg1IMMIx(59 as u8, "store_u8", (context, ri, vx) => {
-  return ok([
-    IxMod.memory(
-      vx,
-      new Uint8Array([Number(context.execution.registers[ri] % 256n)]),
-    ),
-  ]);
-});
+  @Ix(58, OneRegOneImmIxDecoder)
+  load_u64({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 8)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
+    return [
+      IxMod.reg(
+        rA,
+        E_8.decode(context.execution.memory.getBytes(memoryAddress, 8)).value,
+      ),
+    ];
+  }
 
-const store_u16 = create1Reg1IMMIx(60 as u8, "store_u16", (context, ri, vx) => {
-  const wa = Number(context.execution.registers[ri] % 2n ** 16n) as u16;
-  const tmp = new Uint8Array(2);
-  E_2.encode(BigInt(wa), tmp);
-  return ok([IxMod.memory(vx, tmp)]);
-});
+  // ### Load signed
+  @Ix(53, OneRegOneImmIxDecoder)
+  load_i8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 1)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
 
-const store_u32 = create1Reg1IMMIx(61 as u8, "store_u32", (context, ri, vx) => {
-  const wa = Number(context.execution.registers[ri] % 2n ** 32n) as u32;
-  const tmp = new Uint8Array(4);
-  E_4.encode(BigInt(wa), tmp);
-  return ok([IxMod.memory(vx, tmp)]);
-});
+    return [
+      IxMod.reg(
+        rA,
+        X_fn(1n)(
+          BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0]),
+        ),
+      ),
+    ];
+  }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const store_u64 = create1Reg1IMMIx(62 as u8, "store_u64", (context, ri, vx) => {
-  const wa = context.execution.registers[ri];
-  return ok([IxMod.memory(vx, encodeWithCodec(E_8, wa))]);
-});
+  @Ix(55, OneRegOneImmIxDecoder)
+  load_i16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 2)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
+
+    return [
+      IxMod.reg(
+        rA,
+        X_fn(2n)(
+          E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
+        ),
+      ),
+    ];
+  }
+
+  @Ix(57, OneRegOneImmIxDecoder)
+  load_i32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
+    const memoryAddress = toSafeMemoryAddress(vX);
+    if (!context.execution.memory.canRead(memoryAddress, 2)) {
+      return [...IxMod.pageFault(memoryAddress)];
+    }
+
+    return [
+      IxMod.reg(
+        rA,
+        X_4(
+          E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
+        ),
+      ),
+    ];
+  }
+
+  // ### Store
+
+  @Ix(59, OneRegOneImmIxDecoder)
+  store_u8({ wA, vX }: OneRegOneImmArgs) {
+    return [IxMod.memory(vX, new Uint8Array([Number(wA % 256n)]))];
+  }
+
+  @Ix(60, OneRegOneImmIxDecoder)
+  store_u16({ wA, vX }: OneRegOneImmArgs) {
+    return [IxMod.memory(vX, encodeWithCodec(E_2, wA % 2n ** 16n))];
+  }
+
+  @Ix(61, OneRegOneImmIxDecoder)
+  store_u32({ wA, vX }: OneRegOneImmArgs) {
+    return [IxMod.memory(vX, encodeWithCodec(E_4, wA % 2n ** 32n))];
+  }
+
+  @Ix(62, OneRegOneImmIxDecoder)
+  store_u64({ wA, vX }: OneRegOneImmArgs) {
+    return [IxMod.memory(vX, encodeWithCodec(E_8, wA))];
+  }
+}
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  type Mock = import("@vitest/spy").Mock;
   const { createEvContext } = await import("@/test/mocks.js");
-  const { runTestIx } = await import("@/test/mocks.js");
   describe("one_reg_one_imm_ixs", () => {
     describe("decode", () => {
       it("should fail if no input bytes", () => {
-        expect(() => decode(new Uint8Array([]))).toThrow("no input bytes");
+        expect(() =>
+          OneRegOneImmIxDecoder(new Uint8Array([]), createEvContext()),
+        ).toThrow("no input bytes");
       });
       it("should ignore extra bytes", () => {
-        const [, vX] = decode(
+        const { vX } = OneRegOneImmIxDecoder(
           new Uint8Array([
             1, 0b00000001, 0b00000010, 0b00000010, 0b00000010, 1,
           ]),
-        )._unsafeUnwrap();
+          createEvContext(),
+        );
         expect(vX).toBe(0b00000010_00000010_00000010_00000001n);
-      });
-    });
-    describe("ixs", () => {
-      it.skip("jump_ind", () => {});
-      it("load_imm", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          load_imm,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(0x1234n);
-      });
-      it("load_u8", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
-        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([
-          0xaaaa,
-        ]);
-        const { ctx } = runTestIx(
-          context,
-          load_u8,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(0xaaaan);
-      });
-      it("load_u16", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValueOnce(true);
-        (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
-          new Uint8Array([0x34, 0x12]),
-        );
-        const { ctx } = runTestIx(
-          context,
-          load_u16,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(0x1234n);
-        expect((ctx.memory.getBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.getBytes as Mock).mock.calls[0]).toEqual([
-          0x1234, 2,
-        ]);
-      });
-      it("load_u32", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValue(true);
-        (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
-          new Uint8Array([0x34, 0x12, 0x00, 0x01]),
-        );
-        const { ctx } = runTestIx(
-          context,
-          load_u32,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(0x01001234n);
-        expect((ctx.memory.getBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.getBytes as Mock).mock.calls[0]).toEqual([
-          0x1234, 4,
-        ]);
-      });
-      it("load_i8", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValue(true);
-        (context.execution.memory.getBytes as Mock).mockReturnValueOnce([127]);
-        const { ctx } = runTestIx(
-          context,
-          load_i8,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(127n);
-      });
-      it("load_i16", () => {
-        const context = createEvContext();
-        (context.execution.memory.canRead as Mock).mockReturnValue(true);
-        (context.execution.memory.getBytes as Mock).mockReturnValueOnce(
-          new Uint8Array([0x34, 0x12]),
-        );
-        const { ctx } = runTestIx(
-          context,
-          load_i16,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect(ctx.registers[1]).toBe(0x1234n);
-        expect((ctx.memory.getBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.getBytes as Mock).mock.calls[0]).toEqual([
-          0x1234, 2,
-        ]);
-      });
-      it("store_u8", () => {
-        const context = createEvContext();
-        context.execution.registers[1] = 0x2211n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_u8,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect((ctx.memory.setBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.setBytes as Mock).mock.calls[0]).toEqual([
-          0x1234,
-          new Uint8Array([0x11]),
-        ]);
-      });
-      it("store_u16", () => {
-        const context = createEvContext();
-        context.execution.registers[1] = 0x332211n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_u16,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect((ctx.memory.setBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.setBytes as Mock).mock.calls[0]).toEqual([
-          0x1234,
-          new Uint8Array([0x11, 0x22]),
-        ]);
-      });
-      it("store_u32", () => {
-        const context = createEvContext();
-        context.execution.registers[1] = 0x44332211n as RegisterValue;
-        (context.execution.memory.canWrite as Mock).mockReturnValueOnce(true);
-        const { ctx } = runTestIx(
-          context,
-          store_u32,
-          1 as RegisterIdentifier,
-          0x1234n as u64,
-        );
-        expect((ctx.memory.setBytes as Mock).mock.calls).toHaveLength(1);
-        expect((ctx.memory.setBytes as Mock).mock.calls[0]).toEqual([
-          0x1234,
-          new Uint8Array([0x11, 0x22, 0x33, 0x44]),
-        ]);
       });
     });
   });

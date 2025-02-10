@@ -27,6 +27,7 @@
     /* Create sourcemaps for d.ts files. */
     "inlineSourceMap": false,
     "sourceMap": false,
+    "experimentalDecorators": true,
     /* Include sourcemap files inside the emitted JavaScript. */
 //    "sourceRoot": "./src",
     /* Specify the root path for debuggers to find the reference source code. */

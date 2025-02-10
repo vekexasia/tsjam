@@ -5,13 +5,9 @@ export enum RegularPVMExitReason {
   Panic = 1,
   OutOfGas = 2,
 }
+export type PVMExitReasonHostCall = { type: "host-call"; opCode: u8 };
+export type PVMExitReasonPageFault = { type: "page-fault"; address: u32 };
 export type PVMExitReason =
   | RegularPVMExitReason
-  | {
-      type: "host-call";
-      opCode: u8;
-    }
-  | {
-      type: "page-fault";
-      memoryLocationIn: u32;
-    };
+  | PVMExitReasonHostCall
+  | PVMExitReasonPageFault;

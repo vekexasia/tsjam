@@ -1,14 +1,12 @@
 import { u32 } from "@/genericTypes.js";
-import { PVMIx, PVMIxExecutionError } from "@/pvm/PVMIx.js";
+import { PVMIx } from "@/pvm/PVMIx.js";
 
 export interface IParsedProgram {
   /**
    * Get the instruction at the given pointer
    * @param pointer - the ix pointer
    */
-  ixAt<K extends PVMIx<T, PVMIxExecutionError>, T extends unknown[]>(
-    pointer: u32,
-  ): K | undefined;
+  ixAt<K extends PVMIx<unknown>>(pointer: u32): K | undefined;
 
   /**
    * (214) appendix
