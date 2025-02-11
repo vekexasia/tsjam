@@ -1,4 +1,4 @@
-import "@/instructions/index.js";
+import "@/instructions/instructions.js";
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 import { createEvContext } from "@/test/mocks.js";

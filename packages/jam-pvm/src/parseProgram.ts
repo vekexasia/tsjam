@@ -71,7 +71,7 @@ export class ParsedProgram implements IParsedProgram {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  await import("@/instructions/index.js");
+  await import("@/instructions/instructions.js");
   describe("ParsedProgram", () => {
     it.skip("should instantiate the context", () => {
       const program: PVMProgram = {
