@@ -4,13 +4,13 @@ import {
   JamBlock,
   JamHeader,
   JamState,
-  MerkeTreeRoot,
   SignedJamHeader,
   ValidatorData,
   Tau,
   Posterior,
   ValidatorIndex,
   BandersnatchKey,
+  StateRootHash,
 } from "@tsjam/types";
 import { Bandersnatch } from "@tsjam/crypto";
 import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
@@ -112,7 +112,7 @@ export const createBlock = (
     offenders,
     extrinsicHash: computeExtrinsicHash(extrinsics),
     timeSlotIndex: p_tau,
-    priorStateRoot: merkelizeState(curState) as MerkeTreeRoot,
+    priorStateRoot: merkelizeState(curState) as StateRootHash,
     blockAuthorKeyIndex: p_kappa.findIndex(
       (a) => a.ed25519 === data.validator.ed25519,
     ) as ValidatorIndex,

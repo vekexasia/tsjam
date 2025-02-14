@@ -61,7 +61,10 @@ export type Hash = Tagged<BigIntBytes<32>, "Hash">;
 export type AuthorizerHash = Tagged<Hash, "AuthorizerHash">;
 export type CodeHash = Tagged<Hash, "CodeHash">;
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
-export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;
+export type HeaderHash = Tagged<Blake2bHash, "HeaderHash">;
+export type BeefyRootHash = Tagged<Blake2bHash, "BeefyRootHash">;
+export type MerkleTreeRoot = Tagged<Blake2bHash, "MerkleTreeRoot">;
+export type StateRootHash = Tagged<MerkleTreeRoot, "StateRootHash">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
 export type WorkPackageHash = Tagged<Blake2bHash, "WorkPackageHash">;
 /**

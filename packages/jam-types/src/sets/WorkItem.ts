@@ -6,9 +6,9 @@ import {
   ExportingWorkPackageHash,
   u16,
   WorkPayload,
-  MerkeTreeRoot,
   UpToSeq,
   CodeHash,
+  MerkleTreeRoot,
 } from "@/genericTypes";
 import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
 
@@ -64,7 +64,7 @@ export interface WorkItem {
        * merkle tree root
        * or hash of the exporting work package. (if tagged)
        */
-      root: MerkeTreeRoot | ExportingWorkPackageHash;
+      root: MerkleTreeRoot | ExportingWorkPackageHash;
       /**
        * index in the merkle tree
        * Codec specifies that its not bigger than 2^15

@@ -1,5 +1,10 @@
 import { Tau } from "@/Tau";
-import { Hash, WorkPackageHash } from "@/genericTypes";
+import {
+  BeefyRootHash,
+  HeaderHash,
+  StateRootHash,
+  WorkPackageHash,
+} from "@/genericTypes";
 
 /**
  * gives a snapshotof what was the situation when the work report was created
@@ -12,22 +17,22 @@ export type RefinementContext = {
     /**
      * `a` header hash
      */
-    headerHash: Hash;
+    hash: HeaderHash;
     /**
      * `s`
      */
-    posteriorStateRoot: Hash;
+    stateRoot: StateRootHash;
     /**
      * `b`
      */
-    posteriorBeefyRoot: Hash;
+    beefyRoot: BeefyRootHash;
   };
   // second block of the snapshot
   lookupAnchor: {
     /**
      * `l`
      */
-    headerHash: Hash;
+    hash: HeaderHash;
     /**
      * `t`
      */
@@ -35,8 +40,8 @@ export type RefinementContext = {
   };
   /**
    * `p`
-   * it may define a required "parent" work package
-   * some kind of dependency of the work package
+   * it may define a list of WorkPackages that need to be "computed"
+   * before the current one
    */
-  requiredWorkPackages: WorkPackageHash[];
+  dependencies: WorkPackageHash[];
 };

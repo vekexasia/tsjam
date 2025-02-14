@@ -1,4 +1,10 @@
-import { Hash, MerkeTreeRoot, UpToSeq, WorkPackageHash } from "@/genericTypes";
+import {
+  Hash,
+  HeaderHash,
+  StateRootHash,
+  UpToSeq,
+  WorkPackageHash,
+} from "@/genericTypes";
 import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
 /*
@@ -9,7 +15,7 @@ export interface RecentHistoryItem {
   /**
    * `h`
    */
-  headerHash: Hash;
+  headerHash: HeaderHash;
 
   /**
    * `b`
@@ -19,7 +25,7 @@ export interface RecentHistoryItem {
   /**
    * `s`
    */
-  stateRoot: MerkeTreeRoot;
+  stateRoot: StateRootHash;
 
   /**
    * `p`

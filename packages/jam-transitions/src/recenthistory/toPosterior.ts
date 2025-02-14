@@ -2,10 +2,12 @@ import {
   Dagger,
   EG_Extrinsic,
   Hash,
-  MerkeTreeRoot,
+  HeaderHash,
+  MerkleTreeRoot,
   Posterior,
   STF,
   ServiceIndex,
+  StateRootHash,
 } from "@tsjam/types";
 import { appendMMR, wellBalancedBinaryMerkleRoot } from "@tsjam/merklization";
 import { E_4 } from "@tsjam/codec";
@@ -24,7 +26,7 @@ export const calculateAccumulateRoot = (
     serviceIndex: ServiceIndex;
     accumulationResult: Hash;
   }>,
-): MerkeTreeRoot => {
+): MerkleTreeRoot => {
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(
     [...beefyCommitment.values()]
@@ -48,8 +50,8 @@ export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,
   {
     // the result of accummulation merkle tree build
-    accumulateRoot: MerkeTreeRoot;
-    headerHash: Hash;
+    accumulateRoot: MerkleTreeRoot;
+    headerHash: HeaderHash;
     eg: EG_Extrinsic;
   },
   never,
@@ -83,7 +85,7 @@ export const recentHistoryToPosterior: STF<
   toRet.push({
     accumulationResultMMR: b,
     headerHash: input.headerHash,
-    stateRoot: 0n as MerkeTreeRoot,
+    stateRoot: 0n as StateRootHash,
     reportedPackages: p,
   });
 

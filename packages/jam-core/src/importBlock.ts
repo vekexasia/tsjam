@@ -1,7 +1,7 @@
 import { BLOCK_TIME } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
-import { JamBlock, JamState, STF } from "@tsjam/types";
+import { HeaderHash, JamBlock, JamState, STF } from "@tsjam/types";
 import {
   DeltaToPosteriorError,
   DisputesToPosteriorError,
@@ -287,7 +287,7 @@ export const importBlock: STF<
     return err(pDeltaError);
   }
 
-  const headerHash = Hashing.blake2b(
+  const headerHash = Hashing.blake2b<HeaderHash>(
     encodeWithCodec(UnsignedHeaderCodec, block.header),
   );
   const [, p_recentHistory] = recentHistoryToPosterior(

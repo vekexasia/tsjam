@@ -4,8 +4,9 @@ import {
   Blake2bHash,
   ED25519PublicKey,
   Hash,
-  MerkeTreeRoot,
+  HeaderHash,
   SeqOfLength,
+  StateRootHash,
   ValidatorIndex,
 } from "@/genericTypes.js";
 import { Tau } from "@/Tau.js";
@@ -24,14 +25,14 @@ export interface JamHeader {
    * **Hp:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
-  parent: Hash;
+  parent: HeaderHash;
 
   /**
    * **Hr:** The hash of the state root.
    * It's computed by applying the `Mσ` fn to the `σ`
    * @see JamState
    */
-  priorStateRoot: MerkeTreeRoot;
+  priorStateRoot: StateRootHash;
 
   /**
    * **Hx:** The hash of the block's extrinsic data.

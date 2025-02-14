@@ -1,12 +1,19 @@
-import { ED25519PublicKey, JamHeader, Tau, ValidatorIndex } from "@tsjam/types";
+import {
+  ED25519PublicKey,
+  HeaderHash,
+  JamHeader,
+  StateRootHash,
+  Tau,
+  ValidatorIndex,
+} from "@tsjam/types";
 import { Optional } from "@/optional.js";
 import {
   BandersnatchCodec,
   BandersnatchSignatureCodec,
   Blake2bHashCodec,
+  create32BCodec,
   Ed25519PubkeyCodec,
   HashCodec,
-  MerkleTreeRootCodec,
 } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
@@ -20,8 +27,8 @@ import { createCodec } from "@/utils";
  * $(0.6.1 - C.20)
  */
 export const UnsignedHeaderCodec = createCodec<JamHeader>([
-  ["parent", HashCodec],
-  ["priorStateRoot", MerkleTreeRootCodec],
+  ["parent", create32BCodec<HeaderHash>()],
+  ["priorStateRoot", create32BCodec<StateRootHash>()],
   ["extrinsicHash", HashCodec],
   ["timeSlotIndex", E_sub_int<Tau>(4)],
   [

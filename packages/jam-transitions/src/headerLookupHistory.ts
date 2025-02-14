@@ -1,6 +1,6 @@
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import { toPosterior } from "@tsjam/utils";
-import { Hash, HeaderLookupHistory, JamHeader, STF } from "@tsjam/types";
+import { HeaderHash, HeaderLookupHistory, JamHeader, STF } from "@tsjam/types";
 import { ok } from "neverthrow";
 
 /**
@@ -10,7 +10,7 @@ export const headerLookupHistorySTF: STF<
   HeaderLookupHistory,
   {
     header: JamHeader;
-    headerHash: Hash;
+    headerHash: HeaderHash;
   },
   never
 > = (input, curState) => {

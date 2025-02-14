@@ -11,7 +11,7 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
-  MerkeTreeRoot,
+  MerkleTreeRoot,
   OpaqueHash,
   WorkPackageHash,
 } from "@tsjam/types";
@@ -78,21 +78,17 @@ export const GenericBytesBigIntCodec = <
   },
 });
 
-export const HashCodec = GenericBytesBigIntCodec<Hash, 32>(32);
-export const CodeHashCodec = GenericBytesBigIntCodec<CodeHash, 32>(32);
-export const WorkPackageHashCodec = GenericBytesBigIntCodec<
-  WorkPackageHash,
-  32
->(32);
-export const Blake2bHashCodec = GenericBytesBigIntCodec<Blake2bHash, 32>(32);
-export const OpaqueHashCodec = GenericBytesBigIntCodec<OpaqueHash, 32>(32);
-export const MerkleTreeRootCodec = GenericBytesBigIntCodec<MerkeTreeRoot, 32>(
-  32,
-);
-// they share the same properties but the errors are different
-export const Ed25519PubkeyCodec = GenericBytesBigIntCodec<ED25519PublicKey, 32>(
-  32,
-);
+export const create32BCodec = <T extends BigIntBytes<32>>() =>
+  GenericBytesBigIntCodec<T, 32>(32);
+
+export const HashCodec = create32BCodec<Hash>();
+export const CodeHashCodec = create32BCodec<CodeHash>();
+export const WorkPackageHashCodec = create32BCodec<WorkPackageHash>();
+export const Blake2bHashCodec = create32BCodec<Blake2bHash>();
+export const OpaqueHashCodec = create32BCodec<OpaqueHash>();
+export const MerkleTreeRootCodec = create32BCodec<MerkleTreeRoot>();
+export const Ed25519PubkeyCodec = create32BCodec<ED25519PublicKey>();
+
 export const BandersnatchCodec = fixedSizeIdentityCodec<BandersnatchKey, 32>(
   32,
 );

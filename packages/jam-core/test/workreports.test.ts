@@ -3,16 +3,15 @@ import {
   AuthorizerPoolCodec,
   Blake2bHashCodec,
   codec_Eg,
+  create32BCodec,
   createArrayLengthDiscriminator,
   createCodec,
-  buildGenericKeyValueCodec,
   createSequenceCodec,
   E_sub_int,
   Ed25519PubkeyCodec,
   eitherOneOfCodec,
   HashCodec,
   JamCodec,
-  MerkleTreeRootCodec,
   OpaqueHashCodec,
   Optional,
   ValidatorDataCodec,
@@ -40,6 +39,8 @@ import {
   Delta,
   JamHeader,
   Dagger,
+  HeaderHash,
+  StateRootHash,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
@@ -167,14 +168,14 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       "blockHistory",
       createArrayLengthDiscriminator<RecentHistory>(
         createCodec([
-          ["headerHash", HashCodec],
+          ["headerHash", create32BCodec<HeaderHash>()],
           [
             "accumulationResultMMR",
             createArrayLengthDiscriminator<
               RecentHistoryItem["accumulationResultMMR"]
             >(new Optional(HashCodec)),
           ],
-          ["stateRoot", MerkleTreeRootCodec],
+          ["stateRoot", create32BCodec<StateRootHash>()],
           [
             "reportedPackages",
             mapCodec(
@@ -253,7 +254,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
         return [
           a.workReport.refinementContext.lookupAnchor.timeSlot as Tau,
           {
-            hash: a.workReport.refinementContext.lookupAnchor.headerHash,
+            hash: a.workReport.refinementContext.lookupAnchor.hash,
             header: null as unknown as JamHeader,
           },
         ];

@@ -7,7 +7,7 @@ import {
 import { createLengthDiscriminatedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
-import { CodeHashCodec } from "@/identity.js";
+import { CodeHashCodec, HashCodec } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
 import { createCodec } from "@/utils";

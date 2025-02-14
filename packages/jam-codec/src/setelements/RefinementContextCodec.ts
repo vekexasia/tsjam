@@ -1,5 +1,11 @@
-import { RefinementContext, Tau } from "@tsjam/types";
-import { HashCodec, WorkPackageHashCodec } from "@/identity.js";
+import {
+  BeefyRootHash,
+  HeaderHash,
+  RefinementContext,
+  StateRootHash,
+  Tau,
+} from "@tsjam/types";
+import { create32BCodec, HashCodec, WorkPackageHashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { createCodec } from "@/utils";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator";
@@ -12,22 +18,19 @@ export const RefinementContextCodec = createCodec<RefinementContext>([
   [
     "anchor",
     createCodec<RefinementContext["anchor"]>([
-      ["headerHash", HashCodec],
-      ["posteriorStateRoot", HashCodec],
-      ["posteriorBeefyRoot", HashCodec],
+      ["hash", create32BCodec<HeaderHash>()],
+      ["stateRoot", create32BCodec<StateRootHash>()],
+      ["beefyRoot", create32BCodec<BeefyRootHash>()],
     ]),
   ],
   [
     "lookupAnchor",
     createCodec<RefinementContext["lookupAnchor"]>([
-      ["headerHash", HashCodec],
+      ["hash", create32BCodec<HeaderHash>()],
       ["timeSlot", E_sub_int<Tau>(4)],
     ]),
   ],
-  [
-    "requiredWorkPackages",
-    createArrayLengthDiscriminator(WorkPackageHashCodec),
-  ],
+  ["dependencies", createArrayLengthDiscriminator(WorkPackageHashCodec)],
 ]);
 
 if (import.meta.vitest) {

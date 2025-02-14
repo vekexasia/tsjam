@@ -3,6 +3,7 @@ import {
   AccumulationHistory,
   AccumulationQueue,
   AuthorizerPool,
+  BeefyRootHash,
   Dagger,
   Delta,
   DoubleDagger,
@@ -137,7 +138,7 @@ export const assertEGValid = (
     // $(0.6.1 - 11.3) | Check the number of dependencies in the workreports
     if (
       workReport.segmentRootLookup.size +
-        workReport.refinementContext.requiredWorkPackages.length >
+        workReport.refinementContext.dependencies.length >
       MAX_WORK_PREREQUISITES
     ) {
       return err(EGError.TOO_MANY_PREREQUISITES);
@@ -299,15 +300,15 @@ export const assertEGValid = (
 
   const d_recentWithBeefy = deps.d_recentHistory.map((r) => ({
     ...r,
-    beefy: MMRSuperPeak(r.accumulationResultMMR),
+    beefyRoot: MMRSuperPeak(r.accumulationResultMMR) as BeefyRootHash,
   }));
   for (const refinementContext of x) {
     // $(0.6.1 - 11.33)
     const y = d_recentWithBeefy.find(
       (_y) =>
-        _y.headerHash === refinementContext.anchor.headerHash &&
-        _y.stateRoot === refinementContext.anchor.posteriorStateRoot &&
-        refinementContext.anchor.posteriorBeefyRoot == _y.beefy,
+        _y.headerHash === refinementContext.anchor.hash &&
+        _y.stateRoot === refinementContext.anchor.stateRoot &&
+        _y.beefyRoot === refinementContext.anchor.beefyRoot,
     );
     if (typeof y === "undefined") {
       return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
@@ -328,7 +329,7 @@ export const assertEGValid = (
     if (typeof lookupHeader === "undefined") {
       return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
     }
-    if (lookupHeader.hash !== refinementContext.lookupAnchor.headerHash) {
+    if (lookupHeader.hash !== refinementContext.lookupAnchor.hash) {
       return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
     }
   }
@@ -337,14 +338,14 @@ export const assertEGValid = (
   const q: Set<WorkPackageHash> = new Set(
     deps.accumulationQueue
       .flat()
-      .map((a) => a.workReport.refinementContext.requiredWorkPackages)
+      .map((a) => a.workReport.refinementContext.dependencies)
       .flat(),
   );
 
   // $(0.6.1 - 11.37)
   const a: Set<WorkPackageHash> = new Set(
     deps.rho
-      .map((a) => a?.workReport.refinementContext.requiredWorkPackages)
+      .map((a) => a?.workReport.refinementContext.dependencies)
       .flat()
       .filter((a) => typeof a !== "undefined"),
   );
@@ -371,7 +372,7 @@ export const assertEGValid = (
 
   for (const _w of w) {
     const _p = new Set([..._w.segmentRootLookup.keys()]);
-    _w.refinementContext.requiredWorkPackages.forEach((rwp) => _p.add(rwp));
+    _w.refinementContext.dependencies.forEach((rwp) => _p.add(rwp));
     for (const _pp of _p.values()) {
       if (!pSet.has(_pp)) {
         return err(EGError.SRLWP_NOTKNOWN);

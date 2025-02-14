@@ -3,7 +3,6 @@ import { describe, it, vi, expect } from "vitest";
 import { verifyEA } from "@/verifySeal";
 import {
   E_sub_int,
-  HashCodec,
   JamCodec,
   ValidatorDataCodec,
   WorkReportCodec,
@@ -12,9 +11,9 @@ import {
   createCodec,
   createSequenceCodec,
   Optional,
+  create32BCodec,
 } from "@tsjam/codec";
 import {
-  Hash,
   Tau,
   EA_Extrinsic,
   WorkReport,
@@ -24,6 +23,7 @@ import {
   JamState,
   Dagger,
   Validated,
+  HeaderHash,
 } from "@tsjam/types";
 import fs from "node:fs";
 import { beforeEach } from "vitest";
@@ -121,17 +121,17 @@ describe("assurances", () => {
     ]);
 
     const newTestCodec = createCodec<{
-      input: { ea: EA_Extrinsic; slot: Tau; parent: Hash };
+      input: { ea: EA_Extrinsic; slot: Tau; parent: HeaderHash };
       output: { error?: 0 | 1 | 2 | 3 | 4 | 5; output?: WorkReport[] };
       preState: TestState;
       postState: TestState;
     }>([
       [
         "input",
-        createCodec<{ ea: EA_Extrinsic; slot: Tau; parent: Hash }>([
+        createCodec<{ ea: EA_Extrinsic; slot: Tau; parent: HeaderHash }>([
           ["ea", codec_Ea],
           ["slot", E_sub_int<Tau>(4)],
-          ["parent", HashCodec],
+          ["parent", create32BCodec<HeaderHash>()],
         ]),
       ],
       ["preState", stateCodec],

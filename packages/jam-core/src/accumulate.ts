@@ -180,7 +180,7 @@ export const noPrereqAvailableReports = (
   return toTagged(
     w.filter(
       (wr) =>
-        wr.refinementContext.requiredWorkPackages.length === 0 &&
+        wr.refinementContext.dependencies.length === 0 &&
         wr.segmentRootLookup.size === 0,
     ),
   );
@@ -232,15 +232,13 @@ export const withPrereqAvailableReports = (
       w
         .filter((wr) => {
           return (
-            wr.refinementContext.requiredWorkPackages.length > 0 ||
+            wr.refinementContext.dependencies.length > 0 ||
             wr.segmentRootLookup.size > 0
           );
         })
         .map((wr) => {
           const deps = new Set<WorkPackageHash>(wr.segmentRootLookup.keys());
-          wr.refinementContext.requiredWorkPackages.forEach((rwp) =>
-            deps.add(rwp),
-          );
+          wr.refinementContext.dependencies.forEach((rwp) => deps.add(rwp));
 
           return { workReport: wr, dependencies: deps };
         }),

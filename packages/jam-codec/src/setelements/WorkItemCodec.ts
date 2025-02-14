@@ -5,7 +5,7 @@ import {
   WorkItem,
   u32,
   u16,
-  MerkeTreeRoot,
+  MerkleTreeRoot,
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { CodeHashCodec, HashCodec } from "@/identity.js";
@@ -47,7 +47,7 @@ export const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
       };
     } else {
       return {
-        value: { root: root as MerkeTreeRoot, index },
+        value: { root: root as MerkleTreeRoot, index },
         readBytes: 32 + 2,
       };
     }

@@ -24,9 +24,9 @@ import {
   ServiceAccount,
   Delta,
   PrivilegedServices,
-  MerkeTreeRoot,
   AvailableWorkReports,
   Hash,
+  MerkleTreeRoot,
 } from "@tsjam/types";
 import { vi, it, describe, beforeEach, expect } from "vitest";
 import {
@@ -89,7 +89,7 @@ type Input = {
   reports: AvailableWorkReports;
 };
 
-type Output = MerkeTreeRoot; // accumulate Root
+type Output = MerkleTreeRoot; // accumulate Root
 
 type TestCase = {
   input: Input;

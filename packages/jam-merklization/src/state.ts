@@ -29,12 +29,12 @@ import {
   ValidatorStatisticsCodec,
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
+  create32BCodec,
 } from "@tsjam/codec";
 import {
   RHO,
   Hash,
   JamState,
-  MerkeTreeRoot,
   RecentHistoryItem,
   ServiceIndex,
   Tau,
@@ -43,6 +43,8 @@ import {
   SafroleState,
   ByteArrayOfLength,
   SeqOfLength,
+  StateRootHash,
+  HeaderHash,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -59,7 +61,7 @@ import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
  * `Mσ`
  * $(0.6.1 - D.5)
  */
-export const merkelizeState = (state: JamState): Hash => {
+export const merkelizeState = (state: JamState): StateRootHash => {
   const stateMap = transformState(state);
   return M_fn(
     new Map(
@@ -67,7 +69,7 @@ export const merkelizeState = (state: JamState): Hash => {
         return [bits(bigintToBytes(k, 32)), [k, v]];
       }),
     ),
-  );
+  ) as StateRootHash;
 };
 
 const bits = (ar: Uint8Array): bit[] => {
@@ -183,61 +185,12 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   return bytesToBigInt(new Uint8Array([1, ...new Array(31).fill(0), i]));
 };
 
-const singleHistoryItemCodec: JamCodec<RecentHistoryItem> & {
-  wpCodec: JamCodec<Map<WorkPackageHash, Hash>>;
-} = {
-  wpCodec: buildKeyValueCodec(HashCodec),
-
-  encode(value, bytes) {
-    let offset = 0;
-    offset += HashCodec.encode(value.headerHash, bytes);
-    offset += E_M.encode(value.accumulationResultMMR, bytes.subarray(offset));
-    offset += HashCodec.encode(value.stateRoot, bytes.subarray(offset));
-    offset += this.wpCodec.encode(
-      value.reportedPackages,
-      bytes.subarray(offset),
-    );
-    return offset;
-  },
-  decode(bytes) {
-    const headerHash = HashCodec.decode(bytes);
-    const accumulationResultMMR = E_M.decode(
-      bytes.subarray(headerHash.readBytes),
-    );
-    const stateRoot = HashCodec.decode(
-      bytes.subarray(headerHash.readBytes + accumulationResultMMR.readBytes),
-    );
-    const reportedPackages = this.wpCodec.decode(
-      bytes.subarray(
-        headerHash.readBytes +
-          accumulationResultMMR.readBytes +
-          stateRoot.readBytes,
-      ),
-    );
-    return {
-      value: {
-        headerHash: headerHash.value,
-        accumulationResultMMR: accumulationResultMMR.value,
-        stateRoot: stateRoot.value as MerkeTreeRoot,
-        reportedPackages:
-          reportedPackages.value as unknown as RecentHistoryItem["reportedPackages"],
-      },
-      readBytes:
-        headerHash.readBytes +
-        accumulationResultMMR.readBytes +
-        stateRoot.readBytes +
-        reportedPackages.readBytes,
-    };
-  },
-  encodedSize(value) {
-    return (
-      HashCodec.encodedSize(value.headerHash) +
-      E_M.encodedSize(value.accumulationResultMMR) +
-      HashCodec.encodedSize(value.stateRoot) +
-      this.wpCodec.encodedSize(value.reportedPackages)
-    );
-  },
-};
+const singleHistoryItemCodec = createCodec<RecentHistoryItem>([
+  ["headerHash", create32BCodec<HeaderHash>()],
+  ["accumulationResultMMR", E_M],
+  ["stateRoot", create32BCodec<StateRootHash>()],
+  ["reportedPackages", buildKeyValueCodec(HashCodec)],
+]);
 
 /*
  * `T(σ)`

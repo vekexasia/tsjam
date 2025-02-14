@@ -1,4 +1,4 @@
-import { Hash, MerkeTreeRoot } from "@tsjam/types";
+import { Hash, MerkleTreeRoot } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { HashFn, maybeBigintToBytes } from "@/utils.js";
@@ -76,7 +76,7 @@ export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
 export const wellBalancedBinaryMerkleRoot = (
   elements: (Hash | Uint8Array)[],
   hashFn: HashFn = Hashing.blake2b,
-): MerkeTreeRoot => {
+): MerkleTreeRoot => {
   if (elements.length === 1) {
     return toTagged(hashFn(maybeBigintToBytes(elements[0])));
   }
