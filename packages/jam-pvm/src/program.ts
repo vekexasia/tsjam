@@ -6,6 +6,8 @@ import {
   PVMProgram,
   RegisterValue,
   SeqOfLength,
+  u16,
+  u24,
   u32,
 } from "@tsjam/types";
 import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
@@ -17,16 +19,17 @@ const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
 const owzsCodec = createCodec<{
-  oCard: number;
-  wCard: number;
-  z: number;
-  s: number;
+  roDataLength: u24; // |o|
+  rwDataLength: u24; // |w|
+  rwDataPaddingPages: u16; // z
+  stackSize: u24; // s
 }>([
-  ["oCard", E_sub_int(3)],
-  ["wCard", E_sub_int(3)],
-  ["z", E_sub_int(2)],
-  ["s", E_sub_int(3)],
+  ["roDataLength", E_sub_int<u24>(3)],
+  ["rwDataLength", E_sub_int<u24>(3)],
+  ["rwDataPaddingPages", E_sub_int<u16>(2)],
+  ["stackSize", E_sub_int<u24>(3)],
 ]);
+
 /**
  * `Y` fn in the graypaper
  * $(0.6.1 - A.33)
@@ -46,24 +49,49 @@ export const programInitialization = (
     } => {
   // $(0.6.1 - A.32) | start
   const {
-    readBytes: offset,
-    value: { oCard, wCard, z, s },
+    readBytes: initOffset,
+    value: {
+      roDataLength, // |o|
+      rwDataLength, // |w|
+      rwDataPaddingPages, // z
+      stackSize, // s
+    },
   } = owzsCodec.decode(encodedProgram);
 
-  const o = encodedProgram.subarray(offset, offset + oCard);
-  const w = encodedProgram.subarray(offset + oCard, offset + oCard + wCard);
+  let offset = initOffset;
 
-  const cCard = E_4_int.decode(
-    encodedProgram.subarray(offset + oCard + wCard, offset + oCard + wCard + 4),
+  // o
+  const roData = encodedProgram.subarray(offset, offset + roDataLength);
+  offset += roDataLength;
+
+  // w
+  const rwData = encodedProgram.subarray(offset, offset + rwDataLength);
+  offset += rwDataLength;
+
+  // |c|
+  const programCodeLength = E_4_int.decode(
+    encodedProgram.subarray(offset, offset + 4),
   );
-  const c = encodedProgram.subarray(
-    offset + oCard + wCard + 4,
-    offset + oCard + wCard + 4 + cCard.value,
+  offset += 4;
+
+  // c
+  const programCode = encodedProgram.subarray(
+    offset,
+    offset + programCodeLength.value,
   );
+  offset += programCodeLength.value;
+
   // $(0.6.1 - A.32) | end
 
   // $(0.6.1 - A.37)
-  if (5 * Zz + Z_Fn(oCard) + Z_Fn(wCard + z * Zp) + Z_Fn(s) + Zi > 2 ** 32) {
+  if (
+    5 * Zz +
+      Z_Fn(roDataLength) +
+      Z_Fn(rwDataLength + rwDataPaddingPages * Zp) +
+      Z_Fn(stackSize) +
+      Zi >
+    2 ** 32
+  ) {
     return undefined;
   }
 
@@ -105,17 +133,23 @@ export const programInitialization = (
   };
 
   // first case
-  mem.push({ at: Zz as u32, content: o });
+  mem.push({ at: Zz as u32, content: roData });
   // first + second
-  createAcl({ from: Zz, to: Zz + P_Fn(oCard), kind: PVMMemoryAccessKind.Read });
+  createAcl({
+    from: Zz,
+    to: Zz + P_Fn(roDataLength),
+    kind: PVMMemoryAccessKind.Read,
+  });
 
   // third case
   {
-    const offset = 2 * Zz + Z_Fn(oCard);
-    mem.push({ at: <u32>offset, content: w });
+    const offset = 2 * Zz + Z_Fn(roDataLength);
+    mem.push({ at: <u32>offset, content: rwData });
     heap.start = <u32>offset;
-    heap.pointer = <u32>(heap.start + w.length);
-    heap.end = <u32>(offset + P_Fn(wCard) + z * Zp);
+    heap.pointer = <u32>(heap.start + rwDataLength);
+    heap.end = <u32>(
+      (offset + P_Fn(rwDataLength) + rwDataPaddingPages /* z */ * Zp)
+    );
     // NOTE: this is not in graypaper but the third and fourth
     // disequations are unsolveable otherwise.
     // It only happens when oCard is 0
@@ -131,25 +165,16 @@ export const programInitialization = (
     });
   }
 
-  // fifth cas
-  // seventh case
-  {
-    const offset = 2 ** 32 - Zz - Zi + argument.length;
-    createAcl({
-      from: offset,
-      to: 2 ** 32 - Zz - Zi + P_Fn(argument.length),
-      kind: PVMMemoryAccessKind.Write,
-    });
-  }
+  // fifth case
   createAcl({
-    from: 2 ** 32 - 2 * Zz - Zi - P_Fn(s),
+    from: 2 ** 32 - 2 * Zz - Zi - P_Fn(stackSize),
     to: 2 ** 32 - 2 * Zz - Zi,
     kind: PVMMemoryAccessKind.Write,
   });
 
-  // sixth case
   {
     const offset = 2 ** 32 - Zz - Zi;
+    // sixth case
     mem.push({
       at: <u32>offset,
       content: argument,
@@ -162,7 +187,7 @@ export const programInitialization = (
     });
   }
 
-  const program = PVMProgramCodec.decode(c).value;
+  const program = PVMProgramCodec.decode(programCode).value;
   const parsedProgram = ParsedProgram.parse(program);
 
   return {
