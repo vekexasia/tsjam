@@ -1,14 +1,13 @@
-import { Hash, SeqOfLength } from "@/genericTypes.js";
+import { AuthorizerHash, SeqOfLength } from "@/genericTypes.js";
 import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
+import { type AuthorizerPool } from "./AuthorizerPool";
 
-// [ [H]Q ]C
 /**
- * `φ` (84)
- * the authorizer queue basically sets which authorizers are going to be useable within the next 80 blocks (kindof)
- * if nothing is provided, then the authorizerqueue is expected to be the same as the last one
- *
+ * `φ`
+ * $(0.6.1 - 8.1)
+ * A queue of {@link AuthorizerHash}-es, each of which will be rotated in the {@link AuthorizerPool}
  */
 export type AuthorizerQueue = SeqOfLength<
-  SeqOfLength<Hash, typeof AUTHQUEUE_MAX_SIZE>,
-  typeof CORES
+  SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE /* 80 */>,
+  typeof CORES /* 341 */
 >;

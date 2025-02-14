@@ -8,42 +8,43 @@ export type Tagged<
 > = BaseType & {
   [tags]: { [K in Tag]: Metadata };
 };
-export type u8 = Tagged<number, "u8", { minValue: 0; maxValue: 255 }>;
-export type u16 = Tagged<number, "u16", { minValue: 0; maxValue: 65535 }>;
-export type u32 = Tagged<number, "u32", { minValue: 0; maxValue: 4294967295 }>;
-export type i64 = Tagged<
-  bigint,
-  "i64",
-  { minValue: -9223372036854775808n; maxValue: 9223372036854775807n }
->;
-export type u64 = Tagged<
-  bigint,
-  "u64",
-  { minValue: 0n; maxValue: 1844674407370955161n }
->;
+export type u8 = Tagged<number, "u8">;
+export type u16 = Tagged<number, "u16">;
+export type u24 = Tagged<number, "u24">;
+export type u32 = Tagged<number, "u32">;
+export type i64 = Tagged<bigint, "i64">;
+export type u64 = Tagged<bigint, "u64">;
 
-export type i32 = Tagged<
-  number,
-  "i32",
-  { minValue: -2147483648; maxValue: 2147483648 }
->;
+export type i32 = Tagged<number, "i32">;
 
 export type ByteArrayOfLength<T extends number> = Tagged<
   Uint8Array,
-  `ByteArrayOfLength${T}`,
-  { byteLength: T }
+  `ByteArrayOfLength${T}`
 >;
 
-// $(0.6.1 - 4.21)
+/**
+ * $(0.6.1 - 4.21)
+ * Balance is a 64-bit unsigned integer
+ */
 export type Balance = Tagged<u64, "balance">;
 
-// $(0.6.1 - 4.23)
+/**
+ * $(0.6.1 - 4.23)
+ * Gas is a 64-bit unsigned integer
+ */
 export type Gas = Tagged<u64, "gas">;
 
-// $(0.6.1 - 4.23)
+/**
+ * $(0.6.1 - 4.23)
+ * Z_Gas is a 64-bit signed integer
+ */
 export type Z_Gas = Tagged<i64, "gas">;
 
-// $(0.6.1 - 4.23)
+/**
+ * $(0.6.1 - 4.23)
+ * Defines the value held by a register
+ * RegisterValue is a 64-bit unsigned integer
+ */
 export type RegisterValue = Tagged<u64, "registerValue">;
 
 /**
@@ -57,6 +58,7 @@ export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
  */
 export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+export type AuthorizerHash = Tagged<Hash, "AuthorizerHash">;
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
 export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
@@ -118,7 +120,11 @@ export type BoundedSeq<
   { minLength: Min; maxLength: Max }
 >;
 
-export type CoreIndex = Tagged<number, "CoreIndex", { maxValue: typeof CORES }>;
+/**
+ * Index of a core
+ * unsigned 16-bit integer
+ */
+export type CoreIndex = Tagged<u16, "CoreIndex", { maxValue: typeof CORES }>;
 export type ValidatorIndex = Tagged<
   number,
   "ValidatorIndex",
