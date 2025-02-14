@@ -1,7 +1,6 @@
 import { PVMProgramExecutionContext } from "@/pvm/PVMProgramExecutionContext.js";
 import { PVMProgram } from "@/pvm/PVMProgram.js";
 import { IParsedProgram } from "@/pvm/IParsedProgram.js";
-import { PVMExitReason } from "@/pvm/PVMExitReason.js";
 import { Gas, u8 } from "@/genericTypes";
 import { RegisterIdentifier } from "./RegisterIdentifier";
 import {

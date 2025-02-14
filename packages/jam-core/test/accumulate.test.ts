@@ -1,7 +1,6 @@
 import fs from "fs";
 import {
   Blake2bHashCodec,
-  buildGenericKeyValueCodec,
   buildKeyValueCodec,
   createArrayLengthDiscriminator,
   createCodec,
@@ -35,7 +34,8 @@ import {
   serviceAccountFromTestInfo,
   Test_AccHistoryCodec,
   Test_AccQueueCodec,
-} from "./testCodecs";
+  buildTestDeltaCodec,
+} from "@tsjam/codec/test/testCodecs.js";
 import { accumulateReports } from "@/accumulate.js";
 import { dummyState } from "./utils";
 const mocks = vi.hoisted(() => {
@@ -134,14 +134,7 @@ const buildTest = (filename: string, size: string) => {
     ["accQueue", Test_AccQueueCodec(EPOCH_LENGTH)],
     ["accHistory", Test_AccHistoryCodec(EPOCH_LENGTH)],
     ["privServices", PrivilegedServicesCodec],
-    [
-      "accounts",
-      buildGenericKeyValueCodec(
-        E_sub_int<ServiceIndex>(4),
-        accumulateAccountCodec,
-        (a, b) => a - b,
-      ),
-    ],
+    ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
   ]);
 
   const testBin = fs.readFileSync(

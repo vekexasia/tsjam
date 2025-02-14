@@ -48,7 +48,7 @@ export const Ix = <
   decoder: PVMIxDecodeFN<Args>,
 ) => {
   return (
-    target: any,
+    _target: unknown,
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<Descriptor>,
   ) => {
@@ -60,7 +60,8 @@ export const Ix = <
         evaluate: descriptor.value!,
         gasCost: 1n as Gas,
       },
-      (descriptor as any).isBlockTermination as boolean,
+      (descriptor as { isBlockTermination: boolean })
+        .isBlockTermination as boolean,
     );
     return descriptor;
   };
@@ -71,18 +72,19 @@ export const Ix = <
  * must be used AFTER @Ix
  */
 export const BlockTermination = (
-  target: any,
-  propertyKey: string,
+  _target: unknown,
+  _propertyKey: string,
   descriptor: PropertyDescriptor,
 ) => {
-  (descriptor as any).isBlockTermination = true;
+  (
+    descriptor as unknown as { isBlockTermination: boolean }
+  ).isBlockTermination = true;
   return descriptor;
 };
 
 // test
 if (import.meta.vitest) {
   const { describe, expect, it, beforeEach } = import.meta.vitest;
-  const { ok } = await import("neverthrow");
   describe("regIx", () => {
     beforeEach(() => {
       Ixdb.byCode.clear();

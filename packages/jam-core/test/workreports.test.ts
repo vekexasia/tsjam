@@ -37,7 +37,6 @@ import {
   WorkPackageHash,
   AccumulationHistory,
   AccumulationQueue,
-  ServiceAccount,
   Delta,
   JamHeader,
   Dagger,
@@ -47,10 +46,10 @@ import { expect, vi, it, describe, beforeEach } from "vitest";
 import { mapCodec } from "@tsjam/codec";
 import { assertEGValid, EGError } from "@/validateEG";
 import {
+  buildTestDeltaCodec,
   serviceAccountFromTestInfo,
-  serviceInfoCodec,
   Test_ServiceInfo,
-} from "./testCodecs";
+} from "@tsjam/codec/test/testCodecs.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -195,14 +194,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     ],
 
     ["authPool", AuthorizerPoolCodec()],
-    [
-      "delta",
-      buildGenericKeyValueCodec(
-        E_sub_int<ServiceIndex>(4),
-        serviceAccountFromTestInfo(),
-        (a, b) => a - b,
-      ),
-    ],
+    ["delta", buildTestDeltaCodec(serviceAccountFromTestInfo())],
   ]);
 
   const testBin = fs.readFileSync(

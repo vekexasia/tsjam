@@ -1,4 +1,5 @@
 import {
+  buildGenericKeyValueCodec,
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
@@ -14,10 +15,12 @@ import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AccumulationHistory,
   AccumulationQueue,
+  Delta,
   Gas,
   Hash,
   Posterior,
   ServiceAccount,
+  ServiceIndex,
   u32,
   u64,
 } from "@tsjam/types";
@@ -75,6 +78,15 @@ export const serviceAccountFromTestInfo = (): JamCodec<ServiceAccount> => {
   );
 };
 
+export const buildTestDeltaCodec = <T extends Delta>(
+  serviceInfoCodec: JamCodec<ServiceAccount>,
+): JamCodec<T> => {
+  return buildGenericKeyValueCodec(
+    E_sub_int<ServiceIndex>(4),
+    serviceInfoCodec,
+    (a, b) => a - b,
+  );
+};
 // ReadyQueue | AccumulationQueue in our code
 export const Test_AccQueueCodec = (
   epochLength: typeof EPOCH_LENGTH, // here to please typescript but any number can be passed

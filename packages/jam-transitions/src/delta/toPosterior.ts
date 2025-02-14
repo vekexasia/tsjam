@@ -13,6 +13,7 @@ import {
 import { Hashing } from "@tsjam/crypto";
 import { toTagged } from "@tsjam/utils";
 import { err, ok } from "neverthrow";
+import { compareUint8Arrays } from "uint8array-extras";
 
 type Input = {
   EP_Extrinsic: EP_Extrinsic;
@@ -21,7 +22,7 @@ type Input = {
 };
 
 export enum DeltaToPosteriorError {
-  PREIMAGE_ALREADY_PROVIDED = "preimage already provided",
+  PREIMAGE_PROVIDED_OR_UNSOLICITED = "Preimage Provided or unsolicied",
   PREIMAGES_NOT_SORTED = "preimages should be sorted",
 }
 
@@ -36,7 +37,16 @@ export const deltaToPosterior: STF<
     const prev = input.EP_Extrinsic[i - 1];
     if (prev.serviceIndex > input.EP_Extrinsic[i].serviceIndex) {
       return err(DeltaToPosteriorError.PREIMAGES_NOT_SORTED);
+    } else if (prev.serviceIndex === input.EP_Extrinsic[i].serviceIndex) {
+      const comparisonResult = compareUint8Arrays(
+        prev.preimage,
+        input.EP_Extrinsic[i].preimage,
+      );
+      if (comparisonResult !== -1) {
+        return err(DeltaToPosteriorError.PREIMAGES_NOT_SORTED);
+      }
     }
+    // compare now the two preimages
   }
 
   // $(0.6.1 - 12.30)
@@ -46,11 +56,11 @@ export const deltaToPosterior: STF<
       return false;
     }
 
-    const inL = curState
+    const inL = d
       .get(s)!
       .preimage_l.get(h)
       ?.get(l as Tagged<u32, "length">);
-    if (typeof inL !== "undefined") {
+    if (inL?.length !== 0) {
       return false;
     }
 
@@ -67,7 +77,7 @@ export const deltaToPosterior: STF<
         preimage.length,
       )
     ) {
-      return err(DeltaToPosteriorError.PREIMAGE_ALREADY_PROVIDED);
+      return err(DeltaToPosteriorError.PREIMAGE_PROVIDED_OR_UNSOLICITED);
     }
   }
 
