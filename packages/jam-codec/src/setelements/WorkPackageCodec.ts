@@ -1,8 +1,13 @@
-import { ServiceIndex, WorkPackage } from "@tsjam/types";
-import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import {
+  Authorization,
+  AuthorizationParams,
+  ServiceIndex,
+  WorkPackage,
+} from "@tsjam/types";
+import { createLengthDiscriminatedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
-import { HashCodec } from "@/identity.js";
+import { CodeHashCodec } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
 import { createCodec } from "@/utils";
@@ -11,14 +16,14 @@ import { createCodec } from "@/utils";
  * $(0.6.1 - C.25)
  */
 export const WorkPackageCodec = createCodec<WorkPackage>([
-  ["authorizationToken", LengthDiscrimantedIdentity],
-  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
-  ["authorizationCodeHash", HashCodec],
-  ["parametrizationBlob", LengthDiscrimantedIdentity],
+  ["authorizationToken", createLengthDiscriminatedIdentity<Authorization>()],
+  ["authCodeHost", E_sub_int<ServiceIndex>(4)],
+  ["authorizationCodeHash", CodeHashCodec],
+  ["paramsBlob", createLengthDiscriminatedIdentity<AuthorizationParams>()],
   ["context", RefinementContextCodec],
   [
-    "workItems",
-    createArrayLengthDiscriminator<WorkPackage["workItems"]>(WorkItemCodec),
+    "items",
+    createArrayLengthDiscriminator<WorkPackage["items"]>(WorkItemCodec),
   ],
 ]);
 

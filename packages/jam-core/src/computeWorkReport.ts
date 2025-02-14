@@ -61,14 +61,14 @@ export const computeWorkReport = (
   const _deps = {
     ...deps,
     authorizerOutput: o,
-    overline_i: pac.workItems.map((wi) => S_fn(wi, bold_l)),
+    overline_i: pac.items.map((wi) => S_fn(wi, bold_l)),
   };
 
-  const preTransposeEls = new Array(pac.workItems.length) // j \in N_{|p_w|}
+  const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
       const { result: r, out: e } = I_fn(pac, j, _deps);
-      const workResult = C_fn(pac.workItems[j], r);
+      const workResult = C_fn(pac.items[j], r);
       return { result: workResult, out: e };
     });
 
@@ -106,9 +106,9 @@ export const computeWorkReport = (
       ]),
       {
         encodedPackage,
-        x: pac.workItems.map((wi) => X_fn(wi)).flat(),
-        s: pac.workItems.map((wi) => S_fn(wi, bold_l)).flat(),
-        j: pac.workItems.map((wi) => inner_J_fn(wi, bold_l)).flat(),
+        x: pac.items.map((wi) => X_fn(wi)).flat(),
+        s: pac.items.map((wi) => S_fn(wi, bold_l)).flat(),
+        j: pac.items.map((wi) => inner_J_fn(wi, bold_l)).flat(),
       },
     ),
     overline_e, // exported segments
@@ -197,10 +197,10 @@ const I_fn = (
   result: WorkOutput; // `r`
   out: Uint8Array[]; // `e`
 } => {
-  const w = pac.workItems[workIndex];
-  const l = pac.workItems
+  const w = pac.items[workIndex];
+  const l = pac.items
     .slice(0, workIndex)
-    .map((wi) => wi.numberExportedSegments)
+    .map((wi) => wi.exportCount)
     .reduce((a, b) => a + b, 0);
   const re = refineInvocation(
     workIndex,
@@ -210,12 +210,12 @@ const I_fn = (
     l,
     { delta: deps.delta, tau: deps.tau }, // deps
   );
-  if (re.out.length === w.numberExportedSegments) {
+  if (re.out.length === w.exportCount) {
     return { result: re.result, out: re.out };
   } else if (!(re.result instanceof Uint8Array)) {
     return {
       result: re.result,
-      out: new Array(w.numberExportedSegments)
+      out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
           new Uint8Array(
@@ -226,7 +226,7 @@ const I_fn = (
   } else {
     return {
       result: WorkError.BadExports,
-      out: new Array(w.numberExportedSegments)
+      out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
           new Uint8Array(
@@ -241,7 +241,7 @@ const I_fn = (
  * $(0.6.1 - 14.12)
  */
 const L_fn = (
-  hash: WorkItem["importedDataSegments"][0]["root"],
+  hash: WorkItem["importSegments"][0]["root"],
   bold_l: Map<WorkPackageHash, Hash>,
 ): Hash => {
   //bold_l = segment root dictionary
@@ -269,7 +269,7 @@ const S_fn = (
   workItem: WorkItem,
   segmentRootLookup: Map<WorkPackageHash, Hash>,
 ): ExportSegment[] => {
-  return workItem.importedDataSegments.map(
+  return workItem.importSegments.map(
     ({ root, index }) =>
       merkleTreeRootRetriever(L_fn(root, segmentRootLookup))[
         index
@@ -283,7 +283,7 @@ const inner_J_fn = (
   workItem: WorkItem,
   segmentRootLookup: Map<WorkPackageHash, Hash>,
 ): Hash[] => {
-  return workItem.importedDataSegments
+  return workItem.importSegments
     .map(({ root, index }) => {
       const s = merkleTreeRootRetriever(L_fn(root, segmentRootLookup));
       return J_fn(0, s, index);
@@ -297,10 +297,10 @@ const inner_J_fn = (
  */
 export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
   return {
-    serviceIndex: workItem.serviceIndex,
+    serviceIndex: workItem.service,
     codeHash: workItem.codeHash,
     payloadHash: Hashing.blake2b(workItem.payload),
-    gasPrioritization: workItem.accumulationGasLimit,
+    gasPrioritization: workItem.accumulateGasLimit,
     output: out,
   };
 };

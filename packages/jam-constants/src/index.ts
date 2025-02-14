@@ -180,6 +180,16 @@ export const ERASURECODE_BASIC_SIZE = 684;
 export const ERASURECODE_EXPORTED_SIZE = 6;
 
 /**
+ * `WM` in the paper
+ */
+export const MAX_EXPORTED_ITEMS = 2 ** 11;
+
+/**
+ * `WM` in the paper
+ */
+export const MAX_IMPORTED_ITEMS = 2 ** 11;
+
+/**
  * `GA`
  */
 export const TOTAL_GAS_ACCUMULATION_LOGIC = 10_000_000n;

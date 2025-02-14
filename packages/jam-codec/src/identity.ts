@@ -7,6 +7,7 @@ import {
   BigIntBytes,
   Blake2bHash,
   ByteArrayOfLength,
+  CodeHash,
   ED25519PublicKey,
   ED25519Signature,
   Hash,
@@ -78,6 +79,7 @@ export const GenericBytesBigIntCodec = <
 });
 
 export const HashCodec = GenericBytesBigIntCodec<Hash, 32>(32);
+export const CodeHashCodec = GenericBytesBigIntCodec<CodeHash, 32>(32);
 export const WorkPackageHashCodec = GenericBytesBigIntCodec<
   WorkPackageHash,
   32

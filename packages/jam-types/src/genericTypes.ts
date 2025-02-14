@@ -59,6 +59,7 @@ export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
 export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
 export type AuthorizerHash = Tagged<Hash, "AuthorizerHash">;
+export type CodeHash = Tagged<Hash, "CodeHash">;
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
 export type MerkeTreeRoot = Tagged<Hash, "MerkleTreeRoot">;
 export type OpaqueHash = Tagged<Hash, "OpaqueHash">;
@@ -125,12 +126,21 @@ export type BoundedSeq<
  * unsigned 16-bit integer
  */
 export type CoreIndex = Tagged<u16, "CoreIndex", { maxValue: typeof CORES }>;
+
+/**
+ * Index of validator
+ * unsigned 16-bit integer
+ */
 export type ValidatorIndex = Tagged<
-  number,
+  u16,
   "ValidatorIndex",
   { maxValue: typeof NUMBER_OF_VALIDATORS }
 >;
-// $(0.6.1 - 9.1)
+
+/**
+ * $(0.6.1 - 9.1)
+ * unsigned 32-bit integer
+ */
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;
 
 export type Posterior<T> = Tagged<T, "Posterior">;
@@ -154,3 +164,18 @@ export type UnTaggedObject<T> = {
 };
 
 export type Validated<T> = Tagged<T, "validated">;
+
+/**
+ * Used in WorkItem
+ */
+export type WorkPayload = Tagged<Uint8Array, "WorkPayload">;
+
+/**
+ * Data containing hte Authorization Token inside a WorkPackage
+ */
+export type Authorization = Tagged<Uint8Array, "Authorization">;
+
+/**
+ * Parametrization blob to be used in WorkPackage
+ */
+export type AuthorizationParams = Tagged<Uint8Array, "AuthorizationParams">;

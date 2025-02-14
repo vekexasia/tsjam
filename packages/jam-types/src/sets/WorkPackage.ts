@@ -1,4 +1,12 @@
-import { Blake2bHash, BoundedSeq, Hash, ServiceIndex } from "@/genericTypes";
+import {
+  Authorization,
+  AuthorizationParams,
+  Blake2bHash,
+  BoundedSeq,
+  CodeHash,
+  Hash,
+  ServiceIndex,
+} from "@/genericTypes";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { WorkItem } from "@/sets/WorkItem";
 import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
@@ -12,19 +20,19 @@ export interface WorkPackage {
   /**
    * `j`
    */
-  authorizationToken: Uint8Array;
+  authorizationToken: Authorization;
   /**
    * `h` - index of the service that hosts the authorization code
    */
-  serviceIndex: ServiceIndex;
+  authCodeHost: ServiceIndex;
   /**
    * `u` - authorization code hash
    */
-  authorizationCodeHash: Hash;
+  authorizationCodeHash: CodeHash;
   /**
    * `p` - parametrization blob
    */
-  parametrizationBlob: Uint8Array;
+  paramsBlob: AuthorizationParams;
   /**
    * `x` - context
    */
@@ -32,7 +40,7 @@ export interface WorkPackage {
   /**
    * `w` - sequence of work items
    */
-  workItems: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
+  items: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
 }
 
 /**

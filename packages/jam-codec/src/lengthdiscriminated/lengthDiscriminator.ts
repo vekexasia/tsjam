@@ -61,15 +61,26 @@ export class LengthDiscriminator<T> implements JamCodec<T> {
   }
 }
 
+export const createLengthDiscriminatedIdentity = <
+  T extends Uint8Array,
+>(): JamCodec<T> => {
+  return new LengthDiscriminator({
+    ...IdentityCodec,
+    decode(bytes: Uint8Array, length: number) {
+      return IdentityCodec.decode(bytes.subarray(0, length)) as {
+        value: T;
+        readBytes: number;
+      };
+    },
+  });
+};
+
 /**
  * Utility to encode/decode a byteArray with a length discriminator
  */
-export const LengthDiscrimantedIdentity = new LengthDiscriminator({
-  ...IdentityCodec,
-  decode(bytes: Uint8Array, length: number) {
-    return IdentityCodec.decode(bytes.subarray(0, length));
-  },
-});
+export const LengthDiscrimantedIdentity =
+  createLengthDiscriminatedIdentity<Uint8Array>();
+
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");
   const { describe, expect, it } = import.meta.vitest;

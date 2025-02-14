@@ -8,6 +8,7 @@ import {
   TicketIdentifier,
   UnTaggedObject,
   ValidatorData,
+  ValidatorIndex,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
@@ -22,7 +23,7 @@ export const mockHeader = (
   offenders: toTagged(
     opts.offenders || [],
   ) as unknown as JamHeader["offenders"],
-  blockAuthorKeyIndex: toTagged(opts.blockAuthorKeyIndex || 0),
+  blockAuthorKeyIndex: (opts.blockAuthorKeyIndex || 0) as ValidatorIndex,
   entropySignature: toTagged(opts.entropySignature || 0n),
 });
 

@@ -5,18 +5,17 @@ import {
   WorkItem,
   u32,
   u16,
+  MerkeTreeRoot,
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { HashCodec } from "@/identity.js";
+import { CodeHashCodec, HashCodec } from "@/identity.js";
 import { E_sub_int, E_sub } from "@/ints/E_subscr.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { createCodec } from "@/utils.js";
 import { JamCodec } from "@/codec";
 import { isHash } from "@tsjam/utils";
 
-export const importDataSegmentCodec: JamCodec<
-  WorkItem["importedDataSegments"][0]
-> = {
+export const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
   encode(value, bytes) {
     const root = value.root;
     if (!isHash(root)) {
@@ -47,7 +46,10 @@ export const importDataSegmentCodec: JamCodec<
         readBytes: 32 + 2,
       };
     } else {
-      return { value: { root, index }, readBytes: 32 + 2 };
+      return {
+        value: { root: root as MerkeTreeRoot, index },
+        readBytes: 32 + 2,
+      };
     }
   },
   encodedSize() {
@@ -59,14 +61,17 @@ export const importDataSegmentCodec: JamCodec<
  * $(0.6.1 - C.26)
  */
 export const WorkItemCodec = createCodec<WorkItem>([
-  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
-  ["codeHash", HashCodec],
-  ["payload", LengthDiscrimantedIdentity],
-  ["refinementGasLimit", E_sub<Gas>(8)], // g
-  ["accumulationGasLimit", E_sub<Gas>(8)], // a
+  ["service", E_sub_int<ServiceIndex>(4)],
+  ["codeHash", CodeHashCodec],
   [
-    "importedDataSegments",
-    createArrayLengthDiscriminator<WorkItem["importedDataSegments"]>(
+    "payload",
+    LengthDiscrimantedIdentity as unknown as JamCodec<WorkItem["payload"]>,
+  ],
+  ["refineGasLimit", E_sub<Gas>(8)], // g
+  ["accumulateGasLimit", E_sub<Gas>(8)], // a
+  [
+    "importSegments",
+    createArrayLengthDiscriminator<WorkItem["importSegments"]>(
       importDataSegmentCodec,
     ),
   ],
@@ -79,7 +84,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
       ]),
     ),
   ],
-  ["numberExportedSegments", E_sub_int<u32>(2)],
+  ["exportCount", E_sub_int<u32>(2)],
 ]);
 
 if (import.meta.vitest) {

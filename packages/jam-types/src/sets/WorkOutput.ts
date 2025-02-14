@@ -30,4 +30,7 @@ export enum WorkError {
    */
   Big = 4,
 }
+/**
+ * Output Data ofr the refine logic
+ */
 export type WorkOutput = Uint8Array | WorkError;

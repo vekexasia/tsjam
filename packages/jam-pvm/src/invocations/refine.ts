@@ -75,14 +75,14 @@ export const refineInvocation = (
   // exported segments
   out: RefineContext["e"];
 } => {
-  const w = workPackage.workItems[index];
+  const w = workPackage.items[index];
   const lookupResult = historicalLookup(
-    deps.delta.get(w.serviceIndex)!,
+    deps.delta.get(w.service)!,
     workPackage.context.lookupAnchor.timeSlot,
     w.codeHash,
   );
   // first matching case
-  if (!deps.delta.has(w.serviceIndex) || typeof lookupResult === "undefined") {
+  if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
     return { result: WorkError.Bad, out: [] };
   }
   // second metching case
@@ -92,7 +92,7 @@ export const refineInvocation = (
 
   // encode
   const a = encodeWithCodec(refine_a_Codec, {
-    serviceIndex: w.serviceIndex,
+    serviceIndex: w.service,
     payload: w.payload,
     packageHash: Hashing.blake2b<WorkPackageHash>(
       encodeWithCodec(WorkPackageCodec, workPackage),
@@ -104,10 +104,10 @@ export const refineInvocation = (
   const argOut = argumentInvocation(
     lookupResult,
     <u32>0, // instructionPointer
-    w.refinementGasLimit,
+    w.refineGasLimit,
     a,
     F_fn(
-      w.serviceIndex,
+      w.service,
       deps.delta,
       deps.tau,
       importSegments,

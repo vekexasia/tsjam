@@ -5,7 +5,12 @@ import {
   u32,
   ExportingWorkPackageHash,
   u16,
+  WorkPayload,
+  MerkeTreeRoot,
+  UpToSeq,
+  CodeHash,
 } from "@/genericTypes";
+import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
 
 /**
  * Identified by `I` set
@@ -16,55 +21,68 @@ export interface WorkItem {
   /**
    * `s` - the service related to the work item
    */
-  serviceIndex: ServiceIndex;
+  service: ServiceIndex;
 
   /**
    * `c` - the code hash of the service a time of the work item creation
    */
-  codeHash: Hash;
+  codeHash: CodeHash;
 
   /**
    * `y` - the payload of the work item
+   * Obfuscated/Opaque data fed in the refine logic that should contain info about the work that
+   * needs to be done
    */
-  payload: Uint8Array;
+  payload: WorkPayload;
 
   /**
    * `g`
+   * Gas Limit for the Refine logic
    */
-  refinementGasLimit: Gas;
+  refineGasLimit: Gas;
 
   /**
    * `a`
+   * Gas limit for the Accumulate logic
    */
-  accumulationGasLimit: Gas;
+  accumulateGasLimit: Gas;
 
   /**
    * `e`
    * - should be &lt; 2^11
+   * Number of segments exported by the work item
    */
-  numberExportedSegments: u32;
+  exportCount: u32;
 
   /**
    * `i`
+   * Sequence of imported Data Segments
    */
-  importedDataSegments: Array<{
-    /**
-     * merkle tree root
-     * or hash of the exporting work package. (if tagged)
-     */
-    root: Hash | ExportingWorkPackageHash;
-    /**
-     * index in the merkle tree
-     * Codec specifies that its not bigger than 2^15
-     */
-    index: u16;
-  }>;
+  importSegments: UpToSeq<
+    {
+      /**
+       * merkle tree root
+       * or hash of the exporting work package. (if tagged)
+       */
+      root: MerkeTreeRoot | ExportingWorkPackageHash;
+      /**
+       * index in the merkle tree
+       * Codec specifies that its not bigger than 2^15
+       */
+      index: u16;
+    },
+    typeof MAX_IMPORTED_ITEMS
+  >;
 
   /**
    * `x`
+   * NOTSURE: the segments Exported?
    */
-  exportedDataSegments: Array<{
-    blobHash: Hash;
-    length: u32;
-  }>;
+  exportedDataSegments: UpToSeq<
+    {
+      blobHash: Hash;
+      length: u32;
+    },
+    typeof MAX_IMPORTED_ITEMS
+  >;
 }

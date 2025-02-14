@@ -138,17 +138,17 @@ export const omega_y = regFn<
         v = encodeWithCodec(WorkPackageCodec, p);
       } else if (w10 === 1n) {
         v = bold_o;
-      } else if (w10 === 2n && w11 < p.workItems.length) {
-        v = p.workItems[_w11].payload;
+      } else if (w10 === 2n && w11 < p.items.length) {
+        v = p.items[_w11].payload;
       } else if (
         w10 === 3n &&
-        w11 < p.workItems.length &&
-        w12 < p.workItems[_w11].exportedDataSegments.length &&
-        false /* TODO: what is boldx */
+        w11 < p.items.length &&
+        w12 < p.items[_w11].exportedDataSegments.length &&
+        false /* TODO: boldx is a datastore we should keep to fetch data */
       ) {
       } else if (
         w10 === 4n &&
-        w11 < p.workItems[i].exportedDataSegments.length &&
+        w11 < p.items[i].exportedDataSegments.length &&
         false /* TODO: see above */
       ) {
       } else if (
