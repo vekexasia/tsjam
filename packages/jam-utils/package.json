@@ -6,7 +6,8 @@
     "@tsjam/constants": "workspace:*",
     "@tsjam/types": "workspace:*",
     "@vekexasia/bigint-uint8array": "^1.1.1",
-    "bigint-buffer": "^1.1.5"
+    "bigint-buffer": "^1.1.5",
+    "neverthrow-safe-ret": "^1.0.1"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

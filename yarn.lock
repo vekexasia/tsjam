@@ -1422,6 +1422,7 @@ __metadata:
     "@vekexasia/bigint-uint8array": "npm:^1.1.1"
     bigint-buffer: "npm:^1.1.5"
     neverthrow: "npm:^8.1.1"
+    neverthrow-safe-ret: "npm:^1.0.1"
   languageName: unknown
   linkType: soft
 
@@ -6399,6 +6400,15 @@ __metadata:
   version: 2.0.2
   resolution: "netmask@npm:2.0.2"
   checksum: 10c0/cafd28388e698e1138ace947929f842944d0f1c0b87d3fa2601a61b38dc89397d33c0ce2c8e7b99e968584b91d15f6810b91bef3f3826adf71b1833b61d4bf4f
+  languageName: node
+  linkType: hard
+
+"neverthrow-safe-ret@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "neverthrow-safe-ret@npm:1.0.1"
+  peerDependencies:
+    neverthrow: "*"
+  checksum: 10c0/0617cfdfe294f07d506115d16a35a4e3746c81feb097c8bd7ee427e9c1f3aa6314d7006cd6ea1d551f52b9b3ac125dc04eb05c98731e84bae96e613f77ae13cf
   languageName: node
   linkType: hard
 
