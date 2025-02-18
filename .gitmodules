@@ -3,3 +3,6 @@
 	url = git@github.com:davxy/jam-test-vectors.git
 [submodules "jamtestvectors"]
 	branch = polkajam-vectors
+[submodule "jamtestnet"]
+	path = jamtestnet
+	url = git@github.com:jam-duna/jamtestnet.git
