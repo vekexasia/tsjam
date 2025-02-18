@@ -1,0 +1,55 @@
+import { AuthorizerPool, AuthorizerQueue, Hash } from "@tsjam/types";
+import { JSONCodecClass } from "./JsonCodec";
+import { bigintToBytes, hexToBytes, hextToBigInt } from "@tsjam/utils";
+import { encodeWithCodec } from "@/utils";
+import { HashCodec } from "@/identity";
+
+export class AuthPoolJsonCodec implements JSONCodecClass<AuthorizerPool> {
+  fromJSON(json: string[][]) {
+    return <AuthorizerPool>(
+      json.map((s) => s.map((s1) => hextToBigInt<Hash, 32>(s1)))
+    );
+  }
+  toJSON(value: AuthorizerPool) {
+    return value.map((s) =>
+      s.map(
+        (s1) =>
+          `0x${Buffer.from(encodeWithCodec(HashCodec, s1)).toString("hex")}`,
+      ),
+    );
+  }
+}
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+
+  describe("aaa", () => {
+    it("ciao", () => {
+      const x = new AuthPoolJsonCodec().fromJSON([
+        [
+          "0x1000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
+        [
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
+      ]);
+
+      console.log(x);
+
+      console.log(new AuthPoolJsonCodec().toJSON(x));
+    });
+  });
+}
