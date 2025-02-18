@@ -30,6 +30,7 @@ import {
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
   create32BCodec,
+  RecentHistoryCodec,
 } from "@tsjam/codec";
 import {
   RHO,
@@ -185,13 +186,6 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   return bytesToBigInt(new Uint8Array([1, ...new Array(31).fill(0), i]));
 };
 
-const singleHistoryItemCodec = createCodec<RecentHistoryItem>([
-  ["headerHash", create32BCodec<HeaderHash>()],
-  ["accumulationResultMMR", E_M],
-  ["stateRoot", create32BCodec<StateRootHash>()],
-  ["reportedPackages", buildKeyValueCodec(HashCodec)],
-]);
-
 /*
  * `T(σ)`
  * $(0.6.1 - D.2)
@@ -202,13 +196,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec(), state.authPool));
   toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec(), state.authQueue));
   // β - recentHistory
-  toRet.set(
-    C_fn(3),
-    encodeWithCodec(
-      createArrayLengthDiscriminator(singleHistoryItemCodec),
-      state.recentHistory,
-    ),
-  );
+  toRet.set(C_fn(3), encodeWithCodec(RecentHistoryCodec, state.recentHistory));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
