@@ -9,6 +9,16 @@ import { TicketIdentifier } from "@/sets/Ticket";
 import { ValidatorData } from "@/ValidatorData";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
+export type GammaSFallback = SeqOfLength<
+  BandersnatchKey,
+  typeof EPOCH_LENGTH,
+  "gamma_s"
+>;
+export type GammaSNormal = SeqOfLength<
+  TicketIdentifier,
+  typeof EPOCH_LENGTH,
+  "gamma_s"
+>;
 /**
  * Denoted with gamma (y) in the Greek alphabet.
  * This is the basic state of the Safrole state machine.
@@ -36,9 +46,7 @@ export interface SafroleState {
    * mode, a series of EPOCH_LENGTH Bandersnatch keys
    * @see $(0.6.1 - 6.5)
    */
-  gamma_s:
-    | SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
-    | SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
+  gamma_s: GammaSNormal | GammaSFallback;
 
   /**
    * `γk`

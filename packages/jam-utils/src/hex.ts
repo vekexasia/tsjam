@@ -1,11 +1,13 @@
 import { bytesToBigInt } from "@/bigint_bytes.js";
-import { BigIntBytes } from "@tsjam/types";
+import { BigIntBytes, ByteArrayOfLength } from "@tsjam/types";
 
 /**
  * Convert a Uint8Array to a hex string
  * @param bytes - the Uint8Array to convert
  */
-export const hexToBytes = <T extends Uint8Array>(hex: string): T => {
+export const hexToBytes = <T extends ByteArrayOfLength<K>, K extends number>(
+  hex: string,
+): T => {
   return <T>new Uint8Array([...Buffer.from(hex.slice(2), "hex")]);
 };
 
