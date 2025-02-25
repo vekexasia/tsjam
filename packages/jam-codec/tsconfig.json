@@ -5,6 +5,8 @@
     "rootDir": "..",
     "preserveSymlinks": false,
     "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "include": [
     "src/**/*",
