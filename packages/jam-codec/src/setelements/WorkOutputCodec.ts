@@ -2,6 +2,7 @@ import { WorkError, WorkOutput } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import { BufferJSONCodec, createJSONCodec, JSONCodec } from "@/json/JsonCodec";
 
 // $(0.6.1  - C.29)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
@@ -64,5 +65,49 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
       return E.encodedSize(0n) + LengthDiscrimantedIdentity.encodedSize(value);
     }
     return E.encodedSize(1n);
+  },
+};
+
+export const WorkOutputJSONCodec: JSONCodec<
+  WorkOutput,
+  | { ok: string }
+  | { "out-of-gas": null }
+  | { panic: null }
+  | { "bad-exports": null }
+  | { "bad-code": null }
+  | { "code-oversize": null }
+> = {
+  fromJSON(json) {
+    if ("ok" in json) {
+      return BufferJSONCodec().fromJSON(json.ok);
+    } else if ("out-of-gas" in json) {
+      return WorkError.OutOfGas;
+    } else if ("panic" in json) {
+      return WorkError.UnexpectedTermination;
+    } else if ("bad-exports" in json) {
+      return WorkError.BadExports;
+    } else if ("bad-code" in json) {
+      return WorkError.Bad;
+    } else if ("code-oversize" in json) {
+      return WorkError.Big;
+    }
+    throw new Error("wrong encoding in json of workoutput");
+  },
+  toJSON(value) {
+    if (value instanceof Uint8Array) {
+      return { ok: BufferJSONCodec().toJSON(<any>value) };
+    }
+    switch (value) {
+      case WorkError.OutOfGas:
+        return { "out-of-gas": null };
+      case WorkError.UnexpectedTermination:
+        return { panic: null };
+      case WorkError.BadExports:
+        return { "bad-exports": null };
+      case WorkError.Bad:
+        return { "bad-code": null };
+      case WorkError.Big:
+        return { "code-oversize": null };
+    }
   },
 };

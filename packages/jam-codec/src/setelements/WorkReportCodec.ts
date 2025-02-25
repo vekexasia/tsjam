@@ -4,17 +4,35 @@ import {
   Hash,
   WorkPackageHash,
   WorkReport,
+  WorkResult,
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { WorkResultCodec } from "@/setelements/WorkResultCodec.js";
+import {
+  WorkResultCodec,
+  WorkResultJSONCodec,
+} from "@/setelements/WorkResultCodec.js";
 import { JamCodec } from "@/codec.js";
-import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
+import {
+  RefinementContextCodec,
+  RefinementContextJSONCodec,
+} from "@/setelements/RefinementContextCodec.js";
 import { E_2_int } from "@/ints/E_subscr.js";
-import { AvailabilitySpecificationCodec } from "@/setelements/AvailabilitySpecificationCodec.js";
+import {
+  AvailabilitySpecificationCodec,
+  AvailabilitySpecificationJSONCodec,
+} from "@/setelements/AvailabilitySpecificationCodec.js";
 import { HashCodec } from "@/identity.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { buildKeyValueCodec } from "@/dicts/keyValue.js";
 import { createCodec } from "@/utils";
+import {
+  ArrayOfJSONCodec,
+  BufferJSONCodec,
+  createJSONCodec,
+  HashJSONCodec,
+  MapJSONCodec,
+  NumberJSONCodec,
+} from "@/json/JsonCodec";
 
 /**
  * $(0.6.1 - C.24)
@@ -38,6 +56,35 @@ export const WorkReportCodec = createCodec<WorkReport>([
     createArrayLengthDiscriminator(WorkResultCodec) as unknown as JamCodec<
       WorkReport["results"]
     >,
+  ],
+]);
+
+export const WorkReportJSONCodec = createJSONCodec<WorkReport>([
+  [
+    "workPackageSpecification",
+    "package_spec",
+    AvailabilitySpecificationJSONCodec,
+  ],
+  ["refinementContext", "context", RefinementContextJSONCodec],
+  ["coreIndex", "core_index", NumberJSONCodec<CoreIndex>()],
+  ["authorizerHash", "authorizer_hash", HashJSONCodec<Blake2bHash>()],
+  ["authorizerOutput", "auth_output", BufferJSONCodec()],
+  [
+    "segmentRootLookup",
+    "segment_root_lookup",
+    MapJSONCodec(
+      {
+        key: "work_package_hash",
+        value: "segment_tree_root",
+      },
+      HashJSONCodec<WorkPackageHash>(),
+      HashJSONCodec(),
+    ),
+  ],
+  [
+    "results",
+    "results",
+    ArrayOfJSONCodec<WorkReport["results"], WorkResult>(WorkResultJSONCodec),
   ],
 ]);
 

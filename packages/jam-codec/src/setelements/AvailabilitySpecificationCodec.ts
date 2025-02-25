@@ -3,6 +3,11 @@ import { JamCodec } from "@/codec.js";
 import { HashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { createCodec } from "@/utils";
+import {
+  createJSONCodec,
+  HashJSONCodec,
+  NumberJSONCodec,
+} from "@/json/JsonCodec";
 
 /**
  *
@@ -16,4 +21,17 @@ export const AvailabilitySpecificationCodec =
     ["erasureRoot", HashCodec],
     ["segmentRoot", HashCodec],
     ["segmentCount", E_sub_int<u16>(2)],
+  ]);
+
+export const AvailabilitySpecificationJSONCodec =
+  createJSONCodec<AvailabilitySpecification>([
+    ["workPackageHash", "hash", HashJSONCodec<WorkPackageHash>()],
+    [
+      "bundleLength",
+      "length",
+      NumberJSONCodec<AvailabilitySpecification["bundleLength"]>(),
+    ],
+    ["erasureRoot", "erasure_root", HashJSONCodec()],
+    ["segmentRoot", "exports_root", HashJSONCodec()],
+    ["segmentCount", "exports_count", NumberJSONCodec<u16>()],
   ]);

@@ -3,6 +3,12 @@ import { SingleValidatorStatistics, ValidatorStatistics } from "@tsjam/types";
 import { createSequenceCodec } from "./sequenceCodec";
 import { E_4_int } from "./ints/E_subscr";
 import { createCodec } from "./utils";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  JSONCodec,
+  NumberJSONCodec,
+} from "./json/JsonCodec";
 
 /**
  * Codec For `ValidatorStatistics`.
@@ -26,3 +32,46 @@ export const ValidatorStatisticsCodec = (
       ]),
     ),
   );
+
+type SingleValidatorJSONStatistics = {
+  blocks: number;
+  tickets: number;
+  pre_images: number;
+  pre_images_size: number;
+  guarantees: number;
+  assurances: number;
+};
+const SingleValStatisticJSONCodec: JSONCodec<
+  SingleValidatorStatistics,
+  SingleValidatorJSONStatistics
+> = createJSONCodec([
+  ["blocksProduced", "blocks", NumberJSONCodec()],
+  ["ticketsIntroduced", "tickets", NumberJSONCodec()],
+  ["preimagesIntroduced", "pre_images", NumberJSONCodec()],
+  ["totalOctetsIntroduced", "pre_images_size", NumberJSONCodec()],
+  ["guaranteedReports", "guarantees", NumberJSONCodec()],
+  ["availabilityAssurances", "assurances", NumberJSONCodec()],
+]);
+
+export const ValidatorStatistcsJSONCodec: JSONCodec<
+  ValidatorStatistics,
+  {
+    current: SingleValidatorJSONStatistics[];
+    last: SingleValidatorStatistics[];
+  }
+> = {
+  fromJSON(json) {
+    const seqofvalstats = ArrayOfJSONCodec(SingleValStatisticJSONCodec);
+    return <ValidatorStatistics>[
+      seqofvalstats.fromJSON(json.current),
+      seqofvalstats.fromJSON(json.last),
+    ];
+  },
+  toJSON(value) {
+    const seqofvalstats = ArrayOfJSONCodec(SingleValStatisticJSONCodec);
+    return {
+      last: seqofvalstats.toJSON(value[0]),
+      current: seqofvalstats.toJSON(value[1]),
+    };
+  },
+};

@@ -1,7 +1,12 @@
-import { TicketIdentifier } from "@tsjam/types";
+import { OpaqueHash, TicketIdentifier } from "@tsjam/types";
 import { OpaqueHashCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 import { createCodec, mapCodec } from "./utils";
+import {
+  createJSONCodec,
+  HashJSONCodec,
+  NumberJSONCodec,
+} from "./json/JsonCodec";
 
 /**
  * $(0.6.1 - C.27)
@@ -16,4 +21,9 @@ export const TicketIdentifierCodec = createCodec<TicketIdentifier>([
       (x) => BigInt(x),
     ),
   ],
+]);
+
+export const TicketIdentifierJSONCodec = createJSONCodec<TicketIdentifier>([
+  ["id", "id", HashJSONCodec<OpaqueHash>()],
+  ["attempt", "attempt", NumberJSONCodec<0 | 1>()],
 ]);

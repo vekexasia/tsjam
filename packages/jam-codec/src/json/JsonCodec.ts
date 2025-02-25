@@ -1,7 +1,7 @@
-import { HashCodec } from "@/identity";
+import { Ed25519PubkeyCodec, HashCodec } from "@/identity";
 import { encodeWithCodec } from "@/utils";
-import type { Hash, WorkPackageHash } from "@tsjam/types";
-import { hextToBigInt } from "@tsjam/utils";
+import type { ByteArrayOfLength, ED25519PublicKey, Hash } from "@tsjam/types";
+import { hexToBytes, hextToBigInt } from "@tsjam/utils";
 
 /**
  * Basic utility to convert from/to json
@@ -12,70 +12,59 @@ export interface JSONCodec<V, J = any> {
   fromJSON(json: J): V;
 }
 
-// Create a unique symbol for storing codec information
-interface PropertyConfig<T, P extends keyof T = keyof T, V = T[P]> {
-  jsonName: string;
-  property: P;
-  codec: JSONCodec<V, any>;
-}
+type Entries<T> = {
+  [K in keyof T]: [K, string /* the json key*/, JSONCodec<T[K], any>];
+}[keyof T];
 
-// Symbol to store metadata
-const jsonPropertiesKey = Symbol("jsonProperties");
-
-// Property decorator factory
-export function JSONProperty<T>(jsonName: string, codec: JSONCodec<T, any>) {
-  return function (target: any, property: string) {
-    const properties = getJsonProperties(target);
-    properties.push({
-      jsonName,
-      codec,
-      property,
-    });
-  };
-}
-
-// Class decorator factory
-export function JSONCodecClass<T extends { new (...args: any[]): any }>(
-  constructor: T,
-) {
-  return class extends constructor implements JSONCodec<T, any> {
-    toJSON(v: T) {
-      const properties = getJsonProperties(v);
-      const result: Record<string, any> = {};
-
-      for (const config of properties) {
-        const value = v[config.property];
-        result[config.jsonName] = config.codec.toJSON(value);
+export const createJSONCodec = <T extends object>(
+  itemsCodec: Entries<T>[],
+): JSONCodec<T, any> => {
+  return {
+    fromJSON(json) {
+      const newInst = {} as unknown as T;
+      for (const [key, jsonKey, codec] of itemsCodec) {
+        newInst[key] = codec.fromJSON(json[jsonKey]);
       }
-      return result;
-    }
-    fromJSON(j: any) {
-      const properties = getJsonProperties(this);
-      for (const { jsonName, property, codec } of properties) {
-        const jsonValue = j[jsonName];
-        if (jsonValue !== undefined) {
-          this[property] = codec.fromJSON(jsonValue);
-        }
+      return newInst;
+    },
+    toJSON(value) {
+      const toRet: any = {};
+      for (const [key, jsonKey, codec] of itemsCodec) {
+        toRet[jsonKey] = codec.toJSON(value[key]);
       }
-      return this as unknown as T;
-    }
+      return toRet;
+    },
   };
-}
+};
 
-// Utility function to get or create property metadata
-function getJsonProperties<T>(target: T): Array<PropertyConfig<T>> {
-  const prototype = Object.getPrototypeOf(target);
-  if (!prototype[jsonPropertiesKey]) {
-    prototype[jsonPropertiesKey] = [];
-  }
-  return prototype[jsonPropertiesKey];
-}
 const bufToHex = (b: Uint8Array) => `0x${Buffer.from(b).toString("hex")}`;
 
 const hashToHex = <T extends Hash>(h: T) =>
   `${bufToHex(encodeWithCodec(HashCodec, h))}`;
 
-export const HashJSONCodec = <T extends Hash>(): JSONCodec<Hash, string> => {
+export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
+  return {
+    fromJSON(json) {
+      return <T>BigInt(json);
+    },
+    toJSON(value) {
+      return Number(value); // TODO: this might fail due to loss in precision
+    },
+  };
+};
+
+export const NumberJSONCodec = <T extends number>(): JSONCodec<T, number> => {
+  return {
+    fromJSON(json) {
+      return <T>json;
+    },
+    toJSON(value) {
+      return value;
+    },
+  };
+};
+
+export const HashJSONCodec = <T extends Hash>(): JSONCodec<T, string> => {
   return {
     toJSON(value) {
       return hashToHex(value);
@@ -85,38 +74,127 @@ export const HashJSONCodec = <T extends Hash>(): JSONCodec<Hash, string> => {
     },
   };
 };
-export class BaseJSONCodec<V> implements JSONCodec<V, any> {
-  toJSON(value: V) {
-    throw new Error("Decorate class");
-  }
-  fromJSON(json: any): V {
-    throw new Error("Decorate class");
-  }
-}
 
-@JSONCodecClass
-class Person extends BaseJSONCodec<Person> {
-  @JSONProperty("first_name", HashJSONCodec())
-  public firstName!: Hash;
+export const Ed25519JSONCodec = (): JSONCodec<ED25519PublicKey, string> => {
+  return {
+    toJSON(value) {
+      return bufToHex(encodeWithCodec(Ed25519PubkeyCodec, value));
+    },
+    fromJSON(json) {
+      return hextToBigInt<ED25519PublicKey, 32>(json);
+    },
+  };
+};
 
-  @JSONProperty("last_name", HashJSONCodec())
-  public lastName!: WorkPackageHash;
-}
+export const BufferJSONCodec = <
+  T extends ByteArrayOfLength<K>,
+  K extends number,
+>(): JSONCodec<T, string> => {
+  return {
+    fromJSON(json) {
+      return hexToBytes(json);
+    },
+    toJSON(value) {
+      return bufToHex(value);
+    },
+  };
+};
 
-if (import.meta.vitest) {
-  const { describe, it, expect } = import.meta.vitest;
+export const ArrayOfJSONCodec = <K extends T[], T>(
+  singleCodec: JSONCodec<T>,
+): JSONCodec<K, any[]> => {
+  return {
+    fromJSON(json) {
+      return <K>json.map((item) => singleCodec.fromJSON(item));
+    },
+    toJSON(value) {
+      return value.map((item) => singleCodec.toJSON(item));
+    },
+  };
+};
 
-  describe("decode/encode", () => {
-    it("works", () => {
-      // Usage example
-      const person = new Person();
-      person.lastName = <WorkPackageHash>1n;
-      person.firstName = <Hash>2n;
+export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
+  jsonKeys: {
+    key: KN;
+    value: VN;
+  },
+  keyCodec: JSONCodec<K, any>,
+  valueCodec: JSONCodec<V, any>,
+): JSONCodec<Map<K, V>, Array<{ [key in KN | VN]: any }>> => {
+  return {
+    fromJSON(json) {
+      return new Map<K, V>(
+        json.map((item) => [
+          keyCodec.fromJSON(item[jsonKeys.key]),
+          valueCodec.fromJSON(item[jsonKeys.value]),
+        ]),
+      );
+    },
+    toJSON(value) {
+      return <any>[...value.entries()].map(([key, value]) => ({
+        [jsonKeys.key]: keyCodec.toJSON(key),
+        [jsonKeys.value]: valueCodec.toJSON(value),
+      }));
+    },
+  };
+};
 
-      const json2 = person.toJSON(person);
-      const restored = person.fromJSON(json2);
-      console.log(json2);
-      console.log(restored);
-    });
-  });
-}
+export const WrapJSONCodec = <T, K extends string>(
+  key: K,
+  codec: JSONCodec<T, any>,
+): JSONCodec<T, { [key in K]: any }> => {
+  return {
+    fromJSON(json) {
+      return codec.fromJSON(json[key]);
+    },
+    toJSON(value) {
+      return <{ [key in K]: any }>{
+        [key]: codec.toJSON(value),
+      };
+    },
+  };
+};
+
+export const EitherOneOfJSONCodec = <Case1, Case2>(
+  case1Codec: JSONCodec<Case1>,
+  case2Codec: JSONCodec<Case2>,
+  case1Key: string,
+  case2Key: string,
+  valueDiscriminator: (v: Case1 | Case2) => v is Case1,
+): JSONCodec<Case1 | Case2, any> => {
+  return {
+    fromJSON(json) {
+      if (case1Key in json) {
+        return case1Codec.fromJSON(json[case1Key]);
+      } else {
+        return case2Codec.fromJSON(json[case2Key]);
+      }
+    },
+    toJSON(value) {
+      if (valueDiscriminator(value)) {
+        return { [case1Key]: case1Codec.toJSON(value) };
+      } else {
+        return { [case2Key]: case2Codec.toJSON(value) };
+      }
+    },
+  };
+};
+
+export const NULLORCodec = <T>(
+  tCodec: JSONCodec<T, unknown>,
+): JSONCodec<T | undefined, unknown | null> => {
+  return {
+    fromJSON(json) {
+      if (json === null) {
+        return undefined;
+      }
+      return tCodec.fromJSON(json);
+    },
+    toJSON(value) {
+      if (typeof value === "undefined") {
+        return null;
+      }
+      return tCodec.toJSON(value);
+    },
+  };
+};

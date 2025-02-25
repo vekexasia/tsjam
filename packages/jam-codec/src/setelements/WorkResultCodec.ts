@@ -1,8 +1,17 @@
 import { Gas, ServiceIndex, WorkResult } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
-import { WorkOutputCodec } from "@/setelements/WorkOutputCodec.js";
+import {
+  WorkOutputCodec,
+  WorkOutputJSONCodec,
+} from "@/setelements/WorkOutputCodec.js";
 import { createCodec } from "@/utils";
 import { E_sub, E_sub_int } from "@/ints/E_subscr";
+import {
+  BigIntJSONCodec,
+  createJSONCodec,
+  HashJSONCodec,
+  NumberJSONCodec,
+} from "@/json/JsonCodec";
 
 /**
  * $(0.6.1 - C.23)
@@ -13,6 +22,14 @@ export const WorkResultCodec = createCodec<WorkResult>([
   ["payloadHash", HashCodec], // l
   ["gasPrioritization", E_sub<Gas>(8)], // g
   ["output", WorkOutputCodec], // o
+]);
+
+export const WorkResultJSONCodec = createJSONCodec<WorkResult>([
+  ["serviceIndex", "service_id", NumberJSONCodec<ServiceIndex>()],
+  ["codeHash", "code_hash", HashJSONCodec()],
+  ["payloadHash", "payload_hash", HashJSONCodec()],
+  ["gasPrioritization", "accumulate_gas", BigIntJSONCodec<Gas>()],
+  ["output", "result", WorkOutputJSONCodec],
 ]);
 
 if (import.meta.vitest) {

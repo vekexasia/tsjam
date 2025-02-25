@@ -9,6 +9,14 @@ import { create32BCodec, HashCodec, WorkPackageHashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import { createCodec } from "@/utils";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  HashJSONCodec,
+  JSONCodec,
+  NumberJSONCodec,
+} from "@/json/JsonCodec";
+import { hextToBigInt } from "@tsjam/utils";
 
 /**
  * it defines codec for the RefinementContext or member of `X` set
@@ -33,6 +41,44 @@ export const RefinementContextCodec = createCodec<RefinementContext>([
   ["dependencies", createArrayLengthDiscriminator(WorkPackageHashCodec)],
 ]);
 
+export const RefinementContextJSONCodec: JSONCodec<
+  RefinementContext,
+  {
+    anchor: string;
+    state_root: string;
+    beefy_root: string;
+    lookup_anchor: string;
+    lookup_anchor_slot: number;
+    prerequisites: string[];
+  }
+> = {
+  fromJSON(json) {
+    return {
+      anchor: {
+        hash: hextToBigInt(json.anchor),
+        stateRoot: hextToBigInt(json.state_root),
+        beefyRoot: hextToBigInt(json.beefy_root),
+      },
+      lookupAnchor: {
+        hash: hextToBigInt(json.lookup_anchor),
+        timeSlot: <Tau>json.lookup_anchor_slot,
+      },
+      dependencies: json.prerequisites.map((a) => hextToBigInt(a)),
+    };
+  },
+  toJSON(value) {
+    return {
+      anchor: HashJSONCodec().toJSON(value.anchor.hash),
+      state_root: HashJSONCodec().toJSON(value.anchor.stateRoot),
+      beefy_root: HashJSONCodec().toJSON(value.anchor.beefyRoot),
+      lookup_anchor: HashJSONCodec().toJSON(value.lookupAnchor.hash),
+      lookup_anchor_slot: NumberJSONCodec().toJSON(value.lookupAnchor.timeSlot),
+      prerequisites: ArrayOfJSONCodec(HashJSONCodec()).toJSON(
+        value.dependencies,
+      ),
+    };
+  },
+};
 if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/utils.js");
