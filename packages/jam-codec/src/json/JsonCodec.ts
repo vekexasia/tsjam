@@ -12,18 +12,18 @@ export interface JSONCodec<V, J = any> {
   fromJSON(json: J): V;
 }
 
-type Entries<T> = {
-  [K in keyof T]: [K, string /* the json key*/, JSONCodec<T[K], any>];
+type Entries<T, X> = {
+  [K in keyof T]: [K, keyof X /* the json key*/, JSONCodec<T[K], any>];
 }[keyof T];
 
-export const createJSONCodec = <T extends object>(
-  itemsCodec: Entries<T>[],
-): JSONCodec<T, any> => {
+export const createJSONCodec = <T extends object, X = any>(
+  itemsCodec: Entries<T, X>[],
+): JSONCodec<T, X> => {
   return {
     fromJSON(json) {
       const newInst = {} as unknown as T;
       for (const [key, jsonKey, codec] of itemsCodec) {
-        newInst[key] = codec.fromJSON(json[jsonKey]);
+        newInst[key] = <T[typeof key]>codec.fromJSON((<any>json)[jsonKey]);
       }
       return newInst;
     },
@@ -49,6 +49,20 @@ export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
     },
     toJSON(value) {
       return Number(value); // TODO: this might fail due to loss in precision
+    },
+  };
+};
+
+/**
+ * An array of `X` in json converted in Set of `X`
+ */
+export const SetJSONCodec = <T extends Set<X>, X>(): JSONCodec<T, X[]> => {
+  return {
+    fromJSON(json) {
+      return new Set(json) as T;
+    },
+    toJSON(value) {
+      return [...value.values()];
     },
   };
 };
@@ -100,9 +114,9 @@ export const BufferJSONCodec = <
   };
 };
 
-export const ArrayOfJSONCodec = <K extends T[], T>(
-  singleCodec: JSONCodec<T>,
-): JSONCodec<K, any[]> => {
+export const ArrayOfJSONCodec = <K extends T[], T, X>(
+  singleCodec: JSONCodec<T X>,
+): JSONCodec<K, X[]> => {
   return {
     fromJSON(json) {
       return <K>json.map((item) => singleCodec.fromJSON(item));
@@ -180,9 +194,9 @@ export const EitherOneOfJSONCodec = <Case1, Case2>(
   };
 };
 
-export const NULLORCodec = <T>(
-  tCodec: JSONCodec<T, unknown>,
-): JSONCodec<T | undefined, unknown | null> => {
+export const NULLORCodec = <T, X>(
+  tCodec: JSONCodec<T, X>,
+): JSONCodec<T | undefined, X | null> => {
   return {
     fromJSON(json) {
       if (json === null) {
@@ -198,3 +212,28 @@ export const NULLORCodec = <T>(
     },
   };
 };
+
+/**
+ * composes 2 codecs to go from A to C type
+ */
+export const ZipJSONCodecs = <A, B, C>(
+  first: JSONCodec<B, A>,
+  second: JSONCodec<C, B>,
+): JSONCodec<C, A> => {
+  return {
+    fromJSON(json) {
+      return second.fromJSON(first.fromJSON(json));
+    },
+    toJSON(value) {
+      return first.toJSON(second.toJSON(value));
+    },
+  };
+};
+
+// Get the V type (first generic parameter)
+export type JC_V<T extends JSONCodec<any, any>> =
+  T extends JSONCodec<infer V, any> ? V : never;
+
+// Get the J type (second generic parameter)
+export type JC_J<T extends JSONCodec<any, any>> =
+  T extends JSONCodec<any, infer J> ? J : never;

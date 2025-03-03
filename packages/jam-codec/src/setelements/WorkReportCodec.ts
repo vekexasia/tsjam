@@ -30,6 +30,7 @@ import {
   BufferJSONCodec,
   createJSONCodec,
   HashJSONCodec,
+  JC_J,
   MapJSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
@@ -59,7 +60,20 @@ export const WorkReportCodec = createCodec<WorkReport>([
   ],
 ]);
 
-export const WorkReportJSONCodec = createJSONCodec<WorkReport>([
+export type WorkReportJSON = {
+  package_spec: JC_J<typeof AvailabilitySpecificationJSONCodec>;
+  context: JC_J<typeof RefinementContextJSONCodec>;
+  core_index: number;
+  authorizer_hash: string;
+  auth_output: string;
+  segment_root_lookup: Array<{
+    work_package_hash: string;
+    segment_tree_root: string;
+  }>;
+  results: Array<JC_J<typeof WorkResultJSONCodec>>;
+};
+
+export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
   [
     "workPackageSpecification",
     "package_spec",

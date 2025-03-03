@@ -1,4 +1,5 @@
 import {
+  AccumulationQueue,
   Blake2bHash,
   GammaSFallback,
   GammaSNormal,
@@ -21,16 +22,22 @@ import {
   createJSONCodec,
   EitherOneOfJSONCodec,
   HashJSONCodec,
+  JC_J,
   JSONCodec,
   MapJSONCodec,
   NULLORCodec,
   NumberJSONCodec,
+  SetJSONCodec,
   WrapJSONCodec,
+  ZipJSONCodecs,
 } from "./JsonCodec";
 import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 import { isFallbackMode } from "@tsjam/utils";
 import { ValidatorDataArrayJSONCodec } from "@/validatorDataCodec";
-import { WorkReportJSONCodec } from "@/setelements/WorkReportCodec";
+import {
+  WorkReportJSON,
+  WorkReportJSONCodec,
+} from "@/setelements/WorkReportCodec";
 
 export const RecentHistoryJSONCodec: JSONCodec<RecentHistory> =
   ArrayOfJSONCodec(
@@ -79,6 +86,8 @@ export const EntropyJSONCodec = ArrayOfJSONCodec<JamEntropy, Blake2bHash>(
 );
 
 export const IOTAJSONCodec = ValidatorDataArrayJSONCodec<JamState["iota"]>();
+export const GammaKJSONCodec =
+  ValidatorDataArrayJSONCodec<SafroleState["gamma_k"]>();
 export const KappaJSONCodec = ValidatorDataArrayJSONCodec<JamState["kappa"]>();
 export const LambdaJSONCodec =
   ValidatorDataArrayJSONCodec<JamState["lambda"]>();
@@ -91,6 +100,30 @@ export const RHOJSONCodec: JSONCodec<
     createJSONCodec([
       ["workReport", "report", WorkReportJSONCodec],
       ["reportTime", "timeout", NumberJSONCodec<Tau>()],
+    ]),
+  ),
+);
+
+export const AccumulationQueueJSONCodec: JSONCodec<
+  AccumulationQueue,
+  Array<
+    Array<{
+      report: WorkReportJSON;
+      dependencies: string[];
+    }>
+  >
+> = ArrayOfJSONCodec(
+  ArrayOfJSONCodec(
+    createJSONCodec([
+      ["workReport", "report", WorkReportJSONCodec],
+      [
+        "dependencies",
+        "dependencies",
+        ZipJSONCodecs<string[], WorkPackageHash[], Set<WorkPackageHash>>(
+          ArrayOfJSONCodec(HashJSONCodec<WorkPackageHash>()),
+          SetJSONCodec(),
+        ),
+      ],
     ]),
   ),
 );

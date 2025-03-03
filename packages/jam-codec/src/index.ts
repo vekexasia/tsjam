@@ -11,6 +11,8 @@ export * from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 export * from "@/lengthdiscriminated/lengthDiscriminator.js";
 export * from "@/lengthdiscriminated/utils.js";
 export type { JamCodec } from "@/codec.js";
+export * from "./json/codecs.js";
+export * from "./json/JsonCodec.js";
 export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
 
