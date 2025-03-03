@@ -9,5 +9,8 @@ import { AuthorizerPool } from "@tsjam/types";
 export const AuthorizerPoolCodec = (): JamCodec<AuthorizerPool> =>
   createSequenceCodec(CORES, createArrayLengthDiscriminator(HashCodec));
 
-export const AuthorizerPoolJSONCodec = (): JSONCodec<AuthorizerPool> =>
-  ArrayOfJSONCodec(ArrayOfJSONCodec(HashJSONCodec()));
+export type AuthorizerPoolJSON = string[][];
+export const AuthorizerPoolJSONCodec = (): JSONCodec<
+  AuthorizerPool,
+  AuthorizerPoolJSON
+> => ArrayOfJSONCodec(ArrayOfJSONCodec(HashJSONCodec()));

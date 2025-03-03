@@ -1,34 +1,30 @@
 import { describe, it, vi, expect } from "vitest";
 import fs from "fs";
 import {
-  AuthorizerPoolCodec,
   AuthorizerPoolJSONCodec,
-  AuthorizerQueueCodec,
   BlockCodec,
-  createCodec,
   JC_J,
   GammaSJSONCodec,
   ValidatorStatistcsJSONCodec,
+  AuthorizerQueueJSONCodec,
 } from "@tsjam/codec";
 import {
+  AccumulationHistory,
+  AccumulationQueue,
   AuthorizerPool,
   AuthorizerQueue,
-  Delta,
   IDisputesState,
   JamState,
   RecentHistory,
   RHO,
   SafroleState,
-  ServiceAccount,
   ServiceIndex,
-  SingleValidatorStatistics,
   Tau,
-  ValidatorStatistics,
 } from "@tsjam/types";
 
 type DunaState = {
-  alpha: AuthorizerPool;
-  varphi: AuthorizerQueue;
+  alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
+  varphi: JC_J<ReturnType<typeof AuthorizerQueueJSONCodec>>;
   beta: RecentHistory;
   gamma: {
     gamma_k: SafroleState["gamma_k"];
@@ -50,8 +46,8 @@ type DunaState = {
     chi_g: null | Record<ServiceIndex, number>;
   };
   pi: JC_J<typeof ValidatorStatistcsJSONCodec>;
-  theta: [];
-  xi: [];
+  theta: AccumulationQueue;
+  xi: AccumulationHistory;
   accounts: Array<{
     id: ServiceIndex;
     data: {
@@ -72,9 +68,6 @@ type DunaState = {
     };
   }>;
 };
-
-const x: DunaState["gamma"];
-x.gamma_s;
 
 describe("jamduna", () => {
   it("try", () => {

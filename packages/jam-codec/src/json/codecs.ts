@@ -36,27 +36,34 @@ import {
   WorkReportJSONCodec,
 } from "@/setelements/WorkReportCodec";
 
-export const RecentHistoryJSONCodec: JSONCodec<RecentHistory> =
-  ArrayOfJSONCodec(
-    createJSONCodec<RecentHistoryItem>([
-      ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
-      [
-        "accumulationResultMMR",
-        "mmr",
-        WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
-      ],
-      ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
-      [
-        "reportedPackages",
-        "reported",
-        MapJSONCodec(
-          { key: "work_package_hash", value: "segment_tree_root" },
-          HashJSONCodec<WorkPackageHash>(),
-          HashJSONCodec(),
-        ),
-      ],
-    ]),
-  );
+export const RecentHistoryJSONCodec: JSONCodec<
+  RecentHistory,
+  Array<{
+    header_hash: string;
+    mmr: { peaks: Array<null | string> };
+    state_root: string;
+    reported: Array<{ hash: string; exports_root: string }>;
+  }>
+> = ArrayOfJSONCodec(
+  createJSONCodec<RecentHistoryItem>([
+    ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
+    [
+      "accumulationResultMMR",
+      "mmr",
+      WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
+    ],
+    ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
+    [
+      "reportedPackages",
+      "reported",
+      MapJSONCodec(
+        { key: "hash", value: "exports_root" },
+        HashJSONCodec<WorkPackageHash>(),
+        HashJSONCodec(),
+      ),
+    ],
+  ]),
+);
 
 export const GammaSJSONCodec: JSONCodec<
   SafroleState["gamma_s"],
