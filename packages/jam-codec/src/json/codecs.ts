@@ -12,17 +12,14 @@ import {
   SafroleState,
   StateRootHash,
   Tau,
-  TicketIdentifier,
   WorkPackageHash,
 } from "@tsjam/types";
 import {
   ArrayOfJSONCodec,
-  BigIntJSONCodec,
   BufferJSONCodec,
   createJSONCodec,
   EitherOneOfJSONCodec,
   HashJSONCodec,
-  JC_J,
   JSONCodec,
   MapJSONCodec,
   NULLORCodec,
@@ -72,18 +69,18 @@ export const GammaSJSONCodec: JSONCodec<
   (v) => isFallbackMode(v),
 );
 
-export const GammaAJsonCodec = WrapJSONCodec(
-  "tickets",
-  ArrayOfJSONCodec<SafroleState["gamma_a"], TicketIdentifier>(
-    TicketIdentifierJSONCodec,
-  ),
-);
+export const GammaAJsonCodec = WrapJSONCodec<
+  SafroleState["gamma_a"],
+  "tickets"
+>("tickets", ArrayOfJSONCodec(TicketIdentifierJSONCodec));
 
 //TODO: psi/DisputesState
 
-export const EntropyJSONCodec = ArrayOfJSONCodec<JamEntropy, Blake2bHash>(
-  BigIntJSONCodec(),
-);
+export const EntropyJSONCodec = ArrayOfJSONCodec<
+  JamEntropy,
+  Blake2bHash,
+  string
+>(HashJSONCodec());
 
 export const IOTAJSONCodec = ValidatorDataArrayJSONCodec<JamState["iota"]>();
 export const GammaKJSONCodec =
@@ -92,10 +89,11 @@ export const KappaJSONCodec = ValidatorDataArrayJSONCodec<JamState["kappa"]>();
 export const LambdaJSONCodec =
   ValidatorDataArrayJSONCodec<JamState["lambda"]>();
 
-export const RHOJSONCodec: JSONCodec<
+export const RHOJSONCodec = ArrayOfJSONCodec<
   RHO,
-  Array<null | { report: any; timeout: number }>
-> = ArrayOfJSONCodec<RHO, RHO[0]>(
+  RHO[0],
+  null | { report: any; timeout: number }
+>(
   NULLORCodec(
     createJSONCodec([
       ["workReport", "report", WorkReportJSONCodec],

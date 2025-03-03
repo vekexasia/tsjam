@@ -12,6 +12,4 @@ export const AuthorizerQueueCodec = (): JamCodec<AuthorizerQueue> =>
   );
 
 export const AuthorizerQueueJSONCodec = (): JSONCodec<AuthorizerQueue> =>
-  ArrayOfJSONCodec<AuthorizerQueue, AuthorizerQueue[0]>(
-    ArrayOfJSONCodec(HashJSONCodec()),
-  );
+  ArrayOfJSONCodec(ArrayOfJSONCodec(HashJSONCodec()));

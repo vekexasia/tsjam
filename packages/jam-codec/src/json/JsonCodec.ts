@@ -115,7 +115,7 @@ export const BufferJSONCodec = <
 };
 
 export const ArrayOfJSONCodec = <K extends T[], T, X>(
-  singleCodec: JSONCodec<T X>,
+  singleCodec: JSONCodec<T, X>,
 ): JSONCodec<K, X[]> => {
   return {
     fromJSON(json) {

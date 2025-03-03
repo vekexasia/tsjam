@@ -23,7 +23,10 @@ export const TicketIdentifierCodec = createCodec<TicketIdentifier>([
   ],
 ]);
 
-export const TicketIdentifierJSONCodec = createJSONCodec<TicketIdentifier>([
+export const TicketIdentifierJSONCodec = createJSONCodec<
+  TicketIdentifier,
+  { id: string; attempt: number }
+>([
   ["id", "id", HashJSONCodec<OpaqueHash>()],
   ["attempt", "attempt", NumberJSONCodec<0 | 1>()],
 ]);

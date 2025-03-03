@@ -98,7 +98,11 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
   [
     "results",
     "results",
-    ArrayOfJSONCodec<WorkReport["results"], WorkResult>(WorkResultJSONCodec),
+    ArrayOfJSONCodec<
+      WorkReport["results"],
+      WorkResult,
+      JC_J<typeof WorkResultJSONCodec>
+    >(WorkResultJSONCodec),
   ],
 ]);
 

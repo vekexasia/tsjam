@@ -10,6 +10,4 @@ export const AuthorizerPoolCodec = (): JamCodec<AuthorizerPool> =>
   createSequenceCodec(CORES, createArrayLengthDiscriminator(HashCodec));
 
 export const AuthorizerPoolJSONCodec = (): JSONCodec<AuthorizerPool> =>
-  ArrayOfJSONCodec<AuthorizerPool, AuthorizerPool[0]>(
-    ArrayOfJSONCodec(HashJSONCodec()),
-  );
+  ArrayOfJSONCodec(ArrayOfJSONCodec(HashJSONCodec()));

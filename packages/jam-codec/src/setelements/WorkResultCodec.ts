@@ -10,6 +10,7 @@ import {
   BigIntJSONCodec,
   createJSONCodec,
   HashJSONCodec,
+  JC_J,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
 
@@ -24,7 +25,16 @@ export const WorkResultCodec = createCodec<WorkResult>([
   ["output", WorkOutputCodec], // o
 ]);
 
-export const WorkResultJSONCodec = createJSONCodec<WorkResult>([
+export const WorkResultJSONCodec = createJSONCodec<
+  WorkResult,
+  {
+    service_id: number;
+    code_hash: string;
+    payload_hash: string;
+    accumulate_gas: number;
+    result: JC_J<typeof WorkOutputJSONCodec>;
+  }
+>([
   ["serviceIndex", "service_id", NumberJSONCodec<ServiceIndex>()],
   ["codeHash", "code_hash", HashJSONCodec()],
   ["payloadHash", "payload_hash", HashJSONCodec()],

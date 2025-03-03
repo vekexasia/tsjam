@@ -57,7 +57,7 @@ export const ValidatorStatistcsJSONCodec: JSONCodec<
   ValidatorStatistics,
   {
     current: SingleValidatorJSONStatistics[];
-    last: SingleValidatorStatistics[];
+    last: SingleValidatorJSONStatistics[];
   }
 > = {
   fromJSON(json) {

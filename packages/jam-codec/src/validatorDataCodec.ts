@@ -26,7 +26,10 @@ export const ValidatorDataCodec = createCodec<ValidatorData>([
   ["metadata", <JamCodec<ByteArrayOfLength<128>>>fixedSizeIdentityCodec(128)],
 ]);
 
-export const ValidatorDataJSONCodec = createJSONCodec<ValidatorData>([
+export const ValidatorDataJSONCodec = createJSONCodec<
+  ValidatorData,
+  { bandersnatch: string; ed25519: string; bls: string; metadata: string }
+>([
   ["banderSnatch", "bandersnatch", BufferJSONCodec<BandersnatchKey, 32>()],
   ["ed25519", "ed25519", Ed25519JSONCodec()],
   ["blsKey", "bls", BufferJSONCodec<BLSKey, 144>()],
@@ -38,4 +41,4 @@ export const ValidatorDataJSONCodec = createJSONCodec<ValidatorData>([
  */
 export const ValidatorDataArrayJSONCodec = <
   T extends ValidatorData[],
->(): JSONCodec<T> => ArrayOfJSONCodec<T, T[0]>(ValidatorDataJSONCodec);
+>(): JSONCodec<T> => ArrayOfJSONCodec(ValidatorDataJSONCodec);
