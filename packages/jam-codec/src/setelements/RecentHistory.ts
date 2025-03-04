@@ -6,10 +6,20 @@ import {
   RecentHistory,
   RecentHistoryItem,
   StateRootHash,
+  WorkPackageHash,
 } from "@tsjam/types";
 import { buildKeyValueCodec } from "@/dicts/keyValue";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator";
 import { JamCodec } from "@/codec";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  HashJSONCodec,
+  JSONCodec,
+  MapJSONCodec,
+  NULLORCodec,
+  WrapJSONCodec,
+} from "@/json/JsonCodec";
 
 /**
  *
@@ -24,3 +34,32 @@ export const RecentHistoryCodec: JamCodec<RecentHistory> =
       ["reportedPackages", buildKeyValueCodec(HashCodec)],
     ]),
   );
+
+export const RecentHistoryJSONCodec: JSONCodec<
+  RecentHistory,
+  Array<{
+    header_hash: string;
+    mmr: { peaks: Array<null | string> };
+    state_root: string;
+    reported: Array<{ hash: string; exports_root: string }>;
+  }>
+> = ArrayOfJSONCodec(
+  createJSONCodec<RecentHistoryItem>([
+    ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
+    [
+      "accumulationResultMMR",
+      "mmr",
+      WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
+    ],
+    ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
+    [
+      "reportedPackages",
+      "reported",
+      MapJSONCodec(
+        { key: "hash", value: "exports_root" },
+        HashJSONCodec<WorkPackageHash>(),
+        HashJSONCodec(),
+      ),
+    ],
+  ]),
+);

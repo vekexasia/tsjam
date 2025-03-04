@@ -16,6 +16,7 @@ import {
   BufferJSONCodec,
   createJSONCodec,
   Ed25519JSONCodec,
+  JC_J,
   JSONCodec,
 } from "./json/JsonCodec";
 
@@ -41,4 +42,5 @@ export const ValidatorDataJSONCodec = createJSONCodec<
  */
 export const ValidatorDataArrayJSONCodec = <
   T extends ValidatorData[],
->(): JSONCodec<T> => ArrayOfJSONCodec(ValidatorDataJSONCodec);
+>(): JSONCodec<T, Array<JC_J<typeof ValidatorDataJSONCodec>>> =>
+  ArrayOfJSONCodec(ValidatorDataJSONCodec);

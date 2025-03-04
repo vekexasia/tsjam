@@ -1,5 +1,7 @@
 import fs from "fs";
 import {
+  AccumulationHistoryCodec,
+  AccumulationQueueCodec,
   Blake2bHashCodec,
   buildKeyValueCodec,
   createArrayLengthDiscriminator,
@@ -32,8 +34,6 @@ import { vi, it, describe, beforeEach, expect } from "vitest";
 import {
   posteriorCodec,
   serviceAccountFromTestInfo,
-  Test_AccHistoryCodec,
-  Test_AccQueueCodec,
   buildTestDeltaCodec,
 } from "@tsjam/codec/test/testCodecs.js";
 import { accumulateReports } from "@/accumulate.js";
@@ -131,8 +131,8 @@ const buildTest = (filename: string, size: string) => {
   const stateCodec = createCodec<TestState>([
     ["slot", E_sub_int<Tau>(4)],
     ["p_eta_0", posteriorCodec(Blake2bHashCodec)],
-    ["accQueue", Test_AccQueueCodec(EPOCH_LENGTH)],
-    ["accHistory", Test_AccHistoryCodec(EPOCH_LENGTH)],
+    ["accQueue", AccumulationQueueCodec(EPOCH_LENGTH)],
+    ["accHistory", AccumulationHistoryCodec(EPOCH_LENGTH)],
     ["privServices", PrivilegedServicesCodec],
     ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
   ]);

@@ -1,53 +1,48 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
   BlockCodec,
   JC_J,
   GammaSJSONCodec,
+  GammaKJSONCodec,
   ValidatorStatistcsJSONCodec,
   AuthorizerQueueJSONCodec,
+  RecentHistoryJSONCodec,
+  TicketIdentifierJSONCodec,
+  DisputesJSONCodec,
+  PrivilegedServicesJSONCodec,
+  RHOJSONCodec,
+  AccumulationQueueJSONCodec,
+  AccumulationHistoryJSONCodec,
+  JSONCodec,
+  createJSONCodec,
+  ArrayOfJSONCodec,
+  GammaAJsonCodec,
 } from "@tsjam/codec";
-import {
-  AccumulationHistory,
-  AccumulationQueue,
-  AuthorizerPool,
-  AuthorizerQueue,
-  IDisputesState,
-  JamState,
-  RecentHistory,
-  RHO,
-  SafroleState,
-  ServiceIndex,
-  Tau,
-} from "@tsjam/types";
+import { JamState, SafroleState, ServiceIndex, Tau } from "@tsjam/types";
 
 type DunaState = {
   alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
   varphi: JC_J<ReturnType<typeof AuthorizerQueueJSONCodec>>;
-  beta: RecentHistory;
+  beta: JC_J<typeof RecentHistoryJSONCodec>;
   gamma: {
-    gamma_k: SafroleState["gamma_k"];
-    gamma_z: SafroleState["gamma_z"];
+    gamma_k: JC_J<typeof GammaKJSONCodec>;
+    gamma_z: string;
     gamma_s: JC_J<typeof GammaSJSONCodec>;
-    gamma_a: SafroleState["gamma_a"];
+    gamma_a: JC_J<typeof TicketIdentifierJSONCodec>;
   };
-  psi: IDisputesState;
+  psi: JC_J<typeof DisputesJSONCodec>;
   eta: JamState["entropy"];
-  iota: JamState["iota"];
-  kappa: JamState["kappa"];
-  lambda: JamState["lambda"];
-  rho: RHO;
+  iota: JC_J<typeof ValidatorStatistcsJSONCodec>;
+  kappa: JC_J<typeof ValidatorStatistcsJSONCodec>;
+  lambda: JC_J<typeof ValidatorStatistcsJSONCodec>;
+  rho: JC_J<typeof RHOJSONCodec>;
   tau: Tau;
-  chi: {
-    chi_m: ServiceIndex;
-    chi_a: ServiceIndex;
-    chi_v: ServiceIndex;
-    chi_g: null | Record<ServiceIndex, number>;
-  };
+  chi: JC_J<typeof PrivilegedServicesJSONCodec>;
   pi: JC_J<typeof ValidatorStatistcsJSONCodec>;
-  theta: AccumulationQueue;
-  xi: AccumulationHistory;
+  theta: JC_J<typeof AccumulationQueueJSONCodec>;
+  xi: JC_J<typeof AccumulationHistoryJSONCodec>;
   accounts: Array<{
     id: ServiceIndex;
     data: {
@@ -69,6 +64,21 @@ type DunaState = {
   }>;
 };
 
+const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
+  ["authPool", "alpha", AuthorizerPoolJSONCodec()],
+  ["authQueue", "varphi", AuthorizerQueueJSONCodec()],
+  ["recentHistory", "beta", RecentHistoryJSONCodec],
+  [
+    "safroleState",
+    "gamma",
+    createJSONCodec<SafroleState, DunaState["gamma"]>([
+      ["gamma_k", "gamma_k", GammaKJSONCodec],
+      ["gamma_s", "gamma_s", GammaSJSONCodec],
+      ["gamma_a", "gamma_a", GammaAJsonCodec],
+      // TODO: ["gamma_z", "gamma_z", null],
+    ]),
+  ],
+]);
 describe("jamduna", () => {
   it("try", () => {
     const kind = "tiny";

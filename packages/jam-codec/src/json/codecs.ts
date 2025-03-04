@@ -1,23 +1,28 @@
 import {
   AccumulationQueue,
   Blake2bHash,
+  Gas,
   GammaSFallback,
   GammaSNormal,
   HeaderHash,
+  IDisputesState,
   JamEntropy,
   JamState,
+  PrivilegedServices,
   RecentHistory,
   RecentHistoryItem,
   RHO,
   SafroleState,
   StateRootHash,
   Tau,
+  ServiceIndex,
   WorkPackageHash,
 } from "@tsjam/types";
 import {
   ArrayOfJSONCodec,
   BufferJSONCodec,
   createJSONCodec,
+  Ed25519JSONCodec,
   EitherOneOfJSONCodec,
   HashJSONCodec,
   JSONCodec,
@@ -35,35 +40,6 @@ import {
   WorkReportJSON,
   WorkReportJSONCodec,
 } from "@/setelements/WorkReportCodec";
-
-export const RecentHistoryJSONCodec: JSONCodec<
-  RecentHistory,
-  Array<{
-    header_hash: string;
-    mmr: { peaks: Array<null | string> };
-    state_root: string;
-    reported: Array<{ hash: string; exports_root: string }>;
-  }>
-> = ArrayOfJSONCodec(
-  createJSONCodec<RecentHistoryItem>([
-    ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
-    [
-      "accumulationResultMMR",
-      "mmr",
-      WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
-    ],
-    ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
-    [
-      "reportedPackages",
-      "reported",
-      MapJSONCodec(
-        { key: "hash", value: "exports_root" },
-        HashJSONCodec<WorkPackageHash>(),
-        HashJSONCodec(),
-      ),
-    ],
-  ]),
-);
 
 export const GammaSJSONCodec: JSONCodec<
   SafroleState["gamma_s"],
@@ -96,39 +72,28 @@ export const KappaJSONCodec = ValidatorDataArrayJSONCodec<JamState["kappa"]>();
 export const LambdaJSONCodec =
   ValidatorDataArrayJSONCodec<JamState["lambda"]>();
 
-export const RHOJSONCodec = ArrayOfJSONCodec<
-  RHO,
-  RHO[0],
-  null | { report: any; timeout: number }
->(
-  NULLORCodec(
-    createJSONCodec([
-      ["workReport", "report", WorkReportJSONCodec],
-      ["reportTime", "timeout", NumberJSONCodec<Tau>()],
-    ]),
-  ),
-);
-
-export const AccumulationQueueJSONCodec: JSONCodec<
-  AccumulationQueue,
-  Array<
-    Array<{
-      report: WorkReportJSON;
-      dependencies: string[];
-    }>
-  >
-> = ArrayOfJSONCodec(
-  ArrayOfJSONCodec(
-    createJSONCodec([
-      ["workReport", "report", WorkReportJSONCodec],
-      [
-        "dependencies",
-        "dependencies",
-        ZipJSONCodecs<string[], WorkPackageHash[], Set<WorkPackageHash>>(
-          ArrayOfJSONCodec(HashJSONCodec<WorkPackageHash>()),
-          SetJSONCodec(),
-        ),
-      ],
-    ]),
-  ),
-);
+export const DisputesJSONCodec: JSONCodec<
+  IDisputesState,
+  { good: string[]; bad: string[]; wonky: string[]; offenders: string[] }
+> = createJSONCodec([
+  [
+    "psi_g",
+    "good",
+    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+  ],
+  [
+    "psi_b",
+    "bad",
+    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+  ],
+  [
+    "psi_w",
+    "wonky",
+    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+  ],
+  [
+    "psi_o",
+    "offenders",
+    ZipJSONCodecs(ArrayOfJSONCodec(Ed25519JSONCodec()), SetJSONCodec()),
+  ],
+]);

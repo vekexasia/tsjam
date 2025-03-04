@@ -87,36 +87,3 @@ export const buildTestDeltaCodec = <T extends Delta>(
     (a, b) => a - b,
   );
 };
-// ReadyQueue | AccumulationQueue in our code
-export const Test_AccQueueCodec = (
-  epochLength: typeof EPOCH_LENGTH, // here to please typescript but any number can be passed
-): JamCodec<AccumulationQueue> =>
-  createSequenceCodec(
-    epochLength,
-    createArrayLengthDiscriminator(
-      createCodec<AccumulationQueue[0][0]>([
-        ["workReport", WorkReportCodec],
-        [
-          "dependencies",
-          mapCodec(
-            createArrayLengthDiscriminator(WorkPackageHashCodec),
-            (v) => new Set(v),
-            (s) => [...s.values()],
-          ),
-        ],
-      ]),
-    ),
-  );
-
-// AccumulatedQueue | AccumulationHistory in our code
-export const Test_AccHistoryCodec = (
-  epochLength: typeof EPOCH_LENGTH,
-): JamCodec<AccumulationHistory> =>
-  createSequenceCodec(
-    epochLength,
-    mapCodec(
-      createArrayLengthDiscriminator(WorkPackageHashCodec),
-      (v) => new Set(v),
-      (s) => [...s.values()],
-    ),
-  );

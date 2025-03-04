@@ -31,6 +31,7 @@ import {
   PrivilegedServicesCodec,
   create32BCodec,
   RecentHistoryCodec,
+  RHOCodec,
 } from "@tsjam/codec";
 import {
   RHO,
@@ -289,16 +290,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 10
-  const rhoCodec = createSequenceCodec(
-    CORES,
-    new Optional(
-      createCodec<NonNullable<RHO[0]>>([
-        ["workReport", WorkReportCodec],
-        ["reportTime", E_sub_int<Tau>(4)],
-      ]),
-    ),
-  );
-  toRet.set(C_fn(10), encodeWithCodec(rhoCodec, state.rho));
+  toRet.set(C_fn(10), encodeWithCodec(RHOCodec, state.rho));
 
   // 11
   toRet.set(C_fn(11), encodeWithCodec(E_4, BigInt(state.tau)));
