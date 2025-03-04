@@ -1,6 +1,11 @@
-import { Ed25519PubkeyCodec, HashCodec } from "@/identity";
+import { JamCodec } from "@/codec";
+import {
+  Ed25519PubkeyCodec,
+  Ed25519SignatureCodec,
+  HashCodec,
+} from "@/identity";
 import { encodeWithCodec } from "@/utils";
-import type { ByteArrayOfLength, ED25519PublicKey, Hash } from "@tsjam/types";
+import type { BigIntBytes, ByteArrayOfLength, Hash } from "@tsjam/types";
 import { hexToBytes, hextToBigInt } from "@tsjam/utils";
 
 /**
@@ -39,9 +44,6 @@ export const createJSONCodec = <T extends object, X = any>(
 
 const bufToHex = (b: Uint8Array) => `0x${Buffer.from(b).toString("hex")}`;
 
-const hashToHex = <T extends Hash>(h: T) =>
-  `${bufToHex(encodeWithCodec(HashCodec, h))}`;
-
 export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
   return {
     fromJSON(json) {
@@ -53,16 +55,34 @@ export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
   };
 };
 
+const BigIntBytesJSONCodec = <T extends BigIntBytes<N>, N extends number>(
+  codec: JamCodec<T>,
+): JSONCodec<T, string> => {
+  return {
+    fromJSON(json) {
+      return codec.decode(Buffer.from(json.substring(2))).value;
+    },
+    toJSON(value) {
+      return `0x${Buffer.from(encodeWithCodec(codec, value)).toString("hex")}`;
+    },
+  };
+};
 /**
  * An array of `X` in json converted in Set of `X`
  */
-export const SetJSONCodec = <T extends Set<X>, X>(): JSONCodec<T, X[]> => {
+export const SetJSONCodec = <T extends Set<X>, X>(
+  sorter?: (a: X, b: X) => number,
+): JSONCodec<T, X[]> => {
   return {
     fromJSON(json) {
       return new Set(json) as T;
     },
     toJSON(value) {
-      return [...value.values()];
+      const toRet = [...value.values()];
+      if (typeof sorter !== "undefined") {
+        toRet.sort(sorter);
+      }
+      return toRet;
     },
   };
 };
@@ -78,27 +98,14 @@ export const NumberJSONCodec = <T extends number>(): JSONCodec<T, number> => {
   };
 };
 
-export const HashJSONCodec = <T extends Hash>(): JSONCodec<T, string> => {
-  return {
-    toJSON(value) {
-      return hashToHex(value);
-    },
-    fromJSON(json) {
-      return hextToBigInt<T, 32>(json);
-    },
-  };
-};
+export const HashJSONCodec = <T extends Hash>(): JSONCodec<T, string> =>
+  BigIntBytesJSONCodec(HashCodec) as JSONCodec<T, string>;
 
-export const Ed25519JSONCodec = (): JSONCodec<ED25519PublicKey, string> => {
-  return {
-    toJSON(value) {
-      return bufToHex(encodeWithCodec(Ed25519PubkeyCodec, value));
-    },
-    fromJSON(json) {
-      return hextToBigInt<ED25519PublicKey, 32>(json);
-    },
-  };
-};
+export const Ed25519SignatureJSONCodec = BigIntBytesJSONCodec(
+  Ed25519SignatureCodec,
+);
+
+export const Ed25519JSONCodec = BigIntBytesJSONCodec(Ed25519PubkeyCodec);
 
 export const BufferJSONCodec = <
   T extends ByteArrayOfLength<K>,

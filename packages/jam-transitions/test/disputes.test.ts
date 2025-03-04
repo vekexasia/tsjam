@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
-import {
-  disputesStateFromTest,
-  disputesStateToTest,
-  validatorEntryMap,
-} from "./utils.js";
+import { validatorEntryMap } from "./utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -45,6 +41,11 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
 import { disputesSTF } from "@/disputesState.js";
 import { DisputeExtrinsic } from "@tsjam/types";
 import { hextToBigInt, toTagged } from "@tsjam/utils";
+import {
+  DisputesJSONCodec,
+  KappaJSONCodec,
+  LambdaJSONCodec,
+} from "@tsjam/codec";
 const buildTest = (name: string, size: "tiny" | "full") => {
   const test = JSON.parse(
     fs.readFileSync(
@@ -88,9 +89,9 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     faults,
   };
 
-  const kappa = test.pre_state.kappa.map(validatorEntryMap);
-  const lambda = test.pre_state.lambda.map(validatorEntryMap);
-  const preDisputesState = disputesStateFromTest(test.pre_state.psi);
+  const kappa = KappaJSONCodec.fromJSON(test.pre_state.kappa);
+  const lambda = LambdaJSONCodec.fromJSON(test.pre_state.lambda);
+  const preDisputesState = DisputesJSONCodec.fromJSON(test.pre_state.psi);
   const [err, post] = disputesSTF(
     { kappa: kappa, lambda, curTau: test.pre_state.tau, extrinsic },
     preDisputesState,
@@ -98,7 +99,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   if (typeof err !== "undefined") {
     throw new Error(err);
   }
-  const postDisputesState = disputesStateToTest(post);
+  const postDisputesState = DisputesJSONCodec.toJSON(post);
   expect(postDisputesState).toEqual(test.post_state.psi);
   // todo: miss check on rho which is present in tests
 };

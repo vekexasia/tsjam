@@ -1,4 +1,4 @@
-import { DisputeExtrinsic, ValidatorIndex } from "@tsjam/types";
+import { DisputeExtrinsic, u32, ValidatorIndex } from "@tsjam/types";
 import { MINIMUM_VALIDATORS } from "@tsjam/constants";
 import { E_4_int, E_sub_int } from "@/ints/E_subscr.js";
 import {
@@ -9,6 +9,15 @@ import {
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { createCodec } from "@/utils";
 import { createSequenceCodec } from "@/sequenceCodec";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  Ed25519JSONCodec,
+  Ed25519SignatureJSONCodec,
+  HashJSONCodec,
+  JSONCodec,
+  NumberJSONCodec,
+} from "@/json/JsonCodec";
 
 const codecEdCreator = () => {
   return createCodec<DisputeExtrinsic>([
@@ -61,6 +70,103 @@ const codecEdCreator = () => {
  */
 export const codec_Ed = codecEdCreator();
 
+const BooleanCodec: JSONCodec<0 | 1, boolean> = {
+  fromJSON(json) {
+    return json ? 1 : 0;
+  },
+  toJSON(value) {
+    return value === 1;
+  },
+};
+
+export const codec_Ed_JSON: JSONCodec<
+  DisputeExtrinsic,
+  {
+    verdicts: Array<{
+      target: string;
+      age: number;
+      votes: Array<{ vote: boolean; index: number; signature: string }>;
+    }>;
+    culprits: Array<{ target: string; key: string; signature: string }>;
+    faults: Array<{
+      target: string;
+      vote: boolean;
+      key: string;
+      signature: string;
+    }>;
+  }
+> = createJSONCodec([
+  [
+    "faults",
+    "faults",
+    ArrayOfJSONCodec<
+      DisputeExtrinsic["faults"],
+      DisputeExtrinsic["faults"][0],
+      {
+        target: string;
+        vote: boolean;
+        key: string;
+        signature: string;
+      }
+    >(
+      createJSONCodec([
+        ["hash", "target", HashJSONCodec()],
+        ["validity", "vote", BooleanCodec],
+        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["signature", "signature", Ed25519SignatureJSONCodec],
+      ]),
+    ),
+  ],
+  [
+    "culprit",
+    "culprits",
+    ArrayOfJSONCodec<
+      DisputeExtrinsic["culprit"],
+      DisputeExtrinsic["culprit"][0],
+      { target: string; key: string; signature: string }
+    >(
+      createJSONCodec([
+        ["hash", "target", HashJSONCodec()],
+        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["signature", "signature", Ed25519SignatureJSONCodec],
+      ]),
+    ),
+  ],
+  [
+    "verdicts",
+    "verdicts",
+    ArrayOfJSONCodec<
+      DisputeExtrinsic["verdicts"],
+      DisputeExtrinsic["verdicts"][0],
+      {
+        target: string;
+        age: number;
+        votes: Array<{ vote: boolean; index: number; signature: string }>;
+      }
+    >(
+      createJSONCodec([
+        ["hash", "target", HashJSONCodec()],
+        ["epochIndex", "age", NumberJSONCodec<u32>()],
+        [
+          "judgements",
+          "votes",
+          ArrayOfJSONCodec<
+            DisputeExtrinsic["verdicts"][0]["judgements"],
+            DisputeExtrinsic["verdicts"][0]["judgements"][0],
+            { vote: boolean; index: number; signature: string }
+          >(
+            createJSONCodec([
+              ["validity", "vote", BooleanCodec],
+              ["validatorIndex", "index", NumberJSONCodec<ValidatorIndex>()],
+              ["signature", "signature", Ed25519SignatureJSONCodec],
+            ]),
+          ),
+        ],
+      ]),
+    ),
+  ],
+]);
+
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, expect, it } = import.meta.vitest;
   const constants = await import("@tsjam/constants");
@@ -76,6 +182,7 @@ if (import.meta.vitest) {
     });
 
     const bin = getCodecFixtureFile("disputes_extrinsic.bin");
+    // TODO: add check on json disputes
     it("disputes_extrinsic.json encoded should match disputes_extrinsic.bin", () => {
       const decoded = codecEdCreator().decode(bin).value;
       expect(codec_Ed.encodedSize(decoded)).toBe(bin.length);

@@ -19,8 +19,15 @@ import {
   createJSONCodec,
   ArrayOfJSONCodec,
   GammaAJsonCodec,
+  BufferJSONCodec,
+  BigIntJSONCodec,
+  IOTAJSONCodec,
+  KappaJSONCodec,
+  LambdaJSONCodec,
+  NumberJSONCodec,
 } from "@tsjam/codec";
 import { JamState, SafroleState, ServiceIndex, Tau } from "@tsjam/types";
+import { hexToBytes, hextToBigInt } from "@tsjam/utils";
 
 type DunaState = {
   alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
@@ -38,7 +45,7 @@ type DunaState = {
   kappa: JC_J<typeof ValidatorStatistcsJSONCodec>;
   lambda: JC_J<typeof ValidatorStatistcsJSONCodec>;
   rho: JC_J<typeof RHOJSONCodec>;
-  tau: Tau;
+  tau: number;
   chi: JC_J<typeof PrivilegedServicesJSONCodec>;
   pi: JC_J<typeof ValidatorStatistcsJSONCodec>;
   theta: JC_J<typeof AccumulationQueueJSONCodec>;
@@ -75,9 +82,31 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
       ["gamma_k", "gamma_k", GammaKJSONCodec],
       ["gamma_s", "gamma_s", GammaSJSONCodec],
       ["gamma_a", "gamma_a", GammaAJsonCodec],
-      // TODO: ["gamma_z", "gamma_z", null],
+      [
+        "gamma_z",
+        "gamma_z",
+        {
+          fromJSON(v) {
+            return hextToBigInt<SafroleState["gamma_z"], 144>(v);
+          },
+          toJSON(v: SafroleState["gamma_z"]) {
+            return `0x${v.toString(16).padStart(144, "0")}`;
+          },
+        },
+      ],
     ]),
   ],
+  ["disputes", "psi", DisputesJSONCodec],
+  //["eta", "psi", DisputesJSONCodec],
+  ["iota", "iota", IOTAJSONCodec],
+  ["kappa", "kappa", KappaJSONCodec],
+  ["lambda", "lambda", LambdaJSONCodec],
+  ["rho", "rho", RHOJSONCodec],
+  ["tau", "tau", NumberJSONCodec<Tau>()],
+  ["privServices", "chi", PrivilegedServicesJSONCodec],
+  ["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
+  ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
+  ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
 ]);
 describe("jamduna", () => {
   it("try", () => {

@@ -79,21 +79,33 @@ export const DisputesJSONCodec: JSONCodec<
   [
     "psi_g",
     "good",
-    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+    ZipJSONCodecs(
+      ArrayOfJSONCodec(HashJSONCodec()),
+      SetJSONCodec((a, b) => Number(a - b)),
+    ),
   ],
   [
     "psi_b",
     "bad",
-    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+    ZipJSONCodecs(
+      ArrayOfJSONCodec(HashJSONCodec()),
+      SetJSONCodec((a, b) => Number(a - b)),
+    ),
   ],
   [
     "psi_w",
     "wonky",
-    ZipJSONCodecs(ArrayOfJSONCodec(HashJSONCodec()), SetJSONCodec()),
+    ZipJSONCodecs(
+      ArrayOfJSONCodec(HashJSONCodec()),
+      SetJSONCodec((a, b) => Number(a - b)),
+    ),
   ],
   [
     "psi_o",
     "offenders",
-    ZipJSONCodecs(ArrayOfJSONCodec(Ed25519JSONCodec()), SetJSONCodec()),
+    ZipJSONCodecs(
+      ArrayOfJSONCodec(Ed25519JSONCodec()),
+      SetJSONCodec((a, b) => Number(a - b)),
+    ),
   ],
 ]);
