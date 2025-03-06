@@ -97,42 +97,6 @@ export const codec_Ed_JSON: JSONCodec<
   }
 > = createJSONCodec([
   [
-    "faults",
-    "faults",
-    ArrayOfJSONCodec<
-      DisputeExtrinsic["faults"],
-      DisputeExtrinsic["faults"][0],
-      {
-        target: string;
-        vote: boolean;
-        key: string;
-        signature: string;
-      }
-    >(
-      createJSONCodec([
-        ["hash", "target", HashJSONCodec()],
-        ["validity", "vote", BooleanCodec],
-        ["ed25519PublicKey", "key", Ed25519JSONCodec],
-        ["signature", "signature", Ed25519SignatureJSONCodec],
-      ]),
-    ),
-  ],
-  [
-    "culprit",
-    "culprits",
-    ArrayOfJSONCodec<
-      DisputeExtrinsic["culprit"],
-      DisputeExtrinsic["culprit"][0],
-      { target: string; key: string; signature: string }
-    >(
-      createJSONCodec([
-        ["hash", "target", HashJSONCodec()],
-        ["ed25519PublicKey", "key", Ed25519JSONCodec],
-        ["signature", "signature", Ed25519SignatureJSONCodec],
-      ]),
-    ),
-  ],
-  [
     "verdicts",
     "verdicts",
     ArrayOfJSONCodec<
@@ -165,6 +129,42 @@ export const codec_Ed_JSON: JSONCodec<
       ]),
     ),
   ],
+  [
+    "culprit",
+    "culprits",
+    ArrayOfJSONCodec<
+      DisputeExtrinsic["culprit"],
+      DisputeExtrinsic["culprit"][0],
+      { target: string; key: string; signature: string }
+    >(
+      createJSONCodec([
+        ["hash", "target", HashJSONCodec()],
+        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["signature", "signature", Ed25519SignatureJSONCodec],
+      ]),
+    ),
+  ],
+  [
+    "faults",
+    "faults",
+    ArrayOfJSONCodec<
+      DisputeExtrinsic["faults"],
+      DisputeExtrinsic["faults"][0],
+      {
+        target: string;
+        vote: boolean;
+        key: string;
+        signature: string;
+      }
+    >(
+      createJSONCodec([
+        ["hash", "target", HashJSONCodec()],
+        ["validity", "vote", BooleanCodec],
+        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["signature", "signature", Ed25519SignatureJSONCodec],
+      ]),
+    ),
+  ],
 ]);
 
 if (import.meta.vitest) {
@@ -182,7 +182,7 @@ if (import.meta.vitest) {
     });
 
     const bin = getCodecFixtureFile("disputes_extrinsic.bin");
-    // TODO: add check on json disputes
+    const json = getCodecFixtureFile("disputes_extrinsic.json");
     it("disputes_extrinsic.json encoded should match disputes_extrinsic.bin", () => {
       const decoded = codecEdCreator().decode(bin).value;
       expect(codec_Ed.encodedSize(decoded)).toBe(bin.length);
@@ -190,6 +190,17 @@ if (import.meta.vitest) {
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
+    });
+    it("disputes_extrinsic.json should be the same encoded and decoded", () => {
+      const original = JSON.parse(Buffer.from(json).toString("utf8"));
+      const decoded = codec_Ed_JSON.fromJSON(original);
+      const decodedBin = codecEdCreator().decode(bin).value;
+      expect(decoded.verdicts, "bin and json encoding").deep.eq(
+        decodedBin.verdicts,
+      );
+
+      const reencoded = codec_Ed_JSON.toJSON(decoded);
+      expect(reencoded).deep.eq(original);
     });
   });
 }

@@ -104,7 +104,7 @@ export const DisputesJSONCodec: JSONCodec<
     "psi_o",
     "offenders",
     ZipJSONCodecs(
-      ArrayOfJSONCodec(Ed25519JSONCodec()),
+      ArrayOfJSONCodec(Ed25519JSONCodec),
       SetJSONCodec((a, b) => Number(a - b)),
     ),
   ],

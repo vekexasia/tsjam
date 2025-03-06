@@ -60,7 +60,7 @@ const BigIntBytesJSONCodec = <T extends BigIntBytes<N>, N extends number>(
 ): JSONCodec<T, string> => {
   return {
     fromJSON(json) {
-      return codec.decode(Buffer.from(json.substring(2))).value;
+      return codec.decode(Buffer.from(json.substring(2), "hex")).value;
     },
     toJSON(value) {
       return `0x${Buffer.from(encodeWithCodec(codec, value)).toString("hex")}`;

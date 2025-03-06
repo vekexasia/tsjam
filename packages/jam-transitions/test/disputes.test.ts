@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
-import { validatorEntryMap } from "./utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -39,9 +38,8 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
   return toRet;
 });
 import { disputesSTF } from "@/disputesState.js";
-import { DisputeExtrinsic } from "@tsjam/types";
-import { hextToBigInt, toTagged } from "@tsjam/utils";
 import {
+  codec_Ed_JSON,
   DisputesJSONCodec,
   KappaJSONCodec,
   LambdaJSONCodec,
@@ -53,41 +51,8 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       "utf-8",
     ),
   );
-  const verdicts: DisputeExtrinsic["verdicts"] =
-    test.input.disputes.verdicts.map(
-      (a: any): DisputeExtrinsic["verdicts"][0] => {
-        return {
-          epochIndex: a.age,
-          hash: toTagged(hextToBigInt(a.target)),
-          judgements: a.votes.map((j: any) => {
-            return {
-              signature: hextToBigInt(j.signature),
-              validity: j.vote ? 1 : 0,
-              validatorIndex: j.index,
-            };
-          }) as unknown as any,
-        };
-      },
-    );
-  const culprits: DisputeExtrinsic["culprit"] =
-    test.input.disputes.culprits.map((e: any) => ({
-      hash: hextToBigInt(e.target),
-      ed25519PublicKey: hextToBigInt(e.key),
-      signature: hextToBigInt(e.signature),
-    }));
-  const faults: DisputeExtrinsic["faults"] = test.input.disputes.faults.map(
-    (e: any) => ({
-      hash: hextToBigInt(e.target),
-      validity: e.vote ? 1 : 0,
-      ed25519PublicKey: hextToBigInt(e.key),
-      signature: hextToBigInt(e.signature),
-    }),
-  );
-  const extrinsic: DisputeExtrinsic = {
-    verdicts,
-    culprit: culprits,
-    faults,
-  };
+
+  const extrinsic = codec_Ed_JSON.fromJSON(test.input.disputes);
 
   const kappa = KappaJSONCodec.fromJSON(test.pre_state.kappa);
   const lambda = LambdaJSONCodec.fromJSON(test.pre_state.lambda);
@@ -101,7 +66,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   }
   const postDisputesState = DisputesJSONCodec.toJSON(post);
   expect(postDisputesState).toEqual(test.post_state.psi);
-  // todo: miss check on rho which is present in tests
+  // TODO: miss check on rho which is present in tests
 };
 describe("disputes-test-vectors", () => {
   describe("tiny", () => {

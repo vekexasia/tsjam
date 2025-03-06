@@ -32,7 +32,7 @@ export const ValidatorDataJSONCodec = createJSONCodec<
   { bandersnatch: string; ed25519: string; bls: string; metadata: string }
 >([
   ["banderSnatch", "bandersnatch", BufferJSONCodec<BandersnatchKey, 32>()],
-  ["ed25519", "ed25519", Ed25519JSONCodec()],
+  ["ed25519", "ed25519", Ed25519JSONCodec],
   ["blsKey", "bls", BufferJSONCodec<BLSKey, 144>()],
   ["metadata", "metadata", BufferJSONCodec<ByteArrayOfLength<128>, 128>()],
 ]);
