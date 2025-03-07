@@ -25,9 +25,30 @@ import {
   KappaJSONCodec,
   LambdaJSONCodec,
   NumberJSONCodec,
+  MapJSONCodec,
+  HashJSONCodec,
+  Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
-import { JamState, SafroleState, ServiceIndex, Tau } from "@tsjam/types";
-import { hexToBytes, hextToBigInt } from "@tsjam/utils";
+import {
+  CodeHash,
+  Gas,
+  Hash,
+  JamState,
+  SafroleState,
+  ServiceAccount,
+  ServiceIndex,
+  Tagged,
+  Tau,
+  u32,
+  u64,
+  UpToSeq,
+} from "@tsjam/types";
+import {
+  hexToBytes,
+  hextToBigInt,
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/utils";
 
 type DunaState = {
   alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
@@ -71,6 +92,93 @@ type DunaState = {
   }>;
 };
 
+const preimageLCodec: JSONCodec<
+  ServiceAccount["preimage_l"],
+  DunaState["accounts"][0]["data"]["lookup_meta"]
+> = {
+  fromJSON(json) {
+    const toRet: ServiceAccount["preimage_l"] = new Map();
+    for (const [, value] of json.entries()) {
+      const h = HashJSONCodec().fromJSON(value.key.hash);
+
+      if (!toRet.has(h)) {
+        toRet.set(h, new Map());
+      }
+      const hMap = toRet.get(h)!;
+      hMap.set(
+        value.key.length as Tagged<u32, "length">,
+        value.value as UpToSeq<u32, 3, "Nt">,
+      );
+    }
+    return toRet;
+  },
+  toJSON(value) {
+    return [...value.entries()]
+      .map(([k, v]) => {
+        return [...v.entries()].map(([length, value]) => {
+          return {
+            key: {
+              hash: HashJSONCodec().toJSON(k),
+              length: NumberJSONCodec().toJSON(length),
+            },
+            value: value,
+          };
+        });
+      })
+      .flat();
+  },
+};
+const accountsCodec: JSONCodec<Delta, DunaState["accounts"]> = MapJSONCodec(
+  { key: "id", value: "data" },
+  NumberJSONCodec<ServiceIndex>(),
+  {
+    fromJSON(json: DunaState["accounts"][0]["data"]) {
+      const x: ServiceAccount = {
+        codeHash: HashJSONCodec<CodeHash>().fromJSON(json.service.code_hash),
+        balance: BigIntJSONCodec<u64>().fromJSON(json.service.balance),
+        minGasAccumulate: BigIntJSONCodec<Gas>().fromJSON(
+          json.service.min_item_gas,
+        ),
+        minGasOnTransfer: BigIntJSONCodec<Gas>().fromJSON(
+          json.service.min_memo_gas,
+        ),
+        storage: new Map(
+          Object.entries(json.storage).map(([k, v]) => {
+            return [HashJSONCodec().fromJSON(k), BufferJSONCodec().fromJSON(v)];
+          }),
+        ),
+        preimage_p: MapJSONCodec(
+          { key: "hash", value: "blob" },
+          HashJSONCodec<Hash>(),
+          Uint8ArrayJSONCodec,
+        ).fromJSON(json.preimages),
+        preimage_l: preimageLCodec.fromJSON(json.lookup_meta),
+      };
+      return x;
+    },
+    toJSON(value) {
+      const ret: DunaState["accounts"][0]["data"] = {
+        service: {
+          code_hash: HashJSONCodec().toJSON(value.codeHash),
+          balance: BigIntJSONCodec().toJSON(value.balance),
+          min_item_gas: BigIntJSONCodec().toJSON(value.minGasAccumulate),
+          min_memo_gas: BigIntJSONCodec().toJSON(value.minGasOnTransfer),
+          items: serviceAccountItemInStorage(value),
+          bytes: Number(serviceAccountTotalOctets(value)),
+        },
+        storage: Object.fromEntries(value.storage.entries()),
+        preimages: [...value.preimage_p.entries()].map(([k, v]) => {
+          return {
+            hash: HashJSONCodec().toJSON(k),
+            blob: Uint8ArrayJSONCodec.toJSON(v),
+          };
+        }),
+        lookup_meta: preimageLCodec.toJSON(value.preimage_l),
+      };
+      return ret;
+    },
+  },
+);
 const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["authPool", "alpha", AuthorizerPoolJSONCodec()],
   ["authQueue", "varphi", AuthorizerQueueJSONCodec()],
@@ -107,6 +215,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
+  ["serviceAccounts", "accounts", accountsCodec],
 ]);
 describe("jamduna", () => {
   it("try", () => {

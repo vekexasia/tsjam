@@ -1,4 +1,4 @@
-import { Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
+import { CodeHash, Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
 
 /**
  * `A` set in the graypaper
@@ -35,7 +35,7 @@ export interface ServiceAccount {
   /**
    * `c` - code hash
    */
-  codeHash: Tagged<Hash, "code-hash">;
+  codeHash: CodeHash;
 
   /**
    * `b` - balance

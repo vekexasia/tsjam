@@ -107,6 +107,15 @@ export const Ed25519SignatureJSONCodec = BigIntBytesJSONCodec(
 
 export const Ed25519JSONCodec = BigIntBytesJSONCodec(Ed25519PubkeyCodec);
 
+export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
+  fromJSON(json) {
+    return hexToBytes(json);
+  },
+  toJSON(value) {
+    return bufToHex(value);
+  },
+};
+
 export const BufferJSONCodec = <
   T extends ByteArrayOfLength<K>,
   K extends number,
