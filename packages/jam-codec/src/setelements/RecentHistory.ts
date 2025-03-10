@@ -19,6 +19,7 @@ import {
   MapJSONCodec,
   NULLORCodec,
   WrapJSONCodec,
+  ZipJSONCodecs,
 } from "@/json/JsonCodec";
 
 /**
@@ -44,22 +45,44 @@ export const RecentHistoryJSONCodec: JSONCodec<
     reported: Array<{ hash: string; exports_root: string }>;
   }>
 > = ArrayOfJSONCodec(
-  createJSONCodec<RecentHistoryItem>([
-    ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
-    [
-      "accumulationResultMMR",
-      "mmr",
-      WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
-    ],
-    ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
-    [
-      "reportedPackages",
-      "reported",
-      MapJSONCodec(
-        { key: "hash", value: "exports_root" },
-        HashJSONCodec<WorkPackageHash>(),
-        HashJSONCodec(),
-      ),
-    ],
-  ]),
+  ZipJSONCodecs(
+    createJSONCodec<
+      RecentHistoryItem,
+      {
+        header_hash: string;
+        mmr: { peaks: Array<null | string> };
+        state_root: string;
+        reported: Array<{ hash: string; exports_root: string }>;
+      }
+    >([
+      ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
+      [
+        "accumulationResultMMR",
+        "mmr",
+        WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
+      ],
+      ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
+      [
+        "reportedPackages",
+        "reported",
+        MapJSONCodec(
+          { key: "hash", value: "exports_root" },
+          HashJSONCodec<WorkPackageHash>(),
+          HashJSONCodec(),
+        ),
+      ],
+    ]),
+    {
+      fromJSON(x) {
+        return x || [];
+      },
+
+      toJSON(v) {
+        if (v.length === 0) {
+          return undefined;
+        }
+        return v;
+      },
+    },
+  ),
 );

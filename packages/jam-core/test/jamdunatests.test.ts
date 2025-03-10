@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
@@ -28,9 +28,11 @@ import {
   MapJSONCodec,
   HashJSONCodec,
   Uint8ArrayJSONCodec,
+  EntropyJSONCodec,
 } from "@tsjam/codec";
 import {
   CodeHash,
+  Delta,
   Gas,
   Hash,
   JamState,
@@ -44,7 +46,6 @@ import {
   UpToSeq,
 } from "@tsjam/types";
 import {
-  hexToBytes,
   hextToBigInt,
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
@@ -61,7 +62,7 @@ type DunaState = {
     gamma_a: JC_J<typeof TicketIdentifierJSONCodec>;
   };
   psi: JC_J<typeof DisputesJSONCodec>;
-  eta: JamState["entropy"];
+  eta: JC_J<typeof EntropyJSONCodec>;
   iota: JC_J<typeof ValidatorStatistcsJSONCodec>;
   kappa: JC_J<typeof ValidatorStatistcsJSONCodec>;
   lambda: JC_J<typeof ValidatorStatistcsJSONCodec>;
@@ -183,6 +184,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["authPool", "alpha", AuthorizerPoolJSONCodec()],
   ["authQueue", "varphi", AuthorizerQueueJSONCodec()],
   ["recentHistory", "beta", RecentHistoryJSONCodec],
+  /*
   [
     "safroleState",
     "gamma",
@@ -205,7 +207,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
     ]),
   ],
   ["disputes", "psi", DisputesJSONCodec],
-  //["eta", "psi", DisputesJSONCodec],
+  ["entropy", "eta", EntropyJSONCodec],
   ["iota", "iota", IOTAJSONCodec],
   ["kappa", "kappa", KappaJSONCodec],
   ["lambda", "lambda", LambdaJSONCodec],
@@ -216,9 +218,10 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],
+  */
 ]);
 describe("jamduna", () => {
-  it("try", () => {
+  it("try ciao", () => {
     const kind = "tiny";
 
     const gen = BlockCodec.decode(
@@ -227,14 +230,20 @@ describe("jamduna", () => {
       ),
     );
 
-    const state = fs.readFileSync(
-      `${__dirname}/../../../jamtestnet/chainspecs/state_snapshots/genesis-${kind}.json`,
-      "utf8",
+    const state = JSON.parse(
+      fs.readFileSync(
+        `${__dirname}/../../../jamtestnet/chainspecs/state_snapshots/genesis-${kind}.json`,
+        "utf8",
+      ),
     );
 
-    console.log(state);
+    const tsJamState = stateCodec.fromJSON(state);
+    console.log(tsJamState);
 
     // console.log(gen.value.header.blockAuthorKeyIndex);
     //console.log("ciao");
+  });
+  it("test ", () => {
+    expect("ciao").toBe("ciao");
   });
 });
