@@ -1,8 +1,31 @@
 import { JamCodec } from "@/codec.js";
-import { SignedJamHeader } from "@tsjam/types";
+import {
+  Blake2bHash,
+  HeaderHash,
+  JamHeader,
+  SignedJamHeader,
+  StateRootHash,
+  Tau,
+  ValidatorIndex,
+} from "@tsjam/types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
-import { BandersnatchSignatureCodec } from "@/identity.js";
+import { BandersnatchCodec, BandersnatchSignatureCodec } from "@/identity.js";
+import {
+  ArrayOfJSONCodec,
+  BandersnatchKeyJSONCodec,
+  BandersnatchSignatureJSONCodec,
+  BigIntJSONCodec,
+  createJSONCodec,
+  Ed25519JSONCodec,
+  HashJSONCodec,
+  JC_J,
+  JSONCodec,
+  NULLORCodec,
+  NumberJSONCodec,
+  Uint8ArrayJSONCodec,
+} from "@/json/JsonCodec";
+import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -41,6 +64,61 @@ export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
     return UnsignedHeaderCodec.encodedSize(value) + 96;
   },
 };
+
+export const SignedHeaderJSONCodec: JSONCodec<
+  SignedJamHeader,
+  {
+    parent: string;
+    parent_state_root: string;
+    extrinsic_hash: string;
+    slot: number;
+    epoch_mark: {
+      entropy: string;
+      tickets_entropy: string;
+      validators: string[];
+    };
+    tickets_mark: null | Array<JC_J<typeof TicketIdentifierJSONCodec>>;
+    offenders_mark: string[];
+    author_index: number;
+    entropy_source: string;
+    seal: string;
+  }
+> = createJSONCodec([
+  ["parent", "parent", HashJSONCodec<HeaderHash>()],
+  ["priorStateRoot", "parent_state_root", HashJSONCodec<StateRootHash>()],
+  ["extrinsicHash", "extrinsic_hash", HashJSONCodec()],
+  ["timeSlotIndex", "slot", NumberJSONCodec<Tau>()],
+  [
+    "epochMarker",
+    "epoch_mark",
+    NULLORCodec(
+      createJSONCodec<NonNullable<SignedJamHeader["epochMarker"]>>([
+        ["entropy", "entropy", HashJSONCodec<Blake2bHash>()],
+        ["entropy2", "tickets_entropy", HashJSONCodec<Blake2bHash>()],
+        [
+          "validatorKeys",
+          "validators",
+          ArrayOfJSONCodec<
+            NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"],
+            NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"][0],
+            string
+          >(BandersnatchKeyJSONCodec),
+        ],
+      ]),
+    ),
+  ],
+  [
+    "winningTickets",
+    "tickets_mark",
+    <JSONCodec<JamHeader["winningTickets"], any>>(
+      NULLORCodec(ArrayOfJSONCodec(TicketIdentifierJSONCodec))
+    ),
+  ],
+  ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519JSONCodec)],
+  ["blockAuthorKeyIndex", "author_index", NumberJSONCodec<ValidatorIndex>()],
+  ["entropySignature", "entropy_source", BandersnatchSignatureJSONCodec],
+  ["blockSeal", "seal", BandersnatchSignatureJSONCodec],
+]);
 
 if (import.meta.vitest) {
   const { vi, beforeAll, describe, it, expect } = import.meta.vitest;
@@ -94,6 +172,22 @@ if (import.meta.vitest) {
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin).toString("hex"),
         );
+
+        const json = SignedHeaderJSONCodec.fromJSON(
+          JSON.parse(
+            Buffer.from(getCodecFixtureFile("header_0.json")).toString("utf8"),
+          ),
+        );
+
+        expect(json).deep.eq(decoded);
+
+        // reencode and compare
+        const reencodedJson = SignedHeaderJSONCodec.toJSON(json);
+        expect(reencodedJson).deep.eq(
+          JSON.parse(
+            Buffer.from(getCodecFixtureFile("header_0.json")).toString("utf8"),
+          ),
+        );
       });
     });
     describe("header_1", () => {
@@ -107,6 +201,22 @@ if (import.meta.vitest) {
         const reencoded = encodeWithCodec(SignedHeaderCodec, decoded);
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin).toString("hex"),
+        );
+
+        const json = SignedHeaderJSONCodec.fromJSON(
+          JSON.parse(
+            Buffer.from(getCodecFixtureFile("header_1.json")).toString("utf8"),
+          ),
+        );
+        expect(json).deep.eq(decoded);
+
+        // reencode and compare
+        const reencodedJson = SignedHeaderJSONCodec.toJSON(json);
+
+        expect(reencodedJson).deep.eq(
+          JSON.parse(
+            Buffer.from(getCodecFixtureFile("header_1.json")).toString("utf8"),
+          ),
         );
       });
     });
