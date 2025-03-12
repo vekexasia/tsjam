@@ -1,11 +1,18 @@
 import { JamCodec } from "@/codec";
 import {
+  BandersnatchCodec,
+  BandersnatchSignatureCodec,
   Ed25519PubkeyCodec,
   Ed25519SignatureCodec,
   HashCodec,
 } from "@/identity";
 import { encodeWithCodec } from "@/utils";
-import type { BigIntBytes, ByteArrayOfLength, Hash } from "@tsjam/types";
+import {
+  BandersnatchKey,
+  type BigIntBytes,
+  type ByteArrayOfLength,
+  type Hash,
+} from "@tsjam/types";
 import { hexToBytes, hextToBigInt } from "@tsjam/utils";
 
 /**
@@ -106,6 +113,10 @@ export const Ed25519SignatureJSONCodec = BigIntBytesJSONCodec(
 );
 
 export const Ed25519JSONCodec = BigIntBytesJSONCodec(Ed25519PubkeyCodec);
+
+export const BandersnatchSignatureJSONCodec = BigIntBytesJSONCodec(
+  BandersnatchSignatureCodec,
+);
 
 export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   fromJSON(json) {
@@ -245,6 +256,8 @@ export const ZipJSONCodecs = <A, B, C>(
     },
   };
 };
+
+export const BandersnatchKeyJSONCodec = BufferJSONCodec<BandersnatchKey, 32>();
 
 // Get the V type (first generic parameter)
 export type JC_V<T extends JSONCodec<any, any>> =

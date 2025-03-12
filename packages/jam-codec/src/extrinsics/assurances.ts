@@ -17,6 +17,7 @@ import {
   createJSONCodec,
   Ed25519SignatureJSONCodec,
   HashJSONCodec,
+  JSONCodec,
   NumberJSONCodec,
   ZipJSONCodecs,
 } from "@/json/JsonCodec";
@@ -84,7 +85,7 @@ export const codec_Ea = createArrayLengthDiscriminator(
   singleExtrinsicCodec,
 ) as unknown as JamCodec<EA_Extrinsic>;
 
-export const codec_Ea_JSON = ArrayOfJSONCodec(
+export const codec_Ea_JSON = <JSONCodec<EA_Extrinsic, any>>ArrayOfJSONCodec(
   createJSONCodec<
     AssuranceExtrinsic,
     {

@@ -16,10 +16,9 @@ import {
 import { createCodec } from "@/utils.js";
 import {
   ArrayOfJSONCodec,
-  BigIntJSONCodec,
   createJSONCodec,
   Ed25519SignatureJSONCodec,
-  JC_J,
+  JSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
 
@@ -61,7 +60,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
   ]),
 );
 
-export const codec_Eg_JSON = ArrayOfJSONCodec(
+export const codec_Eg_JSON = <JSONCodec<EG_Extrinsic>>ArrayOfJSONCodec(
   createJSONCodec<
     EG_Extrinsic[0],
     {

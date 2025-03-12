@@ -50,6 +50,7 @@ import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
+import { importBlock } from "@/importBlock";
 
 type DunaState = {
   alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
@@ -220,7 +221,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
 ]);
 describe("jamduna", () => {
   it("try ciao", () => {
-    const kind = "tiny";
+    const kind = "full";
 
     const gen = BlockCodec.decode(
       fs.readFileSync(
@@ -237,6 +238,24 @@ describe("jamduna", () => {
 
     const tsJamState = stateCodec.fromJSON(state);
     console.log(tsJamState);
+
+    const newBlock = BlockCodec.decode(
+      fs.readFileSync(
+        `${__dirname}/../../../jamtestnet/data/fallback/blocks/1_000.bin`,
+      ),
+    );
+    console.log(newBlock);
+
+    const newState = JSON.parse(
+      fs.readFileSync(
+        `${__dirname}/../../../jamtestnet/data/fallback/state_snapshots/1_000.json`,
+        "utf8",
+      ),
+    );
+    const [error, tsJamNewState] = importBlock(newBlock.value, state).safeRet();
+    console.log("error", error);
+    if (typeof error === "undefined") {
+    }
 
     // console.log(gen.value.header.blockAuthorKeyIndex);
     //console.log("ciao");
