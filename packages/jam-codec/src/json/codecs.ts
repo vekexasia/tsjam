@@ -1,22 +1,11 @@
 import {
-  AccumulationQueue,
   Blake2bHash,
-  Gas,
   GammaSFallback,
   GammaSNormal,
-  HeaderHash,
   IDisputesState,
   JamEntropy,
   JamState,
-  PrivilegedServices,
-  RecentHistory,
-  RecentHistoryItem,
-  RHO,
   SafroleState,
-  StateRootHash,
-  Tau,
-  ServiceIndex,
-  WorkPackageHash,
 } from "@tsjam/types";
 import {
   ArrayOfJSONCodec,
@@ -25,21 +14,14 @@ import {
   Ed25519JSONCodec,
   EitherOneOfJSONCodec,
   HashJSONCodec,
+  JC_J,
   JSONCodec,
-  MapJSONCodec,
-  NULLORCodec,
-  NumberJSONCodec,
   SetJSONCodec,
-  WrapJSONCodec,
   ZipJSONCodecs,
 } from "./JsonCodec";
 import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 import { isFallbackMode } from "@tsjam/utils";
 import { ValidatorDataArrayJSONCodec } from "@/validatorDataCodec";
-import {
-  WorkReportJSON,
-  WorkReportJSONCodec,
-} from "@/setelements/WorkReportCodec";
 
 export const GammaSJSONCodec: JSONCodec<
   SafroleState["gamma_s"],
@@ -52,10 +34,10 @@ export const GammaSJSONCodec: JSONCodec<
   (v) => isFallbackMode(v),
 );
 
-export const GammaAJsonCodec = WrapJSONCodec<
+export const GammaAJsonCodec: JSONCodec<
   SafroleState["gamma_a"],
-  "tickets"
->("tickets", ArrayOfJSONCodec(TicketIdentifierJSONCodec));
+  Array<JC_J<typeof TicketIdentifierJSONCodec>>
+> = ArrayOfJSONCodec(TicketIdentifierJSONCodec);
 
 //TODO: psi/DisputesState
 

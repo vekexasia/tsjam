@@ -45,7 +45,7 @@ const buildTest = (name: string) => {
     dagger,
   ).safeRet();
 
-  const normalizedPosterior = RecentHistoryJSONCodec.toJSON(posterior);
+  const normalizedPosterior = RecentHistoryJSONCodec.toJSON(posterior)!;
 
   for (let i = 0; i < normalizedPosterior.length; i++) {
     expect(normalizedPosterior[i], `${i}`).toEqual(test.post_state.beta[i]);

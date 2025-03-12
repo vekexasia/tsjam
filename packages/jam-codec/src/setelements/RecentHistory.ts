@@ -43,9 +43,23 @@ export const RecentHistoryJSONCodec: JSONCodec<
     mmr: { peaks: Array<null | string> };
     state_root: string;
     reported: Array<{ hash: string; exports_root: string }>;
-  }>
-> = ArrayOfJSONCodec(
-  ZipJSONCodecs(
+  }> | null
+> = ZipJSONCodecs(
+  {
+    fromJSON(json) {
+      if (json === null) {
+        return [];
+      }
+      return json;
+    },
+    toJSON(value) {
+      if (value.length === 0) {
+        return null;
+      }
+      return value;
+    },
+  },
+  ArrayOfJSONCodec(
     createJSONCodec<
       RecentHistoryItem,
       {
@@ -72,17 +86,5 @@ export const RecentHistoryJSONCodec: JSONCodec<
         ),
       ],
     ]),
-    {
-      fromJSON(x) {
-        return x || [];
-      },
-
-      toJSON(v) {
-        if (v.length === 0) {
-          return undefined;
-        }
-        return v;
-      },
-    },
   ),
 );

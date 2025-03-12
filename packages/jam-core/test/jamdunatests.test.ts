@@ -144,7 +144,7 @@ const accountsCodec: JSONCodec<Delta, DunaState["accounts"]> = MapJSONCodec(
           json.service.min_memo_gas,
         ),
         storage: new Map(
-          Object.entries(json.storage).map(([k, v]) => {
+          Object.entries(json.storage || {}).map(([k, v]) => {
             return [HashJSONCodec().fromJSON(k), BufferJSONCodec().fromJSON(v)];
           }),
         ),
@@ -184,7 +184,6 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["authPool", "alpha", AuthorizerPoolJSONCodec()],
   ["authQueue", "varphi", AuthorizerQueueJSONCodec()],
   ["recentHistory", "beta", RecentHistoryJSONCodec],
-  /*
   [
     "safroleState",
     "gamma",
@@ -218,7 +217,6 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],
-  */
 ]);
 describe("jamduna", () => {
   it("try ciao", () => {
