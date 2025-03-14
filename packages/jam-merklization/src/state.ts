@@ -11,42 +11,33 @@ import {
   E_4,
   E_4_int,
   E_8,
-  E_M,
-  E_sub_int,
   Ed25519PubkeyCodec,
   HashCodec,
   IdentityCodec,
   JamCodec,
-  Optional,
   TicketIdentifierCodec,
   ValidatorDataCodec,
   WorkReportCodec,
   bit,
-  buildKeyValueCodec,
   createArrayLengthDiscriminator,
   createSetCodec,
   encodeWithCodec,
   ValidatorStatisticsCodec,
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
-  create32BCodec,
   RecentHistoryCodec,
   RHOCodec,
 } from "@tsjam/codec";
 import {
-  RHO,
   Hash,
   JamState,
-  RecentHistoryItem,
   ServiceIndex,
-  Tau,
   WorkPackageHash,
   WorkReport,
   SafroleState,
   ByteArrayOfLength,
   SeqOfLength,
   StateRootHash,
-  HeaderHash,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -56,7 +47,7 @@ import {
 } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * Merkelize state
@@ -290,7 +281,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 10
-  toRet.set(C_fn(10), encodeWithCodec(RHOCodec, state.rho));
+  toRet.set(C_fn(10), encodeWithCodec(RHOCodec(), state.rho));
 
   // 11
   toRet.set(C_fn(11), encodeWithCodec(E_4, BigInt(state.tau)));

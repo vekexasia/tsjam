@@ -71,7 +71,7 @@ export const verifySeal = (
   p_state: Posterior<JamState>,
 ): boolean => {
   const ha = getBlockAuthorKey(header, toPosterior(p_state.kappa));
-  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
+  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec(), header);
   if (typeof ha === "undefined") {
     // invalid block author key
     return false;
@@ -262,7 +262,7 @@ export const verifyOffenders = (
 export const verifyEA = (
   ea: EA_Extrinsic,
   hp: JamHeader["parent"],
-  ht: JamHeader["timeSlotIndex"],
+  ht: JamHeader["timeSlotIndex"], // TODO:remove?
   p_kappa: Posterior<JamState["kappa"]>,
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {

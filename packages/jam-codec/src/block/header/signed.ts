@@ -1,4 +1,3 @@
-import { JamCodec } from "@/codec.js";
 import {
   Blake2bHash,
   HeaderHash,
@@ -10,12 +9,11 @@ import {
 } from "@tsjam/types";
 import { UnsignedHeaderCodec } from "@/block/header/unsigned.js";
 import assert from "node:assert";
-import { BandersnatchCodec, BandersnatchSignatureCodec } from "@/identity.js";
+import { BandersnatchSignatureCodec } from "@/identity.js";
 import {
   ArrayOfJSONCodec,
   BandersnatchKeyJSONCodec,
   BandersnatchSignatureJSONCodec,
-  BigIntJSONCodec,
   createJSONCodec,
   Ed25519JSONCodec,
   HashJSONCodec,
@@ -23,7 +21,6 @@ import {
   JSONCodec,
   NULLORCodec,
   NumberJSONCodec,
-  Uint8ArrayJSONCodec,
 } from "@/json/JsonCodec";
 import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 
@@ -32,37 +29,40 @@ import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
  * it does use the UnsignedHeaderCodec and appends the block seal
  * $(0.6.1 - C.19)
  */
-export const SignedHeaderCodec: JamCodec<SignedJamHeader> = {
-  decode(bytes: Uint8Array) {
-    const unsignedHeader = UnsignedHeaderCodec.decode(bytes);
-    return {
-      value: {
-        ...unsignedHeader.value,
-        blockSeal: BandersnatchSignatureCodec.decode(
-          bytes.subarray(
-            unsignedHeader.readBytes,
-            unsignedHeader.readBytes + 96,
-          ),
-        ).value,
-      },
-      readBytes: unsignedHeader.readBytes + 96,
-    };
-  },
-  encode(value: SignedJamHeader, bytes: Uint8Array): number {
-    assert.ok(
-      bytes.length >= this.encodedSize(value),
-      `SignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
-    );
-    const consumedBytes = UnsignedHeaderCodec.encode(value, bytes);
-    BandersnatchSignatureCodec.encode(
-      value.blockSeal,
-      bytes.subarray(consumedBytes, consumedBytes + 96),
-    );
-    return consumedBytes + 96;
-  },
-  encodedSize(value: SignedJamHeader): number {
-    return UnsignedHeaderCodec.encodedSize(value) + 96;
-  },
+export const SignedHeaderCodec = () => {
+  const unsignedHeaderCodec = UnsignedHeaderCodec();
+  return {
+    decode(bytes: Uint8Array) {
+      const unsignedHeader = unsignedHeaderCodec.decode(bytes);
+      return {
+        value: {
+          ...unsignedHeader.value,
+          blockSeal: BandersnatchSignatureCodec.decode(
+            bytes.subarray(
+              unsignedHeader.readBytes,
+              unsignedHeader.readBytes + 96,
+            ),
+          ).value,
+        },
+        readBytes: unsignedHeader.readBytes + 96,
+      };
+    },
+    encode(value: SignedJamHeader, bytes: Uint8Array): number {
+      assert.ok(
+        bytes.length >= this.encodedSize(value),
+        `SignedHeaderCodec: not enough space in buffer when encoding, expected ${this.encodedSize(value)}, got ${bytes.length}`,
+      );
+      const consumedBytes = unsignedHeaderCodec.encode(value, bytes);
+      BandersnatchSignatureCodec.encode(
+        value.blockSeal,
+        bytes.subarray(consumedBytes, consumedBytes + 96),
+      );
+      return consumedBytes + 96;
+    },
+    encodedSize(value: SignedJamHeader): number {
+      return unsignedHeaderCodec.encodedSize(value) + 96;
+    },
+  };
 };
 
 export const SignedHeaderJSONCodec: JSONCodec<
@@ -166,9 +166,9 @@ if (import.meta.vitest) {
         bin = getCodecFixtureFile("header_0.bin");
       });
       it("should encode/decode properly", () => {
-        const decoded = SignedHeaderCodec.decode(bin).value;
-        expect(SignedHeaderCodec.encodedSize(decoded)).toBe(bin.length);
-        const reencoded = encodeWithCodec(SignedHeaderCodec, decoded);
+        const decoded = SignedHeaderCodec().decode(bin).value;
+        expect(SignedHeaderCodec().encodedSize(decoded)).toBe(bin.length);
+        const reencoded = encodeWithCodec(SignedHeaderCodec(), decoded);
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin).toString("hex"),
         );
@@ -196,9 +196,9 @@ if (import.meta.vitest) {
       });
 
       it("should encode/decode properly", () => {
-        const decoded = SignedHeaderCodec.decode(bin).value;
-        expect(SignedHeaderCodec.encodedSize(decoded)).toBe(bin.length);
-        const reencoded = encodeWithCodec(SignedHeaderCodec, decoded);
+        const decoded = SignedHeaderCodec().decode(bin).value;
+        expect(SignedHeaderCodec().encodedSize(decoded)).toBe(bin.length);
+        const reencoded = encodeWithCodec(SignedHeaderCodec(), decoded);
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin).toString("hex"),
         );

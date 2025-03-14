@@ -123,7 +123,7 @@ export const createBlock = (
     ),
   };
 
-  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec, header);
+  const encodedHeader = encodeWithCodec(UnsignedHeaderCodec(), header);
   const seal: BandersnatchSignature = Bandersnatch.sign(
     data.bandersnatchPrivateKey,
     encodedHeader,

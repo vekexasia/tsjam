@@ -12,15 +12,16 @@ import {
   NumberJSONCodec,
 } from "@/json/JsonCodec.js";
 
-export const RHOCodec = createSequenceCodec(
-  CORES,
-  new Optional(
-    createCodec<NonNullable<RHO[0]>>([
-      ["workReport", WorkReportCodec],
-      ["reportTime", E_sub_int<Tau>(4)],
-    ]),
-  ),
-);
+export const RHOCodec = () =>
+  createSequenceCodec(
+    CORES,
+    new Optional(
+      createCodec<NonNullable<RHO[0]>>([
+        ["workReport", WorkReportCodec],
+        ["reportTime", E_sub_int<Tau>(4)],
+      ]),
+    ),
+  );
 
 export const RHOJSONCodec = ArrayOfJSONCodec<
   RHO,

@@ -1,7 +1,15 @@
 import { BLOCK_TIME } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
-import { HeaderHash, JamBlock, JamState, STF } from "@tsjam/types";
+import {
+  AvailableWorkReports,
+  HeaderHash,
+  JamBlock,
+  JamHeader,
+  JamState,
+  SignedJamHeader,
+  STF,
+} from "@tsjam/types";
 import {
   DeltaToPosteriorError,
   DisputesToPosteriorError,
@@ -28,7 +36,11 @@ import {
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import { UnsignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
+import {
+  SignedHeaderCodec,
+  UnsignedHeaderCodec,
+  encodeWithCodec,
+} from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   EpochMarkerError,
@@ -92,6 +104,7 @@ export const importBlock: STF<
   ) {
     return err(ImportBlockError.InvalidSlot);
   }
+
   const [, p_entropy] = rotateEntropy(
     {
       ...tauTransition,
@@ -287,9 +300,7 @@ export const importBlock: STF<
     return err(pDeltaError);
   }
 
-  const headerHash = Hashing.blake2b<HeaderHash>(
-    encodeWithCodec(UnsignedHeaderCodec, block.header),
-  );
+  const headerHash = computeHeaderHash(block.header);
   const [, p_recentHistory] = recentHistoryToPosterior(
     {
       accumulateRoot,
@@ -397,4 +408,10 @@ export const importBlock: STF<
   }
 
   return ok(p_state);
+};
+
+export const computeHeaderHash = (header: SignedJamHeader) => {
+  return Hashing.blake2b<HeaderHash>(
+    encodeWithCodec(SignedHeaderCodec(), header),
+  );
 };

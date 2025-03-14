@@ -15,19 +15,20 @@ import { createJSONCodec, JC_J, JSONCodec } from "@/json/JsonCodec";
  * Codec for block extrinsic. used in both block serialiation and computing `Hx`
  * $(0.6.1 - C.13)
  */
-export const BlockCodec = createCodec<JamBlock>([
-  ["header", SignedHeaderCodec],
-  [
-    "extrinsics",
-    createCodec<JamBlock["extrinsics"]>([
-      ["tickets", codec_Et],
-      ["preimages", codec_Ep],
-      ["reportGuarantees", codec_Eg],
-      ["assurances", codec_Ea],
-      ["disputes", codec_Ed],
-    ]),
-  ],
-]);
+export const BlockCodec = () =>
+  createCodec<JamBlock>([
+    ["header", SignedHeaderCodec()],
+    [
+      "extrinsics",
+      createCodec<JamBlock["extrinsics"]>([
+        ["tickets", codec_Et],
+        ["preimages", codec_Ep],
+        ["reportGuarantees", codec_Eg],
+        ["assurances", codec_Ea],
+        ["disputes", codec_Ed],
+      ]),
+    ],
+  ]);
 
 export const BlockJSONCodec: JSONCodec<
   JamBlock,
@@ -63,9 +64,9 @@ if (import.meta.vitest) {
   describe("Block", () => {
     const bin = getCodecFixtureFile("block.bin");
     it("should match block.bin", () => {
-      const decoded = BlockCodec.decode(bin).value;
-      expect(BlockCodec.encodedSize(decoded)).toBe(bin.length);
-      const reencoded = encodeWithCodec(BlockCodec, decoded);
+      const decoded = BlockCodec().decode(bin).value;
+      expect(BlockCodec().encodedSize(decoded)).toBe(bin.length);
+      const reencoded = encodeWithCodec(BlockCodec(), decoded);
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -82,7 +83,7 @@ if (import.meta.vitest) {
         Buffer.from(getCodecFixtureFile("block.json")).toString("utf8"),
       );
       const jsonDecoded = BlockJSONCodec.fromJSON(json);
-      const decoded = BlockCodec.decode(bin).value;
+      const decoded = BlockCodec().decode(bin).value;
       expect(jsonDecoded).deep.eq(decoded);
     });
   });

@@ -26,42 +26,43 @@ import { createCodec } from "@/utils";
  * `Eu` codec
  * $(0.6.1 - C.20)
  */
-export const UnsignedHeaderCodec = createCodec<JamHeader>([
-  ["parent", create32BCodec<HeaderHash>()],
-  ["priorStateRoot", create32BCodec<StateRootHash>()],
-  ["extrinsicHash", HashCodec],
-  ["timeSlotIndex", E_sub_int<Tau>(4)],
-  [
-    "epochMarker",
-    new Optional(
-      createCodec<NonNullable<JamHeader["epochMarker"]>>([
-        ["entropy", Blake2bHashCodec],
-        ["entropy2", Blake2bHashCodec],
-        [
-          "validatorKeys",
-          createSequenceCodec<
-            NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
-          >(NUMBER_OF_VALIDATORS, BandersnatchCodec),
-        ],
-      ]),
-    ),
-  ],
-  [
-    "winningTickets",
-    new Optional(createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec)),
-  ],
-  [
-    "offenders",
-    createArrayLengthDiscriminator({
-      ...Ed25519PubkeyCodec,
-      encode(value: ED25519PublicKey, bytes: Uint8Array): number {
-        return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
-      },
-      decode(bytes: Uint8Array) {
-        return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
-      },
-    }),
-  ],
-  ["blockAuthorKeyIndex", E_sub_int<ValidatorIndex>(2)],
-  ["entropySignature", BandersnatchSignatureCodec],
-]);
+export const UnsignedHeaderCodec = () =>
+  createCodec<JamHeader>([
+    ["parent", create32BCodec<HeaderHash>()],
+    ["priorStateRoot", create32BCodec<StateRootHash>()],
+    ["extrinsicHash", HashCodec],
+    ["timeSlotIndex", E_sub_int<Tau>(4)],
+    [
+      "epochMarker",
+      new Optional(
+        createCodec<NonNullable<JamHeader["epochMarker"]>>([
+          ["entropy", Blake2bHashCodec],
+          ["entropy2", Blake2bHashCodec],
+          [
+            "validatorKeys",
+            createSequenceCodec<
+              NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
+            >(NUMBER_OF_VALIDATORS, BandersnatchCodec),
+          ],
+        ]),
+      ),
+    ],
+    [
+      "winningTickets",
+      new Optional(createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec)),
+    ],
+    [
+      "offenders",
+      createArrayLengthDiscriminator({
+        ...Ed25519PubkeyCodec,
+        encode(value: ED25519PublicKey, bytes: Uint8Array): number {
+          return Ed25519PubkeyCodec.encode(value, bytes.subarray(0, 32));
+        },
+        decode(bytes: Uint8Array) {
+          return Ed25519PubkeyCodec.decode(bytes.subarray(0, 32));
+        },
+      }),
+    ],
+    ["blockAuthorKeyIndex", E_sub_int<ValidatorIndex>(2)],
+    ["entropySignature", BandersnatchSignatureCodec],
+  ]);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
@@ -17,7 +17,6 @@ import {
   AccumulationHistoryJSONCodec,
   JSONCodec,
   createJSONCodec,
-  ArrayOfJSONCodec,
   GammaAJsonCodec,
   BufferJSONCodec,
   BigIntJSONCodec,
@@ -29,13 +28,17 @@ import {
   HashJSONCodec,
   Uint8ArrayJSONCodec,
   EntropyJSONCodec,
+  BlockJSONCodec,
 } from "@tsjam/codec";
 import {
   CodeHash,
+  Dagger,
   Delta,
   Gas,
   Hash,
   JamState,
+  MerkleTreeRoot,
+  RecentHistory,
   SafroleState,
   ServiceAccount,
   ServiceIndex,
@@ -50,7 +53,45 @@ import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
-import { importBlock } from "@/importBlock";
+import { computeHeaderHash, importBlock } from "@/importBlock";
+import { recentHistoryToPosterior } from "@tsjam/transitions";
+
+const mocks = vi.hoisted(() => {
+  return {
+    CORES: 341,
+    NUMBER_OF_VALIDATORS: 1023,
+    EPOCH_LENGTH: 600,
+    VALIDATOR_CORE_ROTATION: 10,
+  };
+});
+vi.mock("@tsjam/constants", async (importOriginal) => {
+  const toRet = {
+    ...(await importOriginal<typeof import("@tsjam/constants")>()),
+    ...mocks,
+  };
+
+  Object.defineProperty(toRet, "VALIDATOR_CORE_ROTATION", {
+    get() {
+      return mocks.VALIDATOR_CORE_ROTATION;
+    },
+  });
+  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
+    get() {
+      return mocks.NUMBER_OF_VALIDATORS;
+    },
+  });
+  Object.defineProperty(toRet, "EPOCH_LENGTH", {
+    get() {
+      return mocks.EPOCH_LENGTH;
+    },
+  });
+  Object.defineProperty(toRet, "CORES", {
+    get() {
+      return mocks.CORES;
+    },
+  });
+  return toRet;
+});
 
 type DunaState = {
   alpha: JC_J<ReturnType<typeof AuthorizerPoolJSONCodec>>;
@@ -220,31 +261,64 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["serviceAccounts", "accounts", accountsCodec],
 ]);
 describe("jamduna", () => {
+  beforeEach(() => {
+    mocks.CORES = 2;
+    mocks.NUMBER_OF_VALIDATORS = 6;
+    mocks.EPOCH_LENGTH = 12;
+    mocks.VALIDATOR_CORE_ROTATION;
+  });
   it("try ciao", () => {
-    const kind = "full";
+    const kind = "tiny";
 
-    const gen = BlockCodec.decode(
-      fs.readFileSync(
-        `${__dirname}/../../../jamtestnet/chainspecs/blocks/genesis-${kind}.bin`,
+    const tsJamState = stateCodec.fromJSON(
+      JSON.parse(
+        fs.readFileSync(
+          `${__dirname}/../../../jamtestnet/chainspecs/state_snapshots/genesis-${kind}.json`,
+          "utf8",
+        ),
+      ),
+    );
+    tsJamState.headerLookupHistory = new Map();
+
+    const genesis = BlockJSONCodec.fromJSON(
+      JSON.parse(
+        fs.readFileSync(
+          `${__dirname}/../../../jamtestnet/chainspecs/blocks/genesis-${kind}.json`,
+          "utf8",
+        ),
       ),
     );
 
-    const state = JSON.parse(
-      fs.readFileSync(
-        `${__dirname}/../../../jamtestnet/chainspecs/state_snapshots/genesis-${kind}.json`,
-        "utf8",
+    const headerHash = computeHeaderHash(genesis.header);
+
+    const [, p_recentHistory] = recentHistoryToPosterior(
+      {
+        accumulateRoot: 0n as MerkleTreeRoot,
+        headerHash,
+        eg: genesis.extrinsics.reportGuarantees,
+      },
+      [] as unknown as Dagger<RecentHistory>,
+    ).safeRet();
+    tsJamState.recentHistory = p_recentHistory;
+
+    const newBlock = BlockJSONCodec.fromJSON(
+      JSON.parse(
+        fs.readFileSync(
+          `${__dirname}/../../../jamtestnet/data/fallback/blocks/1_000.json`,
+          "utf8",
+        ),
       ),
     );
-
-    const tsJamState = stateCodec.fromJSON(state);
     console.log(tsJamState);
+    console.log(newBlock, HashJSONCodec().toJSON(headerHash));
 
-    const newBlock = BlockCodec.decode(
-      fs.readFileSync(
-        `${__dirname}/../../../jamtestnet/data/fallback/blocks/1_000.bin`,
-      ),
-    );
-    console.log(newBlock);
+    const [error, tsJamNewState] = importBlock(newBlock, tsJamState).safeRet();
+    console.log("error", error);
+    if (typeof error === "undefined") {
+      console.log("yeserror");
+    } else {
+      console.log("noerror");
+    }
 
     const newState = JSON.parse(
       fs.readFileSync(
@@ -252,11 +326,6 @@ describe("jamduna", () => {
         "utf8",
       ),
     );
-    const [error, tsJamNewState] = importBlock(newBlock.value, state).safeRet();
-    console.log("error", error);
-    if (typeof error === "undefined") {
-    }
-
     // console.log(gen.value.header.blockAuthorKeyIndex);
     //console.log("ciao");
   });
