@@ -2,7 +2,7 @@ import { WorkError, WorkOutput } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { BufferJSONCodec, createJSONCodec, JSONCodec } from "@/json/JsonCodec";
+import { BufferJSONCodec, JSONCodec } from "@/json/JsonCodec";
 
 // $(0.6.1  - C.29)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
@@ -95,6 +95,7 @@ export const WorkOutputJSONCodec: JSONCodec<
   },
   toJSON(value) {
     if (value instanceof Uint8Array) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { ok: BufferJSONCodec().toJSON(<any>value) };
     }
     switch (value) {

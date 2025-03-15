@@ -1,10 +1,4 @@
-import {
-  ED25519Signature,
-  EG_Extrinsic,
-  Tau,
-  u32,
-  ValidatorIndex,
-} from "@tsjam/types";
+import { EG_Extrinsic, u32, ValidatorIndex } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { Ed25519SignatureCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";

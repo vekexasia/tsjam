@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JamCodec } from "@/codec";
 import {
-  BandersnatchCodec,
   BandersnatchSignatureCodec,
   Ed25519PubkeyCodec,
   Ed25519SignatureCodec,
@@ -13,7 +13,7 @@ import {
   type ByteArrayOfLength,
   type Hash,
 } from "@tsjam/types";
-import { hexToBytes, hextToBigInt } from "@tsjam/utils";
+import { hexToBytes } from "@tsjam/utils";
 
 /**
  * Basic utility to convert from/to json
@@ -25,7 +25,7 @@ export interface JSONCodec<V, J = any> {
 }
 
 type Entries<T, X> = {
-  [K in keyof T]: [K, keyof X /* the json key*/, JSONCodec<T[K], any>];
+  [K in keyof T]: [K, keyof X /* the json key*/, JSONCodec<T[K]>];
 }[keyof T];
 
 export const createJSONCodec = <T extends object, X = any>(
@@ -159,8 +159,8 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
     key: KN;
     value: VN;
   },
-  keyCodec: JSONCodec<K, any>,
-  valueCodec: JSONCodec<V, any>,
+  keyCodec: JSONCodec<K>,
+  valueCodec: JSONCodec<V>,
 ): JSONCodec<Map<K, V>, Array<{ [key in KN | VN]: any }>> => {
   return {
     fromJSON(json) {
@@ -182,7 +182,7 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
 
 export const WrapJSONCodec = <T, K extends string>(
   key: K,
-  codec: JSONCodec<T, any>,
+  codec: JSONCodec<T>,
 ): JSONCodec<T, { [key in K]: any }> => {
   return {
     fromJSON(json) {

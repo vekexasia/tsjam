@@ -1,6 +1,5 @@
 import { AuthorizerHash, SeqOfLength } from "@/genericTypes.js";
 import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
-import { type AuthorizerPool } from "./AuthorizerPool";
 
 /**
  * `φ`

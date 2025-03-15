@@ -85,7 +85,7 @@ export const codec_Ea = createArrayLengthDiscriminator(
   singleExtrinsicCodec,
 ) as unknown as JamCodec<EA_Extrinsic>;
 
-export const codec_Ea_JSON = <JSONCodec<EA_Extrinsic, any>>ArrayOfJSONCodec(
+export const codec_Ea_JSON = <JSONCodec<EA_Extrinsic>>ArrayOfJSONCodec(
   createJSONCodec<
     AssuranceExtrinsic,
     {

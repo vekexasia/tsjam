@@ -26,6 +26,7 @@ export const RHOCodec = () =>
 export const RHOJSONCodec = ArrayOfJSONCodec<
   RHO,
   RHO[0],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   null | { report: any; timeout: number }
 >(
   NULLORCodec(

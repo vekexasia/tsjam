@@ -110,7 +110,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
   [
     "winningTickets",
     "tickets_mark",
-    <JSONCodec<JamHeader["winningTickets"], any>>(
+    <JSONCodec<JamHeader["winningTickets"]>>(
       NULLORCodec(ArrayOfJSONCodec(TicketIdentifierJSONCodec))
     ),
   ],

@@ -2,10 +2,8 @@ import { BLOCK_TIME } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
 import {
-  AvailableWorkReports,
   HeaderHash,
   JamBlock,
-  JamHeader,
   JamState,
   SignedJamHeader,
   STF,
@@ -36,11 +34,7 @@ import {
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import {
-  SignedHeaderCodec,
-  UnsignedHeaderCodec,
-  encodeWithCodec,
-} from "@tsjam/codec";
+import { SignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   EpochMarkerError,
@@ -78,7 +72,7 @@ export enum ImportBlockError {
  * $(0.6.1 - 4.1)
  */
 export const importBlock: STF<
-  JamState,
+  { block: JamBlock; state: JamState },
   JamBlock,
   | ImportBlockError
   | GammaAError
@@ -89,7 +83,7 @@ export const importBlock: STF<
   | EpochMarkerError
   | WinningTicketsError
   | DeltaToPosteriorError
-> = (block, curState) => {
+> = (block, { block: parent, state: curState }) => {
   const tauTransition = {
     tau: curState.tau,
     p_tau: toPosterior(block.header.timeSlotIndex),
@@ -367,15 +361,13 @@ export const importBlock: STF<
   });
 
   // $(0.6.1 - 5.2)
-  if (
-    block.header.parent !==
-    curState.recentHistory[curState.recentHistory.length - 1].headerHash
-  ) {
+  if (block.header.parent !== computeHeaderHash(parent.header)) {
     return err(ImportBlockError.InvalidParentHeader);
   }
 
   // $(0.6.1 - 5.8)
   const prevMerkleRoot = merkelizeState(curState);
+
   if (prevMerkleRoot !== block.header.priorStateRoot) {
     return err(ImportBlockError.InvalidParentStateRoot);
   }
@@ -407,7 +399,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidOffenders);
   }
 
-  return ok(p_state);
+  return ok(toPosterior({ block, state: p_state }));
 };
 
 export const computeHeaderHash = (header: SignedJamHeader) => {

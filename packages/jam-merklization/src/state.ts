@@ -39,6 +39,7 @@ import {
   ByteArrayOfLength,
   SeqOfLength,
   StateRootHash,
+  u32,
 } from "@tsjam/types";
 import {
   bigintToBytes,
@@ -156,7 +157,7 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
     const h: Uint8Array = _s;
     const s = i;
     const n = encodeWithCodec(E_4, BigInt(s));
-    return bytesToBigInt(
+    return HashCodec.decode(
       new Uint8Array([
         n[0],
         h[0],
@@ -166,9 +167,9 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
         h[2],
         n[3],
         h[3],
-        ...h.subarray(4),
+        ...h.subarray(4, 28),
       ]) as unknown as ByteArrayOfLength<32>,
-    );
+    ).value;
   }
   if (typeof _s === "number") {
     // its ServiceIndex
@@ -386,33 +387,32 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ]),
     );
 
-    for (const [h, v] of serviceAccount.storage) {
-      // TODO: fix
+    for (const [_k, v] of serviceAccount.storage) {
+      const k = encodeWithCodec(HashCodec, _k);
+      const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
+
       toRet.set(
-        C_fn(serviceIndex, bigintToBytes(h, 32)),
+        C_fn(serviceIndex, new Uint8Array([...pref, ...k.subarray(0, 28)])),
         encodeWithCodec(IdentityCodec, v),
       );
     }
 
-    for (const [h, p] of serviceAccount.preimage_p) {
-      // TODO:fix
+    for (const [_h, p] of serviceAccount.preimage_p) {
+      const h = encodeWithCodec(HashCodec, _h);
+      const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
       toRet.set(
-        C_fn(serviceIndex, bigintToBytes(h, 32)),
+        C_fn(serviceIndex, new Uint8Array([...pref, ...h.subarray(1, 29)])),
         encodeWithCodec(IdentityCodec, p),
       );
     }
 
     for (const [h, lm] of serviceAccount.preimage_l) {
-      // TODO:fix
       for (const [l, t] of lm) {
+        const e_l = encodeWithCodec(E_4_int, l);
+        const h_h = Hashing.blake2bBuf(encodeWithCodec(HashCodec, h));
+
         toRet.set(
-          C_fn(
-            serviceIndex,
-            new Uint8Array([
-              ...encodeWithCodec(E_4_int, l),
-              ...bigintToBytes(~h as Hash, 32).subarray(4),
-            ]),
-          ),
+          C_fn(serviceIndex, new Uint8Array([...e_l, ...h_h.subarray(2, 30)])),
           encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
         );
       }

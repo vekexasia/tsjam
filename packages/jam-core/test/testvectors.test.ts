@@ -20,9 +20,12 @@ import {
   ValidatorIndex,
   BandersnatchSignature,
   ValidatorData,
+  JamBlock,
+  JamHeader,
+  SignedJamHeader,
 } from "@tsjam/types";
 import { bigintToBytes, isFallbackMode, toTagged } from "@tsjam/utils";
-import { importBlock } from "@/importBlock.js";
+import { computeHeaderHash, importBlock } from "@/importBlock.js";
 import { merkelizeState } from "@tsjam/merklization";
 import {
   BandersnatchCodec,
@@ -371,11 +374,22 @@ const buildTest = (name: string, size: "tiny" | "full") => {
 
   const decoded = testCodec.decode(testBin);
   //  console.log(decoded.value.preState)
+  const parentHeader: SignedJamHeader = {
+    parent: toTagged(1n),
+    blockSeal: toTagged(0n),
+    offenders: [],
+    extrinsicHash: toTagged(0n),
+    timeSlotIndex: decoded.value.preState.tau,
+    priorStateRoot: toTagged(merkelizeState(decoded.value.preState)),
+    entropySignature: decoded.value.input
+      .entropy as unknown as BandersnatchSignature,
+    blockAuthorKeyIndex: 0 as ValidatorIndex,
+  };
 
-  const [err, newState] = importBlock(
+  const [err, x] = importBlock(
     {
       header: {
-        parent: toTagged(0n),
+        parent: computeHeaderHash(parentHeader),
         blockSeal: toTagged(0n),
         offenders: [],
         extrinsicHash: toTagged(0n),
@@ -397,11 +411,15 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         reportGuarantees: [] as unknown as EG_Extrinsic,
       },
     },
-    decoded.value.preState,
+    {
+      state: decoded.value.preState,
+      block: { header: parentHeader } as JamBlock,
+    },
   ).safeRet();
   if (err) {
     throw new Error(err);
   }
+  const newState = x!.state;
 
   const edonly = (vd: ValidatorData) =>
     Buffer.from(bigintToBytes(vd.ed25519, 32)).toString("hex");

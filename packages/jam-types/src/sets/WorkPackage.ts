@@ -4,7 +4,6 @@ import {
   Blake2bHash,
   BoundedSeq,
   CodeHash,
-  Hash,
   ServiceIndex,
 } from "@/genericTypes";
 import { RefinementContext } from "@/sets/RefinementContext";

@@ -29,6 +29,8 @@ import {
   Uint8ArrayJSONCodec,
   EntropyJSONCodec,
   BlockJSONCodec,
+  encodeWithCodec,
+  HashCodec,
 } from "@tsjam/codec";
 import {
   CodeHash,
@@ -37,8 +39,6 @@ import {
   Gas,
   Hash,
   JamState,
-  MerkleTreeRoot,
-  RecentHistory,
   SafroleState,
   ServiceAccount,
   ServiceIndex,
@@ -53,8 +53,9 @@ import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
-import { computeHeaderHash, importBlock } from "@/importBlock";
-import { recentHistoryToPosterior } from "@tsjam/transitions";
+import { importBlock } from "@/importBlock";
+import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
+import assert from "assert";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -260,6 +261,20 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],
 ]);
+function checkMerkle(jamState: JamState, duna: any) {
+  const tsjamState = merkleStateMap(jamState);
+
+  for (const items of duna.keyvals.slice(0)) {
+    const [key, value, desc] = items;
+    const k = HashJSONCodec().fromJSON(key);
+    assert(tsjamState.has(k), `missing key ${key}|${desc}`);
+
+    expect(Uint8ArrayJSONCodec.toJSON(tsjamState.get(k)!), desc).toBe(value);
+  }
+  // check merkle root
+  const mtr = merkelizeState(jamState);
+  expect(HashJSONCodec().toJSON(mtr)).eq(duna.state_root);
+}
 describe("jamduna", () => {
   beforeEach(() => {
     mocks.CORES = 2;
@@ -267,10 +282,10 @@ describe("jamduna", () => {
     mocks.EPOCH_LENGTH = 12;
     mocks.VALIDATOR_CORE_ROTATION;
   });
-  it("try ciao", () => {
+  it("fallback", () => {
     const kind = "tiny";
 
-    const tsJamState = stateCodec.fromJSON(
+    let tsJamState = stateCodec.fromJSON(
       JSON.parse(
         fs.readFileSync(
           `${__dirname}/../../../jamtestnet/chainspecs/state_snapshots/genesis-${kind}.json`,
@@ -289,45 +304,35 @@ describe("jamduna", () => {
       ),
     );
 
-    const headerHash = computeHeaderHash(genesis.header);
+    const dir = fs
+      .readdirSync(
+        `${__dirname}/../../../jamtestnet/data/fallback/state_transitions/`,
+      )
+      .filter((x) => x.endsWith(".json"))
+      .sort((a, b) => a.localeCompare(b))
+      .map((f) => f.replace(".json", ""));
+    let curBlock = genesis;
 
-    const [, p_recentHistory] = recentHistoryToPosterior(
-      {
-        accumulateRoot: 0n as MerkleTreeRoot,
-        headerHash,
-        eg: genesis.extrinsics.reportGuarantees,
-      },
-      [] as unknown as Dagger<RecentHistory>,
-    ).safeRet();
-    tsJamState.recentHistory = p_recentHistory;
-
-    const newBlock = BlockJSONCodec.fromJSON(
-      JSON.parse(
+    for (const block of dir) {
+      const dunaStateTransition = JSON.parse(
         fs.readFileSync(
-          `${__dirname}/../../../jamtestnet/data/fallback/blocks/1_000.json`,
+          `${__dirname}/../../../jamtestnet/data/fallback/state_transitions/${block}.json`,
           "utf8",
         ),
-      ),
-    );
-    console.log(tsJamState);
-    console.log(newBlock, HashJSONCodec().toJSON(headerHash));
+      );
 
-    const [error, tsJamNewState] = importBlock(newBlock, tsJamState).safeRet();
-    console.log("error", error);
-    if (typeof error === "undefined") {
-      console.log("yeserror");
-    } else {
-      console.log("noerror");
+      checkMerkle(tsJamState, dunaStateTransition.pre_state);
+      const newBlock = BlockJSONCodec.fromJSON(dunaStateTransition.block);
+      const [error, tsJamNewState] = importBlock(newBlock, {
+        block: curBlock,
+        state: tsJamState,
+      }).safeRet();
+      expect(error).toBeUndefined();
+
+      checkMerkle(tsJamNewState!.state, dunaStateTransition.post_state);
+      tsJamState = tsJamNewState!.state;
+      curBlock = tsJamNewState!.block;
     }
-
-    const newState = JSON.parse(
-      fs.readFileSync(
-        `${__dirname}/../../../jamtestnet/data/fallback/state_snapshots/1_000.json`,
-        "utf8",
-      ),
-    );
-    // console.log(gen.value.header.blockAuthorKeyIndex);
-    //console.log("ciao");
   });
   it("test ", () => {
     expect("ciao").toBe("ciao");
