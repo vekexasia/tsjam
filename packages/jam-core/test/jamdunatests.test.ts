@@ -63,6 +63,8 @@ const mocks = vi.hoisted(() => {
     NUMBER_OF_VALIDATORS: 1023,
     EPOCH_LENGTH: 600,
     VALIDATOR_CORE_ROTATION: 10,
+    MAX_TICKETS_PER_VALIDATOR: 2,
+    LOTTERY_MAX_SLOT: 500,
   };
 });
 vi.mock("@tsjam/constants", async (importOriginal) => {
@@ -91,6 +93,17 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
       return mocks.CORES;
     },
   });
+  Object.defineProperty(toRet, "LOTTERY_MAX_SLOT", {
+    get() {
+      return mocks.LOTTERY_MAX_SLOT;
+    },
+  });
+  Object.defineProperty(toRet, "MAX_TICKETS_PER_VALIDATOR", {
+    get() {
+      return mocks.MAX_TICKETS_PER_VALIDATOR;
+    },
+  });
+
   return toRet;
 });
 
@@ -280,10 +293,12 @@ describe("jamduna", () => {
     mocks.CORES = 2;
     mocks.NUMBER_OF_VALIDATORS = 6;
     mocks.EPOCH_LENGTH = 12;
-    mocks.VALIDATOR_CORE_ROTATION;
+    mocks.MAX_TICKETS_PER_VALIDATOR = 3;
+    mocks.LOTTERY_MAX_SLOT = 10;
   });
   it("fallback", () => {
     const kind = "tiny";
+    const set = "safrole";
 
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(
@@ -306,7 +321,7 @@ describe("jamduna", () => {
 
     const dir = fs
       .readdirSync(
-        `${__dirname}/../../../jamtestnet/data/fallback/state_transitions/`,
+        `${__dirname}/../../../jamtestnet/data/${set}/state_transitions/`,
       )
       .filter((x) => x.endsWith(".json"))
       .sort((a, b) => a.localeCompare(b))
@@ -314,9 +329,10 @@ describe("jamduna", () => {
     let curBlock = genesis;
 
     for (const block of dir) {
+      console.log("Processing block", block);
       const dunaStateTransition = JSON.parse(
         fs.readFileSync(
-          `${__dirname}/../../../jamtestnet/data/fallback/state_transitions/${block}.json`,
+          `${__dirname}/../../../jamtestnet/data/${set}/state_transitions/${block}.json`,
           "utf8",
         ),
       );
