@@ -27,6 +27,7 @@ import {
   PrivilegedServicesCodec,
   RecentHistoryCodec,
   RHOCodec,
+  LengthDiscriminator,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -42,6 +43,7 @@ import {
 import {
   bigintToBytes,
   bytesToBigInt,
+  isFallbackMode,
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
@@ -55,7 +57,7 @@ import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
  * $(0.6.1 - D.5)
  */
 export const merkelizeState = (state: JamState): StateRootHash => {
-  const stateMap = transformState(state);
+  const stateMap = merkleStateMap(state);
   return M_fn(
     new Map(
       [...stateMap.entries()].map(([k, v]) => {
@@ -175,20 +177,32 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
       new Uint8Array([i, ...n, ...new Array(32 - 4 - 1).fill(0)]),
     );
   }
-  return bytesToBigInt(new Uint8Array([1, ...new Array(31).fill(0), i]));
+  return bytesToBigInt(new Uint8Array([i, ...new Array(31).fill(0)]));
 };
 
 /*
  * `T(σ)`
  * $(0.6.1 - D.2)
  */
-const transformState = (state: JamState): Map<Hash, Uint8Array> => {
+export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
+  //  const logState = (n: string, k: Hash) => {
+  //    console.log(
+  //      n,
+  //      HashJSONCodec().toJSON(k),
+  //      Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
+  //    );
+  //  };
 
   toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec(), state.authPool));
+  //  logState("authPool|c1", C_fn(1));
+
   toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec(), state.authQueue));
+  //  logState("authQueue|c2", C_fn(2));
+
   // β - recentHistory
   toRet.set(C_fn(3), encodeWithCodec(RecentHistoryCodec, state.recentHistory));
+  //  logState("recentHistory|c3", C_fn(3));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
@@ -209,7 +223,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
       ...encodeWithCodec(BandersnatchRingRootCodec, state.safroleState.gamma_z),
       ...encodeWithCodec(
         E_1,
-        typeof state.safroleState.gamma_s[0] === "bigint" ? 1n : 0n,
+        isFallbackMode(state.safroleState.gamma_s) ? 1n : 0n,
       ),
       ...encodeWithCodec(gamma_sCodec, state.safroleState.gamma_s),
       ...encodeWithCodec(
@@ -310,6 +324,7 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
       ),
     })),
   );
+
   // c
   toRet.set(
     C_fn(14),
@@ -342,7 +357,14 @@ const transformState = (state: JamState): Map<Hash, Uint8Array> => {
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
+        new LengthDiscriminator<Set<WorkPackageHash>>({
+          ...createSetCodec(WorkPackageHashCodec, (a, b) =>
+            a - b < 0 ? -1 : 1,
+          ),
+          length(v) {
+            return v.size;
+          },
+        }),
       ),
       state.accumulationHistory,
     ),
