@@ -187,7 +187,7 @@ export const verifyWinningTickets = (
 ): Result<undefined, WinningTicketsError> => {
   if (
     isSameEra(tauTransition.p_tau, tauTransition.tau) &&
-    slotIndex(curState.tau) <= LOTTERY_MAX_SLOT &&
+    slotIndex(curState.tau) < LOTTERY_MAX_SLOT &&
     LOTTERY_MAX_SLOT <= slotIndex(tauTransition.p_tau) &&
     curState.safroleState.gamma_a.length === EPOCH_LENGTH
   ) {
@@ -201,7 +201,10 @@ export const verifyWinningTickets = (
       >,
     );
     for (let i = 0; i < EPOCH_LENGTH; i++) {
-      if (block.header.winningTickets[i] !== expectedHw[i]) {
+      if (
+        block.header.winningTickets[i].id !== expectedHw[i].id ||
+        block.header.winningTickets[i].attempt !== expectedHw[i].attempt
+      ) {
         return err(WinningTicketsError.WinningTicketMismatch);
       }
     }
