@@ -1,13 +1,13 @@
-import { EG_Extrinsic, u32, ValidatorIndex } from "@tsjam/types";
+import { EG_Extrinsic, u32, ValidatorIndex, WorkReport } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { Ed25519SignatureCodec } from "@/identity.js";
+import { Ed25519SignatureCodec, HashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
 import {
   WorkReportCodec,
   WorkReportJSON,
   WorkReportJSONCodec,
 } from "@/setelements/WorkReportCodec.js";
-import { createCodec } from "@/utils.js";
+import { createCodec, encodeWithCodec } from "@/utils.js";
 import {
   ArrayOfJSONCodec,
   createJSONCodec,
@@ -15,6 +15,8 @@ import {
   JSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
+import { JamCodec } from "@/codec";
+import { Hashing } from "@tsjam/crypto";
 
 /**
  * $(0.6.1 - C.16)
@@ -40,7 +42,24 @@ export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
  */
 export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
-    ["workReport", WorkReportCodec],
+    [
+      "workReport",
+      <JamCodec<WorkReport>>{
+        encode(w, buf) {
+          HashCodec.encode(
+            Hashing.blake2b(encodeWithCodec(WorkReportCodec, w)),
+            buf,
+          );
+          return 32;
+        },
+        decode() {
+          throw new Error("codec_Eg_4Hx should not be used for decoding");
+        },
+        encodedSize() {
+          return 32;
+        },
+      },
+    ],
     ["timeSlot", E_sub_int<u32>(4)],
     [
       "credential",
