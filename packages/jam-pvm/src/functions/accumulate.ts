@@ -213,17 +213,11 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
       nm.set(toTagged(Number(l) as u32), toTagged([]));
       a.preimage_l.set(c, nm);
 
+      // a_t
       a.balance = serviceAccountGasThreshold(a);
 
       const x_bold_s = x.u.delta.get(x.service)!;
 
-      const bump = (a: ServiceIndex) =>
-        2 ** 8 + ((a - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9));
-
-      const newServiceIndex = check_fn(
-        bump(x.service) as ServiceIndex,
-        x.u.delta,
-      );
       const s: ServiceAccount = {
         ...x_bold_s,
         balance: <u64>(x_bold_s.balance - a.balance),
@@ -233,11 +227,16 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
         return [IxMod.w7(HostCallResult.CASH)];
       }
       return [
-        IxMod.w7(x.service),
+        IxMod.w7(x.i),
         IxMod.obj({
           x: {
             ...x,
-            service: newServiceIndex,
+            i: check_fn(
+              <ServiceIndex>(
+                (2 ** 8 + ((x.i - 2 ** 8 + 42) % (2 ** 32 - 2 ** 9)))
+              ),
+              x.u.delta,
+            ),
             u: {
               ...x.u,
               delta: new Map([
