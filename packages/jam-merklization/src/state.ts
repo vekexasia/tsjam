@@ -175,7 +175,17 @@ const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
     // its ServiceIndex
     const n = encodeWithCodec(E_4, BigInt(_s));
     return bytesToBigInt(
-      new Uint8Array([i, ...n, ...new Array(32 - 4 - 1).fill(0)]),
+      new Uint8Array([
+        i,
+        n[0],
+        0,
+        n[1],
+        0,
+        n[2],
+        0,
+        n[3],
+        ...new Array(32 - 4 - 4).fill(0),
+      ]),
     );
   }
   return bytesToBigInt(new Uint8Array([i, ...new Array(31).fill(0)]));
