@@ -433,6 +433,8 @@ export const parallelizedAccAccumulation = (
     delta_prime.delete(k);
   }
 
+  // TODO: if same service index just call once the accumulation and use the result
+
   const newState: PVMAccumulationState = {
     delta: delta_prime,
     // x'
@@ -482,21 +484,25 @@ export const singleServiceAccumulation = (
 } => {
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
-    wr.results.forEach((r) => (g = (g + r.gasPrioritization) as Gas)),
+    wr.results
+      .filter((r) => r.serviceIndex === s)
+      .forEach((r) => (g = (g + r.gasPrioritization) as Gas)),
   );
 
   const p: PVMAccumulationOp[] = [];
   for (const wr of w) {
     for (const r of wr.results) {
-      p.push({
-        authorizationOutput: wr.authorizerOutput, // o
-        output: r.output, // o
-        payloadHash: r.payloadHash, // l
-        packageHash: wr.workPackageSpecification.workPackageHash, // (ws)h
-      });
+      if (r.serviceIndex === s) {
+        p.push({
+          authorizationOutput: wr.authorizerOutput, // o
+          output: r.output, // o
+          payloadHash: r.payloadHash, // l
+          packageHash: wr.workPackageSpecification.workPackageHash, // (ws)h
+        });
+      }
     }
   }
-  const [_o, t, b, u] = accumulateInvocation(o, s, g, p, deps.tau, {
+  const [_o, t, b, u] = accumulateInvocation(o, s, g, p, deps.p_tau, {
     p_tau: deps.p_tau,
     p_eta_0: deps.p_eta_0,
   });
