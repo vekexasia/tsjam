@@ -13,7 +13,12 @@ import {
 import { toSafeMemoryAddress } from "@/pvmMemory";
 import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
-import { E_4_int, encodeWithCodec } from "@tsjam/codec";
+import {
+  E_4_int,
+  encodeWithCodec,
+  HashJSONCodec,
+  Uint8ArrayJSONCodec,
+} from "@tsjam/codec";
 import { serviceAccountGasThreshold } from "@tsjam/utils";
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";

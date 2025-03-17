@@ -1,3 +1,4 @@
+import { Uint8ArrayJSONCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
@@ -29,6 +30,12 @@ export class PVMMemory implements IPVMMemory {
         this.#setBytes(at, content);
       }
     }
+    // debug
+    // for (const [page, memory] of this.#innerMemoryContent.entries()) {
+    //   console.log(
+    //     `Page ${page}|0x${(page * Zp).toString(16)}: ${Buffer.from(memory).toString("hex")}`,
+    //   );
+    // }
   }
 
   #locationFromAddress(address: u32) {
@@ -124,7 +131,8 @@ export class PVMMemory implements IPVMMemory {
 
   getBytes(address: u32, length: number): Uint8Array {
     assert(this.canRead(address, length), "Memory is not readable");
-    return this.#getBytes(address, length);
+    const r = this.#getBytes(address, length);
+    return r;
   }
 
   canRead(address: u32, length: number): boolean {

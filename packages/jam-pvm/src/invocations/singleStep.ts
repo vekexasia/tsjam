@@ -9,15 +9,21 @@ import {
 } from "@tsjam/types";
 import { applyMods } from "@/functions/utils";
 import { IxMod, TRAP_COST } from "@/instructions/utils";
+
 type Output = {
   p_context: Posterior<PVMProgramExecutionContext>;
   exitReason?: PVMExitReason;
 };
 
+// export const debugContext = (ctx: PVMProgramExecutionContext) => {
+//   pvmLogger.debug("regs", { regs: ctx.registers.join(", ") });
+//   // console.log(`\t regs:[${ctx.registers.join(", ")}] gas:${ctx.gas}`);
+// };
+
 /**
  * SingleStep State Transition Function
  * Ψ1 in the graypaper
- * $(0.6.1 - A.5)
+ * $(0.6.2 - A.6)
  */
 export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -25,6 +31,8 @@ export const pvmSingleStep = (
 ): Output => {
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
   // console.log(`[@${ctx.instructionPointer}] - ${ix?.identifier}`);
+
+  ///debugContext(ctx);
 
   if (
     ctx.instructionPointer >= p.program.c.length ||
@@ -61,7 +69,7 @@ export const pvmSingleStep = (
     args = ix.decode(byteArgs, context);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    console.log(`Decoding error for ${ix.identifier}`, e.message);
+    //pvmLogger.warn(`Decoding error for ${ix.identifier}`, e.message);
     const o = applyMods(ctx, {} as object, [
       IxMod.skip(ctx.instructionPointer, skip), //NOTE: not sure we should skip
       IxMod.gas(TRAP_COST + ix.gasCost),
@@ -78,7 +86,7 @@ export const pvmSingleStep = (
   // we apply the gas and skip.
   // if an instruction pointer is set we apply it and override the skip inside
   // the applyMods
-  // $(0.6.1 - A.6)
+  // $(0.6.1 - A.7)
   const rMod = applyMods(ctx, {} as object, [
     IxMod.gas(ix.gasCost), // g′ = g − g∆
     IxMod.skip(ctx.instructionPointer, skip), // i'

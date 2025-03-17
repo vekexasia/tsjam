@@ -7,7 +7,9 @@
     "@tsjam/types": "workspace:*",
     "@vekexasia/bigint-uint8array": "^1.1.1",
     "bigint-buffer": "^1.1.5",
-    "neverthrow-safe-ret": "^1.0.1"
+    "neverthrow-safe-ret": "^1.0.1",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

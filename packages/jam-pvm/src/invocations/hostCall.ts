@@ -11,7 +11,7 @@ import { basicInvocation } from "@/invocations/basic.js";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * $(0.6.1 - A.31)
+ * $(0.6.2 - A.33)
  */
 export const hostCallInvocation = <X>(
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -24,13 +24,17 @@ export const hostCallInvocation = <X>(
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"
   ) {
-    const res = f({
+    const hostCallRes = f({
       hostCallOpcode: out.exitReason.opCode,
       ctx: out.context,
       out: x,
     });
-    if ("exitReason" in res && typeof res.exitReason !== "undefined") {
-      const exitReason = res.exitReason;
+
+    if (
+      "exitReason" in hostCallRes &&
+      typeof hostCallRes.exitReason !== "undefined"
+    ) {
+      const exitReason = hostCallRes.exitReason;
       if (typeof exitReason === "object" && exitReason.type === "page-fault") {
         // if page fault we need to use the context from basic invocation
 
@@ -44,26 +48,26 @@ export const hostCallInvocation = <X>(
         return {
           exitReason,
           context: {
-            ...res.ctx,
+            ...hostCallRes.ctx,
             instructionPointer: out.context.instructionPointer,
           },
-          out: res.out,
+          out: hostCallRes.out,
         };
       }
     } else {
-      // all good we hostcall
+      // all good we skip and hostcall
       return hostCallInvocation(
         p,
         {
           instructionPointer: (out.context.instructionPointer +
             p.parsedProgram.skip(out.context.instructionPointer) +
             1) as u32,
-          gas: res.ctx.gas,
-          registers: res.ctx.registers,
-          memory: res.ctx.memory,
+          gas: hostCallRes.ctx.gas,
+          registers: hostCallRes.ctx.registers,
+          memory: hostCallRes.ctx.memory,
         },
         f,
-        res.out,
+        hostCallRes.out,
       );
     }
   } else {

@@ -287,6 +287,11 @@ function checkMerkle(jamState: JamState, duna: any) {
   // check merkle root
   const mtr = merkelizeState(jamState);
   expect(HashJSONCodec().toJSON(mtr)).eq(duna.state_root);
+  //  console.log(
+  //    [...tsjamState.keys()].map(
+  //      (x) => `${HashJSONCodec().toJSON(x)}`, // => ${Uint8ArrayJSONCodec.toJSON(tsjamState.get(x)!)}`,
+  //    ),
+  //  );
 }
 describe("jamduna", () => {
   beforeEach(() => {
@@ -295,10 +300,11 @@ describe("jamduna", () => {
     mocks.EPOCH_LENGTH = 12;
     mocks.MAX_TICKETS_PER_VALIDATOR = 3;
     mocks.LOTTERY_MAX_SLOT = 10;
+    mocks.VALIDATOR_CORE_ROTATION = 4;
   });
   it("fallback", () => {
     const kind = "tiny";
-    const set = "safrole";
+    const set = "assurances";
 
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(
@@ -338,6 +344,7 @@ describe("jamduna", () => {
       );
 
       checkMerkle(tsJamState, dunaStateTransition.pre_state);
+      merkleStateMap;
       const newBlock = BlockJSONCodec.fromJSON(dunaStateTransition.block);
       const [error, tsJamNewState] = importBlock(newBlock, {
         block: curBlock,

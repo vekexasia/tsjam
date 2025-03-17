@@ -1,5 +1,5 @@
 import { BLOCK_TIME } from "@tsjam/constants";
-import { merkelizeState } from "@tsjam/merklization";
+import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
 import {
   HeaderHash,
@@ -34,7 +34,12 @@ import {
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import { SignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
+import {
+  HashJSONCodec,
+  SignedHeaderCodec,
+  Uint8ArrayJSONCodec,
+  encodeWithCodec,
+} from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   EpochMarkerError,
@@ -97,6 +102,13 @@ export const importBlock: STF<
     // && tauTransition.p_tau < 2 ** 32 // NOTE: this is implicit in previous line
   ) {
     return err(ImportBlockError.InvalidSlot);
+  }
+
+  // $(0.6.1 - 5.8)
+  const prevMerkleRoot = merkelizeState(curState);
+
+  if (prevMerkleRoot !== block.header.priorStateRoot) {
+    return err(ImportBlockError.InvalidParentStateRoot);
   }
 
   const [, p_entropy] = rotateEntropy(
@@ -206,6 +218,54 @@ export const importBlock: STF<
    * Integrate state to calculate several posterior state
    */
   const w = availableReports(ea, d_rho);
+  // const merkleMap = merkleStateMap(curState);
+  // console.log(
+  //   "a",
+  //   [...merkleMap.keys()].map(
+  //     (x) => `${HashJSONCodec().toJSON(x)}`, // => ${Uint8ArrayJSONCodec.toJSON(merkleMap.get(x)!)}`,
+  //   ),
+  // );
+
+  function freezeMap(myMap: Map<any, any>) {
+    if (!(myMap instanceof Map)) {
+      throw new Error("Fuck off with that non-Map shit");
+    }
+
+    const mapSet = function (key: string) {
+      throw new Error(`Can't add property ${key}, map is frozen`);
+    };
+
+    const mapDelete = function (key: string) {
+      throw new Error(`Can't delete property ${key}, map is frozen`);
+    };
+
+    const mapClear = function () {
+      throw new Error("Can't clear frozen map");
+    };
+
+    myMap.set = mapSet;
+    myMap.delete = mapDelete;
+    myMap.clear = mapClear;
+
+    return Object.freeze(myMap);
+  }
+  function deepFreeze<T>(obj: T): T {
+    if (obj === null || typeof obj !== "object") {
+      return obj;
+    }
+
+    // Handle Maps specially
+    if (obj instanceof Map) {
+      freezeMap(obj);
+      return obj;
+    }
+
+    Object.keys(obj).forEach((key) => {
+      deepFreeze((<any>obj)[key]);
+    });
+
+    return Object.freeze(obj);
+  }
   const [
     ,
     {
@@ -224,7 +284,7 @@ export const importBlock: STF<
     accumulationHistory: curState.accumulationHistory,
     accumulationQueue: curState.accumulationQueue,
     authQueue: curState.authQueue,
-    serviceAccounts: curState.serviceAccounts,
+    serviceAccounts: deepFreeze(curState.serviceAccounts),
     privServices: curState.privServices,
     iota: curState.iota,
     p_eta_0: toPosterior(p_entropy[0]),
@@ -363,13 +423,6 @@ export const importBlock: STF<
   // $(0.6.1 - 5.2)
   if (block.header.parent !== computeHeaderHash(parent.header)) {
     return err(ImportBlockError.InvalidParentHeader);
-  }
-
-  // $(0.6.1 - 5.8)
-  const prevMerkleRoot = merkelizeState(curState);
-
-  if (prevMerkleRoot !== block.header.priorStateRoot) {
-    return err(ImportBlockError.InvalidParentStateRoot);
   }
 
   if (!verifySeal(block.header, p_state)) {

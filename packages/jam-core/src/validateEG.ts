@@ -1,5 +1,4 @@
 import { epochIndex, toPosterior } from "@tsjam/utils";
-import { jamLogger } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,

@@ -24,6 +24,17 @@ export const X_fn = (n: bigint) => (x: bigint) =>
 export const X_4 = X_fn(4n);
 export const X_8 = X_fn(8n);
 
+/**
+ * $(0.6.2 - A.32)
+ */
+export const smod = (a: bigint, b: bigint) => {
+  // Math.abs on bigint
+  const asign = a < 0n ? -1n : 1n;
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+
+  return asign * (a % b);
+};
 export const TRAP_COST = 1n;
 
 export const IxMod = {

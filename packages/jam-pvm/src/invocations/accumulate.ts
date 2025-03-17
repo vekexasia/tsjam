@@ -255,6 +255,7 @@ const G_fn = (
 ): ReturnType<
   HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }>
 > => {
+  x.x.u = { ...x.x.u, delta: new Map([...x.x.u.delta.entries()]) };
   x.x.u.delta.set(x.x.service, serviceAccount);
   return {
     out: x,

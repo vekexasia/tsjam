@@ -28,7 +28,7 @@ import {
   TwoRegTwoImmIxDecoder,
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
-import { IxMod, X_4, X_8, X_fn } from "./utils";
+import { IxMod, X_4, X_8, X_fn, smod } from "./utils";
 import { djump } from "@/utils/djump";
 import { branch } from "@/utils/branch";
 import { Z, Z4, Z8, Z8_inv } from "@/utils/zed";
@@ -54,8 +54,10 @@ export class Instructions {
   }
 
   @Ix(10, OneImmIxDecoder)
-  ecalli({ vX }: OneImmArgs) {
-    return [IxMod.hostCall(vX)];
+  ecalli({ vX }: OneImmArgs, context: PVMIxEvaluateFNContext) {
+    // FIXME: the ip is not defined in GP but  i wrote a text here
+    // https://matrix.to/#/!ddsEwXlCWnreEGuqXZ:polkadot.io/$k0-5cva9JIcR_gVVwLjwFH6ZOjaGrG7SocCgHlzUZZg?via=polkadot.io&via=matrix.org&via=parity.io
+    return [IxMod.ip(context.execution.instructionPointer), IxMod.hostCall(vX)];
   }
 
   @Ix(20, OneRegOneExtImmArgsIxDecoder)
@@ -266,7 +268,7 @@ export class Instructions {
     { rA, vX, vY }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContext,
   ) {
-    return [...branch(context, vY, true), IxMod.reg(rA, vX)];
+    return [IxMod.reg(rA, vX), ...branch(context, vY, true)];
   }
 
   @Ix(81, OneRegOneIMMOneOffsetIxDecoder)
@@ -624,6 +626,9 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 4)) {
+      return [...IxMod.pageFault(location, context.execution)];
+    }
     const r = context.execution.memory.getBytes(location, 4);
     // TODO: memory fault?
     return [IxMod.reg(rA, E_4.decode(r).value)];
@@ -929,12 +934,10 @@ export class Instructions {
     const z4a = Z4(wA % 2n ** 32n);
     const z4b = Z4(wB % 2n ** 32n);
     let newVal: number | bigint;
-    if (z4b === 0) {
-      newVal = Z8_inv(BigInt(z4a));
-    } else if (z4a === -1 * 2 ** 31 && z4b === -1) {
+    if (z4a === -1 * 2 ** 31 && z4b === -1) {
       newVal = 0;
     } else {
-      newVal = Z8_inv(BigInt(z4a % z4b));
+      newVal = Z8_inv(smod(BigInt(z4a), BigInt(z4b)));
     }
     return [IxMod.reg(rD, newVal)];
   }
@@ -1014,12 +1017,10 @@ export class Instructions {
     const z8a = Z8(wA);
     const z8b = Z8(wB);
     let newVal: number | bigint;
-    if (wB === 0n) {
-      newVal = wA;
-    } else if (z8a === -1n * 2n ** 63n && z8b === -1n) {
+    if (z8a === -1n * 2n ** 63n && z8b === -1n) {
       newVal = 0 as u32;
     } else {
-      newVal = Z8_inv(z8a % z8b);
+      newVal = Z8_inv(smod(z8a, z8b));
     }
     return [IxMod.reg(rD, newVal)];
   }
