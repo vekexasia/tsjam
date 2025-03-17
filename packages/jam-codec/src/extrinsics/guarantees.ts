@@ -126,7 +126,6 @@ if (import.meta.vitest) {
         ),
       );
       const decoded = codec_Eg_JSON.fromJSON(json);
-      console.log(decoded[0].credential);
       const reencoded = codec_Eg_JSON.toJSON(decoded);
       expect(reencoded).deep.eq(json);
     });
