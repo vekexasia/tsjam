@@ -1,4 +1,5 @@
-import { slotIndex, toPosterior } from "@tsjam/utils";
+import { epochIndex, toPosterior } from "@tsjam/utils";
+import { jamLogger } from "@tsjam/utils";
 import {
   AccumulationHistory,
   AccumulationQueue,
@@ -32,6 +33,7 @@ import {
   VALIDATOR_CORE_ROTATION,
   MAX_WORKREPORT_OUTPUT_SIZE,
   TOTAL_GAS_ACCUMULATION_LOGIC,
+  EPOCH_LENGTH,
 } from "@tsjam/constants";
 import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
 import { Ed25519, Hashing } from "@tsjam/crypto";
@@ -201,6 +203,7 @@ export const assertEGValid = (
 
   // $(0.6.1 - 11.26)
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
+
   for (const { workReport, timeSlot, credential } of extrinsic) {
     const wrh = Hashing.blake2bBuf(
       encodeWithCodec(WorkReportCodec, workReport),
@@ -212,7 +215,6 @@ export const assertEGValid = (
       if (validatorIndex < 0 || validatorIndex >= NUMBER_OF_VALIDATORS) {
         return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
       }
-
       let correspondingG: GuarantorsAssignment = g_star;
       if (curRotation === Math.floor(timeSlot / VALIDATOR_CORE_ROTATION)) {
         correspondingG = g;
@@ -429,14 +431,16 @@ const G_fn = (input: {
         ),
         e,
       ),
-      Math.floor(slotIndex(t) / VALIDATOR_CORE_ROTATION),
+      Math.floor((t % EPOCH_LENGTH) / VALIDATOR_CORE_ROTATION),
     );
   };
   return {
+    // c
     validatorsAssignedCore: P(
       input.entropy,
       (input.p_tau + input.tauOffset) as Tau,
     ),
+    // k
     validatorsED22519Key: PHI_FN(input.validatorKeys, input.p_psi_o).map(
       (v) => v.ed25519,
     ),
@@ -455,8 +459,8 @@ export const G_STAR_fn = (input: {
   p_tau: Posterior<Tau>;
 }) => {
   if (
-    slotIndex((input.p_tau - VALIDATOR_CORE_ROTATION) as Tau) ==
-    slotIndex(input.p_tau)
+    epochIndex((input.p_tau - VALIDATOR_CORE_ROTATION) as Tau) ==
+    epochIndex(input.p_tau)
   ) {
     return G_fn({
       entropy: input.p_eta2,
