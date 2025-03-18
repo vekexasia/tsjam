@@ -31,6 +31,7 @@ import {
   createJSONCodec,
   HashJSONCodec,
   JC_J,
+  JSONCodec,
   MapJSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
@@ -88,8 +89,8 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
     "segment_root_lookup",
     MapJSONCodec(
       {
-        key: "work_package_hash",
-        value: "segment_tree_root",
+        key: "hash",
+        value: "exports_root",
       },
       HashJSONCodec<WorkPackageHash>(),
       HashJSONCodec(),

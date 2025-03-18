@@ -15,10 +15,10 @@ type Output = {
   exitReason?: PVMExitReason;
 };
 
-// export const debugContext = (ctx: PVMProgramExecutionContext) => {
-//   pvmLogger.debug("regs", { regs: ctx.registers.join(", ") });
-//   // console.log(`\t regs:[${ctx.registers.join(", ")}] gas:${ctx.gas}`);
-// };
+export const debugContext = (ctx: PVMProgramExecutionContext) => {
+  // pvmLogger.debug("regs", { regs: ctx.registers.join(", ") });
+  console.log(`\t regs:[${ctx.registers.join(", ")}] gas:${ctx.gas}`);
+};
 
 /**
  * SingleStep State Transition Function
@@ -30,9 +30,9 @@ export const pvmSingleStep = (
   ctx: PVMProgramExecutionContext,
 ): Output => {
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
-  // console.log(`[@${ctx.instructionPointer}] - ${ix?.identifier}`);
+  console.log(`[@${ctx.instructionPointer}] - ${ix?.identifier}`);
 
-  ///debugContext(ctx);
+  debugContext(ctx);
 
   if (
     ctx.instructionPointer >= p.program.c.length ||

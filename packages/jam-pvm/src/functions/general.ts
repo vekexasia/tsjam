@@ -4,6 +4,7 @@ import {
   Delta,
   Gas,
   Hash,
+  PVMExitPanicMod,
   PVMSingleModMemory,
   PVMSingleModObject,
   ServiceAccount,
@@ -152,7 +153,7 @@ export const omega_r = regFn<
  */
 export const omega_w = regFn<
   [bold_s: ServiceAccount, s: ServiceIndex],
-  W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
+  PVMExitPanicMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
 >({
   fn: {
     opCode: 3 as u8,
@@ -165,7 +166,7 @@ export const omega_w = regFn<
         !context.memory.canRead(toSafeMemoryAddress(k0), Number(kz)) ||
         !context.memory.canRead(toSafeMemoryAddress(v0), Number(vz))
       ) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       } else {
         k = Hashing.blake2b(
           new Uint8Array([
@@ -179,8 +180,21 @@ export const omega_w = regFn<
         storage: new Map(bold_s.storage),
       };
       if (vz === 0n) {
+        // write in red delleting key
+        console.log(
+          "\x1b[36m deleting key",
+          HashJSONCodec().toJSON(k),
+          "\x1b[0m",
+          s,
+        );
         a.storage.delete(k);
       } else {
+        console.log(
+          "\x1b[36m writing key",
+          HashJSONCodec().toJSON(k),
+          "\x1b[0m",
+          s,
+        );
         a.storage.set(
           k,
           context.memory.getBytes(toSafeMemoryAddress(v0), Number(vz)),

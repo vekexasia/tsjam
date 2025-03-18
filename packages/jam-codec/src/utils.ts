@@ -14,6 +14,13 @@ export const encodeWithCodec = <T>(
   return buffer;
 };
 
+/**
+ * provides utility to clone a value with a codec
+ */
+export const cloneWithCodec = <T>(codec: JamCodec<T>, value: T): T => {
+  return codec.decode(encodeWithCodec(codec, value)).value;
+};
+
 type Entries<T> = {
   [K in keyof T]: [K, JamCodec<T[K]>];
 }[keyof T];
