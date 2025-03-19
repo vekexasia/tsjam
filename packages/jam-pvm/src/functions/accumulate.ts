@@ -173,8 +173,7 @@ export const omega_c = regFn<
     gasCost: 10n as Gas,
     execute(context, x) {
       // deep clone x
-      console.log("checkpoint");
-      const p_y = JSON.parse(JSON.stringify(x));
+      const p_y = structuredClone(x);
       const gasAfter = context.gas - (this.gasCost as bigint);
       return [IxMod.w7(gasAfter), IxMod.obj({ y: p_y })];
     },
