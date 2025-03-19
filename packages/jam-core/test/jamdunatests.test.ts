@@ -139,11 +139,11 @@ type DunaState = {
         bytes: number;
         items: number;
       };
-      storage: Record<string, string>; // key, value
-      preimages: Array<{ hash: string; blob: string }>;
+      storage: null | Record<string, string>; // key, value
+      preimages: null | Array<{ hash: string; blob: string }>;
       lookup_meta: Array<{
         key: { hash: string; length: number };
-        value: number[];
+        value: null | number[];
       }>;
     };
   }>;
@@ -178,7 +178,7 @@ const preimageLCodec: JSONCodec<
               hash: HashJSONCodec().toJSON(k),
               length: NumberJSONCodec().toJSON(length),
             },
-            value: value,
+            value: value.length === 0 ? null : value,
           };
         });
       })
@@ -208,7 +208,7 @@ const accountsCodec: JSONCodec<Delta, DunaState["accounts"]> = MapJSONCodec(
           { key: "hash", value: "blob" },
           HashJSONCodec<Hash>(),
           Uint8ArrayJSONCodec,
-        ).fromJSON(json.preimages),
+        ).fromJSON(json.preimages || []),
         preimage_l: preimageLCodec.fromJSON(json.lookup_meta),
       };
       return x;
@@ -223,13 +223,27 @@ const accountsCodec: JSONCodec<Delta, DunaState["accounts"]> = MapJSONCodec(
           items: serviceAccountItemInStorage(value),
           bytes: Number(serviceAccountTotalOctets(value)),
         },
-        storage: Object.fromEntries(value.storage.entries()),
-        preimages: [...value.preimage_p.entries()].map(([k, v]) => {
-          return {
-            hash: HashJSONCodec().toJSON(k),
-            blob: Uint8ArrayJSONCodec.toJSON(v),
-          };
-        }),
+        storage: (() => {
+          if (value.storage.size === 0) {
+            return null;
+          }
+          return <Record<string, string>>Object.fromEntries(
+            [...value.storage.entries()].map(([k, v]) => {
+              return [HashJSONCodec().toJSON(k), Uint8ArrayJSONCodec.toJSON(v)];
+            }),
+          );
+        })(),
+        preimages: (() => {
+          if (value.preimage_p.size === 0) {
+            return null;
+          }
+          return [...value.preimage_p.entries()].map(([k, v]) => {
+            return {
+              hash: HashJSONCodec().toJSON(k),
+              blob: Uint8ArrayJSONCodec.toJSON(v),
+            };
+          });
+        })(),
         lookup_meta: preimageLCodec.toJSON(value.preimage_l),
       };
       return ret;
@@ -347,7 +361,6 @@ describe("jamduna", () => {
       );
 
       checkMerkle(tsJamState, dunaStateTransition.pre_state);
-      merkleStateMap;
       const newBlock = BlockJSONCodec.fromJSON(dunaStateTransition.block);
       const [error, tsJamNewState] = importBlock(newBlock, {
         block: curBlock,
@@ -356,6 +369,22 @@ describe("jamduna", () => {
       expect(error).toBeUndefined();
 
       checkMerkle(tsJamNewState!.state, dunaStateTransition.post_state);
+
+      // check against state snapshott
+      const dunaState = JSON.parse(
+        fs.readFileSync(
+          `${__dirname}/../../../jamtestnet/data/${set}/state_snapshots/${block}.json`,
+          "utf8",
+        ),
+      );
+
+      const encodedJamState = stateCodec.toJSON(tsJamNewState!.state);
+      for (const k in dunaState) {
+        if (k !== "headerLookupHistory") {
+          // @ts-ignore
+          expect(encodedJamState[k], `${k} - ${block}`).deep.eq(dunaState[k]);
+        }
+      }
       tsJamState = tsJamNewState!.state;
       curBlock = tsJamNewState!.block;
     }

@@ -17,7 +17,7 @@ type Output = {
 
 export const debugContext = (ctx: PVMProgramExecutionContext) => {
   // pvmLogger.debug("regs", { regs: ctx.registers.join(", ") });
-  console.log(`\t regs:[${ctx.registers.join(", ")}] gas:${ctx.gas}`);
+  return `\t regs:[${ctx.registers.join(" ")}] gas:${ctx.gas}`;
 };
 
 /**
@@ -30,9 +30,9 @@ export const pvmSingleStep = (
   ctx: PVMProgramExecutionContext,
 ): Output => {
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
-  console.log(`[@${ctx.instructionPointer}] - ${ix?.identifier}`);
-
-  debugContext(ctx);
+  console.log(
+    `[@${ctx.instructionPointer}] - ${ix?.identifier} ${debugContext(ctx)}`,
+  );
 
   if (
     ctx.instructionPointer >= p.program.c.length ||

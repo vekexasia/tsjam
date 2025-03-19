@@ -33,7 +33,15 @@ import { djump } from "@/utils/djump";
 import { branch } from "@/utils/branch";
 import { Z, Z4, Z8, Z8_inv } from "@/utils/zed";
 import { toSafeMemoryAddress } from "@/pvmMemory";
-import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
+import {
+  E_2,
+  E_2_int,
+  E_4,
+  E_4_int,
+  E_8,
+  encodeWithCodec,
+  Uint8ArrayJSONCodec,
+} from "@tsjam/codec";
 
 /**
  * This class holds the ixs implementations.
@@ -676,7 +684,11 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    console.log(location);
+    console.log(location.toString(16));
+    console.log({ wB, vX }, context.execution.memory.canWrite(location, 4));
     const val = context.execution.memory.getBytes(location, 4);
+    console.log(Uint8ArrayJSONCodec.toJSON(val));
     // TODO: memory fault?
     const num = E_4.decode(val).value;
     return [IxMod.reg(rA, Z8_inv(Z(4, num)))];

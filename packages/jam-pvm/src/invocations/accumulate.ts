@@ -38,7 +38,9 @@ import {
   E_4_int,
   E_sub_int,
   HashCodec,
+  HashJSONCodec,
   PVMAccumulationOpCodec,
+  Uint8ArrayJSONCodec,
   createArrayLengthDiscriminator,
   createCodec,
   encodeWithCodec,
@@ -54,6 +56,7 @@ import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
+import { WorkOutputJSONCodec } from "@tsjam/codec";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
@@ -92,6 +95,26 @@ export const accumulateInvocation = (
   const code = serviceAccount.preimage_p.get(serviceAccount.codeHash);
   assert(typeof code !== "undefined", "Code not found in preimage");
 
+  console.log("arguments", { t, s, o });
+  console.log(
+    "encoded",
+    Uint8ArrayJSONCodec.toJSON(
+      encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
+    ),
+    "op",
+    ...(() => {
+      if (o.length === 0) return [];
+      return [
+        "packageHash",
+        HashJSONCodec().toJSON(o[0].packageHash),
+        "payloadHash",
+        HashJSONCodec().toJSON(o[0].payloadHash),
+        "output",
+        WorkOutputJSONCodec.toJSON(o[0].output),
+        o[0].output,
+      ];
+    })(),
+  );
   const mres = argumentInvocation(
     code,
     5 as u32, // instructionPointer
@@ -139,7 +162,7 @@ const I_fn = (
   return {
     service,
     u: {
-      ...pvmAccState, //TODO: create a full copy
+      ...structuredClone(pvmAccState),
     },
     i,
     transfer: [],
