@@ -70,8 +70,8 @@ export const ValidatorStatistcsJSONCodec: JSONCodec<
   toJSON(value) {
     const seqofvalstats = ArrayOfJSONCodec(SingleValStatisticJSONCodec);
     return {
-      last: seqofvalstats.toJSON(value[0]),
-      current: seqofvalstats.toJSON(value[1]),
+      current: seqofvalstats.toJSON(value[0]),
+      last: seqofvalstats.toJSON(value[1]),
     };
   },
 };

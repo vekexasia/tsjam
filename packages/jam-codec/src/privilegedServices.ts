@@ -53,7 +53,7 @@ export const PrivilegedServicesJSONCodec: JSONCodec<
       },
       toJSON(v: Map<ServiceIndex, Gas>) {
         if (v.size === 0) {
-          return null;
+          return {};
         }
         return Object.fromEntries(
           [...v.entries()].map((a) => [a[0], Number(a[1])]),

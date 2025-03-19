@@ -30,6 +30,7 @@ export * from "@/setelements/WorkItemCodec.js";
 export * from "@/setelements/WorkPackageCodec.js";
 export * from "@/setelements/WorkReportCodec.js";
 export * from "@/setelements/WorkResultCodec.js";
+export * from "@/setelements/WorkOutputCodec.js";
 export * from "@/setelements/RHOCodec.js";
 export * from "@/setelements/RecentHistory.js";
 export * from "@/setelements/DeferredTransferCodec.js";
