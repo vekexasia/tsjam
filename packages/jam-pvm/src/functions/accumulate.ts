@@ -559,7 +559,7 @@ export const omega_f = regFn<
           a_p.delete(h);
         } else if (xslhz.length === 1) {
           a_l.get(h)!.set(z, toTagged([x, t]));
-        } else if (xslhz.length === 3 && w < t - PREIMAGE_EXPIRATION) {
+        } else if (xslhz.length === 3 && y < t - PREIMAGE_EXPIRATION) {
           a_l.get(h)!.set(z, toTagged([w, t]));
         } else {
           return [IxMod.w7(HostCallResult.HUH)];
