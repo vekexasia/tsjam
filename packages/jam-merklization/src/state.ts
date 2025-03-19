@@ -150,9 +150,10 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 };
 
 /**
+ * `C` in graypaper
  * $(0.6.1 - D.1)
  */
-const C_fn = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
+export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {
     const h: Uint8Array = _s;
     const s = i;
@@ -205,14 +206,23 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   //    );
   //  };
 
-  toRet.set(C_fn(1), encodeWithCodec(AuthorizerPoolCodec(), state.authPool));
+  toRet.set(
+    stateKey(1),
+    encodeWithCodec(AuthorizerPoolCodec(), state.authPool),
+  );
   //  logState("authPool|c1", C_fn(1));
 
-  toRet.set(C_fn(2), encodeWithCodec(AuthorizerQueueCodec(), state.authQueue));
+  toRet.set(
+    stateKey(2),
+    encodeWithCodec(AuthorizerQueueCodec(), state.authQueue),
+  );
   //  logState("authQueue|c2", C_fn(2));
 
   // β - recentHistory
-  toRet.set(C_fn(3), encodeWithCodec(RecentHistoryCodec, state.recentHistory));
+  toRet.set(
+    stateKey(3),
+    encodeWithCodec(RecentHistoryCodec, state.recentHistory),
+  );
   //  logState("recentHistory|c3", C_fn(3));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
@@ -225,7 +235,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   toRet.set(
-    C_fn(4),
+    stateKey(4),
     new Uint8Array([
       ...encodeWithCodec(
         createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
@@ -246,7 +256,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 5
   toRet.set(
-    C_fn(5),
+    stateKey(5),
     new Uint8Array([
       ...encodeWithCodec(
         createArrayLengthDiscriminator(HashCodec),
@@ -269,7 +279,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 6
   toRet.set(
-    C_fn(6),
+    stateKey(6),
     new Uint8Array([
       ...encodeWithCodec(HashCodec, state.entropy[0]),
       ...encodeWithCodec(HashCodec, state.entropy[1]),
@@ -280,7 +290,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 7
   toRet.set(
-    C_fn(7),
+    stateKey(7),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
       state.iota,
@@ -289,7 +299,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 8
   toRet.set(
-    C_fn(8),
+    stateKey(8),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
       state.kappa,
@@ -298,7 +308,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 9
   toRet.set(
-    C_fn(9),
+    stateKey(9),
     encodeWithCodec(
       createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
       state.lambda,
@@ -306,20 +316,20 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   );
 
   // 10
-  toRet.set(C_fn(10), encodeWithCodec(RHOCodec(), state.rho));
+  toRet.set(stateKey(10), encodeWithCodec(RHOCodec(), state.rho));
 
   // 11
-  toRet.set(C_fn(11), encodeWithCodec(E_4, BigInt(state.tau)));
+  toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
 
   // 12
   toRet.set(
-    C_fn(12),
+    stateKey(12),
     encodeWithCodec(PrivilegedServicesCodec, state.privServices),
   );
 
   // 13
   toRet.set(
-    C_fn(13),
+    stateKey(13),
     encodeWithCodec(
       ValidatorStatisticsCodec(NUMBER_OF_VALIDATORS),
       state.validatorStatistics,
@@ -338,7 +348,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // c
   toRet.set(
-    C_fn(14),
+    stateKey(14),
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
@@ -364,7 +374,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   // 15 - accumulationHistory
   toRet.set(
-    C_fn(15),
+    stateKey(15),
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
@@ -383,7 +393,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
 
   for (const [serviceIndex, serviceAccount] of state.serviceAccounts) {
     toRet.set(
-      C_fn(255, serviceIndex),
+      stateKey(255, serviceIndex),
       new Uint8Array([
         ...encodeWithCodec(HashCodec, serviceAccount.codeHash),
         ...encodeWithCodec(E_8, serviceAccount.balance),
@@ -402,7 +412,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
 
       toRet.set(
-        C_fn(serviceIndex, new Uint8Array([...pref, ...k.subarray(0, 28)])),
+        stateKey(serviceIndex, new Uint8Array([...pref, ...k.subarray(0, 28)])),
         encodeWithCodec(IdentityCodec, v),
       );
     }
@@ -411,7 +421,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       const h = encodeWithCodec(HashCodec, _h);
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
       toRet.set(
-        C_fn(serviceIndex, new Uint8Array([...pref, ...h.subarray(1, 29)])),
+        stateKey(serviceIndex, new Uint8Array([...pref, ...h.subarray(1, 29)])),
         encodeWithCodec(IdentityCodec, p),
       );
     }
@@ -422,7 +432,10 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
         const h_h = Hashing.blake2bBuf(encodeWithCodec(HashCodec, h));
 
         toRet.set(
-          C_fn(serviceIndex, new Uint8Array([...e_l, ...h_h.subarray(2, 30)])),
+          stateKey(
+            serviceIndex,
+            new Uint8Array([...e_l, ...h_h.subarray(2, 30)]),
+          ),
           encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
         );
       }
