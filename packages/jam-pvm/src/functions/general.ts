@@ -15,8 +15,10 @@ import { toSafeMemoryAddress } from "@/pvmMemory";
 import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
 import {
+  Blake2bHashCodec,
   E_4_int,
   encodeWithCodec,
+  HashCodec,
   HashJSONCodec,
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
@@ -48,7 +50,7 @@ export const omega_g = regFn<[], W7 | W8>({
  */
 export const omega_l = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
-  W7 | PVMSingleModMemory
+  PVMExitPanicMod | W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 1 as u8,
@@ -62,33 +64,42 @@ export const omega_l = regFn<
       } else {
         a = d.get(Number(w7) as ServiceIndex);
       }
-      const [h0, b0, bz] = context.registers.slice(8);
-      let h: Blake2bHash | undefined;
-      if (!context.memory.canRead(toSafeMemoryAddress(h0), 32)) {
-        h = undefined;
+      const [h, o] = context.registers.slice(8);
+
+      let hash: Blake2bHash;
+      if (context.memory.canRead(toSafeMemoryAddress(h), 32)) {
+        hash = Blake2bHashCodec.decode(
+          context.memory.getBytes(toSafeMemoryAddress(h), 32),
+        ).value;
       } else {
-        h = Hashing.blake2b(
-          context.memory.getBytes(toSafeMemoryAddress(h0), 32),
-        );
+        // v = ∇
+        return [IxMod.panic()];
       }
-
-      const v =
-        typeof a !== "undefined" &&
-        typeof h !== "undefined" &&
-        a.preimage_p.has(h)
-          ? a.preimage_p.get(h)
-          : undefined;
-
-      assert(bz + b0 < 2 ** 32, "lookup bz + b0 exceed ram length");
-      if (!context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz + b0))) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      }
-      if (typeof v === "undefined") {
+      if (typeof a === "undefined" || !a.preimage_p.has(hash)) {
+        // we can't either read memory or `a` cannot be set or the preimage has not the hash we're looking for
         return [IxMod.w7(HostCallResult.NONE)];
+      }
+
+      const v = a.preimage_p.get(hash)!;
+
+      const w10 = context.registers[10];
+      const w11 = context.registers[11];
+
+      const vLength = BigInt(v.length);
+      // start
+      const f = w10 < vLength ? w10 : vLength;
+      // length
+      const l = w11 < vLength - f ? w11 : vLength - f;
+
+      // this is not ingraypaper  but it's a good idea to check if the sum of the two values is less than 2^32
+      assert(o + l < 2 ** 32, "o+l must not exceed 2^32");
+
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), Number(l))) {
+        return [IxMod.panic()];
       }
       return [
         IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(v.length, Number(bz)))),
+        IxMod.memory(o, v.subarray(Number(f), Number(l))),
       ];
     },
   },
@@ -194,6 +205,9 @@ export const omega_w = regFn<
           HashJSONCodec().toJSON(k),
           "\x1b[0m",
           s,
+          Uint8ArrayJSONCodec.toJSON(
+            context.memory.getBytes(toSafeMemoryAddress(v0), Number(vz)),
+          ),
         );
         a.storage.set(
           k,
