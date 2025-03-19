@@ -31,6 +31,7 @@ import {
   BlockJSONCodec,
   encodeWithCodec,
   HashCodec,
+  E_4_int,
 } from "@tsjam/codec";
 import {
   CodeHash,
@@ -54,7 +55,7 @@ import {
   serviceAccountTotalOctets,
 } from "@tsjam/utils";
 import { importBlock } from "@/importBlock";
-import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
+import { merkelizeState, merkleStateMap, stateKey } from "@tsjam/merklization";
 import assert from "assert";
 
 const mocks = vi.hoisted(() => {
@@ -65,6 +66,7 @@ const mocks = vi.hoisted(() => {
     VALIDATOR_CORE_ROTATION: 10,
     MAX_TICKETS_PER_VALIDATOR: 2,
     LOTTERY_MAX_SLOT: 500,
+    PREIMAGE_EXPIRATION: 28800,
   };
 });
 vi.mock("@tsjam/constants", async (importOriginal) => {
@@ -73,6 +75,11 @@ vi.mock("@tsjam/constants", async (importOriginal) => {
     ...mocks,
   };
 
+  Object.defineProperty(toRet, "PREIMAGE_EXPIRATION", {
+    get() {
+      return mocks.PREIMAGE_EXPIRATION;
+    },
+  });
   Object.defineProperty(toRet, "VALIDATOR_CORE_ROTATION", {
     get() {
       return mocks.VALIDATOR_CORE_ROTATION;
@@ -318,6 +325,7 @@ describe("jamduna", () => {
     mocks.MAX_TICKETS_PER_VALIDATOR = 3;
     mocks.LOTTERY_MAX_SLOT = 10;
     mocks.VALIDATOR_CORE_ROTATION = 4;
+    mocks.PREIMAGE_EXPIRATION = 6;
   });
   it("fallback", () => {
     const kind = "tiny";
@@ -380,9 +388,62 @@ describe("jamduna", () => {
 
       const encodedJamState = stateCodec.toJSON(tsJamNewState!.state);
       for (const k in dunaState) {
-        if (k !== "headerLookupHistory") {
+        if (k !== "accounts") {
           // @ts-ignore
           expect(encodedJamState[k], `${k} - ${block}`).deep.eq(dunaState[k]);
+        }
+      }
+
+      // check accounts which is ok except for the damn storage
+      // first sort them by id
+      encodedJamState.accounts.sort((a, b) => a.id - b.id);
+      dunaState.accounts.sort((a: any, b: any) => a.id - b.id);
+      for (let i = 0; i < encodedJamState.accounts.length; i++) {
+        const acc = encodedJamState.accounts[i];
+        const dunaAcc = dunaState.accounts[i];
+
+        expect(acc.id, `acc[${i}].id - block:${block}`).deep.eq(dunaAcc.id);
+        expect(
+          acc.data.service,
+          `acc[${i}].data.service - block:${block}`,
+        ).deep.eq(dunaAcc.data.service);
+        acc.data.preimages?.sort((a, b) => a.hash.localeCompare(b.hash));
+        dunaAcc.data.preimages?.sort((a: any, b: any) =>
+          a.hash.localeCompare(b.hash),
+        );
+        expect(
+          acc.data.preimages,
+          `acc[${i}].data.preimages - block:${block}`,
+        ).deep.eq(dunaAcc.data.preimages);
+        //reorder lookup meta
+        acc.data.lookup_meta.sort((a, b) =>
+          a.key.hash.localeCompare(b.key.hash),
+        );
+        dunaAcc.data.lookup_meta.sort((a: any, b: any) =>
+          a.key.hash.localeCompare(b.key.hash),
+        );
+        expect(
+          acc.data.lookup_meta,
+          `acc[${i}].data.lookup_meta - block:${block}`,
+        ).deep.eq(dunaAcc.data.lookup_meta);
+
+        // storage is broken in duna... lets use the merklization keys instead of real keys
+        for (const realKey in acc.data.storage) {
+          const k = encodeWithCodec(
+            HashCodec,
+            HashJSONCodec().fromJSON(realKey),
+          );
+          const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
+
+          const dunaKey = stateKey(
+            acc.id,
+            new Uint8Array([...pref, ...k.subarray(0, 28)]),
+          );
+          const dunaJSONKey = HashJSONCodec().toJSON(dunaKey);
+          expect(
+            acc.data.storage[realKey],
+            `acc[${i}].data.storage[${realKey} - ${dunaJSONKey}] - block:${block}`,
+          ).deep.eq(dunaAcc.data.storage[dunaJSONKey]);
         }
       }
       tsJamState = tsJamNewState!.state;
