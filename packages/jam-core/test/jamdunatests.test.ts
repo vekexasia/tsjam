@@ -282,7 +282,10 @@ function checkMerkle(jamState: JamState, duna: any) {
     const k = HashJSONCodec().fromJSON(key);
     assert(tsjamState.has(k), `missing key ${key}|${desc}`);
 
-    expect(Uint8ArrayJSONCodec.toJSON(tsjamState.get(k)!), desc).toBe(value);
+    expect(
+      Uint8ArrayJSONCodec.toJSON(tsjamState.get(k)!),
+      `${key}|${desc}`,
+    ).toBe(value);
   }
   // check merkle root
   const mtr = merkelizeState(jamState);
