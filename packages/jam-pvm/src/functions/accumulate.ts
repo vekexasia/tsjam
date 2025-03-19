@@ -15,6 +15,7 @@ import {
   u32,
   u8,
   u64,
+  PVMExitPanicMod,
 } from "@tsjam/types";
 import {
   AUTHQUEUE_MAX_SIZE,
@@ -513,8 +514,12 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
 /**
  * `ΩF`
  * forget preimage host call
+ *
  */
-export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
+export const omega_f = regFn<
+  [x: PVMResultContext, t: Tau],
+  PVMExitPanicMod | W7 | XMod
+>({
   fn: {
     opCode: 15 as u8,
     identifier: "forget",
@@ -523,7 +528,7 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       const [o, _z] = context.registers.slice(7);
       const z = Number(_z) as Tagged<u32, "length">;
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
       const x_bold_s = x.u.delta.get(x.service)!;
       const h = HashCodec.decode(
@@ -532,6 +537,35 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
       const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
 
+      if (typeof x_bold_s.preimage_l.get(h) === "undefined") {
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+
+      const xslhz = x_bold_s.preimage_l.get(h)?.get(z);
+
+      if (typeof xslhz === "undefined") {
+        // means we have `h` but no `z`
+        if (a_l.get(h)?.size === 0) {
+          a_l.delete(h);
+        }
+        a_p.delete(h);
+      } else {
+        const [x, y, w] = xslhz;
+        if (xslhz.length === 2 && y < t - PREIMAGE_EXPIRATION) {
+          a_l.get(h)!.delete(z);
+          if (a_l.get(h)!.size === 0) {
+            a_l.delete(h);
+          }
+          a_p.delete(h);
+        } else if (xslhz.length === 1) {
+          a_l.get(h)!.set(z, toTagged([x, t]));
+        } else if (xslhz.length === 3 && w < t - PREIMAGE_EXPIRATION) {
+          a_l.get(h)!.set(z, toTagged([w, t]));
+        } else {
+          return [IxMod.w7(HostCallResult.HUH)];
+        }
+      }
+      /*
       if (a_l.get(h)?.get(z)?.length === 1) {
         a_l.get(h)!.get(z)!.push(t);
       } else if (a_l.get(h)?.get(z)?.length === 3) {
@@ -559,7 +593,7 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
         // zero length or undefined
         a_p.delete(h);
       }
-
+*/
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.obj({
@@ -586,7 +620,10 @@ export const omega_f = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
   },
 });
 
-export const omega_y = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_y = regFn<
+  [x: PVMResultContext],
+  PVMExitPanicMod | W7 | XMod
+>({
   fn: {
     opCode: 16,
     identifier: "yield",
@@ -594,11 +631,11 @@ export const omega_y = regFn<[x: PVMResultContext], W7 | XMod>({
     execute(context, x) {
       const o = context.registers[7];
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
-      const h: Hash = bytesToBigInt(
+      const h = HashCodec.decode(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
-      );
+      ).value;
       return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: { ...x, y: h } })];
     },
   },
