@@ -10,7 +10,7 @@ import {
   StateRootHash,
 } from "@tsjam/types";
 import { appendMMR, wellBalancedBinaryMerkleRoot } from "@tsjam/merklization";
-import { E_4 } from "@tsjam/codec";
+import { E_4, HashJSONCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { RecentHistory } from "@tsjam/types";
 import { bigintToExistingBytes } from "@tsjam/utils";
@@ -27,6 +27,14 @@ export const calculateAccumulateRoot = (
     accumulationResult: Hash;
   }>,
 ): MerkleTreeRoot => {
+
+  console.log("Beefy", [...beefyCommitment.values()]
+      // sorting is set in (83)
+      .sort((a, b) => a.serviceIndex - b.serviceIndex)
+    .map((entry) => {
+      return {serviceIndex: entry.serviceIndex, acc: HashJSONCodec().toJSON(entry.accumulationResult)};
+    }))
+
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(
     [...beefyCommitment.values()]

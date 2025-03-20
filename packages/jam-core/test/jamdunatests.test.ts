@@ -450,7 +450,4 @@ describe("jamduna", () => {
       curBlock = tsJamNewState!.block;
     }
   });
-  it("test ", () => {
-    expect("ciao").toBe("ciao");
-  });
 });

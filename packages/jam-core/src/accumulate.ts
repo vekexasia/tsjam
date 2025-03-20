@@ -37,6 +37,12 @@ import { toDagger, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@tsjam/pvm";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  WorkReportCodec,
+  WorkReportJSONCodec,
+} from "@tsjam/codec";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -60,13 +66,29 @@ export const accumulateReports = (
    * Integrate state to calculate several posterior state
    */
   const w_mark = noPrereqAvailableReports(w);
+
+  //console.log(
+  //  JSON.stringify(
+  //    { w_mark: ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(w_mark) },
+  //    null,
+  //    2,
+  //  ),
+  //);
   const w_q = withPrereqAvailableReports(w, deps.accumulationHistory);
+  // console.log({ w_q: w_q });
   const w_star = accumulatableReports(
     w_mark,
     w_q,
     deps.accumulationQueue,
     deps.p_tau,
   );
+  //console.log(
+  //  JSON.stringify(
+  //    { w_star: ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(w_star) },
+  //    null,
+  //    2,
+  //  ),
+  //);
 
   // $(0.6.1 - 12.20)
   const g: Gas = [
@@ -284,20 +306,20 @@ export const accumulatableReports = (
   // $(0.6.1 - 12.10)
   const m = p_tau % EPOCH_LENGTH;
 
-  return [
-    ...w_mark,
-    ...computeAccumulationPriority(
-      // $(0.6.1 - 12.12)
-      E_Fn(
-        [
-          ...accumulationQueue.slice(m).flat(),
-          ...accumulationQueue.slice(0, m).flat(),
-          ...w_q,
-        ],
-        P_fn(w_mark),
-      ),
+  // console.log("W_Q", w_q);
+  const accprio = computeAccumulationPriority(
+    // $(0.6.1 - 12.12)
+    E_Fn(
+      [
+        ...accumulationQueue.slice(m).flat(),
+        ...accumulationQueue.slice(0, m).flat(),
+        ...w_q,
+      ],
+      P_fn(w_mark),
     ),
-  ] as Tagged<WorkReport[], "W*">;
+  );
+  // console.log("Q(q)", ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(accprio));
+  return [...w_mark, ...accprio] as Tagged<WorkReport[], "W*">;
 };
 
 /**
@@ -391,10 +413,14 @@ export const parallelizedAccAccumulation = (
     ...f.keys(),
   ]);
   const bold_s_values = [...bold_s.values()];
+  // console.log(
+  //  "∆* services:",
+  // w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
+  //  );
 
-  const accumulatedServices = bold_s_values.map((s) =>
-    singleServiceAccumulation(o, w, f, s, deps),
-  );
+  const accumulatedServices = bold_s_values.map((s) => {
+    return singleServiceAccumulation(o, w, f, s, deps);
+  });
 
   const u = accumulatedServices.reduce((a, { u }) => a + u, 0n);
   const b = new Set<{ service: ServiceIndex; hash: Hash }>();
@@ -428,6 +454,8 @@ export const parallelizedAccAccumulation = (
       }
     }
   }
+  // console.log({ n });
+  // console.log({ m });
   const delta_prime: Delta = new Map([...delta.entries(), ...n.entries()]);
   for (const k of m) {
     delta_prime.delete(k);
@@ -482,6 +510,7 @@ export const singleServiceAccumulation = (
   b: Hash | undefined;
   u: u64;
 } => {
+  // console.log(`\nACCUMULATING ${s}\n`);
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
     wr.results
