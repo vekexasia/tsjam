@@ -110,51 +110,53 @@ export const omega_l = regFn<
  */
 export const omega_r = regFn<
   [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
-  W7 | PVMSingleModMemory
+  PVMExitPanicMod | W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 2 as u8,
     identifier: "read",
     gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
-      let a: ServiceAccount | undefined;
+      console.log("READ", s);
       const w7 = context.registers[7];
-      const [k0, kz, b0, bz] = context.registers.slice(8);
-      if (Number(w7) === s || w7 === 2n ** 64n - 1n) {
+      let s_star = s;
+      if (w7 !== 2n ** 64n - 1n) {
+        s_star = <ServiceIndex>Number(w7);
+      }
+      assert(s_star < 2 ** 32, "service index not in bounds");
+
+      console.log("READ s*", s_star);
+      let a: ServiceAccount | undefined;
+      if (s_star === s) {
         a = bold_s;
+      } else if (d.has(s_star)) {
+        console.log("qui");
+        a = d.get(s_star)!;
       } else {
-        a = d.get(Number(w7) as ServiceIndex);
+        console.log("porcodio");
       }
-      let k: Hash;
-      assert(kz < 2 ** 32, "kz >= ram size");
-      assert(bz < 2 ** 32, "bz >= ram size");
-      if (
-        !context.memory.canRead(toSafeMemoryAddress(k0), Number(kz)) ||
-        !context.memory.canWrite(toSafeMemoryAddress(b0), Number(bz))
-      ) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      } else {
-        const tmp = new Uint8Array(4 + Number(kz));
 
-        tmp.set(encodeWithCodec(E_4_int, s), 0);
-        tmp.set(
-          context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz)),
-          4,
-        );
-
-        k = Hashing.blake2b(tmp);
+      const [ko, kz, o, w11, w12] = context.registers.slice(8);
+      if (!context.memory.canRead(toSafeMemoryAddress(ko), Number(kz))) {
+        return [IxMod.panic()];
       }
-      let v: Uint8Array;
-      if (typeof a !== "undefined" && a.storage.has(k)) {
-        v = a.storage.get(k)!;
-      } else {
+      // compute k
+      const tmp = new Uint8Array(4 + Number(kz));
+      E_4_int.encode(s_star, tmp);
+      tmp.set(context.memory.getBytes(toSafeMemoryAddress(ko), Number(kz)), 4);
+      const k = Hashing.blake2b(tmp);
+      console.log("READ key=", HashJSONCodec().toJSON(k));
+
+      const v = a?.storage.get(k);
+      if (typeof v === "undefined") {
+        console.log("diomerda");
+        // either a is undefined or no key in storage
         return [IxMod.w7(HostCallResult.NONE)];
       }
 
-      return [
-        IxMod.w7(v.length),
-        IxMod.memory(b0, v.subarray(0, Math.min(v.length, Number(bz)))),
-      ];
+      const f = w11 < v.length ? Number(w11) : v.length;
+      const l = w12 < v.length - f ? Number(w12) : v.length - f;
+      return [IxMod.w7(v.length), IxMod.memory(o, v.subarray(f, f + l))];
     },
   },
 });
