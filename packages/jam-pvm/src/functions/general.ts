@@ -18,14 +18,13 @@ import {
   Blake2bHashCodec,
   E_4_int,
   encodeWithCodec,
-  HashCodec,
   HashJSONCodec,
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
-import { serviceAccountGasThreshold } from "@tsjam/utils";
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import assert from "node:assert";
+import { serviceAccountGasThreshold } from "@tsjam/serviceaccounts";
 
 /**
  * `ΩG`

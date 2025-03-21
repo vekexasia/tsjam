@@ -26,17 +26,16 @@ import {
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
 import { E_4_int, E_8, HashCodec, ValidatorDataCodec } from "@tsjam/codec";
-import {
-  bytesToBigInt,
-  serviceAccountGasThreshold,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-  toTagged,
-} from "@tsjam/utils";
+import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 import { toSafeMemoryAddress } from "@/pvmMemory";
+import {
+  serviceAccountGasThreshold,
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 /**
  * `ΩB`

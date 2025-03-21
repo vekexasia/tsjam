@@ -1,12 +1,12 @@
 {
-  "name": "@tsjam/merklization",
+  "name": "@tsjam/serviceaccounts",
   "version": "1.0.0",
-  "description": "MMR and merkle trees used in JAM",
+  "description": "Base Types for JAM",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
     "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
-    "test": "vitest",
+    "test": "npx vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build && vitest run"
   },
@@ -30,8 +30,6 @@
   "dependencies": {
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
-    "@tsjam/serviceaccounts": "*",
-    "@tsjam/crypto": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },

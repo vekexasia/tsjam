@@ -34,6 +34,7 @@
     "@tsjam/pvm": "*",
     "@tsjam/transitions": "*",
     "@tsjam/types": "*",
+    "@tsjam/serviceaccounts": "*",
     "@tsjam/utils": "*",
     "neverthrow": "^8.1.1"
   },

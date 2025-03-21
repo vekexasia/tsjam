@@ -4,6 +4,7 @@ import { BigIntBytes, ByteArrayOfLength } from "@tsjam/types";
 /**
  * Convert a Uint8Array to a hex string
  * @param bytes - the Uint8Array to convert
+ * TODO: remove
  */
 export const hexToBytes = <T extends ByteArrayOfLength<K>, K extends number>(
   hex: string,
@@ -15,6 +16,7 @@ export const hexToBytes = <T extends ByteArrayOfLength<K>, K extends number>(
  * Convert a hex string to a BigInt
  * @param hex - the hex string to convert
  * @returns the BigInt
+ * TODO: remove
  */
 export const hextToBigInt = <T extends BigIntBytes<K>, K extends number>(
   hex: string,

@@ -4,7 +4,30 @@ import {
   SERVICE_MIN_BALANCE,
 } from "@tsjam/constants";
 import { ServiceAccount, u32, u64 } from "@tsjam/types";
-import { toTagged } from "./utils";
+import { toTagged } from "@tsjam/utils";
+import {
+  createCodec,
+  IdentityCodec,
+  LengthDiscrimantedIdentity,
+} from "@tsjam/codec";
+
+const metadataCodec = createCodec<{ code: Uint8Array; metadata: Uint8Array }>([
+  ["code", LengthDiscrimantedIdentity],
+  ["metadata", IdentityCodec],
+]);
+/**
+ *
+ * computes bold_c and bold_m
+ * $(0.6.4 - 9.4)
+ */
+export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
+  const blob = a.preimage_p.get(a.codeHash);
+  if (typeof blob === "undefined") {
+    return { code: undefined, metadata: undefined };
+  }
+  const decoded = metadataCodec.decode(blob);
+  return decoded.value;
+};
 
 /**
  * compute the gas threshold of a service account

@@ -41,16 +41,14 @@ import {
   StateRootHash,
   u32,
 } from "@tsjam/types";
-import {
-  bigintToBytes,
-  bytesToBigInt,
-  isFallbackMode,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/utils";
+import { bigintToBytes, bytesToBigInt, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 /**
  * Merkelize state

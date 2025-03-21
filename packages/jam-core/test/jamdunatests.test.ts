@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
-  BlockCodec,
   JC_J,
   GammaSJSONCodec,
   GammaKJSONCodec,
@@ -35,7 +34,6 @@ import {
 } from "@tsjam/codec";
 import {
   CodeHash,
-  Dagger,
   Delta,
   Gas,
   Hash,
@@ -49,14 +47,14 @@ import {
   u64,
   UpToSeq,
 } from "@tsjam/types";
-import {
-  hextToBigInt,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/utils";
+import { hextToBigInt } from "@tsjam/utils";
 import { importBlock } from "@/importBlock";
 import { merkelizeState, merkleStateMap, stateKey } from "@tsjam/merklization";
 import assert from "assert";
+import {
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 const mocks = vi.hoisted(() => {
   return {
