@@ -322,6 +322,9 @@ export const accumulatableReports = (
   return [...w_mark, ...accprio] as Tagged<WorkReport[], "W*">;
 };
 
+// $(0.6.4 - 12.15)
+type B = Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>;
+type U = Array<{ serviceIndex: ServiceIndex; gas: Gas }>;
 /**
  * `∆+`
  * $(0.6.1 - 12.16)
@@ -340,8 +343,8 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  // $(0.6.1 - 12.15)
-  Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>,
+  B,
+  U,
 ] => {
   let sum = 0n;
   let i = 0;
@@ -356,17 +359,21 @@ export const outerAccumulation = (
   }
 
   if (i == 0) {
-    return [0, accState, [], new Set()];
+    return [0, accState, [], new Set(), []];
   }
 
-  const [g_star, o_star, t_star, b_star] = parallelizedAccAccumulation(
+  const [o_star, t_star, b_star, u_star] = parallelizedAccAccumulation(
     accState,
     works.slice(0, i),
     gasLimits,
     deps,
   );
-  const [j, o_prime, t, b] = outerAccumulation(
-    (gasLimit - g_star) as Gas,
+  const consumedGas = u_star
+    .map((a) => a.gas)
+    .reduce((s, e) => <Gas>(s + e), <Gas>0n);
+
+  const [j, o_prime, t, b, u] = outerAccumulation(
+    (gasLimit - consumedGas) as Gas,
     works.slice(i),
     o_star,
     new Map(),
@@ -386,12 +393,13 @@ export const outerAccumulation = (
       }),
       ...b.values(),
     ]),
+    u_star.concat(u),
   ];
 };
 
 /**
  * `∆*` fn
- * $(0.6.1 - 12.17)
+ * $(0.6.4 - 12.17)
  */
 export const parallelizedAccAccumulation = (
   o: PVMAccumulationState,
@@ -403,10 +411,10 @@ export const parallelizedAccAccumulation = (
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
 ): [
-  gas: u64,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  b: Set<{ service: ServiceIndex; hash: Hash }>,
+  b: B,
+  u: U,
 ] => {
   const bold_s = new Set([
     ...w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
@@ -418,18 +426,22 @@ export const parallelizedAccAccumulation = (
   // w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
   //  );
 
-  const accumulatedServices = bold_s_values.map((s) => {
-    return singleServiceAccumulation(o, w, f, s, deps);
-  });
+  const u: U = [];
+  const accumulatedServices: Array<
+    ReturnType<typeof singleServiceAccumulation>
+  > = [];
+  const b: B = new Set();
 
-  const u = accumulatedServices.reduce((a, { u }) => a + u, 0n);
-  const b = new Set<{ service: ServiceIndex; hash: Hash }>();
+  bold_s_values.forEach((s) => {
+    const acc = singleServiceAccumulation(o, w, f, s, deps);
 
-  for (let i = 0; i < bold_s_values.length; i++) {
-    if (typeof accumulatedServices[i].b !== "undefined") {
-      b.add({ service: bold_s_values[i], hash: accumulatedServices[i].b! });
+    u.push({ serviceIndex: s, gas: acc.u });
+    accumulatedServices.push(acc);
+
+    if (typeof acc.b !== "undefined") {
+      b.add({ serviceIndex: s, accumulationResult: acc.b! });
     }
-  }
+  });
 
   const t = accumulatedServices
     .reduce((a, { t }) => a.concat(t), [] as DeferredTransfer[])
@@ -486,7 +498,7 @@ export const parallelizedAccAccumulation = (
     ).o.authQueue,
   };
 
-  return [toTagged(u), newState, t, b];
+  return [newState, t, b, u];
 };
 
 /**
@@ -508,7 +520,7 @@ export const singleServiceAccumulation = (
   o: PVMAccumulationState;
   t: DeferredTransfer[];
   b: Hash | undefined;
-  u: u64;
+  u: Gas;
 } => {
   // console.log(`\nACCUMULATING ${s}\n`);
   let g = (f.get(s) || 0n) as Gas;
