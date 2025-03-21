@@ -14,7 +14,6 @@ import {
   ServiceIndex,
   Tau,
   u32,
-  u64,
 } from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
@@ -38,9 +37,7 @@ import {
   E_4_int,
   E_sub_int,
   HashCodec,
-  HashJSONCodec,
   PVMAccumulationOpCodec,
-  Uint8ArrayJSONCodec,
   createArrayLengthDiscriminator,
   createCodec,
   encodeWithCodec,
@@ -56,7 +53,6 @@ import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
-import { WorkOutputJSONCodec } from "@tsjam/codec";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
@@ -84,7 +80,7 @@ export const accumulateInvocation = (
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
-): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
+): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, Gas] => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   // first case
   if (!pvmAccState.delta.has(s)) {
@@ -267,10 +263,10 @@ const G_fn = (
  * $(0.6.1 - B.12)
  */
 const C_fn = (
-  gas: u64,
+  gas: Gas,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
   d: { x: PVMResultContext; y: PVMResultContext },
-): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, u64] => {
+): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, Gas] => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
     return [d.y.u, d.y.transfer, d.y.y, gas];
   } else if (o.length === 32) {

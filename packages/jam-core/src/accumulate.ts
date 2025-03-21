@@ -37,12 +37,6 @@ import { toDagger, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@tsjam/pvm";
-import {
-  ArrayOfJSONCodec,
-  createJSONCodec,
-  WorkReportCodec,
-  WorkReportJSONCodec,
-} from "@tsjam/codec";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -384,15 +378,7 @@ export const outerAccumulation = (
     i + j,
     o_prime,
     t_star.concat(t),
-    new Set([
-      ...[...b_star.values()].map((item) => {
-        return {
-          serviceIndex: item.service,
-          accumulationResult: item.hash,
-        };
-      }),
-      ...b.values(),
-    ]),
+    new Set([...b_star.values(), ...b.values()]),
     u_star.concat(u),
   ];
 };
@@ -406,7 +392,6 @@ export const parallelizedAccAccumulation = (
   w: WorkReport[],
   f: Map<ServiceIndex, u64>,
   deps: {
-    tau: Tau;
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
@@ -511,12 +496,10 @@ export const singleServiceAccumulation = (
   f: Map<ServiceIndex, u64>,
   s: ServiceIndex,
   deps: {
-    tau: Tau;
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
 ): {
-  // `O` tuple defined in $(0.6.1 - 12.18)
   o: PVMAccumulationState;
   t: DeferredTransfer[];
   b: Hash | undefined;

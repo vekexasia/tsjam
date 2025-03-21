@@ -21,7 +21,7 @@ export type WorkResult = {
   codeHash: Hash;
 
   /**
-   * `l` - The hash of the payload (l) which produced this result
+   * `y` - The hash of the payload which produced this result
    * in the refine stage
    */
   payloadHash: Hash;
@@ -32,7 +32,26 @@ export type WorkResult = {
   gasPrioritization: Gas;
 
   /**
-   * `o` - The output of the service
+   * `d` - The output of the service
    */
   output: WorkOutput;
+
+  /**
+   * `u` - effective gas used when producing this wr in onRefine
+   */
+  gasUsedInRefinement: Gas;
+
+  /**
+   * `i` - number imported segments
+   */
+  numImportedSegments: number;
+
+  /**
+   * `e` - number of exported segments
+   */
+  numExportedSegments: number;
+
+  // TODO: fix naming
+  x: number;
+  z: number;
 };
