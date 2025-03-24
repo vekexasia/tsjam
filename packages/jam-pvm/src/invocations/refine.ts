@@ -2,6 +2,7 @@ import { HostCallExecutor } from "@/invocations/hostCall.js";
 import {
   Delta,
   ExportSegment,
+  Gas,
   Hash,
   RefinementContext,
   RegularPVMExitReason,
@@ -43,6 +44,7 @@ import {
   WorkPackageHashCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
+import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
 
 const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
@@ -58,7 +60,7 @@ const refine_a_Codec = createCodec<{
   ["authorizerHash", HashCodec],
 ]);
 /**
- * $(0.6.1 - B.4)
+ * $(0.6.4 - B.5)
  */
 export const refineInvocation = (
   index: number, // `i`
@@ -74,6 +76,7 @@ export const refineInvocation = (
   result: WorkOutput;
   // exported segments
   out: RefineContext["e"];
+  usedGas: Gas;
 } => {
   const w = workPackage.items[index];
   const lookupResult = historicalLookup(
@@ -83,11 +86,11 @@ export const refineInvocation = (
   );
   // first matching case
   if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
-    return { result: WorkError.Bad, out: [] };
+    return { result: WorkError.Bad, out: [], usedGas: <Gas>0n };
   }
   // second metching case
   if (lookupResult.length > SERVICECODE_MAX_SIZE) {
-    return { result: WorkError.Big, out: [] };
+    return { result: WorkError.Big, out: [], usedGas: <Gas>0n };
   }
 
   // encode
@@ -98,8 +101,15 @@ export const refineInvocation = (
       encodeWithCodec(WorkPackageCodec, workPackage),
     ),
     context: workPackage.context,
-    authorizerHash: workPackage.pa,
+    authorizerHash: workPackage.authorizationCodeHash,
   });
+  const lookup = historicalLookup(
+    deps.delta.get(w.service)!,
+    workPackage.context.lookupAnchor.timeSlot,
+    w.codeHash,
+  );
+  assert(typeof lookup !== "undefined", "Service not found in delta");
+  Const { metadata, code } = serviceMetadataCodec.decode(lookup).value;
 
   const argOut = argumentInvocation(
     lookupResult,

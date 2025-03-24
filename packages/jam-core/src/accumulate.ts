@@ -32,6 +32,7 @@ import {
   WorkPackageHash,
   WorkReport,
   u64,
+  u32,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
@@ -95,7 +96,7 @@ export const accumulateReports = (
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
   // $(0.6.1 - 12.21)
-  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
+  const [nAccumulatedWork, o, bold_t, C, bold_u] = outerAccumulation(
     g,
     w_star,
     {
@@ -111,6 +112,35 @@ export const accumulateReports = (
       p_eta_0: deps.p_eta_0,
     },
   );
+
+  // $(0.6.4 - 12.23)
+  const bigI: Map<ServiceIndex, { usedGas: Gas; count: u32 }> = new Map();
+
+  const slicedW = w_star.slice(0, nAccumulatedWork);
+
+  // $(0.6.4 - 12.24)
+  bold_u.forEach(({ serviceIndex, usedGas }) => {
+    if (!bigI.has(serviceIndex)) {
+      bigI.set(serviceIndex, { usedGas: <Gas>0n, count: <u32>0 });
+    }
+    const el = bigI.get(serviceIndex)!;
+    //el.accumulatedReports++;
+    el.usedGas = (el.usedGas + usedGas) as Gas;
+  });
+
+  for (const serviceIndex of bigI.keys()) {
+    // $(0.6.4 - 12.25)
+    const n_s = slicedW
+      .map((wr) => wr.results)
+      .flat()
+      .filter((r) => r.serviceIndex === serviceIndex);
+    if (n_s.length === 0) {
+      // how can this happen?
+      bigI.delete(serviceIndex);
+    } else {
+      bigI.get(serviceIndex)!.count = <u32>n_s.length;
+    }
+  }
 
   // calculoate posterior acc history
   // $(0.6.1 - 12.25 / 12.26)
@@ -160,6 +190,7 @@ export const accumulateReports = (
     d_delta: toDagger(o.delta),
     p_iota: toPosterior(o.validatorKeys),
     p_authQueue: toPosterior(o.authQueue),
+    accumulateStatistics: bigI,
   });
 };
 
@@ -317,11 +348,23 @@ export const accumulatableReports = (
 };
 
 // $(0.6.4 - 12.15)
+/*
+ * `servouts`
+ */
 type B = Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>;
-type U = Array<{ serviceIndex: ServiceIndex; gas: Gas }>;
+/*
+ * `gasusd` gas used by each service
+ */
+type U = Array<{
+  // `s`
+  serviceIndex: ServiceIndex;
+  // `u`
+  usedGas: Gas;
+}>;
+
 /**
  * `∆+`
- * $(0.6.1 - 12.16)
+ * $(0.6.4 - 12.16)
  */
 export const outerAccumulation = (
   gasLimit: Gas, // g
@@ -363,7 +406,7 @@ export const outerAccumulation = (
     deps,
   );
   const consumedGas = u_star
-    .map((a) => a.gas)
+    .map((a) => a.usedGas)
     .reduce((s, e) => <Gas>(s + e), <Gas>0n);
 
   const [j, o_prime, t, b, u] = outerAccumulation(
@@ -420,7 +463,7 @@ export const parallelizedAccAccumulation = (
   bold_s_values.forEach((s) => {
     const acc = singleServiceAccumulation(o, w, f, s, deps);
 
-    u.push({ serviceIndex: s, gas: acc.u });
+    u.push({ serviceIndex: s, usedGas: acc.u });
     accumulatedServices.push(acc);
 
     if (typeof acc.b !== "undefined") {
@@ -488,7 +531,7 @@ export const parallelizedAccAccumulation = (
 
 /**
  * `∆1` fn
- * $(0.6.1 - 12.19)
+ * $(0.6.4 - 12.19)
  */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
@@ -518,10 +561,12 @@ export const singleServiceAccumulation = (
     for (const r of wr.results) {
       if (r.serviceIndex === s) {
         p.push({
-          authorizationOutput: wr.authorizerOutput, // o
-          output: r.output, // o
-          payloadHash: r.payloadHash, // l
-          packageHash: wr.workPackageSpecification.workPackageHash, // (ws)h
+          output: r.output,
+          segmentRoot: wr.workPackageSpecification.segmentRoot,
+          authorizerOutput: wr.authorizerOutput,
+          payloadHash: r.payloadHash,
+          workPackageHash: wr.workPackageSpecification.workPackageHash,
+          authorizerHash: wr.authorizerHash,
         });
       }
     }

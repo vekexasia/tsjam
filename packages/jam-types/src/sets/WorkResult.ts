@@ -1,4 +1,4 @@
-import { Gas, Hash, ServiceIndex } from "@/genericTypes";
+import { Gas, Hash, ServiceIndex, u16, u32 } from "@/genericTypes";
 import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
@@ -44,14 +44,20 @@ export type WorkResult = {
   /**
    * `i` - number imported segments
    */
-  numImportedSegments: number;
+  numImportedSegments: u16;
 
   /**
    * `e` - number of exported segments
    */
-  numExportedSegments: number;
+  numExportedSegments: u16;
 
-  // TODO: fix naming
-  x: number;
-  z: number;
+  /**
+   * `x`
+   */
+  numExports: u16;
+
+  /**
+   * `z`
+   */
+  exportsSize: u32;
 };

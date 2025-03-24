@@ -52,7 +52,7 @@ export interface WorkItem {
    * - should be &lt; 2^11
    * Number of segments exported by the work item
    */
-  exportCount: u32;
+  exportCount: u16;
 
   /**
    * `i`

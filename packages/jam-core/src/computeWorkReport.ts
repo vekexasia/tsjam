@@ -3,6 +3,7 @@ import {
   CoreIndex,
   Delta,
   ExportSegment,
+  Gas,
   Hash,
   Tau,
   WorkError,
@@ -13,6 +14,7 @@ import {
   WorkReport,
   WorkResult,
   u16,
+  u32,
 } from "@tsjam/types";
 import { isAuthorized, refineInvocation } from "@tsjam/pvm";
 import {
@@ -155,7 +157,7 @@ const A_fn = (
   return {
     segmentCount: exportedSegments.length as u16,
     workPackageHash,
-    bundleLength: toTagged(bold_b.length),
+    bundleLength: toTagged(<u32>bold_b.length),
     segmentRoot: constantDepthBinaryTree(exportedSegments),
     erasureRoot: wellBalancedBinaryMerkleRoot(
       transpose<Hash>([b_flower, s_flower]).flat(),
@@ -196,6 +198,7 @@ const I_fn = (
 ): {
   result: WorkOutput; // `r`
   out: Uint8Array[]; // `e`
+  usedGas: Gas; // `u`
 } => {
   const w = pac.items[workIndex];
   const l = pac.items
@@ -292,16 +295,29 @@ const inner_J_fn = (
 };
 
 /**
- * (179) `C` constructs WorkResult from item and output
- * $(0.6.1 - 14.8)
+ * `C` constructs WorkResult from item and output
+ * $(0.6.4 - 14.8)
  */
-export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
+export const C_fn = (
+  workItem: WorkItem,
+  out: WorkOutput,
+  usedGas: Gas,
+): WorkResult => {
   return {
     serviceIndex: workItem.service,
     codeHash: workItem.codeHash,
     payloadHash: Hashing.blake2b(workItem.payload),
     gasPrioritization: workItem.accumulateGasLimit,
     output: out,
+    gasUsedInRefinement: usedGas, // u
+    numImportedSegments: <u16>workItem.importSegments.length,
+    numExportedSegments: workItem.exportCount,
+    numExports: <u16>workItem.exportedDataSegments.length,
+    exportsSize: <u32>(
+      workItem.exportedDataSegments
+        .map((x) => x.length)
+        .reduce((a, b) => a + b, 0)
+    ),
   };
 };
 

@@ -15,6 +15,9 @@ export * from "./safrole/stateUpdater.js";
 export * from "./safrole/tickets.js";
 
 export * from "./disputesState.js";
+
+export * from "./coreStatistics.js";
+export * from "./serviceStatistics.js";
 export * from "./validatorStatistics.js";
 
 export * from "./utilityComputations/w.js";

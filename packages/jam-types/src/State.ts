@@ -11,10 +11,10 @@ import { Delta } from "./states/Delta";
 import { IDisputesState } from "./states/DisputesState";
 import { RecentHistory } from "./states/RecentHistory";
 import { SafroleState } from "./states/SafroleState";
-import { ValidatorStatistics } from "./states/ValidatorStatistics";
 import { RHO } from "./states/rho";
 import { SeqOfLength } from "./genericTypes";
 import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
+import { JamStatistics } from "./states/Statistics";
 
 /**
  * `σ`
@@ -78,7 +78,7 @@ export type JamState = {
   /**
    * `π`
    */
-  validatorStatistics: ValidatorStatistics;
+  statistics: JamStatistics;
 
   /**
    * `θ`

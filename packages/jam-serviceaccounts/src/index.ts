@@ -11,7 +11,10 @@ import {
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 
-const metadataCodec = createCodec<{ code: Uint8Array; metadata: Uint8Array }>([
+export const serviceMetadataCodec = createCodec<{
+  code: Uint8Array;
+  metadata: Uint8Array;
+}>([
   ["code", LengthDiscrimantedIdentity],
   ["metadata", IdentityCodec],
 ]);
@@ -25,7 +28,7 @@ export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
   if (typeof blob === "undefined") {
     return { code: undefined, metadata: undefined };
   }
-  const decoded = metadataCodec.decode(blob);
+  const decoded = serviceMetadataCodec.decode(blob);
   return decoded.value;
 };
 

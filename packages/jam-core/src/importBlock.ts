@@ -1,5 +1,5 @@
 import { BLOCK_TIME } from "@tsjam/constants";
-import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
+import { merkelizeState } from "@tsjam/merklization";
 import { err, ok } from "neverthrow";
 import {
   HeaderHash,
@@ -17,7 +17,9 @@ import {
   RHO_2_Dagger,
   RHO_2_DaggerError,
   RHO_toPosterior,
+  _w,
   authorizerPool_toPosterior,
+  coreStatisticsSTF,
   deltaToDoubleDagger,
   deltaToPosterior,
   disputesSTF,
@@ -30,16 +32,12 @@ import {
   rotateEntropy,
   rotateKeys,
   safroleToPosterior,
+  serviceStatisticsSTF,
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import {
-  HashJSONCodec,
-  SignedHeaderCodec,
-  Uint8ArrayJSONCodec,
-  encodeWithCodec,
-} from "@tsjam/codec";
+import { SignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   EpochMarkerError,
@@ -53,6 +51,8 @@ import {
   verifyWinningTickets,
 } from "@/verifySeal";
 import { accumulateReports, availableReports } from "./accumulate";
+import { transferStatistics } from "@tsjam/pvm";
+import { b } from "vitest/dist/chunks/suite.B2jumIFP.js";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",
@@ -218,54 +218,14 @@ export const importBlock: STF<
    * Integrate state to calculate several posterior state
    */
   const w = availableReports(ea, d_rho);
-  // const merkleMap = merkleStateMap(curState);
-  // console.log(
-  //   "a",
-  //   [...merkleMap.keys()].map(
-  //     (x) => `${HashJSONCodec().toJSON(x)}`, // => ${Uint8ArrayJSONCodec.toJSON(merkleMap.get(x)!)}`,
-  //   ),
-  // );
 
-  function freezeMap(myMap: Map<any, any>) {
-    if (!(myMap instanceof Map)) {
-      throw new Error("Fuck off with that non-Map shit");
-    }
+  const [, d_recentHistory] = recentHistoryToDagger(
+    {
+      hr: block.header.priorStateRoot,
+    },
+    curState.recentHistory,
+  ).safeRet();
 
-    const mapSet = function (key: string) {
-      throw new Error(`Can't add property ${key}, map is frozen`);
-    };
-
-    const mapDelete = function (key: string) {
-      throw new Error(`Can't delete property ${key}, map is frozen`);
-    };
-
-    const mapClear = function () {
-      throw new Error("Can't clear frozen map");
-    };
-
-    myMap.set = mapSet;
-    myMap.delete = mapDelete;
-    myMap.clear = mapClear;
-
-    return Object.freeze(myMap);
-  }
-  function deepFreeze<T>(obj: T): T {
-    if (obj === null || typeof obj !== "object") {
-      return obj;
-    }
-
-    // Handle Maps specially
-    if (obj instanceof Map) {
-      freezeMap(obj);
-      return obj;
-    }
-
-    Object.keys(obj).forEach((key) => {
-      deepFreeze((<any>obj)[key]);
-    });
-
-    return Object.freeze(obj);
-  }
   const [
     ,
     {
@@ -277,6 +237,7 @@ export const importBlock: STF<
       p_iota,
       p_authQueue,
       deferredTransfers,
+      accumulateStatistics,
     },
   ] = accumulateReports(w, {
     tau: tauTransition.tau,
@@ -284,22 +245,28 @@ export const importBlock: STF<
     accumulationHistory: curState.accumulationHistory,
     accumulationQueue: curState.accumulationQueue,
     authQueue: curState.authQueue,
-    serviceAccounts: deepFreeze(curState.serviceAccounts),
+    serviceAccounts: curState.serviceAccounts,
     privServices: curState.privServices,
     iota: curState.iota,
     p_eta_0: toPosterior(p_entropy[0]),
   }).safeRet();
 
+  const invokedOnTransfers = invokeOntransfers(
+    deferredTransfers,
+    d_delta,
+    p_tau,
+  );
+
+  const tStats = transferStatistics(deferredTransfers, invokedOnTransfers);
+
+  const [, dd_delta] = deltaToDoubleDagger(
+    { bold_x: invokedOnTransfers },
+    d_delta,
+  ).safeRet();
+
   const [, dd_rho] = RHO2DoubleDagger(
     { p_tau, rho: curState.rho, availableReports: w },
     d_rho,
-  ).safeRet();
-
-  const [, d_recentHistory] = recentHistoryToDagger(
-    {
-      hr: block.header.priorStateRoot,
-    },
-    curState.recentHistory,
   ).safeRet();
 
   const [egError, validatedEG] = assertEGValid(
@@ -336,11 +303,6 @@ export const importBlock: STF<
   if (rhoPostErr) {
     return err(rhoPostErr);
   }
-
-  const [, dd_delta] = deltaToDoubleDagger(
-    { transfers: deferredTransfers, p_tau },
-    d_delta,
-  ).safeRet();
 
   const [pDeltaError, p_delta] = deltaToPosterior(
     {
@@ -380,8 +342,28 @@ export const importBlock: STF<
       p_tau: toPosterior(block.header.timeSlotIndex),
       curTau: curState.tau,
     },
-    curState.validatorStatistics,
+    curState.statistics.validator,
   ).safeRet();
+
+  const guaranteedReports = _w(block.extrinsics.reportGuarantees);
+  const [, p_coreStatistics] = coreStatisticsSTF(
+    {
+      availableReports: w,
+      assurances: block.extrinsics.assurances,
+      guaranteedReports,
+    },
+    curState.statistics.core,
+  );
+
+  const [, p_serviceStatistics] = serviceStatisticsSTF(
+    {
+      guaranteedReports,
+      preimages: block.extrinsics.preimages,
+      transferStatistics: tStats,
+      accumulateStatistics,
+    },
+    curState.statistics.service,
+  );
 
   const [, p_authorizerPool] = authorizerPool_toPosterior(
     {
@@ -407,7 +389,11 @@ export const importBlock: STF<
     authPool: p_authorizerPool,
     authQueue: p_authQueue,
     safroleState: p_safroleState,
-    validatorStatistics: p_validatorStatistics,
+    statistics: {
+      validator: p_validatorStatistics,
+      core: p_coreStatistics,
+      service: p_serviceStatistics,
+    },
     rho: p_rho,
     serviceAccounts: p_delta,
     recentHistory: p_recentHistory,

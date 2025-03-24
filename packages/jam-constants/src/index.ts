@@ -180,6 +180,13 @@ export const ERASURECODE_BASIC_SIZE = 684;
 export const ERASURECODE_EXPORTED_SIZE = 6;
 
 /**
+ * `WG` in the paper
+ */
+export const ERASURECODE_SEGMENT_SIZE = <4104>(
+  (ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE)
+);
+
+/**
  * `WM` in the paper
  */
 export const MAX_EXPORTED_ITEMS = 2 ** 11;

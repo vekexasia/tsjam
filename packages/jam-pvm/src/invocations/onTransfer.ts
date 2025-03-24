@@ -1,7 +1,9 @@
 import {
+  Dagger,
   DeferredTransfer,
   Delta,
   Gas,
+  Posterior,
   PVMProgramExecutionContext,
   ServiceAccount,
   ServiceIndex,
@@ -31,6 +33,8 @@ import {
   E_sub_int,
   encodeWithCodec,
 } from "@tsjam/codec";
+import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
+import { toTagged } from "@tsjam/utils";
 
 const argumentInvocationTransferCodec = createCodec<{
   tau: Tau;
@@ -45,14 +49,14 @@ const argumentInvocationTransferCodec = createCodec<{
   ],
 ]);
 /**
- * $(0.6.1 - B.14 / B.15)
+ * $(0.6.4 - B.15 / B.16)
  */
 export const transferInvocation = (
   d: Delta,
   t: Tau,
   s: ServiceIndex,
   transfers: DeferredTransfer[],
-): ServiceAccount => {
+): [ServiceAccount, Gas] => {
   let bold_s = d.get(s)!;
 
   assert(typeof bold_s !== "undefined", "Service not found in delta");
@@ -63,12 +67,10 @@ export const transferInvocation = (
   };
   assert(bold_s.balance >= 0, "Balance cannot be negative");
 
-  if (bold_s.codeHash || transfers.length === 0) {
-    return bold_s;
+  const { code } = serviceAccountMetadataAndCode(bold_s);
+  if (typeof code === "undefined" || transfers.length === 0) {
+    return [bold_s, <Gas>0n];
   }
-
-  const code = bold_s.preimage_p.get(bold_s.codeHash);
-  assert(typeof code !== "undefined", "Code not found in preimage");
 
   const out = argumentInvocation(
     code,
@@ -82,7 +84,8 @@ export const transferInvocation = (
     F_fn(d, s),
     bold_s,
   );
-  return out.out;
+  // FIXME: This is a hack to make the type checker happy
+  return [out.out, <Gas>0n];
 };
 
 /**
@@ -136,3 +139,72 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
         ]);
     }
   };
+
+/**
+ * $(0.6.4 - 12.26) | R
+ */
+export const filterTransfersByDestination = (
+  bold_t: DeferredTransfer[],
+  destination: ServiceIndex,
+) => {
+  return bold_t
+    .slice()
+    .sort((a, b) => {
+      if (a.sender === b.sender) {
+        return a.destination - b.destination;
+      }
+      return a.sender - b.sender;
+    })
+    .filter((t) => t.destination === destination);
+};
+
+export type InvokedTransfers = Map<
+  ServiceIndex,
+  ReturnType<typeof transferInvocation>
+>;
+
+/**
+ * computes bold_x
+ * $(0.6.4 - 12.27)
+ */
+export const invokeOntransfers = (
+  transfers: DeferredTransfer[],
+  d_delta: Dagger<Delta>,
+  p_tau: Posterior<Tau>,
+) => {
+  const x: InvokedTransfers = toTagged(new Map());
+
+  for (const [serviceIndex] of d_delta) {
+    x.set(
+      serviceIndex,
+      transferInvocation(
+        d_delta,
+        p_tau,
+        serviceIndex,
+        filterTransfersByDestination(transfers, serviceIndex),
+      ),
+    );
+  }
+  return x;
+};
+/**
+ * computes big bold X
+ * $(0.6.4 - 12.29 / 12.30)
+ */
+export const transferStatistics = (
+  bold_t: DeferredTransfer[],
+  bold_x: InvokedTransfers,
+): Map<ServiceIndex, { count: u32; usedGas: Gas }> => {
+  const toRet = new Map<ServiceIndex, { count: u32; usedGas: Gas }>();
+  for (const [destService, [, usedGas]] of bold_x) {
+    const r = filterTransfersByDestination(bold_t, destService);
+    if (r.length > 0) {
+      toRet.set(destService, {
+        // u
+        usedGas,
+        count: <u32>r.length,
+      });
+    }
+  }
+  return toRet;
+};
