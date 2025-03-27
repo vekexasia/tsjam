@@ -101,8 +101,13 @@ export const SignedHeaderJSONCodec: JSONCodec<
           ArrayOfJSONCodec<
             NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"],
             NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"][0],
-            string
-          >(BandersnatchKeyJSONCodec),
+            { bandersnatch: string; ed25519: string }
+          >(
+            createJSONCodec([
+              ["bandersnatch", "bandersnatch", BandersnatchKeyJSONCodec],
+              ["ed25519", "ed25519", Ed25519JSONCodec],
+            ]),
+          ),
         ],
       ]),
     ),

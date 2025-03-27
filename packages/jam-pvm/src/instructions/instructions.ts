@@ -62,10 +62,8 @@ export class Instructions {
   }
 
   @Ix(10, OneImmIxDecoder)
-  ecalli({ vX }: OneImmArgs, context: PVMIxEvaluateFNContext) {
-    // FIXME: the ip is not defined in GP but  i wrote a text here
-    // https://matrix.to/#/!ddsEwXlCWnreEGuqXZ:polkadot.io/$k0-5cva9JIcR_gVVwLjwFH6ZOjaGrG7SocCgHlzUZZg?via=polkadot.io&via=matrix.org&via=parity.io
-    return [IxMod.ip(context.execution.instructionPointer), IxMod.hostCall(vX)];
+  ecalli({ vX }: OneImmArgs) {
+    return [IxMod.hostCall(vX)];
   }
 
   @Ix(20, OneRegOneExtImmArgsIxDecoder)
@@ -924,6 +922,7 @@ export class Instructions {
     } else if (z4a == -1 * 2 ** 31 && z4b === -1) {
       newVal = Z8_inv(BigInt(z4a));
     } else {
+      // this is basically `rtz`
       newVal = Z8_inv(BigInt(Math.trunc(z4a / z4b)));
     }
 
@@ -1008,7 +1007,7 @@ export class Instructions {
     } else if (z8a == -1n * 2n ** 63n && z8b === -1n) {
       newVal = wA;
     } else {
-      newVal = Z8_inv(z8a / z8b);
+      newVal = Z8_inv(z8a / z8b); // since bigint (RegisterValue) has no decimal point this is `rtz` already
     }
     return [IxMod.reg(rD, newVal)];
   }
@@ -1174,7 +1173,7 @@ export class Instructions {
   max({ wA, wB, rD }: ThreeRegArgs) {
     const z8a = Z8(wA);
     const z8b = Z8(wB);
-    // gp at 0.6.1  is wrong here
+    // using wA and wB is basically a Z8_inv
     return [IxMod.reg(rD, z8a > z8b ? wA : wB)];
   }
 
@@ -1187,6 +1186,7 @@ export class Instructions {
   min({ wA, wB, rD }: ThreeRegArgs) {
     const z8a = Z8(wA);
     const z8b = Z8(wB);
+    // using wA and wB is basically a Z8_inv
     return [IxMod.reg(rD, z8a < z8b ? wA : wB)];
   }
 

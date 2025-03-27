@@ -176,6 +176,7 @@ export const TRANSFER_MEMO_SIZE = 128;
 
 /**
  * `D` in the paper
+ * $(0.6.4 - B.3)
  */
 export const PREIMAGE_EXPIRATION = 19_200;
 

@@ -192,7 +192,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
     execute(context, x) {
       const [o, l, g, m] = context.registers.slice(7);
 
-      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32) || l >= 2 ** 32) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const c: ServiceAccount["codeHash"] = bytesToBigInt(

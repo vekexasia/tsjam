@@ -3,7 +3,6 @@ import {
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
-  u32,
   u8,
 } from "@tsjam/types";
 import { basicInvocation } from "@/invocations/basic.js";
@@ -11,7 +10,7 @@ import { basicInvocation } from "@/invocations/basic.js";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * $(0.6.2 - A.33)
+ * $(0.6.4 - A.34)
  */
 export const hostCallInvocation = <X>(
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
@@ -59,9 +58,7 @@ export const hostCallInvocation = <X>(
       return hostCallInvocation(
         p,
         {
-          instructionPointer: (out.context.instructionPointer +
-            p.parsedProgram.skip(out.context.instructionPointer) +
-            1) as u32,
+          instructionPointer: out.context.instructionPointer,
           gas: hostCallRes.ctx.gas,
           registers: hostCallRes.ctx.registers,
           memory: hostCallRes.ctx.memory,

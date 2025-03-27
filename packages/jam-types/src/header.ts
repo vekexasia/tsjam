@@ -56,7 +56,7 @@ export interface JamHeader {
     entropy2: Blake2bHash;
     // 32 byte bandersnatch sequence (ordered) coming from gamma_k
     validatorKeys: SeqOfLength<
-      BandersnatchKey, // | ED25519PublicKey, // FIXME: it can also be an ed25519pubkey but we've no way to dicriminate for now and typescript is complaining
+      { bandersnatch: BandersnatchKey; ed25519: ED25519PublicKey },
       typeof NUMBER_OF_VALIDATORS,
       "validatorKeys"
     >;

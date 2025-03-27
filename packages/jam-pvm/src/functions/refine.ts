@@ -20,12 +20,13 @@ import { W7, W8 } from "@/functions/utils.js";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
+  ERASURECODE_SEGMENT_SIZE,
   HostCallResult,
   InnerPVMResultCode,
   MAX_WORKPACKAGE_ENTRIES,
   Zp,
 } from "@tsjam/constants";
-import { toSafeMemoryAddress } from "@/pvmMemory.js";
+import { toInBoundsMemoryAddress, toSafeMemoryAddress } from "@/pvmMemory.js";
 import { historicalLookup, zeroPad } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
 import {
@@ -159,6 +160,8 @@ export const omega_y = regFn<
         v = overline_i[_w11][_w12];
       } else if (w10 === 6n && w11 < overline_i[i].length) {
         v = overline_i[i][_w11];
+      } else if (w10 === 7n) {
+        v = p.paramsBlob;
       }
 
       const f = Math.min(Number(w8), (v || []).length);
@@ -200,16 +203,18 @@ export const omega_e = regFn<
     gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
       const [p, w8] = context.registers.slice(7);
-      const WG = ERASURECODE_EXPORTED_SIZE * ERASURECODE_BASIC_SIZE;
-      const z = Math.min(Number(w8), WG);
+      const z = Math.min(Number(w8), ERASURECODE_SEGMENT_SIZE);
 
-      if (!context.memory.canRead(toSafeMemoryAddress(p), z)) {
+      if (!context.memory.canRead(p, z)) {
         return [IxMod.panic()];
       }
       if (offset + refineCtx.e.length >= MAX_WORKPACKAGE_ENTRIES) {
         return [IxMod.w7(HostCallResult.FULL)];
       }
-      const x = zeroPad(WG, context.memory.getBytes(toSafeMemoryAddress(p), z));
+      const x = zeroPad(
+        ERASURECODE_SEGMENT_SIZE,
+        context.memory.getBytes(toSafeMemoryAddress(p), z),
+      );
 
       return [
         IxMod.w7(offset + refineCtx.e.length),
@@ -233,7 +238,7 @@ export const omega_m = regFn<
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [p0, pz, i] = context.registers.slice(7);
-      if (!context.memory.canWrite(toSafeMemoryAddress(p0), Number(pz))) {
+      if (!context.memory.canRead(p0, Number(pz))) {
         return [IxMod.panic()];
       }
       const p = context.memory.getBytes(toSafeMemoryAddress(p0), Number(pz));
@@ -276,17 +281,13 @@ export const omega_p = regFn<
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
       const [n, o, s, z] = context.registers.slice(7);
-      if (!context.memory.canWrite(toSafeMemoryAddress(o), Number(z))) {
+      if (!context.memory.canWrite(o, Number(z))) {
         return [IxMod.panic()];
       }
       if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      if (
-        !refineCtx.m
-          .get(Number(n))!
-          .memory.canRead(toSafeMemoryAddress(s), Number(z))
-      ) {
+      if (!refineCtx.m.get(Number(n))!.memory.canRead(s, Number(z))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
 
@@ -318,7 +319,7 @@ export const omega_o = regFn<
     execute(context, refineCtx) {
       const [_n, s, o, z] = context.registers.slice(7);
       const n = Number(_n);
-      if (!context.memory.canRead(toSafeMemoryAddress(s), Number(z))) {
+      if (!context.memory.canRead(s, Number(z))) {
         return [IxMod.panic()];
       }
       if (!refineCtx.m.has(Number(n))) {
@@ -326,15 +327,18 @@ export const omega_o = regFn<
       }
       const u = refineCtx.m.get(n)!.memory;
 
-      if (!u.canWrite(toSafeMemoryAddress(o), Number(z))) {
+      if (!u.canWrite(o, Number(z))) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
-      const bold_s = context.memory.getBytes(toSafeMemoryAddress(s), Number(z));
+      const bold_s = context.memory.getBytes(
+        toInBoundsMemoryAddress(s),
+        Number(z),
+      );
 
       const p_m = new Map(refineCtx.m);
       p_m.set(n, {
         programCode: refineCtx.m.get(n)!.programCode,
-        memory: u.clone().setBytes(toSafeMemoryAddress(o), bold_s),
+        memory: u.clone().setBytes(toInBoundsMemoryAddress(o), bold_s),
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
       });
 
@@ -362,9 +366,10 @@ export const omega_z = regFn<
       }
       const u = refineCtx.m.get(Number(n))!.memory;
 
-      if (p + c >= 2 ** 32 || !u.canRead(toSafeMemoryAddress(p), Number(c))) {
-        return [IxMod.w7(HostCallResult.OOB)];
+      if (p < 16 || p + c >= 2 ** 32 / Zp) {
+        return [IxMod.w7(HostCallResult.HUH)];
       }
+
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {
         p_u
@@ -402,8 +407,9 @@ export const omega_v = regFn<
       }
       const u = refineCtx.m.get(Number(n))!.memory;
 
-      if (p + c >= 2 ** 32 || !u.canRead(toSafeMemoryAddress(p), Number(c))) {
-        return [IxMod.w7(HostCallResult.OOB)];
+      // TODO: missing check
+      if (p < 16 || p + c >= 2 ** 32 / Zp) {
+        return [IxMod.w7(HostCallResult.HUH)];
       }
       const p_u = u.clone();
       for (let page = 0; page < c; page++) {

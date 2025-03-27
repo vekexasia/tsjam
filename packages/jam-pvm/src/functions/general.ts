@@ -9,6 +9,8 @@ import {
   PVMSingleModObject,
   ServiceAccount,
   ServiceIndex,
+  u32,
+  u64,
   u8,
 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "@/pvmMemory";
@@ -16,7 +18,11 @@ import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
 import {
   Blake2bHashCodec,
+  CodeHashCodec,
+  createCodec,
   E_4_int,
+  E_8,
+  E_sub,
   encodeWithCodec,
   HashJSONCodec,
   Uint8ArrayJSONCodec,
@@ -24,7 +30,11 @@ import {
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import assert from "node:assert";
-import { serviceAccountGasThreshold } from "@tsjam/serviceaccounts";
+import {
+  serviceAccountGasThreshold,
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 /**
  * `ΩG`
@@ -231,6 +241,17 @@ export const omega_w = regFn<
   },
 });
 
+const serviceAccountCodec = createCodec<
+  ServiceAccount & { gasThreshold: Gas; totalOctets: u64; itemInStorage: u32 }
+>([
+  ["codeHash", CodeHashCodec], // c
+  ["balance", E_sub<u64>(8)], // b
+  ["gasThreshold", E_sub<Gas>(8)], // t - virutal element
+  ["minGasAccumulate", E_sub<Gas>(8)], // g
+  ["minGasOnTransfer", E_sub<Gas>(8)], // m
+  ["totalOctets", E_sub<u64>(8)], // o - virtual element
+  ["itemInStorage", E_4_int], // i - virtual element
+]);
 /**
  * `ΩI`
  */
@@ -244,17 +265,22 @@ export const omega_i = regFn<
     gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, d: Delta) {
       const w7 = context.registers[7];
-      let t: ServiceAccount | undefined;
+      let bold_t: ServiceAccount | undefined;
       if (w7 === 2n ** 64n - 1n) {
-        t = d.get(s);
+        bold_t = d.get(s);
       } else {
-        t = d.get(Number(w7) as ServiceIndex);
+        bold_t = d.get(Number(w7) as ServiceIndex);
       }
-      if (typeof t === "undefined") {
+      if (typeof bold_t === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
       const o = context.registers[8];
-      const m = new Uint8Array(32); //TODO encode of t
+      const m = encodeWithCodec(serviceAccountCodec, {
+        ...bold_t,
+        gasThreshold: serviceAccountGasThreshold(bold_t),
+        totalOctets: serviceAccountTotalOctets(bold_t),
+        itemInStorage: serviceAccountItemInStorage(bold_t),
+      });
       if (!context.memory.canWrite(toSafeMemoryAddress(o), m.length)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {

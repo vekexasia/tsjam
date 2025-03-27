@@ -3,7 +3,7 @@ import {
   SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
   SERVICE_MIN_BALANCE,
 } from "@tsjam/constants";
-import { ServiceAccount, u32, u64 } from "@tsjam/types";
+import { Gas, ServiceAccount, u32, u64 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import {
   createCodec,
@@ -37,7 +37,7 @@ export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
  * @param a - the service account
  * $(0.6.1 - 9.8)
  */
-export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
+export const serviceAccountGasThreshold = (a: ServiceAccount): Gas => {
   const ai = BigInt(serviceAccountItemInStorage(a));
   const l =
     [...a.preimage_l.values()].reduce(
@@ -45,9 +45,9 @@ export const serviceAccountGasThreshold = (a: ServiceAccount): u64 => {
       0n,
     ) +
     [...a.storage.values()].reduce((a, b) => a + BigInt(b.length) + 32n, 0n);
-  return (SERVICE_MIN_BALANCE + // Bs
+  return <Gas>(SERVICE_MIN_BALANCE + // Bs
     SERVICE_ADDITIONAL_BALANCE_PER_ITEM * ai + // BI*ai
-    SERVICE_ADDITIONAL_BALANCE_PER_OCTET * l) /* BL*al */ as u64;
+    SERVICE_ADDITIONAL_BALANCE_PER_OCTET * l) /* BL*al */;
 };
 
 /**

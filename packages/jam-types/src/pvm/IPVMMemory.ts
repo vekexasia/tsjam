@@ -34,12 +34,12 @@ export interface IPVMMemory {
   /**
    * wrapper for @{link #firstUnreadable}
    */
-  canRead(address: u32, length: number): boolean;
+  canRead(address: bigint | u32, length: number): boolean;
 
   /**
    * wrapper for @{link #firstUnwriteable}
    */
-  canWrite(address: u32, length: number): boolean;
+  canWrite(address: bigint | u32, length: number): boolean;
 
   /**
    * Returns the first address that is not readable - undefined if all are readable

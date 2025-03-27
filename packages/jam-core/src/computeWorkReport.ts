@@ -49,28 +49,29 @@ import assert from "assert";
  * @see A_fn
  * @see C_fn
  * @see M_fn
- * $(0.6.1 - 14.11)
+ * $(0.6.4 - 14.11)
  */
 export const computeWorkReport = (
   pac: WorkPackageWithAuth,
   core: CoreIndex,
   deps: { delta: Delta; tau: Tau },
 ): WorkReport => {
-  const o = isAuthorized(pac, core);
-  if (!(o instanceof Uint8Array)) {
-    throw new Error("unexpected");
+  const bold_o = isAuthorized(pac, core);
+  const authOutput = bold_o.res;
+  if (!(authOutput instanceof Uint8Array)) {
+    throw new Error("no auth output. ??????");
   }
   const _deps = {
     ...deps,
-    authorizerOutput: o,
+    authorizerOutput: authOutput,
     overline_i: pac.items.map((wi) => S_fn(wi, bold_l)),
   };
 
   const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
-      const { result: r, out: e } = I_fn(pac, j, _deps);
-      const workResult = C_fn(pac.items[j], r);
+      const { result: r, out: e, usedGas } = I_fn(pac, j, _deps);
+      const workResult = C_fn(pac.items[j], r, usedGas);
       return { result: workResult, out: e };
     });
 
@@ -126,11 +127,12 @@ export const computeWorkReport = (
     // a
     authorizerHash: pac.pa,
     // o
-    authorizerOutput: o,
+    authorizerOutput: authOutput,
     // l
     segmentRootLookup: bold_l,
     // r
     results: bold_r,
+    authGasUsed: bold_o.usedGas,
   };
 };
 /**

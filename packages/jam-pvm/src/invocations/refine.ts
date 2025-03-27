@@ -45,6 +45,8 @@ import {
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
+import assert from "node:assert";
+import { argv0 } from "node:process";
 
 const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
@@ -73,7 +75,7 @@ export const refineInvocation = (
     tau: Tau;
   },
 ): {
-  result: WorkOutput;
+  res: WorkOutput;
   // exported segments
   out: RefineContext["e"];
   usedGas: Gas;
@@ -86,11 +88,11 @@ export const refineInvocation = (
   );
   // first matching case
   if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
-    return { result: WorkError.Bad, out: [], usedGas: <Gas>0n };
+    return { res: WorkError.Bad, out: [], usedGas: <Gas>0n };
   }
   // second metching case
   if (lookupResult.length > SERVICECODE_MAX_SIZE) {
-    return { result: WorkError.Big, out: [], usedGas: <Gas>0n };
+    return { res: WorkError.Big, out: [], usedGas: <Gas>0n };
   }
 
   // encode
@@ -103,16 +105,10 @@ export const refineInvocation = (
     context: workPackage.context,
     authorizerHash: workPackage.authorizationCodeHash,
   });
-  const lookup = historicalLookup(
-    deps.delta.get(w.service)!,
-    workPackage.context.lookupAnchor.timeSlot,
-    w.codeHash,
-  );
-  assert(typeof lookup !== "undefined", "Service not found in delta");
-  Const { metadata, code } = serviceMetadataCodec.decode(lookup).value;
+  const { code } = serviceMetadataCodec.decode(lookupResult).value;
 
   const argOut = argumentInvocation(
-    lookupResult,
+    code,
     <u32>0, // instructionPointer
     w.refineGasLimit,
     a,
@@ -131,20 +127,29 @@ export const refineInvocation = (
       e: [],
     },
   );
-  if (argOut.ok) {
-    return { result: argOut.ok[1], out: argOut.out.e };
+  const argRes = argOut.res;
+  if (
+    argRes === RegularPVMExitReason.Panic ||
+    argRes === RegularPVMExitReason.OutOfGas
+  ) {
+    return {
+      res:
+        argOut.res === RegularPVMExitReason.Panic
+          ? WorkError.UnexpectedTermination
+          : WorkError.OutOfGas,
+      out: [],
+      usedGas: argOut.usedGas,
+    };
   }
   return {
-    result:
-      argOut.exitReason === RegularPVMExitReason.OutOfGas
-        ? WorkError.OutOfGas
-        : WorkError.UnexpectedTermination,
-    out: [],
+    res: argRes,
+    out: argOut.out.e,
+    usedGas: argOut.usedGas,
   };
 };
 
 /**
- * $(0.6.1 - B.5)
+ * $(0.6.4 - B.6)
  */
 const F_fn: (
   service: ServiceIndex,

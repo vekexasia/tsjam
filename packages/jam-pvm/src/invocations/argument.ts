@@ -49,11 +49,14 @@ const R_fn = <X>(
   gas: Gas,
   hostCall: HostCallOut<X>,
 ): ArgumentInvocationOut<X> => {
+  const u_prime = hostCall.context.gas;
+  const gas_prime: Gas = <Gas>(gas - (u_prime > 0n ? u_prime : 0n));
+
   if (hostCall.exitReason === RegularPVMExitReason.OutOfGas) {
     return {
-      usedGas: gas,
+      usedGas: gas_prime,
       res: RegularPVMExitReason.OutOfGas,
-      out: hostCall.out,
+      out: hostCall.out, // x'
     };
   }
   if (
@@ -66,7 +69,7 @@ const R_fn = <X>(
     );
     if (readable) {
       return {
-        usedGas: gas,
+        usedGas: gas_prime,
         res: hostCall.context.memory.getBytes(
           toSafeMemoryAddress(hostCall.context.registers[7]),
           Number(hostCall.context.registers[8]),
@@ -74,9 +77,13 @@ const R_fn = <X>(
         out: hostCall.out,
       };
     } else {
-      return { usedGas: gas, res: new Uint8Array(0), out: hostCall.out };
+      return { usedGas: gas_prime, res: new Uint8Array(0), out: hostCall.out };
     }
   } else {
-    return { usedGas: gas, res: RegularPVMExitReason.Panic, out: hostCall.out };
+    return {
+      usedGas: gas_prime,
+      res: RegularPVMExitReason.Panic,
+      out: hostCall.out,
+    };
   }
 };

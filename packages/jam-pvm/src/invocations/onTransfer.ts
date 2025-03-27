@@ -49,7 +49,7 @@ const argumentInvocationTransferCodec = createCodec<{
   ],
 ]);
 /**
- * $(0.6.4 - B.15 / B.16)
+ * $(0.6.4 - B.15)
  */
 export const transferInvocation = (
   d: Delta,
@@ -84,12 +84,12 @@ export const transferInvocation = (
     F_fn(d, s),
     bold_s,
   );
-  // FIXME: This is a hack to make the type checker happy
+
   return [out.out, <Gas>0n];
 };
 
 /**
- * $(0.6.1 - B.16)
+ * $(0.6.4 - B.16)
  */
 const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   (d: Delta, s: ServiceIndex) =>

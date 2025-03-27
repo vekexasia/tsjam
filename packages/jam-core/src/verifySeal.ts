@@ -269,7 +269,7 @@ export const verifyEA = (
   ea: EA_Extrinsic,
   hp: JamHeader["parent"],
   ht: JamHeader["timeSlotIndex"], // TODO:remove?
-  p_kappa: Posterior<JamState["kappa"]>,
+  kappa: JamState["kappa"],
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
   // $(0.6.1 - 11.10)
@@ -306,7 +306,7 @@ export const verifyEA = (
     const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
     const signatureValid = Ed25519.verifySignature(
       a.signature,
-      p_kappa[a.validatorIndex].ed25519,
+      kappa[a.validatorIndex].ed25519,
       new Uint8Array([
         ...JAM_AVAILABLE,
         ...Hashing.blake2bBuf(

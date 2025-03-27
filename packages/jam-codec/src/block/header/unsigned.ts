@@ -42,7 +42,13 @@ export const UnsignedHeaderCodec = () =>
             "validatorKeys",
             createSequenceCodec<
               NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
-            >(NUMBER_OF_VALIDATORS, BandersnatchCodec),
+            >(
+              NUMBER_OF_VALIDATORS,
+              createCodec<>([
+                ["bander", BandersnatchCodec],
+                ["ed", Ed25519PubkeyCodec],
+              ]),
+            ),
           ],
         ]),
       ),

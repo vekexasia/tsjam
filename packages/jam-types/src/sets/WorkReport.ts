@@ -4,6 +4,7 @@ import {
   Blake2bHash,
   BoundedSeq,
   CoreIndex,
+  Gas,
   Hash,
   SeqOfLength,
   Tagged,
@@ -15,7 +16,7 @@ import { AccumulationQueue } from "..";
 
 /**
  * Identified by `W` set
- * @see $(0.6.1 - 11.2)
+ * @see $(0.6.4 - 11.2)
  */
 export type WorkReport = {
   /**
@@ -52,6 +53,11 @@ export type WorkReport = {
    * `r`
    */
   results: BoundedSeq<WorkResult, 1, typeof MAXIMUM_WORK_ITEMS>;
+
+  /**
+   * `g`
+   */
+  authGasUsed: Gas;
 };
 
 /**
