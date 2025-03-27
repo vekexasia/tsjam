@@ -1,6 +1,5 @@
 import { toPosterior } from "@tsjam/utils";
 import {
-  AvailableWorkReports,
   EP_Extrinsic,
   Gas,
   JamStatistics,
@@ -33,7 +32,7 @@ export const serviceStatisticsSTF: STF<
     /**
      * `bold I` - from $(0.6.4 - 12.23)
      */
-    accumulateStatistics: Map<ServiceIndex, { count: u32; usedGas: Gas }>;
+    accumulationStatistics: Map<ServiceIndex, { count: u32; usedGas: Gas }>;
   },
   never
 > = (input) => {
@@ -52,7 +51,7 @@ export const serviceStatisticsSTF: STF<
   const bold_s = new Set([
     ...bold_p,
     ...bold_r,
-    ...input.accumulateStatistics.keys(),
+    ...input.accumulationStatistics.keys(),
     ...input.transferStatistics.keys(),
   ]);
 
@@ -71,7 +70,7 @@ export const serviceStatisticsSTF: STF<
           { count: <u16>0, size: <u32>0 },
         ),
 
-      accumulate: input.accumulateStatistics.get(service) ?? {
+      accumulate: input.accumulationStatistics.get(service) ?? {
         count: <u32>0,
         usedGas: <Gas>0n,
       },

@@ -7,7 +7,7 @@ import { Hashing } from "@tsjam/crypto";
 const prefix: Uint8Array = new TextEncoder().encode("node");
 
 /**
- * $(0.6.1 - E.1)
+ * $(0.6.4 - E.1)
  */
 export const binaryMerkleTree = <T extends Uint8Array | Hash>(
   elements: T[],

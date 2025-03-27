@@ -9,7 +9,7 @@ import {
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { CodeHashCodec, HashCodec } from "@/identity.js";
-import { E_sub_int, E_sub } from "@/ints/E_subscr.js";
+import { E_sub_int, E_sub, E_2_int } from "@/ints/E_subscr.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { createCodec } from "@/utils.js";
 import { JamCodec } from "@/codec";
@@ -84,7 +84,7 @@ export const WorkItemCodec = createCodec<WorkItem>([
       ]),
     ),
   ],
-  ["exportCount", E_sub_int<u32>(2)],
+  ["exportCount", E_2_int],
 ]);
 
 if (import.meta.vitest) {

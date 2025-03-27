@@ -85,7 +85,7 @@ export const accumulateReports = (
   //  ),
   //);
 
-  // $(0.6.1 - 12.20)
+  // $(0.6.4 - 12.20)
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
@@ -95,8 +95,8 @@ export const accumulateReports = (
       ),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.6.1 - 12.21)
-  const [nAccumulatedWork, o, bold_t, C, bold_u] = outerAccumulation(
+  // $(0.6.4 - 12.21)
+  const [nAccumulatedWork, bold_o, bold_t, C, bold_u] = outerAccumulation(
     g,
     w_star,
     {
@@ -113,22 +113,28 @@ export const accumulateReports = (
     },
   );
 
-  // $(0.6.4 - 12.23)
-  const bigI: Map<ServiceIndex, { usedGas: Gas; count: u32 }> = new Map();
+  // $(0.6.4 - 12.23) | I
+  const accumulationStatistics: Map<
+    ServiceIndex,
+    { usedGas: Gas; count: u32 }
+  > = new Map();
 
   const slicedW = w_star.slice(0, nAccumulatedWork);
 
   // $(0.6.4 - 12.24)
   bold_u.forEach(({ serviceIndex, usedGas }) => {
-    if (!bigI.has(serviceIndex)) {
-      bigI.set(serviceIndex, { usedGas: <Gas>0n, count: <u32>0 });
+    if (!accumulationStatistics.has(serviceIndex)) {
+      accumulationStatistics.set(serviceIndex, {
+        usedGas: <Gas>0n,
+        count: <u32>0,
+      });
     }
-    const el = bigI.get(serviceIndex)!;
+    const el = accumulationStatistics.get(serviceIndex)!;
     //el.accumulatedReports++;
     el.usedGas = (el.usedGas + usedGas) as Gas;
   });
 
-  for (const serviceIndex of bigI.keys()) {
+  for (const serviceIndex of accumulationStatistics.keys()) {
     // $(0.6.4 - 12.25)
     const n_s = slicedW
       .map((wr) => wr.results)
@@ -136,9 +142,9 @@ export const accumulateReports = (
       .filter((r) => r.serviceIndex === serviceIndex);
     if (n_s.length === 0) {
       // how can this happen?
-      bigI.delete(serviceIndex);
+      accumulationStatistics.delete(serviceIndex);
     } else {
-      bigI.get(serviceIndex)!.count = <u32>n_s.length;
+      accumulationStatistics.get(serviceIndex)!.count = <u32>n_s.length;
     }
   }
 
@@ -185,18 +191,18 @@ export const accumulateReports = (
     deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
-    // $(0.6.1 - 12.22)
-    p_privServices: toPosterior(o.privServices),
-    d_delta: toDagger(o.delta),
-    p_iota: toPosterior(o.validatorKeys),
-    p_authQueue: toPosterior(o.authQueue),
-    accumulateStatistics: bigI,
+    // $(0.6.4 - 12.22)
+    p_privServices: toPosterior(bold_o.privServices),
+    d_delta: toDagger(bold_o.delta),
+    p_iota: toPosterior(bold_o.validatorKeys),
+    p_authQueue: toPosterior(bold_o.authQueue),
+    accumulationStatistics,
   });
 };
 
 /**
  * `bold W`
- * $(0.6.1 - 11.15)
+ * $(0.6.4 - 11.16)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -548,7 +554,6 @@ export const singleServiceAccumulation = (
   b: Hash | undefined;
   u: Gas;
 } => {
-  // console.log(`\nACCUMULATING ${s}\n`);
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
     wr.results

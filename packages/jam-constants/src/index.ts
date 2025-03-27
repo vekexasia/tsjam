@@ -15,14 +15,17 @@ export const RECENT_HISTORY_LENGTH = 8;
 export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
 export const CORES = 341;
+
 /**
  * referred as constant `Y` in the paper
  */
 export const LOTTERY_MAX_SLOT = 500;
+
 /**
  * referred as constant `E` in the paper
  */
 export const EPOCH_LENGTH = 600;
+
 /**
  * referred as constant `K` in the paper
  */
@@ -37,14 +40,21 @@ export const MAX_TICKETS_PER_VALIDATOR = 2;
  * `U` in the paper
  */
 export const WORK_TIMEOUT = 5;
+
 /**
  * referred as constant `R` in the paper
  */
 export const VALIDATOR_CORE_ROTATION = 10;
+
 /**
- * referred as capital i in the paper
+ * `I` | the maximum amount of work items in a package.
  */
-export const MAXIMUM_WORK_ITEMS = 4;
+export const MAXIMUM_WORK_ITEMS = 16;
+
+/**
+ * `T` | the maximum number of extrinsics in a work-package
+ */
+export const MAXIMUM_EXTRINSICS_IN_WP = 128;
 
 /**
  * `Wm` in the paper
@@ -167,7 +177,7 @@ export const TRANSFER_MEMO_SIZE = 128;
 /**
  * `D` in the paper
  */
-export const PREIMAGE_EXPIRATION = 28800;
+export const PREIMAGE_EXPIRATION = 19_200;
 
 /**
  * `WE` in the paper
@@ -189,12 +199,12 @@ export const ERASURECODE_SEGMENT_SIZE = <4104>(
 /**
  * `WM` in the paper
  */
-export const MAX_EXPORTED_ITEMS = 2 ** 11;
+export const MAX_EXPORTED_ITEMS = 3072;
 
 /**
  * `WM` in the paper
  */
-export const MAX_IMPORTED_ITEMS = 2 ** 11;
+export const MAX_IMPORTED_ITEMS = 3072;
 
 /**
  * `GA`

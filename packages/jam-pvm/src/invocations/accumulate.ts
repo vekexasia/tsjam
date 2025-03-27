@@ -67,7 +67,7 @@ const AccumulateArgsCodec = createCodec<{
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.6.1 - B.8)
+ * $(0.6.4 - B.9)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -102,12 +102,11 @@ export const accumulateInvocation = (
     { x: iRes, y: I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau) },
   );
 
-  const _o = mres.exitReason ?? mres.ok![1];
-  return C_fn(gas, _o, mres.out);
+  return C_fn(gas, mres.res, mres.out);
 };
 
 /**
- * $(0.6.1 - B.9)
+ * $(0.6.4 - B.10)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationState,
@@ -149,7 +148,7 @@ const I_fn = (
 };
 
 /**
- * $(0.6.1 - B.10)
+ * $(0.6.4 - B.11)
  */
 const F_fn: (
   service: ServiceIndex,

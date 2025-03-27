@@ -51,8 +51,7 @@ import {
   verifyWinningTickets,
 } from "@/verifySeal";
 import { accumulateReports, availableReports } from "./accumulate";
-import { transferStatistics } from "@tsjam/pvm";
-import { b } from "vitest/dist/chunks/suite.B2jumIFP.js";
+import { invokeOntransfers, transferStatistics } from "@tsjam/pvm";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",
@@ -237,7 +236,7 @@ export const importBlock: STF<
       p_iota,
       p_authQueue,
       deferredTransfers,
-      accumulateStatistics,
+      accumulationStatistics,
     },
   ] = accumulateReports(w, {
     tau: tauTransition.tau,
@@ -360,7 +359,7 @@ export const importBlock: STF<
       guaranteedReports,
       preimages: block.extrinsics.preimages,
       transferStatistics: tStats,
-      accumulateStatistics,
+      accumulationStatistics,
     },
     curState.statistics.service,
   );

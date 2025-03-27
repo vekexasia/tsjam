@@ -22,7 +22,7 @@ import {
   createArrayLengthDiscriminator,
   createSetCodec,
   encodeWithCodec,
-  ValidatorStatisticsCodec,
+  StatisticsCodec,
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
   RecentHistoryCodec,
@@ -44,7 +44,7 @@ import {
 import { bigintToBytes, bytesToBigInt, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
@@ -329,8 +329,8 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   toRet.set(
     stateKey(13),
     encodeWithCodec(
-      ValidatorStatisticsCodec(NUMBER_OF_VALIDATORS),
-      state.validatorStatistics,
+      StatisticsCodec(NUMBER_OF_VALIDATORS, CORES),
+      state.statistics,
     ),
   );
 
