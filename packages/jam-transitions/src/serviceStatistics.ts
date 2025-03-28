@@ -47,6 +47,7 @@ export const serviceStatisticsSTF: STF<
       .flat()
       .map((res) => res.serviceIndex),
   );
+  console.log({ bold_r, bold_p });
 
   const bold_s = new Set([
     ...bold_p,

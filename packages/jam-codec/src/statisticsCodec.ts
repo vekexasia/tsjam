@@ -23,13 +23,15 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
 } from "./json/JsonCodec";
+import { E_bigint, E_int } from "./ints/e";
+import { logCodec } from "@/test/utils";
 export const StatisticsCodec = (
   validatorsCount: typeof NUMBER_OF_VALIDATORS,
   cores: typeof CORES,
 ): JamCodec<JamStatistics> => {
   return createCodec([
     ["validators", ValidatorStatisticsCodec(validatorsCount)],
-    ["cores", coreStatisticsCodec(cores)],
+    logCodec(["cores", coreStatisticsCodec(cores)]),
     ["services", serviceStatisticsCodec],
   ]);
 };
@@ -79,14 +81,14 @@ const coreStatisticsCodec = (cores: typeof CORES) => {
   return createSequenceCodec(
     cores,
     createCodec<SingleCoreStatistics>([
-      ["daLoad", E_4_int],
-      ["popularity", E_2_int],
-      ["imports", E_2_int],
-      ["extrinsicCount", E_2_int],
-      ["extrinsicSize", E_4_int],
-      ["exports", E_2_int],
-      ["bundleSize", E_4_int],
-      ["usedGas", E_sub<Gas>(8)],
+      ["daLoad", E_int<u32>()],
+      ["popularity", E_int<u16>()],
+      ["imports", E_int<u16>()],
+      ["extrinsicCount", E_int<u16>()],
+      ["extrinsicSize", E_int<u32>()],
+      ["exports", E_int<u16>()],
+      ["bundleSize", E_int<u32>()],
+      ["usedGas", E_bigint<Gas>()],
     ]),
   );
 };
