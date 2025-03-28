@@ -36,28 +36,30 @@ export type WorkResult = {
    */
   output: WorkOutput;
 
-  /**
-   * `u` - effective gas used when producing this wr in onRefine
-   */
-  gasUsedInRefinement: Gas;
+  refineLoad: {
+    /**
+     * `u` - effective gas used when producing this wr in onRefine
+     */
+    gasUsed: Gas;
 
-  /**
-   * `i` - number imported segments
-   */
-  numImportedSegments: u16;
+    /**
+     * `i` - number imported segments
+     */
+    imports: u16;
 
-  /**
-   * `e` - number of exported segments
-   */
-  numExportedSegments: u16;
+    /**
+     * `x`
+     */
+    extrinsicCount: u16;
 
-  /**
-   * `x`
-   */
-  numExports: u16;
+    /**
+     * `z`
+     */
+    extrinsicSize: u32;
 
-  /**
-   * `z`
-   */
-  exportsSize: u32;
+    /**
+     * `e` - number of exported segments
+     */
+    exports: u16;
+  };
 };
