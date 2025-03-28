@@ -36,6 +36,7 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
+import { E_bigint } from "@/ints/e";
 
 /**
  * $(0.6.4 - C.24)
@@ -60,7 +61,7 @@ export const WorkReportCodec = createCodec<WorkReport>([
       WorkReport["results"]
     >,
   ],
-  ["authGasUsed", E_sub<Gas>(8)],
+  ["authGasUsed", E_bigint<Gas>()],
 ]);
 
 export type WorkReportJSON = {

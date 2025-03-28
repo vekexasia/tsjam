@@ -180,10 +180,10 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
   };
 };
 
-export const WrapJSONCodec = <T, K extends string>(
+export const WrapJSONCodec = <T, K extends string, X = any>(
   key: K,
-  codec: JSONCodec<T>,
-): JSONCodec<T, { [key in K]: any }> => {
+  codec: JSONCodec<T, X>,
+): JSONCodec<T, { [key in K]: X }> => {
   return {
     fromJSON(json) {
       return codec.fromJSON(json[key]);
