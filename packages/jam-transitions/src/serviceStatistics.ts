@@ -99,11 +99,11 @@ const R_fn = (
     .flat()
     .filter((result) => result.serviceIndex === service)
     .map((result) => ({
-      imports: <u16>result.numImportedSegments,
-      exports: <u16>result.numExports,
-      extrinsicSize: <u32>result.exportsSize,
-      extrinsicCount: <u16>result.numExportedSegments,
-      refinement: { count: <u32>1, usedGas: result.gasUsedInRefinement },
+      imports: result.refineLoad.imports,
+      exports: result.refineLoad.exports,
+      extrinsicSize: result.refineLoad.extrinsicSize,
+      extrinsicCount: result.refineLoad.extrinsicCount,
+      refinement: { count: <u32>1, usedGas: result.refineLoad.usedGas },
     }))
     .reduce((a, b) => {
       return {

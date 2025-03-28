@@ -40,7 +40,7 @@ export type WorkResult = {
     /**
      * `u` - effective gas used when producing this wr in onRefine
      */
-    gasUsed: Gas;
+    usedGas: Gas;
 
     /**
      * `i` - number imported segments

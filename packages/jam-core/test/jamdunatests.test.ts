@@ -288,7 +288,8 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["rho", "rho", RHOJSONCodec],
   ["tau", "tau", NumberJSONCodec<Tau>()],
   ["privServices", "chi", PrivilegedServicesJSONCodec],
-  ["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
+  // FIXME:when duna fixes it
+  //["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],

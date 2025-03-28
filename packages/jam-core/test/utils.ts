@@ -1,25 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
-  AccumulationHistory,
-  AccumulationQueue,
   AuthorizerPool,
   AuthorizerQueue,
   BandersnatchKey,
-  BandersnatchRingRoot,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
+  Gas,
   Hash,
   IDisputesState,
   JamState,
+  JamStatistics,
   RecentHistory,
   RecentHistoryItem,
   SafroleState,
   ServiceIndex,
-  Tagged,
   Tau,
-  TicketIdentifier,
+  u16,
+  u32,
   ValidatorData,
   ValidatorStatistics,
 } from "@tsjam/types";
@@ -102,16 +100,29 @@ export const dummyState = (conf: {
           accumulationResultMMR: [],
         }) as RecentHistoryItem,
     ) as RecentHistory,
-    validatorStatistics: [null, null].map(() =>
-      new Array(validators).fill({
-        blocksProduced: 0,
-        ticketsIntroduced: 0,
-        preimagesIntroduced: 0,
-        totalOctetsIntroduced: 0,
-        guaranteedReports: 0,
-        availabilityAssurances: 0,
+    statistics: {
+      validator: [null, null].map(() =>
+        new Array(validators).fill({
+          blocksProduced: 0,
+          ticketsIntroduced: 0,
+          preimagesIntroduced: 0,
+          totalOctetsIntroduced: 0,
+          guaranteedReports: 0,
+          availabilityAssurances: 0,
+        }),
+      ) as ValidatorStatistics,
+      core: <JamStatistics["core"]>new Array(cores).fill({
+        daLoad: <u32>0,
+        popularity: <u16>0,
+        imports: <u16>0,
+        extrinsicCount: <u16>0,
+        extrinsicSize: <u32>0,
+        exports: <u16>0,
+        bundleSize: <u32>0,
+        usedGas: <Gas>0n,
       }),
-    ) as ValidatorStatistics,
+      service: new Map(),
+    },
     authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
     authQueue: new Array(cores).fill(
       new Array(80).fill(0n as Hash),

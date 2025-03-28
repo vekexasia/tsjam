@@ -68,11 +68,7 @@ const R_fn = (
     .filter((w) => w.coreIndex === core)
     .map(({ results, workPackageSpecification }) =>
       results.flat().map((r) => ({
-        imports: r.numImportedSegments,
-        exports: r.numExportedSegments,
-        extrinsicSize: r.exportsSize,
-        extrinsicCount: r.numExportedSegments,
-        usedGas: r.gasUsedInRefinement,
+        ...r.refineLoad,
         bundleSize: workPackageSpecification.bundleLength,
       })),
     )

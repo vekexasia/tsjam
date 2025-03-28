@@ -157,9 +157,11 @@ export const verifyEpochMarker = (
     for (let i = 0; i < block.header.epochMarker!.validatorKeys.length; i++) {
       if (
         Buffer.compare(
-          block.header.epochMarker!.validatorKeys[i],
+          block.header.epochMarker!.validatorKeys[i].bandersnatch,
           p_gamma_k[i].banderSnatch,
-        ) !== 0
+        ) !== 0 ||
+        block.header.epochMarker!.validatorKeys[i].ed25519 !==
+          p_gamma_k[i].ed25519
       ) {
         return err(EpochMarkerError.InvalidEpochMarkerValidator);
       }

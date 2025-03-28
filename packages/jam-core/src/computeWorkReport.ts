@@ -70,7 +70,7 @@ export const computeWorkReport = (
   const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
-      const { result: r, out: e, usedGas } = I_fn(pac, j, _deps);
+      const { res: r, out: e, usedGas } = I_fn(pac, j, _deps);
       const workResult = C_fn(pac.items[j], r, usedGas);
       return { result: workResult, out: e };
     });
@@ -198,7 +198,7 @@ const I_fn = (
     overline_i: ExportSegment[][];
   },
 ): {
-  result: WorkOutput; // `r`
+  res: WorkOutput; // `r`
   out: Uint8Array[]; // `e`
   usedGas: Gas; // `u`
 } => {
@@ -216,10 +216,10 @@ const I_fn = (
     { delta: deps.delta, tau: deps.tau }, // deps
   );
   if (re.out.length === w.exportCount) {
-    return { result: re.result, out: re.out };
-  } else if (!(re.result instanceof Uint8Array)) {
+    return re;
+  } else if (!(re.res instanceof Uint8Array)) {
     return {
-      result: re.result,
+      res: re.res,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -227,10 +227,11 @@ const I_fn = (
             ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
           ).fill(0),
         ),
+      usedGas: re.usedGas,
     };
   } else {
     return {
-      result: WorkError.BadExports,
+      res: WorkError.BadExports,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -238,6 +239,7 @@ const I_fn = (
             ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
           ).fill(0),
         ),
+      usedGas: re.usedGas,
     };
   }
 };
@@ -311,15 +313,17 @@ export const C_fn = (
     payloadHash: Hashing.blake2b(workItem.payload),
     gasPrioritization: workItem.accumulateGasLimit,
     output: out,
-    gasUsedInRefinement: usedGas, // u
-    numImportedSegments: <u16>workItem.importSegments.length,
-    numExportedSegments: workItem.exportCount,
-    numExports: <u16>workItem.exportedDataSegments.length,
-    exportsSize: <u32>(
-      workItem.exportedDataSegments
-        .map((x) => x.length)
-        .reduce((a, b) => a + b, 0)
-    ),
+    refineLoad: {
+      usedGas,
+      imports: <u16>workItem.importSegments.length,
+      extrinsicCount: <u16>workItem.exportedDataSegments.length,
+      extrinsicSize: <u32>(
+        workItem.exportedDataSegments
+          .map((x) => x.length)
+          .reduce((a, b) => a + b, 0)
+      ),
+      exports: <u16>workItem.exportCount,
+    },
   };
 };
 

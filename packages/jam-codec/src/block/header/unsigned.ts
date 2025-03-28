@@ -44,9 +44,9 @@ export const UnsignedHeaderCodec = () =>
               NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
             >(
               NUMBER_OF_VALIDATORS,
-              createCodec<>([
-                ["bander", BandersnatchCodec],
-                ["ed", Ed25519PubkeyCodec],
+              createCodec([
+                ["bandersnatch", BandersnatchCodec],
+                ["ed25519", Ed25519PubkeyCodec],
               ]),
             ),
           ],

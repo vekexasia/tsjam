@@ -27,7 +27,7 @@ export const WorkResultCodec = createCodec<WorkResult>([
   [
     "refineLoad",
     createCodec<WorkResult["refineLoad"]>([
-      ["gasUsed", E_bigint<Gas>()], // u
+      ["usedGas", E_bigint<Gas>()], // u
       ["imports", E_int<u16>()], // i
       ["extrinsicCount", E_int<u16>()], // x
       ["extrinsicSize", E_int<u32>()], // z
@@ -62,7 +62,7 @@ export const WorkResultJSONCodec = createJSONCodec<
     "refineLoad",
     "refine_load",
     createJSONCodec<WorkResult["refineLoad"]>([
-      ["gasUsed", "gas_used", BigIntJSONCodec<Gas>()],
+      ["usedGas", "gas_used", BigIntJSONCodec<Gas>()],
       ["imports", "imports", NumberJSONCodec<u16>()],
       ["extrinsicCount", "extrinsic_count", NumberJSONCodec<u16>()],
       ["extrinsicSize", "extrinsic_size", NumberJSONCodec<u32>()],
