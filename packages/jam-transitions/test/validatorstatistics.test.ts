@@ -11,6 +11,7 @@ import {
   createSequenceCodec,
   ValidatorStatisticsCodec,
   codec_Et,
+  StatisticsCodec,
 } from "@tsjam/codec";
 import {
   Tau,
@@ -19,11 +20,13 @@ import {
   ValidatorStatistics,
   ValidatorIndex,
   JamBlock,
+  JamStatistics,
 } from "@tsjam/types";
 import fs from "node:fs";
 import * as constants from "@tsjam/constants";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { validatorStatisticsToPosterior } from "@/validatorStatistics";
+import { logCodec } from "@tsjam/codec/test/utils.js";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -40,7 +43,7 @@ export const getCodecFixtureFile = (
 };
 
 type TestState = {
-  pi: ValidatorStatistics;
+  pi: JamStatistics;
   tau: Tau;
   p_kappa: Posterior<JamState["kappa"]>;
 };
@@ -49,8 +52,9 @@ describe("statistics", () => {
     const innerNUMOFVAL = <typeof NUMBER_OF_VALIDATORS>(
       (kind == "tiny" ? 6 : 1023)
     );
+    const cores = <typeof CORES>(kind == "tiny" ? 2 : 341);
     const stateCodec = createCodec<TestState>([
-      ["pi", ValidatorStatisticsCodec(innerNUMOFVAL)],
+      logCodec(["pi", StatisticsCodec(innerNUMOFVAL, cores)], (s) => Statistcs),
       ["tau", E_sub_int<Tau>(4)],
       [
         "p_kappa",

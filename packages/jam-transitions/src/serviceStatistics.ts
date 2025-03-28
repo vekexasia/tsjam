@@ -16,7 +16,7 @@ import { ok } from "neverthrow";
  * $(0.6.4 - 13.11)
  */
 export const serviceStatisticsSTF: STF<
-  JamStatistics["service"],
+  JamStatistics["services"],
   {
     /**
      * `bold w` calculated in $(0.6.4 - 11.28)
@@ -36,7 +36,7 @@ export const serviceStatisticsSTF: STF<
   },
   never
 > = (input) => {
-  const toRet: JamStatistics["service"] = new Map();
+  const toRet: JamStatistics["services"] = new Map();
   // $(0.6.4 - 13.14)
   const bold_p = new Set(input.preimages.map((p) => p.serviceIndex));
 

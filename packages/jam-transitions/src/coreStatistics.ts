@@ -14,7 +14,7 @@ import {
 import { ok } from "neverthrow";
 
 export const coreStatisticsSTF: STF<
-  JamStatistics["core"],
+  JamStatistics["cores"],
   {
     /**
      * `bold W` calculated in $(0.6.4 - 11.16)
@@ -29,7 +29,7 @@ export const coreStatisticsSTF: STF<
   },
   never
 > = (input) => {
-  const toRet = [] as unknown as JamStatistics["core"];
+  const toRet = [] as unknown as JamStatistics["cores"];
   for (let c = 0; c < CORES; c++) {
     toRet[c] = {
       ...R_fn(<CoreIndex>c, input.guaranteedReports),
@@ -63,7 +63,7 @@ const D_fn = (core: CoreIndex, availableReports: AvailableWorkReports): u32 => {
 const R_fn = (
   core: CoreIndex,
   guaranteedReports: WorkReport[],
-): Omit<JamStatistics["core"][0], "popularity" | "daLoad"> => {
+): Omit<JamStatistics["cores"][0], "popularity" | "daLoad"> => {
   return guaranteedReports
     .filter((w) => w.coreIndex === core)
     .map(({ results, workPackageSpecification }) =>
