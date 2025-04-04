@@ -5,7 +5,7 @@ import { ok } from "neverthrow";
 
 /**
  * rotate `η`
- * $(0.6.1 - 4.9)
+ * $(0.6.4 - 4.8)
  */
 export const rotateEntropy: STF<
   JamEntropy,

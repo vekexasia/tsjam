@@ -79,7 +79,7 @@ export type HostCallOut<X> = {
 
 /**
  * `Ω(X)` in the paper
- * $(0.6.1 - A.32)
+ * $(0.6.4 - A.35)
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;

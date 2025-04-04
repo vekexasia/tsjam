@@ -1,7 +1,7 @@
 import { Delta, ServiceIndex } from "@tsjam/types";
 
 /**
- * $(0.6.1 - B.13)
+ * $(0.6.4 - B.14)
  */
 export function check_fn(i: ServiceIndex, delta: Delta): ServiceIndex {
   if (delta.has(i)) {

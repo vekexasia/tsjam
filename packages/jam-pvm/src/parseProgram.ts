@@ -4,7 +4,7 @@ import { Ixdb } from "@/instructions/ixdb.js";
 
 export class ParsedProgram implements IParsedProgram {
   #blockBeginnings: Set<u32>;
-  // $(0.6.1 - A.4)
+  // $(0.6.4 - A.5)
   #ixSkips: Map<u32, u32>;
   #ixs: Map<u32, u8> = new Map<u32, u8>();
 
@@ -28,7 +28,7 @@ export class ParsedProgram implements IParsedProgram {
         lastIx = i as u32;
       }
     }
-    // calculates skips $(0.6.1 - A.2)
+    // calculates skips $(0.6.4 - A.3)
     this.#ixSkips.set(lastIx, (program.k.length - lastIx - 1) as u32);
     this.#blockBeginnings.add(0 as u32);
     for (const [ix, skip] of this.#ixSkips.entries()) {
@@ -47,7 +47,7 @@ export class ParsedProgram implements IParsedProgram {
 
   /**
    * Basically computes `l`
-   * $(0.6.1 - A.18)
+   * $(0.6.4 - A.19)
    */
   skip(pointer: u32): u32 {
     // we assume that the pointer is valid

@@ -27,13 +27,18 @@ export const calculateAccumulateRoot = (
     accumulationResult: Hash;
   }>,
 ): MerkleTreeRoot => {
-
-  console.log("Beefy", [...beefyCommitment.values()]
+  console.log(
+    "Beefy",
+    [...beefyCommitment.values()]
       // sorting is set in (83)
       .sort((a, b) => a.serviceIndex - b.serviceIndex)
-    .map((entry) => {
-      return {serviceIndex: entry.serviceIndex, acc: HashJSONCodec().toJSON(entry.accumulationResult)};
-    }))
+      .map((entry) => {
+        return {
+          serviceIndex: entry.serviceIndex,
+          acc: HashJSONCodec().toJSON(entry.accumulationResult),
+        };
+      }),
+  );
 
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(
@@ -52,7 +57,7 @@ export const calculateAccumulateRoot = (
 };
 
 /**
- * $(0.6.1 - 7.4 / 4.7)
+ * $(0.6.4 - 7.4 / 4.17)
  */
 export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,

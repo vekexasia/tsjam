@@ -24,14 +24,13 @@ import {
   NumberJSONCodec,
 } from "./json/JsonCodec";
 import { E_bigint, E_int } from "./ints/e";
-import { logCodec } from "@/test/utils";
 export const StatisticsCodec = (
   validatorsCount: typeof NUMBER_OF_VALIDATORS,
   cores: typeof CORES,
 ): JamCodec<JamStatistics> => {
   return createCodec([
     ["validators", ValidatorStatisticsCodec(validatorsCount)],
-    logCodec(["cores", coreStatisticsCodec(cores)]),
+    ["cores", coreStatisticsCodec(cores)],
     ["services", serviceStatisticsCodec],
   ]);
 };

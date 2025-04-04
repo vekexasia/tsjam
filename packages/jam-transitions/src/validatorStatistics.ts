@@ -40,9 +40,9 @@ export const validatorStatisticsToPosterior: STF<
   let bold_a = pi_v;
   p_pi_l = toPosterior(pi_l);
 
-  // $(0.6.1 - 13.2)
+  // $(0.6.4 - 13.3)
   if (isNewEra(input.p_tau, input.curTau)) {
-    // $(0.6.1 - 13.3) | second bracket
+    // $(0.6.4 - 13.4) | second bracket
     p_pi_l = toPosterior(pi_v);
     bold_a = new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
       return {
@@ -61,7 +61,7 @@ export const validatorStatisticsToPosterior: STF<
 
   for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
     const curV = i === input.authorIndex;
-    // $(0.6.1 - 13.4)
+    // $(0.6.4 - 13.5)
     p_pi_v[i] = {
       blocksProduced: <u32>(bold_a[i].blocksProduced + (curV ? 1 : 0)),
       ticketsIntroduced: <u32>(

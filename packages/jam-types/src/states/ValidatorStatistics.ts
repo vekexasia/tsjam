@@ -3,9 +3,9 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * `π`
- * $(0.6.1 - 13.1)
- * [0] is the accumulator,
- * [1] is the previous epoch's statistics
+ * $(0.6.4 - 13.2)
+ * [0] is `πV`
+ * [1] is `πL`
  */
 export type ValidatorStatistics = SeqOfLength<
   SeqOfLength<SingleValidatorStatistics, typeof NUMBER_OF_VALIDATORS>,

@@ -86,7 +86,7 @@ export const pvmSingleStep = (
   // we apply the gas and skip.
   // if an instruction pointer is set we apply it and override the skip inside
   // the applyMods
-  // $(0.6.1 - A.7)
+  // $(0.6.4 - A.8)
   const rMod = applyMods(ctx, {} as object, [
     IxMod.gas(ix.gasCost), // g′ = g − g∆
     IxMod.skip(ctx.instructionPointer, skip), // i'

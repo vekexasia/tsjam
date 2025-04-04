@@ -42,7 +42,7 @@ export enum DisputesToPosteriorError {
 
 /**
  * Computes state transition for disputes state
- * $(0.6.1 - 4.12)
+ * $(0.6.4 - 4.11)
  */
 export const disputesSTF: STF<
   IDisputesState,
