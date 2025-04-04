@@ -46,6 +46,7 @@ import {
   Ed25519PubkeyCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { logCodec } from "@tsjam/codec/test/utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -191,7 +192,7 @@ type TestState = {
 type EpochMark = {
   entropy: OpaqueHash;
   ticketsEntropy: OpaqueHash;
-  validators: BandersnatchKey[]; // validator long
+  validators: { bandersnatch: BandersnatchKey; ed25519: ED25519PublicKey }[]; // validator long
 };
 type TestType = {
   input: {
@@ -350,8 +351,11 @@ const buildTest = (name: string, size: "tiny" | "full") => {
                     "validators",
                     createSequenceCodec(
                       NUMVALS,
-                      BandersnatchCodec,
-                    ) as unknown as JamCodec<BandersnatchKey[]>,
+                      createCodec<EpochMark["validators"][0]>([
+                        ["bandersnatch", BandersnatchCodec],
+                        ["ed25519", Ed25519PubkeyCodec],
+                      ]),
+                    ) as unknown as JamCodec<EpochMark["validators"]>,
                   ],
                 ]),
               ),
