@@ -7,6 +7,7 @@ import {
   Posterior,
   PVMAccumulationOp,
   PVMAccumulationState,
+  PVMProgramCode,
   PVMProgramExecutionContext,
   PVMResultContext,
   RegularPVMExitReason,
@@ -94,7 +95,7 @@ export const accumulateInvocation = (
   // console.log("arguments", { t, s, o });
 
   const mres = argumentInvocation(
-    code,
+    <PVMProgramCode>code,
     5 as u32, // instructionPointer
     gas,
     encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
@@ -241,7 +242,7 @@ const F_fn: (
   };
 //
 /**
- * $(0.6.1 - B.11)
+ * $(0.6.4 - B.12)
  */
 const G_fn = (
   context: PVMProgramExecutionContext,

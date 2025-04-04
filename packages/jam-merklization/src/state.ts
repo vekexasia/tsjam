@@ -192,7 +192,7 @@ export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
 
 /*
  * `T(σ)`
- * $(0.6.1 - D.2)
+ * $(0.6.4 - D.2)
  */
 export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();

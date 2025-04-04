@@ -3,15 +3,14 @@ import {
   IPVMMemory,
   Page,
   PVMMemoryAccessKind,
-  PVMProgram,
+  PVMProgramCode,
   RegisterValue,
   SeqOfLength,
   u16,
   u24,
   u32,
 } from "@tsjam/types";
-import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
-import { ParsedProgram } from "@/parseProgram.js";
+import { E_sub_int, E_4_int, createCodec } from "@tsjam/codec";
 import { MemoryContent, PVMHeap, PVMMemory } from "@/pvmMemory.js";
 
 // constants defined in $(0.6.1 - A.35)
@@ -32,7 +31,7 @@ const owzsCodec = createCodec<{
 
 /**
  * `Y` fn in the graypaper
- * $(0.6.1 - A.33)
+ * $(0.6.4 - A.36)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -42,8 +41,7 @@ export const programInitialization = (
 ):
   | undefined
   | {
-      program: PVMProgram;
-      parsed: ParsedProgram;
+      programCode: PVMProgramCode;
       memory: IPVMMemory;
       registers: SeqOfLength<RegisterValue, 13>;
     } => {
@@ -75,9 +73,8 @@ export const programInitialization = (
   offset += 4;
 
   // c
-  const programCode = encodedProgram.subarray(
-    offset,
-    offset + programCodeLength.value,
+  const programCode = <PVMProgramCode>(
+    encodedProgram.subarray(offset, offset + programCodeLength.value)
   );
   offset += programCodeLength.value;
 
@@ -187,12 +184,8 @@ export const programInitialization = (
     });
   }
 
-  const program = PVMProgramCodec.decode(programCode).value;
-  const parsedProgram = ParsedProgram.parse(program);
-
   return {
-    program,
-    parsed: parsedProgram,
+    programCode,
     memory: new PVMMemory(
       mem.filter((a) => a.content.length > 0), // we filter empty memory content cause it won't have acl
       acl,

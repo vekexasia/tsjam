@@ -153,7 +153,7 @@ describe("assurances", () => {
     const eaVerified = verifyEA(
       decoded.value.input.ea,
       decoded.value.input.parent,
-      decoded.value.input.slot,
+      // decoded.value.input.slot,
       decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
       decoded.value.preState.rho as Dagger<RHO>,
     );

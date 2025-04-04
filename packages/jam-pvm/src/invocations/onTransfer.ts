@@ -4,6 +4,7 @@ import {
   Delta,
   Gas,
   Posterior,
+  PVMProgramCode,
   PVMProgramExecutionContext,
   ServiceAccount,
   ServiceIndex,
@@ -73,7 +74,7 @@ export const transferInvocation = (
   }
 
   const out = argumentInvocation(
-    code,
+    <PVMProgramCode>code,
     10 as u32,
     transfers.reduce((acc, a) => acc + a.gasLimit, 0n) as Gas,
     encodeWithCodec(argumentInvocationTransferCodec, {

@@ -149,7 +149,7 @@ export const accumulateReports = (
   }
 
   // calculoate posterior acc history
-  // $(0.6.1 - 12.25 / 12.26)
+  // $(0.6.4 - 12.31 / 12.32)
   const p_accumulationHistory =
     deps.accumulationHistory.slice() as AccumulationHistory as Posterior<AccumulationHistory>;
   {
@@ -160,7 +160,7 @@ export const accumulateReports = (
     }
   } // end of calculation of posterior accumulation history
 
-  // $(0.6.1 - 12.27) - calculate p_accumulationQueue
+  // $(0.6.4 - 12.33) - calculate p_accumulationQueue
   const p_accumulationQueue = [
     ...deps.accumulationQueue,
   ] as Posterior<AccumulationQueue>;

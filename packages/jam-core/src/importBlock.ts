@@ -202,13 +202,7 @@ export const importBlock: STF<
   }
 
   const ea = block.extrinsics.assurances;
-  const validatedEa = verifyEA(
-    ea,
-    block.header.parent,
-    block.header.timeSlotIndex,
-    p_kappa,
-    d_rho,
-  );
+  const validatedEa = verifyEA(ea, block.header.parent, curState.kappa, d_rho);
   if (!validatedEa) {
     return err(ImportBlockError.InvalidEA);
   }
@@ -341,7 +335,7 @@ export const importBlock: STF<
       p_tau: toPosterior(block.header.timeSlotIndex),
       curTau: curState.tau,
     },
-    curState.statistics.validator,
+    curState.statistics.validators,
   ).safeRet();
 
   const guaranteedReports = _w(block.extrinsics.reportGuarantees);
@@ -351,7 +345,7 @@ export const importBlock: STF<
       assurances: block.extrinsics.assurances,
       guaranteedReports,
     },
-    curState.statistics.core,
+    curState.statistics.cores,
   );
 
   const [, p_serviceStatistics] = serviceStatisticsSTF(
@@ -361,7 +355,7 @@ export const importBlock: STF<
       transferStatistics: tStats,
       accumulationStatistics,
     },
-    curState.statistics.service,
+    curState.statistics.services,
   );
 
   const [, p_authorizerPool] = authorizerPool_toPosterior(
@@ -389,9 +383,9 @@ export const importBlock: STF<
     authQueue: p_authQueue,
     safroleState: p_safroleState,
     statistics: {
-      validator: p_validatorStatistics,
-      core: p_coreStatistics,
-      service: p_serviceStatistics,
+      validators: p_validatorStatistics,
+      cores: p_coreStatistics,
+      services: p_serviceStatistics,
     },
     rho: p_rho,
     serviceAccounts: p_delta,

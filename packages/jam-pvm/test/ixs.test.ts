@@ -10,6 +10,7 @@ import {
   Gas,
   Page,
   PVMMemoryAccessKind,
+  PVMProgramCode,
   RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
@@ -54,14 +55,8 @@ describe("pvm", () => {
       BigInt(reg),
     );
 
-    const program = PVMProgramCodec.decode(new Uint8Array(json.program));
-    context.program = program.value;
-    context.parsedProgram = ParsedProgram.parse(program.value);
     const r = basicInvocation(
-      {
-        parsedProgram: ParsedProgram.parse(program.value),
-        program: program.value,
-      },
+      <PVMProgramCode>new Uint8Array(json.program),
       context.execution,
     );
     if (r.exitReason === RegularPVMExitReason.Panic) {

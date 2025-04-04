@@ -16,7 +16,7 @@ import {
 import { E_bigint, E_int } from "@/ints/e";
 
 /**
- * $(0.6.1 - C.23)
+ * $(0.6.4 - C.23)
  */
 export const WorkResultCodec = createCodec<WorkResult>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)], // s

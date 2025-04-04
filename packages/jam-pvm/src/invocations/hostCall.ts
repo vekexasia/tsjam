@@ -1,10 +1,4 @@
-import {
-  IParsedProgram,
-  PVMExitReason,
-  PVMProgram,
-  PVMProgramExecutionContext,
-  u8,
-} from "@tsjam/types";
+import { PVMExitReason, PVMProgramExecutionContext, u8 } from "@tsjam/types";
 import { basicInvocation } from "@/invocations/basic.js";
 
 /**
@@ -13,12 +7,12 @@ import { basicInvocation } from "@/invocations/basic.js";
  * $(0.6.4 - A.34)
  */
 export const hostCallInvocation = <X>(
-  p: { program: PVMProgram; parsedProgram: IParsedProgram },
+  program: Uint8Array,
   ctx: PVMProgramExecutionContext, // ı, ξ, ω, μ
   f: HostCallExecutor<X>,
   x: X,
 ): HostCallOut<X> => {
-  const out = basicInvocation(p, ctx);
+  const out = basicInvocation(program, ctx);
   if (
     typeof out.exitReason == "object" &&
     out.exitReason.type === "host-call"
@@ -56,7 +50,7 @@ export const hostCallInvocation = <X>(
     } else {
       // all good we skip and hostcall
       return hostCallInvocation(
-        p,
+        program,
         {
           instructionPointer: out.context.instructionPointer,
           gas: hostCallRes.ctx.gas,

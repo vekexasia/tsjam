@@ -145,7 +145,7 @@ export const assertEGValid = (
       return err(EGError.TOO_MANY_PREREQUISITES);
     }
 
-    // $(0.6.1 - 11.8) | check work report total size
+    // $(0.6.4 - 11.8) | check work report total size
     const totalSize =
       workReport.authorizerOutput.length +
       workReport.results
@@ -245,7 +245,7 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.6.1 - 11.28)
+  // $(0.6.4 - 11.28)
   const w = _w(extrinsic);
 
   // $(0.6.1 - 11.29) | no reports on core with pending avail

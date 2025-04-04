@@ -101,7 +101,7 @@ export const dummyState = (conf: {
         }) as RecentHistoryItem,
     ) as RecentHistory,
     statistics: {
-      validator: [null, null].map(() =>
+      validators: [null, null].map(() =>
         new Array(validators).fill({
           blocksProduced: 0,
           ticketsIntroduced: 0,
@@ -111,7 +111,7 @@ export const dummyState = (conf: {
           availabilityAssurances: 0,
         }),
       ) as ValidatorStatistics,
-      core: <JamStatistics["core"]>new Array(cores).fill({
+      cores: <JamStatistics["cores"]>new Array(cores).fill({
         daLoad: <u32>0,
         popularity: <u16>0,
         imports: <u16>0,
@@ -121,7 +121,7 @@ export const dummyState = (conf: {
         bundleSize: <u32>0,
         usedGas: <Gas>0n,
       }),
-      service: new Map(),
+      services: new Map(),
     },
     authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
     authQueue: new Array(cores).fill(

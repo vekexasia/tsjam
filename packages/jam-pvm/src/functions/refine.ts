@@ -18,8 +18,6 @@ import {
 } from "@tsjam/types";
 import { W7, W8 } from "@/functions/utils.js";
 import {
-  ERASURECODE_BASIC_SIZE,
-  ERASURECODE_EXPORTED_SIZE,
   ERASURECODE_SEGMENT_SIZE,
   HostCallResult,
   InnerPVMResultCode,
@@ -34,11 +32,9 @@ import {
   E_8,
   encodeWithCodec,
   HashCodec,
-  PVMProgramCodec,
   WorkPackageCodec,
 } from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
-import { ParsedProgram } from "@/parseProgram.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
 export type RefineContext = {
@@ -470,10 +466,6 @@ export const omega_k = regFn<
               ),
             ).value,
         );
-      const program = PVMProgramCodec.decode(
-        refineCtx.m.get(n)!.programCode,
-      ).value;
-      const parsed = ParsedProgram.parse(program);
 
       const pvmCtx = {
         instructionPointer: refineCtx.m.get(n)!.instructionPointer,
@@ -481,10 +473,7 @@ export const omega_k = regFn<
         registers: w as PVMProgramExecutionContextBase["registers"],
         memory: refineCtx.m.get(n)!.memory.clone(),
       };
-      const res = basicInvocation(
-        { program: program, parsedProgram: parsed },
-        pvmCtx,
-      );
+      const res = basicInvocation(refineCtx.m.get(n)!.programCode, pvmCtx);
 
       // compute u*
       const newMemory = {

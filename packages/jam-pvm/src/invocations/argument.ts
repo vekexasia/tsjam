@@ -1,4 +1,4 @@
-import { Gas, RegularPVMExitReason, u32, u64 } from "@tsjam/types";
+import { Gas, PVMProgramCode, RegularPVMExitReason, u32 } from "@tsjam/types";
 import {
   HostCallExecutor,
   HostCallOut,
@@ -12,7 +12,7 @@ import { programInitialization } from "@/program.js";
  * $(0.6.4 - A.43)
  */
 export const argumentInvocation = <X>(
-  p: Uint8Array,
+  encodedProgram: PVMProgramCode,
   instructionPointer: u32, // ı
   gas: Gas, // ϱ
   args: Uint8Array, // a
@@ -23,13 +23,13 @@ export const argumentInvocation = <X>(
   res: Uint8Array | RegularPVMExitReason.Panic | RegularPVMExitReason.OutOfGas;
   out: X;
 } => {
-  const res = programInitialization(p, args);
+  const res = programInitialization(encodedProgram, args);
   if (typeof res === "undefined") {
     return { usedGas: <Gas>0n, res: RegularPVMExitReason.Panic, out: x };
   }
-  const { program, parsed, memory, registers } = res;
+  const { programCode, memory, registers } = res;
   const hRes = hostCallInvocation(
-    { program, parsedProgram: parsed },
+    programCode,
     { instructionPointer, gas, registers, memory },
     f,
     x,

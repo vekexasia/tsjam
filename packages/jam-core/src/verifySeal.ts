@@ -16,6 +16,7 @@ import {
 import { Result, err, ok } from "neverthrow";
 import {
   BitSequence,
+  HashCodec,
   UnsignedHeaderCodec,
   codec_Ea,
   codec_Ed,
@@ -140,7 +141,7 @@ export enum EpochMarkerError {
 
 /**
  * Verifies epoch marker `He` is valid
- * $(0.6.1 - 6.27)
+ * $(0.6.4 - 6.27)
  */
 export const verifyEpochMarker = (
   block: JamBlock,
@@ -270,7 +271,6 @@ export const verifyOffenders = (
 export const verifyEA = (
   ea: EA_Extrinsic,
   hp: JamHeader["parent"],
-  ht: JamHeader["timeSlotIndex"], // TODO:remove?
   kappa: JamState["kappa"],
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
@@ -302,19 +302,18 @@ export const verifyEA = (
     }
   }
 
-  // $(0.6.1 - 11.13)
+  // $(0.6.4 - 11.13)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
-    const encodedBitSequence = encodeWithCodec(BitSequence, a.bitstring);
     const signatureValid = Ed25519.verifySignature(
       a.signature,
       kappa[a.validatorIndex].ed25519,
       new Uint8Array([
-        ...JAM_AVAILABLE,
+        ...JAM_AVAILABLE, // XA
         ...Hashing.blake2bBuf(
           new Uint8Array([
-            ...bigintToBytes(a.anchorHash, 32),
-            ...encodedBitSequence,
+            ...encodeWithCodec(HashCodec, hp),
+            ...encodeWithCodec(BitSequence, a.bitstring),
           ]),
         ),
       ]),
@@ -324,16 +323,13 @@ export const verifyEA = (
     }
   }
 
-  // $(0.6.1 - 11.13 / 11.14)
+  // $(0.6.4 - 11.13 / 11.15)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     for (let c = 0; c < CORES; c++) {
       if (a.bitstring[c] === 1) {
         // af[c]
-        if (
-          typeof d_rho[c] === "undefined"
-          //|| ht > d_rho[c]!.reportTime + WORK_TIMEOUT
-        ) {
+        if (typeof d_rho[c] === "undefined") {
           return false;
         }
       }

@@ -4,6 +4,7 @@ import {
   ExportSegment,
   Gas,
   Hash,
+  PVMProgramCode,
   RefinementContext,
   RegularPVMExitReason,
   ServiceIndex,
@@ -45,8 +46,6 @@ import {
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
-import assert from "node:assert";
-import { argv0 } from "node:process";
 
 const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
@@ -108,7 +107,7 @@ export const refineInvocation = (
   const { code } = serviceMetadataCodec.decode(lookupResult).value;
 
   const argOut = argumentInvocation(
-    code,
+    <PVMProgramCode>code,
     <u32>0, // instructionPointer
     w.refineGasLimit,
     a,

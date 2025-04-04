@@ -1,8 +1,8 @@
 import {
   CoreIndex,
   Gas,
+  PVMProgramCode,
   PVMResultContext,
-  RegularPVMExitReason,
   WorkPackage,
   u32,
 } from "@tsjam/types";
@@ -30,7 +30,7 @@ const authArgsCodec = createCodec<{ p: WorkPackage; c: CoreIndex }>([
  */
 export const isAuthorized = (p: WorkPackage, c: CoreIndex) => {
   const res = argumentInvocation(
-    new Uint8Array(), // FIXME: missing the preimage fetch
+    <PVMProgramCode>new Uint8Array(), // FIXME: missing the preimage fetch
     0 as u32, // instruction pointer
     TOTAL_GAS_IS_AUTHORIZED as Gas,
     encodeWithCodec(authArgsCodec, { p, c }),
