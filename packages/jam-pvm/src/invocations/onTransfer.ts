@@ -74,7 +74,7 @@ export const transferInvocation = (
   }
 
   const out = argumentInvocation(
-    <PVMProgramCode>code,
+    code,
     10 as u32,
     transfers.reduce((acc, a) => acc + a.gasLimit, 0n) as Gas,
     encodeWithCodec(argumentInvocationTransferCodec, {

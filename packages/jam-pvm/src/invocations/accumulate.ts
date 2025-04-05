@@ -54,6 +54,8 @@ import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
+import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
+import { IxMod } from "@/instructions/utils";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
@@ -89,13 +91,11 @@ export const accumulateInvocation = (
   }
 
   const serviceAccount = pvmAccState.delta.get(s)!;
-  const code = serviceAccount.preimage_p.get(serviceAccount.codeHash);
+  const { code } = serviceAccountMetadataAndCode(serviceAccount);
   assert(typeof code !== "undefined", "Code not found in preimage");
 
-  // console.log("arguments", { t, s, o });
-
   const mres = argumentInvocation(
-    <PVMProgramCode>code,
+    code,
     5 as u32, // instructionPointer
     gas,
     encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
@@ -238,7 +238,11 @@ const F_fn: (
       case "yield":
         return applyMods(input.ctx, input.out, omega_y(input.ctx, input.out.x));
     }
-    throw new Error("not implemented");
+    if (input.hostCallOpcode === 100) {
+      // TODO: https://docs.jamcha.in/knowledge/testing/polka-vm/host-call-log
+      return applyMods(input.ctx, input.out, []);
+    }
+    throw new Error("not implemented" + input.hostCallOpcode);
   };
 //
 /**

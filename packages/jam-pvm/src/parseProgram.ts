@@ -15,7 +15,7 @@ export class ParsedProgram implements IParsedProgram {
 
     assert(
       program.k[0] === 1 && Ixdb.byCode.has(program.c[0] as u8),
-      "First instruction must be an instruction",
+      `First instruction must be an instruction k[0]=${program.k[0]} c[0]=${program.c[0]}`,
     );
     this.#ixs.set(0 as u32, program.c[0] as u8);
     let lastIx = 0 as u32;

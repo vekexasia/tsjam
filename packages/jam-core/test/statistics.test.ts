@@ -167,7 +167,7 @@ describe("statistics", () => {
     console.log(p_services);
     expect(p_services).deep.eq(decoded.value.postState.pi.services);
   };
-  describe("tiny", () => {
+  describe.skip("tiny", () => {
     beforeAll(() => {
       vi.spyOn(constants, "EPOCH_LENGTH", "get").mockReturnValue(<any>12);
       vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
@@ -185,19 +185,19 @@ describe("statistics", () => {
     it("stats_with_epoch_change", () => {
       doTest("stats_with_epoch_change-1", "tiny");
     });
-    // it("stats_with_some_extrinsic", () => {
-    //   doTest("stats_with_some_extrinsic-1", "tiny");
-    // });
+    it("stats_with_some_extrinsic", () => {
+      doTest("stats_with_some_extrinsic-1", "tiny");
+    });
   });
-  // describe.skip("full", () => {
-  //   it("stats_with_empty_extrinsic-1", () => {
-  //     doTest("stats_with_empty_extrinsic-1", "full");
-  //   });
-  //   it("stats_with_epoch_change", () => {
-  //     doTest("stats_with_epoch_change-1", "full");
-  //   });
-  //   it("stats_with_some_extrinsic", () => {
-  //     doTest("stats_with_some_extrinsic-1", "full");
-  //   });
-  // });
+  describe("full", () => {
+    it("stats_with_empty_extrinsic-1", () => {
+      doTest("stats_with_empty_extrinsic-1", "full");
+    });
+    it("stats_with_epoch_change", () => {
+      doTest("stats_with_epoch_change-1", "full");
+    });
+    it("stats_with_some_extrinsic", () => {
+      doTest("stats_with_some_extrinsic-1", "full");
+    });
+  });
 });

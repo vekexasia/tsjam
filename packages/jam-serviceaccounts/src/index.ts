@@ -3,20 +3,21 @@ import {
   SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
   SERVICE_MIN_BALANCE,
 } from "@tsjam/constants";
-import { Gas, ServiceAccount, u32, u64 } from "@tsjam/types";
+import { Gas, PVMProgramCode, ServiceAccount, u32, u64 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import {
   createCodec,
   IdentityCodec,
+  JamCodec,
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 
 export const serviceMetadataCodec = createCodec<{
-  code: Uint8Array;
+  code: PVMProgramCode;
   metadata: Uint8Array;
 }>([
   ["metadata", LengthDiscrimantedIdentity],
-  ["code", IdentityCodec],
+  ["code", IdentityCodec as unknown as JamCodec<PVMProgramCode>],
 ]);
 /**
  *

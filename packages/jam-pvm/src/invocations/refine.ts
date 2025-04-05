@@ -107,7 +107,7 @@ export const refineInvocation = (
   const { code } = serviceMetadataCodec.decode(lookupResult).value;
 
   const argOut = argumentInvocation(
-    <PVMProgramCode>code,
+    code,
     <u32>0, // instructionPointer
     w.refineGasLimit,
     a,
