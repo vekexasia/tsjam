@@ -13,7 +13,7 @@ import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
 import { createCodec } from "@/utils";
 
 /**
- * $(0.6.1 - C.25)
+ * $(0.6.4 - C.25)
  */
 export const WorkPackageCodec = createCodec<WorkPackage>([
   ["authorizationToken", createLengthDiscriminatedIdentity<Authorization>()],

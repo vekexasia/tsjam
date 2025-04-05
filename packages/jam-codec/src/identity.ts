@@ -17,7 +17,7 @@ import {
 } from "@tsjam/types";
 import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
 
-// $(0.6.1 - C.2)
+// $(0.6.4 - C.2)
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {
     return { value: bytes, readBytes: bytes.length };

@@ -165,7 +165,7 @@ export const accumulateReports = (
     ...deps.accumulationQueue,
   ] as Posterior<AccumulationQueue>;
   {
-    const m = deps.p_tau % EPOCH_LENGTH; // $(0.6.1 - 12.10)
+    const m = deps.p_tau % EPOCH_LENGTH; // $(0.6.4 - 12.10)
 
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
@@ -225,7 +225,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
- * $(0.6.1 - 12.4)
+ * $(0.6.4 - 12.4)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -241,7 +241,7 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * $(0.6.1 - 12.2)
+ * $(0.6.4 - 12.2)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
@@ -250,7 +250,7 @@ export const accHistoryUnion = (
 };
 
 /**
- * $(0.6.1 - 12.7)
+ * $(0.6.4 - 12.7)
  */
 export const E_Fn = (
   r: AccumulationQueue[0],
@@ -273,7 +273,7 @@ export const E_Fn = (
 
 /**
  * `WQ` in the paper
- * $(0.6.1 - 12.5)
+ * $(0.6.4 - 12.5)
  */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -281,7 +281,7 @@ export const withPrereqAvailableReports = (
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
-      // $(0.6.1 - 12.6) | D fn calculated inline
+      // $(0.6.4 - 12.6) | D fn calculated inline
       w
         .filter((wr) => {
           return (
@@ -301,7 +301,7 @@ export const withPrereqAvailableReports = (
 };
 
 /**
- * $(0.6.1 - 12.9)
+ * $(0.6.4 - 12.9)
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
   return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
@@ -309,7 +309,7 @@ export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
 
 /**
  * `Q` fn
- * $(0.6.1 - 12.8)
+ * $(0.6.4 - 12.8)
  */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
@@ -326,7 +326,7 @@ export const computeAccumulationPriority = (
 
 /**
  * `W*` in the paper
- * $(0.6.1 - 12.11)
+ * $(0.6.4 - 12.11)
  */
 export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,
@@ -334,12 +334,12 @@ export const accumulatableReports = (
   accumulationQueue: AccumulationQueue,
   p_tau: Posterior<Tau>, // Ht
 ) => {
-  // $(0.6.1 - 12.10)
+  // $(0.6.4 - 12.10)
   const m = p_tau % EPOCH_LENGTH;
 
   // console.log("W_Q", w_q);
   const accprio = computeAccumulationPriority(
-    // $(0.6.1 - 12.12)
+    // $(0.6.4 - 12.12)
     E_Fn(
       [
         ...accumulationQueue.slice(m).flat(),

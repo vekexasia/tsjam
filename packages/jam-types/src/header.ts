@@ -16,7 +16,7 @@ import { TicketIdentifier } from "@/sets/Ticket.js";
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
- * @see $(0.6.1 - 5.1)
+ * @see $(0.6.4 - 5.1)
  * NOTE: the following are computed values
  * `Ha`= K'[Hi]
  */

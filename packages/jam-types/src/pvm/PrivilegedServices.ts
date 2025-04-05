@@ -1,7 +1,7 @@
 import { Gas, ServiceIndex } from "../genericTypes.js";
 /**
  * `χ`
- * $(0.6.1 - 9.9)
+ * $(0.6.4 - 9.9)
  */
 export type PrivilegedServices = {
   /**

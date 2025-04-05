@@ -65,7 +65,7 @@ export const sealSignContext = (
 };
 /**
  * Verify Hs
- * $(0.6.1 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
+ * $(0.6.4 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
  */
 export const verifySeal = (
   header: SignedJamHeader,
@@ -91,7 +91,7 @@ export const verifySeal = (
     return false;
   }
 
-  // $(0.6.1 - 6.16)
+  // $(0.6.4 - 6.16)
   if (isFallbackMode(p_state.safroleState.gamma_s)) {
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     if (i !== ha) {
@@ -99,7 +99,7 @@ export const verifySeal = (
     }
     return true;
   } else {
-    // $(0.6.1 - 6.15)
+    // $(0.6.4 - 6.15)
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
     if (i.id !== Bandersnatch.vrfOutputSignature(header.blockSeal)) {
@@ -182,7 +182,7 @@ export enum WinningTicketsError {
 }
 
 // check winning tickets Hw
-// $(0.6.1 - 6.28)
+// $(0.6.4 - 6.28)
 export const verifyWinningTickets = (
   block: JamBlock,
   curState: JamState,
@@ -220,8 +220,8 @@ export const verifyWinningTickets = (
 };
 
 /**
- * $(0.6.1 - 5.4 / 5.5)
- * uses $(0.6.1 - 5.6) - codec_Eg_4Hx
+ * $(0.6.4 - 5.4 / 5.5)
+ * uses $(0.6.4 - 5.6) - codec_Eg_4Hx
  */
 export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],
@@ -246,7 +246,7 @@ export const computeExtrinsicHash = (extrinsics: JamBlock["extrinsics"]) => {
 
 /**
  * Verify `Ho`
- * $(0.6.1 - 10.20)
+ * $(0.6.4 - 10.20)
  */
 export const verifyOffenders = (
   extrinsics: JamBlock["extrinsics"],
@@ -274,7 +274,7 @@ export const verifyEA = (
   kappa: JamState["kappa"],
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
-  // $(0.6.1 - 11.10)
+  // $(0.6.4 - 11.10)
   if (ea.length > NUMBER_OF_VALIDATORS) {
     return false;
   }
@@ -288,14 +288,14 @@ export const verifyEA = (
     }
   }
 
-  // $(0.6.1 - 11.11)
+  // $(0.6.4 - 11.11)
   for (const a of ea) {
     if (a.anchorHash !== hp) {
       return false;
     }
   }
 
-  // $(0.6.1 - 11.12)
+  // $(0.6.4 - 11.12)
   for (let i = 1; i < ea.length; i++) {
     if (ea[i].validatorIndex <= ea[i - 1].validatorIndex) {
       return false;

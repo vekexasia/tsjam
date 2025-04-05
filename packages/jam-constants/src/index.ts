@@ -64,7 +64,7 @@ export const MAX_WORKPACKAGE_ENTRIES = 2048;
 
 /**
  * `Wr` in the paper
- * $(0.6.1 - 11.9)
+ * $(0.6.4 - 11.9)
  */
 export const MAX_WORKREPORT_OUTPUT_SIZE = 48 * 2 ** 10;
 
@@ -82,7 +82,7 @@ export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 
 /**
  * Denoted with `Xa` in the paper. It's value is `jam_available`
- * $(0.6.1 - 11.14)
+ * $(0.6.4 - 11.14)
  */
 export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
 /**
@@ -91,17 +91,17 @@ export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
 export const JAM_BEEFY = new TextEncoder().encode("jam_beefy");
 /**
  * Denoted with `XE` in the paper. It's value is `jam_entropy`
- * $(0.6.1 - 6.18)
+ * $(0.6.4 - 6.18)
  */
 export const JAM_ENTROPY = new TextEncoder().encode("jam_entropy");
 /**
  * Denoted with `XE` in the paper. It's value is `jam_fallback_seal`
- * $(0.6.1 - 6.19)
+ * $(0.6.4 - 6.19)
  */
 export const JAM_FALLBACK_SEAL = new TextEncoder().encode("jam_fallback_seal");
 /**
  * Denoted with `XG` in the paper. It's value is `jam_guarantee`
- * $(0.6.1 - 11.27)
+ * $(0.6.4 - 11.27)
  */
 export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
 /**
@@ -110,7 +110,7 @@ export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
 export const JAM_ANNOUNCE = new TextEncoder().encode("jam_announce");
 /**
  * Denoted with `XT` in the paper. It's value is `jam_ticket_seal`
- * $(0.6.1 - 6.20)
+ * $(0.6.4 - 6.20)
  */
 export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 /**
@@ -119,12 +119,12 @@ export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 export const JAM_AUDIT = new TextEncoder().encode("jam_audit");
 /**
  * Denoted with `Xtrue` in the paper. It's value is `jam_valid`
- * $(0.6.1 - 10.4)
+ * $(0.6.4 - 10.4)
  */
 export const JAM_VALID = new TextEncoder().encode("jam_valid");
 /**
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
- * $(0.6.1 - 10.4)
+ * $(0.6.4 - 10.4)
  */
 export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 
@@ -226,5 +226,5 @@ export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
  * `GT`
  */
 export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
-// $(0.6.1 - 4.25)
+// $(0.6.4 - 4.25)
 export const Zp = 2 ** 12;

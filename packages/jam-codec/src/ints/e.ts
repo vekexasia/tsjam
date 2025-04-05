@@ -5,7 +5,7 @@ import { mapCodec } from "@/utils";
 
 /**
  * E encoding allows for variable size encoding for numbers up to 2^64
- * $(0.6.1 - C.6)
+ * $(0.6.4 - C.6)
  */
 export const E: JamCodec<bigint> = {
   encode: (value: bigint, bytes: Uint8Array): number => {

@@ -42,7 +42,7 @@ const P_sup = <T extends Uint8Array | Hash>(
 
 /**
  * `T`
- * $(0.6.1 - E.2)
+ * $(0.6.4 - E.2)
  * @param elements - the elements to trace from
  * @param index - the index of the element
  * @param hashFn - the hashfn
@@ -71,7 +71,7 @@ export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
 
 /**
  * `Mb`
- * $(0.6.1 - E.3)
+ * $(0.6.4 - E.3)
  */
 export const wellBalancedBinaryMerkleRoot = (
   elements: (Hash | Uint8Array)[],

@@ -53,7 +53,7 @@ import {
 /**
  * Merkelize state
  * `Mσ`
- * $(0.6.1 - D.5)
+ * $(0.6.4 - D.5)
  */
 export const merkelizeState = (state: JamState): StateRootHash => {
   const stateMap = merkleStateMap(state);
@@ -92,7 +92,7 @@ const bits_inv = (bits: bit[]): Uint8Array => {
 };
 */
 
-// $(0.6.1 - D.3)
+// $(0.6.4 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
@@ -103,7 +103,7 @@ const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   ]) as ByteArrayOfLength<64>;
 };
 
-// $(0.6.1 - D.4) | implementation avoids using bits()
+// $(0.6.4 - D.4) | implementation avoids using bits()
 // following my
 const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   if (v.length <= 32) {
@@ -125,7 +125,7 @@ const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   }
 };
 
-// $(0.6.1 - D.6)
+// $(0.6.4 - D.6)
 const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
@@ -149,7 +149,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 
 /**
  * `C` in graypaper
- * $(0.6.1 - D.1)
+ * $(0.6.4 - D.1)
  */
 export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {

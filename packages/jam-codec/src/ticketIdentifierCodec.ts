@@ -9,7 +9,7 @@ import {
 } from "./json/JsonCodec";
 
 /**
- * $(0.6.1 - C.27)
+ * $(0.6.4 - C.27)
  */
 export const TicketIdentifierCodec = createCodec<TicketIdentifier>([
   ["id", OpaqueHashCodec],

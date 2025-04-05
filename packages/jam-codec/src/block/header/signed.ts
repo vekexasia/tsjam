@@ -27,7 +27,7 @@ import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
  * it does use the UnsignedHeaderCodec and appends the block seal
- * $(0.6.1 - C.19)
+ * $(0.6.4 - C.19)
  */
 export const SignedHeaderCodec = () => {
   const unsignedHeaderCodec = UnsignedHeaderCodec();

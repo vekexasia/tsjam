@@ -62,13 +62,13 @@ export type WorkReport = {
 
 /**
  * it's defined by the bold `W` in the paper
- * $(0.6.1 - 11.16)
+ * $(0.6.4 - 11.16)
  */
 export type AvailableWorkReports = Tagged<WorkReport[], "available">;
 
 /**
  * `W!` in the paper
- * $(0.6.1 - 12.4)
+ * $(0.6.4 - 12.4)
  */
 export type AvailableNoPrereqWorkReports = Tagged<
   WorkReport[],
@@ -77,7 +77,7 @@ export type AvailableNoPrereqWorkReports = Tagged<
 
 /**
  * `WQ` in the paper
- * $(0.6.1 - 12.5)
+ * $(0.6.4 - 12.5)
  */
 export type AvailableWithPrereqWorkReports = Tagged<
   Array<AccumulationQueue[0][0]>,
@@ -86,7 +86,7 @@ export type AvailableWithPrereqWorkReports = Tagged<
 
 /**
  * `bold Q`
- * $(0.6.1 - 17.1)
+ * $(0.6.4 - 17.1)
  */
 export type AuditRequiredWorkReports = SeqOfLength<
   WorkReport | undefined,

@@ -78,7 +78,7 @@ export const getBlockAuthorKey = (
  * `P` in the graypaper
  * @param buf - original buffer
  * @param n - the multiple of which the end buffer length should be
- * @see $(0.6.1 - 14.17)
+ * @see $(0.6.4 - 14.17)
  */
 export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   const toRet = new Uint8Array(Math.ceil(buf.length / n) * n).fill(0);

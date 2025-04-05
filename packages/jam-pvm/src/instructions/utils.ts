@@ -25,7 +25,7 @@ export const X_4 = X_fn(4n);
 export const X_8 = X_fn(8n);
 
 /**
- * $(0.6.2 - A.32)
+ * $(0.6.4 - A.32)
  */
 export const smod = (a: bigint, b: bigint) => {
   // Math.abs on bigint

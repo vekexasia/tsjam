@@ -10,7 +10,7 @@ import { Hashing } from "@tsjam/crypto";
 
 /**
  * section E.2 `A`
- * $(0.6.1 - E.8)
+ * $(0.6.4 - E.8)
  * @param peeks - the current MMR
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
@@ -82,7 +82,7 @@ const innerMMRSuperPeak = (
 };
 
 /**
- * $(0.6.1 - E.9)
+ * $(0.6.4 - E.9)
  */
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
   createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));

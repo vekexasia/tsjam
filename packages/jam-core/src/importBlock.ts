@@ -73,7 +73,7 @@ export enum ImportBlockError {
 /**
  * the main State Transition Function
  * `Υ` in the paper
- * $(0.6.1 - 4.1)
+ * $(0.6.4 - 4.1)
  */
 export const importBlock: STF<
   { block: JamBlock; state: JamState },
@@ -94,7 +94,7 @@ export const importBlock: STF<
   };
   const { p_tau } = tauTransition;
 
-  // $(0.6.1 - 5.7)
+  // $(0.6.4 - 5.7)
   if (
     tauTransition.tau >= tauTransition.p_tau &&
     tauTransition.p_tau * BLOCK_TIME < Timekeeping.bigT()
@@ -103,7 +103,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidSlot);
   }
 
-  // $(0.6.1 - 5.8)
+  // $(0.6.4 - 5.8)
   const prevMerkleRoot = merkelizeState(curState);
 
   if (prevMerkleRoot !== block.header.priorStateRoot) {
@@ -399,7 +399,7 @@ export const importBlock: STF<
     headerLookupHistory: p_headerLookupHistory,
   });
 
-  // $(0.6.1 - 5.2)
+  // $(0.6.4 - 5.2)
   if (block.header.parent !== computeHeaderHash(parent.header)) {
     return err(ImportBlockError.InvalidParentHeader);
   }

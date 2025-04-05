@@ -23,7 +23,7 @@ export const debugContext = (ctx: PVMProgramExecutionContext) => {
 /**
  * SingleStep State Transition Function
  * Ψ1 in the graypaper
- * $(0.6.2 - A.6)
+ * $(0.6.4 - A.6)
  */
 export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },

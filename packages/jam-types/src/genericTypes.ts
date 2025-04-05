@@ -23,25 +23,25 @@ export type ByteArrayOfLength<T extends number> = Tagged<
 >;
 
 /**
- * $(0.6.1 - 4.21)
+ * $(0.6.4 - 4.21)
  * Balance is a 64-bit unsigned integer
  */
 export type Balance = Tagged<u64, "balance">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Gas is a 64-bit unsigned integer
  */
 export type Gas = Tagged<u64, "gas">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Z_Gas is a 64-bit signed integer
  */
 export type Z_Gas = Tagged<i64, "gas">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Defines the value held by a register
  * RegisterValue is a 64-bit unsigned integer
  */
@@ -141,7 +141,7 @@ export type ValidatorIndex = Tagged<
 >;
 
 /**
- * $(0.6.1 - 9.1)
+ * $(0.6.4 - 9.1)
  * unsigned 32-bit integer
  */
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;

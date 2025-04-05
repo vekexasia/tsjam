@@ -35,7 +35,7 @@ export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
 /**
  * compute the gas threshold of a service account
  * @param a - the service account
- * $(0.6.1 - 9.8)
+ * $(0.6.4 - 9.8)
  */
 export const serviceAccountGasThreshold = (a: ServiceAccount): Gas => {
   const ai = BigInt(serviceAccountItemInStorage(a));
@@ -52,7 +52,7 @@ export const serviceAccountGasThreshold = (a: ServiceAccount): Gas => {
 
 /**
  * `a_i` - total number of preimage lookup dictionaries and
- * $(0.6.1 - 9.8)
+ * $(0.6.4 - 9.8)
  */
 export const serviceAccountItemInStorage = (a: ServiceAccount): u32 => {
   return toTagged(2 * a.preimage_l.size + a.storage.size);
@@ -60,7 +60,7 @@ export const serviceAccountItemInStorage = (a: ServiceAccount): u32 => {
 
 /**
  * `a_o` - total octets in the preimage lookup and storage
- * $(0.6.1 - 9.8)
+ * $(0.6.4 - 9.8)
  */
 export const serviceAccountTotalOctets = (a: ServiceAccount): u64 => {
   let sum: bigint = 0n;

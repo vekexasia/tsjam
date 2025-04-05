@@ -40,7 +40,7 @@ export const isAuthorized = (p: WorkPackage, c: CoreIndex) => {
   return { res: res.res, usedGas: res.usedGas };
 };
 
-// $(0.6.1 - B.2)
+// $(0.6.4 - B.2)
 const F_Fn: HostCallExecutor<unknown> = (input) => {
   if (input.hostCallOpcode === 0 /** ΩG */) {
     return applyMods(input.ctx, input.out as never, omega_g(input.ctx));

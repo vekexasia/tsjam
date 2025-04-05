@@ -27,7 +27,7 @@ export const validatorStatisticsToPosterior: STF<
     curTau: Tau;
     p_tau: Tau;
     p_kappa: Posterior<JamState["kappa"]>;
-    reporters: Set<ED25519PublicKey>; // $(0.6.1 - 11.26) | R
+    reporters: Set<ED25519PublicKey>; // $(0.6.4 - 11.26) | R
   },
   never
 > = (input, state) => {

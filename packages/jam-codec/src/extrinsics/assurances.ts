@@ -79,7 +79,7 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
 };
 
 /**
- * $(0.6.1 - C.17)
+ * $(0.6.4 - C.17)
  */
 export const codec_Ea = createArrayLengthDiscriminator(
   singleExtrinsicCodec,

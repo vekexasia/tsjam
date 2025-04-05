@@ -19,7 +19,7 @@ import { hextToBigInt } from "@tsjam/utils";
 
 /**
  * it defines codec for the RefinementContext or member of `X` set
- * $(0.6.1 - C.21)
+ * $(0.6.4 - C.21)
  */
 export const RefinementContextCodec = createCodec<RefinementContext>([
   [

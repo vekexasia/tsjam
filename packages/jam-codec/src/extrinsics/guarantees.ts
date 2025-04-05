@@ -19,7 +19,7 @@ import { JamCodec } from "@/codec";
 import { Hashing } from "@tsjam/crypto";
 
 /**
- * $(0.6.1 - C.16)
+ * $(0.6.4 - C.16)
  */
 export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
@@ -38,7 +38,7 @@ export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
 );
 
 /*
- * $(0.6.1 - 5.6)
+ * $(0.6.4 - 5.6)
  */
 export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([

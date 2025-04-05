@@ -3,7 +3,7 @@ import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
 
 /**
  * `φ`
- * $(0.6.1 - 8.1)
+ * $(0.6.4 - 8.1)
  * A queue of {@link AuthorizerHash}-es, each of which will be rotated in the {@link AuthorizerPool}
  */
 export type AuthorizerQueue = SeqOfLength<
