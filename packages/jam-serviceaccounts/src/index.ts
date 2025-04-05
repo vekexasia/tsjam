@@ -15,8 +15,8 @@ export const serviceMetadataCodec = createCodec<{
   code: Uint8Array;
   metadata: Uint8Array;
 }>([
-  ["code", LengthDiscrimantedIdentity],
-  ["metadata", IdentityCodec],
+  ["metadata", LengthDiscrimantedIdentity],
+  ["code", IdentityCodec],
 ]);
 /**
  *
