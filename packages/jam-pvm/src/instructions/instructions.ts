@@ -682,11 +682,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
-    console.log(location);
-    console.log(location.toString(16));
-    console.log({ wB, vX }, context.execution.memory.canWrite(location, 4));
     const val = context.execution.memory.getBytes(location, 4);
-    console.log(Uint8ArrayJSONCodec.toJSON(val));
     // TODO: memory fault?
     const num = E_4.decode(val).value;
     return [IxMod.reg(rA, Z8_inv(Z(4, num)))];
