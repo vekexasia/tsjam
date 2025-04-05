@@ -28,8 +28,11 @@ export const X_8 = X_fn(8n);
  * $(0.6.4 - A.32)
  */
 export const smod = (a: bigint, b: bigint) => {
-  // Math.abs on bigint
+  if (b === 0n) {
+    return a;
+  }
   const asign = a < 0n ? -1n : 1n;
+  // Math.abs on bigint
   a = a < 0n ? -a : a;
   b = b < 0n ? -b : b;
 
