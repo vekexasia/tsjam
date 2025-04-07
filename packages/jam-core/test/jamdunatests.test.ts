@@ -31,6 +31,7 @@ import {
   encodeWithCodec,
   HashCodec,
   E_4_int,
+  StatisticsJSONCodec,
 } from "@tsjam/codec";
 import {
   CodeHash,
@@ -288,8 +289,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["rho", "rho", RHOJSONCodec],
   ["tau", "tau", NumberJSONCodec<Tau>()],
   ["privServices", "chi", PrivilegedServicesJSONCodec],
-  // FIXME:when duna fixes it
-  //["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
+  ["statistics", "pi", StatisticsJSONCodec],
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],

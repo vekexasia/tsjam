@@ -55,7 +55,6 @@ import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
 import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
-import { IxMod } from "@/instructions/utils";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;

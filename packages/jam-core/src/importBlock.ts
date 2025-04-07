@@ -346,7 +346,7 @@ export const importBlock: STF<
       guaranteedReports,
     },
     curState.statistics.cores,
-  );
+  ).safeRet();
 
   const [, p_serviceStatistics] = serviceStatisticsSTF(
     {
@@ -356,7 +356,7 @@ export const importBlock: STF<
       accumulationStatistics,
     },
     curState.statistics.services,
-  );
+  ).safeRet();
 
   const [, p_authorizerPool] = authorizerPool_toPosterior(
     {

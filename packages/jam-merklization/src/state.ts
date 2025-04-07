@@ -28,6 +28,8 @@ import {
   RecentHistoryCodec,
   RHOCodec,
   LengthDiscriminator,
+  HashJSONCodec,
+  Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -196,32 +198,32 @@ export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
  */
 export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
-  //  const logState = (n: string, k: Hash) => {
-  //    console.log(
-  //      n,
-  //      HashJSONCodec().toJSON(k),
-  //      Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
-  //    );
-  //  };
+  const logState = (n: string, k: Hash) => {
+    // console.log(
+    //   n,
+    //   HashJSONCodec().toJSON(k),
+    //   Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
+    // );
+  };
 
   toRet.set(
     stateKey(1),
     encodeWithCodec(AuthorizerPoolCodec(), state.authPool),
   );
-  //  logState("authPool|c1", C_fn(1));
+  // logState("authPool|c1", stateKey(1));
 
   toRet.set(
     stateKey(2),
     encodeWithCodec(AuthorizerQueueCodec(), state.authQueue),
   );
-  //  logState("authQueue|c2", C_fn(2));
+  // logState("authQueue|c2", stateKey(2));
 
   // β - recentHistory
   toRet.set(
     stateKey(3),
     encodeWithCodec(RecentHistoryCodec, state.recentHistory),
   );
-  //  logState("recentHistory|c3", C_fn(3));
+  // logState("recentHistory|c3", stateKey(3));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
@@ -251,6 +253,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ),
     ]),
   );
+  logState("4|c4", stateKey(4));
 
   // 5
   toRet.set(
@@ -274,6 +277,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ),
     ]),
   );
+  // logState("5|c5", stateKey(5));
 
   // 6
   toRet.set(
@@ -285,6 +289,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ...encodeWithCodec(HashCodec, state.entropy[3]),
     ]),
   );
+  // logState("c6", stateKey(6));
 
   // 7
   toRet.set(
@@ -294,6 +299,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.iota,
     ),
   );
+  // logState("c7", stateKey(7));
 
   // 8
   toRet.set(
@@ -303,6 +309,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.kappa,
     ),
   );
+  logState("8", stateKey(8));
 
   // 9
   toRet.set(
@@ -313,17 +320,21 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
     ),
   );
 
+  logState("9", stateKey(9));
   // 10
   toRet.set(stateKey(10), encodeWithCodec(RHOCodec(), state.rho));
 
+  logState("rho|c10", stateKey(10));
   // 11
   toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
+  logState("c11", stateKey(11));
 
   // 12
   toRet.set(
     stateKey(12),
     encodeWithCodec(PrivilegedServicesCodec, state.privServices),
   );
+  logState("c12", stateKey(12));
 
   // 13
   toRet.set(
@@ -333,6 +344,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.statistics,
     ),
   );
+  logState("c13", stateKey(13));
 
   // 14
   const sortedDepsQueue = state.accumulationQueue.map((a) =>

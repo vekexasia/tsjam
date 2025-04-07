@@ -197,16 +197,10 @@ const buildTest = (filename: string, size: string) => {
     authQueue: testSTate.authQueue,
   }).safeRet();
 
-  console.log(
-    "Res",
-    [...res.d_delta.get(<ServiceIndex>1729)!.storage.values()].map((a) =>
-      Buffer.from(a).toString("ascii"),
-    ),
-  );
-
   expect(res.p_accumulationQueue).deep.equal(postState.accQueue);
   expect(res.p_accumulationHistory).deep.equal(postState.accHistory);
   expect(res.accumulateRoot).toEqual(output.ok);
+  // TODO: compare other post states
 };
 describe("accumulate", () => {
   const set: "full" | "tiny" = "full";

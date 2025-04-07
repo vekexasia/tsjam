@@ -12,7 +12,7 @@ import {
 import { createCodec } from "./utils";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { createSequenceCodec } from "./sequenceCodec";
-import { E_2_int, E_4_int, E_sub, E_sub_int } from "./ints/E_subscr";
+import { E_4_int } from "./ints/E_subscr";
 import { buildGenericKeyValueCodec } from "./dicts/keyValue";
 import { JamCodec } from "./codec";
 import {
@@ -41,7 +41,7 @@ export const StatisticsJSONCodec: JSONCodec<
     vals_current: SingleValidatorJSONStatistics[];
     vals_last: SingleValidatorJSONStatistics[];
     cores: SingleCoreJSONStatistics[];
-    services: { id: number; record: SingleServiceJSONStatistics }[];
+    services: Array<{ id: number; record: SingleServiceJSONStatistics }>;
   }
 > = {
   fromJSON(json) {
@@ -55,7 +55,7 @@ export const StatisticsJSONCodec: JSONCodec<
         },
         NumberJSONCodec<ServiceIndex>(),
         serviceStatisticsJSONCodec,
-      ).fromJSON(json.services),
+      ).fromJSON(json.services || []),
     };
   },
   toJSON(value: JamStatistics) {
@@ -116,38 +116,38 @@ const coreStatisticsJSONCodec = createJSONCodec<
 ]);
 
 export const serviceStatisticsCodec = buildGenericKeyValueCodec(
-  E_sub_int<ServiceIndex>(4),
+  E_int<ServiceIndex>(),
   createCodec<SingleServiceStatistics>([
     [
       "provided",
       createCodec<SingleServiceStatistics["provided"]>([
-        ["count", E_2_int],
-        ["size", E_4_int],
+        ["count", E_int<u16>()],
+        ["size", E_int<u32>()],
       ]),
     ],
     [
       "refinement",
       createCodec<SingleServiceStatistics["refinement"]>([
-        ["count", E_4_int],
-        ["usedGas", E_sub<Gas>(8)],
+        ["count", E_int<u32>()],
+        ["usedGas", E_bigint<Gas>()],
       ]),
     ],
-    ["imports", E_2_int],
-    ["extrinsicCount", E_2_int],
-    ["extrinsicSize", E_4_int],
-    ["exports", E_2_int],
+    ["imports", E_int<u16>()],
+    ["extrinsicCount", E_int<u16>()],
+    ["extrinsicSize", E_int<u32>()],
+    ["exports", E_int<u16>()],
     [
       "accumulate",
       createCodec<SingleServiceStatistics["accumulate"]>([
-        ["count", E_4_int],
-        ["usedGas", E_sub<Gas>(8)],
+        ["count", E_int<u32>()],
+        ["usedGas", E_bigint<Gas>()],
       ]),
     ],
     [
       "transfers",
       createCodec<SingleServiceStatistics["accumulate"]>([
-        ["count", E_4_int],
-        ["usedGas", E_sub<Gas>(8)],
+        ["count", E_int<u32>()],
+        ["usedGas", E_bigint<Gas>()],
       ]),
     ],
   ]),
