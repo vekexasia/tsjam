@@ -102,7 +102,7 @@ export const accumulateInvocation = (
     { x: iRes, y: I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau) },
   );
 
-  return C_fn(gas, mres.res, mres.out);
+  return C_fn(mres.usedGas, mres.res, mres.out);
 };
 
 /**

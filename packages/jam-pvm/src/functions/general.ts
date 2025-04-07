@@ -126,7 +126,6 @@ export const omega_r = regFn<
     identifier: "read",
     gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
-      console.log("READ", s);
       const w7 = context.registers[7];
       let s_star = s;
       if (w7 !== 2n ** 64n - 1n) {
@@ -134,17 +133,12 @@ export const omega_r = regFn<
       }
       assert(s_star < 2 ** 32, "service index not in bounds");
 
-      console.log("READ s*", s_star);
       let a: ServiceAccount | undefined;
       if (s_star === s) {
         a = bold_s;
       } else if (d.has(s_star)) {
-        console.log("qui");
         a = d.get(s_star)!;
-      } else {
-        console.log("porcodio");
       }
-
       const [ko, kz, o, w11, w12] = context.registers.slice(8);
       if (!context.memory.canRead(toSafeMemoryAddress(ko), Number(kz))) {
         return [IxMod.panic()];
@@ -154,11 +148,9 @@ export const omega_r = regFn<
       E_4_int.encode(s_star, tmp);
       tmp.set(context.memory.getBytes(toSafeMemoryAddress(ko), Number(kz)), 4);
       const k = Hashing.blake2b(tmp);
-      console.log("READ key=", HashJSONCodec().toJSON(k));
 
       const v = a?.storage.get(k);
       if (typeof v === "undefined") {
-        console.log("diomerda");
         // either a is undefined or no key in storage
         return [IxMod.w7(HostCallResult.NONE)];
       }
@@ -184,10 +176,7 @@ export const omega_w = regFn<
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(7);
       let k: Hash;
-      if (
-        !context.memory.canRead(toSafeMemoryAddress(k0), Number(kz)) ||
-        !context.memory.canRead(toSafeMemoryAddress(v0), Number(vz))
-      ) {
+      if (!context.memory.canRead(toSafeMemoryAddress(k0), Number(kz))) {
         return [IxMod.panic()];
       } else {
         k = Hashing.blake2b(
@@ -197,6 +186,7 @@ export const omega_w = regFn<
           ]),
         );
       }
+
       const a: ServiceAccount = {
         ...bold_s,
         storage: new Map(bold_s.storage),
@@ -210,7 +200,8 @@ export const omega_w = regFn<
           s,
         );
         a.storage.delete(k);
-      } else {
+      } else if (context.memory.canRead(toSafeMemoryAddress(v0), Number(vz))) {
+        // second bracket
         console.log(
           "\x1b[36m writing key",
           HashJSONCodec().toJSON(k),
@@ -219,11 +210,14 @@ export const omega_w = regFn<
           Uint8ArrayJSONCodec.toJSON(
             context.memory.getBytes(toSafeMemoryAddress(v0), Number(vz)),
           ),
+          context.gas,
         );
         a.storage.set(
           k,
           context.memory.getBytes(toSafeMemoryAddress(v0), Number(vz)),
         );
+      } else {
+        return [IxMod.panic()];
       }
 
       let l: number | bigint;

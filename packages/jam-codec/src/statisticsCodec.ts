@@ -83,9 +83,9 @@ const coreStatisticsCodec = (cores: typeof CORES) => {
       ["daLoad", E_int<u32>()],
       ["popularity", E_int<u16>()],
       ["imports", E_int<u16>()],
-      ["extrinsicCount", E_int<u16>()],
-      ["extrinsicSize", E_int<u32>()],
       ["exports", E_int<u16>()],
+      ["extrinsicSize", E_int<u32>()],
+      ["extrinsicCount", E_int<u16>()],
       ["bundleSize", E_int<u32>()],
       ["usedGas", E_bigint<Gas>()],
     ]),
@@ -133,9 +133,9 @@ export const serviceStatisticsCodec = buildGenericKeyValueCodec(
       ]),
     ],
     ["imports", E_int<u16>()],
-    ["extrinsicCount", E_int<u16>()],
-    ["extrinsicSize", E_int<u32>()],
     ["exports", E_int<u16>()],
+    ["extrinsicSize", E_int<u32>()],
+    ["extrinsicCount", E_int<u16>()],
     [
       "accumulate",
       createCodec<SingleServiceStatistics["accumulate"]>([
@@ -145,7 +145,7 @@ export const serviceStatisticsCodec = buildGenericKeyValueCodec(
     ],
     [
       "transfers",
-      createCodec<SingleServiceStatistics["accumulate"]>([
+      createCodec<SingleServiceStatistics["transfers"]>([
         ["count", E_int<u32>()],
         ["usedGas", E_bigint<Gas>()],
       ]),

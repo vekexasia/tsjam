@@ -47,7 +47,6 @@ export const serviceStatisticsSTF: STF<
       .flat()
       .map((res) => res.serviceIndex),
   );
-  console.log({ bold_r, bold_p });
 
   const bold_s = new Set([
     ...bold_p,
@@ -59,7 +58,6 @@ export const serviceStatisticsSTF: STF<
   for (const service of bold_s) {
     toRet.set(service, {
       ...R_fn(service, input.guaranteedReports),
-
       provided: input.preimages
         .filter(({ serviceIndex }) => serviceIndex === service)
         .map(({ preimage }) => ({ count: <u16>1, size: <u32>preimage.length }))
@@ -106,16 +104,28 @@ const R_fn = (
       extrinsicCount: result.refineLoad.extrinsicCount,
       refinement: { count: <u32>1, usedGas: result.refineLoad.usedGas },
     }))
-    .reduce((a, b) => {
-      return {
-        imports: <u16>(a.imports + b.imports),
-        exports: <u16>(a.exports + b.exports),
-        extrinsicSize: <u32>(a.extrinsicSize + b.extrinsicSize),
-        extrinsicCount: <u16>(a.extrinsicCount + b.extrinsicCount),
+    .reduce(
+      (a, b) => {
+        return {
+          imports: <u16>(a.imports + b.imports),
+          exports: <u16>(a.exports + b.exports),
+          extrinsicSize: <u32>(a.extrinsicSize + b.extrinsicSize),
+          extrinsicCount: <u16>(a.extrinsicCount + b.extrinsicCount),
+          refinement: {
+            count: <u32>(a.refinement.count + b.refinement.count),
+            usedGas: <Gas>(a.refinement.usedGas + b.refinement.usedGas),
+          },
+        };
+      },
+      {
+        imports: <u16>0,
+        exports: <u16>0,
+        extrinsicSize: <u32>0,
+        extrinsicCount: <u16>0,
         refinement: {
-          count: <u32>(a.refinement.count + b.refinement.count),
-          usedGas: <Gas>(a.refinement.usedGas + b.refinement.usedGas),
+          count: <u32>0,
+          usedGas: <Gas>0n,
         },
-      };
-    });
+      },
+    );
 };

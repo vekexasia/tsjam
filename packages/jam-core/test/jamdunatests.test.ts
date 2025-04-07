@@ -131,7 +131,7 @@ type DunaState = {
   rho: JC_J<typeof RHOJSONCodec>;
   tau: number;
   chi: JC_J<typeof PrivilegedServicesJSONCodec>;
-  pi: JC_J<typeof ValidatorStatistcsJSONCodec>;
+  pi: JC_J<typeof StatisticsJSONCodec>;
   theta: JC_J<typeof AccumulationQueueJSONCodec>;
   xi: JC_J<typeof AccumulationHistoryJSONCodec>;
   accounts: Array<{
@@ -386,6 +386,8 @@ describe("jamduna", () => {
       );
 
       const encodedJamState = stateCodec.toJSON(tsJamNewState!.state);
+      encodedJamState.pi.services.sort((a, b) => a.id - b.id);
+      dunaState.pi.services.sort((a: any, b: any) => a.id - b.id);
       for (const k in dunaState) {
         if (k !== "accounts") {
           // @ts-ignore
@@ -397,6 +399,7 @@ describe("jamduna", () => {
       // first sort them by id
       encodedJamState.accounts.sort((a, b) => a.id - b.id);
       dunaState.accounts.sort((a: any, b: any) => a.id - b.id);
+
       for (let i = 0; i < encodedJamState.accounts.length; i++) {
         const acc = encodedJamState.accounts[i];
         const dunaAcc = dunaState.accounts[i];
@@ -426,23 +429,11 @@ describe("jamduna", () => {
           `acc[${i}].data.lookup_meta - block:${block}`,
         ).deep.eq(dunaAcc.data.lookup_meta);
 
-        // storage is broken in duna... lets use the merklization keys instead of real keys
         for (const realKey in acc.data.storage) {
-          const k = encodeWithCodec(
-            HashCodec,
-            HashJSONCodec().fromJSON(realKey),
-          );
-          const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
-
-          const dunaKey = stateKey(
-            acc.id,
-            new Uint8Array([...pref, ...k.subarray(0, 28)]),
-          );
-          const dunaJSONKey = HashJSONCodec().toJSON(dunaKey);
           expect(
             acc.data.storage[realKey],
-            `acc[${i}].data.storage[${realKey} - ${dunaJSONKey}] - block:${block}`,
-          ).deep.eq(dunaAcc.data.storage[dunaJSONKey]);
+            `acc[${i}].data.storage[${realKey}] - block:${block}`,
+          ).deep.eq(dunaAcc.data.storage[realKey]);
         }
       }
       tsJamState = tsJamNewState!.state;

@@ -64,33 +64,37 @@ const R_fn = (
   core: CoreIndex,
   guaranteedReports: WorkReport[],
 ): Omit<JamStatistics["cores"][0], "popularity" | "daLoad"> => {
-  return guaranteedReports
-    .filter((w) => w.coreIndex === core)
-    .map(({ results, workPackageSpecification }) =>
-      results.flat().map((r) => ({
-        ...r.refineLoad,
-        bundleSize: workPackageSpecification.bundleLength,
-      })),
-    )
-    .flat()
-    .reduce(
-      (acc, curr) => {
-        return {
-          imports: <u16>(acc.imports + curr.imports),
-          exports: <u16>(acc.exports + curr.exports),
-          extrinsicSize: <u32>(acc.extrinsicSize + curr.extrinsicSize),
-          extrinsicCount: <u16>(acc.extrinsicCount + curr.extrinsicCount),
-          usedGas: <Gas>(acc.usedGas + curr.usedGas),
-          bundleSize: <u32>(acc.bundleSize + curr.bundleSize),
-        };
-      },
-      {
-        imports: <u16>0,
-        exports: <u16>0,
-        extrinsicSize: <u32>0,
-        extrinsicCount: <u16>0,
-        usedGas: <Gas>0n,
-        bundleSize: <u32>0,
-      },
+  const filteredReports = guaranteedReports.filter((w) => w.coreIndex === core);
+
+  const accumulator = {
+    imports: <u16>0,
+    exports: <u16>0,
+    extrinsicSize: <u32>0,
+    extrinsicCount: <u16>0,
+    usedGas: <Gas>0n,
+    bundleSize: <u32>0,
+  };
+  for (const { results, workPackageSpecification } of filteredReports) {
+    accumulator.bundleSize = <u32>(
+      (accumulator.bundleSize + workPackageSpecification.bundleLength)
     );
+    for (const result of results) {
+      accumulator.imports = <u16>(
+        (accumulator.imports + result.refineLoad.imports)
+      );
+      accumulator.exports = <u16>(
+        (accumulator.exports + result.refineLoad.exports)
+      );
+      accumulator.extrinsicSize = <u32>(
+        (accumulator.extrinsicSize + result.refineLoad.extrinsicSize)
+      );
+      accumulator.extrinsicCount = <u16>(
+        (accumulator.extrinsicCount + result.refineLoad.extrinsicCount)
+      );
+      accumulator.usedGas = <Gas>(
+        (accumulator.usedGas + result.refineLoad.usedGas)
+      );
+    }
+  }
+  return accumulator;
 };

@@ -35,7 +35,18 @@ export const createJSONCodec = <T extends object, X = any>(
     fromJSON(json) {
       const newInst = {} as unknown as T;
       for (const [key, jsonKey, codec] of itemsCodec) {
-        newInst[key] = <T[typeof key]>codec.fromJSON((<any>json)[jsonKey]);
+        try {
+          newInst[key] = <T[typeof key]>codec.fromJSON((<any>json)[jsonKey]);
+        } catch (e) {
+          console.error(
+            "Error in JSONCodec",
+            key,
+            jsonKey,
+            json[jsonKey],
+            (<any>e)?.message,
+          );
+          throw e;
+        }
       }
       return newInst;
     },
