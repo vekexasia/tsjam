@@ -33,12 +33,7 @@ export const Bandersnatch = {
     message: Uint8Array,
     context: Uint8Array,
   ): boolean {
-    return ietfVrfVerify(
-      pubkey,
-      context,
-      message,
-      bigintToBytes(signature, 96),
-    );
+    return ietfVrfVerify(pubkey, context, message, signature);
   },
 
   /**
@@ -53,7 +48,11 @@ export const Bandersnatch = {
     message: Uint8Array,
     context: Uint8Array,
   ): BandersnatchSignature {
-    return bytesToBigInt(ietfVrfSign(privkey, context, message));
+    return ietfVrfSign(
+      privkey,
+      context,
+      message,
+    ) as Uint8Array as BandersnatchSignature;
   },
 
   /**
@@ -63,9 +62,7 @@ export const Bandersnatch = {
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
     return bytesToBigInt(
-      ietfVrfOutputHash(
-        bigintToBytes(signature, 96),
-      ) as unknown as ByteArrayOfLength<32>,
+      ietfVrfOutputHash(signature) as Uint8Array as ByteArrayOfLength<32>,
     );
   },
 
@@ -80,7 +77,7 @@ export const Bandersnatch = {
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
     return bytesToBigInt(
-      ringVrfOutputHash(ringProof) as unknown as ByteArrayOfLength<32>,
+      ringVrfOutputHash(ringProof) as Uint8Array as ByteArrayOfLength<32>,
     );
   },
 
@@ -93,7 +90,7 @@ export const Bandersnatch = {
       proof,
       context,
       new Uint8Array(0),
-      Buffer.from(bigintToBytes(ringRoot, 144)),
+      Buffer.from(ringRoot),
       NUMBER_OF_VALIDATORS,
     );
   },
@@ -108,7 +105,6 @@ export const Bandersnatch = {
       inputBuf.set(key, idx * 32);
     });
 
-    const root = Buffer.from(ringRoot(inputBuf));
-    return bytesToBigInt(root as unknown as ByteArrayOfLength<144>) as T;
+    return ringRoot(inputBuf) as Uint8Array as T;
   },
 };

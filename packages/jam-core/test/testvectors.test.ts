@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import merklization from "@tsjam/merklization";
 import * as fs from "node:fs";
 import { dummyState } from "./utils.js";
 import { ok } from "neverthrow";
@@ -21,10 +20,9 @@ import {
   BandersnatchSignature,
   ValidatorData,
   JamBlock,
-  JamHeader,
   SignedJamHeader,
 } from "@tsjam/types";
-import { bigintToBytes, isFallbackMode, toTagged } from "@tsjam/utils";
+import { isFallbackMode, toTagged } from "@tsjam/utils";
 import { computeHeaderHash, importBlock } from "@/importBlock.js";
 import { merkelizeState } from "@tsjam/merklization";
 import {
@@ -44,9 +42,10 @@ import {
   Optional,
   mapCodec,
   Ed25519PubkeyCodec,
+  Ed25519BigIntJSONCodec,
+  Ed25519PublicKeyJSONCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { logCodec } from "@tsjam/codec/test/utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -56,7 +55,7 @@ const mocks = vi.hoisted(() => {
     EPOCH_LENGTH: 600,
     CORES: 341,
     MAX_TICKETS_PER_VALIDATOR: 2,
-    psi_o: new Set<ED25519PublicKey>(),
+    psi_o: new Set<ED25519PublicKey["bigint"]>(),
     toTagged: (a: any) => a,
     vrfOutputSignature: (a: any) => {
       return a;
@@ -277,8 +276,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const jamStateCodec = mapCodec<TestState, JamState>(
     stateCodec,
     (fromTest: TestState): JamState => {
-      // this is so hacky i want to cry
-      mocks.psi_o = new Set(fromTest.p_psi_o);
+      mocks.psi_o = new Set(fromTest.p_psi_o.map((a) => a.bigint));
       return {
         ...dummyState({ validators: NUMVALS, cores: NCOR, epoch: EPLEN }),
         kappa: fromTest.kappa,
@@ -306,7 +304,9 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         tau: fromJam.tau,
         lambda: fromJam.lambda,
         entropy: fromJam.entropy,
-        p_psi_o: [...fromJam.disputes.psi_o.values()],
+        p_psi_o: [...fromJam.disputes.psi_o.values()].map((a) =>
+          Ed25519PublicKeyJSONCodec.fromJSON(Ed25519BigIntJSONCodec.toJSON(a)),
+        ),
         gamma_z: fromJam.safroleState.gamma_z,
         gamma_a: fromJam.safroleState.gamma_a,
         gamma_k: fromJam.safroleState.gamma_k,
@@ -375,18 +375,21 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const testBin = fs.readFileSync(
     `${__dirname}/../../../jamtestvectors/safrole/${size}/${name}.bin`,
   );
-
+  mocks.vrfOutputSignature = (a: any) => {
+    return decoded.value.input.entropy;
+  };
   const decoded = testCodec.decode(testBin);
   //  console.log(decoded.value.preState)
   const parentHeader: SignedJamHeader = {
     parent: toTagged(1n),
-    blockSeal: toTagged(0n),
+    blockSeal: new Uint8Array(96).fill(0) as BandersnatchSignature,
     offenders: [],
     extrinsicHash: toTagged(0n),
     timeSlotIndex: decoded.value.preState.tau,
     priorStateRoot: toTagged(merkelizeState(decoded.value.preState)),
-    entropySignature: decoded.value.input
-      .entropy as unknown as BandersnatchSignature,
+    entropySignature: new Uint8Array(96).fill(
+      0,
+    ) as unknown as BandersnatchSignature,
     blockAuthorKeyIndex: 0 as ValidatorIndex,
   };
 
@@ -394,13 +397,14 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     {
       header: {
         parent: computeHeaderHash(parentHeader),
-        blockSeal: toTagged(0n),
+        blockSeal: new Uint8Array(96).fill(0) as BandersnatchSignature,
         offenders: [],
         extrinsicHash: toTagged(0n),
         timeSlotIndex: decoded.value.input.curSlot,
         priorStateRoot: toTagged(merkelizeState(decoded.value.preState)),
-        entropySignature: decoded.value.input
-          .entropy as unknown as BandersnatchSignature,
+        entropySignature: new Uint8Array(96).fill(
+          0,
+        ) as unknown as BandersnatchSignature,
         blockAuthorKeyIndex: 0 as ValidatorIndex,
       },
       extrinsics: {
@@ -426,9 +430,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   const newState = x!.state;
 
   const edonly = (vd: ValidatorData) =>
-    Buffer.from(bigintToBytes(vd.ed25519, 32)).toString("hex");
-  const tohex = (n: number) => (a: bigint) =>
-    Buffer.from(bigintToBytes(<any>a, n)).toString("hex");
+    Buffer.from(vd.ed25519.buf).toString("hex");
   expect(newState.safroleState.gamma_a, "gamma_a").deep.eq(
     decoded.value.postState.safroleState.gamma_a,
   );
@@ -438,8 +440,11 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(newState.safroleState.gamma_s, "gamma_s").deep.eq(
     decoded.value.postState.safroleState.gamma_s,
   );
-  expect(tohex(144)(newState.safroleState.gamma_z), "gamma_z").deep.eq(
-    tohex(144)(decoded.value.postState.safroleState.gamma_z),
+  expect(
+    Buffer.from(newState.safroleState.gamma_z).toString("hex"),
+    "gamma_z",
+  ).deep.eq(
+    Buffer.from(decoded.value.postState.safroleState.gamma_z).toString("hex"),
   );
   expect(newState.safroleState, "safrole").deep.eq(
     decoded.value.postState.safroleState,

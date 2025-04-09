@@ -11,7 +11,6 @@ import {
   createSequenceCodec,
   codec_Et,
   StatisticsCodec,
-  StatisticsJSONCodec,
 } from "@tsjam/codec";
 import {
   Tau,
@@ -36,7 +35,6 @@ import {
   validatorStatisticsToPosterior,
 } from "@tsjam/transitions";
 import { availableReports } from "@/accumulate";
-import { decode } from "node:punycode";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -124,7 +122,7 @@ describe("statistics", () => {
             .map((rg) => rg.credential)
             .flat()
             .map((c) => decoded.value.preState.p_kappa[c.validatorIndex])
-            .map((v) => v.ed25519),
+            .map((v) => v.ed25519.bigint),
         ),
         curTau: decoded.value.preState.tau,
         p_kappa: decoded.value.preState.p_kappa,

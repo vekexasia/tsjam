@@ -28,8 +28,7 @@ import {
   RecentHistoryCodec,
   RHOCodec,
   LengthDiscriminator,
-  HashJSONCodec,
-  Uint8ArrayJSONCodec,
+  Ed25519PubkeyBigIntCodec,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -272,8 +271,8 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
         [...state.disputes.psi_w.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
       ),
       ...encodeWithCodec(
-        createArrayLengthDiscriminator(Ed25519PubkeyCodec),
-        [...state.disputes.psi_o.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+        createArrayLengthDiscriminator(Ed25519PubkeyBigIntCodec),
+        [...state.disputes.psi_o.values()].sort((a, b) => Number(a - b)),
       ),
     ]),
   );

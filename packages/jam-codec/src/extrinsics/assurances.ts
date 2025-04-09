@@ -34,7 +34,7 @@ const singleExtrinsicCodec: JamCodec<AssuranceExtrinsic> = {
       BigInt(value.validatorIndex),
       bytes.subarray(offset, offset + 2),
     );
-    offset += bigintToExistingBytes(
+    offset += Ed25519SignatureCodec.encode(
       value.signature,
       bytes.subarray(offset, offset + 64),
     );

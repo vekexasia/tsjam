@@ -12,7 +12,7 @@ import { createSequenceCodec } from "@/sequenceCodec";
 import {
   ArrayOfJSONCodec,
   createJSONCodec,
-  Ed25519JSONCodec,
+  Ed25519PublicKeyJSONCodec,
   Ed25519SignatureJSONCodec,
   HashJSONCodec,
   JSONCodec,
@@ -139,7 +139,7 @@ export const codec_Ed_JSON: JSONCodec<
     >(
       createJSONCodec([
         ["hash", "target", HashJSONCodec()],
-        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["ed25519PublicKey", "key", Ed25519PublicKeyJSONCodec],
         ["signature", "signature", Ed25519SignatureJSONCodec],
       ]),
     ),
@@ -160,7 +160,7 @@ export const codec_Ed_JSON: JSONCodec<
       createJSONCodec([
         ["hash", "target", HashJSONCodec()],
         ["validity", "vote", BooleanCodec],
-        ["ed25519PublicKey", "key", Ed25519JSONCodec],
+        ["ed25519PublicKey", "key", Ed25519PublicKeyJSONCodec],
         ["signature", "signature", Ed25519SignatureJSONCodec],
       ]),
     ),

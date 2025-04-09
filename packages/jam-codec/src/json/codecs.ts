@@ -11,7 +11,7 @@ import {
   ArrayOfJSONCodec,
   BufferJSONCodec,
   createJSONCodec,
-  Ed25519JSONCodec,
+  Ed25519BigIntJSONCodec,
   EitherOneOfJSONCodec,
   HashJSONCodec,
   JC_J,
@@ -86,7 +86,7 @@ export const DisputesJSONCodec: JSONCodec<
     "psi_o",
     "offenders",
     ZipJSONCodecs(
-      ArrayOfJSONCodec(Ed25519JSONCodec),
+      ArrayOfJSONCodec(Ed25519BigIntJSONCodec),
       SetJSONCodec((a, b) => Number(a - b)),
     ),
   ],

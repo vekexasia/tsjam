@@ -34,8 +34,11 @@ export const validatorEntryMap = (entry: any) => {
 
 export const dummyValidator = (): ValidatorData => {
   return {
-    banderSnatch: Buffer.alloc(32).fill(0) as unknown as BandersnatchKey,
-    ed25519: 0n as ED25519PublicKey,
+    banderSnatch: Buffer.alloc(32).fill(0) as Uint8Array as BandersnatchKey,
+    ed25519: {
+      buf: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey["buf"],
+      bigint: toTagged(0n),
+    },
     blsKey: new Uint8Array(144).fill(0) as BLSKey,
     metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
   } as unknown as ValidatorData;

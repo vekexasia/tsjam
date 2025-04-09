@@ -94,7 +94,7 @@ export const garantorsReporters = (input: {
     p_psi_o: input.p_psi_o,
   });
 
-  const reporters = new Set<ED25519PublicKey>();
+  const reporters = new Set<ED25519PublicKey["bigint"]>();
   const curRotation = Math.floor(input.p_tau / VALIDATOR_CORE_ROTATION);
   for (const { credential, timeSlot } of input.extrinsic) {
     let usedG: GuarantorsAssignment = g_star;
@@ -102,7 +102,7 @@ export const garantorsReporters = (input: {
       usedG = g;
     }
     for (const { validatorIndex } of credential) {
-      reporters.add(usedG.validatorsED22519Key[validatorIndex]);
+      reporters.add(usedG.validatorsED22519Key[validatorIndex].bigint);
     }
   }
   return reporters;

@@ -1,6 +1,7 @@
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
+  ED25519PublicKey,
   IDisputesState,
   JamHeader,
   SafroleState,
@@ -24,13 +25,15 @@ export const mockHeader = (
     opts.offenders || [],
   ) as unknown as JamHeader["offenders"],
   blockAuthorKeyIndex: (opts.blockAuthorKeyIndex || 0) as ValidatorIndex,
-  entropySignature: toTagged(opts.entropySignature || 0n),
+  entropySignature: toTagged(
+    opts.entropySignature || new Uint8Array(96).fill(0),
+  ),
 });
 
 export const mockState = (
   opts: Partial<UnTaggedObject<SafroleState>> = {},
 ): SafroleState => ({
-  gamma_z: toTagged(0n as BandersnatchRingRoot),
+  gamma_z: toTagged(new Uint8Array(144).fill(0) as BandersnatchRingRoot),
   gamma_a: toTagged(opts.gamma_a ?? new Array(EPOCH_LENGTH)),
   gamma_s: toTagged(opts.gamma_s ?? new Array(EPOCH_LENGTH)),
   gamma_k: toTagged(opts.gamma_k ?? new Array(NUMBER_OF_VALIDATORS)),
@@ -40,10 +43,16 @@ export const mockValidatorData = (
   opts: Partial<UnTaggedObject<ValidatorData>> = {},
 ): ValidatorData => ({
   banderSnatch: (toTagged(opts.banderSnatch) ||
-    toTagged(Buffer.alloc(32).fill(0))) as unknown as BandersnatchKey,
-  ed25519: toTagged(opts.ed25519 || 0n),
-  blsKey: (opts.blsKey || new Uint8Array(144)) as ValidatorData["blsKey"],
-  metadata: (opts.metadata || new Uint8Array(128)) as ValidatorData["metadata"],
+    toTagged(new Uint8Array(32).fill(0))) as unknown as BandersnatchKey,
+  ed25519: {
+    buf: (opts.ed25519?.buf ||
+      new Uint8Array(32).fill(0)) as ED25519PublicKey["buf"],
+    bigint: (opts.ed25519?.bigint || 0n) as ED25519PublicKey["bigint"],
+  },
+  blsKey: (opts.blsKey ||
+    new Uint8Array(144).fill(0)) as ValidatorData["blsKey"],
+  metadata: (opts.metadata ||
+    new Uint8Array(128).fill(0)) as ValidatorData["metadata"],
 });
 
 export const mockTicketIdentifier = (

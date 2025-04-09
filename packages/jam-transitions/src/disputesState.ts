@@ -71,7 +71,7 @@ export const disputesSTF: STF<
   // enforce culprit keys are not in psi_o and signture is valid
   // $(0.6.4 - 10.5)
   const _checkculprit = input.extrinsic.culprit.map((culprit) => {
-    if (curState.psi_o.has(culprit.ed25519PublicKey)) {
+    if (curState.psi_o.has(culprit.ed25519PublicKey.bigint)) {
       return err(
         DisputesToPosteriorError.ED25519_PUBLIC_KEY_MUST_NOT_BE_IN_PSI,
       );
@@ -97,7 +97,7 @@ export const disputesSTF: STF<
   // enforce faults keys are not in psi_o and signature is valid
   // $(0.6.4 - 10.6)
   const _checkfaults = input.extrinsic.faults.map((fault) => {
-    if (curState.psi_o.has(fault.ed25519PublicKey)) {
+    if (curState.psi_o.has(fault.ed25519PublicKey.bigint)) {
       return err(
         DisputesToPosteriorError.ED25519_PUBLIC_KEY_MUST_NOT_BE_IN_PSI,
       );

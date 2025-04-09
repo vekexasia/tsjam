@@ -15,7 +15,7 @@ import {
   BandersnatchKeyJSONCodec,
   BandersnatchSignatureJSONCodec,
   createJSONCodec,
-  Ed25519JSONCodec,
+  Ed25519PublicKeyJSONCodec,
   HashJSONCodec,
   JC_J,
   JSONCodec,
@@ -105,7 +105,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
           >(
             createJSONCodec([
               ["bandersnatch", "bandersnatch", BandersnatchKeyJSONCodec],
-              ["ed25519", "ed25519", Ed25519JSONCodec],
+              ["ed25519", "ed25519", Ed25519PublicKeyJSONCodec],
             ]),
           ),
         ],
@@ -119,7 +119,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
       NULLORCodec(ArrayOfJSONCodec(TicketIdentifierJSONCodec))
     ),
   ],
-  ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519JSONCodec)],
+  ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519PublicKeyJSONCodec)],
   ["blockAuthorKeyIndex", "author_index", NumberJSONCodec<ValidatorIndex>()],
   ["entropySignature", "entropy_source", BandersnatchSignatureJSONCodec],
   ["blockSeal", "seal", BandersnatchSignatureJSONCodec],

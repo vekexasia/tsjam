@@ -1,13 +1,11 @@
 import {
-  BandersnatchKey,
   BandersnatchRingRoot,
-  IDisputesState,
   JamState,
   Tagged,
   TicketIdentifier,
   ValidatorData,
 } from "@tsjam/types";
-import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
+import { hextToBigInt, toTagged } from "@tsjam/utils";
 
 export const validatorEntryMap = (entry: any) => {
   return {
@@ -39,10 +37,10 @@ export const mapTestDataToSafroleState = (testData: any): JamState => {
         }
         return testData.gamma_s;
       })(),
-      gamma_z: hextToBigInt(testData.gamma_z) as Tagged<
-        BandersnatchRingRoot,
-        "gamma_z"
-      >,
+      gamma_z: Buffer.from(
+        testData.gamma_z.substring(2),
+        "hex",
+      ) as Uint8Array as Tagged<BandersnatchRingRoot, "gamma_z">,
     },
     iota: testData.iota.map(validatorEntryMap),
     kappa: testData.kappa.map(validatorEntryMap),
@@ -50,13 +48,4 @@ export const mapTestDataToSafroleState = (testData: any): JamState => {
     tau: testData.tau,
     // NOTE: there are other elements in the state that are not used in the test
   } as JamState;
-};
-
-const validatorEntryHexMap = (entry: ValidatorData) => {
-  return {
-    bandersnatch: `0x${Buffer.from(entry.banderSnatch).toString("hex")}`,
-    ed25519: `0x${Buffer.from(bigintToBytes(entry.ed25519, 32)).toString("hex")}`,
-    bls: `0x${Buffer.from(entry.blsKey).toString("hex")}`,
-    metadata: `0x${Buffer.from(entry.metadata).toString("hex")}`,
-  };
 };

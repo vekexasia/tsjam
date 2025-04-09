@@ -272,10 +272,13 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
         "gamma_z",
         {
           fromJSON(v) {
-            return hextToBigInt<SafroleState["gamma_z"], 144>(v);
+            return Buffer.from(
+              v.substring(2),
+              "hex",
+            ) as Uint8Array as SafroleState["gamma_z"];
           },
           toJSON(v: SafroleState["gamma_z"]) {
-            return `0x${v.toString(16).padStart(144, "0")}`;
+            return `0x${Buffer.from(v).toString("hex")}`;
           },
         },
       ],

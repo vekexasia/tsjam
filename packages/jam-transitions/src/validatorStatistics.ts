@@ -27,7 +27,7 @@ export const validatorStatisticsToPosterior: STF<
     curTau: Tau;
     p_tau: Tau;
     p_kappa: Posterior<JamState["kappa"]>;
-    reporters: Set<ED25519PublicKey>; // $(0.6.4 - 11.26) | R
+    reporters: Set<ED25519PublicKey["bigint"]>; // $(0.6.4 - 11.26) | R
   },
   never
 > = (input, state) => {
@@ -83,7 +83,7 @@ export const validatorStatisticsToPosterior: STF<
       ),
       guaranteedReports: <u32>(
         (bold_a[i].guaranteedReports +
-          (input.reporters.has(input.p_kappa[i].ed25519) ? 1 : 0))
+          (input.reporters.has(input.p_kappa[i].ed25519.bigint) ? 1 : 0))
       ),
       availabilityAssurances: <u32>(
         (bold_a[i].availabilityAssurances +
