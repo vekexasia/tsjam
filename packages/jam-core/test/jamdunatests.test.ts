@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
@@ -317,19 +317,7 @@ function checkMerkle(jamState: JamState, duna: any) {
   //  );
 }
 describe("jamduna", () => {
-  beforeEach(() => {
-    mocks.CORES = 2;
-    mocks.NUMBER_OF_VALIDATORS = 6;
-    mocks.EPOCH_LENGTH = 12;
-    mocks.MAX_TICKETS_PER_VALIDATOR = 3;
-    mocks.LOTTERY_MAX_SLOT = 10;
-    mocks.VALIDATOR_CORE_ROTATION = 4;
-    mocks.PREIMAGE_EXPIRATION = 6;
-  });
-  it("fallback", () => {
-    const kind = "tiny";
-    const set = "assurances";
-
+  const createTests = (kind: "tiny" | "full", set: string) => {
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(
         fs.readFileSync(
@@ -367,6 +355,7 @@ describe("jamduna", () => {
         ),
       );
 
+      console.log("checking pre_state");
       checkMerkle(tsJamState, dunaStateTransition.pre_state);
       const newBlock = BlockJSONCodec.fromJSON(dunaStateTransition.block);
       const [error, tsJamNewState] = importBlock(newBlock, {
@@ -375,6 +364,7 @@ describe("jamduna", () => {
       }).safeRet();
       expect(error).toBeUndefined();
 
+      console.log("checking post_state");
       checkMerkle(tsJamNewState!.state, dunaStateTransition.post_state);
 
       // check against state snapshott
@@ -439,5 +429,47 @@ describe("jamduna", () => {
       tsJamState = tsJamNewState!.state;
       curBlock = tsJamNewState!.block;
     }
+  };
+
+  describe("tiny", () => {
+    beforeEach(() => {
+      mocks.CORES = 2;
+      mocks.NUMBER_OF_VALIDATORS = 6;
+      mocks.EPOCH_LENGTH = 12;
+      mocks.MAX_TICKETS_PER_VALIDATOR = 3;
+      mocks.LOTTERY_MAX_SLOT = 10;
+      mocks.VALIDATOR_CORE_ROTATION = 4;
+      mocks.PREIMAGE_EXPIRATION = 6;
+    });
+    it("test fallback", () => {
+      createTests("tiny", "fallback");
+    });
+    it("test safrole", () => {
+      createTests("tiny", "safrole");
+    });
+    it("test assurances", () => {
+      createTests("tiny", "assurances");
+    });
+  });
+  describe.skip("full", () => {
+    // beforeEach(() => {
+    //   mocks.CORES = 341;
+    //   mocks.NUMBER_OF_VALIDATORS = 1023;
+    //   mocks.EPOCH_LENGTH = 600;
+    //   mocks.MAX_TICKETS_PER_VALIDATOR = 2;
+    //   mocks.LOTTERY_MAX_SLOT = 500;
+    //   mocks.VALIDATOR_CORE_ROTATION = 10;
+    //   mocks.PREIMAGE_EXPIRATION = 28800;
+    // });
+
+    it("test fallback", () => {
+      createTests("full", "fallback");
+    });
+    it("test safrole", () => {
+      createTests("full", "safrole");
+    });
+    it("test assurances", () => {
+      createTests("full", "assurances");
+    });
   });
 });

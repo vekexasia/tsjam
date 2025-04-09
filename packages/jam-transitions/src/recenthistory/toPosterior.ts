@@ -27,18 +27,18 @@ export const calculateAccumulateRoot = (
     accumulationResult: Hash;
   }>,
 ): MerkleTreeRoot => {
-  console.log(
-    "Beefy",
-    [...beefyCommitment.values()]
-      // sorting is set in (83)
-      .sort((a, b) => a.serviceIndex - b.serviceIndex)
-      .map((entry) => {
-        return {
-          serviceIndex: entry.serviceIndex,
-          acc: HashJSONCodec().toJSON(entry.accumulationResult),
-        };
-      }),
-  );
+  // console.log(
+  //   "Beefy",
+  //   [...beefyCommitment.values()]
+  //     // sorting is set in (83)
+  //     .sort((a, b) => a.serviceIndex - b.serviceIndex)
+  //     .map((entry) => {
+  //       return {
+  //         serviceIndex: entry.serviceIndex,
+  //         acc: HashJSONCodec().toJSON(entry.accumulationResult),
+  //       };
+  //     }),
+  // );
 
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(

@@ -60,6 +60,7 @@ export const transferInvocation = (
 ): [ServiceAccount, Gas] => {
   let bold_s = d.get(s)!;
 
+  console.log("transfer", transfers);
   assert(typeof bold_s !== "undefined", "Service not found in delta");
   bold_s = {
     ...bold_s,

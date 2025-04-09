@@ -93,6 +93,8 @@ export const accumulateInvocation = (
   const { code } = serviceAccountMetadataAndCode(serviceAccount);
   assert(typeof code !== "undefined", "Code not found in preimage");
 
+  console.log(`\nAccumulating ${s}`);
+  process.env.DEBUG_STEPS = `${s === 1343007977}`;
   const mres = argumentInvocation(
     code,
     5 as u32, // instructionPointer
