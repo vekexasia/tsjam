@@ -1,4 +1,9 @@
-import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
+import {
+  PVMIxEvaluateFNContext,
+  PVMIxReturnMods,
+  PVMProgramExecutionContext,
+  u32,
+} from "@tsjam/types";
 import {
   NoArgIxArgs,
   NoArgIxDecoder,
@@ -33,15 +38,8 @@ import { djump } from "@/utils/djump";
 import { branch } from "@/utils/branch";
 import { Z, Z4, Z8, Z8_inv } from "@/utils/zed";
 import { toSafeMemoryAddress } from "@/pvmMemory";
-import {
-  E_2,
-  E_2_int,
-  E_4,
-  E_4_int,
-  E_8,
-  encodeWithCodec,
-  Uint8ArrayJSONCodec,
-} from "@tsjam/codec";
+import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
+import { Zp } from "@tsjam/constants";
 
 /**
  * This class holds the ixs implementations.
@@ -114,8 +112,12 @@ export class Instructions {
   @Ix(52, OneRegOneImmIxDecoder)
   load_u8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
+
     if (!context.execution.memory.canRead(memoryAddress, 1)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 1)!,
+        context.execution,
+      );
     }
 
     return [
@@ -130,8 +132,12 @@ export class Instructions {
   load_u16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 2)!,
+        context.execution,
+      );
     }
+
     return [
       IxMod.reg(
         rA,
@@ -145,7 +151,10 @@ export class Instructions {
   load_u32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 4)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 4)!,
+        context.execution,
+      );
     }
     return [
       IxMod.reg(
@@ -160,8 +169,12 @@ export class Instructions {
   load_u64({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 8)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 8)!,
+        context.execution,
+      );
     }
+
     return [
       IxMod.reg(
         rA,
@@ -175,7 +188,10 @@ export class Instructions {
   load_i8({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 1)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 1)!,
+        context.execution,
+      );
     }
 
     return [
@@ -192,7 +208,10 @@ export class Instructions {
   load_i16({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
     if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 2)!,
+        context.execution,
+      );
     }
 
     return [
@@ -208,8 +227,11 @@ export class Instructions {
   @Ix(57, OneRegOneImmIxDecoder)
   load_i32({ rA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContext) {
     const memoryAddress = toSafeMemoryAddress(vX);
-    if (!context.execution.memory.canRead(memoryAddress, 2)) {
-      return [...IxMod.pageFault(memoryAddress, context.execution)];
+    if (!context.execution.memory.canRead(memoryAddress, 4)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(memoryAddress, 4)!,
+        context.execution,
+      );
     }
 
     return [
@@ -609,7 +631,12 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
-    // TODO: memory fault?
+    if (!context.execution.memory.canRead(location, 1)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 1)!,
+        context.execution,
+      );
+    }
     return [
       IxMod.reg(rA, context.execution.memory.getBytes(location, 1)[0] as u32),
     ];
@@ -621,8 +648,13 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 2)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 2)!,
+        context.execution,
+      );
+    }
     const r = context.execution.memory.getBytes(location, 2);
-    // TODO: memory fault?
     return [IxMod.reg(rA, E_2.decode(r).value)];
   }
 
@@ -633,10 +665,12 @@ export class Instructions {
   ) {
     const location = toSafeMemoryAddress(wB + vX);
     if (!context.execution.memory.canRead(location, 4)) {
-      return [...IxMod.pageFault(location, context.execution)];
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 4)!,
+        context.execution,
+      );
     }
     const r = context.execution.memory.getBytes(location, 4);
-    // TODO: memory fault?
     return [IxMod.reg(rA, E_4.decode(r).value)];
   }
 
@@ -646,8 +680,13 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 8)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 8)!,
+        context.execution,
+      );
+    }
     const r = context.execution.memory.getBytes(location, 8);
-    // TODO: memory fault?
     return [IxMod.reg(rA, E_8.decode(r).value)];
   }
 
@@ -658,8 +697,13 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 1)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 1)!,
+        context.execution,
+      );
+    }
     const raw = context.execution.memory.getBytes(location, 1);
-    // TODO: memory fault?
     const val = Z8_inv(Z(1, BigInt(raw[0])));
     return [IxMod.reg(rA, val)];
   }
@@ -670,8 +714,13 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 2)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 2)!,
+        context.execution,
+      );
+    }
     const val = context.execution.memory.getBytes(location, 2);
-    // TODO: memory fault?
     const num = E_2.decode(val).value;
     return [IxMod.reg(rA, Z8_inv(Z(2, num)))];
   }
@@ -682,8 +731,13 @@ export class Instructions {
     context: PVMIxEvaluateFNContext,
   ) {
     const location = toSafeMemoryAddress(wB + vX);
+    if (!context.execution.memory.canRead(location, 4)) {
+      return handleMemoryFault(
+        context.execution.memory.firstUnreadable(location, 4)!,
+        context.execution,
+      );
+    }
     const val = context.execution.memory.getBytes(location, 4);
-    // TODO: memory fault?
     const num = E_4.decode(val).value;
     return [IxMod.reg(rA, Z8_inv(Z(4, num)))];
   }
@@ -1191,3 +1245,17 @@ export class Instructions {
     return [IxMod.reg(rD, wA < wB ? wA : wB)];
   }
 }
+
+/**
+ * $(0.6.4 - A.9)
+ * $(0.6.4 - A.8) | is handled by caller
+ */
+const handleMemoryFault = (
+  location: u32,
+  context: PVMProgramExecutionContext,
+): PVMIxReturnMods => {
+  if (location < 2 ** 16) {
+    return [IxMod.panic()];
+  }
+  return IxMod.pageFault(<u32>(Zp * Math.floor(location % Zp)), context);
+};
