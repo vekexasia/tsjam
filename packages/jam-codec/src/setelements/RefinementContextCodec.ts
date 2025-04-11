@@ -4,6 +4,7 @@ import {
   RefinementContext,
   StateRootHash,
   Tau,
+  WorkPackageHash,
 } from "@tsjam/types";
 import { create32BCodec, WorkPackageHashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
@@ -15,7 +16,6 @@ import {
   JSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
-import { hextToBigInt } from "@tsjam/utils";
 
 /**
  * it defines codec for the RefinementContext or member of `X` set
@@ -54,15 +54,17 @@ export const RefinementContextJSONCodec: JSONCodec<
   fromJSON(json) {
     return {
       anchor: {
-        hash: hextToBigInt(json.anchor),
-        stateRoot: hextToBigInt(json.state_root),
-        beefyRoot: hextToBigInt(json.beefy_root),
+        hash: HashJSONCodec<HeaderHash>().fromJSON(json.anchor),
+        stateRoot: HashJSONCodec<StateRootHash>().fromJSON(json.state_root),
+        beefyRoot: HashJSONCodec<BeefyRootHash>().fromJSON(json.beefy_root),
       },
       lookupAnchor: {
-        hash: hextToBigInt(json.lookup_anchor),
+        hash: HashJSONCodec<HeaderHash>().fromJSON(json.lookup_anchor),
         timeSlot: <Tau>json.lookup_anchor_slot,
       },
-      dependencies: json.prerequisites.map((a) => hextToBigInt(a)),
+      dependencies: json.prerequisites.map((a) =>
+        HashJSONCodec<WorkPackageHash>().fromJSON(a),
+      ),
     };
   },
   toJSON(value) {

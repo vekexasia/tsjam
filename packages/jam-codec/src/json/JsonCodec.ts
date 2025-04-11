@@ -11,7 +11,7 @@ import {
   type ByteArrayOfLength,
   type Hash,
 } from "@tsjam/types";
-import { bigintToBytes, bytesToBigInt, hexToBytes } from "@tsjam/utils";
+import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * Basic utility to convert from/to json
@@ -120,7 +120,7 @@ export const BufferJSONCodec = <
 >(): JSONCodec<T, string> => {
   return {
     fromJSON(json) {
-      return hexToBytes(json);
+      return <T>new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
     },
     toJSON(value) {
       return bufToHex(value);
@@ -145,7 +145,9 @@ export const Ed25519BigIntJSONCodec: JSONCodec<
   string
 > = {
   fromJSON(json) {
-    return bytesToBigInt(hexToBytes(json));
+    return bytesToBigInt(
+      new Uint8Array([...Buffer.from(json.slice(2), "hex")]),
+    );
   },
   toJSON(value) {
     return Buffer.from(bigintToBytes(value, 32)).toString("hex");
@@ -170,7 +172,7 @@ export const BandersnatchSignatureJSONCodec = BufferJSONCodec<
 
 export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   fromJSON(json) {
-    return hexToBytes(json);
+    return new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
   },
   toJSON(value) {
     return bufToHex(value);

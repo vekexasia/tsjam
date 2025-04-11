@@ -28,9 +28,6 @@ import {
   Uint8ArrayJSONCodec,
   EntropyJSONCodec,
   BlockJSONCodec,
-  encodeWithCodec,
-  HashCodec,
-  E_4_int,
   StatisticsJSONCodec,
 } from "@tsjam/codec";
 import {
@@ -48,9 +45,8 @@ import {
   u64,
   UpToSeq,
 } from "@tsjam/types";
-import { hextToBigInt } from "@tsjam/utils";
 import { importBlock } from "@/importBlock";
-import { merkelizeState, merkleStateMap, stateKey } from "@tsjam/merklization";
+import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
 import assert from "assert";
 import {
   serviceAccountItemInStorage,
@@ -423,6 +419,7 @@ describe("jamduna", () => {
         ).deep.eq(dunaAcc.data.lookup_meta);
 
         for (const realKey in acc.data.storage) {
+          console.log(realKey, acc.data.storage[realKey]);
           expect(
             acc.data.storage[realKey],
             `acc[${i}].data.storage[${realKey}] - block:${block}`,
@@ -453,26 +450,8 @@ describe("jamduna", () => {
     it("test assurances", () => {
       createTests("tiny", "assurances");
     });
-  });
-  describe.skip("full", () => {
-    // beforeEach(() => {
-    //   mocks.CORES = 341;
-    //   mocks.NUMBER_OF_VALIDATORS = 1023;
-    //   mocks.EPOCH_LENGTH = 600;
-    //   mocks.MAX_TICKETS_PER_VALIDATOR = 2;
-    //   mocks.LOTTERY_MAX_SLOT = 500;
-    //   mocks.VALIDATOR_CORE_ROTATION = 10;
-    //   mocks.PREIMAGE_EXPIRATION = 28800;
-    // });
-
-    it("test fallback", () => {
-      createTests("full", "fallback");
-    });
-    it("test safrole", () => {
-      createTests("full", "safrole");
-    });
-    it("test assurances", () => {
-      createTests("full", "assurances");
+    it("test orderedaccumulation", () => {
+      createTests("tiny", "orderedaccumulation");
     });
   });
 });

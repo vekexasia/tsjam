@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AuthorizerPool,
   AuthorizerQueue,
@@ -8,7 +7,6 @@ import {
   ED25519PublicKey,
   Gas,
   Hash,
-  IDisputesState,
   JamState,
   JamStatistics,
   RecentHistory,
@@ -21,16 +19,7 @@ import {
   ValidatorData,
   ValidatorStatistics,
 } from "@tsjam/types";
-import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
-
-export const validatorEntryMap = (entry: any) => {
-  return {
-    banderSnatch: hextToBigInt(entry.bandersnatch),
-    ed25519: hextToBigInt(entry.ed25519),
-    blsKey: Buffer.from(entry.bls.slice(2), "hex"),
-    metadata: Buffer.from(entry.metadata.slice(2), "hex"),
-  } as unknown as ValidatorData;
-};
+import { toTagged } from "@tsjam/utils";
 
 export const dummyValidator = (): ValidatorData => {
   return {
@@ -131,44 +120,5 @@ export const dummyState = (conf: {
       new Array(80).fill(0n as Hash),
     ) as AuthorizerQueue,
     headerLookupHistory: new Map(),
-  };
-};
-
-export const disputesStateFromTest = (testData: {
-  psi_w: string[];
-  psi_b: string[];
-  psi_g: string[];
-  psi_o: string[];
-}): IDisputesState => {
-  return {
-    psi_w: new Set(testData.psi_w.map((item: string) => hextToBigInt(item))),
-    psi_b: new Set(testData.psi_b.map((item: string) => hextToBigInt(item))),
-    psi_g: new Set(testData.psi_g.map((item: string) => hextToBigInt(item))),
-    psi_o: new Set(testData.psi_o.map((item: string) => hextToBigInt(item))),
-  } as unknown as IDisputesState;
-};
-
-export const disputesStateToTest = (state: IDisputesState) => {
-  return {
-    psi_w: Array.from(state.psi_w)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_b: Array.from(state.psi_b)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_g: Array.from(state.psi_g)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_o: Array.from(state.psi_o)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
   };
 };
