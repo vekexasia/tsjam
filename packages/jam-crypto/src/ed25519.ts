@@ -1,11 +1,9 @@
 import {
-  ByteArrayOfLength,
   ED25519PrivateKey,
   ED25519PublicKey,
   ED25519Signature,
 } from "@tsjam/types";
 import sodium from "sodium-native";
-import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 export const Ed25519 = {
   /**
@@ -17,9 +15,9 @@ export const Ed25519 = {
     message: Uint8Array,
   ): boolean {
     return sodium.crypto_sign_verify_detached(
-      Buffer.from(bigintToBytes(signature, 64)),
+      Buffer.from(signature),
       Buffer.from(message),
-      Buffer.from(bigintToBytes(pubkey, 32)),
+      Buffer.from(pubkey.buf),
     );
   },
 
@@ -31,8 +29,8 @@ export const Ed25519 = {
     sodium.crypto_sign_detached(
       signatureBuf,
       Buffer.from(message),
-      Buffer.from(bigintToBytes(privkey, 64)),
+      Buffer.from(privkey),
     );
-    return bytesToBigInt(signatureBuf as unknown as ByteArrayOfLength<64>);
+    return signatureBuf as Uint8Array as ED25519Signature;
   },
 };

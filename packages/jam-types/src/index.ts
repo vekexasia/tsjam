@@ -31,6 +31,7 @@ export * from "./states/DisputesState.js";
 export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";
+export * from "./states/Statistics.js";
 export * from "./states/ValidatorStatistics.js";
 export * from "./states/HeaderLookupHistory.js";
 
@@ -44,6 +45,7 @@ export * from "./pvm/PVMModifications.js";
 export * from "./pvm/PVMExitReason.js";
 export * from "./pvm/PVMFn.js";
 export * from "./pvm/PVMIx.js";
+export * from "./pvm/PVMProgramCode.js";
 export * from "./pvm/IPVMMemory.js";
 export * from "./pvm/PVMProgram.js";
 export * from "./pvm/PVMRegisters.js";

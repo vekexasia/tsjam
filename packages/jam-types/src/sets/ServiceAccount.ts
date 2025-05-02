@@ -3,10 +3,10 @@ import { CodeHash, Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
 /**
  * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
- * $(0.6.1 - 9.3)
+ * $(0.6.4 - 9.3)
  *  NOTE: there are some `virtual` elements such as
- * `bold_c` - actual code ap[ac] $(0.6.1 - 9.4)
- * $(0.6.1 - 9.8):
+ * `bold_c` - actual code ap[ac] $(0.6.4 - 9.4)
+ * $(0.6.4 - 9.8):
  * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
  * `o` - ∈ N264 = computed in `serviceAccountTotalOctets`
  * `t` - balance threshold  computed in `serviceAccountGasThreshold`

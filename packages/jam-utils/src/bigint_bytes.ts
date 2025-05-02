@@ -5,6 +5,7 @@ import { BigIntBytes, ByteArrayOfLength } from "@tsjam/types";
  * Utility to convert a BigInt to a Uint8Array
  * @param value - the value to convert
  * @param nBytes - the number of bytes to use
+ * TODO: remove
  */
 export const bigintToBytes = <T extends number>(
   value: BigIntBytes<T>,

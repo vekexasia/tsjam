@@ -1,10 +1,11 @@
 import { JamCodec } from "@/codec";
 import assert from "node:assert";
 import { E_8, E_sub } from "@/ints/E_subscr.js";
+import { mapCodec } from "@/utils";
 
 /**
  * E encoding allows for variable size encoding for numbers up to 2^64
- * $(0.6.1 - C.6)
+ * $(0.6.4 - C.6)
  */
 export const E: JamCodec<bigint> = {
   encode: (value: bigint, bytes: Uint8Array): number => {
@@ -84,6 +85,20 @@ export const E: JamCodec<bigint> = {
     }
   },
 };
+
+export const E_bigint = <T extends bigint>() =>
+  mapCodec(
+    E,
+    (v) => <T>v,
+    (v: T) => v,
+  );
+
+export const E_int = <T extends number>() =>
+  mapCodec(
+    E,
+    (v) => <T>Number(v),
+    (v: T) => BigInt(v),
+  );
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("E", () => {

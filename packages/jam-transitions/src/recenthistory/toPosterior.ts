@@ -18,7 +18,7 @@ import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.1 - 7.3)
+ * $(0.6.4 - 7.3)
  * calculate `r`
  */
 export const calculateAccumulateRoot = (
@@ -27,13 +27,18 @@ export const calculateAccumulateRoot = (
     accumulationResult: Hash;
   }>,
 ): MerkleTreeRoot => {
-
-  console.log("Beefy", [...beefyCommitment.values()]
-      // sorting is set in (83)
-      .sort((a, b) => a.serviceIndex - b.serviceIndex)
-    .map((entry) => {
-      return {serviceIndex: entry.serviceIndex, acc: HashJSONCodec().toJSON(entry.accumulationResult)};
-    }))
+  // console.log(
+  //   "Beefy",
+  //   [...beefyCommitment.values()]
+  //     // sorting is set in (83)
+  //     .sort((a, b) => a.serviceIndex - b.serviceIndex)
+  //     .map((entry) => {
+  //       return {
+  //         serviceIndex: entry.serviceIndex,
+  //         acc: HashJSONCodec().toJSON(entry.accumulationResult),
+  //       };
+  //     }),
+  // );
 
   // accumulate root
   const r = wellBalancedBinaryMerkleRoot(
@@ -52,7 +57,7 @@ export const calculateAccumulateRoot = (
 };
 
 /**
- * $(0.6.1 - 7.4 / 4.7)
+ * $(0.6.4 - 7.4 / 4.17)
  */
 export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,
@@ -97,7 +102,7 @@ export const recentHistoryToPosterior: STF<
     reportedPackages: p,
   });
 
-  // $(0.6.1 - 7.4)
+  // $(0.6.4 - 7.4)
   if (toRet.length > RECENT_HISTORY_LENGTH) {
     return ok(
       toRet.slice(

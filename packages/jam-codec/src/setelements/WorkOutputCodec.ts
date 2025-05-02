@@ -4,7 +4,7 @@ import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { BufferJSONCodec, JSONCodec } from "@/json/JsonCodec";
 
-// $(0.6.1  - C.29)
+// $(0.6.4  - C.30)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
   encode(value: WorkOutput, bytes: Uint8Array): number {
     let offset = 0;

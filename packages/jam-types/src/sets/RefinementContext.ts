@@ -9,7 +9,7 @@ import {
 /**
  * gives a snapshotof what was the situation when the work report was created
  * defined by `X` set
- * $(0.6.1 - 11.4)
+ * $(0.6.4 - 11.4)
  */
 export type RefinementContext = {
   // first block of the snapshot

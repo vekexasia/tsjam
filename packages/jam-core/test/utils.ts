@@ -1,43 +1,33 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
-  AccumulationHistory,
-  AccumulationQueue,
   AuthorizerPool,
   AuthorizerQueue,
   BandersnatchKey,
-  BandersnatchRingRoot,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
+  Gas,
   Hash,
-  IDisputesState,
   JamState,
+  JamStatistics,
   RecentHistory,
   RecentHistoryItem,
   SafroleState,
   ServiceIndex,
-  Tagged,
   Tau,
-  TicketIdentifier,
+  u16,
+  u32,
   ValidatorData,
   ValidatorStatistics,
 } from "@tsjam/types";
-import { bigintToBytes, hextToBigInt, toTagged } from "@tsjam/utils";
-
-export const validatorEntryMap = (entry: any) => {
-  return {
-    banderSnatch: hextToBigInt(entry.bandersnatch),
-    ed25519: hextToBigInt(entry.ed25519),
-    blsKey: Buffer.from(entry.bls.slice(2), "hex"),
-    metadata: Buffer.from(entry.metadata.slice(2), "hex"),
-  } as unknown as ValidatorData;
-};
+import { toTagged } from "@tsjam/utils";
 
 export const dummyValidator = (): ValidatorData => {
   return {
-    banderSnatch: Buffer.alloc(32).fill(0) as unknown as BandersnatchKey,
-    ed25519: 0n as ED25519PublicKey,
+    banderSnatch: Buffer.alloc(32).fill(0) as Uint8Array as BandersnatchKey,
+    ed25519: {
+      buf: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey["buf"],
+      bigint: toTagged(0n),
+    },
     blsKey: new Uint8Array(144).fill(0) as BLSKey,
     metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
   } as unknown as ValidatorData;
@@ -102,59 +92,33 @@ export const dummyState = (conf: {
           accumulationResultMMR: [],
         }) as RecentHistoryItem,
     ) as RecentHistory,
-    validatorStatistics: [null, null].map(() =>
-      new Array(validators).fill({
-        blocksProduced: 0,
-        ticketsIntroduced: 0,
-        preimagesIntroduced: 0,
-        totalOctetsIntroduced: 0,
-        guaranteedReports: 0,
-        availabilityAssurances: 0,
+    statistics: {
+      validators: [null, null].map(() =>
+        new Array(validators).fill({
+          blocksProduced: 0,
+          ticketsIntroduced: 0,
+          preimagesIntroduced: 0,
+          totalOctetsIntroduced: 0,
+          guaranteedReports: 0,
+          availabilityAssurances: 0,
+        }),
+      ) as ValidatorStatistics,
+      cores: <JamStatistics["cores"]>new Array(cores).fill({
+        daLoad: <u32>0,
+        popularity: <u16>0,
+        imports: <u16>0,
+        extrinsicCount: <u16>0,
+        extrinsicSize: <u32>0,
+        exports: <u16>0,
+        bundleSize: <u32>0,
+        usedGas: <Gas>0n,
       }),
-    ) as ValidatorStatistics,
+      services: new Map(),
+    },
     authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
     authQueue: new Array(cores).fill(
       new Array(80).fill(0n as Hash),
     ) as AuthorizerQueue,
     headerLookupHistory: new Map(),
-  };
-};
-
-export const disputesStateFromTest = (testData: {
-  psi_w: string[];
-  psi_b: string[];
-  psi_g: string[];
-  psi_o: string[];
-}): IDisputesState => {
-  return {
-    psi_w: new Set(testData.psi_w.map((item: string) => hextToBigInt(item))),
-    psi_b: new Set(testData.psi_b.map((item: string) => hextToBigInt(item))),
-    psi_g: new Set(testData.psi_g.map((item: string) => hextToBigInt(item))),
-    psi_o: new Set(testData.psi_o.map((item: string) => hextToBigInt(item))),
-  } as unknown as IDisputesState;
-};
-
-export const disputesStateToTest = (state: IDisputesState) => {
-  return {
-    psi_w: Array.from(state.psi_w)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_b: Array.from(state.psi_b)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_g: Array.from(state.psi_g)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
-    psi_o: Array.from(state.psi_o)
-      .sort((a, b) => (a < b ? -1 : 1))
-      .map(
-        (item) => `0x${Buffer.from(bigintToBytes(item, 32)).toString("hex")}`,
-      ),
   };
 };

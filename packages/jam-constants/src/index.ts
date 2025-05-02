@@ -15,14 +15,17 @@ export const RECENT_HISTORY_LENGTH = 8;
 export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
 export const CORES = 341;
+
 /**
  * referred as constant `Y` in the paper
  */
 export const LOTTERY_MAX_SLOT = 500;
+
 /**
  * referred as constant `E` in the paper
  */
 export const EPOCH_LENGTH = 600;
+
 /**
  * referred as constant `K` in the paper
  */
@@ -37,14 +40,21 @@ export const MAX_TICKETS_PER_VALIDATOR = 2;
  * `U` in the paper
  */
 export const WORK_TIMEOUT = 5;
+
 /**
  * referred as constant `R` in the paper
  */
 export const VALIDATOR_CORE_ROTATION = 10;
+
 /**
- * referred as capital i in the paper
+ * `I` | the maximum amount of work items in a package.
  */
-export const MAXIMUM_WORK_ITEMS = 4;
+export const MAXIMUM_WORK_ITEMS = 16;
+
+/**
+ * `T` | the maximum number of extrinsics in a work-package
+ */
+export const MAXIMUM_EXTRINSICS_IN_WP = 128;
 
 /**
  * `Wm` in the paper
@@ -54,7 +64,7 @@ export const MAX_WORKPACKAGE_ENTRIES = 2048;
 
 /**
  * `Wr` in the paper
- * $(0.6.1 - 11.9)
+ * $(0.6.4 - 11.9)
  */
 export const MAX_WORKREPORT_OUTPUT_SIZE = 48 * 2 ** 10;
 
@@ -72,7 +82,7 @@ export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 
 /**
  * Denoted with `Xa` in the paper. It's value is `jam_available`
- * $(0.6.1 - 11.14)
+ * $(0.6.4 - 11.14)
  */
 export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
 /**
@@ -81,17 +91,17 @@ export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
 export const JAM_BEEFY = new TextEncoder().encode("jam_beefy");
 /**
  * Denoted with `XE` in the paper. It's value is `jam_entropy`
- * $(0.6.1 - 6.18)
+ * $(0.6.4 - 6.18)
  */
 export const JAM_ENTROPY = new TextEncoder().encode("jam_entropy");
 /**
  * Denoted with `XE` in the paper. It's value is `jam_fallback_seal`
- * $(0.6.1 - 6.19)
+ * $(0.6.4 - 6.19)
  */
 export const JAM_FALLBACK_SEAL = new TextEncoder().encode("jam_fallback_seal");
 /**
  * Denoted with `XG` in the paper. It's value is `jam_guarantee`
- * $(0.6.1 - 11.27)
+ * $(0.6.4 - 11.27)
  */
 export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
 /**
@@ -100,7 +110,7 @@ export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
 export const JAM_ANNOUNCE = new TextEncoder().encode("jam_announce");
 /**
  * Denoted with `XT` in the paper. It's value is `jam_ticket_seal`
- * $(0.6.1 - 6.20)
+ * $(0.6.4 - 6.20)
  */
 export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 /**
@@ -109,12 +119,12 @@ export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 export const JAM_AUDIT = new TextEncoder().encode("jam_audit");
 /**
  * Denoted with `Xtrue` in the paper. It's value is `jam_valid`
- * $(0.6.1 - 10.4)
+ * $(0.6.4 - 10.4)
  */
 export const JAM_VALID = new TextEncoder().encode("jam_valid");
 /**
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
- * $(0.6.1 - 10.4)
+ * $(0.6.4 - 10.4)
  */
 export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 
@@ -166,8 +176,9 @@ export const TRANSFER_MEMO_SIZE = 128;
 
 /**
  * `D` in the paper
+ * $(0.6.4 - B.3)
  */
-export const PREIMAGE_EXPIRATION = 28800;
+export const PREIMAGE_EXPIRATION = 19_200;
 
 /**
  * `WE` in the paper
@@ -180,14 +191,21 @@ export const ERASURECODE_BASIC_SIZE = 684;
 export const ERASURECODE_EXPORTED_SIZE = 6;
 
 /**
- * `WM` in the paper
+ * `WG` in the paper
  */
-export const MAX_EXPORTED_ITEMS = 2 ** 11;
+export const ERASURECODE_SEGMENT_SIZE = <4104>(
+  (ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE)
+);
 
 /**
  * `WM` in the paper
  */
-export const MAX_IMPORTED_ITEMS = 2 ** 11;
+export const MAX_EXPORTED_ITEMS = 3072;
+
+/**
+ * `WM` in the paper
+ */
+export const MAX_IMPORTED_ITEMS = 3072;
 
 /**
  * `GA`
@@ -208,5 +226,5 @@ export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
  * `GT`
  */
 export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
-// $(0.6.1 - 4.25)
+// $(0.6.4 - 4.25)
 export const Zp = 2 ** 12;

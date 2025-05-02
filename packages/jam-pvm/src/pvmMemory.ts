@@ -135,7 +135,13 @@ export class PVMMemory implements IPVMMemory {
     return r;
   }
 
-  canRead(address: u32, length: number): boolean {
+  canRead(address: u32 | bigint, length: number): boolean {
+    if (typeof address === "bigint") {
+      if (address >= 2n ** 32n) {
+        return false;
+      }
+      address = <u32>Number(address);
+    }
     return this.firstUnreadable(address, length) === undefined;
   }
 
@@ -148,7 +154,14 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  canWrite(address: u32, length: number): boolean {
+  canWrite(address: u32 | bigint, length: number): boolean {
+    if (typeof address === "bigint") {
+      if (address >= 2n ** 32n) {
+        return false;
+      }
+      address = <u32>Number(address);
+    }
+
     return this.firstUnwriteable(address, length) === undefined;
   }
 
@@ -190,6 +203,11 @@ export class PVMMemory implements IPVMMemory {
     return str;
   }
 }
+
+export const toInBoundsMemoryAddress = (rawAddr: bigint): u32 => {
+  assert(rawAddr < 2n ** 32n, "Address is out of memory bounds");
+  return <u32>Number(rawAddr);
+};
 
 export const toSafeMemoryAddress = (rawAddr: bigint | number): u32 => {
   return <u32>Number(BigInt(rawAddr) % 2n ** 32n);

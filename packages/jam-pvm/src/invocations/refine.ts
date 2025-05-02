@@ -2,7 +2,9 @@ import { HostCallExecutor } from "@/invocations/hostCall.js";
 import {
   Delta,
   ExportSegment,
+  Gas,
   Hash,
+  PVMProgramCode,
   RefinementContext,
   RegularPVMExitReason,
   ServiceIndex,
@@ -43,6 +45,7 @@ import {
   WorkPackageHashCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
+import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
 
 const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
@@ -58,7 +61,7 @@ const refine_a_Codec = createCodec<{
   ["authorizerHash", HashCodec],
 ]);
 /**
- * $(0.6.1 - B.4)
+ * $(0.6.4 - B.5)
  */
 export const refineInvocation = (
   index: number, // `i`
@@ -71,9 +74,10 @@ export const refineInvocation = (
     tau: Tau;
   },
 ): {
-  result: WorkOutput;
+  res: WorkOutput;
   // exported segments
   out: RefineContext["e"];
+  usedGas: Gas;
 } => {
   const w = workPackage.items[index];
   const lookupResult = historicalLookup(
@@ -83,11 +87,11 @@ export const refineInvocation = (
   );
   // first matching case
   if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
-    return { result: WorkError.Bad, out: [] };
+    return { res: WorkError.Bad, out: [], usedGas: <Gas>0n };
   }
   // second metching case
   if (lookupResult.length > SERVICECODE_MAX_SIZE) {
-    return { result: WorkError.Big, out: [] };
+    return { res: WorkError.Big, out: [], usedGas: <Gas>0n };
   }
 
   // encode
@@ -98,11 +102,12 @@ export const refineInvocation = (
       encodeWithCodec(WorkPackageCodec, workPackage),
     ),
     context: workPackage.context,
-    authorizerHash: workPackage.pa,
+    authorizerHash: workPackage.authorizationCodeHash,
   });
+  const { code } = serviceMetadataCodec.decode(lookupResult).value;
 
   const argOut = argumentInvocation(
-    lookupResult,
+    code,
     <u32>0, // instructionPointer
     w.refineGasLimit,
     a,
@@ -121,20 +126,29 @@ export const refineInvocation = (
       e: [],
     },
   );
-  if (argOut.ok) {
-    return { result: argOut.ok[1], out: argOut.out.e };
+  const argRes = argOut.res;
+  if (
+    argRes === RegularPVMExitReason.Panic ||
+    argRes === RegularPVMExitReason.OutOfGas
+  ) {
+    return {
+      res:
+        argOut.res === RegularPVMExitReason.Panic
+          ? WorkError.UnexpectedTermination
+          : WorkError.OutOfGas,
+      out: [],
+      usedGas: argOut.usedGas,
+    };
   }
   return {
-    result:
-      argOut.exitReason === RegularPVMExitReason.OutOfGas
-        ? WorkError.OutOfGas
-        : WorkError.UnexpectedTermination,
-    out: [],
+    res: argRes,
+    out: argOut.out.e,
+    usedGas: argOut.usedGas,
   };
 };
 
 /**
- * $(0.6.1 - B.5)
+ * $(0.6.4 - B.6)
  */
 const F_fn: (
   service: ServiceIndex,

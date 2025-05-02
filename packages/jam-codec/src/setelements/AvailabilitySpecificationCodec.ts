@@ -12,7 +12,7 @@ import {
 /**
  *
  * `S` set member codec
- * $(0.6.1 - C.22)
+ * $(0.6.4 - C.22)
  */
 export const AvailabilitySpecificationCodec =
   createCodec<AvailabilitySpecification>([

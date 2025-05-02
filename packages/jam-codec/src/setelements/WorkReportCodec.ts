@@ -1,6 +1,7 @@
 import {
   Blake2bHash,
   CoreIndex,
+  Gas,
   Hash,
   WorkPackageHash,
   WorkReport,
@@ -16,7 +17,7 @@ import {
   RefinementContextCodec,
   RefinementContextJSONCodec,
 } from "@/setelements/RefinementContextCodec.js";
-import { E_2_int } from "@/ints/E_subscr.js";
+import { E_2_int, E_sub } from "@/ints/E_subscr.js";
 import {
   AvailabilitySpecificationCodec,
   AvailabilitySpecificationJSONCodec,
@@ -27,17 +28,18 @@ import { buildKeyValueCodec } from "@/dicts/keyValue.js";
 import { createCodec } from "@/utils";
 import {
   ArrayOfJSONCodec,
+  BigIntJSONCodec,
   BufferJSONCodec,
   createJSONCodec,
   HashJSONCodec,
   JC_J,
-  JSONCodec,
   MapJSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
+import { E_bigint } from "@/ints/e";
 
 /**
- * $(0.6.1 - C.24)
+ * $(0.6.4 - C.24)
  */
 export const WorkReportCodec = createCodec<WorkReport>([
   // s
@@ -59,6 +61,7 @@ export const WorkReportCodec = createCodec<WorkReport>([
       WorkReport["results"]
     >,
   ],
+  ["authGasUsed", E_bigint<Gas>()],
 ]);
 
 export type WorkReportJSON = {
@@ -72,6 +75,7 @@ export type WorkReportJSON = {
     segment_tree_root: string;
   }>;
   results: Array<JC_J<typeof WorkResultJSONCodec>>;
+  auth_gas_used: number;
 };
 
 export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
@@ -89,8 +93,8 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
     "segment_root_lookup",
     MapJSONCodec(
       {
-        key: "hash",
-        value: "exports_root",
+        key: "work_package_hash",
+        value: "segment_tree_root",
       },
       HashJSONCodec<WorkPackageHash>(),
       HashJSONCodec(),
@@ -105,6 +109,7 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
       JC_J<typeof WorkResultJSONCodec>
     >(WorkResultJSONCodec),
   ],
+  ["authGasUsed", "auth_gas_used", BigIntJSONCodec<Gas>()],
 ]);
 
 if (import.meta.vitest) {

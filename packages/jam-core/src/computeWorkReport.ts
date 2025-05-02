@@ -3,6 +3,7 @@ import {
   CoreIndex,
   Delta,
   ExportSegment,
+  Gas,
   Hash,
   Tau,
   WorkError,
@@ -13,6 +14,7 @@ import {
   WorkReport,
   WorkResult,
   u16,
+  u32,
 } from "@tsjam/types";
 import { isAuthorized, refineInvocation } from "@tsjam/pvm";
 import {
@@ -47,28 +49,29 @@ import assert from "assert";
  * @see A_fn
  * @see C_fn
  * @see M_fn
- * $(0.6.1 - 14.11)
+ * $(0.6.4 - 14.11)
  */
 export const computeWorkReport = (
   pac: WorkPackageWithAuth,
   core: CoreIndex,
   deps: { delta: Delta; tau: Tau },
 ): WorkReport => {
-  const o = isAuthorized(pac, core);
-  if (!(o instanceof Uint8Array)) {
-    throw new Error("unexpected");
+  const bold_o = isAuthorized(pac, core);
+  const authOutput = bold_o.res;
+  if (!(authOutput instanceof Uint8Array)) {
+    throw new Error("no auth output. ??????");
   }
   const _deps = {
     ...deps,
-    authorizerOutput: o,
+    authorizerOutput: authOutput,
     overline_i: pac.items.map((wi) => S_fn(wi, bold_l)),
   };
 
   const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
-      const { result: r, out: e } = I_fn(pac, j, _deps);
-      const workResult = C_fn(pac.items[j], r);
+      const { res: r, out: e, usedGas } = I_fn(pac, j, _deps);
+      const workResult = C_fn(pac.items[j], r, usedGas);
       return { result: workResult, out: e };
     });
 
@@ -124,17 +127,18 @@ export const computeWorkReport = (
     // a
     authorizerHash: pac.pa,
     // o
-    authorizerOutput: o,
+    authorizerOutput: authOutput,
     // l
     segmentRootLookup: bold_l,
     // r
     results: bold_r,
+    authGasUsed: bold_o.usedGas,
   };
 };
 /**
  * compute availability specifier
  * @returns AvailabilitySpecification
- * $(0.6.1 - 14.16)
+ * $(0.6.4 - 14.16)
  */
 const A_fn = (
   workPackageHash: WorkPackageHash,
@@ -155,7 +159,7 @@ const A_fn = (
   return {
     segmentCount: exportedSegments.length as u16,
     workPackageHash,
-    bundleLength: toTagged(bold_b.length),
+    bundleLength: toTagged(<u32>bold_b.length),
     segmentRoot: constantDepthBinaryTree(exportedSegments),
     erasureRoot: wellBalancedBinaryMerkleRoot(
       transpose<Hash>([b_flower, s_flower]).flat(),
@@ -165,7 +169,7 @@ const A_fn = (
 
 /**
  * Paged Proof
- * $(0.6.1 - 14.10)
+ * $(0.6.4 - 14.10)
  */
 const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
@@ -194,8 +198,9 @@ const I_fn = (
     overline_i: ExportSegment[][];
   },
 ): {
-  result: WorkOutput; // `r`
+  res: WorkOutput; // `r`
   out: Uint8Array[]; // `e`
+  usedGas: Gas; // `u`
 } => {
   const w = pac.items[workIndex];
   const l = pac.items
@@ -211,10 +216,10 @@ const I_fn = (
     { delta: deps.delta, tau: deps.tau }, // deps
   );
   if (re.out.length === w.exportCount) {
-    return { result: re.result, out: re.out };
-  } else if (!(re.result instanceof Uint8Array)) {
+    return re;
+  } else if (!(re.res instanceof Uint8Array)) {
     return {
-      result: re.result,
+      res: re.res,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -222,10 +227,11 @@ const I_fn = (
             ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
           ).fill(0),
         ),
+      usedGas: re.usedGas,
     };
   } else {
     return {
-      result: WorkError.BadExports,
+      res: WorkError.BadExports,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -233,12 +239,13 @@ const I_fn = (
             ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
           ).fill(0),
         ),
+      usedGas: re.usedGas,
     };
   }
 };
 
 /**
- * $(0.6.1 - 14.12)
+ * $(0.6.4 - 14.12)
  */
 const L_fn = (
   hash: WorkItem["importSegments"][0]["root"],
@@ -255,7 +262,7 @@ const L_fn = (
 };
 
 /**
- * $(0.6.1 - 14.14)
+ * $(0.6.4 - 14.14)
  */
 const X_fn = (workItem: WorkItem) => {
   return workItem.exportedDataSegments.map(({ blobHash }) => {
@@ -263,7 +270,7 @@ const X_fn = (workItem: WorkItem) => {
   });
 };
 /**
- * $(0.6.1 - 14.14)
+ * $(0.6.4 - 14.14)
  */
 const S_fn = (
   workItem: WorkItem,
@@ -277,7 +284,7 @@ const S_fn = (
   );
 };
 /**
- * $(0.6.1 - 14.14)
+ * $(0.6.4 - 14.14)
  */
 const inner_J_fn = (
   workItem: WorkItem,
@@ -292,16 +299,31 @@ const inner_J_fn = (
 };
 
 /**
- * (179) `C` constructs WorkResult from item and output
- * $(0.6.1 - 14.8)
+ * `C` constructs WorkResult from item and output
+ * $(0.6.4 - 14.8)
  */
-export const C_fn = (workItem: WorkItem, out: WorkOutput): WorkResult => {
+export const C_fn = (
+  workItem: WorkItem,
+  out: WorkOutput,
+  usedGas: Gas,
+): WorkResult => {
   return {
     serviceIndex: workItem.service,
     codeHash: workItem.codeHash,
     payloadHash: Hashing.blake2b(workItem.payload),
     gasPrioritization: workItem.accumulateGasLimit,
     output: out,
+    refineLoad: {
+      usedGas,
+      imports: <u16>workItem.importSegments.length,
+      extrinsicCount: <u16>workItem.exportedDataSegments.length,
+      extrinsicSize: <u32>(
+        workItem.exportedDataSegments
+          .map((x) => x.length)
+          .reduce((a, b) => a + b, 0)
+      ),
+      exports: <u16>workItem.exportCount,
+    },
   };
 };
 

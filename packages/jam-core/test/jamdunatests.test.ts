@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
-  BlockCodec,
   JC_J,
   GammaSJSONCodec,
   GammaKJSONCodec,
@@ -29,13 +28,10 @@ import {
   Uint8ArrayJSONCodec,
   EntropyJSONCodec,
   BlockJSONCodec,
-  encodeWithCodec,
-  HashCodec,
-  E_4_int,
+  StatisticsJSONCodec,
 } from "@tsjam/codec";
 import {
   CodeHash,
-  Dagger,
   Delta,
   Gas,
   Hash,
@@ -49,14 +45,13 @@ import {
   u64,
   UpToSeq,
 } from "@tsjam/types";
+import { importBlock } from "@/importBlock";
+import { merkelizeState, merkleStateMap } from "@tsjam/merklization";
+import assert from "assert";
 import {
-  hextToBigInt,
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
-} from "@tsjam/utils";
-import { importBlock } from "@/importBlock";
-import { merkelizeState, merkleStateMap, stateKey } from "@tsjam/merklization";
-import assert from "assert";
+} from "@tsjam/serviceaccounts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -132,7 +127,7 @@ type DunaState = {
   rho: JC_J<typeof RHOJSONCodec>;
   tau: number;
   chi: JC_J<typeof PrivilegedServicesJSONCodec>;
-  pi: JC_J<typeof ValidatorStatistcsJSONCodec>;
+  pi: JC_J<typeof StatisticsJSONCodec>;
   theta: JC_J<typeof AccumulationQueueJSONCodec>;
   xi: JC_J<typeof AccumulationHistoryJSONCodec>;
   accounts: Array<{
@@ -273,10 +268,13 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
         "gamma_z",
         {
           fromJSON(v) {
-            return hextToBigInt<SafroleState["gamma_z"], 144>(v);
+            return Buffer.from(
+              v.substring(2),
+              "hex",
+            ) as Uint8Array as SafroleState["gamma_z"];
           },
           toJSON(v: SafroleState["gamma_z"]) {
-            return `0x${v.toString(16).padStart(144, "0")}`;
+            return `0x${Buffer.from(v).toString("hex")}`;
           },
         },
       ],
@@ -290,7 +288,7 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["rho", "rho", RHOJSONCodec],
   ["tau", "tau", NumberJSONCodec<Tau>()],
   ["privServices", "chi", PrivilegedServicesJSONCodec],
-  ["validatorStatistics", "pi", ValidatorStatistcsJSONCodec],
+  ["statistics", "pi", StatisticsJSONCodec],
   ["accumulationQueue", "theta", AccumulationQueueJSONCodec],
   ["accumulationHistory", "xi", AccumulationHistoryJSONCodec],
   ["serviceAccounts", "accounts", accountsCodec],
@@ -318,19 +316,7 @@ function checkMerkle(jamState: JamState, duna: any) {
   //  );
 }
 describe("jamduna", () => {
-  beforeEach(() => {
-    mocks.CORES = 2;
-    mocks.NUMBER_OF_VALIDATORS = 6;
-    mocks.EPOCH_LENGTH = 12;
-    mocks.MAX_TICKETS_PER_VALIDATOR = 3;
-    mocks.LOTTERY_MAX_SLOT = 10;
-    mocks.VALIDATOR_CORE_ROTATION = 4;
-    mocks.PREIMAGE_EXPIRATION = 6;
-  });
-  it("fallback", () => {
-    const kind = "tiny";
-    const set = "assurances";
-
+  const createTests = (kind: "tiny" | "full", set: string) => {
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(
         fs.readFileSync(
@@ -368,6 +354,7 @@ describe("jamduna", () => {
         ),
       );
 
+      console.log("checking pre_state");
       checkMerkle(tsJamState, dunaStateTransition.pre_state);
       const newBlock = BlockJSONCodec.fromJSON(dunaStateTransition.block);
       const [error, tsJamNewState] = importBlock(newBlock, {
@@ -376,6 +363,7 @@ describe("jamduna", () => {
       }).safeRet();
       expect(error).toBeUndefined();
 
+      console.log("checking post_state");
       checkMerkle(tsJamNewState!.state, dunaStateTransition.post_state);
 
       // check against state snapshott
@@ -387,6 +375,8 @@ describe("jamduna", () => {
       );
 
       const encodedJamState = stateCodec.toJSON(tsJamNewState!.state);
+      encodedJamState.pi.services.sort((a, b) => a.id - b.id);
+      dunaState.pi.services.sort((a: any, b: any) => a.id - b.id);
       for (const k in dunaState) {
         if (k !== "accounts") {
           // @ts-ignore
@@ -398,6 +388,7 @@ describe("jamduna", () => {
       // first sort them by id
       encodedJamState.accounts.sort((a, b) => a.id - b.id);
       dunaState.accounts.sort((a: any, b: any) => a.id - b.id);
+
       for (let i = 0; i < encodedJamState.accounts.length; i++) {
         const acc = encodedJamState.accounts[i];
         const dunaAcc = dunaState.accounts[i];
@@ -427,27 +418,40 @@ describe("jamduna", () => {
           `acc[${i}].data.lookup_meta - block:${block}`,
         ).deep.eq(dunaAcc.data.lookup_meta);
 
-        // storage is broken in duna... lets use the merklization keys instead of real keys
         for (const realKey in acc.data.storage) {
-          const k = encodeWithCodec(
-            HashCodec,
-            HashJSONCodec().fromJSON(realKey),
-          );
-          const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
-
-          const dunaKey = stateKey(
-            acc.id,
-            new Uint8Array([...pref, ...k.subarray(0, 28)]),
-          );
-          const dunaJSONKey = HashJSONCodec().toJSON(dunaKey);
+          console.log(realKey, acc.data.storage[realKey]);
           expect(
             acc.data.storage[realKey],
-            `acc[${i}].data.storage[${realKey} - ${dunaJSONKey}] - block:${block}`,
-          ).deep.eq(dunaAcc.data.storage[dunaJSONKey]);
+            `acc[${i}].data.storage[${realKey}] - block:${block}`,
+          ).deep.eq(dunaAcc.data.storage[realKey]);
         }
       }
       tsJamState = tsJamNewState!.state;
       curBlock = tsJamNewState!.block;
     }
+  };
+
+  describe("tiny", () => {
+    beforeEach(() => {
+      mocks.CORES = 2;
+      mocks.NUMBER_OF_VALIDATORS = 6;
+      mocks.EPOCH_LENGTH = 12;
+      mocks.MAX_TICKETS_PER_VALIDATOR = 3;
+      mocks.LOTTERY_MAX_SLOT = 10;
+      mocks.VALIDATOR_CORE_ROTATION = 4;
+      mocks.PREIMAGE_EXPIRATION = 6;
+    });
+    it("test fallback", () => {
+      createTests("tiny", "fallback");
+    });
+    it("test safrole", () => {
+      createTests("tiny", "safrole");
+    });
+    it("test assurances", () => {
+      createTests("tiny", "assurances");
+    });
+    it("test orderedaccumulation", () => {
+      createTests("tiny", "orderedaccumulation");
+    });
   });
 });

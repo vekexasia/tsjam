@@ -1,11 +1,11 @@
-import { Gas, Hash, ServiceIndex } from "@/genericTypes";
+import { Gas, Hash, ServiceIndex, u16, u32 } from "@/genericTypes";
 import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
  * Identified by `L` set
  *
  * @see section 11.1.4
- * $(0.6.1 - 11.6)
+ * $(0.6.4 - 11.6)
  */
 export type WorkResult = {
   /**
@@ -21,7 +21,7 @@ export type WorkResult = {
   codeHash: Hash;
 
   /**
-   * `l` - The hash of the payload (l) which produced this result
+   * `y` - The hash of the payload which produced this result
    * in the refine stage
    */
   payloadHash: Hash;
@@ -32,7 +32,34 @@ export type WorkResult = {
   gasPrioritization: Gas;
 
   /**
-   * `o` - The output of the service
+   * `d` - The output of the service
    */
   output: WorkOutput;
+
+  refineLoad: {
+    /**
+     * `u` - effective gas used when producing this wr in onRefine
+     */
+    usedGas: Gas;
+
+    /**
+     * `i` - number imported segments
+     */
+    imports: u16;
+
+    /**
+     * `x`
+     */
+    extrinsicCount: u16;
+
+    /**
+     * `z`
+     */
+    extrinsicSize: u32;
+
+    /**
+     * `e` - number of exported segments
+     */
+    exports: u16;
+  };
 };

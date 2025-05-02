@@ -8,7 +8,7 @@ import {
 } from "@/json/JsonCodec";
 
 /**
- * $(0.6.1 - C.14)
+ * $(0.6.4 - C.14)
  */
 export const codec_Et = createArrayLengthDiscriminator<TicketExtrinsics>({
   encode(

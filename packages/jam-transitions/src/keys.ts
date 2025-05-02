@@ -19,19 +19,22 @@ import { ok } from "neverthrow";
 /**
  * Phi function
  * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
- * @see $(0.6.1 - 6.14)
+ * @see $(0.6.4 - 6.14)
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper
   p_psi_o: Posterior<IDisputesState["psi_o"]>,
 ): T => {
   return validatorKeys.map((v) => {
-    if (p_psi_o.has(v.ed25519)) {
+    if (p_psi_o.has(v.ed25519.bigint)) {
       return {
-        banderSnatch: toTagged(Buffer.alloc(32).fill(0)) as BandersnatchKey,
-        ed25519: 0n as ValidatorData["ed25519"],
-        blsKey: new Uint8Array(144) as ValidatorData["blsKey"],
-        metadata: new Uint8Array(128) as ValidatorData["metadata"],
+        banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
+        ed25519: {
+          buf: new Uint8Array(32).fill(0) as ValidatorData["ed25519"]["buf"],
+          bigint: toTagged(0n),
+        },
+        blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
+        metadata: new Uint8Array(128).fill(0) as ValidatorData["metadata"],
       };
     }
     return v;
@@ -40,7 +43,7 @@ export const PHI_FN = <T extends ValidatorData[]>(
 
 /**
  * rotates all keys
- * $(0.6.1 - 4.10 / 4.11 / 6.13)
+ * $(0.6.4 - 4.9 / 4.10 / 6.13)
  */
 export const rotateKeys: STF<
   [

@@ -15,7 +15,7 @@ import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
 /**
  * Identified by `I` set
  * @see section 14.3
- * $(0.6.1 - 14.3 / 14.4)
+ * $(0.6.4 - 14.3)
  */
 export interface WorkItem {
   /**
@@ -52,7 +52,7 @@ export interface WorkItem {
    * - should be &lt; 2^11
    * Number of segments exported by the work item
    */
-  exportCount: u32;
+  exportCount: u16;
 
   /**
    * `i`

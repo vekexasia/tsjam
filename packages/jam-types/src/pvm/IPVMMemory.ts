@@ -34,12 +34,12 @@ export interface IPVMMemory {
   /**
    * wrapper for @{link #firstUnreadable}
    */
-  canRead(address: u32, length: number): boolean;
+  canRead(address: bigint | u32, length: number): boolean;
 
   /**
    * wrapper for @{link #firstUnwriteable}
    */
-  canWrite(address: u32, length: number): boolean;
+  canWrite(address: bigint | u32, length: number): boolean;
 
   /**
    * Returns the first address that is not readable - undefined if all are readable
@@ -54,7 +54,7 @@ export interface IPVMMemory {
   /**
    * Change ACL of specified region
    * being used in void, and zero refine fns
-   * $(0.6.1 - 4.24) - acl is defined there
+   * $(0.6.4 - 4.24) - acl is defined there
    */
   changeAcl(page: Page, newKind: PVMMemoryAccessKind): this;
 

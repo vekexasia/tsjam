@@ -15,7 +15,7 @@ import {
   BandersnatchKeyJSONCodec,
   BandersnatchSignatureJSONCodec,
   createJSONCodec,
-  Ed25519JSONCodec,
+  Ed25519PublicKeyJSONCodec,
   HashJSONCodec,
   JC_J,
   JSONCodec,
@@ -27,7 +27,7 @@ import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
  * it does use the UnsignedHeaderCodec and appends the block seal
- * $(0.6.1 - C.19)
+ * $(0.6.4 - C.19)
  */
 export const SignedHeaderCodec = () => {
   const unsignedHeaderCodec = UnsignedHeaderCodec();
@@ -101,8 +101,13 @@ export const SignedHeaderJSONCodec: JSONCodec<
           ArrayOfJSONCodec<
             NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"],
             NonNullable<SignedJamHeader["epochMarker"]>["validatorKeys"][0],
-            string
-          >(BandersnatchKeyJSONCodec),
+            { bandersnatch: string; ed25519: string }
+          >(
+            createJSONCodec([
+              ["bandersnatch", "bandersnatch", BandersnatchKeyJSONCodec],
+              ["ed25519", "ed25519", Ed25519PublicKeyJSONCodec],
+            ]),
+          ),
         ],
       ]),
     ),
@@ -114,7 +119,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
       NULLORCodec(ArrayOfJSONCodec(TicketIdentifierJSONCodec))
     ),
   ],
-  ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519JSONCodec)],
+  ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519PublicKeyJSONCodec)],
   ["blockAuthorKeyIndex", "author_index", NumberJSONCodec<ValidatorIndex>()],
   ["entropySignature", "entropy_source", BandersnatchSignatureJSONCodec],
   ["blockSeal", "seal", BandersnatchSignatureJSONCodec],

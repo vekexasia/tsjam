@@ -32,7 +32,7 @@ export const deltaToPosterior: STF<
   DeltaToPosteriorError,
   Posterior<Delta>
 > = (input, curState) => {
-  // $(0.6.1 - 12.29)
+  // $(0.6.4 - 12.35)
   for (let i = 1; i < input.EP_Extrinsic.length; i++) {
     const prev = input.EP_Extrinsic[i - 1];
     if (prev.serviceIndex > input.EP_Extrinsic[i].serviceIndex) {
@@ -49,7 +49,7 @@ export const deltaToPosterior: STF<
     // compare now the two preimages
   }
 
-  // $(0.6.1 - 12.30)
+  // $(0.6.4 - 12.36)
   const R_fn = (d: Delta, s: ServiceIndex, h: Hash, l: number) => {
     const alreadyProvided = new Set(d.get(s)!.preimage_p.keys()).has(h);
     if (alreadyProvided) {
@@ -67,7 +67,7 @@ export const deltaToPosterior: STF<
     return true;
   };
 
-  // $(0.6.1 - 12.31) data must be solicited by a service but not yet provided
+  // $(0.6.4 - 12.37) data must be solicited by a service but not yet provided
   for (const { serviceIndex, preimage } of input.EP_Extrinsic) {
     if (
       !R_fn(
@@ -81,7 +81,7 @@ export const deltaToPosterior: STF<
     }
   }
 
-  // $(0.6.1 - 12.32)
+  // $(0.6.4 - 12.38)
   const P = input.EP_Extrinsic.filter((ep) =>
     R_fn(
       curState,
@@ -92,7 +92,7 @@ export const deltaToPosterior: STF<
   );
 
   const result = new Map(curState) as Posterior<Delta>;
-  // $(0.6.1 - 12.33)
+  // $(0.6.4 - 12.39)
   for (const { serviceIndex, preimage } of P) {
     const x = result.get(serviceIndex);
 

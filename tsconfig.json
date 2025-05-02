@@ -54,6 +54,7 @@
       "@tsjam/transitions": ["../jam-transitions/dist/types/index.d.ts"],
       "@tsjam/types": ["../jam-types/dist/types/index.d.ts"],
       "@tsjam/utils": ["../jam-utils/dist/types/index.d.ts"],
+      "@tsjam/serviceaccounts": ["../jam-serviceaccounts/dist/types/index.d.ts"],
     }
 
   },

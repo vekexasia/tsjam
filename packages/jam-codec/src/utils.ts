@@ -32,7 +32,18 @@ export const createCodec = <T extends object>(
     encode(value, bytes) {
       let offset = 0;
       for (const [key, codec] of itemsCodec) {
-        offset += codec.encode(value[key], bytes.subarray(offset));
+        try {
+          offset += codec.encode(value[key], bytes.subarray(offset));
+          if (isNaN(offset)) {
+            console.error("diocan", key);
+          }
+        } catch (e) {
+          console.error(
+            `Error encoding key: ${key as string}`,
+            e as unknown as any,
+          );
+          throw e;
+        }
       }
       return offset;
     },

@@ -17,7 +17,7 @@ import {
 } from "@tsjam/types";
 import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
 
-// $(0.6.1 - C.2)
+// $(0.6.4 - C.2)
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {
     return { value: bytes, readBytes: bytes.length };
@@ -51,10 +51,7 @@ export const fixedSizeIdentityCodec = <
   };
 };
 
-export const GenericBytesBigIntCodec = <
-  K extends BigIntBytes<T>,
-  T extends number,
->(
+const genericBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
   num: T,
 ): JamCodec<K> => ({
   decode(bytes: Uint8Array): { value: K; readBytes: number } {
@@ -79,7 +76,7 @@ export const GenericBytesBigIntCodec = <
 });
 
 export const create32BCodec = <T extends BigIntBytes<32>>() =>
-  GenericBytesBigIntCodec<T, 32>(32);
+  genericBytesBigIntCodec<T, 32>(32);
 
 export const HashCodec = create32BCodec<Hash>();
 export const CodeHashCodec = create32BCodec<CodeHash>();
@@ -87,21 +84,48 @@ export const WorkPackageHashCodec = create32BCodec<WorkPackageHash>();
 export const Blake2bHashCodec = create32BCodec<Blake2bHash>();
 export const OpaqueHashCodec = create32BCodec<OpaqueHash>();
 export const MerkleTreeRootCodec = create32BCodec<MerkleTreeRoot>();
-export const Ed25519PubkeyCodec = create32BCodec<ED25519PublicKey>();
+const Ed25519PubkeyBufCodec = fixedSizeIdentityCodec<
+  ED25519PublicKey["buf"],
+  32
+>(32);
+export const Ed25519PubkeyBigIntCodec = genericBytesBigIntCodec<
+  ED25519PublicKey["bigint"],
+  32
+>(32);
+export const Ed25519PubkeyCodec: JamCodec<ED25519PublicKey> = {
+  encode(value, bytes) {
+    return Ed25519PubkeyBufCodec.encode(value.buf, bytes.subarray(0, 32));
+  },
+  decode(bytes) {
+    const { value: buf, readBytes } = Ed25519PubkeyBufCodec.decode(
+      bytes.subarray(0, 32),
+    );
+    return {
+      value: {
+        buf,
+        bigint: Ed25519PubkeyBigIntCodec.decode(bytes.subarray(0, 32)).value,
+      },
+      readBytes,
+    };
+  },
+  encodedSize() {
+    return 32;
+  },
+};
 
 export const BandersnatchCodec = fixedSizeIdentityCodec<BandersnatchKey, 32>(
   32,
 );
-export const BandersnatchSignatureCodec = GenericBytesBigIntCodec<
+export const BandersnatchSignatureCodec = fixedSizeIdentityCodec<
   BandersnatchSignature,
   96
 >(96);
-export const Ed25519SignatureCodec = GenericBytesBigIntCodec<
+export const Ed25519SignatureCodec = fixedSizeIdentityCodec<
   ED25519Signature,
   64
 >(64);
 
-export const BandersnatchRingRootCodec = GenericBytesBigIntCodec<
+export const BandersnatchRingRootCodec = fixedSizeIdentityCodec<
   BandersnatchRingRoot,
   144
 >(144);

@@ -14,7 +14,7 @@ import assert from "node:assert";
 export const NoArgIxDecoder = () => null;
 export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;
 
-// $(0.6.1 - A.19)
+// $(0.6.4 - A.20)
 export const OneImmIxDecoder = (bytes: Uint8Array) => {
   const lx = Math.min(4, bytes.length);
   const vX = readVarIntFromBuffer(bytes, lx as u8);
@@ -24,7 +24,7 @@ export const OneImmIxDecoder = (bytes: Uint8Array) => {
 
 export type OneImmArgs = ReturnType<typeof OneImmIxDecoder>;
 
-// $(0.6.1 - A.20)
+// $(0.6.4 - A.21)
 export const OneRegOneExtImmArgsIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -44,7 +44,7 @@ export type OneRegOneExtImmArgs = ReturnType<
 /**
  * decode the full instruction from the bytes.
  * the byte array is chunked to include only the bytes of the instruction
- * $(0.6.1 - A.21)
+ * $(0.6.4 - A.22)
  */
 export const TwoImmIxDecoder = (bytes: Uint8Array) => {
   let offset = 0;
@@ -67,7 +67,7 @@ export const TwoImmIxDecoder = (bytes: Uint8Array) => {
 
 export type TwoImmArgs = ReturnType<typeof TwoImmIxDecoder>;
 
-// $(0.6.1 - A.22)
+// $(0.6.4 - A.23)
 export const OneOffsetIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -84,7 +84,7 @@ export const OneOffsetIxDecoder = (
 
 export type OneOffsetArgs = ReturnType<typeof OneOffsetIxDecoder>;
 
-// $(0.6.1 - A.23)
+// $(0.6.4 - A.24)
 export const OneRegOneImmIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -98,7 +98,7 @@ export const OneRegOneImmIxDecoder = (
 
 export type OneRegOneImmArgs = ReturnType<typeof OneRegOneImmIxDecoder>;
 
-// $(0.6.1 - A.24)
+// $(0.6.4 - A.25)
 export const OneRegTwoImmIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -115,7 +115,7 @@ export const OneRegTwoImmIxDecoder = (
 
 export type OneRegTwoImmArgs = ReturnType<typeof OneRegTwoImmIxDecoder>;
 //
-// $(0.6.1 - A.25
+// $(0.6.4 - A.26)
 export const OneRegOneIMMOneOffsetIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -144,7 +144,7 @@ export type OneRegOneIMMOneOffsetArgs = ReturnType<
   typeof OneRegOneIMMOneOffsetIxDecoder
 >;
 
-// $(0.6.1 - A.26)
+// $(0.6.4 - A.27)
 export const TwoRegIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -157,7 +157,7 @@ export const TwoRegIxDecoder = (
 
 export type TwoRegArgs = ReturnType<typeof TwoRegIxDecoder>;
 
-// $(0.6.1 - A.27)
+// $(0.6.4 - A.28)
 export const TwoRegOneImmIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -178,7 +178,7 @@ export const TwoRegOneImmIxDecoder = (
 
 export type TwoRegOneImmArgs = ReturnType<typeof TwoRegOneImmIxDecoder>;
 
-// $(0.6.1 - A.28)
+// $(0.6.4 - A.29)
 export const TwoRegOneOffsetIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -198,7 +198,7 @@ export const TwoRegOneOffsetIxDecoder = (
 
 export type TwoRegOneOffsetArgs = ReturnType<typeof TwoRegOneOffsetIxDecoder>;
 
-// $(0.6.1 - A.29)
+// $(0.6.4 - A.30)
 export const TwoRegTwoImmIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
@@ -228,7 +228,7 @@ export const TwoRegTwoImmIxDecoder = (
 
 export type TwoRegTwoImmIxArgs = ReturnType<typeof TwoRegTwoImmIxDecoder>;
 
-// $(0.6.1 - A.30)
+// $(0.6.4 - A.31)
 export const ThreeRegIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,

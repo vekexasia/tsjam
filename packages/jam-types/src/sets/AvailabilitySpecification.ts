@@ -1,10 +1,10 @@
-import { Hash, Tagged, WorkPackageHash, u16 } from "@/genericTypes";
+import { Hash, Tagged, WorkPackageHash, u16, u32 } from "@/genericTypes";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 
 /**
  * identified by `S` set
  * @see section 11.1.3
- * $(0.6.1 - 11.5)
+ * $(0.6.4 - 11.5)
  */
 export type AvailabilitySpecification = {
   /**
@@ -16,7 +16,7 @@ export type AvailabilitySpecification = {
    * @see section 14.4.1
    */
   bundleLength: Tagged<
-    number,
+    u32,
     "l",
     { maxValue: typeof MAXIMUM_AGE_LOOKUP_ANCHOR }
   >;
@@ -38,6 +38,7 @@ export type AvailabilitySpecification = {
   segmentRoot: Hash;
 
   /**
+   * `n`
    * Exported segment count
    */
   segmentCount: u16;

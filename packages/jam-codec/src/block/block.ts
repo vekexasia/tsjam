@@ -13,7 +13,7 @@ import { createJSONCodec, JC_J, JSONCodec } from "@/json/JsonCodec";
 
 /**
  * Codec for block extrinsic. used in both block serialiation and computing `Hx`
- * $(0.6.1 - C.13)
+ * $(0.6.4 - C.13)
  */
 export const BlockCodec = () =>
   createCodec<JamBlock>([

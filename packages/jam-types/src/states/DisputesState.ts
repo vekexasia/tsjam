@@ -2,7 +2,7 @@ import { ED25519PublicKey, Hash } from "@/genericTypes";
 
 /**
  * Section 10 of graypaper
- * $(0.6.1 - 10.1)
+ * $(0.6.4 - 10.1)
  */
 export interface IDisputesState {
   /**
@@ -26,5 +26,5 @@ export interface IDisputesState {
    * set of validator keys found to have misjudged a work report
    * aka: they voted for a work report to be valid when it was not (in psi_b) or vice versa
    */
-  psi_o: Set<ED25519PublicKey>;
+  psi_o: Set<ED25519PublicKey["bigint"]>;
 }

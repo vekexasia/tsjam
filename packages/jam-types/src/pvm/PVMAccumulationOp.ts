@@ -1,28 +1,38 @@
 import { WorkOutput } from "@/sets/WorkOutput.js";
-import { Hash } from "@/genericTypes.js";
+import { Hash, WorkPackageHash } from "@/genericTypes.js";
 
 /**
  * `O` set in graypaper
- * $(0.6.1 - 12.18)
+ * $(0.6.4 - 12.18)
  */
 export type PVMAccumulationOp = {
   /**
-   * `o`
+   * `h`
    */
-  output: WorkOutput;
+  workPackageHash: WorkPackageHash;
 
   /**
-   * `l`
+   * `e`
    */
-  payloadHash: Hash;
-
-  /**
-   * `k`
-   */
-  packageHash: Hash;
+  segmentRoot: Hash;
 
   /**
    * `a`
    */
-  authorizationOutput: Uint8Array;
+  authorizerHash: Hash;
+
+  /**
+   * `o` - comes from Workreport
+   */
+  authorizerOutput: Uint8Array;
+
+  /**
+   * `y`
+   */
+  payloadHash: Hash;
+
+  /**
+   * `d`
+   */
+  output: WorkOutput;
 };

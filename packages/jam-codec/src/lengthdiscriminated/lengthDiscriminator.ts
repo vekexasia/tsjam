@@ -77,6 +77,7 @@ export const createLengthDiscriminatedIdentity = <
 
 /**
  * Utility to encode/decode a byteArray with a length discriminator
+ * TODO: rename to ....Codec
  */
 export const LengthDiscrimantedIdentity =
   createLengthDiscriminatedIdentity<Uint8Array>();

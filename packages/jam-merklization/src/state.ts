@@ -22,12 +22,13 @@ import {
   createArrayLengthDiscriminator,
   createSetCodec,
   encodeWithCodec,
-  ValidatorStatisticsCodec,
+  StatisticsCodec,
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
   RecentHistoryCodec,
   RHOCodec,
   LengthDiscriminator,
+  Ed25519PubkeyBigIntCodec,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -41,21 +42,19 @@ import {
   StateRootHash,
   u32,
 } from "@tsjam/types";
-import {
-  bigintToBytes,
-  bytesToBigInt,
-  isFallbackMode,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/utils";
+import { bigintToBytes, bytesToBigInt, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 /**
  * Merkelize state
  * `Mσ`
- * $(0.6.1 - D.5)
+ * $(0.6.4 - D.5)
  */
 export const merkelizeState = (state: JamState): StateRootHash => {
   const stateMap = merkleStateMap(state);
@@ -94,7 +93,7 @@ const bits_inv = (bits: bit[]): Uint8Array => {
 };
 */
 
-// $(0.6.1 - D.3)
+// $(0.6.4 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
@@ -105,7 +104,7 @@ const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   ]) as ByteArrayOfLength<64>;
 };
 
-// $(0.6.1 - D.4) | implementation avoids using bits()
+// $(0.6.4 - D.4) | implementation avoids using bits()
 // following my
 const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   if (v.length <= 32) {
@@ -127,7 +126,7 @@ const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
   }
 };
 
-// $(0.6.1 - D.6)
+// $(0.6.4 - D.6)
 const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
@@ -151,7 +150,7 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
 
 /**
  * `C` in graypaper
- * $(0.6.1 - D.1)
+ * $(0.6.4 - D.1)
  */
 export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
   if (_s instanceof Uint8Array) {
@@ -194,36 +193,36 @@ export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
 
 /*
  * `T(σ)`
- * $(0.6.1 - D.2)
+ * $(0.6.4 - D.2)
  */
 export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
   const toRet = new Map<Hash, Uint8Array>();
-  //  const logState = (n: string, k: Hash) => {
-  //    console.log(
-  //      n,
-  //      HashJSONCodec().toJSON(k),
-  //      Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
-  //    );
-  //  };
+  const logState = (n: string, k: Hash) => {
+    // console.log(
+    //   n,
+    //   HashJSONCodec().toJSON(k),
+    //   Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
+    // );
+  };
 
   toRet.set(
     stateKey(1),
     encodeWithCodec(AuthorizerPoolCodec(), state.authPool),
   );
-  //  logState("authPool|c1", C_fn(1));
+  // logState("authPool|c1", stateKey(1));
 
   toRet.set(
     stateKey(2),
     encodeWithCodec(AuthorizerQueueCodec(), state.authQueue),
   );
-  //  logState("authQueue|c2", C_fn(2));
+  // logState("authQueue|c2", stateKey(2));
 
   // β - recentHistory
   toRet.set(
     stateKey(3),
     encodeWithCodec(RecentHistoryCodec, state.recentHistory),
   );
-  //  logState("recentHistory|c3", C_fn(3));
+  // logState("recentHistory|c3", stateKey(3));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
     EPOCH_LENGTH,
@@ -253,6 +252,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ),
     ]),
   );
+  logState("4|c4", stateKey(4));
 
   // 5
   toRet.set(
@@ -271,11 +271,12 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
         [...state.disputes.psi_w.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
       ),
       ...encodeWithCodec(
-        createArrayLengthDiscriminator(Ed25519PubkeyCodec),
-        [...state.disputes.psi_o.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
+        createArrayLengthDiscriminator(Ed25519PubkeyBigIntCodec),
+        [...state.disputes.psi_o.values()].sort((a, b) => Number(a - b)),
       ),
     ]),
   );
+  // logState("5|c5", stateKey(5));
 
   // 6
   toRet.set(
@@ -287,6 +288,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ...encodeWithCodec(HashCodec, state.entropy[3]),
     ]),
   );
+  // logState("c6", stateKey(6));
 
   // 7
   toRet.set(
@@ -296,6 +298,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.iota,
     ),
   );
+  // logState("c7", stateKey(7));
 
   // 8
   toRet.set(
@@ -305,6 +308,7 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.kappa,
     ),
   );
+  logState("8", stateKey(8));
 
   // 9
   toRet.set(
@@ -315,26 +319,31 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
     ),
   );
 
+  logState("9", stateKey(9));
   // 10
   toRet.set(stateKey(10), encodeWithCodec(RHOCodec(), state.rho));
 
+  logState("rho|c10", stateKey(10));
   // 11
   toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
+  logState("c11", stateKey(11));
 
   // 12
   toRet.set(
     stateKey(12),
     encodeWithCodec(PrivilegedServicesCodec, state.privServices),
   );
+  logState("c12", stateKey(12));
 
   // 13
   toRet.set(
     stateKey(13),
     encodeWithCodec(
-      ValidatorStatisticsCodec(NUMBER_OF_VALIDATORS),
-      state.validatorStatistics,
+      StatisticsCodec(NUMBER_OF_VALIDATORS, CORES),
+      state.statistics,
     ),
   );
+  logState("c13", stateKey(13));
 
   // 14
   const sortedDepsQueue = state.accumulationQueue.map((a) =>

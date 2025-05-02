@@ -24,7 +24,7 @@ import { createCodec } from "@/utils";
 
 /**
  * `Eu` codec
- * $(0.6.1 - C.20)
+ * $(0.6.4 - C.20)
  */
 export const UnsignedHeaderCodec = () =>
   createCodec<JamHeader>([
@@ -42,7 +42,13 @@ export const UnsignedHeaderCodec = () =>
             "validatorKeys",
             createSequenceCodec<
               NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
-            >(NUMBER_OF_VALIDATORS, BandersnatchCodec),
+            >(
+              NUMBER_OF_VALIDATORS,
+              createCodec([
+                ["bandersnatch", BandersnatchCodec],
+                ["ed25519", Ed25519PubkeyCodec],
+              ]),
+            ),
           ],
         ]),
       ),

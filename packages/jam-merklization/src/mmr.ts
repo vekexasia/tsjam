@@ -4,13 +4,13 @@ import {
   JamCodec,
   OptBytesBigIntCodec,
   createArrayLengthDiscriminator,
+  encodeWithCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * section E.2 `A`
- * $(0.6.1 - E.8)
+ * $(0.6.4 - E.8)
  * @param peeks - the current MMR
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
@@ -50,16 +50,16 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 };
 
 /**
- * $(0.6.1 - E.10)
+ * $(0.6.4 - E.10)
  */
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   const peeks = _peeks
     .filter((a) => typeof a !== "undefined")
-    .map((a) => bigintToBytes(a, 32));
+    .map((a) => <ByteArrayOfLength<32>>encodeWithCodec(HashCodec, a));
   if (peeks.length === 0) {
     return <Hash>0n;
   }
-  return bytesToBigInt<32, Hash>(innerMMRSuperPeak(peeks));
+  return HashCodec.decode(innerMMRSuperPeak(peeks)).value;
 };
 
 const PEAK = new TextEncoder().encode("peak");
@@ -67,7 +67,7 @@ const innerMMRSuperPeak = (
   peeks: ByteArrayOfLength<32>[],
 ): ByteArrayOfLength<32> => {
   if (peeks.length === 0) {
-    return bigintToBytes(<Hash>0n, 32);
+    return <ByteArrayOfLength<32>>encodeWithCodec(HashCodec, <Hash>0n);
   }
   if (peeks.length === 1) {
     return peeks[0];
@@ -82,7 +82,7 @@ const innerMMRSuperPeak = (
 };
 
 /**
- * $(0.6.1 - E.9)
+ * $(0.6.4 - E.9)
  */
 export const MMRCodec: JamCodec<Array<Hash | undefined>> =
   createArrayLengthDiscriminator(OptBytesBigIntCodec<Hash, 32>(HashCodec));

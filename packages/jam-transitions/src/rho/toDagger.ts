@@ -14,7 +14,7 @@ export enum RHO_2_DaggerError {
 }
 /**
  * Input should be the newly added hashes to phi_b and phi_w
- * $(0.6.1 - 10.15)
+ * $(0.6.4 - 10.15)
  */
 export const RHO_2_Dagger: STF<
   RHO,

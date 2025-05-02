@@ -23,25 +23,25 @@ export type ByteArrayOfLength<T extends number> = Tagged<
 >;
 
 /**
- * $(0.6.1 - 4.21)
+ * $(0.6.4 - 4.21)
  * Balance is a 64-bit unsigned integer
  */
 export type Balance = Tagged<u64, "balance">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Gas is a 64-bit unsigned integer
  */
 export type Gas = Tagged<u64, "gas">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Z_Gas is a 64-bit signed integer
  */
 export type Z_Gas = Tagged<i64, "gas">;
 
 /**
- * $(0.6.1 - 4.23)
+ * $(0.6.4 - 4.23)
  * Defines the value held by a register
  * RegisterValue is a 64-bit unsigned integer
  */
@@ -56,7 +56,6 @@ export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
 /**
  * Both public and private keys are 32 bytes long
  */
-export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type Hash = Tagged<BigIntBytes<32>, "Hash">;
 export type AuthorizerHash = Tagged<Hash, "AuthorizerHash">;
 export type CodeHash = Tagged<Hash, "CodeHash">;
@@ -71,15 +70,25 @@ export type WorkPackageHash = Tagged<Blake2bHash, "WorkPackageHash">;
  *  `H⊞`
  */
 export type ExportingWorkPackageHash = { value: WorkPackageHash };
-export type ED25519PublicKey = Tagged<BigIntBytes<32>, "ED25519PublicKey">;
-export type ED25519PrivateKey = Tagged<BigIntBytes<64>, "ED25519PrivateKey">;
-export type ED25519Signature = Tagged<BigIntBytes<64>, "ED25519Signature">;
+export type ED25519PublicKey = {
+  buf: Tagged<ByteArrayOfLength<32>, "ED25519PublicKey">;
+  bigint: Tagged<BigIntBytes<32>, "ED25519PublicKeyBigInt">;
+};
+export type ED25519PrivateKey = Tagged<
+  ByteArrayOfLength<64>,
+  "ED25519PrivateKey"
+>;
+export type ED25519Signature = Tagged<
+  ByteArrayOfLength<64>,
+  "ED25519Signature"
+>;
+export type BandersnatchKey = Tagged<ByteArrayOfLength<32>, "BandersnatchKey">;
 export type BandersnatchSignature = Tagged<
-  BigIntBytes<96>,
+  ByteArrayOfLength<96>,
   "BandersnatchSignature"
 >;
 export type BandersnatchRingRoot = Tagged<
-  BigIntBytes<144>,
+  ByteArrayOfLength<144>,
   "BandersnatchRingRoot"
 >;
 export type BLSKey = Tagged<ByteArrayOfLength<144>, "BLSKey">;
@@ -141,7 +150,7 @@ export type ValidatorIndex = Tagged<
 >;
 
 /**
- * $(0.6.1 - 9.1)
+ * $(0.6.4 - 9.1)
  * unsigned 32-bit integer
  */
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;

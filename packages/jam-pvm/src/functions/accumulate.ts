@@ -26,17 +26,16 @@ import {
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
 import { E_4_int, E_8, HashCodec, ValidatorDataCodec } from "@tsjam/codec";
-import {
-  bytesToBigInt,
-  serviceAccountGasThreshold,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-  toTagged,
-} from "@tsjam/utils";
+import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 import { toSafeMemoryAddress } from "@/pvmMemory";
+import {
+  serviceAccountGasThreshold,
+  serviceAccountItemInStorage,
+  serviceAccountTotalOctets,
+} from "@tsjam/serviceaccounts";
 
 /**
  * `ΩB`
@@ -193,7 +192,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
     execute(context, x) {
       const [o, l, g, m] = context.registers.slice(7);
 
-      if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 32) || l >= 2 ** 32) {
         return [IxMod.w7(HostCallResult.OOB)];
       }
       const c: ServiceAccount["codeHash"] = bytesToBigInt(

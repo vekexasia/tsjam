@@ -4,7 +4,7 @@ import assert from "node:assert";
  * Z(n, a) = a if a &lt; 2^(8n-1) else a - 2^(8n)
  * @param n - the number of bytes
  * @param a - the number to convert
- * $(0.6.1 - A.9)
+ * $(0.6.4 - A.10)
  */
 export const Z = <T extends bigint>(n: number, a: bigint) => {
   assert(n >= 0, "n in Z(n) must be positive aaaaa");
@@ -22,7 +22,7 @@ export const Z = <T extends bigint>(n: number, a: bigint) => {
  * Z_inv(n, a) = (2^(8n) + a) mod 2^(8n)
  * @param n - the number of bytes
  * @param a - the number to convert
- * $(0.6.1 - A.10)
+ * $(0.6.4 - A.11)
  */
 export const Z_inv = <T extends bigint>(n: number, a: bigint) => {
   assert(n >= 0, "n in Z_inv(n) must be positive");

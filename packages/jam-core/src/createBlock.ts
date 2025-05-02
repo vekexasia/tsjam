@@ -114,7 +114,7 @@ export const createBlock = (
     timeSlotIndex: p_tau,
     priorStateRoot: merkelizeState(curState) as StateRootHash,
     blockAuthorKeyIndex: p_kappa.findIndex(
-      (a) => a.ed25519 === data.validator.ed25519,
+      (a) => a.ed25519.bigint === data.validator.ed25519.bigint,
     ) as ValidatorIndex,
     entropySignature: Bandersnatch.sign(
       data.bandersnatchPrivateKey,

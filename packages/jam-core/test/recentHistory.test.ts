@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 
-import { hextToBigInt } from "@tsjam/utils";
-import { EG_Extrinsic } from "@tsjam/types";
+import {
+  EG_Extrinsic,
+  HeaderHash,
+  MerkleTreeRoot,
+  StateRootHash,
+  WorkPackageHash,
+} from "@tsjam/types";
 import {
   recentHistoryToDagger,
   recentHistoryToPosterior,
 } from "@tsjam/transitions";
-import { RecentHistoryJSONCodec } from "@tsjam/codec";
+import { HashJSONCodec, RecentHistoryJSONCodec } from "@tsjam/codec";
 
 const getUTF8FixtureFile = (filename: string): string => {
   return fs.readFileSync(
@@ -23,20 +28,26 @@ const buildTest = (name: string) => {
   const test = JSON.parse(getUTF8FixtureFile(name));
   const curState = RecentHistoryJSONCodec.fromJSON(test.pre_state.beta);
   const [, dagger] = recentHistoryToDagger(
-    { hr: hextToBigInt(test.input.parent_state_root) },
+    {
+      hr: HashJSONCodec<StateRootHash>().fromJSON(test.input.parent_state_root),
+    },
     curState,
   ).safeRet();
   const [, posterior] = recentHistoryToPosterior(
     {
-      headerHash: hextToBigInt(test.input.header_hash),
-      accumulateRoot: hextToBigInt(test.input.accumulate_root),
+      headerHash: HashJSONCodec<HeaderHash>().fromJSON(test.input.header_hash),
+      accumulateRoot: HashJSONCodec<MerkleTreeRoot>().fromJSON(
+        test.input.accumulate_root,
+      ),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       eg: <EG_Extrinsic>test.input.work_packages.map((wp: any) => {
         return {
           workReport: {
             workPackageSpecification: {
-              workPackageHash: hextToBigInt(wp.hash),
-              segmentRoot: hextToBigInt(wp.exports_root),
+              workPackageHash: HashJSONCodec<WorkPackageHash>().fromJSON(
+                wp.hash,
+              ),
+              segmentRoot: HashJSONCodec().fromJSON(wp.exports_root),
             },
           },
         };

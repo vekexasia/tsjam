@@ -243,7 +243,9 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     p_kappa: decoded.preState.p_kappa,
     p_lambda: decoded.preState.p_lambda,
     p_entropy: decoded.preState.p_entropy,
-    p_psi_o: toPosterior(new Set(decoded.preState.p_psi_o)),
+    p_psi_o: toPosterior(
+      new Set(decoded.preState.p_psi_o.map((a) => a.bigint)),
+    ),
     recentHistory: decoded.preState.blockHistory,
     d_recentHistory: decoded.preState.blockHistory as Dagger<RecentHistory>,
     authPool: decoded.preState.authPool,

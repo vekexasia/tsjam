@@ -3,18 +3,17 @@ import {
   IPVMMemory,
   Page,
   PVMMemoryAccessKind,
-  PVMProgram,
+  PVMProgramCode,
   RegisterValue,
   SeqOfLength,
   u16,
   u24,
   u32,
 } from "@tsjam/types";
-import { E_sub_int, PVMProgramCodec, E_4_int, createCodec } from "@tsjam/codec";
-import { ParsedProgram } from "@/parseProgram.js";
+import { E_sub_int, E_4_int, createCodec } from "@tsjam/codec";
 import { MemoryContent, PVMHeap, PVMMemory } from "@/pvmMemory.js";
 
-// constants defined in $(0.6.1 - A.35)
+// constants defined in $(0.6.4 - A.38)
 const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
@@ -32,7 +31,7 @@ const owzsCodec = createCodec<{
 
 /**
  * `Y` fn in the graypaper
- * $(0.6.1 - A.33)
+ * $(0.6.4 - A.36)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -42,12 +41,11 @@ export const programInitialization = (
 ):
   | undefined
   | {
-      program: PVMProgram;
-      parsed: ParsedProgram;
+      programCode: PVMProgramCode;
       memory: IPVMMemory;
       registers: SeqOfLength<RegisterValue, 13>;
     } => {
-  // $(0.6.1 - A.32) | start
+  // $(0.6.4 - A.35) | start
   const {
     readBytes: initOffset,
     value: {
@@ -75,15 +73,14 @@ export const programInitialization = (
   offset += 4;
 
   // c
-  const programCode = encodedProgram.subarray(
-    offset,
-    offset + programCodeLength.value,
+  const programCode = <PVMProgramCode>(
+    encodedProgram.subarray(offset, offset + programCodeLength.value)
   );
   offset += programCodeLength.value;
 
-  // $(0.6.1 - A.32) | end
+  // $(0.6.4 - A.35) | end
 
-  // $(0.6.1 - A.37)
+  // $(0.6.4 - A.40)
   if (
     5 * Zz +
       Z_Fn(roDataLength) +
@@ -95,7 +92,7 @@ export const programInitialization = (
     return undefined;
   }
 
-  // registers $(0.6.1 - A.36)
+  // registers $(0.6.4 - A.39)
   const registers = [
     2n ** 32n - 2n ** 16n,
     2n ** 32n - 2n * BigInt(Zz) - BigInt(Zi),
@@ -117,7 +114,7 @@ export const programInitialization = (
     end: <u32>0,
     start: <u32>0,
   };
-  // memory $(0.6.1 - A.36)
+  // memory $(0.6.4 - A.39)
   const acl: Map<Page, PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write> =
     new Map();
   const mem: MemoryContent[] = [];
@@ -187,12 +184,8 @@ export const programInitialization = (
     });
   }
 
-  const program = PVMProgramCodec.decode(programCode).value;
-  const parsedProgram = ParsedProgram.parse(program);
-
   return {
-    program,
-    parsed: parsedProgram,
+    programCode,
     memory: new PVMMemory(
       mem.filter((a) => a.content.length > 0), // we filter empty memory content cause it won't have acl
       acl,
@@ -202,12 +195,12 @@ export const programInitialization = (
   };
 };
 
-// $(0.6.1 - A.36)
+// $(0.6.4 - A.39)
 const P_Fn = (x: number | bigint) => {
   return Zp * Math.ceil(Number(x) / Zp);
 };
 
-// $(0.6.1 - A.36)
+// $(0.6.4 - A.39)
 const Z_Fn = (x: number | bigint) => {
   return Zz * Math.ceil(Number(x) / Zz);
 };

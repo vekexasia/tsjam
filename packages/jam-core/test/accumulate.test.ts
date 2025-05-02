@@ -173,7 +173,8 @@ const buildTest = (filename: string, size: string) => {
   // this will have w7 set to the length of value (0) and make the pvm finish with Halt at 4787
   // instead of trap at 7464
   // this is only for `process_one_immediate_report-1` test
-  preState.accounts
+  /*
+   preState.accounts
     .get(<ServiceIndex>1729)!
     .storage.set(
       <Hash>(
@@ -181,7 +182,8 @@ const buildTest = (filename: string, size: string) => {
       ),
       Buffer.alloc(0),
     );
-  preState.accounts.get(<ServiceIndex>1729)!.preimage_l = new Map();
+  */
+  // preState.accounts.get(<ServiceIndex>1729)!.preimage_l = new Map();
 
   const [, res] = accumulateReports(input.reports, {
     p_tau: input.p_tau,
@@ -195,19 +197,13 @@ const buildTest = (filename: string, size: string) => {
     authQueue: testSTate.authQueue,
   }).safeRet();
 
-  console.log(
-    "Res",
-    [...res.d_delta.get(<ServiceIndex>1729)!.storage.values()].map((a) =>
-      Buffer.from(a).toString("ascii"),
-    ),
-  );
-
   expect(res.p_accumulationQueue).deep.equal(postState.accQueue);
   expect(res.p_accumulationHistory).deep.equal(postState.accHistory);
   expect(res.accumulateRoot).toEqual(output.ok);
+  // TODO: compare other post states
 };
 describe("accumulate", () => {
-  const set: "full" | "tiny" = "tiny";
+  const set: "full" | "tiny" = "full";
   beforeEach(() => {
     if (set === <string>"tiny") {
       mocks.CORES = 2;
@@ -216,58 +212,50 @@ describe("accumulate", () => {
       mocks.VALIDATOR_CORE_ROTATION = 4;
     }
   });
-  it("process_one_immediate_report-1", () => {
-    buildTest("process_one_immediate_report-1", set);
-  });
-  it("enqueue_and_unlock_chain-1", () => {
-    buildTest("enqueue_and_unlock_chain-1", set);
-  });
-  it("enqueue_and_unlock_chain-2", () => {
-    buildTest("enqueue_and_unlock_chain-2", set);
-  });
-  it("enqueue_and_unlock_chain-3", () => {
-    buildTest("enqueue_and_unlock_chain-3", set);
-  });
-  it("enqueue_and_unlock_chain-4", () => {
-    buildTest("enqueue_and_unlock_chain-4", set);
-  });
-  it("enqueue_and_unlock_chain_wraps-1", () => {
-    buildTest("enqueue_and_unlock_chain_wraps-1", set);
-  });
-  it("enqueue_and_unlock_chain_wraps-2", () => {
-    buildTest("enqueue_and_unlock_chain_wraps-2", set);
-  });
-  it("enqueue_and_unlock_chain_wraps-3", () => {
-    buildTest("enqueue_and_unlock_chain_wraps-3", set);
-  });
-  it("enqueue_and_unlock_chain_wraps-4", () => {
-    buildTest("enqueue_and_unlock_chain_wraps-4", set);
-  });
-  it("enqueue_and_unlock_chain_wraps-5", () => {
-    buildTest("enqueue_and_unlock_chain_wraps-5", set);
-  });
-  it("enqueue_and_unlock_simple-1", () => {
-    buildTest("enqueue_and_unlock_simple-1", set);
-  });
-  it("enqueue_and_unlock_simple-2", () => {
-    buildTest("enqueue_and_unlock_simple-2", set);
-  });
-  it("enqueue_and_unlock_with_sr_lookup-1", () => {
-    buildTest("enqueue_and_unlock_with_sr_lookup-1", set);
-  });
-  it("enqueue_and_unlock_with_sr_lookup-2", () => {
-    buildTest("enqueue_and_unlock_with_sr_lookup-2", set);
-  });
-  it("enqueue_self_referential-2", () => {
-    buildTest("enqueue_self_referential-2", set);
-  });
-  it("enqueue_self_referential-3", () => {
-    buildTest("enqueue_self_referential-3", set);
-  });
-  it("enqueue_self_referential-4", () => {
-    buildTest("enqueue_self_referential-4", set);
-  });
-  it("no_available_reports-1", () => {
-    buildTest("no_available_reports-1", set);
-  });
+  // NOTE: regenerate with
+  // for i in $(ls *.bin); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", () => buildTest("'$X'", set));'; done
+  it("accumulate_ready_queued_reports-1", () =>
+    buildTest("accumulate_ready_queued_reports-1", set));
+  it("enqueue_and_unlock_chain-1", () =>
+    buildTest("enqueue_and_unlock_chain-1", set));
+  it("enqueue_and_unlock_chain-2", () =>
+    buildTest("enqueue_and_unlock_chain-2", set));
+  it("enqueue_and_unlock_chain-3", () =>
+    buildTest("enqueue_and_unlock_chain-3", set));
+  it("enqueue_and_unlock_chain-4", () =>
+    buildTest("enqueue_and_unlock_chain-4", set));
+  it("enqueue_and_unlock_chain_wraps-1", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-1", set));
+  it("enqueue_and_unlock_chain_wraps-2", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-2", set));
+  it("enqueue_and_unlock_chain_wraps-3", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-3", set));
+  it("enqueue_and_unlock_chain_wraps-4", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-4", set));
+  it("enqueue_and_unlock_chain_wraps-5", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-5", set));
+  it("enqueue_and_unlock_simple-1", () =>
+    buildTest("enqueue_and_unlock_simple-1", set));
+  it("enqueue_and_unlock_simple-2", () =>
+    buildTest("enqueue_and_unlock_simple-2", set));
+  it("enqueue_and_unlock_with_sr_lookup-1", () =>
+    buildTest("enqueue_and_unlock_with_sr_lookup-1", set));
+  it("enqueue_and_unlock_with_sr_lookup-2", () =>
+    buildTest("enqueue_and_unlock_with_sr_lookup-2", set));
+  it("enqueue_self_referential-1", () =>
+    buildTest("enqueue_self_referential-1", set));
+  it("enqueue_self_referential-2", () =>
+    buildTest("enqueue_self_referential-2", set));
+  it("enqueue_self_referential-3", () =>
+    buildTest("enqueue_self_referential-3", set));
+  it("enqueue_self_referential-4", () =>
+    buildTest("enqueue_self_referential-4", set));
+  it("no_available_reports-1", () => buildTest("no_available_reports-1", set));
+  it("process_one_immediate_report-1", () =>
+    buildTest("process_one_immediate_report-1", set));
+  it("queues_are_shifted-1", () => buildTest("queues_are_shifted-1", set));
+  it("queues_are_shifted-2", () => buildTest("queues_are_shifted-2", set));
+  it("ready_queue_editing-1", () => buildTest("ready_queue_editing-1", set));
+  it("ready_queue_editing-2", () => buildTest("ready_queue_editing-2", set));
+  it("ready_queue_editing-3", () => buildTest("ready_queue_editing-3", set));
 });

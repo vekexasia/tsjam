@@ -4,7 +4,7 @@ import { BigIntBytes } from "@tsjam/types";
 /**
  * OptCodec is a codec that allows for optional values
  * it is defined in 277 in graypaper and identified with ¿x
- * $(0.6.1 - C.9)
+ * $(0.6.4 - C.9)
  */
 export class Optional<T> implements JamCodec<T | undefined | null> {
   constructor(private codec: JamCodec<T>) {}

@@ -32,17 +32,12 @@ import {
   WorkPackageHash,
   WorkReport,
   u64,
+  u32,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@tsjam/pvm";
-import {
-  ArrayOfJSONCodec,
-  createJSONCodec,
-  WorkReportCodec,
-  WorkReportJSONCodec,
-} from "@tsjam/codec";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -90,7 +85,7 @@ export const accumulateReports = (
   //  ),
   //);
 
-  // $(0.6.1 - 12.20)
+  // $(0.6.4 - 12.20)
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
@@ -100,8 +95,8 @@ export const accumulateReports = (
       ),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.6.1 - 12.21)
-  const [nAccumulatedWork, o, bold_t, C] = outerAccumulation(
+  // $(0.6.4 - 12.21)
+  const [nAccumulatedWork, bold_o, bold_t, C, bold_u] = outerAccumulation(
     g,
     w_star,
     {
@@ -118,8 +113,43 @@ export const accumulateReports = (
     },
   );
 
+  // $(0.6.4 - 12.23) | I
+  const accumulationStatistics: Map<
+    ServiceIndex,
+    { usedGas: Gas; count: u32 }
+  > = new Map();
+
+  const slicedW = w_star.slice(0, nAccumulatedWork);
+
+  // $(0.6.4 - 12.24)
+  bold_u.forEach(({ serviceIndex, usedGas }) => {
+    if (!accumulationStatistics.has(serviceIndex)) {
+      accumulationStatistics.set(serviceIndex, {
+        usedGas: <Gas>0n,
+        count: <u32>0,
+      });
+    }
+    const el = accumulationStatistics.get(serviceIndex)!;
+    //el.accumulatedReports++;
+    el.usedGas = (el.usedGas + usedGas) as Gas;
+  });
+
+  for (const serviceIndex of accumulationStatistics.keys()) {
+    // $(0.6.4 - 12.25)
+    const n_s = slicedW
+      .map((wr) => wr.results)
+      .flat()
+      .filter((r) => r.serviceIndex === serviceIndex);
+    if (n_s.length === 0) {
+      // how can this happen?
+      accumulationStatistics.delete(serviceIndex);
+    } else {
+      accumulationStatistics.get(serviceIndex)!.count = <u32>n_s.length;
+    }
+  }
+
   // calculoate posterior acc history
-  // $(0.6.1 - 12.25 / 12.26)
+  // $(0.6.4 - 12.31 / 12.32)
   const p_accumulationHistory =
     deps.accumulationHistory.slice() as AccumulationHistory as Posterior<AccumulationHistory>;
   {
@@ -130,12 +160,12 @@ export const accumulateReports = (
     }
   } // end of calculation of posterior accumulation history
 
-  // $(0.6.1 - 12.27) - calculate p_accumulationQueue
+  // $(0.6.4 - 12.33) - calculate p_accumulationQueue
   const p_accumulationQueue = [
     ...deps.accumulationQueue,
   ] as Posterior<AccumulationQueue>;
   {
-    const m = deps.p_tau % EPOCH_LENGTH; // $(0.6.1 - 12.10)
+    const m = deps.p_tau % EPOCH_LENGTH; // $(0.6.4 - 12.10)
 
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
@@ -161,17 +191,18 @@ export const accumulateReports = (
     deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
-    // $(0.6.1 - 12.22)
-    p_privServices: toPosterior(o.privServices),
-    d_delta: toDagger(o.delta),
-    p_iota: toPosterior(o.validatorKeys),
-    p_authQueue: toPosterior(o.authQueue),
+    // $(0.6.4 - 12.22)
+    p_privServices: toPosterior(bold_o.privServices),
+    d_delta: toDagger(bold_o.delta),
+    p_iota: toPosterior(bold_o.validatorKeys),
+    p_authQueue: toPosterior(bold_o.authQueue),
+    accumulationStatistics,
   });
 };
 
 /**
  * `bold W`
- * $(0.6.1 - 11.15)
+ * $(0.6.4 - 11.16)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -194,7 +225,7 @@ export const availableReports = (
 
 /**
  * Computes  `W!` in the paper
- * $(0.6.1 - 12.4)
+ * $(0.6.4 - 12.4)
  */
 export const noPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -210,7 +241,7 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * $(0.6.1 - 12.2)
+ * $(0.6.4 - 12.2)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
@@ -219,7 +250,7 @@ export const accHistoryUnion = (
 };
 
 /**
- * $(0.6.1 - 12.7)
+ * $(0.6.4 - 12.7)
  */
 export const E_Fn = (
   r: AccumulationQueue[0],
@@ -242,7 +273,7 @@ export const E_Fn = (
 
 /**
  * `WQ` in the paper
- * $(0.6.1 - 12.5)
+ * $(0.6.4 - 12.5)
  */
 export const withPrereqAvailableReports = (
   w: AvailableWorkReports,
@@ -250,7 +281,7 @@ export const withPrereqAvailableReports = (
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
-      // $(0.6.1 - 12.6) | D fn calculated inline
+      // $(0.6.4 - 12.6) | D fn calculated inline
       w
         .filter((wr) => {
           return (
@@ -270,7 +301,7 @@ export const withPrereqAvailableReports = (
 };
 
 /**
- * $(0.6.1 - 12.9)
+ * $(0.6.4 - 12.9)
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
   return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
@@ -278,7 +309,7 @@ export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
 
 /**
  * `Q` fn
- * $(0.6.1 - 12.8)
+ * $(0.6.4 - 12.8)
  */
 export const computeAccumulationPriority = (
   r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
@@ -295,7 +326,7 @@ export const computeAccumulationPriority = (
 
 /**
  * `W*` in the paper
- * $(0.6.1 - 12.11)
+ * $(0.6.4 - 12.11)
  */
 export const accumulatableReports = (
   w_mark: ReturnType<typeof noPrereqAvailableReports>,
@@ -303,12 +334,12 @@ export const accumulatableReports = (
   accumulationQueue: AccumulationQueue,
   p_tau: Posterior<Tau>, // Ht
 ) => {
-  // $(0.6.1 - 12.10)
+  // $(0.6.4 - 12.10)
   const m = p_tau % EPOCH_LENGTH;
 
   // console.log("W_Q", w_q);
   const accprio = computeAccumulationPriority(
-    // $(0.6.1 - 12.12)
+    // $(0.6.4 - 12.12)
     E_Fn(
       [
         ...accumulationQueue.slice(m).flat(),
@@ -322,9 +353,24 @@ export const accumulatableReports = (
   return [...w_mark, ...accprio] as Tagged<WorkReport[], "W*">;
 };
 
+// $(0.6.4 - 12.15)
+/*
+ * `servouts`
+ */
+type B = Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>;
+/*
+ * `gasusd` gas used by each service
+ */
+type U = Array<{
+  // `s`
+  serviceIndex: ServiceIndex;
+  // `u`
+  usedGas: Gas;
+}>;
+
 /**
  * `∆+`
- * $(0.6.1 - 12.16)
+ * $(0.6.4 - 12.16)
  */
 export const outerAccumulation = (
   gasLimit: Gas, // g
@@ -340,8 +386,8 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  // $(0.6.1 - 12.15)
-  Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>,
+  B,
+  U,
 ] => {
   let sum = 0n;
   let i = 0;
@@ -356,17 +402,21 @@ export const outerAccumulation = (
   }
 
   if (i == 0) {
-    return [0, accState, [], new Set()];
+    return [0, accState, [], new Set(), []];
   }
 
-  const [g_star, o_star, t_star, b_star] = parallelizedAccAccumulation(
+  const [o_star, t_star, b_star, u_star] = parallelizedAccAccumulation(
     accState,
     works.slice(0, i),
     gasLimits,
     deps,
   );
-  const [j, o_prime, t, b] = outerAccumulation(
-    (gasLimit - g_star) as Gas,
+  const consumedGas = u_star
+    .map((a) => a.usedGas)
+    .reduce((s, e) => <Gas>(s + e), <Gas>0n);
+
+  const [j, o_prime, t, b, u] = outerAccumulation(
+    (gasLimit - consumedGas) as Gas,
     works.slice(i),
     o_star,
     new Map(),
@@ -377,36 +427,28 @@ export const outerAccumulation = (
     i + j,
     o_prime,
     t_star.concat(t),
-    new Set([
-      ...[...b_star.values()].map((item) => {
-        return {
-          serviceIndex: item.service,
-          accumulationResult: item.hash,
-        };
-      }),
-      ...b.values(),
-    ]),
+    new Set([...b_star.values(), ...b.values()]),
+    u_star.concat(u),
   ];
 };
 
 /**
  * `∆*` fn
- * $(0.6.1 - 12.17)
+ * $(0.6.4 - 12.17)
  */
 export const parallelizedAccAccumulation = (
   o: PVMAccumulationState,
   w: WorkReport[],
   f: Map<ServiceIndex, u64>,
   deps: {
-    tau: Tau;
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
 ): [
-  gas: u64,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  b: Set<{ service: ServiceIndex; hash: Hash }>,
+  b: B,
+  u: U,
 ] => {
   const bold_s = new Set([
     ...w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
@@ -418,18 +460,22 @@ export const parallelizedAccAccumulation = (
   // w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
   //  );
 
-  const accumulatedServices = bold_s_values.map((s) => {
-    return singleServiceAccumulation(o, w, f, s, deps);
-  });
+  const u: U = [];
+  const accumulatedServices: Array<
+    ReturnType<typeof singleServiceAccumulation>
+  > = [];
+  const b: B = new Set();
 
-  const u = accumulatedServices.reduce((a, { u }) => a + u, 0n);
-  const b = new Set<{ service: ServiceIndex; hash: Hash }>();
+  bold_s_values.forEach((s) => {
+    const acc = singleServiceAccumulation(o, w, f, s, deps);
 
-  for (let i = 0; i < bold_s_values.length; i++) {
-    if (typeof accumulatedServices[i].b !== "undefined") {
-      b.add({ service: bold_s_values[i], hash: accumulatedServices[i].b! });
+    u.push({ serviceIndex: s, usedGas: acc.u });
+    accumulatedServices.push(acc);
+
+    if (typeof acc.b !== "undefined") {
+      b.add({ serviceIndex: s, accumulationResult: acc.b! });
     }
-  }
+  });
 
   const t = accumulatedServices
     .reduce((a, { t }) => a.concat(t), [] as DeferredTransfer[])
@@ -486,12 +532,12 @@ export const parallelizedAccAccumulation = (
     ).o.authQueue,
   };
 
-  return [toTagged(u), newState, t, b];
+  return [newState, t, b, u];
 };
 
 /**
  * `∆1` fn
- * $(0.6.1 - 12.19)
+ * $(0.6.4 - 12.19)
  */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
@@ -499,18 +545,15 @@ export const singleServiceAccumulation = (
   f: Map<ServiceIndex, u64>,
   s: ServiceIndex,
   deps: {
-    tau: Tau;
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
 ): {
-  // `O` tuple defined in $(0.6.1 - 12.18)
   o: PVMAccumulationState;
   t: DeferredTransfer[];
   b: Hash | undefined;
-  u: u64;
+  u: Gas;
 } => {
-  // console.log(`\nACCUMULATING ${s}\n`);
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
     wr.results
@@ -523,10 +566,12 @@ export const singleServiceAccumulation = (
     for (const r of wr.results) {
       if (r.serviceIndex === s) {
         p.push({
-          authorizationOutput: wr.authorizerOutput, // o
-          output: r.output, // o
-          payloadHash: r.payloadHash, // l
-          packageHash: wr.workPackageSpecification.workPackageHash, // (ws)h
+          output: r.output,
+          segmentRoot: wr.workPackageSpecification.segmentRoot,
+          authorizerOutput: wr.authorizerOutput,
+          payloadHash: r.payloadHash,
+          workPackageHash: wr.workPackageSpecification.workPackageHash,
+          authorizerHash: wr.authorizerHash,
         });
       }
     }

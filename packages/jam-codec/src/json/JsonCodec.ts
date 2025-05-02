@@ -1,19 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JamCodec } from "@/codec";
-import {
-  BandersnatchSignatureCodec,
-  Ed25519PubkeyCodec,
-  Ed25519SignatureCodec,
-  HashCodec,
-} from "@/identity";
+import { HashCodec } from "@/identity";
 import { encodeWithCodec } from "@/utils";
 import {
   BandersnatchKey,
+  BandersnatchSignature,
+  ED25519PublicKey,
+  ED25519Signature,
   type BigIntBytes,
   type ByteArrayOfLength,
   type Hash,
 } from "@tsjam/types";
-import { hexToBytes } from "@tsjam/utils";
+import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
 
 /**
  * Basic utility to convert from/to json
@@ -35,7 +33,18 @@ export const createJSONCodec = <T extends object, X = any>(
     fromJSON(json) {
       const newInst = {} as unknown as T;
       for (const [key, jsonKey, codec] of itemsCodec) {
-        newInst[key] = <T[typeof key]>codec.fromJSON((<any>json)[jsonKey]);
+        try {
+          newInst[key] = <T[typeof key]>codec.fromJSON((<any>json)[jsonKey]);
+        } catch (e) {
+          console.error(
+            "Error in JSONCodec",
+            key,
+            jsonKey,
+            json[jsonKey],
+            (<any>e)?.message,
+          );
+          throw e;
+        }
       }
       return newInst;
     },
@@ -105,40 +114,69 @@ export const NumberJSONCodec = <T extends number>(): JSONCodec<T, number> => {
   };
 };
 
-export const HashJSONCodec = <T extends Hash>(): JSONCodec<T, string> =>
-  BigIntBytesJSONCodec(HashCodec) as JSONCodec<T, string>;
-
-export const Ed25519SignatureJSONCodec = BigIntBytesJSONCodec(
-  Ed25519SignatureCodec,
-);
-
-export const Ed25519JSONCodec = BigIntBytesJSONCodec(Ed25519PubkeyCodec);
-
-export const BandersnatchSignatureJSONCodec = BigIntBytesJSONCodec(
-  BandersnatchSignatureCodec,
-);
-
-export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
-  fromJSON(json) {
-    return hexToBytes(json);
-  },
-  toJSON(value) {
-    return bufToHex(value);
-  },
-};
-
 export const BufferJSONCodec = <
   T extends ByteArrayOfLength<K>,
   K extends number,
 >(): JSONCodec<T, string> => {
   return {
     fromJSON(json) {
-      return hexToBytes(json);
+      return <T>new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
     },
     toJSON(value) {
       return bufToHex(value);
     },
   };
+};
+
+export const HashJSONCodec = <T extends Hash>(): JSONCodec<T, string> =>
+  BigIntBytesJSONCodec(HashCodec) as JSONCodec<T, string>;
+
+export const Ed25519SignatureJSONCodec = BufferJSONCodec<
+  ED25519Signature,
+  64
+>();
+
+export const Ed25519BufJSONCodec = BufferJSONCodec<
+  ED25519PublicKey["buf"],
+  32
+>();
+export const Ed25519BigIntJSONCodec: JSONCodec<
+  ED25519PublicKey["bigint"],
+  string
+> = {
+  fromJSON(json) {
+    return bytesToBigInt(
+      new Uint8Array([...Buffer.from(json.slice(2), "hex")]),
+    );
+  },
+  toJSON(value) {
+    return Buffer.from(bigintToBytes(value, 32)).toString("hex");
+  },
+};
+
+export const Ed25519PublicKeyJSONCodec: JSONCodec<ED25519PublicKey, string> = {
+  fromJSON(json) {
+    return {
+      bigint: Ed25519BigIntJSONCodec.fromJSON(json),
+      buf: Ed25519BufJSONCodec.fromJSON(json),
+    };
+  },
+  toJSON(value) {
+    return Ed25519BufJSONCodec.toJSON(value.buf);
+  },
+};
+export const BandersnatchSignatureJSONCodec = BufferJSONCodec<
+  BandersnatchSignature,
+  96
+>();
+
+export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
+  fromJSON(json) {
+    return new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
+  },
+  toJSON(value) {
+    return bufToHex(value);
+  },
 };
 
 export const ArrayOfJSONCodec = <K extends T[], T, X>(
@@ -180,10 +218,10 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
   };
 };
 
-export const WrapJSONCodec = <T, K extends string>(
+export const WrapJSONCodec = <T, K extends string, X = any>(
   key: K,
-  codec: JSONCodec<T>,
-): JSONCodec<T, { [key in K]: any }> => {
+  codec: JSONCodec<T, X>,
+): JSONCodec<T, { [key in K]: X }> => {
   return {
     fromJSON(json) {
       return codec.fromJSON(json[key]);

@@ -1,51 +1,19 @@
-import { transferInvocation } from "@tsjam/pvm";
-import {
-  Dagger,
-  DeferredTransfer,
-  Delta,
-  DoubleDagger,
-  Posterior,
-  STF,
-  ServiceIndex,
-  Tau,
-} from "@tsjam/types";
+import { InvokedTransfers } from "@tsjam/pvm";
+import { Dagger, Delta, DoubleDagger, STF } from "@tsjam/types";
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.1 - 12.24)
+ * $(0.6.4 - 12.28)
  */
 export const deltaToDoubleDagger: STF<
   Dagger<Delta>,
-  { transfers: DeferredTransfer[]; p_tau: Posterior<Tau> },
+  { bold_x: InvokedTransfers },
   never,
   DoubleDagger<Delta>
 > = (input, curState) => {
   const dd_delta: Delta = new Map();
   for (const [serviceIndex] of curState) {
-    dd_delta.set(
-      serviceIndex,
-      transferInvocation(
-        curState,
-        input.p_tau,
-        serviceIndex,
-        R_fn(input.transfers, serviceIndex),
-      ),
-    );
+    dd_delta.set(serviceIndex, input.bold_x.get(serviceIndex)![0]);
   }
   return ok(dd_delta as DoubleDagger<Delta>);
-};
-
-/**
- * $(0.6.1 - 12.23)
- */
-const R_fn = (t: DeferredTransfer[], destination: ServiceIndex) => {
-  return t
-    .slice()
-    .sort((a, b) => {
-      if (a.sender === b.sender) {
-        return a.destination - b.destination;
-      }
-      return a.sender - b.sender;
-    })
-    .filter((t) => t.destination === destination);
 };

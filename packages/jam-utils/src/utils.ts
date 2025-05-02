@@ -62,7 +62,7 @@ export const isFallbackMode = (
  * @param state - the state of the safrole state machine
  *
  * @returns undefined in case blockAuthorKeyIndex is invalid and not within
- * $(0.6.1 - 5.9)
+ * $(0.6.4 - 5.9)
  */
 
 export const getBlockAuthorKey = (
@@ -78,7 +78,7 @@ export const getBlockAuthorKey = (
  * `P` in the graypaper
  * @param buf - original buffer
  * @param n - the multiple of which the end buffer length should be
- * @see $(0.6.1 - 14.17)
+ * @see $(0.6.4 - 14.17)
  */
 export const zeroPad = (n: number, buf: Uint8Array): Uint8Array => {
   const toRet = new Uint8Array(Math.ceil(buf.length / n) * n).fill(0);
