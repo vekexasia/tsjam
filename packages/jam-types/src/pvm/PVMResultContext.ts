@@ -31,4 +31,9 @@ export interface PVMResultContext {
   transfer: DeferredTransfer[];
 
   y?: Hash;
+
+  /**
+   * `p`
+   */
+  preimages: Array<{ service: ServiceIndex; preimage: Uint8Array }>;
 }

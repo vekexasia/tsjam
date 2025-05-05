@@ -311,8 +311,8 @@ export const C_fn = (
     serviceIndex: workItem.service,
     codeHash: workItem.codeHash,
     payloadHash: Hashing.blake2b(workItem.payload),
-    gasPrioritization: workItem.accumulateGasLimit,
-    output: out,
+    gasLimit: workItem.accumulateGasLimit,
+    result: out,
     refineLoad: {
       usedGas,
       imports: <u16>workItem.importSegments.length,

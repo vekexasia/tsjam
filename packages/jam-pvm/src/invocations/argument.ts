@@ -9,7 +9,7 @@ import { programInitialization } from "@/program.js";
 
 /**
  * `ΨM` in the paper
- * $(0.6.4 - A.43)
+ * $(0.6.5 - A.43)
  */
 export const argumentInvocation = <X>(
   encodedProgram: PVMProgramCode,

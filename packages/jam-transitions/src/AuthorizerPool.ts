@@ -17,7 +17,7 @@ type Input = {
   p_tau: Posterior<Tau>;
 };
 
-// $(0.6.4 - 8.2 / 8.3)
+// $(0.6.5 - 8.2 / 8.3)
 export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, never> = (
   input: Input,
   curState: AuthorizerPool,

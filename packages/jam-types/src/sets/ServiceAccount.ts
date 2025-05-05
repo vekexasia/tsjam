@@ -1,4 +1,5 @@
 import { CodeHash, Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
+import { Tau } from "@/Tau";
 
 /**
  * `A` set in the graypaper
@@ -30,7 +31,7 @@ export interface ServiceAccount {
    * if there are 3 items, then its available since [2] no but in the past was not available[1] after being available[0]<br>
    * once all three elements are valued. we remove the first 2 only after a certain period has passed (to be defined)
    */
-  preimage_l: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">>>;
+  preimage_l: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>>;
 
   /**
    * `c` - code hash

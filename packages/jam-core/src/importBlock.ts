@@ -151,7 +151,7 @@ export const importBlock: STF<
     block.extrinsics.tickets,
     {
       p_tau,
-      gamma_z: curState.safroleState.gamma_z,
+      p_gamma_z,
       gamma_a: curState.safroleState.gamma_a,
       p_entropy,
     },

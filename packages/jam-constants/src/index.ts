@@ -81,6 +81,11 @@ export const MAX_WORK_PREREQUISITES = 8;
 export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 
 /**
+ * `Wa` in the paper
+ */
+export const MAXIMUM_SIZE_IS_AUTHORIZED = 64_000;
+
+/**
  * Denoted with `Xa` in the paper. It's value is `jam_available`
  * $(0.6.4 - 11.14)
  */
@@ -151,7 +156,7 @@ export const AUTHQUEUE_MAX_SIZE = 80;
 /**
  * `WC` in the paper
  */
-export const SERVICECODE_MAX_SIZE = 40000000;
+export const SERVICECODE_MAX_SIZE = 4_000_0000;
 
 /**
  * `BS` in the paper

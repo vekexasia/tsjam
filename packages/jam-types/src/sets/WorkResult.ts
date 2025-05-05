@@ -3,7 +3,7 @@ import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
  * Identified by `L` set
- *
+ * also called **Work Digest**
  * @see section 11.1.4
  * $(0.6.4 - 11.6)
  */
@@ -27,14 +27,14 @@ export type WorkResult = {
   payloadHash: Hash;
 
   /**
-   * `g` -The gas prioritization **ratio**.
+   * `g` -The gas
    */
-  gasPrioritization: Gas;
+  gasLimit: Gas;
 
   /**
    * `d` - The output of the service
    */
-  output: WorkOutput;
+  result: WorkOutput;
 
   refineLoad: {
     /**

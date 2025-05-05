@@ -22,8 +22,8 @@ export const WorkResultCodec = createCodec<WorkResult>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)], // s
   ["codeHash", HashCodec], // c
   ["payloadHash", HashCodec], // y
-  ["gasPrioritization", E_sub<Gas>(8)], // g
-  ["output", WorkOutputCodec], // d
+  ["gasLimit", E_sub<Gas>(8)], // g
+  ["result", WorkOutputCodec], // d
   [
     "refineLoad",
     createCodec<WorkResult["refineLoad"]>([
@@ -56,8 +56,8 @@ export const WorkResultJSONCodec = createJSONCodec<
   ["serviceIndex", "service_id", NumberJSONCodec<ServiceIndex>()],
   ["codeHash", "code_hash", HashJSONCodec()],
   ["payloadHash", "payload_hash", HashJSONCodec()],
-  ["gasPrioritization", "accumulate_gas", BigIntJSONCodec<Gas>()],
-  ["output", "result", WorkOutputJSONCodec],
+  ["gasLimit", "accumulate_gas", BigIntJSONCodec<Gas>()],
+  ["result", "result", WorkOutputJSONCodec],
   [
     "refineLoad",
     "refine_load",

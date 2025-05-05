@@ -31,7 +31,7 @@ const owzsCodec = createCodec<{
 
 /**
  * `Y` fn in the graypaper
- * $(0.6.4 - A.36)
+ * $(0.6.5 - A.36)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */

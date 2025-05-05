@@ -11,7 +11,6 @@ import {
   E_4,
   E_4_int,
   E_8,
-  Ed25519PubkeyCodec,
   HashCodec,
   IdentityCodec,
   JamCodec,
@@ -61,7 +60,7 @@ export const merkelizeState = (state: JamState): StateRootHash => {
   return M_fn(
     new Map(
       [...stateMap.entries()].map(([k, v]) => {
-        return [bits(bigintToBytes(k, 32)), [k, v]];
+        return [bits(k), [k, v]];
       }),
     ),
   ) as StateRootHash;
@@ -80,20 +79,7 @@ const bits = (ar: Uint8Array): bit[] => {
   return a as bit[];
 };
 
-/*
-  this is deprecated now for a more performant version with bytes and bitwise
-const bits_inv = (bits: bit[]): Uint8Array => {
-  assert(bits.length % 8 === 0);
-  const bytes = [];
-  for (let i = 0; i < bits.length / 8; i++) {
-    const curBits = bits.slice(i * 8, i * 8 + 8).join("");
-    bytes[i] = parseInt(curBits, 2);
-  }
-  return new Uint8Array(bytes);
-};
-*/
-
-// $(0.6.4 - D.3)
+// $(0.6.5 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   const lb = bigintToBytes(l, 32);
   const rb = bigintToBytes(r, 32);
@@ -105,29 +91,28 @@ const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
 };
 
 // $(0.6.4 - D.4) | implementation avoids using bits()
-// following my
-const L_fn = (k: Hash, v: Uint8Array): ByteArrayOfLength<64> => {
+const L_fn = (
+  k: ByteArrayOfLength<31>,
+  v: Uint8Array,
+): ByteArrayOfLength<64> => {
   if (v.length <= 32) {
     return new Uint8Array([
-      // NOTE: the following line is out of spec as stated in my comment
-      // https://github.com/w3f/jamtestvectors/pull/14#issuecomment-2549423040
-      // it should be 0b10000000 + (v.length >> 2)
       0b10000000 + v.length,
-      ...bigintToBytes(k, 32).subarray(0, 31),
+      ...k,
       ...v,
       ...new Array(32 - v.length).fill(0),
     ]) as ByteArrayOfLength<64>;
   } else {
     return new Uint8Array([
       0b11000000,
-      ...bigintToBytes(k, 32).subarray(0, 31),
+      ...k,
       ...Hashing.blake2bBuf(v),
     ]) as ByteArrayOfLength<64>;
   }
 };
 
 // $(0.6.4 - D.6)
-const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
+const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
   } else if (d.size === 1) {
@@ -148,62 +133,55 @@ const M_fn = (d: Map<bit[], [Hash, Uint8Array]>): Hash => {
   }
 };
 
+type StateKey = ByteArrayOfLength<31>;
 /**
  * `C` in graypaper
- * $(0.6.4 - D.1)
+ * $(0.6.5 - D.1)
  */
-export const stateKey = (i: number, _s?: ServiceIndex | Uint8Array): Hash => {
+export const stateKey = (
+  i: number,
+  _s?: ServiceIndex | Uint8Array,
+): StateKey => {
   if (_s instanceof Uint8Array) {
     const h: Uint8Array = _s;
     const s = i;
     const n = encodeWithCodec(E_4, BigInt(s));
-    return HashCodec.decode(
-      new Uint8Array([
-        n[0],
-        h[0],
-        n[1],
-        h[1],
-        n[2],
-        h[2],
-        n[3],
-        h[3],
-        ...h.subarray(4, 28),
-      ]) as unknown as ByteArrayOfLength<32>,
-    ).value;
+    return new Uint8Array([
+      n[0],
+      h[0],
+      n[1],
+      h[1],
+      n[2],
+      h[2],
+      n[3],
+      h[3],
+      ...h.subarray(4, 27), // ends at [26]
+    ]) as StateKey;
   }
   if (typeof _s === "number") {
     // its ServiceIndex
     const n = encodeWithCodec(E_4, BigInt(_s));
-    return bytesToBigInt(
-      new Uint8Array([
-        i,
-        n[0],
-        0,
-        n[1],
-        0,
-        n[2],
-        0,
-        n[3],
-        ...new Array(32 - 4 - 4).fill(0),
-      ]),
-    );
+    return new Uint8Array([
+      i,
+      n[0],
+      0,
+      n[1],
+      0,
+      n[2],
+      0,
+      n[3],
+      ...new Array(31 - 4 - 4).fill(0),
+    ]) as StateKey;
   }
-  return bytesToBigInt(new Uint8Array([i, ...new Array(31).fill(0)]));
+  return new Uint8Array([i, ...new Array(30).fill(0)]) as StateKey;
 };
 
 /*
  * `T(σ)`
  * $(0.6.4 - D.2)
  */
-export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
-  const toRet = new Map<Hash, Uint8Array>();
-  const logState = (n: string, k: Hash) => {
-    // console.log(
-    //   n,
-    //   HashJSONCodec().toJSON(k),
-    //   Uint8ArrayJSONCodec.toJSON(toRet.get(k)!),
-    // );
-  };
+export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
+  const toRet = new Map<StateKey, Uint8Array>();
 
   toRet.set(
     stateKey(1),
@@ -252,7 +230,6 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       ),
     ]),
   );
-  logState("4|c4", stateKey(4));
 
   // 5
   toRet.set(
@@ -308,7 +285,6 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.kappa,
     ),
   );
-  logState("8", stateKey(8));
 
   // 9
   toRet.set(
@@ -319,21 +295,17 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
     ),
   );
 
-  logState("9", stateKey(9));
   // 10
   toRet.set(stateKey(10), encodeWithCodec(RHOCodec(), state.rho));
 
-  logState("rho|c10", stateKey(10));
   // 11
   toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
-  logState("c11", stateKey(11));
 
   // 12
   toRet.set(
     stateKey(12),
     encodeWithCodec(PrivilegedServicesCodec, state.privServices),
   );
-  logState("c12", stateKey(12));
 
   // 13
   toRet.set(
@@ -343,7 +315,6 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
       state.statistics,
     ),
   );
-  logState("c13", stateKey(13));
 
   // 14
   const sortedDepsQueue = state.accumulationQueue.map((a) =>
@@ -468,13 +439,16 @@ if (import.meta.vitest) {
           ),
         );
       for (const t of r) {
-        const m = new Map<bit[], [Hash, Uint8Array]>();
+        const m = new Map<bit[], [StateKey, Uint8Array]>();
         for (const key in t.input) {
-          const keyBuf = Buffer.from(`${key}`, "hex");
+          const keyBuf = Buffer.from(`${key}`, "hex").subarray(
+            0,
+            31,
+          ) as Uint8Array as StateKey;
           const keyBits = bits(keyBuf);
-          const keyHash: Hash = bytesToBigInt(keyBuf);
+          //const keyHash: Hash = bytesToBigInt(keyBuf);
           const value = Buffer.from(t.input[key], "hex");
-          m.set(keyBits, [keyHash, value]);
+          m.set(keyBits, [keyBuf, value]);
         }
         const res = M_fn(m);
         expect(Buffer.from(bigintToBytes(res, 32)).toString("hex")).eq(

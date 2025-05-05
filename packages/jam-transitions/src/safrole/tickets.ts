@@ -32,7 +32,7 @@ export const etToIdentifiers = (
   et: TicketExtrinsics,
   input: {
     p_tau: Posterior<Tau>;
-    gamma_z: SafroleState["gamma_z"];
+    p_gamma_z: Posterior<SafroleState["gamma_z"]>;
     gamma_a: SafroleState["gamma_a"];
     p_entropy: Posterior<JamState["entropy"]>;
   },
@@ -51,7 +51,7 @@ export const etToIdentifiers = (
     return err(ETError.MAX_TICKETS_EXCEEDED);
   }
 
-  // $(0.6.4 - 6.29) | we validate the ticket
+  // $(0.6.5 - 6.29) | we validate the ticket
   for (const extrinsic of et) {
     if (
       extrinsic.entryIndex < 0 ||
@@ -61,7 +61,7 @@ export const etToIdentifiers = (
     }
     const sig = Bandersnatch.verifyVrfProof(
       extrinsic.proof,
-      input.gamma_z,
+      input.p_gamma_z,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
         ...bigintToBytes(input.p_entropy[2], 32),
