@@ -58,7 +58,7 @@ export const Ix = <
         identifier: propertyKey,
         decode: decoder,
         evaluate: descriptor.value!,
-        gasCost: 0n as Gas,
+        gasCost: 1n as Gas,
       },
       (descriptor as { isBlockTermination: boolean })
         .isBlockTermination as boolean,

@@ -13,13 +13,13 @@ import {
   LengthDiscriminator,
   MerkleTreeRootCodec,
   PrivilegedServicesCodec,
+  ServiceStatisticsCodec,
   WorkReportCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   JamState,
   Posterior,
-  ServiceIndex,
   Tau,
   AccumulationHistory,
   AccumulationQueue,
@@ -27,8 +27,8 @@ import {
   Delta,
   PrivilegedServices,
   AvailableWorkReports,
-  Hash,
   MerkleTreeRoot,
+  JamStatistics,
 } from "@tsjam/types";
 import { vi, it, describe, beforeEach, expect } from "vitest";
 import {
@@ -38,6 +38,8 @@ import {
 } from "@tsjam/codec/test/testCodecs.js";
 import { accumulateReports } from "@/accumulate.js";
 import { dummyState } from "./utils";
+import { logCodec } from "@tsjam/codec/test/utils.js";
+import { _w, serviceStatisticsSTF } from "@tsjam/transitions";
 const mocks = vi.hoisted(() => {
   return {
     CORES: 341,
@@ -81,6 +83,7 @@ type TestState = {
   accQueue: AccumulationQueue;
   accHistory: AccumulationHistory;
   privServices: PrivilegedServices;
+  statistics: JamStatistics["services"];
   accounts: Delta;
 };
 
@@ -126,7 +129,7 @@ const buildTest = (filename: string, size: string) => {
     ? 6
     : 1023) as unknown as typeof NUMBER_OF_VALIDATORS;
   const EPLEN = (size === "tiny" ? 12 : 600) as unknown as typeof EPOCH_LENGTH;
-  const NCOR = (size === "tiny" ? 2 : 341) as unknown as number;
+  const NCOR = (size === "tiny" ? 2 : 341) as unknown as typeof CORES;
 
   const stateCodec = createCodec<TestState>([
     ["slot", E_sub_int<Tau>(4)],
@@ -134,6 +137,7 @@ const buildTest = (filename: string, size: string) => {
     ["accQueue", AccumulationQueueCodec(EPOCH_LENGTH)],
     ["accHistory", AccumulationHistoryCodec(EPOCH_LENGTH)],
     ["privServices", PrivilegedServicesCodec],
+    ["statistics", ServiceStatisticsCodec],
     ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
   ]);
 
@@ -196,10 +200,24 @@ const buildTest = (filename: string, size: string) => {
     p_eta_0: preState.p_eta_0,
     authQueue: testSTate.authQueue,
   }).safeRet();
+  const [, p_serviceStatistics] = serviceStatisticsSTF(
+    {
+      guaranteedReports: [],
+      preimages: [],
+      transferStatistics: new Map(),
+      accumulationStatistics: res.accumulationStatistics,
+    },
+    preState.statistics,
+  ).safeRet();
 
   expect(res.p_accumulationQueue).deep.equal(postState.accQueue);
   expect(res.p_accumulationHistory).deep.equal(postState.accHistory);
   expect(res.accumulateRoot).toEqual(output.ok);
+  console.log(preState.statistics);
+  console.log(p_serviceStatistics);
+
+  expect(p_serviceStatistics).deep.equal(postState.statistics);
+
   // TODO: compare other post states
 };
 describe("accumulate", () => {
