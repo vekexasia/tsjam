@@ -10,9 +10,13 @@ import {
   ValidatorStatistics,
 } from "@tsjam/types";
 import { createCodec } from "./utils";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  CORES,
+  ERASURECODE_EXPORTED_SIZE,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
 import { createSequenceCodec } from "./sequenceCodec";
-import { E_4_int } from "./ints/E_subscr";
+import { E_4_int, E_sub_int } from "./ints/E_subscr";
 import { buildGenericKeyValueCodec } from "./dicts/keyValue";
 import { JamCodec } from "./codec";
 import {
@@ -31,7 +35,7 @@ export const StatisticsCodec = (
   return createCodec([
     ["validators", ValidatorStatisticsCodec(validatorsCount)],
     ["cores", coreStatisticsCodec(cores)],
-    ["services", serviceStatisticsCodec],
+    ["services", ServiceStatisticsCodec],
   ]);
 };
 
@@ -54,7 +58,7 @@ export const StatisticsJSONCodec: JSONCodec<
           value: "record",
         },
         NumberJSONCodec<ServiceIndex>(),
-        serviceStatisticsJSONCodec,
+        ServiceStatisticsJSONCodec,
       ).fromJSON(json.services || []),
     };
   },
@@ -70,7 +74,7 @@ export const StatisticsJSONCodec: JSONCodec<
           value: "record",
         },
         NumberJSONCodec<ServiceIndex>(),
-        serviceStatisticsJSONCodec,
+        ServiceStatisticsJSONCodec,
       ).toJSON(value.services),
     };
   },
@@ -115,8 +119,8 @@ const coreStatisticsJSONCodec = createJSONCodec<
   ["popularity", "popularity", NumberJSONCodec<u16>()],
 ]);
 
-export const serviceStatisticsCodec = buildGenericKeyValueCodec(
-  E_int<ServiceIndex>(),
+export const ServiceStatisticsCodec = buildGenericKeyValueCodec(
+  E_sub_int<ServiceIndex>(4),
   createCodec<SingleServiceStatistics>([
     [
       "provided",
@@ -168,7 +172,7 @@ type SingleServiceJSONStatistics = {
   on_transfers_count: number;
   on_transfers_gas_used: number;
 };
-export const serviceStatisticsJSONCodec: JSONCodec<
+export const ServiceStatisticsJSONCodec: JSONCodec<
   SingleServiceStatistics,
   SingleServiceJSONStatistics
 > = {
