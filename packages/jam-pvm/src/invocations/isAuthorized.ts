@@ -10,6 +10,7 @@ import {
 import { argumentInvocation } from "@/invocations/argument.js";
 import {
   createCodec,
+  E_2_int,
   E_sub_int,
   encodeWithCodec,
   WorkPackageCodec,
@@ -24,14 +25,10 @@ import {
 import { IxMod } from "@/instructions/utils";
 import { applyMods } from "@/functions/utils";
 
-const authArgsCodec = createCodec<{ p: WorkPackage; c: CoreIndex }>([
-  ["p", WorkPackageCodec],
-  ["c", E_sub_int<CoreIndex>(2)],
-]);
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
- * $(0.6.4 - B.1)
+ * $(0.6.6 - B.1)
  */
 export const isAuthorized = (p: WorkPackageWithAuth, c: CoreIndex) => {
   if (p.pc.length === 0) {
@@ -45,7 +42,7 @@ export const isAuthorized = (p: WorkPackageWithAuth, c: CoreIndex) => {
     p.pc,
     0 as u32, // instruction pointer
     TOTAL_GAS_IS_AUTHORIZED as Gas,
-    encodeWithCodec(authArgsCodec, { p, c }),
+    encodeWithCodec(E_2_int, c),
     F_Fn,
     undefined as unknown as PVMResultContext, // something is missing from the paper
   );

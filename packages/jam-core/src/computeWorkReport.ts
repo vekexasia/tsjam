@@ -38,6 +38,7 @@ import { isHash, toTagged, zeroPad } from "@tsjam/utils";
 import {
   ERASURECODE_BASIC_SIZE,
   ERASURECODE_EXPORTED_SIZE,
+  MAX_WORKREPORT_OUTPUT_SIZE,
 } from "@tsjam/constants";
 import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 import assert from "assert";
@@ -49,7 +50,7 @@ import assert from "assert";
  * @see A_fn
  * @see C_fn
  * @see M_fn
- * $(0.6.4 - 14.11)
+ * $(0.6.6 - 14.11)
  */
 export const computeWorkReport = (
   pac: WorkPackageWithAuth,
@@ -65,12 +66,17 @@ export const computeWorkReport = (
     ...deps,
     authorizerOutput: authOutput,
     overline_i: pac.items.map((wi) => S_fn(wi, bold_l)),
+    rLengthSoFar: 0,
   };
 
   const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
       const { res: r, out: e, usedGas } = I_fn(pac, j, _deps);
+      // part of I_fn optimization to avoud recomputing
+      if (r instanceof Uint8Array) {
+        _deps.rLengthSoFar += r.length;
+      }
       const workResult = C_fn(pac.items[j], r, usedGas);
       return { result: workResult, out: e };
     });
@@ -196,6 +202,7 @@ const I_fn = (
     tau: Tau;
     authorizerOutput: Uint8Array;
     overline_i: ExportSegment[][];
+    rLengthSoFar: number; // `∑k<j,(r∈Y,... )=I(p,k) |r|`
   },
 ): {
   res: WorkOutput; // `r`
@@ -210,14 +217,41 @@ const I_fn = (
   const re = refineInvocation(
     workIndex,
     pac,
-    deps.authorizerOutput,
+    deps.authorizerOutput, // o
     deps.overline_i,
     l,
     { delta: deps.delta, tau: deps.tau }, // deps
   );
-  if (re.out.length === w.exportCount) {
-    return re;
-  } else if (!(re.res instanceof Uint8Array)) {
+  const z = deps.authorizerOutput.length + deps.rLengthSoFar;
+  if (re.out.length + z < MAX_WORKREPORT_OUTPUT_SIZE) {
+    return {
+      res: WorkError.Big,
+      usedGas: re.usedGas,
+      out: new Array(w.exportCount)
+        .fill(0)
+        .map(() =>
+          new Uint8Array(
+            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
+          ).fill(0),
+        ),
+    };
+  }
+
+  if (re.out.length !== w.exportCount) {
+    return {
+      res: WorkError.BadExports,
+      usedGas: re.usedGas,
+      out: new Array(w.exportCount)
+        .fill(0)
+        .map(() =>
+          new Uint8Array(
+            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
+          ).fill(0),
+        ),
+    };
+  }
+
+  if (!(re.res instanceof Uint8Array)) {
     return {
       res: re.res,
       out: new Array(w.exportCount)
@@ -229,19 +263,8 @@ const I_fn = (
         ),
       usedGas: re.usedGas,
     };
-  } else {
-    return {
-      res: WorkError.BadExports,
-      out: new Array(w.exportCount)
-        .fill(0)
-        .map(() =>
-          new Uint8Array(
-            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
-          ).fill(0),
-        ),
-      usedGas: re.usedGas,
-    };
   }
+  return re;
 };
 
 /**

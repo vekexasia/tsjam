@@ -9,11 +9,10 @@ import { E } from "@/ints/e";
  * $(0.6.4 - C.29)
  */
 export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
-  ["workPackageHash", WorkPackageHashCodec],
-  ["segmentRoot", HashCodec],
-  ["authorizerHash", HashCodec],
-  ["authorizerOutput", LengthDiscrimantedIdentity],
-  ["payloadHash", HashCodec],
+  ["workPackageHash", WorkPackageHashCodec], // h
+  ["segmentRoot", HashCodec], // e
+  ["authorizerHash", HashCodec], // a
+  ["payloadHash", HashCodec], // y
   [
     "gasLimit",
     mapCodec(
@@ -22,5 +21,6 @@ export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
       (b) => b,
     ),
   ],
-  ["output", WorkOutputCodec],
+  ["output", WorkOutputCodec], // d
+  ["authorizerOutput", LengthDiscrimantedIdentity], // y
 ]);

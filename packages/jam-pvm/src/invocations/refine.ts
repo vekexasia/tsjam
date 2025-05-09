@@ -26,11 +26,10 @@ import {
   omega_x,
   omega_e,
   omega_z,
-  omega_y,
 } from "@/functions/refine.js";
 import { FnsDb } from "@/functions/fnsdb.js";
 import { applyMods } from "@/functions/utils.js";
-import { omega_g } from "@/functions/general.js";
+import { omega_g, omega_y } from "@/functions/general.js";
 import { historicalLookup } from "@tsjam/utils";
 import { argumentInvocation } from "@/invocations/argument.js";
 import { IxMod } from "@/instructions/utils";
