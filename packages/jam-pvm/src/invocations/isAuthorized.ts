@@ -3,18 +3,11 @@ import {
   Gas,
   PVMResultContext,
   WorkError,
-  WorkPackage,
   WorkPackageWithAuth,
   u32,
 } from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
-import {
-  createCodec,
-  E_2_int,
-  E_sub_int,
-  encodeWithCodec,
-  WorkPackageCodec,
-} from "@tsjam/codec";
+import { E_2_int, encodeWithCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
 import {

@@ -1,4 +1,3 @@
-import { Uint8ArrayJSONCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";

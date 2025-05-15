@@ -17,7 +17,7 @@ import {
   RefinementContextCodec,
   RefinementContextJSONCodec,
 } from "@/setelements/RefinementContextCodec.js";
-import { E_2_int, E_sub } from "@/ints/E_subscr.js";
+import { E_2_int } from "@/ints/E_subscr.js";
 import {
   AvailabilitySpecificationCodec,
   AvailabilitySpecificationJSONCodec,

@@ -23,7 +23,6 @@ import {
   CodeHashCodec,
   createCodec,
   E_4_int,
-  E_8,
   E_sub,
   encodeWithCodec,
   HashJSONCodec,

@@ -10,11 +10,7 @@ import {
   ValidatorStatistics,
 } from "@tsjam/types";
 import { createCodec } from "./utils";
-import {
-  CORES,
-  ERASURECODE_EXPORTED_SIZE,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
+import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { createSequenceCodec } from "./sequenceCodec";
 import { E_4_int, E_sub_int } from "./ints/E_subscr";
 import { buildGenericKeyValueCodec } from "./dicts/keyValue";

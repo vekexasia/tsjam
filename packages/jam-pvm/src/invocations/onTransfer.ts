@@ -4,7 +4,6 @@ import {
   Delta,
   Gas,
   Posterior,
-  PVMProgramCode,
   PVMProgramExecutionContext,
   ServiceAccount,
   ServiceIndex,

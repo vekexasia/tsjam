@@ -69,7 +69,7 @@ export const pvmSingleStep = (
   let args: unknown;
   try {
     args = ix.decode(byteArgs, context);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
   } catch (e: any) {
     //pvmLogger.warn(`Decoding error for ${ix.identifier}`, e.message);
     const o = applyMods(ctx, {} as object, [

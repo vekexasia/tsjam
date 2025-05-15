@@ -41,7 +41,7 @@ import {
   StateRootHash,
   u32,
 } from "@tsjam/types";
-import { bigintToBytes, bytesToBigInt, isFallbackMode } from "@tsjam/utils";
+import { bigintToBytes, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
@@ -81,8 +81,8 @@ const bits = (ar: Uint8Array): bit[] => {
 
 // $(0.6.5 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
-  const lb = bigintToBytes(l, 32);
-  const rb = bigintToBytes(r, 32);
+  const lb = encodeWithCodec(HashCodec, l);
+  const rb = encodeWithCodec(HashCodec, r);
   return new Uint8Array([
     lb[0] & 0b01111111,
     ...lb.subarray(1),

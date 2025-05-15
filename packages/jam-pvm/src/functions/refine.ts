@@ -1,7 +1,6 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
   Delta,
-  ExportSegment,
   Gas,
   PVMExitPanicMod,
   PVMMemoryAccessKind,
@@ -14,7 +13,6 @@ import {
   Tau,
   u32,
   u8,
-  WorkPackageWithAuth,
 } from "@tsjam/types";
 import { W7, W8 } from "@/functions/utils.js";
 import {
@@ -27,13 +25,7 @@ import {
 import { toInBoundsMemoryAddress, toSafeMemoryAddress } from "@/pvmMemory.js";
 import { historicalLookup, zeroPad } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
-import {
-  E_4,
-  E_8,
-  encodeWithCodec,
-  HashCodec,
-  WorkPackageCodec,
-} from "@tsjam/codec";
+import { E_4, E_8, HashCodec } from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
