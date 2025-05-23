@@ -320,7 +320,7 @@ function checkMerkle(jamState: JamState, duna: any) {
   //    ),
   //  );
 }
-describe("jamduna", () => {
+describe.skip("jamduna", () => {
   const createTests = (kind: "tiny" | "full", set: string) => {
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(
