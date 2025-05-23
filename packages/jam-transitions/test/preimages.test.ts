@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
-import { deltaToPosterior, DeltaToPosteriorError } from "@/index.js";
+import {
+  deltaToPosterior,
+  DeltaToPosteriorError,
+  serviceStatisticsSTF,
+} from "@/index.js";
 import {
   Delta,
   DoubleDagger,
@@ -154,6 +158,20 @@ const buildTest = (filename: string) => {
   }
 
   expect([...p_delta.entries()]).deep.eq([...postState.accounts]);
+
+  const [, p_serviseStats] = serviceStatisticsSTF(
+    {
+      guaranteedReports: [],
+      preimages: input.ep,
+      accumulationStatistics: new Map(),
+      transferStatistics: new Map(),
+    },
+    preState.statistics,
+  ).safeRet();
+
+  expect([...p_serviseStats.entries()]).deep.eq([
+    ...postState.statistics.entries(),
+  ]);
 };
 describe("preimages-test-vectors", () => {
   describe("tiny", () => {
