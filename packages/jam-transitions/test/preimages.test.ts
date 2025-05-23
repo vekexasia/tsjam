@@ -9,6 +9,8 @@ import {
   Hash,
   Posterior,
   ServiceAccount,
+  ServiceIndex,
+  SingleServiceStatistics,
   Tau,
   u32,
   u64,
@@ -24,6 +26,7 @@ import {
   HashCodec,
   LengthDiscrimantedIdentity,
   mapCodec,
+  ServiceStatisticsCodec,
 } from "@tsjam/codec";
 import {
   buildTestDeltaCodec,
@@ -32,11 +35,12 @@ import {
 
 type TestState = {
   accounts: DoubleDagger<Delta>;
+  statistics: Map<ServiceIndex, SingleServiceStatistics>;
 };
 
 type Input = {
-  p_tau: Posterior<Tau>;
   ep: EP_Extrinsic;
+  p_tau: Posterior<Tau>;
 };
 
 type TestCase = {
@@ -103,6 +107,7 @@ const buildTest = (filename: string) => {
         ),
       ),
     ],
+    ["statistics", ServiceStatisticsCodec],
   ]);
 
   const testBin = fs.readFileSync(
