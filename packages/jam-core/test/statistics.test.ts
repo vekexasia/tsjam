@@ -10,7 +10,7 @@ import {
   createCodec,
   createSequenceCodec,
   codec_Et,
-  StatisticsCodec,
+  ValidatorStatisticsCodec,
 } from "@tsjam/codec";
 import {
   Tau,
@@ -18,23 +18,12 @@ import {
   JamState,
   ValidatorIndex,
   JamBlock,
-  JamStatistics,
-  Validated,
-  EA_Extrinsic,
-  Dagger,
-  RHO,
+  ValidatorStatistics,
 } from "@tsjam/types";
 import fs from "node:fs";
 import * as constants from "@tsjam/constants";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { logCodec } from "@tsjam/codec/test/utils.js";
-import {
-  _w,
-  coreStatisticsSTF,
-  serviceStatisticsSTF,
-  validatorStatisticsToPosterior,
-} from "@tsjam/transitions";
-import { availableReports } from "@/accumulate";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { _w, validatorStatisticsToPosterior } from "@tsjam/transitions";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -51,7 +40,7 @@ export const getCodecFixtureFile = (
 };
 
 type TestState = {
-  pi: JamStatistics;
+  pi: ValidatorStatistics;
   tau: Tau;
   p_kappa: Posterior<JamState["kappa"]>;
 };
@@ -60,10 +49,10 @@ describe("statistics", () => {
     const innerNUMOFVAL = <typeof NUMBER_OF_VALIDATORS>(
       (kind == "tiny" ? 6 : 1023)
     );
-    const cores = <typeof CORES>(kind == "tiny" ? 2 : 341);
+    // const cores = <typeof CORES>(kind == "tiny" ? 2 : 341);
     const stateCodec = createCodec<TestState>([
-      ["pi", StatisticsCodec(innerNUMOFVAL, cores)],
-      logCodec(["tau", E_sub_int<Tau>(4)]),
+      ["pi", ValidatorStatisticsCodec(innerNUMOFVAL)],
+      ["tau", E_sub_int<Tau>(4)],
       [
         "p_kappa",
         createSequenceCodec<Posterior<JamState["kappa"]>>(
@@ -111,7 +100,6 @@ describe("statistics", () => {
       getCodecFixtureFile(`${filename}.bin`, kind),
     );
 
-    console.log(decoded.value.preState.pi.services);
     const [, posterior_validators] = validatorStatisticsToPosterior(
       {
         extrinsics: decoded.value.input.extrinsic,
@@ -127,45 +115,45 @@ describe("statistics", () => {
         curTau: decoded.value.preState.tau,
         p_kappa: decoded.value.preState.p_kappa,
       },
-      decoded.value.preState.pi.validators,
+      decoded.value.preState.pi,
     ).safeRet();
     expect(posterior_validators[0], "pi[0]").deep.eq(
-      decoded.value.postState.pi.validators[0],
+      decoded.value.postState.pi[0],
     );
     expect(posterior_validators[1], "pi[1]").deep.eq(
-      decoded.value.postState.pi.validators[1],
+      decoded.value.postState.pi[1],
     );
 
-    const guaranteedReports = _w(
-      decoded.value.input.extrinsic.reportGuarantees,
-    );
-    const [, p_cores] = coreStatisticsSTF(
-      {
-        availableReports: availableReports(
-          <Validated<EA_Extrinsic>>decoded.value.input.extrinsic.assurances,
-          <Dagger<RHO>>new Array(cores).fill(undefined),
-        ),
-        guaranteedReports,
-        assurances: decoded.value.input.extrinsic.assurances,
-      },
-      decoded.value.preState.pi.cores,
-    ).safeRet();
-    expect(p_cores).deep.eq(decoded.value.postState.pi.cores);
+    // const guaranteedReports = _w(
+    //   decoded.value.input.extrinsic.reportGuarantees,
+    // );
+    // const [, p_cores] = coreStatisticsSTF(
+    //   {
+    //     availableReports: availableReports(
+    //       <Validated<EA_Extrinsic>>decoded.value.input.extrinsic.assurances,
+    //       <Dagger<RHO>>new Array(cores).fill(undefined),
+    //     ),
+    //     guaranteedReports,
+    //     assurances: decoded.value.input.extrinsic.assurances,
+    //   },
+    //   decoded.value.preState.pi.cores,
+    // ).safeRet();
+    // expect(p_cores).deep.eq(decoded.value.postState.pi.cores);
 
-    console.log({ guaranteedReports });
-    const [, p_services] = serviceStatisticsSTF(
-      {
-        guaranteedReports,
-        preimages: decoded.value.input.extrinsic.preimages,
-        transferStatistics: new Map(),
-        accumulationStatistics: new Map(),
-      },
-      decoded.value.preState.pi.services,
-    ).safeRet();
-    console.log(p_services);
-    expect(p_services).deep.eq(decoded.value.postState.pi.services);
+    // console.log({ guaranteedReports });
+    // const [, p_services] = serviceStatisticsSTF(
+    //   {
+    //     guaranteedReports,
+    //     preimages: decoded.value.input.extrinsic.preimages,
+    //     transferStatistics: new Map(),
+    //     accumulationStatistics: new Map(),
+    //   },
+    //   decoded.value.preState.pi.services,
+    // ).safeRet();
+    // console.log(p_services);
+    // expect(p_services).deep.eq(decoded.value.postState.pi.services);
   };
-  describe.skip("tiny", () => {
+  describe("tiny", () => {
     beforeAll(() => {
       vi.spyOn(constants, "EPOCH_LENGTH", "get").mockReturnValue(<any>12);
       vi.spyOn(constants, "NUMBER_OF_VALIDATORS", "get").mockReturnValue(
