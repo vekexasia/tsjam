@@ -57,11 +57,13 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
           readBytes: 1,
         };
       case 4:
-        return { value: WorkError.Bad, readBytes: 1 };
+        return { value: WorkError.Oversize, readBytes: 1 };
       case 5:
+        return { value: WorkError.Bad, readBytes: 1 };
+      case 6:
         return { value: WorkError.Big, readBytes: 1 };
     }
-    throw new Error("Invalid value");
+    throw new Error(`Invalid value ${bytes[0]}`);
   },
   encodedSize(value: WorkOutput): number {
     if (value instanceof Uint8Array) {

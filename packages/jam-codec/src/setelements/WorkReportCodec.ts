@@ -17,7 +17,6 @@ import {
   RefinementContextCodec,
   RefinementContextJSONCodec,
 } from "@/setelements/RefinementContextCodec.js";
-import { E_2_int } from "@/ints/E_subscr.js";
 import {
   AvailabilitySpecificationCodec,
   AvailabilitySpecificationJSONCodec,
@@ -36,7 +35,7 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
-import { E_bigint } from "@/ints/e";
+import { E_bigint, E_int } from "@/ints/e";
 
 /**
  * $(0.6.4 - C.24)
@@ -47,7 +46,7 @@ export const WorkReportCodec = createCodec<WorkReport>([
   // x
   ["refinementContext", RefinementContextCodec],
   // c
-  ["coreIndex", E_2_int as unknown as JamCodec<CoreIndex>],
+  ["coreIndex", E_int<CoreIndex>()],
   // a
   ["authorizerHash", HashCodec as unknown as JamCodec<Blake2bHash>],
   // o
