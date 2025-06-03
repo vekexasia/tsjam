@@ -1,11 +1,32 @@
-import { CodeHash, Gas, Hash, Tagged, UpToSeq, u32, u64 } from "@/genericTypes";
+import {
+  CodeHash,
+  Gas,
+  Hash,
+  ServiceIndex,
+  Tagged,
+  UpToSeq,
+  u32,
+  u64,
+} from "@/genericTypes";
+
+export interface IServiceAccountStorage {
+  delete(key: Uint8Array): boolean;
+
+  get(key: Uint8Array): Uint8Array;
+
+  hasKey(key: Uint8Array): boolean;
+
+  set(key: Uint8Array, value: Uint8Array): void;
+
+  readonly size: number;
+}
 
 /**
  * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
- * $(0.6.4 - 9.3)
+ * $(0.6.6 - 9.3)
  *  NOTE: there are some `virtual` elements such as
- * `bold_c` - actual code ap[ac] $(0.6.4 - 9.4)
+ * `bold_c` - actual code ap[ac] $(0.6.6 - 9.4)
  * $(0.6.4 - 9.8):
  * `i` - ∈ N232 = computed in `serviceAccountItemInStorage`
  * `o` - ∈ N264 = computed in `serviceAccountTotalOctets`
@@ -15,10 +36,10 @@ export interface ServiceAccount {
   /**
    * `s` - key value storage. It is set from service accumulation
    */
-  storage: Map<Hash, Uint8Array>;
+  storage: IServiceAccountStorage;
 
   /**
-   * `p` - designed to be queried in core.
+   * `bold_p` - designed to be queried in core.
    */
   preimage_p: Map<Hash, Uint8Array>;
 
@@ -33,13 +54,17 @@ export interface ServiceAccount {
   preimage_l: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">>>;
 
   /**
+   * `f`
+   */
+  gratisStorageOffset: u64;
+
+  /**
    * `c` - code hash
    */
   codeHash: CodeHash;
 
   /**
    * `b` - balance
-   *
    */
   balance: u64;
 
@@ -52,4 +77,34 @@ export interface ServiceAccount {
    * `m` - minimum gas for the on_initialize method
    */
   minGasOnTransfer: Gas;
+
+  /**
+   * `r`
+   */
+  creationTimeSlot: u32;
+
+  /**
+   * `a`
+   */
+  lastAccumulationTimeSlot: u32;
+
+  /**
+   * `p`
+   */
+  parentService: ServiceIndex;
+
+  //  NOTE: Virtual elements
+  /**
+   * `i`
+   */
+  itemInStorage(): u32;
+  /**
+   * `o`
+   */
+  totalOctets(): u64;
+
+  /**
+   * `t`
+   */
+  gasThreshold(): Gas;
 }

@@ -46,10 +46,6 @@ import { bigintToBytes, bytesToBigInt, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import {
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/serviceaccounts";
 
 /**
  * Merkelize state
@@ -408,11 +404,8 @@ export const merkleStateMap = (state: JamState): Map<Hash, Uint8Array> => {
         ...encodeWithCodec(E_8, serviceAccount.balance),
         ...encodeWithCodec(E_8, serviceAccount.minGasAccumulate),
         ...encodeWithCodec(E_8, serviceAccount.minGasOnTransfer),
-        ...encodeWithCodec(E_8, serviceAccountTotalOctets(serviceAccount)),
-        ...encodeWithCodec(
-          E_4_int,
-          serviceAccountItemInStorage(serviceAccount),
-        ),
+        ...encodeWithCodec(E_8, serviceAccount.totalOctets()),
+        ...encodeWithCodec(E_4_int, serviceAccount.itemInStorage()),
       ]),
     );
 

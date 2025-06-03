@@ -32,9 +32,9 @@
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/pvm": "*",
+    "@tsjam/serviceaccounts": "*",
     "@tsjam/transitions": "*",
     "@tsjam/types": "*",
-    "@tsjam/serviceaccounts": "*",
     "@tsjam/utils": "*",
     "neverthrow": "^8.1.1"
   },

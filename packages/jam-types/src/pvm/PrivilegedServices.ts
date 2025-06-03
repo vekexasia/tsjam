@@ -5,22 +5,21 @@ import { Gas, ServiceIndex } from "../genericTypes.js";
  */
 export type PrivilegedServices = {
   /**
-   * `m`
-   * Index of the service able to alter PrivilegedServices from block to block
+   * `m` - the index of the blessed service
    */
-  bless: ServiceIndex;
-
-  /**
-   * `a`
-   * service which can alter φ
-   */
-  assign: ServiceIndex;
+  manager: ServiceIndex;
 
   /**
    * `v`
    * service which can alter ι
    */
   designate: ServiceIndex;
+
+  /**
+   * `a`
+   * service which can alter φ
+   */
+  assign: ServiceIndex;
 
   /**
    * map of services which are automatically accumulated in each block

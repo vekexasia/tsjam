@@ -30,8 +30,8 @@
   "dependencies": {
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
-    "@tsjam/serviceaccounts": "*",
     "@tsjam/crypto": "*",
+    "@tsjam/serviceaccounts": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },

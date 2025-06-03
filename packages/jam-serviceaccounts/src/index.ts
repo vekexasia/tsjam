@@ -3,7 +3,14 @@ import {
   SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
   SERVICE_MIN_BALANCE,
 } from "@tsjam/constants";
-import { Gas, PVMProgramCode, ServiceAccount, u32, u64 } from "@tsjam/types";
+import {
+  Gas,
+  PVMProgramCode,
+  IServiceAccountStorage,
+  ServiceAccount,
+  u32,
+  u64,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import {
   createCodec,
@@ -22,7 +29,7 @@ export const serviceMetadataCodec = createCodec<{
 /**
  *
  * computes bold_c and bold_m
- * $(0.6.4 - 9.4)
+ * $(0.6.6 - 9.4)
  */
 export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
   const blob = a.preimage_p.get(a.codeHash);
@@ -53,7 +60,7 @@ export const serviceAccountGasThreshold = (a: ServiceAccount): Gas => {
 
 /**
  * `a_i` - total number of preimage lookup dictionaries and
- * $(0.6.4 - 9.8)
+ * $(0.6.6 - 9.8)
  */
 export const serviceAccountItemInStorage = (a: ServiceAccount): u32 => {
   return toTagged(2 * a.preimage_l.size + a.storage.size);
@@ -61,7 +68,7 @@ export const serviceAccountItemInStorage = (a: ServiceAccount): u32 => {
 
 /**
  * `a_o` - total octets in the preimage lookup and storage
- * $(0.6.4 - 9.8)
+ * $(0.6.6 - 9.8)
  */
 export const serviceAccountTotalOctets = (a: ServiceAccount): u64 => {
   let sum: bigint = 0n;
