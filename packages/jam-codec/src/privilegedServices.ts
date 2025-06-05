@@ -11,7 +11,7 @@ import { createJSONCodec, JSONCodec, NumberJSONCodec } from "./json/JsonCodec";
  */
 export const PrivilegedServicesCodec: JamCodec<PrivilegedServices> =
   createCodec([
-    ["bless", E_sub_int<ServiceIndex>(4)],
+    ["manager", E_sub_int<ServiceIndex>(4)],
     ["assign", E_sub_int<ServiceIndex>(4)],
     ["designate", E_sub_int<ServiceIndex>(4)],
     [
@@ -33,7 +33,7 @@ export const PrivilegedServicesJSONCodec: JSONCodec<
     chi_g: null | Record<ServiceIndex, number>;
   }
 > = createJSONCodec([
-  ["bless", "chi_m", NumberJSONCodec<ServiceIndex>()],
+  ["manager", "chi_m", NumberJSONCodec<ServiceIndex>()],
   ["assign", "chi_a", NumberJSONCodec<ServiceIndex>()],
   ["designate", "chi_v", NumberJSONCodec<ServiceIndex>()],
   [
