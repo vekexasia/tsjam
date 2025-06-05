@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
-import { deltaToPosterior, DeltaToPosteriorError } from "@/index.js";
+import {
+  deltaToPosterior,
+  DeltaToPosteriorError,
+  serviceStatisticsSTF,
+} from "@/index.js";
 import {
   Delta,
   DoubleDagger,
@@ -9,6 +13,8 @@ import {
   Hash,
   Posterior,
   ServiceAccount,
+  ServiceIndex,
+  SingleServiceStatistics,
   Tau,
   u32,
   u64,
@@ -24,6 +30,7 @@ import {
   HashCodec,
   LengthDiscrimantedIdentity,
   mapCodec,
+  ServiceStatisticsCodec,
 } from "@tsjam/codec";
 import {
   buildTestDeltaCodec,
@@ -32,11 +39,12 @@ import {
 
 type TestState = {
   accounts: DoubleDagger<Delta>;
+  statistics: Map<ServiceIndex, SingleServiceStatistics>;
 };
 
 type Input = {
-  p_tau: Posterior<Tau>;
   ep: EP_Extrinsic;
+  p_tau: Posterior<Tau>;
 };
 
 type TestCase = {
@@ -103,6 +111,7 @@ const buildTest = (filename: string) => {
         ),
       ),
     ],
+    ["statistics", ServiceStatisticsCodec],
   ]);
 
   const testBin = fs.readFileSync(
@@ -149,6 +158,20 @@ const buildTest = (filename: string) => {
   }
 
   expect([...p_delta.entries()]).deep.eq([...postState.accounts]);
+
+  const [, p_serviseStats] = serviceStatisticsSTF(
+    {
+      guaranteedReports: [],
+      preimages: input.ep,
+      accumulationStatistics: new Map(),
+      transferStatistics: new Map(),
+    },
+    preState.statistics,
+  ).safeRet();
+
+  expect([...p_serviseStats.entries()]).deep.eq([
+    ...postState.statistics.entries(),
+  ]);
 };
 describe("preimages-test-vectors", () => {
   describe("tiny", () => {

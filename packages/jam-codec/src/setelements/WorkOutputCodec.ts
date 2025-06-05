@@ -4,7 +4,7 @@ import { E } from "@/ints/e.js";
 import { LengthDiscrimantedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { BufferJSONCodec, JSONCodec } from "@/json/JsonCodec";
 
-// $(0.6.4  - C.30)
+// $(0.6.6  - C.30)
 export const WorkOutputCodec: JamCodec<WorkOutput> = {
   encode(value: WorkOutput, bytes: Uint8Array): number {
     let offset = 0;
@@ -25,11 +25,14 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
         case WorkError.BadExports:
           offset = E.encode(3n, bytes);
           break;
-        case WorkError.Bad:
+        case WorkError.Oversize:
           offset = E.encode(4n, bytes);
           break;
-        case WorkError.Big:
+        case WorkError.Bad:
           offset = E.encode(5n, bytes);
+          break;
+        case WorkError.Big:
+          offset = E.encode(6n, bytes);
           break;
       }
     }
@@ -54,11 +57,13 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
           readBytes: 1,
         };
       case 4:
-        return { value: WorkError.Bad, readBytes: 1 };
+        return { value: WorkError.Oversize, readBytes: 1 };
       case 5:
+        return { value: WorkError.Bad, readBytes: 1 };
+      case 6:
         return { value: WorkError.Big, readBytes: 1 };
     }
-    throw new Error("Invalid value");
+    throw new Error(`Invalid value ${bytes[0]}`);
   },
   encodedSize(value: WorkOutput): number {
     if (value instanceof Uint8Array) {
@@ -76,6 +81,7 @@ export const WorkOutputJSONCodec: JSONCodec<
   | { "bad-exports": null }
   | { "bad-code": null }
   | { "code-oversize": null }
+  | { oversize: null }
 > = {
   fromJSON(json) {
     if ("ok" in json) {
@@ -105,6 +111,8 @@ export const WorkOutputJSONCodec: JSONCodec<
         return { panic: null };
       case WorkError.BadExports:
         return { "bad-exports": null };
+      case WorkError.Oversize:
+        return { oversize: null };
       case WorkError.Bad:
         return { "bad-code": null };
       case WorkError.Big:

@@ -33,11 +33,14 @@ import {
   WorkReport,
   u64,
   u32,
+  PVMResultContext,
+  ServiceAccount,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@tsjam/pvm";
+import { Hashing } from "@tsjam/crypto";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -393,7 +396,7 @@ export const outerAccumulation = (
   let i = 0;
   // TODO: rewrite this to a more elegant solution
   for (const w of works) {
-    sum += w.results.reduce((a, r) => a + r.gasPrioritization, 0n);
+    sum += w.results.reduce((a, r) => a + r.gasLimit, 0n);
     if (sum <= gasLimit) {
       i++;
     } else {
@@ -432,6 +435,29 @@ export const outerAccumulation = (
   ];
 };
 
+// $(0.6.5 - 12.18) - \fnprovide
+const preimageProvide = (
+  d: Map<ServiceIndex, ServiceAccount>,
+  p: PVMResultContext["preimages"],
+  p_tau: Posterior<Tau>,
+) => {
+  const newD = structuredClone(d);
+  for (const { service, preimage } of p) {
+    const serviceAccount = newD.get(service);
+    const phash = Hashing.blake2b(preimage);
+    if (
+      typeof serviceAccount !== "undefined" &&
+      serviceAccount.preimage_l.get(phash)?.get(toTagged(<u32>preimage.length))
+        ?.length === 0
+    ) {
+      const newSa = newD.get(service)!;
+      newSa.preimage_l
+        .get(phash)!
+        .set(toTagged(<u32>preimage.length), toTagged(<Tau[]>[p_tau]));
+      newSa.preimage_p.set(phash, preimage);
+    }
+  }
+};
 /**
  * `∆*` fn
  * $(0.6.4 - 12.17)
@@ -537,7 +563,7 @@ export const parallelizedAccAccumulation = (
 
 /**
  * `∆1` fn
- * $(0.6.4 - 12.19)
+ * $(0.6.5 - 12.20)
  */
 export const singleServiceAccumulation = (
   o: PVMAccumulationState,
@@ -553,32 +579,41 @@ export const singleServiceAccumulation = (
   t: DeferredTransfer[];
   b: Hash | undefined;
   u: Gas;
+  p: PVMResultContext["preimages"];
 } => {
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
     wr.results
       .filter((r) => r.serviceIndex === s)
-      .forEach((r) => (g = (g + r.gasPrioritization) as Gas)),
+      .forEach((r) => (g = (g + r.gasLimit) as Gas)),
   );
 
-  const p: PVMAccumulationOp[] = [];
+  const i: PVMAccumulationOp[] = [];
   for (const wr of w) {
     for (const r of wr.results) {
       if (r.serviceIndex === s) {
-        p.push({
-          output: r.output,
-          segmentRoot: wr.workPackageSpecification.segmentRoot,
-          authorizerOutput: wr.authorizerOutput,
+        i.push({
+          output: r.result,
+          gasLimit: r.gasLimit,
           payloadHash: r.payloadHash,
+          authorizerOutput: wr.authorizerOutput,
+          segmentRoot: wr.workPackageSpecification.segmentRoot,
           workPackageHash: wr.workPackageSpecification.workPackageHash,
           authorizerHash: wr.authorizerHash,
         });
       }
     }
   }
-  const [_o, t, b, u] = accumulateInvocation(o, s, g, p, deps.p_tau, {
-    p_tau: deps.p_tau,
-    p_eta_0: deps.p_eta_0,
-  });
-  return { o: _o, t, b, u };
+  const [_o, t, b, u, preimages] = accumulateInvocation(
+    o,
+    s,
+    g,
+    i,
+    deps.p_tau,
+    {
+      p_tau: deps.p_tau,
+      p_eta_0: deps.p_eta_0,
+    },
+  );
+  return { o: _o, t, b, u, p: preimages };
 };

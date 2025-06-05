@@ -76,7 +76,6 @@ export interface WorkItem {
 
   /**
    * `x`
-   * NOTSURE: the segments Exported?
    */
   exportedDataSegments: UpToSeq<
     {

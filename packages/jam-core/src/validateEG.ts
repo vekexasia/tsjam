@@ -149,7 +149,7 @@ export const assertEGValid = (
     const totalSize =
       workReport.authorizerOutput.length +
       workReport.results
-        .map((r) => r.output)
+        .map((r) => r.result)
         .filter((ro) => ro instanceof Uint8Array)
         .map((ro) => ro.length)
         .reduce((a, b) => a + b, 0);
@@ -272,17 +272,14 @@ export const assertEGValid = (
   // $(0.6.4 - 11.30) | check gas requiremens
   for (const wr of w) {
     const usedGas = wr.results
-      .map((r) => r.gasPrioritization)
+      .map((r) => r.gasLimit)
       .reduce((a, b) => a + b, 0n);
     if (usedGas > TOTAL_GAS_ACCUMULATION_LOGIC) {
       return err(EGError.GAS_EXCEEDED_ACCUMULATION_LIMITS);
     }
 
     for (const res of wr.results) {
-      if (
-        res.gasPrioritization <
-        deps.delta.get(res.serviceIndex)!.minGasAccumulate
-      ) {
+      if (res.gasLimit < deps.delta.get(res.serviceIndex)!.minGasAccumulate) {
         return err(EGError.GAS_TOO_LOW);
       }
     }

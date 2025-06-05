@@ -16,7 +16,7 @@ import {
   ietfVrfOutputHashFromSecret,
 } from "@tsjam/crypto-napi";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { bigintToBytes, bytesToBigInt } from "@tsjam/utils";
+import { bytesToBigInt } from "@tsjam/utils";
 
 export const Bandersnatch = {
   /**

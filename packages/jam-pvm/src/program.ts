@@ -31,7 +31,7 @@ const owzsCodec = createCodec<{
 
 /**
  * `Y` fn in the graypaper
- * $(0.6.4 - A.36)
+ * $(0.6.5 - A.36)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -141,6 +141,12 @@ export const programInitialization = (
   // third case
   {
     const offset = 2 * Zz + Z_Fn(roDataLength);
+
+    console.log(
+      "offset",
+      offset.toString(16),
+      Buffer.from(rwData).toString("hex"),
+    );
     mem.push({ at: <u32>offset, content: rwData });
     heap.start = <u32>offset;
     heap.pointer = <u32>(heap.start + rwDataLength);
@@ -168,9 +174,15 @@ export const programInitialization = (
     to: 2 ** 32 - 2 * Zz - Zi,
     kind: PVMMemoryAccessKind.Write,
   });
+  console.log("stack", (2 ** 32 - 2 * Zz - Zi - P_Fn(stackSize)).toString(16));
 
   {
     const offset = 2 ** 32 - Zz - Zi;
+    console.log(
+      "argument",
+      offset.toString(16),
+      Buffer.from(argument).toString("hex"),
+    );
     // sixth case
     mem.push({
       at: <u32>offset,

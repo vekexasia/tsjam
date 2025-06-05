@@ -108,6 +108,12 @@ type Input = {
   eg: EG_Extrinsic;
   // H_t
   tau: Posterior<Tau>;
+  /**
+   * This is a derived sequence of all known packages
+   * The set is constructed from all the recently reported WPs using recent_blocks (β),
+   * accumulated reports (ξ), availability (ρ), and ready queue (φ).
+   */
+  knownPackages: Array<WorkPackageHash>;
 };
 type Output = {
   reportedPackages: Array<{
@@ -208,6 +214,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       createCodec<Input>([
         ["eg", codec_Eg],
         ["tau", E_sub_int<Posterior<Tau>>(4)],
+        ["knownPackages", createArrayLengthDiscriminator(WorkPackageHashCodec)],
       ]),
     ],
     ["preState", stateCodec],
@@ -293,6 +300,12 @@ describe("workreports", () => {
 
   it("anchor_not_recent-1", () => {
     expect(() => buildTest("anchor_not_recent-1", set)).toThrow(
+      EGError.ANCHOR_NOT_IN_RECENTHISTORY,
+    );
+  });
+
+  it("bad_beefy_mmr-1", () => {
+    expect(() => buildTest("bad_beefy_mmr-1", set)).toThrow(
       EGError.ANCHOR_NOT_IN_RECENTHISTORY,
     );
   });
@@ -413,6 +426,12 @@ describe("workreports", () => {
     );
   });
 
+  it("report_before_last_rotation-1", () => {
+    expect(() => buildTest("report_before_last_rotation-1", set)).toThrow(
+      EGError.CORE_INDEX_MISMATCH,
+    );
+  });
+
   it("reports_with_dependencies-1", () => {
     buildTest("reports_with_dependencies-1", set);
   });
@@ -462,18 +481,6 @@ describe("workreports", () => {
   it("too_big_work_report_output-1", () => {
     expect(() => buildTest("too_big_work_report_output-1", set)).toThrow(
       EGError.WORKREPORT_SIZE_EXCEEDED,
-    );
-  });
-
-  it("report_before_last_rotation-1", () => {
-    expect(() => buildTest("report_before_last_rotation-1", set)).toThrow(
-      EGError.CORE_INDEX_MISMATCH,
-    );
-  });
-
-  it("bad_beefy_mmr-1", () => {
-    expect(() => buildTest("bad_beefy_mmr-1", set)).toThrow(
-      EGError.ANCHOR_NOT_IN_RECENTHISTORY,
     );
   });
 });

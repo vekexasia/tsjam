@@ -88,12 +88,12 @@ export type SingleServiceStatistics = {
   /**
    * `i`
    */
-  imports: u16;
+  imports: u32;
 
   /**
    * `e`
    */
-  extrinsicCount: u16;
+  extrinsicCount: u32;
 
   /**
    * `z`
@@ -103,7 +103,7 @@ export type SingleServiceStatistics = {
   /**
    * `x`
    */
-  exports: u16;
+  exports: u32;
 
   /**
    * `a`

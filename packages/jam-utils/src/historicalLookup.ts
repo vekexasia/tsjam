@@ -27,7 +27,7 @@ export const historicalLookup = (
 /**
  * Checks based on the length of the preimage and tau if it is valid
  */
-const I_Fn = (l: UpToSeq<u32, 3, "Nt">, t: Tau) => {
+const I_Fn = (l: UpToSeq<Tau, 3>, t: Tau) => {
   switch (l.length) {
     case 0:
       return false;

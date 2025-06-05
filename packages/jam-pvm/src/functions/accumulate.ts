@@ -36,6 +36,7 @@ import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/serviceaccounts";
+import { Hashing } from "@tsjam/crypto";
 
 /**
  * `ΩB`
@@ -210,7 +211,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
         minGasAccumulate: g as bigint as Gas,
         minGasOnTransfer: m as bigint as Gas,
       };
-      const nm: Map<Tagged<u32, "length">, UpToSeq<u32, 3, "Nt">> = new Map();
+      const nm: Map<Tagged<u32, "length">, UpToSeq<Tau, 3>> = new Map();
       nm.set(toTagged(Number(l) as u32), toTagged([]));
       a.preimage_l.set(c, nm);
 
@@ -636,6 +637,69 @@ export const omega_y = regFn<
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       ).value;
       return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: { ...x, y: h } })];
+    },
+  },
+});
+
+export const omega_aries = regFn<
+  [x: PVMResultContext, s: ServiceIndex],
+  PVMExitPanicMod | W7 | XMod
+>({
+  fn: {
+    opCode: 27,
+    identifier: "provide",
+    gasCost: 10n as Gas,
+    execute(context, x, s) {
+      const [o, _z] = context.registers.slice(8);
+      const z = Number(_z) as Tagged<u32, "length">;
+      const w7 = context.registers[7];
+      const bold_d = x.u.delta;
+      let s_star = <ServiceIndex>Number(w7);
+      if (w7 === 2n ** 64n - 1n) {
+        s_star = s;
+      }
+      if (!context.memory.canRead(toSafeMemoryAddress(o), z)) {
+        return [IxMod.panic()];
+      }
+
+      const bold_i = context.memory.getBytes(toSafeMemoryAddress(o), z);
+      const bold_a = bold_d.get(s_star);
+
+      if (typeof bold_a === "undefined") {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+
+      if (
+        bold_a.preimage_l.get(Hashing.blake2b(bold_i))?.get(z)?.length !== 0
+      ) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+
+      if (
+        x.preimages.find(
+          (x) =>
+            x.service === s_star && Buffer.compare(x.preimage, bold_i) === 0,
+        )
+      ) {
+        // already there
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({
+          x: {
+            ...x,
+            preimages: [
+              ...x.preimages.slice(),
+              {
+                service: s_star,
+                preimage: bold_i,
+              },
+            ],
+          },
+        }),
+      ];
     },
   },
 });

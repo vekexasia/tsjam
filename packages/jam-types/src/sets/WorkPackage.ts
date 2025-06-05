@@ -6,6 +6,7 @@ import {
   CodeHash,
   ServiceIndex,
 } from "@/genericTypes";
+import { PVMProgramCode } from "@/pvm/PVMProgramCode";
 import { RefinementContext } from "@/sets/RefinementContext";
 import { WorkItem } from "@/sets/WorkItem";
 import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
@@ -55,5 +56,5 @@ export interface WorkPackageWithAuth extends WorkPackage {
    * `c` - the authorization code
    * historicalLookup(delta(serviceIndex), context.lookupAnchor.timeSlot, authorizationCodeHash)
    */
-  readonly pc: Uint8Array;
+  readonly pc: PVMProgramCode;
 }

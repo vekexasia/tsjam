@@ -3,6 +3,7 @@ import {
   AccumulationHistoryCodec,
   AccumulationQueueCodec,
   Blake2bHashCodec,
+  buildGenericKeyValueCodec,
   buildKeyValueCodec,
   createArrayLengthDiscriminator,
   createCodec,
@@ -10,16 +11,18 @@ import {
   eitherOneOfCodec,
   extendCodec,
   IdentityCodec,
+  LengthDiscrimantedIdentity,
   LengthDiscriminator,
+  mapCodec,
   MerkleTreeRootCodec,
   PrivilegedServicesCodec,
+  ServiceStatisticsCodec,
   WorkReportCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   JamState,
   Posterior,
-  ServiceIndex,
   Tau,
   AccumulationHistory,
   AccumulationQueue,
@@ -27,8 +30,8 @@ import {
   Delta,
   PrivilegedServices,
   AvailableWorkReports,
-  Hash,
   MerkleTreeRoot,
+  JamStatistics,
 } from "@tsjam/types";
 import { vi, it, describe, beforeEach, expect } from "vitest";
 import {
@@ -38,6 +41,9 @@ import {
 } from "@tsjam/codec/test/testCodecs.js";
 import { accumulateReports } from "@/accumulate.js";
 import { dummyState } from "./utils";
+import { logCodec } from "@tsjam/codec/test/utils.js";
+import { _w, serviceStatisticsSTF } from "@tsjam/transitions";
+import { Hashing } from "@tsjam/crypto";
 const mocks = vi.hoisted(() => {
   return {
     CORES: 341,
@@ -81,6 +87,7 @@ type TestState = {
   accQueue: AccumulationQueue;
   accHistory: AccumulationHistory;
   privServices: PrivilegedServices;
+  statistics: JamStatistics["services"];
   accounts: Delta;
 };
 
@@ -106,7 +113,32 @@ type TestCase = {
 
 const accumulateAccountCodec = extendCodec(
   serviceAccountFromTestInfo(),
-  createCodec<Pick<ServiceAccount, "preimage_p">>([
+  createCodec<Pick<ServiceAccount, "preimage_p" | "storage">>([
+    [
+      "storage",
+      mapCodec(
+        buildGenericKeyValueCodec(
+          LengthDiscrimantedIdentity,
+          LengthDiscrimantedIdentity,
+          (a, b) => Buffer.compare(a, b),
+        ),
+        (info) => {
+          const storage: ServiceAccount["storage"] = new Map();
+          for (const key of info.keys()) {
+            const value = info.get(key)!;
+            storage.set(Hashing.blake2b(key), value);
+          }
+          console.log("storage", storage, info);
+          if (info.size > 0) {
+            throw new Error("diocan");
+          }
+          return storage;
+        },
+        () => {
+          return new Map(); // we do not  care
+        },
+      ),
+    ],
     [
       "preimage_p",
       buildKeyValueCodec(
@@ -126,14 +158,15 @@ const buildTest = (filename: string, size: string) => {
     ? 6
     : 1023) as unknown as typeof NUMBER_OF_VALIDATORS;
   const EPLEN = (size === "tiny" ? 12 : 600) as unknown as typeof EPOCH_LENGTH;
-  const NCOR = (size === "tiny" ? 2 : 341) as unknown as number;
+  const NCOR = (size === "tiny" ? 2 : 341) as unknown as typeof CORES;
 
   const stateCodec = createCodec<TestState>([
     ["slot", E_sub_int<Tau>(4)],
     ["p_eta_0", posteriorCodec(Blake2bHashCodec)],
-    ["accQueue", AccumulationQueueCodec(EPOCH_LENGTH)],
-    ["accHistory", AccumulationHistoryCodec(EPOCH_LENGTH)],
+    ["accQueue", AccumulationQueueCodec(EPLEN)],
+    ["accHistory", AccumulationHistoryCodec(EPLEN)],
     ["privServices", PrivilegedServicesCodec],
+    ["statistics", ServiceStatisticsCodec],
     ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
   ]);
 
@@ -160,9 +193,23 @@ const buildTest = (filename: string, size: string) => {
         ["err", createCodec<{}>([])],
       ]),
     ],
-    ["postState", stateCodec],
+    [
+      "postState",
+      createCodec<TestState>([
+        ["slot", E_sub_int<Tau>(4)],
+        ["p_eta_0", posteriorCodec(Blake2bHashCodec)],
+        ["accQueue", AccumulationQueueCodec(EPLEN)],
+        ["accHistory", AccumulationHistoryCodec(EPLEN)],
+        ["privServices", PrivilegedServicesCodec],
+        logCodec(["statistics", ServiceStatisticsCodec], (a) =>
+          JSON.stringify(a),
+        ),
+        ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
+      ]),
+    ],
   ]).decode(testBin).value;
 
+  throw new Error("TODO: remove this 2");
   const { input, preState, output, postState } = decoded;
   const testSTate = dummyState({
     validators: NUMVALS,
@@ -184,6 +231,7 @@ const buildTest = (filename: string, size: string) => {
     );
   */
   // preState.accounts.get(<ServiceIndex>1729)!.preimage_l = new Map();
+  console.log("preAccumulate");
 
   const [, res] = accumulateReports(input.reports, {
     p_tau: input.p_tau,
@@ -196,14 +244,29 @@ const buildTest = (filename: string, size: string) => {
     p_eta_0: preState.p_eta_0,
     authQueue: testSTate.authQueue,
   }).safeRet();
+  console.log("postAccumulate");
+  const [, p_serviceStatistics] = serviceStatisticsSTF(
+    {
+      guaranteedReports: [],
+      preimages: [],
+      transferStatistics: new Map(),
+      accumulationStatistics: res.accumulationStatistics,
+    },
+    preState.statistics,
+  ).safeRet();
 
   expect(res.p_accumulationQueue).deep.equal(postState.accQueue);
   expect(res.p_accumulationHistory).deep.equal(postState.accHistory);
   expect(res.accumulateRoot).toEqual(output.ok);
+  console.log(preState.statistics);
+  console.log(p_serviceStatistics);
+
+  expect(p_serviceStatistics).deep.equal(postState.statistics);
+
   // TODO: compare other post states
 };
 describe("accumulate", () => {
-  const set: "full" | "tiny" = "full";
+  const set: "full" | "tiny" = "tiny";
   beforeEach(() => {
     if (set === <string>"tiny") {
       mocks.CORES = 2;

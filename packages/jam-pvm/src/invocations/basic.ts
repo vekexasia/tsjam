@@ -1,5 +1,4 @@
 import {
-  IParsedProgram,
   PVMExitReason,
   PVMProgram,
   PVMProgramExecutionContext,
@@ -21,6 +20,7 @@ export const basicInvocation = (
   let program: PVMProgram;
   try {
     program = PVMProgramCodec.decode(bold_p).value;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return {
       context: executionContext,

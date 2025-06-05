@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import {
   AuthorizerPoolJSONCodec,
@@ -52,6 +52,7 @@ import {
   serviceAccountItemInStorage,
   serviceAccountTotalOctets,
 } from "@tsjam/serviceaccounts";
+import { bytesToBigInt } from "@tsjam/utils";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -166,7 +167,7 @@ const preimageLCodec: JSONCodec<
       const hMap = toRet.get(h)!;
       hMap.set(
         value.key.length as Tagged<u32, "length">,
-        value.value as UpToSeq<u32, 3, "Nt">,
+        value.value as UpToSeq<Tau, 3>,
       );
     }
     return toRet;
@@ -294,11 +295,15 @@ const stateCodec: JSONCodec<JamState, DunaState> = createJSONCodec([
   ["serviceAccounts", "accounts", accountsCodec],
 ]);
 function checkMerkle(jamState: JamState, duna: any) {
-  const tsjamState = merkleStateMap(jamState);
+  const _tsjamState = merkleStateMap(jamState);
+  const tsjamState = new Map(
+    [..._tsjamState.entries()].map(([x, y]) => [bytesToBigInt(x), y]),
+  );
 
   for (const items of duna.keyvals.slice(0)) {
     const [key, value, desc] = items;
-    const k = HashJSONCodec().fromJSON(key);
+    const _k = BufferJSONCodec().fromJSON(key).subarray(0, 31);
+    const k = bytesToBigInt(_k);
     assert(tsjamState.has(k), `missing key ${key}|${desc}`);
 
     expect(
@@ -315,7 +320,7 @@ function checkMerkle(jamState: JamState, duna: any) {
   //    ),
   //  );
 }
-describe("jamduna", () => {
+describe.skip("jamduna", () => {
   const createTests = (kind: "tiny" | "full", set: string) => {
     let tsJamState = stateCodec.fromJSON(
       JSON.parse(

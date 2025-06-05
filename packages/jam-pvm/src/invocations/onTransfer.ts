@@ -4,7 +4,6 @@ import {
   Delta,
   Gas,
   Posterior,
-  PVMProgramCode,
   PVMProgramExecutionContext,
   ServiceAccount,
   ServiceIndex,
@@ -22,7 +21,7 @@ import {
   omega_r,
   omega_w,
 } from "@/functions/general";
-import { HostCallResult } from "@tsjam/constants";
+import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { applyMods } from "@/functions/utils";
 import assert from "node:assert";
 import { HostCallExecutor } from "./hostCall";
@@ -50,7 +49,7 @@ const argumentInvocationTransferCodec = createCodec<{
   ],
 ]);
 /**
- * $(0.6.4 - B.15)
+ * $(0.6.5 - B.15)
  */
 export const transferInvocation = (
   d: Delta,
@@ -60,7 +59,6 @@ export const transferInvocation = (
 ): [ServiceAccount, Gas] => {
   let bold_s = d.get(s)!;
 
-  console.log("transfer", transfers);
   assert(typeof bold_s !== "undefined", "Service not found in delta");
   bold_s = {
     ...bold_s,
@@ -70,7 +68,11 @@ export const transferInvocation = (
   assert(bold_s.balance >= 0, "Balance cannot be negative");
 
   const { code } = serviceAccountMetadataAndCode(bold_s);
-  if (typeof code === "undefined" || transfers.length === 0) {
+  if (
+    typeof code === "undefined" ||
+    code.length > SERVICECODE_MAX_SIZE ||
+    transfers.length === 0
+  ) {
     return [bold_s, <Gas>0n];
   }
 

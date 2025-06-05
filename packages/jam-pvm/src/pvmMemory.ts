@@ -1,4 +1,3 @@
-import { Uint8ArrayJSONCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
@@ -183,6 +182,7 @@ export class PVMMemory implements IPVMMemory {
     if (this.heap.end - this.heap.pointer >= size) {
       const oldPointer = this.heap.pointer;
       this.heap.pointer = <u32>(oldPointer + size);
+      console.log("sbrk", oldPointer, this.heap.pointer, size);
       return oldPointer;
     }
   }

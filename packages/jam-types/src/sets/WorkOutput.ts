@@ -7,28 +7,33 @@ export enum WorkError {
    * the work was not executed because the gas limit was reached
    * @see infinity symbol in the paper
    */
-  OutOfGas = 0,
+  OutOfGas = 1,
 
   /**
    * Possibly a program failure
    * @see lightning bolt in the paper
    */
-  UnexpectedTermination = 1,
+  UnexpectedTermination = 2,
 
   /**
    * ⊚
    */
-  BadExports = 2,
+  BadExports = 3,
+
+  /**
+   * ⊖
+   */
+  Oversize = 4,
 
   /**
    * Service code was not available for lookup at the lookup anchor block
    * it essentially means that `WorkResult.codeHash` preimage was not found
    */
-  Bad = 3,
+  Bad = 5,
   /**
    * Code too big (exceeded `S`)
    */
-  Big = 4,
+  Big = 6,
 }
 /**
  * Output Data ofr the refine logic

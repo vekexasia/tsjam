@@ -50,7 +50,7 @@ export type WorkReport = {
   segmentRootLookup: Map<WorkPackageHash, Hash>;
 
   /**
-   * `r`
+   * `r` - also called digests
    */
   results: BoundedSeq<WorkResult, 1, typeof MAXIMUM_WORK_ITEMS>;
 

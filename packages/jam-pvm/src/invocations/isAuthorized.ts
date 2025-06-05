@@ -1,39 +1,41 @@
 import {
   CoreIndex,
   Gas,
-  PVMProgramCode,
   PVMResultContext,
-  WorkPackage,
+  WorkError,
+  WorkPackageWithAuth,
   u32,
 } from "@tsjam/types";
 import { argumentInvocation } from "@/invocations/argument.js";
-import {
-  createCodec,
-  E_sub_int,
-  encodeWithCodec,
-  WorkPackageCodec,
-} from "@tsjam/codec";
+import { E_2_int, encodeWithCodec } from "@tsjam/codec";
 import { HostCallExecutor } from "@/invocations/hostCall.js";
 import { omega_g } from "@/functions/general.js";
-import { HostCallResult, TOTAL_GAS_IS_AUTHORIZED } from "@tsjam/constants";
+import {
+  HostCallResult,
+  MAXIMUM_SIZE_IS_AUTHORIZED,
+  TOTAL_GAS_IS_AUTHORIZED,
+} from "@tsjam/constants";
 import { IxMod } from "@/instructions/utils";
 import { applyMods } from "@/functions/utils";
 
-const authArgsCodec = createCodec<{ p: WorkPackage; c: CoreIndex }>([
-  ["p", WorkPackageCodec],
-  ["c", E_sub_int<CoreIndex>(2)],
-]);
 /**
  * `ΨI` in the paper
  * it's stateless so `null` for curState
- * $(0.6.4 - B.1)
+ * $(0.6.6 - B.1)
  */
-export const isAuthorized = (p: WorkPackage, c: CoreIndex) => {
+export const isAuthorized = (p: WorkPackageWithAuth, c: CoreIndex) => {
+  if (p.pc.length === 0) {
+    return { res: WorkError.Bad, usedGas: <Gas>0n };
+  }
+  if (p.pc.length > MAXIMUM_SIZE_IS_AUTHORIZED) {
+    return { res: WorkError.Big, usedGas: <Gas>0n };
+  }
+
   const res = argumentInvocation(
-    <PVMProgramCode>new Uint8Array(), // FIXME: missing the preimage fetch
+    p.pc,
     0 as u32, // instruction pointer
     TOTAL_GAS_IS_AUTHORIZED as Gas,
-    encodeWithCodec(authArgsCodec, { p, c }),
+    encodeWithCodec(E_2_int, c),
     F_Fn,
     undefined as unknown as PVMResultContext, // something is missing from the paper
   );

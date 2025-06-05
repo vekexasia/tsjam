@@ -1,7 +1,6 @@
 import { regFn } from "@/functions/fnsdb.js";
 import {
   Delta,
-  ExportSegment,
   Gas,
   PVMExitPanicMod,
   PVMMemoryAccessKind,
@@ -14,7 +13,6 @@ import {
   Tau,
   u32,
   u8,
-  WorkPackageWithAuth,
 } from "@tsjam/types";
 import { W7, W8 } from "@/functions/utils.js";
 import {
@@ -27,13 +25,7 @@ import {
 import { toInBoundsMemoryAddress, toSafeMemoryAddress } from "@/pvmMemory.js";
 import { historicalLookup, zeroPad } from "@tsjam/utils";
 import { PVMMemory } from "@/pvmMemory.js";
-import {
-  E_4,
-  E_8,
-  encodeWithCodec,
-  HashCodec,
-  WorkPackageCodec,
-} from "@tsjam/codec";
+import { E_4, E_8, HashCodec } from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
@@ -104,83 +96,6 @@ export const omega_h = regFn<
       const l = Math.min(Number(w11), v.length - f);
 
       return [IxMod.w7(v.length), IxMod.memory(o, v.subarray(f, l))];
-    },
-  },
-});
-
-/**
- * `ΩY` in the graypaper
- * fetch
- */
-export const omega_y = regFn<
-  [
-    workItemIndex: number, // i
-    workPackage: WorkPackageWithAuth, // p
-    authOutput: Uint8Array, // bold_o
-    overline_i: ExportSegment[][], // \overline_i
-  ],
-  W7 | PVMSingleModMemory | PVMExitPanicMod
->({
-  fn: {
-    opCode: 18 as u8,
-    identifier: "fetch",
-    gasCost: 10n as Gas,
-    execute(context, i, p, bold_o, overline_i) {
-      const [o, w8, w9, w10, w11, w12] = context.registers.slice(7);
-      const _w11 = Number(w11);
-      const _w12 = Number(w12);
-
-      let v: Uint8Array | undefined;
-      if (w10 === 0n) {
-        v = encodeWithCodec(WorkPackageCodec, p);
-      } else if (w10 === 1n) {
-        v = bold_o;
-      } else if (w10 === 2n && w11 < p.items.length) {
-        v = p.items[_w11].payload;
-      } else if (
-        w10 === 3n &&
-        w11 < p.items.length &&
-        w12 < p.items[_w11].exportedDataSegments.length &&
-        false /* TODO: boldx is a datastore we should keep to fetch data */
-      ) {
-      } else if (
-        w10 === 4n &&
-        w11 < p.items[i].exportedDataSegments.length &&
-        false /* TODO: see above */
-      ) {
-      } else if (
-        w10 === 5n &&
-        w11 < overline_i.length &&
-        w12 < overline_i[_w11].length
-      ) {
-        v = overline_i[_w11][_w12];
-      } else if (w10 === 6n && w11 < overline_i[i].length) {
-        v = overline_i[i][_w11];
-      } else if (w10 === 7n) {
-        v = p.paramsBlob;
-      }
-
-      const f = Math.min(Number(w8), (v || []).length);
-      const l = Math.min(Number(w9), (v || []).length - f);
-      let memory: PVMSingleModMemory[] = [];
-      if (
-        typeof v !== "undefined" &&
-        context.memory.canWrite(toSafeMemoryAddress(o), l)
-      ) {
-        memory = [IxMod.memory(o, v.subarray(f, l))];
-      }
-
-      if (
-        !context.memory.canRead(toSafeMemoryAddress(o), l) ||
-        (w9 == 5n && context.memory.canRead(toSafeMemoryAddress(w10), 32))
-      ) {
-        return [...memory, IxMod.panic()];
-      }
-
-      if (typeof v === "undefined") {
-        return [IxMod.w7(HostCallResult.NONE)];
-      }
-      return [IxMod.w7(v.length)];
     },
   },
 });

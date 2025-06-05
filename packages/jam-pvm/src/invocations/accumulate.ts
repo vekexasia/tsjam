@@ -7,7 +7,6 @@ import {
   Posterior,
   PVMAccumulationOp,
   PVMAccumulationState,
-  PVMProgramCode,
   PVMProgramExecutionContext,
   PVMResultContext,
   RegularPVMExitReason,
@@ -32,10 +31,12 @@ import {
   omega_s,
   omega_t,
   omega_u,
+  omega_aries,
 } from "@/functions/accumulate.js";
 import { applyMods } from "@/functions/utils.js";
 import {
   E_4_int,
+  E_int,
   E_sub_int,
   HashCodec,
   PVMAccumulationOpCodec,
@@ -55,14 +56,15 @@ import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
 import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
+import { IxMod } from "@/instructions/utils";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
   s: ServiceIndex;
   o: PVMAccumulationOp[];
 }>([
-  ["t", E_sub_int<Tau>(4)],
-  ["s", E_sub_int<ServiceIndex>(4)],
+  ["t", E_int<Tau>()],
+  ["s", E_int<ServiceIndex>()],
   ["o", createArrayLengthDiscriminator(PVMAccumulationOpCodec)],
 ]);
 
@@ -82,33 +84,39 @@ export const accumulateInvocation = (
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
-): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, Gas] => {
+): [
+  PVMAccumulationState,
+  DeferredTransfer[],
+  Hash | undefined,
+  Gas,
+  PVMResultContext["preimages"], // p
+] => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
+  const yRes = structuredClone(iRes);
+
   // first case
   if (!pvmAccState.delta.has(s)) {
-    return [iRes.u, [], undefined, toTagged(0n)];
+    return [iRes.u, [], undefined, toTagged(0n), []];
   }
 
   const serviceAccount = pvmAccState.delta.get(s)!;
   const { code } = serviceAccountMetadataAndCode(serviceAccount);
   assert(typeof code !== "undefined", "Code not found in preimage");
 
-  console.log(`\nAccumulating ${s}`);
-  process.env.DEBUG_STEPS = `${s === 1343007977}`;
   const mres = argumentInvocation(
     code,
     5 as u32, // instructionPointer
     gas,
     encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
     F_fn(s, t),
-    { x: iRes, y: I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau) },
+    { x: iRes, y: yRes },
   );
 
   return C_fn(mres.usedGas, mres.res, mres.out);
 };
 
 /**
- * $(0.6.4 - B.10)
+ * $(0.6.5 - B.10)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationState,
@@ -146,6 +154,7 @@ const I_fn = (
     i,
     transfer: [],
     y: undefined,
+    preimages: [],
   };
 };
 
@@ -238,10 +247,16 @@ const F_fn: (
         );
       case "yield":
         return applyMods(input.ctx, input.out, omega_y(input.ctx, input.out.x));
+      case "provide":
+        return applyMods(
+          input.ctx,
+          input.out,
+          omega_aries(input.ctx, input.out.x, input.out.x.service),
+        );
     }
     if (input.hostCallOpcode === 100) {
       // TODO: https://docs.jamcha.in/knowledge/testing/polka-vm/host-call-log
-      return applyMods(input.ctx, input.out, []);
+      return applyMods(input.ctx, input.out, [IxMod.gas(10n)]);
     }
     throw new Error("not implemented" + input.hostCallOpcode);
   };
@@ -265,18 +280,30 @@ const G_fn = (
 };
 
 /**
- * $(0.6.4 - B.11)
+ * $(0.6.5 - B.11)
  */
 const C_fn = (
   gas: Gas,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
   d: { x: PVMResultContext; y: PVMResultContext },
-): [PVMAccumulationState, DeferredTransfer[], Hash | undefined, Gas] => {
+): [
+  PVMAccumulationState,
+  DeferredTransfer[],
+  Hash | undefined,
+  Gas,
+  PVMResultContext["preimages"],
+] => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
-    return [d.y.u, d.y.transfer, d.y.y, gas];
+    return [d.y.u, d.y.transfer, d.y.y, gas, d.y.preimages];
   } else if (o.length === 32) {
-    return [d.x.u, d.x.transfer, bytesToBigInt(o) as unknown as Hash, gas];
+    return [
+      d.x.u,
+      d.x.transfer,
+      bytesToBigInt(o) as unknown as Hash,
+      gas,
+      d.x.preimages,
+    ];
   } else {
-    return [d.x.u, d.x.transfer, d.x.y, gas];
+    return [d.x.u, d.x.transfer, d.x.y, gas, d.x.preimages];
   }
 };

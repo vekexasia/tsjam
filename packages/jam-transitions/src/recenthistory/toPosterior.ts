@@ -10,7 +10,7 @@ import {
   StateRootHash,
 } from "@tsjam/types";
 import { appendMMR, wellBalancedBinaryMerkleRoot } from "@tsjam/merklization";
-import { E_4, HashJSONCodec } from "@tsjam/codec";
+import { E_4 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { RecentHistory } from "@tsjam/types";
 import { bigintToExistingBytes } from "@tsjam/utils";
