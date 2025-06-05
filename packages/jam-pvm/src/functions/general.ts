@@ -4,7 +4,6 @@ import {
   Delta,
   ExportSegment,
   Gas,
-  Hash,
   PVMExitPanicMod,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -16,7 +15,6 @@ import {
   WorkPackageWithAuth,
 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "@/pvmMemory";
-import { Hashing } from "@tsjam/crypto";
 import { HostCallResult } from "@tsjam/constants";
 import {
   Blake2bHashCodec,
@@ -24,18 +22,14 @@ import {
   createCodec,
   E_4_int,
   E_sub,
+  E_sub_int,
   encodeWithCodec,
-  HashJSONCodec,
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
 import { W7, W8 } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import assert from "node:assert";
-import {
-  serviceAccountGasThreshold,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/serviceaccounts";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 
 /**
  * `ΩG`
@@ -202,7 +196,7 @@ export const omega_r = regFn<
   PVMExitPanicMod | W7 | PVMSingleModMemory
 >({
   fn: {
-    opCode: 2 as u8,
+    opCode: 3 as u8,
     identifier: "read",
     gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
@@ -223,11 +217,7 @@ export const omega_r = regFn<
       if (!context.memory.canRead(toSafeMemoryAddress(ko), Number(kz))) {
         return [IxMod.panic()];
       }
-      // compute k
-      const tmp = new Uint8Array(4 + Number(kz));
-      E_4_int.encode(s_star, tmp);
-      tmp.set(context.memory.getBytes(toSafeMemoryAddress(ko), Number(kz)), 4);
-      const k = Hashing.blake2b(tmp);
+      const k = context.memory.getBytes(toSafeMemoryAddress(ko), Number(kz));
 
       const v = a?.storage.get(k);
       if (typeof v === "undefined") {
@@ -250,32 +240,26 @@ export const omega_w = regFn<
   PVMExitPanicMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
 >({
   fn: {
-    opCode: 3 as u8,
+    opCode: 4 as u8,
     identifier: "write",
     gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(7);
-      let k: Hash;
+      let k: Uint8Array;
       if (!context.memory.canRead(toSafeMemoryAddress(k0), Number(kz))) {
         return [IxMod.panic()];
       } else {
-        k = Hashing.blake2b(
-          new Uint8Array([
-            ...encodeWithCodec(E_4_int, s),
-            ...context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz)),
-          ]),
-        );
+        k = context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz));
       }
 
-      const a: ServiceAccount = {
-        ...bold_s,
-        storage: new Map(bold_s.storage),
-      };
+      const a = new ServiceAccountImpl(s);
+      Object.assign(a, bold_s);
+      a.storage = bold_s.storage.clone();
+
       if (vz === 0n) {
-        // write in red delleting key
         console.log(
           "\x1b[36m deleting key",
-          HashJSONCodec().toJSON(k),
+          Uint8ArrayJSONCodec.toJSON(k),
           "\x1b[0m",
           s,
         );
@@ -284,7 +268,7 @@ export const omega_w = regFn<
         // second bracket
         console.log(
           "\x1b[36m writing key",
-          HashJSONCodec().toJSON(k),
+          Uint8ArrayJSONCodec.toJSON(k),
           "\x1b[0m",
           s,
           Uint8ArrayJSONCodec.toJSON(
@@ -302,7 +286,7 @@ export const omega_w = regFn<
 
       let l: number | bigint;
       if (bold_s.storage.has(k)) {
-        const at = serviceAccountGasThreshold(bold_s);
+        const at = bold_s.gasThreshold();
         if (at > a.balance) {
           return [IxMod.w7(HostCallResult.FULL)];
         }
@@ -316,7 +300,11 @@ export const omega_w = regFn<
 });
 
 const serviceAccountCodec = createCodec<
-  ServiceAccount & { gasThreshold: Gas; totalOctets: u64; itemInStorage: u32 }
+  Omit<ServiceAccount, "itemInStorage" | "totalOctets" | "gasThreshold"> & {
+    gasThreshold: Gas;
+    totalOctets: u64;
+    itemInStorage: u32;
+  }
 >([
   ["codeHash", CodeHashCodec], // c
   ["balance", E_sub<u64>(8)], // b
@@ -324,14 +312,19 @@ const serviceAccountCodec = createCodec<
   ["minGasAccumulate", E_sub<Gas>(8)], // g
   ["minGasOnTransfer", E_sub<Gas>(8)], // m
   ["totalOctets", E_sub<u64>(8)], // o - virtual element
-  ["itemInStorage", E_4_int], // i - virtual element
+  ["itemInStorage", E_sub_int<u32>(4)], // i - virtual element
+  ["gratisStorageOffset", E_sub<u64>(8)], // f
+  ["creationTimeSlot", E_4_int], // r
+  ["lastAccumulationTimeSlot", E_4_int], // a
+  ["parentService", E_sub_int<ServiceIndex>(4)], // p
 ]);
+
 /**
  * `ΩI`
  */
 export const omega_i = regFn<
   [s: ServiceIndex, d: Delta],
-  W7 | PVMSingleModMemory
+  W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
     opCode: 4 as u8,
@@ -339,26 +332,37 @@ export const omega_i = regFn<
     gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, d: Delta) {
       const w7 = context.registers[7];
-      let bold_t: ServiceAccount | undefined;
+      let bold_a: ServiceAccount | undefined;
       if (w7 === 2n ** 64n - 1n) {
-        bold_t = d.get(s);
+        bold_a = d.get(s);
       } else {
-        bold_t = d.get(Number(w7) as ServiceIndex);
+        bold_a = d.get(Number(w7) as ServiceIndex);
       }
-      if (typeof bold_t === "undefined") {
+      if (typeof bold_a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE)];
       }
-      const o = context.registers[8];
-      const m = encodeWithCodec(serviceAccountCodec, {
-        ...bold_t,
-        gasThreshold: serviceAccountGasThreshold(bold_t),
-        totalOctets: serviceAccountTotalOctets(bold_t),
-        itemInStorage: serviceAccountItemInStorage(bold_t),
+      const v = encodeWithCodec(serviceAccountCodec, {
+        ...bold_a,
+        gasThreshold: bold_a.gasThreshold(),
+        totalOctets: bold_a.totalOctets(),
+        itemInStorage: bold_a.itemInStorage(),
       });
-      if (!context.memory.canWrite(toSafeMemoryAddress(o), m.length)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+
+      let f = Number(context.registers[11]);
+      if (f > v.length) {
+        f = v.length;
+      }
+
+      let l = Number(context.registers[12]);
+      if (l > v.length - f) {
+        l = v.length - f;
+      }
+
+      const o = context.registers[8];
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), l)) {
+        return [IxMod.panic()];
       } else {
-        return [IxMod.w7(HostCallResult.OK), IxMod.memory(o, m)];
+        return [IxMod.w7(v.length), IxMod.memory(o, v.subarray(f, f + l))];
       }
     },
   },

@@ -80,7 +80,7 @@ export const dummyState = (conf: {
     privServices: {
       assign: 0 as ServiceIndex,
       alwaysAccumulate: new Map(),
-      bless: 0 as ServiceIndex,
+      manager: 0 as ServiceIndex,
       designate: 0 as ServiceIndex,
     },
     recentHistory: new Array(80).fill(null).map(

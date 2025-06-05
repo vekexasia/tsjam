@@ -31,12 +31,9 @@ import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
 import { check_fn } from "@/utils/check_fn";
 import { toSafeMemoryAddress } from "@/pvmMemory";
-import {
-  serviceAccountGasThreshold,
-  serviceAccountItemInStorage,
-  serviceAccountTotalOctets,
-} from "@tsjam/serviceaccounts";
 import { Hashing } from "@tsjam/crypto";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import { G } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 /**
  * `ΩB`
@@ -73,7 +70,7 @@ export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
               u: {
                 ...x.u,
                 privServices: {
-                  bless: Number(m) as ServiceIndex,
+                  manager: Number(m) as ServiceIndex,
                   assign: Number(a) as ServiceIndex,
                   designate: Number(v) as ServiceIndex,
                   alwaysAccumulate: g,
@@ -185,13 +182,13 @@ export const omega_c = regFn<
  * `ΩN`
  * new-service host call
  */
-export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
   fn: {
-    opCode: 9 as u8,
+    opCode: 18 as u8,
     identifier: "new",
     gasCost: 10n as Gas,
-    execute(context, x) {
-      const [o, l, g, m] = context.registers.slice(7);
+    execute(context, x, tau: Tau) {
+      const [o, l, g, m, f] = context.registers.slice(7);
 
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32) || l >= 2 ** 32) {
         return [IxMod.w7(HostCallResult.OOB)];
@@ -199,24 +196,22 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
       const c: ServiceAccount["codeHash"] = bytesToBigInt(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       );
-      const a: ServiceAccount = {
-        storage: new Map<Hash, Uint8Array>(),
-        preimage_p: new Map<Hash, Uint8Array>(),
-        preimage_l: new Map<
-          Hash,
-          Map<u32, u32>
-        >() as unknown as ServiceAccount["preimage_l"],
-        codeHash: c,
-        balance: <u64>0n,
-        minGasAccumulate: g as bigint as Gas,
-        minGasOnTransfer: m as bigint as Gas,
-      };
-      const nm: Map<Tagged<u32, "length">, UpToSeq<Tau, 3>> = new Map();
-      nm.set(toTagged(Number(l) as u32), toTagged([]));
-      a.preimage_l.set(c, nm);
+      const i_star = check_fn(
+        <ServiceIndex>(2 ** 8 + ((x.i - 2 ** 8 + 42) % (2 ** 32 - 2 ** 9))),
+        x.u.delta,
+      );
 
-      // a_t
-      a.balance = serviceAccountGasThreshold(a);
+      const a = new ServiceAccountImpl(x.i);
+      a.codeHash = c;
+      a.preimage_l.set(c, new Map());
+      a.preimage_l.get(c)!.set(l, []);
+      a.minGasAccumulate = g as u64 as Gas;
+      a.minGasOnTransfer = m as u64 as Gas;
+      a.creationTimeSlot = tau;
+      a.gratisStorageOffset = f;
+      a.lastAccumulationTimeSlot = <Tau>0;
+      a.parentService = x.service;
+      a.balance = a.gasThreshold();
 
       const x_bold_s = x.u.delta.get(x.service)!;
 
@@ -225,7 +220,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
         balance: <u64>(x_bold_s.balance - a.balance),
       };
 
-      if (s.balance < serviceAccountGasThreshold(x_bold_s)) {
+      if (s.balance < x_bold_s.gasThreshold()) {
         return [IxMod.w7(HostCallResult.CASH)];
       }
       return [
@@ -233,12 +228,7 @@ export const omega_n = regFn<[x: PVMResultContext], W7 | XMod>({
         IxMod.obj({
           x: {
             ...x,
-            i: check_fn(
-              <ServiceIndex>(
-                (2 ** 8 + ((x.i - 2 ** 8 + 42) % (2 ** 32 - 2 ** 9)))
-              ),
-              x.u.delta,
-            ),
+            i: i_star,
             u: {
               ...x.u,
               delta: new Map([
@@ -329,7 +319,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
       }
       const x_bold_s = x.u.delta.get(x.service)!;
       const b = x_bold_s.balance - a;
-      if (b < serviceAccountGasThreshold(x_bold_s)) {
+      if (b < x_bold_s.gasThreshold()) {
         return [IxMod.w7(HostCallResult.CASH)];
       }
 
@@ -391,8 +381,8 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       ) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
-      const d_i = serviceAccountItemInStorage(bold_d);
-      const d_o = serviceAccountTotalOctets(bold_d);
+      const d_i = bold_d.itemInStorage();
+      const d_o = bold_d.totalOctets();
       const l = <u32>Number((d_o > 81 ? d_o : 81n) - 81n);
       const dlhl = bold_d.preimage_l.get(h)?.get(toTagged(l));
 
@@ -491,7 +481,7 @@ export const omega_s = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
         // third case of `a`
         // we either have 1 or 2 elements or more than 3
         return [IxMod.w7(HostCallResult.HUH)];
-      } else if (a.balance < serviceAccountGasThreshold(a)) {
+      } else if (a.balance < a.gasThreshold()) {
         return [IxMod.w7(HostCallResult.FULL)];
       } else {
         return [

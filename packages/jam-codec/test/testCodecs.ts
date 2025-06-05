@@ -1,20 +1,13 @@
 import {
   buildGenericKeyValueCodec,
-  createArrayLengthDiscriminator,
   createCodec,
-  createSequenceCodec,
   E_sub,
   E_sub_int,
   HashCodec,
   JamCodec,
   mapCodec,
-  WorkPackageHashCodec,
-  WorkReportCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
-  AccumulationHistory,
-  AccumulationQueue,
   Delta,
   Gas,
   Hash,
@@ -25,6 +18,7 @@ import {
   u64,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 
 export const posteriorCodec = <T>(codec: JamCodec<T>) =>
   codec as JamCodec<Posterior<T>>;
@@ -47,23 +41,22 @@ export const serviceInfoCodec = createCodec<Test_ServiceInfo>([
   ["items", E_sub_int<u32>(4)],
 ]);
 
-export const serviceAccountFromTestInfo = (): JamCodec<ServiceAccount> => {
+export const serviceAccountFromTestInfo = (
+  serviceIndex: ServiceIndex,
+): JamCodec<ServiceAccount> => {
   return mapCodec(
     serviceInfoCodec,
     (info) => {
-      const toRet: ServiceAccount = {
-        balance: info.balance,
-        codeHash: toTagged(info.codeHash),
-        minGasAccumulate: info.minItemGas,
-        minGasOnTransfer: info.minMemoGas,
-        storage: new Map(),
-        preimage_l: new Map(),
-        preimage_p: new Map(),
-      };
+      const toRet = new ServiceAccountImpl(serviceIndex);
+      toRet.codeHash = toTagged(info.codeHash);
+      toRet.balance = info.balance;
+      toRet.minGasAccumulate = info.minItemGas;
+      toRet.minGasOnTransfer = info.minMemoGas;
+
       (toRet as any)["_i"] = info.items;
       (toRet as any)["_o"] = info.bytes;
       // NOTE: ^^ the above needs to be used when mocking the virtual computing functions
-      return toRet;
+      return toRet as ServiceAccount;
     },
     (account) => {
       return {
@@ -79,11 +72,11 @@ export const serviceAccountFromTestInfo = (): JamCodec<ServiceAccount> => {
 };
 
 export const buildTestDeltaCodec = <T extends Delta>(
-  serviceInfoCodec: JamCodec<ServiceAccount>,
+  serviceAccountCodec: (serviceIndex: ServiceIndex) => JamCodec<ServiceAccount>,
 ): JamCodec<T> => {
   return buildGenericKeyValueCodec(
     E_sub_int<ServiceIndex>(4),
-    serviceInfoCodec,
+    serviceAccountCodec,
     (a, b) => a - b,
   );
 };

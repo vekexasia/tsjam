@@ -32,6 +32,8 @@ import {
   AvailableWorkReports,
   MerkleTreeRoot,
   JamStatistics,
+  ServiceIndex,
+  IServiceAccountStorage,
 } from "@tsjam/types";
 import { vi, it, describe, beforeEach, expect } from "vitest";
 import {
@@ -43,7 +45,7 @@ import { accumulateReports } from "@/accumulate.js";
 import { dummyState } from "./utils";
 import { logCodec } from "@tsjam/codec/test/utils.js";
 import { _w, serviceStatisticsSTF } from "@tsjam/transitions";
-import { Hashing } from "@tsjam/crypto";
+import { ServiceAccountStorageImpl } from "@tsjam/serviceaccounts";
 const mocks = vi.hoisted(() => {
   return {
     CORES: 341,
@@ -111,47 +113,49 @@ type TestCase = {
 //
 //
 
-const accumulateAccountCodec = extendCodec(
-  serviceAccountFromTestInfo(),
-  createCodec<Pick<ServiceAccount, "preimage_p" | "storage">>([
-    [
-      "storage",
-      mapCodec(
-        buildGenericKeyValueCodec(
-          LengthDiscrimantedIdentity,
-          LengthDiscrimantedIdentity,
-          (a, b) => Buffer.compare(a, b),
-        ),
-        (info) => {
-          const storage: ServiceAccount["storage"] = new Map();
-          for (const key of info.keys()) {
-            const value = info.get(key)!;
-            storage.set(Hashing.blake2b(key), value);
-          }
-          console.log("storage", storage, info);
-          if (info.size > 0) {
-            throw new Error("diocan");
-          }
-          return storage;
-        },
-        () => {
-          return new Map(); // we do not  care
-        },
-      ),
-    ],
-    [
-      "preimage_p",
-      buildKeyValueCodec(
-        new LengthDiscriminator({
-          ...IdentityCodec,
-          decode(bytes: Uint8Array, length: number) {
-            return IdentityCodec.decode(bytes.subarray(0, length));
+const accumulateAccountCodec = (serviceIndex: ServiceIndex) =>
+  extendCodec(
+    serviceAccountFromTestInfo(serviceIndex),
+    createCodec<Pick<ServiceAccount, "preimage_p" | "storage">>([
+      [
+        "storage",
+        mapCodec(
+          buildGenericKeyValueCodec(
+            LengthDiscrimantedIdentity,
+            LengthDiscrimantedIdentity,
+            (a, b) => Buffer.compare(a, b),
+          ),
+          (info): IServiceAccountStorage => {
+            const storage = new ServiceAccountStorageImpl(serviceIndex);
+            throw new Error("reimplement me");
+            //  for (const key of info.keys()) {
+            //    const value = info.get(key)!;
+            //    storage.set(Hashing.blake2b(key), value);
+            //  }
+            //  console.log("storage", storage, info);
+            //  if (info.size > 0) {
+            //    throw new Error("diocan");
+            //  }
+            //  return storage;
           },
-        }),
-      ),
-    ],
-  ]),
-);
+          () => {
+            return new Map(); // we do not  care
+          },
+        ),
+      ],
+      [
+        "preimage_p",
+        buildKeyValueCodec(
+          new LengthDiscriminator({
+            ...IdentityCodec,
+            decode(bytes: Uint8Array, length: number) {
+              return IdentityCodec.decode(bytes.subarray(0, length));
+            },
+          }),
+        ),
+      ],
+    ]),
+  );
 
 const buildTest = (filename: string, size: string) => {
   const NUMVALS = (size === "tiny"

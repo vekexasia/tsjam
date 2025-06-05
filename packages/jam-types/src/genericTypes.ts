@@ -98,6 +98,11 @@ export type BLSKey = Tagged<ByteArrayOfLength<144>, "BLSKey">;
  */
 export type RingVRFProof = Tagged<ByteArrayOfLength<784>, "RingVRFProof">;
 
+/**
+ * Type of the key used in merkle state
+ */
+export type StateKey = Tagged<ByteArrayOfLength<31>, "state-key">;
+
 // Sequences
 /**
  * Defines type of a sequence having up to L elements

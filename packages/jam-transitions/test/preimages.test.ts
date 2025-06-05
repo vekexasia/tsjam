@@ -36,6 +36,7 @@ import {
   buildTestDeltaCodec,
   posteriorCodec,
 } from "@tsjam/codec/test/testCodecs.js";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 
 type TestState = {
   accounts: DoubleDagger<Delta>;
@@ -57,7 +58,7 @@ const buildTest = (filename: string) => {
   const stateCodec = createCodec<TestState>([
     [
       "accounts",
-      buildTestDeltaCodec<DoubleDagger<Delta>>(
+      buildTestDeltaCodec<DoubleDagger<Delta>>((serviceIndex: ServiceIndex) =>
         mapCodec(
           createCodec<{
             preimage_p: ServiceAccount["preimage_p"];
@@ -93,16 +94,10 @@ const buildTest = (filename: string) => {
                 entry.tau as unknown as any,
               );
             });
-            const toRet: ServiceAccount = {
-              balance: 0n as u64,
-              codeHash: 0n as ServiceAccount["codeHash"],
-              minGasAccumulate: 0n as Gas,
-              minGasOnTransfer: 0n as Gas,
-              storage: new Map(),
-              preimage_l: preimage_l,
-              preimage_p: info.preimage_p,
-            };
-            return toRet;
+            const toRet = new ServiceAccountImpl(serviceIndex);
+            toRet.preimage_l = preimage_l;
+            toRet.preimage_p = info.preimage_p;
+            return toRet as ServiceAccount;
           },
           (_) => {
             // we dont really care

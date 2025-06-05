@@ -3,6 +3,7 @@ import {
   Gas,
   Hash,
   ServiceIndex,
+  StateKey,
   Tagged,
   UpToSeq,
   u32,
@@ -14,13 +15,23 @@ import { Tau } from "@/Tau";
 export interface IServiceAccountStorage {
   delete(key: Uint8Array): boolean;
 
-  get(key: Uint8Array): Uint8Array;
+  has(key: Uint8Array): boolean;
 
-  hasKey(key: Uint8Array): boolean;
+  get(key: Uint8Array): Uint8Array | undefined;
 
   set(key: Uint8Array, value: Uint8Array): void;
 
-  entries(): IterableIterator<[Uint8Array, Uint8Array]>;
+  setFromStateKey(
+    stateKey: StateKey,
+    keyLength: number,
+    value: Uint8Array,
+  ): void;
+
+  entries(): IterableIterator<
+    [{ stateKey: StateKey; keyLength: number }, Uint8Array]
+  >;
+
+  clone(): IServiceAccountStorage;
 
   readonly size: number;
 }

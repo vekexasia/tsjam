@@ -12,7 +12,6 @@ import {
   E_4_int,
   E_8,
   HashCodec,
-  IdentityCodec,
   JamCodec,
   TicketIdentifierCodec,
   ValidatorDataCodec,
@@ -40,6 +39,7 @@ import {
   SeqOfLength,
   StateRootHash,
   u32,
+  StateKey,
 } from "@tsjam/types";
 import { bigintToBytes, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
@@ -129,7 +129,6 @@ const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   }
 };
 
-type StateKey = ByteArrayOfLength<31>;
 /**
  * `C` in graypaper
  * $(0.6.7 - D.1)
@@ -386,9 +385,7 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
     );
 
     for (const [k, v] of serviceAccount.storage.entries()) {
-      const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
-
-      toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...k])), v);
+      toRet.set(k.stateKey, v);
     }
 
     for (const [_h, p] of serviceAccount.preimage_p) {

@@ -201,7 +201,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     ],
 
     ["authPool", AuthorizerPoolCodec()],
-    ["delta", buildTestDeltaCodec(serviceAccountFromTestInfo())],
+    ["delta", buildTestDeltaCodec(serviceAccountFromTestInfo)],
   ]);
 
   const testBin = fs.readFileSync(

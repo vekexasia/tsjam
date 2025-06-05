@@ -30,6 +30,7 @@
   "dependencies": {
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
+    "@tsjam/merklization": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },

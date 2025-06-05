@@ -31,7 +31,6 @@
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
-    "@tsjam/serviceaccounts": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },

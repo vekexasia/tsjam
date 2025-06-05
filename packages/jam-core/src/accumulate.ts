@@ -538,8 +538,13 @@ export const parallelizedAccAccumulation = (
   const newState: PVMAccumulationState = {
     delta: delta_prime,
     // x'
-    privServices: singleServiceAccumulation(o, w, f, o.privServices.bless, deps)
-      .o.privServices,
+    privServices: singleServiceAccumulation(
+      o,
+      w,
+      f,
+      o.privServices.manager,
+      deps,
+    ).o.privServices,
     // i'
     validatorKeys: singleServiceAccumulation(
       o,

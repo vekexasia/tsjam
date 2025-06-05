@@ -33,7 +33,6 @@ import {
   E_sub_int,
   encodeWithCodec,
 } from "@tsjam/codec";
-import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
 import { toTagged } from "@tsjam/utils";
 
 const argumentInvocationTransferCodec = createCodec<{
@@ -67,7 +66,7 @@ export const transferInvocation = (
   };
   assert(bold_s.balance >= 0, "Balance cannot be negative");
 
-  const { code } = serviceAccountMetadataAndCode(bold_s);
+  const code = bold_s.code();
   if (
     typeof code === "undefined" ||
     code.length > SERVICECODE_MAX_SIZE ||

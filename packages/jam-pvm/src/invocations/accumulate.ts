@@ -55,7 +55,6 @@ import { check_fn } from "@/utils/check_fn.js";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
-import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
 import { IxMod } from "@/instructions/utils";
 
 const AccumulateArgsCodec = createCodec<{
@@ -100,7 +99,7 @@ export const accumulateInvocation = (
   }
 
   const serviceAccount = pvmAccState.delta.get(s)!;
-  const { code } = serviceAccountMetadataAndCode(serviceAccount);
+  const code = serviceAccount.code();
   assert(typeof code !== "undefined", "Code not found in preimage");
 
   const mres = argumentInvocation(
@@ -220,7 +219,11 @@ const F_fn: (
           omega_c(input.ctx, input.out.x, input.out.y),
         );
       case "new":
-        return applyMods(input.ctx, input.out, omega_n(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          omega_n(input.ctx, input.out.x, tau),
+        );
       case "upgrade":
         return applyMods(input.ctx, input.out, omega_u(input.ctx, input.out.x));
       case "transfer":
