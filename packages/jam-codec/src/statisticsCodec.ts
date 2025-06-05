@@ -12,7 +12,7 @@ import {
 import { createCodec } from "./utils";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { createSequenceCodec } from "./sequenceCodec";
-import { E_4_int, E_sub_int } from "./ints/E_subscr";
+import { E_4_int, E_8, E_sub, E_sub_int } from "./ints/E_subscr";
 import { buildGenericKeyValueCodec } from "./dicts/keyValue";
 import { JamCodec } from "./codec";
 import {
@@ -129,25 +129,25 @@ export const ServiceStatisticsCodec = buildGenericKeyValueCodec(
       "refinement",
       createCodec<SingleServiceStatistics["refinement"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_bigint<Gas>()],
+        ["usedGas", E_sub<Gas>(8)],
       ]),
     ],
-    ["imports", E_int<u16>()],
-    ["exports", E_int<u16>()],
+    ["imports", E_int<u32>()],
+    ["exports", E_int<u32>()],
     ["extrinsicSize", E_int<u32>()],
-    ["extrinsicCount", E_int<u16>()],
+    ["extrinsicCount", E_int<u32>()],
     [
       "accumulate",
       createCodec<SingleServiceStatistics["accumulate"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_bigint<Gas>()],
+        ["usedGas", E_sub<Gas>(8)],
       ]),
     ],
     [
       "transfers",
       createCodec<SingleServiceStatistics["transfers"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_bigint<Gas>()],
+        ["usedGas", E_sub<Gas>(8)],
       ]),
     ],
   ]),
@@ -182,10 +182,10 @@ export const ServiceStatisticsJSONCodec: JSONCodec<
         count: <u32>json.refinement_count,
         usedGas: BigInt(json.refinement_gas_used) as Gas,
       },
-      imports: <u16>json.imports,
-      extrinsicCount: <u16>json.extrinsic_count,
+      imports: <u32>json.imports,
+      extrinsicCount: <u32>json.extrinsic_count,
       extrinsicSize: <u32>json.extrinsic_size,
-      exports: <u16>json.exports,
+      exports: <u32>json.exports,
       accumulate: {
         count: <u32>json.accumulate_count,
         usedGas: BigInt(json.accumulate_gas_used) as Gas,

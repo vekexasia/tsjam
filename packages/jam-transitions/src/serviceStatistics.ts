@@ -107,10 +107,10 @@ const R_fn = (
     .reduce(
       (a, b) => {
         return {
-          imports: <u16>(a.imports + b.imports),
-          exports: <u16>(a.exports + b.exports),
+          imports: <u32>(a.imports + b.imports),
+          exports: <u32>(a.exports + b.exports),
           extrinsicSize: <u32>(a.extrinsicSize + b.extrinsicSize),
-          extrinsicCount: <u16>(a.extrinsicCount + b.extrinsicCount),
+          extrinsicCount: <u32>(a.extrinsicCount + b.extrinsicCount),
           refinement: {
             count: <u32>(a.refinement.count + b.refinement.count),
             usedGas: <Gas>(a.refinement.usedGas + b.refinement.usedGas),
@@ -118,10 +118,10 @@ const R_fn = (
         };
       },
       {
-        imports: <u16>0,
-        exports: <u16>0,
+        imports: <u32>0,
+        exports: <u32>0,
         extrinsicSize: <u32>0,
-        extrinsicCount: <u16>0,
+        extrinsicCount: <u32>0,
         refinement: {
           count: <u32>0,
           usedGas: <Gas>0n,

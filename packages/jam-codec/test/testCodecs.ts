@@ -57,8 +57,8 @@ export const serviceAccountFromTestInfo = (): JamCodec<ServiceAccount> => {
         minGasAccumulate: info.minItemGas,
         minGasOnTransfer: info.minMemoGas,
         storage: new Map(),
-        preimage_l: undefined as any,
-        preimage_p: undefined as any,
+        preimage_l: new Map(),
+        preimage_p: new Map(),
       };
       (toRet as any)["_i"] = info.items;
       (toRet as any)["_o"] = info.bytes;

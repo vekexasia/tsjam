@@ -12,6 +12,7 @@ export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
   ["workPackageHash", WorkPackageHashCodec], // h
   ["segmentRoot", HashCodec], // e
   ["authorizerHash", HashCodec], // a
+  ["authorizerOutput", LengthDiscrimantedIdentity], // y
   ["payloadHash", HashCodec], // y
   [
     "gasLimit",
@@ -22,5 +23,4 @@ export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
     ),
   ],
   ["output", WorkOutputCodec], // d
-  ["authorizerOutput", LengthDiscrimantedIdentity], // y
 ]);

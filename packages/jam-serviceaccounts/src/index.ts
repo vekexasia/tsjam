@@ -39,6 +39,7 @@ export const serviceAccountMetadataAndCode = (a: ServiceAccount) => {
  * $(0.6.4 - 9.8)
  */
 export const serviceAccountGasThreshold = (a: ServiceAccount): Gas => {
+  console.log("gasThresholf");
   const ai = BigInt(serviceAccountItemInStorage(a));
   const l =
     [...a.preimage_l.values()].reduce(

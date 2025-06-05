@@ -1,6 +1,6 @@
 import { readVarIntFromBuffer } from "@/utils/varint";
-import { Z } from "@/utils/zed";
-import { E_8, E_sub } from "@tsjam/codec";
+import { Z, Z_inv } from "@/utils/zed";
+import { E_2, E_2_int, E_8, E_sub, encodeWithCodec } from "@tsjam/codec";
 import {
   i32,
   PVMIxEvaluateFNContext,
@@ -120,6 +120,7 @@ export const OneRegOneIMMOneOffsetIxDecoder = (
   bytes: Uint8Array,
   context: PVMIxEvaluateFNContext,
 ) => {
+  // console.log(Buffer.from(bytes).toString("hex"));
   assert(bytes.length > 0, "no input bytes");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.floor(bytes[0] / 16) % 8);
@@ -132,12 +133,29 @@ export const OneRegOneIMMOneOffsetIxDecoder = (
   ) as RegisterValue;
   // this is not vy as in the paper since we 're missing the current instruction pointer
   // at this stage. to get vy = ip + offset
+
   const offset = Number(
     Z(ly, E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
   ) as u32;
+  // console.log(
+  //   "offset data = ",
+  //   Buffer.from(bytes.subarray(2 + lx, 1 + lx + ly)).toString("hex"),
+  //   ", E_(ly).decode() = ",
+  //   E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value,
+  //   ", offset =",
+  //   offset,
+  // );
 
+  // console.log(
+  //   "dakk",
+  //   Z(2, 63091n),
+  //   Z_inv(2, -2275n),
+  //   Buffer.from(encodeWithCodec(E_2, Z_inv(2, -2275n))).toString("hex"),
+  // );
   const vY = <u32>(context.execution.instructionPointer + offset);
-  return { rA, wA: context.execution.registers[rA], vX, vY };
+  const wA = context.execution.registers[rA];
+  // console.log({ rA, lx, ly, vX, vY, offset });
+  return { rA, wA, vX, vY };
 };
 
 export type OneRegOneIMMOneOffsetArgs = ReturnType<

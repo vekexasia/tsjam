@@ -36,6 +36,7 @@ import {
 import { applyMods } from "@/functions/utils.js";
 import {
   E_4_int,
+  E_int,
   E_sub_int,
   HashCodec,
   PVMAccumulationOpCodec,
@@ -55,14 +56,15 @@ import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { Hashing } from "@tsjam/crypto";
 import { serviceAccountMetadataAndCode } from "@tsjam/serviceaccounts";
+import { IxMod } from "@/instructions/utils";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
   s: ServiceIndex;
   o: PVMAccumulationOp[];
 }>([
-  ["t", E_sub_int<Tau>(4)],
-  ["s", E_sub_int<ServiceIndex>(4)],
+  ["t", E_int<Tau>()],
+  ["s", E_int<ServiceIndex>()],
   ["o", createArrayLengthDiscriminator(PVMAccumulationOpCodec)],
 ]);
 
@@ -254,7 +256,7 @@ const F_fn: (
     }
     if (input.hostCallOpcode === 100) {
       // TODO: https://docs.jamcha.in/knowledge/testing/polka-vm/host-call-log
-      return applyMods(input.ctx, input.out, []);
+      return applyMods(input.ctx, input.out, [IxMod.gas(10n)]);
     }
     throw new Error("not implemented" + input.hostCallOpcode);
   };
