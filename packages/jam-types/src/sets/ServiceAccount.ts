@@ -8,6 +8,7 @@ import {
   u32,
   u64,
 } from "@/genericTypes";
+import { PVMProgramCode } from "@/pvm/PVMProgramCode";
 import { Tau } from "@/Tau";
 
 export interface IServiceAccountStorage {
@@ -18,6 +19,8 @@ export interface IServiceAccountStorage {
   hasKey(key: Uint8Array): boolean;
 
   set(key: Uint8Array, value: Uint8Array): void;
+
+  entries(): IterableIterator<[Uint8Array, Uint8Array]>;
 
   readonly size: number;
 }
@@ -108,4 +111,13 @@ export interface ServiceAccount {
    * `t`
    */
   gasThreshold(): Gas;
+  /**
+   * `m`
+   */
+  metadata(): Uint8Array | undefined;
+
+  /**
+   * `c`
+   */
+  code(): PVMProgramCode | undefined;
 }

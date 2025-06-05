@@ -132,7 +132,7 @@ const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
 type StateKey = ByteArrayOfLength<31>;
 /**
  * `C` in graypaper
- * $(0.6.5 - D.1)
+ * $(0.6.7 - D.1)
  */
 export const stateKey = (
   i: number,
@@ -140,18 +140,19 @@ export const stateKey = (
 ): StateKey => {
   if (_s instanceof Uint8Array) {
     const h: Uint8Array = _s;
+    const a = Hashing.blake2bBuf(h);
     const s = i;
     const n = encodeWithCodec(E_4, BigInt(s));
     return new Uint8Array([
       n[0],
-      h[0],
+      a[0],
       n[1],
-      h[1],
+      a[1],
       n[2],
-      h[2],
+      a[2],
       n[3],
-      h[3],
-      ...h.subarray(4, 27), // ends at [26]
+      a[3],
+      ...a.subarray(4, 27), // ends at [26]
     ]) as StateKey;
   }
   if (typeof _s === "number") {
@@ -174,7 +175,7 @@ export const stateKey = (
 
 /*
  * `T(σ)`
- * $(0.6.4 - D.2)
+ * $(0.6.7 - D.2)
  */
 export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   const toRet = new Map<StateKey, Uint8Array>();
@@ -376,27 +377,24 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
         ...encodeWithCodec(E_8, serviceAccount.minGasAccumulate),
         ...encodeWithCodec(E_8, serviceAccount.minGasOnTransfer),
         ...encodeWithCodec(E_8, serviceAccount.totalOctets()),
+        ...encodeWithCodec(E_8, serviceAccount.gratisStorageOffset),
         ...encodeWithCodec(E_4_int, serviceAccount.itemInStorage()),
+        ...encodeWithCodec(E_4_int, serviceAccount.creationTimeSlot),
+        ...encodeWithCodec(E_4_int, serviceAccount.lastAccumulationTimeSlot),
+        ...encodeWithCodec(E_4_int, serviceAccount.parentService),
       ]),
     );
 
-    for (const [_k, v] of serviceAccount.storage) {
-      const k = encodeWithCodec(HashCodec, _k);
+    for (const [k, v] of serviceAccount.storage.entries()) {
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 1));
 
-      toRet.set(
-        stateKey(serviceIndex, new Uint8Array([...pref, ...k.subarray(0, 28)])),
-        encodeWithCodec(IdentityCodec, v),
-      );
+      toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...k])), v);
     }
 
     for (const [_h, p] of serviceAccount.preimage_p) {
       const h = encodeWithCodec(HashCodec, _h);
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
-      toRet.set(
-        stateKey(serviceIndex, new Uint8Array([...pref, ...h.subarray(1, 29)])),
-        encodeWithCodec(IdentityCodec, p),
-      );
+      toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...h])), p);
     }
 
     for (const [h, lm] of serviceAccount.preimage_l) {
@@ -405,10 +403,7 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
         const h_h = Hashing.blake2bBuf(encodeWithCodec(HashCodec, h));
 
         toRet.set(
-          stateKey(
-            serviceIndex,
-            new Uint8Array([...e_l, ...h_h.subarray(2, 30)]),
-          ),
+          stateKey(serviceIndex, new Uint8Array([...e_l, ...h_h])),
           encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
         );
       }
