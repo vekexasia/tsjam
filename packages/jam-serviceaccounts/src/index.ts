@@ -136,13 +136,13 @@ export class ServiceAccountImpl implements ServiceAccount {
   /**
    * `a_t`
    * compute the gas threshold of a service account
-   * $(0.6.4 - 9.8)
+   * $(0.6.6 - 9.8)
    */
   gasThreshold(): Gas {
     return <Gas>(SERVICE_MIN_BALANCE + // Bs
       SERVICE_ADDITIONAL_BALANCE_PER_ITEM * BigInt(this.itemInStorage()) + // BI*ai
-      SERVICE_ADDITIONAL_BALANCE_PER_OCTET * this.totalOctets() -
-      this.gratisStorageOffset) /* BL*ao */;
+      SERVICE_ADDITIONAL_BALANCE_PER_OCTET * this.totalOctets() - // BL*ao
+      this.gratisStorageOffset); // - af
   }
 
   private decodedMetaAndCode?: {
@@ -166,12 +166,14 @@ export class ServiceAccountImpl implements ServiceAccount {
       ).value;
     }
   }
+
   metadata(): Uint8Array | undefined {
     if (typeof this.decodedMetaAndCode === "undefined") {
       this.decodeMetaAndCode();
     }
     return this.decodedMetaAndCode!.metadata;
   }
+
   code(): PVMProgramCode | undefined {
     if (typeof this.decodedMetaAndCode === "undefined") {
       this.decodeMetaAndCode();

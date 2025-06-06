@@ -300,7 +300,7 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   // 12
   toRet.set(
     stateKey(12),
-    encodeWithCodec(PrivilegedServicesCodec, state.privServices),
+    encodeWithCodec(PrivilegedServicesCodec(CORES), state.privServices),
   );
 
   // 13
