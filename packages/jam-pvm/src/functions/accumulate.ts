@@ -25,7 +25,15 @@ import {
   PREIMAGE_EXPIRATION,
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
-import { E_4_int, E_8, HashCodec, ValidatorDataCodec } from "@tsjam/codec";
+import {
+  E_4_int,
+  E_8,
+  E_sub,
+  E_sub_int,
+  HashCodec,
+  privilegedAssignCodec,
+  ValidatorDataCodec,
+} from "@tsjam/codec";
 import { bytesToBigInt, toTagged } from "@tsjam/utils";
 import { W7, W8, XMod, YMod } from "@/functions/utils.js";
 import { IxMod } from "@/instructions/utils.js";
@@ -33,53 +41,67 @@ import { check_fn } from "@/utils/check_fn";
 import { toSafeMemoryAddress } from "@/pvmMemory";
 import { Hashing } from "@tsjam/crypto";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
-import { G } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 /**
  * `ΩB`
  * bless service host call
  */
-export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_b = regFn<
+  [x: PVMResultContext],
+  W7 | XMod | PVMExitPanicMod
+>({
   fn: {
-    opCode: 5 as u8,
+    opCode: 14 as u8,
     identifier: "bless",
     gasCost: 10n as Gas,
     execute(context, x) {
       const [m, a, v, o, n] = context.registers.slice(7);
-      if (!context.memory.canRead(toSafeMemoryAddress(o), 12 * Number(n))) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      } else if (m > 2 ** 32 || a > 2 ** 32 || v > 2 ** 32) {
-        return [IxMod.w7(HostCallResult.WHO)];
-      } else {
-        const g = new Map<ServiceIndex, Gas>();
-        const buf = context.memory.getBytes(
-          toSafeMemoryAddress(o),
-          12 * Number(n),
-        );
-        for (let i = 0; i < n; i++) {
-          const data = buf.subarray(i * 12, (i + 1) * 12);
-          const key = E_4_int.decode(data).value;
-          const value = E_8.decode(data.subarray(4)).value;
-          g.set(key as ServiceIndex, value as Gas);
-        }
-        return [
-          IxMod.w7(HostCallResult.OK),
-          IxMod.obj({
-            x: {
-              ...x,
-              u: {
-                ...x.u,
-                privServices: {
-                  manager: Number(m) as ServiceIndex,
-                  assign: Number(a) as ServiceIndex,
-                  designate: Number(v) as ServiceIndex,
-                  alwaysAccumulate: g,
-                },
-              },
-            },
-          }),
-        ];
+      if (!context.memory.canRead(toSafeMemoryAddress(a), 4 * CORES)) {
+        return [IxMod.panic()];
       }
+
+      const bold_a = privilegedAssignCodec(CORES).decode(
+        context.memory.getBytes(toSafeMemoryAddress(a), 4 * CORES),
+      ).value;
+
+      if (!context.memory.canRead(toSafeMemoryAddress(o), 12 * Number(n))) {
+        return [IxMod.panic()];
+      }
+      const bold_z = new Map<ServiceIndex, Gas>();
+      const buf = context.memory.getBytes(
+        toSafeMemoryAddress(o),
+        12 * Number(n),
+      );
+      for (let i = 0; i < n; i++) {
+        const data = buf.subarray(i * 12, (i + 1) * 12);
+        const key = E_sub_int<ServiceIndex>(4).decode(data).value;
+        const value = E_sub<Gas>(8).decode(data.subarray(4)).value;
+        bold_z.set(key, value);
+      }
+
+      if (x.service !== x.u.manager) {
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+
+      if (m >= 2 ** 32 || a >= 2 ** 32) {
+        return [IxMod.w7(HostCallResult.WHO)];
+      }
+
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({
+          x: {
+            ...x,
+            u: {
+              ...x.u,
+              manager: Number(m) as ServiceIndex,
+              assign: bold_a,
+              designate: Number(v) as ServiceIndex,
+              alwaysAccumulate: bold_z,
+            },
+          },
+        }),
+      ];
     },
   },
 });
@@ -88,38 +110,46 @@ export const omega_b = regFn<[x: PVMResultContext], W7 | XMod>({
  * `ΩA`
  * assign core host call
  */
-export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_a = regFn<
+  [x: PVMResultContext],
+  W7 | XMod | PVMExitPanicMod
+>({
   fn: {
-    opCode: 6 as u8,
+    opCode: 15 as u8,
     identifier: "assign",
     gasCost: 10n as Gas,
     execute(context, x) {
-      const [w7, o] = context.registers.slice(7);
+      const [c, o, a] = context.registers.slice(7);
+
       if (
         !context.memory.canRead(toSafeMemoryAddress(o), AUTHQUEUE_MAX_SIZE * 32)
       ) {
-        return [IxMod.w7(HostCallResult.OOB)];
-      } else {
-        const c = context.memory.getBytes(
-          toSafeMemoryAddress(o),
-          AUTHQUEUE_MAX_SIZE * 32,
-        );
-        if (w7 < CORES) {
-          const xc = x.u.authQueue.slice() as AuthorizerQueue;
-          const nl: Hash[] = [];
-          for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
-            nl.push(bytesToBigInt(c.subarray(i * 32, (i + 1) * 32)));
-          }
-          xc[Number(w7)] = nl as AuthorizerQueue[0];
-
-          return [
-            IxMod.w7(HostCallResult.OK),
-            IxMod.obj({ x: { ...x, u: { ...x.u, authQueue: xc } } }),
-          ];
-        } else {
-          return [IxMod.w7(HostCallResult.CORE)];
-        }
+        return [IxMod.panic()];
       }
+      if (x.service !== x.u.assign[Number(c)]) {
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+      if (c >= CORES) {
+        return [IxMod.w7(HostCallResult.CORE)];
+      }
+
+      const q = context.memory.getBytes(
+        toSafeMemoryAddress(o),
+        AUTHQUEUE_MAX_SIZE * 32,
+      );
+      const nl: Hash[] = [];
+      for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
+        nl.push(HashCodec.decode(q.subarray(i * 32, (i + 1) * 32)).value);
+      }
+      const xc = x.u.authQueue.slice() as AuthorizerQueue;
+      xc[Number(c)] = nl as AuthorizerQueue[0];
+
+      const assign = x.u.assign.slice() as PVMAccumulationState["assign"];
+      assign[Number(c)] = Number(a) as ServiceIndex;
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({ x: { ...x, u: { ...x.u, authQueue: xc, assign } } }),
+      ];
     },
   },
 });
@@ -128,31 +158,35 @@ export const omega_a = regFn<[x: PVMResultContext], W7 | XMod>({
  * `ΩD`
  * designate validators host call
  */
-export const omega_d = regFn<[x: PVMResultContext], W7 | XMod>({
+export const omega_d = regFn<
+  [x: PVMResultContext],
+  W7 | XMod | PVMExitPanicMod
+>({
   fn: {
-    opCode: 7 as u8,
+    opCode: 16 as u8,
     identifier: "designate",
     gasCost: 10n as Gas,
     execute(context, x) {
       const o = context.registers[7];
       if (!context.memory.canRead(toSafeMemoryAddress(o), 336)) {
-        return [IxMod.w7(HostCallResult.OOB), IxMod.obj({ x })];
-      } else {
-        // implicitly by canRead `o` should be < 2**32
-        const validators =
-          [] as unknown as PVMAccumulationState["validatorKeys"];
-        for (let i = 0n; i < NUMBER_OF_VALIDATORS; i++) {
-          const c = context.memory.getBytes(
-            toSafeMemoryAddress(o + 336n * i),
-            336,
-          );
-          validators.push(ValidatorDataCodec.decode(c).value);
-        }
-        return [
-          IxMod.w7(HostCallResult.OK),
-          IxMod.obj({ x: { ...x, u: { ...x.u, validatorKeys: validators } } }),
-        ];
+        return [IxMod.panic()];
       }
+
+      const validators = [] as unknown as PVMAccumulationState["validatorKeys"];
+      for (let i = 0n; i < NUMBER_OF_VALIDATORS; i++) {
+        const c = context.memory.getBytes(
+          toSafeMemoryAddress(o + 336n * i),
+          336,
+        );
+        validators.push(ValidatorDataCodec.decode(c).value);
+      }
+      if (x.service !== x.u.designate) {
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({ x: { ...x, u: { ...x.u, validatorKeys: validators } } }),
+      ];
     },
   },
 });
@@ -166,7 +200,7 @@ export const omega_c = regFn<
   W7 | W8 | YMod
 >({
   fn: {
-    opCode: 8 as u8,
+    opCode: 17 as u8,
     identifier: "checkpoint",
     gasCost: 10n as Gas,
     execute(context, x) {
@@ -250,7 +284,7 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
  */
 export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
-    opCode: 10 as u8,
+    opCode: 19 as u8,
     identifier: "upgrade",
     gasCost: 10n as Gas,
     execute(context, x) {
@@ -293,7 +327,7 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
  */
 export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
   fn: {
-    opCode: 11 as u8,
+    opCode: 20 as u8,
     identifier: "transfer",
     gasCost: (context: PVMProgramExecutionContextBase) => {
       return (10n + context.registers[9]) as Gas;
@@ -354,12 +388,11 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
 });
 
 /**
- * `ΩQ`
- * query-service host call
+ * `Ωj`
  */
 export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
   fn: {
-    opCode: 12 as u8,
+    opCode: 22 as u8,
     identifier: "eject",
     gasCost: 10n as Gas,
     execute(context, x, t) {
@@ -412,7 +445,7 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
  */
 export const omega_q = regFn<[x: PVMResultContext], W7 | W8>({
   fn: {
-    opCode: 13 as u8,
+    opCode: 22 as u8,
     identifier: "query",
     gasCost: 10n as Gas,
     execute(context, x) {
@@ -449,54 +482,53 @@ export const omega_q = regFn<[x: PVMResultContext], W7 | W8>({
  * `ΩS`
  * solicit-preimage host call
  */
-export const omega_s = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
+export const omega_s = regFn<
+  [x: PVMResultContext, t: Tau],
+  W7 | XMod | PVMExitPanicMod
+>({
   fn: {
-    opCode: 14 as u8,
+    opCode: 23 as u8,
     identifier: "solicit",
     gasCost: 10n as Gas,
     execute(context, x, tau) {
       const [o, z] = context.registers.slice(7);
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
-        return [IxMod.w7(HostCallResult.OOB)];
+        return [IxMod.panic()];
       }
-      const h: Hash = bytesToBigInt(
+      const h: Hash = HashCodec.decode(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
-      );
-      const x_bold_s = x.u.delta.get(x.service)!;
-      const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
-      if (typeof a_l.get(h)?.get(toTagged(Number(z) as u32)) === "undefined") {
-        a_l.set(h, new Map([[toTagged(Number(z) as u32), toTagged([])]]));
+      ).value;
+
+      const a = structuredClone(x.u.delta.get(x.service)! /* x_bold_s */);
+
+      const _z = Number(z) as Tagged<u32, "length">;
+      if (typeof a.preimage_l.get(h)?.get(_z) === "undefined") {
+        a.preimage_l.set(
+          h,
+          new Map([[toTagged(Number(z) as u32), toTagged([])]]),
+        );
+      } else if (a.preimage_l.get(h)?.get(_z)?.length === 2) {
+        a.preimage_l.get(h)!.get(_z)!.push(tau);
       } else {
-        a_l
-          .get(h)!
-          .get(toTagged(Number(z) as u32))!
-          .push(tau);
-      }
-      const a: ServiceAccount = {
-        ...x_bold_s,
-        preimage_l: a_l,
-      };
-      const newL = a_l.get(h)!.get(toTagged(Number(z) as u32))!.length;
-      if (newL !== 3 && newL !== 0) {
-        // third case of `a`
-        // we either have 1 or 2 elements or more than 3
         return [IxMod.w7(HostCallResult.HUH)];
-      } else if (a.balance < a.gasThreshold()) {
-        return [IxMod.w7(HostCallResult.FULL)];
-      } else {
-        return [
-          IxMod.w7(HostCallResult.OK),
-          IxMod.obj({
-            x: {
-              ...x,
-              u: {
-                ...x.u,
-                delta: new Map([...x.u.delta.entries(), [x.service, a]]),
-              },
-            },
-          }),
-        ];
       }
+
+      if (a.balance < a.gasThreshold()) {
+        return [IxMod.w7(HostCallResult.FULL)];
+      }
+
+      return [
+        IxMod.w7(HostCallResult.OK),
+        IxMod.obj({
+          x: {
+            ...x,
+            u: {
+              ...x.u,
+              delta: new Map([...x.u.delta.entries(), [x.service, a]]),
+            },
+          },
+        }),
+      ];
     },
   },
 });
@@ -511,7 +543,7 @@ export const omega_f = regFn<
   PVMExitPanicMod | W7 | XMod
 >({
   fn: {
-    opCode: 15 as u8,
+    opCode: 24 as u8,
     identifier: "forget",
     gasCost: 10n as Gas,
     execute(context, x, t) {
@@ -555,35 +587,7 @@ export const omega_f = regFn<
           return [IxMod.w7(HostCallResult.HUH)];
         }
       }
-      /*
-      if (a_l.get(h)?.get(z)?.length === 1) {
-        a_l.get(h)!.get(z)!.push(t);
-      } else if (a_l.get(h)?.get(z)?.length === 3) {
-        const [x, y] = a_l.get(h)!.get(z)!;
-        if (y < t - PREIMAGE_EXPIRATION) {
-          // last bracket
-          a_l.get(h)!.set(z, toTagged([x, y, t]));
-        } else {
-          return [IxMod.w7(HostCallResult.HUH)];
-        }
-      } else if (a_l.get(h)?.get(z)?.length === 2) {
-        const [, y] = a_l.get(h)!.get(z)!;
-        if (y < t - PREIMAGE_EXPIRATION) {
-          a_l.get(h)!.delete(z);
-          if (a_l.get(h)!.size === 0) {
-            a_l.delete(h);
-          }
-          a_p.delete(h);
-        } else {
-          return [IxMod.w7(HostCallResult.HUH)];
-        }
-      } else if (a_l.get(h)?.get(z)?.length !== 0) {
-        return [IxMod.w7(HostCallResult.HUH)];
-      } else {
-        // zero length or undefined
-        a_p.delete(h);
-      }
-*/
+
       return [
         IxMod.w7(HostCallResult.OK),
         IxMod.obj({
@@ -615,7 +619,7 @@ export const omega_y = regFn<
   PVMExitPanicMod | W7 | XMod
 >({
   fn: {
-    opCode: 16,
+    opCode: 25,
     identifier: "yield",
     gasCost: 10n as Gas,
     execute(context, x) {
@@ -636,7 +640,7 @@ export const omega_aries = regFn<
   PVMExitPanicMod | W7 | XMod
 >({
   fn: {
-    opCode: 27,
+    opCode: 26,
     identifier: "provide",
     gasCost: 10n as Gas,
     execute(context, x, s) {
@@ -662,7 +666,7 @@ export const omega_aries = regFn<
       if (
         bold_a.preimage_l.get(Hashing.blake2b(bold_i))?.get(z)?.length !== 0
       ) {
-        return [IxMod.w7(HostCallResult.WHO)];
+        return [IxMod.w7(HostCallResult.HUH)];
       }
 
       if (

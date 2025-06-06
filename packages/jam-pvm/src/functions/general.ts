@@ -41,10 +41,7 @@ export const omega_g = regFn<[], W7 | W8>({
     gasCost: 10n as Gas,
     execute(context) {
       const p_gas = context.gas - (this.gasCost as bigint);
-      return [
-        IxMod.w7(Number(p_gas % BigInt(2 ** 32))),
-        IxMod.w8(Number(p_gas / BigInt(2 ** 32))),
-      ];
+      return [IxMod.w7(p_gas)];
     },
   },
 });
@@ -63,7 +60,7 @@ export const omega_y = regFn<
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
-    opCode: 18 as u8,
+    opCode: 1 as u8,
     identifier: "fetch",
     gasCost: 10n as Gas,
     execute(context, i, p, bold_o, t) {
@@ -136,7 +133,7 @@ export const omega_l = regFn<
   PVMExitPanicMod | W7 | PVMSingleModMemory
 >({
   fn: {
-    opCode: 1 as u8,
+    opCode: 2 as u8,
     identifier: "lookup",
     gasCost: 10n as Gas,
     execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
@@ -182,7 +179,7 @@ export const omega_l = regFn<
       }
       return [
         IxMod.w7(v.length),
-        IxMod.memory(o, v.subarray(Number(f), Number(l))),
+        IxMod.memory(o, v.subarray(Number(f), Number(f + l))),
       ];
     },
   },

@@ -29,6 +29,7 @@ import { E_4, E_8, HashCodec } from "@tsjam/codec";
 import { basicInvocation } from "@/invocations/basic.js";
 import assert from "node:assert";
 import { IxMod } from "@/instructions/utils.js";
+import { pbkdf2 } from "node:crypto";
 export type RefineContext = {
   m: Map<
     number,
@@ -62,7 +63,7 @@ export const omega_h = regFn<
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
-    opCode: 17 as u8,
+    opCode: 6 as u8,
     identifier: "historical_lookup",
     gasCost: 10n as Gas,
     execute(context, s: ServiceIndex, delta: Delta, t: Tau) {
@@ -71,13 +72,12 @@ export const omega_h = regFn<
       if (context.memory.canRead(toSafeMemoryAddress(h), 32)) {
         return [IxMod.panic()];
       }
-      let a: ServiceAccount | undefined;
+      let a: ServiceAccount;
       if (_w7 === 2n ** 64n - 1n && delta.has(s)) {
-        a = delta.get(s);
+        a = delta.get(s)!;
       } else if (delta.has(w7 as ServiceIndex)) {
-        a = delta.get(w7 as ServiceIndex);
-      }
-      if (typeof a === "undefined") {
+        a = delta.get(w7 as ServiceIndex)!;
+      } else {
         return [IxMod.w7(HostCallResult.NONE)];
       }
 
@@ -94,6 +94,9 @@ export const omega_h = regFn<
 
       const f = Math.min(Number(w10), v.length);
       const l = Math.min(Number(w11), v.length - f);
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), l)) {
+        return [IxMod.panic()];
+      }
 
       return [IxMod.w7(v.length), IxMod.memory(o, v.subarray(f, l))];
     },
@@ -109,14 +112,14 @@ export const omega_e = regFn<
   W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
-    opCode: 19 as u8,
+    opCode: 7 as u8,
     identifier: "export",
     gasCost: 10n as Gas,
     execute(context, refineCtx, offset) {
       const [p, w8] = context.registers.slice(7);
       const z = Math.min(Number(w8), ERASURECODE_SEGMENT_SIZE);
 
-      if (!context.memory.canRead(p, z)) {
+      if (!context.memory.canRead(toSafeMemoryAddress(p), z)) {
         return [IxMod.panic()];
       }
       if (offset + refineCtx.e.length >= MAX_WORKPACKAGE_ENTRIES) {
@@ -144,7 +147,7 @@ export const omega_m = regFn<
   W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
-    opCode: 20 as u8,
+    opCode: 8 as u8,
     identifier: "machine",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -159,7 +162,7 @@ export const omega_m = regFn<
         sortedKeys.shift()!;
         n++;
       }
-      const mem = new PVMMemory(new Map(), new Map(), {
+      const u = new PVMMemory(new Map(), new Map(), {
         start: <u32>0,
         end: <u32>0,
         pointer: <u32>0,
@@ -167,7 +170,7 @@ export const omega_m = regFn<
       const newM = new Map(refineCtx.m);
       newM.set(n, {
         programCode: p,
-        memory: mem,
+        memory: u,
         instructionPointer: Number(i) as u32,
       });
       return [
@@ -187,7 +190,7 @@ export const omega_p = regFn<
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
-    opCode: 21 as u8,
+    opCode: 9 as u8,
     identifier: "peek",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -224,7 +227,7 @@ export const omega_o = regFn<
   W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod
 >({
   fn: {
-    opCode: 22 as u8,
+    opCode: 10 as u8,
     identifier: "poke",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
@@ -259,40 +262,51 @@ export const omega_o = regFn<
 });
 
 /**
- * `ΩZ` in the graypaper
- * Zero inner-PVM memory host-call
+ * `ΩZ`
  */
 export const omega_z = regFn<
   [RefineContext],
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 23 as u8,
-    identifier: "zero",
+    opCode: 11 as u8,
+    identifier: "pages",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
-      const [n, p, c] = context.registers.slice(7);
+      const [n, p, c, r] = context.registers.slice(7);
       if (!refineCtx.m.has(Number(n))) {
         return [IxMod.w7(HostCallResult.WHO)];
       }
       const u = refineCtx.m.get(Number(n))!.memory;
 
-      if (p < 16 || p + c >= 2 ** 32 / Zp) {
+      if (r > 4 || p < 16 || p + c >= 2 ** 32 / Zp) {
+        return [IxMod.w7(HostCallResult.HUH)];
+      }
+      if (r > 2 && u.canRead(p, Number(c))) {
         return [IxMod.w7(HostCallResult.HUH)];
       }
 
       const p_u = u.clone();
-      for (let page = 0; page < c; page++) {
-        p_u
-          .changeAcl(page, PVMMemoryAccessKind.Write)
-          .setBytes(toSafeMemoryAddress(page * Zp), new Uint8Array(Zp).fill(0));
+      for (let i = 0; i < c; i++) {
+        if (r < 3) {
+          p_u
+            .changeAcl(Number(p) + i, PVMMemoryAccessKind.Write)
+            .setBytes(<u32>((Number(p) + i) * Zp), new Uint8Array(Zp).fill(0)); // fill with zeros
+        }
+
+        if (r == 1n || r == 3n) {
+          p_u.changeAcl(Number(p) + i, PVMMemoryAccessKind.Read);
+        } else if (r == 2n || r == 4n) {
+          p_u.changeAcl(Number(p) + i, PVMMemoryAccessKind.Write);
+        } else if (r == 0n) {
+          p_u.changeAcl(Number(p) + i, PVMMemoryAccessKind.Null);
+        }
       }
 
       const p_m = new Map(refineCtx.m);
       p_m.set(Number(n), {
-        programCode: refineCtx.m.get(Number(n))!.programCode,
+        ...refineCtx.m.get(Number(n))!,
         memory: p_u,
-        instructionPointer: refineCtx.m.get(Number(n))!.instructionPointer,
       });
       return [IxMod.w7(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
     },
@@ -300,49 +314,7 @@ export const omega_z = regFn<
 });
 
 /**
- * `ΩV` in the graypaper
- * Void inner-PVM memory host-call
- */
-export const omega_v = regFn<
-  [RefineContext],
-  W7 | PVMSingleModObject<RefineContext>
->({
-  fn: {
-    opCode: 24 as u8,
-    identifier: "void",
-    gasCost: 10n as Gas,
-    execute(context, refineCtx) {
-      const [n, p, c] = context.registers.slice(7);
-      if (!refineCtx.m.has(Number(n))) {
-        return [IxMod.w7(HostCallResult.WHO)];
-      }
-      const u = refineCtx.m.get(Number(n))!.memory;
-
-      // TODO: missing check
-      if (p < 16 || p + c >= 2 ** 32 / Zp) {
-        return [IxMod.w7(HostCallResult.HUH)];
-      }
-      const p_u = u.clone();
-      for (let page = 0; page < c; page++) {
-        p_u
-          .changeAcl(page, PVMMemoryAccessKind.Write) // needed for next line
-          .setBytes(toSafeMemoryAddress(page * Zp), new Uint8Array(Zp).fill(0))
-          .changeAcl(page, PVMMemoryAccessKind.Read);
-      }
-
-      const p_m = new Map(refineCtx.m);
-      p_m.set(Number(n), {
-        programCode: refineCtx.m.get(Number(n))!.programCode,
-        memory: p_u,
-        instructionPointer: refineCtx.m.get(Number(n))!.instructionPointer,
-      });
-      return [IxMod.w7(HostCallResult.OK), IxMod.obj({ ...refineCtx, m: p_m })];
-    },
-  },
-});
-
-/**
- * `ΩK` in the graypaper
+ * `ΩK`
  * kick off pvm host call
  */
 export const omega_k = regFn<
@@ -354,13 +326,13 @@ export const omega_k = regFn<
   | PVMExitPanicMod
 >({
   fn: {
-    opCode: 25 as u8,
+    opCode: 12 as u8,
     identifier: "invoke",
     gasCost: 10n as Gas,
     execute(context: PVMProgramExecutionContextBase, refineCtx) {
       const [_n, o] = context.registers.slice(7);
       const n = Number(_n);
-      if (!context.memory.canWrite(toSafeMemoryAddress(o), 60)) {
+      if (!context.memory.canWrite(toSafeMemoryAddress(o), 112)) {
         return [IxMod.panic()];
       }
       if (!refineCtx.m.has(n)) {
@@ -374,10 +346,10 @@ export const omega_k = regFn<
         .fill(0n)
         .map(
           (_, i) =>
-            E_4.decode(
+            E_8.decode(
               context.memory.getBytes(
-                toSafeMemoryAddress(o + 8n + 4n * BigInt(i)),
-                4,
+                toSafeMemoryAddress(o + 8n + 8n * BigInt(i)),
+                8,
               ),
             ).value,
         );
@@ -393,18 +365,21 @@ export const omega_k = regFn<
       // compute u*
       const newMemory = {
         from: o,
-        newData: new Uint8Array(60),
+        newData: new Uint8Array(112),
       };
-      E_8.encode(pvmCtx.gas, newMemory.newData.subarray(0, 8));
-      w.forEach((v, i) =>
-        E_4.encode(BigInt(v), newMemory.newData.subarray(8 + 4 * i, 4)),
+      E_8.encode(res.context.gas, newMemory.newData.subarray(0, 8));
+      res.context.registers.forEach((v, i) =>
+        E_8.encode(
+          BigInt(v),
+          newMemory.newData.subarray(8 + 8 * i, 16 + 8 * i),
+        ),
       );
 
       // compute m*
       const mStar = new Map(refineCtx.m);
       mStar.set(n, {
         programCode: refineCtx.m.get(n)!.programCode,
-        memory: pvmCtx.memory,
+        memory: <PVMMemory>res.context.memory,
         instructionPointer:
           typeof res.exitReason !== "undefined" &&
           typeof res.exitReason !== "number" &&
@@ -413,7 +388,6 @@ export const omega_k = regFn<
             : res.context.instructionPointer,
       });
 
-      assert(typeof res.exitReason !== "undefined", "exit reason is undefined");
       if (typeof res.exitReason === "number") {
         let exitReason = 0;
         if (res.exitReason === RegularPVMExitReason.OutOfGas) {
@@ -457,7 +431,7 @@ export const omega_x = regFn<
   W7 | PVMSingleModObject<RefineContext>
 >({
   fn: {
-    opCode: 26 as u8,
+    opCode: 13 as u8,
     identifier: "expunge",
     gasCost: 10n as Gas,
     execute(context, refineCtx) {
