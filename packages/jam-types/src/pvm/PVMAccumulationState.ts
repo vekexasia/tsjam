@@ -1,6 +1,6 @@
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { PrivilegedServices } from "./PrivilegedServices";
-import { SeqOfLength } from "@/genericTypes";
+import { Gas, SeqOfLength, ServiceIndex } from "@/genericTypes";
 import { ValidatorData } from "@/ValidatorData";
 import { Delta } from "@/states/Delta";
 import { AuthorizerQueue } from "@/states/AuthorizerQueue";
@@ -24,7 +24,23 @@ export interface PVMAccumulationState {
    */
   authQueue: AuthorizerQueue;
   /**
-   * `x` - privileged Services
+   * `m` - the index of the blessed service
    */
-  privServices: PrivilegedServices;
+  manager: ServiceIndex;
+  /**
+   * `a`
+   * service which can alter φ one for each CORE
+   */
+  assign: SeqOfLength<ServiceIndex, typeof CORES>;
+  /**
+   * `v`
+   * service which can alter ι
+   */
+  designate: ServiceIndex;
+  /**
+   * map of services which are automatically accumulated in each block
+   * along with their gas limits
+   * `z`
+   */
+  alwaysAccumulate: Map<ServiceIndex, Gas>;
 }

@@ -3,8 +3,9 @@ export * from "./AuthorizerPool.js";
 export * from "./delta/toPosterior.js";
 export * from "./delta/toDoubleDagger.js";
 
-export * from "./recenthistory/toDagger.js";
-export * from "./recenthistory/toPosterior.js";
+export * from "./recenthistory/h_toDagger.js";
+export * from "./recenthistory/h_toPosterior.js";
+export * from "./recenthistory/b_toPosterior.js";
 
 export * from "./rho/index.js";
 

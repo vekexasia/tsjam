@@ -27,7 +27,8 @@ import {
   gamma_aSTF,
   gamma_sSTF,
   headerLookupHistorySTF,
-  recentHistoryToDagger,
+  recentHistoryHToDagger,
+  recentHistoryBToPosterior,
   recentHistoryToPosterior,
   rotateEntropy,
   rotateKeys,
@@ -212,17 +213,16 @@ export const importBlock: STF<
    */
   const w = availableReports(ea, d_rho);
 
-  const [, d_recentHistory] = recentHistoryToDagger(
+  const [, d_recentHistoryH] = recentHistoryHToDagger(
     {
       hr: block.header.priorStateRoot,
     },
-    curState.recentHistory,
+    curState.recentHistory.h,
   ).safeRet();
 
   const [
     ,
     {
-      accumulateRoot,
       p_accumulationQueue,
       p_accumulationHistory,
       p_privServices,

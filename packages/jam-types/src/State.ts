@@ -12,9 +12,10 @@ import { IDisputesState } from "./states/DisputesState";
 import { RecentHistory } from "./states/RecentHistory";
 import { SafroleState } from "./states/SafroleState";
 import { RHO } from "./states/rho";
-import { SeqOfLength } from "./genericTypes";
+import { Hash, SeqOfLength, ServiceIndex } from "./genericTypes";
 import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
 import { JamStatistics } from "./states/Statistics";
+import { ServiceOuts } from "./states/ServiceOuts";
 
 /**
  * `σ`
@@ -99,6 +100,14 @@ export type JamState = {
    * `τ` - the most recent block timeslot
    */
   tau: Tau;
+
+  /**
+   * `θ` - `\lastaccout`
+   */
+  mostRecentAccumulationOutputs: Array<{
+    serviceIndex: ServiceIndex;
+    accumulationResult: Hash;
+  }>;
 
   /**
    * NOTE: this is not included in gp but used as per type doc

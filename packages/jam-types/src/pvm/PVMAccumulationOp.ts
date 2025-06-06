@@ -3,7 +3,7 @@ import { Gas, Hash, WorkPackageHash } from "@/genericTypes.js";
 
 /**
  * `O` set in graypaper $\operandtuple$
- * $(0.6.4 - 12.18)
+ * $(0.6.6 - 12.19)
  */
 export type PVMAccumulationOp = {
   /**
@@ -22,11 +22,6 @@ export type PVMAccumulationOp = {
   authorizerHash: Hash;
 
   /**
-   * `o` - comes from Workreport
-   */
-  authorizerOutput: Uint8Array;
-
-  /**
    * `y`
    */
   payloadHash: Hash;
@@ -41,4 +36,9 @@ export type PVMAccumulationOp = {
    * TODO: rename to result
    */
   output: WorkOutput;
+
+  /**
+   * `o` - comes from Workreport
+   */
+  authorizerOutput: Uint8Array;
 };

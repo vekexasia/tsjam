@@ -17,8 +17,6 @@ import {
   HashJSONCodec,
   JSONCodec,
   MapJSONCodec,
-  NULLORCodec,
-  WrapJSONCodec,
   ZipJSONCodecs,
 } from "@/json/JsonCodec";
 
@@ -26,21 +24,26 @@ import {
  *
  * This is defined in C(3) of state merklization
  */
-export const RecentHistoryCodec: JamCodec<RecentHistory> =
-  createArrayLengthDiscriminator(
-    createCodec<RecentHistoryItem>([
-      ["headerHash", create32BCodec<HeaderHash>()],
-      ["accumulationResultMMR", E_M],
-      ["stateRoot", create32BCodec<StateRootHash>()],
-      ["reportedPackages", buildKeyValueCodec(HashCodec)],
-    ]),
-  );
+export const RecentHistoryCodec: JamCodec<RecentHistory> = createCodec([
+  [
+    "h",
+    createArrayLengthDiscriminator<RecentHistory["h"]>(
+      createCodec([
+        ["headerHash", create32BCodec<HeaderHash>()],
+        ["accumulationResultMMB", HashCodec],
+        ["stateRoot", create32BCodec<StateRootHash>()],
+        ["reportedPackages", buildKeyValueCodec(HashCodec)],
+      ]),
+    ),
+  ],
+  ["b", E_M],
+]);
 
 export const RecentHistoryJSONCodec: JSONCodec<
-  RecentHistory,
+  RecentHistory["h"],
   Array<{
     header_hash: string;
-    mmr: { peaks: Array<null | string> };
+    mmb: string;
     state_root: string;
     reported: Array<{ hash: string; exports_root: string }>;
   }> | null
@@ -64,17 +67,13 @@ export const RecentHistoryJSONCodec: JSONCodec<
       RecentHistoryItem,
       {
         header_hash: string;
-        mmr: { peaks: Array<null | string> };
+        mmb: string;
         state_root: string;
         reported: Array<{ hash: string; exports_root: string }>;
       }
     >([
       ["headerHash", "header_hash", HashJSONCodec<HeaderHash>()],
-      [
-        "accumulationResultMMR",
-        "mmr",
-        WrapJSONCodec("peaks", ArrayOfJSONCodec(NULLORCodec(HashJSONCodec()))),
-      ],
+      ["accumulationResultMMB", "mmb", HashJSONCodec()],
       ["stateRoot", "state_root", HashJSONCodec<StateRootHash>()],
       [
         "reportedPackages",

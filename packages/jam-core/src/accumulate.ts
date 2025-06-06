@@ -5,7 +5,6 @@ import {
   EPOCH_LENGTH,
   NUMBER_OF_VALIDATORS,
 } from "@tsjam/constants";
-import { calculateAccumulateRoot } from "@tsjam/transitions";
 import {
   AccumulationHistory,
   AccumulationQueue,
@@ -41,6 +40,7 @@ import { ok } from "neverthrow";
 import { toTagged } from "@tsjam/utils";
 import { accumulateInvocation } from "@tsjam/pvm";
 import { Hashing } from "@tsjam/crypto";
+import { ServiceOuts } from "../../jam-types/dist/types/states/ServiceOuts";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -56,6 +56,7 @@ export const accumulateReports = (
     tau: Tau;
     p_tau: Posterior<Tau>;
     privServices: PrivilegedServices;
+    p_mostRecentAccumulationOutputs: Posterior<ServiceOuts>; // `θ′`
     iota: JamState["iota"];
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
@@ -65,13 +66,6 @@ export const accumulateReports = (
    */
   const w_mark = noPrereqAvailableReports(w);
 
-  //console.log(
-  //  JSON.stringify(
-  //    { w_mark: ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(w_mark) },
-  //    null,
-  //    2,
-  //  ),
-  //);
   const w_q = withPrereqAvailableReports(w, deps.accumulationHistory);
   // console.log({ w_q: w_q });
   const w_star = accumulatableReports(
@@ -80,15 +74,8 @@ export const accumulateReports = (
     deps.accumulationQueue,
     deps.p_tau,
   );
-  //console.log(
-  //  JSON.stringify(
-  //    { w_star: ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(w_star) },
-  //    null,
-  //    2,
-  //  ),
-  //);
 
-  // $(0.6.4 - 12.20)
+  // $(0.6.7 - 12.21)
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
@@ -98,13 +85,19 @@ export const accumulateReports = (
       ),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.6.4 - 12.21)
-  const [nAccumulatedWork, bold_o, bold_t, C, bold_u] = outerAccumulation(
+  // $(0.6.7 - 12.22)
+  const [
+    nAccumulatedWork,
+    bold_o,
+    bold_t,
+    p_mostRecentAccumulationOutputs,
+    bold_u,
+  ] = outerAccumulation(
     g,
     w_star,
     {
       delta: deps.serviceAccounts,
-      privServices: deps.privServices,
+      ...deps.privServices,
       authQueue: deps.authQueue,
       validatorKeys: deps.iota,
     },
@@ -116,7 +109,7 @@ export const accumulateReports = (
     },
   );
 
-  // $(0.6.4 - 12.23) | I
+  // $(0.6.7 - 12.24) | I
   const accumulationStatistics: Map<
     ServiceIndex,
     { usedGas: Gas; count: u32 }
@@ -124,7 +117,7 @@ export const accumulateReports = (
 
   const slicedW = w_star.slice(0, nAccumulatedWork);
 
-  // $(0.6.4 - 12.24)
+  // $(0.6.7 - 12.25)
   bold_u.forEach(({ serviceIndex, usedGas }) => {
     if (!accumulationStatistics.has(serviceIndex)) {
       accumulationStatistics.set(serviceIndex, {
@@ -133,12 +126,11 @@ export const accumulateReports = (
       });
     }
     const el = accumulationStatistics.get(serviceIndex)!;
-    //el.accumulatedReports++;
     el.usedGas = (el.usedGas + usedGas) as Gas;
   });
 
   for (const serviceIndex of accumulationStatistics.keys()) {
-    // $(0.6.4 - 12.25)
+    // $(0.6.7 - 12.26)
     const n_s = slicedW
       .map((wr) => wr.results)
       .flat()
@@ -152,7 +144,7 @@ export const accumulateReports = (
   }
 
   // calculoate posterior acc history
-  // $(0.6.4 - 12.31 / 12.32)
+  // $(0.6.7 - 12.33 / 12.34)
   const p_accumulationHistory =
     deps.accumulationHistory.slice() as AccumulationHistory as Posterior<AccumulationHistory>;
   {
@@ -163,7 +155,7 @@ export const accumulateReports = (
     }
   } // end of calculation of posterior accumulation history
 
-  // $(0.6.4 - 12.33) - calculate p_accumulationQueue
+  // $(0.6.7 - 12.35) - calculate p_accumulationQueue
   const p_accumulationQueue = [
     ...deps.accumulationQueue,
   ] as Posterior<AccumulationQueue>;
@@ -190,12 +182,10 @@ export const accumulateReports = (
   } // end of calculation of posterior accumulation queue
 
   return ok({
-    accumulateRoot: calculateAccumulateRoot(C),
     deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
-    // $(0.6.4 - 12.22)
-    p_privServices: toPosterior(bold_o.privServices),
+    p_mostRecentAccumulationOutputs,
     d_delta: toDagger(bold_o.delta),
     p_iota: toPosterior(bold_o.validatorKeys),
     p_authQueue: toPosterior(bold_o.authQueue),
@@ -356,11 +346,7 @@ export const accumulatableReports = (
   return [...w_mark, ...accprio] as Tagged<WorkReport[], "W*">;
 };
 
-// $(0.6.4 - 12.15)
-/*
- * `servouts`
- */
-type B = Set<{ serviceIndex: ServiceIndex; accumulationResult: Hash }>;
+// $(0.6.6 - 12.15)
 /*
  * `gasusd` gas used by each service
  */
@@ -389,7 +375,7 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  B,
+  ServiceOuts,
   U,
 ] => {
   let sum = 0n;
@@ -473,7 +459,7 @@ export const parallelizedAccAccumulation = (
 ): [
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
-  b: B,
+  b: ServiceOuts,
   u: U,
 ] => {
   const bold_s = new Set([
@@ -490,7 +476,7 @@ export const parallelizedAccAccumulation = (
   const accumulatedServices: Array<
     ReturnType<typeof singleServiceAccumulation>
   > = [];
-  const b: B = new Set();
+  const b: ServiceOuts = new Set();
 
   bold_s_values.forEach((s) => {
     const acc = singleServiceAccumulation(o, w, f, s, deps);
@@ -532,35 +518,48 @@ export const parallelizedAccAccumulation = (
   for (const k of m) {
     delta_prime.delete(k);
   }
+  const {
+    manager: m_prime,
+    assign: a_star,
+    designate: v_star,
+    alwaysAccumulate: z_prime,
+  } = singleServiceAccumulation(o, w, f, o.manager, deps).o;
+
+  const v_prime = singleServiceAccumulation(o, w, f, v_star, deps).o.designate;
+  const i_prime = singleServiceAccumulation(o, w, f, o.designate, deps).o
+    .validatorKeys;
+
+  const a_prime = [] as unknown as PVMAccumulationState["assign"];
+  for (let c = 0; c < CORES; c++) {
+    a_prime[c] = singleServiceAccumulation(o, w, f, a_star[c], deps).o.assign[
+      c
+    ];
+  }
+
+  const q_prime = [] as unknown as PVMAccumulationState["authQueue"];
+  for (let c = 0; c < CORES; c++) {
+    q_prime[c] = singleServiceAccumulation(
+      o,
+      w,
+      f,
+      o.assign[c],
+      deps,
+    ).o.authQueue[c];
+  }
 
   // TODO: if same service index just call once the accumulation and use the result
 
   const newState: PVMAccumulationState = {
     delta: delta_prime,
-    // x'
-    privServices: singleServiceAccumulation(
-      o,
-      w,
-      f,
-      o.privServices.manager,
-      deps,
-    ).o.privServices,
     // i'
-    validatorKeys: singleServiceAccumulation(
-      o,
-      w,
-      f,
-      o.privServices.assign,
-      deps,
-    ).o.validatorKeys,
+    validatorKeys: i_prime,
     // q'
-    authQueue: singleServiceAccumulation(
-      o,
-      w,
-      f,
-      o.privServices.designate,
-      deps,
-    ).o.authQueue,
+    authQueue: singleServiceAccumulation(o, w, f, o.designate, deps).o
+      .authQueue,
+    manager: m_prime,
+    assign: a_prime,
+    designate: v_prime,
+    alwaysAccumulate: z_prime,
   };
 
   return [newState, t, b, u];

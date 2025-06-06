@@ -4,6 +4,7 @@ import {
   JamCodec,
   OptBytesBigIntCodec,
   createArrayLengthDiscriminator,
+  createCodec,
   encodeWithCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
@@ -15,31 +16,29 @@ import { Hashing } from "@tsjam/crypto";
  * @param newPeek - the new element to append
  * @param hashFn - the hash function
  */
-export const appendMMR = <T>(
+export const appendMMR = <T extends Hash>(
   peeks: Array<T | undefined>,
   newPeek: T,
-  hashFn: (rn: T, l: T) => T,
+  hashFn: (el: Uint8Array) => T,
 ): Array<T | undefined> => {
   return p(peeks, newPeek, 0, hashFn);
 };
 
-const p = <T>(
-  peeks: Array<T | undefined>,
-  newEl: T,
-  pos: number,
-  hashFn: (rn: T, l: T) => T,
+const p = <T extends Hash>(
+  peeks: Array<T | undefined>, // r
+  newEl: T, // l
+  pos: number, // n
+  hashFn: (el: Uint8Array) => T, // H
 ): Array<T | undefined> => {
   if (pos >= peeks.length) {
     return peeks.slice().concat(newEl);
   } else if (pos < peeks.length && typeof peeks[pos] === "undefined") {
     return replace(peeks, pos, newEl);
   } else {
-    return p(
-      replace(peeks, pos, undefined),
-      hashFn(peeks[pos]!, newEl),
-      pos + 1,
-      hashFn,
-    );
+    const a = new Uint8Array(32 * 2);
+    HashCodec.encode(peeks[pos]!, a.subarray(0, 32));
+    HashCodec.encode(newEl, a.subarray(32, 64));
+    return p(replace(peeks, pos, undefined), hashFn(a), pos + 1, hashFn);
   }
 };
 
