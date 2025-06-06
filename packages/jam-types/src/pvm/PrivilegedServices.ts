@@ -1,7 +1,8 @@
-import { Gas, ServiceIndex } from "../genericTypes.js";
+import { CORES } from "@tsjam/constants";
+import { Gas, SeqOfLength, ServiceIndex } from "../genericTypes.js";
 /**
  * `χ`
- * $(0.6.4 - 9.9)
+ * $(0.6.6 - 9.9)
  */
 export type PrivilegedServices = {
   /**
@@ -17,9 +18,9 @@ export type PrivilegedServices = {
 
   /**
    * `a`
-   * service which can alter φ
+   * service which can alter φ one for each CORE
    */
-  assign: ServiceIndex;
+  assign: SeqOfLength<ServiceIndex, typeof CORES>;
 
   /**
    * map of services which are automatically accumulated in each block

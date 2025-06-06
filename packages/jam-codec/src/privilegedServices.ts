@@ -3,16 +3,30 @@ import { JamCodec } from "./codec";
 import { createCodec } from "./utils";
 import { E_sub, E_sub_int } from "./ints/E_subscr";
 import { buildGenericKeyValueCodec } from "./dicts/keyValue";
-import { createJSONCodec, JSONCodec, NumberJSONCodec } from "./json/JsonCodec";
+import {
+  ArrayOfJSONCodec,
+  createJSONCodec,
+  JSONCodec,
+  NumberJSONCodec,
+} from "./json/JsonCodec";
+import { createSequenceCodec } from "./sequenceCodec";
+import { CORES } from "@tsjam/constants";
 
+export const privilegedAssignCodec = (
+  cores: typeof CORES,
+): JamCodec<PrivilegedServices["assign"]> => {
+  return createSequenceCodec(cores, E_sub_int<ServiceIndex>(4));
+};
 /**
  * Codec for PrivilegedServices
  * being used in merklization and tests
  */
-export const PrivilegedServicesCodec: JamCodec<PrivilegedServices> =
+export const PrivilegedServicesCodec = (
+  cores: typeof CORES,
+): JamCodec<PrivilegedServices> =>
   createCodec([
     ["manager", E_sub_int<ServiceIndex>(4)],
-    ["assign", E_sub_int<ServiceIndex>(4)],
+    ["assign", privilegedAssignCodec(cores)],
     ["designate", E_sub_int<ServiceIndex>(4)],
     [
       "alwaysAccumulate",
@@ -34,7 +48,13 @@ export const PrivilegedServicesJSONCodec: JSONCodec<
   }
 > = createJSONCodec([
   ["manager", "chi_m", NumberJSONCodec<ServiceIndex>()],
-  ["assign", "chi_a", NumberJSONCodec<ServiceIndex>()],
+  [
+    "assign",
+    "chi_a",
+    ArrayOfJSONCodec<PrivilegedServices["assign"], ServiceIndex, number>(
+      NumberJSONCodec(),
+    ),
+  ],
   ["designate", "chi_v", NumberJSONCodec<ServiceIndex>()],
   [
     "alwaysAccumulate",
