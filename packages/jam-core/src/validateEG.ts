@@ -3,7 +3,6 @@ import {
   AccumulationHistory,
   AccumulationQueue,
   AuthorizerPool,
-  BeefyRootHash,
   Dagger,
   Delta,
   DoubleDagger,
@@ -39,7 +38,6 @@ import { Ed25519, Hashing } from "@tsjam/crypto";
 import { PHI_FN, _w } from "@tsjam/transitions";
 import { Result, err, ok } from "neverthrow";
 import { FisherYatesH } from "./fisherYates";
-import { MMRSuperPeak } from "@tsjam/merklization";
 
 export enum EGError {
   GAS_TOO_LOW = "Work result gasPrioritization is too low",
@@ -113,7 +111,7 @@ export const assertEGValid = (
   deps: {
     headerLookupHistory: HeaderLookupHistory;
     recentHistory: RecentHistory;
-    d_recentHistory: Dagger<RecentHistory>;
+    d_recentHistoryH: Dagger<RecentHistory["h"]>;
     delta: Delta;
     accumulationHistory: AccumulationHistory;
     accumulationQueue: AccumulationQueue;
@@ -296,17 +294,13 @@ export const assertEGValid = (
     return err(EGError.WORK_PACKAGE_HASH_NOT_UNIQUE);
   }
 
-  const d_recentWithBeefy = deps.d_recentHistory.map((r) => ({
-    ...r,
-    beefyRoot: MMRSuperPeak(r.accumulationResultMMR) as BeefyRootHash,
-  }));
   for (const refinementContext of x) {
-    // $(0.6.4 - 11.33)
-    const y = d_recentWithBeefy.find(
+    // $(0.6.7 - 11.33)
+    const y = deps.d_recentHistoryH.find(
       (_y) =>
         _y.headerHash === refinementContext.anchor.hash &&
         _y.stateRoot === refinementContext.anchor.stateRoot &&
-        _y.beefyRoot === refinementContext.anchor.beefyRoot,
+        _y.accumulationResultMMB === refinementContext.anchor.beefyRoot,
     );
     if (typeof y === "undefined") {
       return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
@@ -340,7 +334,7 @@ export const assertEGValid = (
       .flat(),
   );
 
-  // $(0.6.4 - 11.37)
+  // $(0.6.7 - 11.37)
   const a: Set<WorkPackageHash> = new Set(
     deps.rho
       .map((a) => a?.workReport.refinementContext.dependencies)
@@ -349,7 +343,7 @@ export const assertEGValid = (
   );
 
   const kxp = new Set(
-    deps.recentHistory.map((r) => [...r.reportedPackages.keys()]).flat(),
+    deps.recentHistory.h.map((r) => [...r.reportedPackages.keys()]).flat(),
   );
   const _x = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
@@ -361,9 +355,9 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.6.4 - 11.39)
+  // $(0.6.7 - 11.39)
   const pSet = new Set(p);
-  deps.recentHistory
+  deps.recentHistory.h
     .map((r) => [...r.reportedPackages.keys()])
     .flat()
     .forEach((reportedHash) => pSet.add(reportedHash));
@@ -386,9 +380,9 @@ export const assertEGValid = (
         .map((wPSpec) => [wPSpec.workPackageHash, wPSpec.segmentRoot]),
     );
 
-    // $(0.6.4 - 11.41)
+    // $(0.6.7 - 11.41)
     const recentAndCurrentWP = new Map(
-      deps.recentHistory
+      deps.recentHistory.h
         .map((rh) => [...rh.reportedPackages.entries()])
         .flat()
         .concat([...p.entries()]),

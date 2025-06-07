@@ -170,7 +170,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       "p_psi_o",
       createArrayLengthDiscriminator<ED25519PublicKey[]>(Ed25519PubkeyCodec),
     ],
-    [
+    /*[
       "blockHistory",
       createArrayLengthDiscriminator<RecentHistory>(
         createCodec([
@@ -198,9 +198,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
           ],
         ]),
       ),
-    ],
-
-    ["authPool", AuthorizerPoolCodec()],
+    ]*/ ["authPool", AuthorizerPoolCodec()],
     ["delta", buildTestDeltaCodec(serviceAccountFromTestInfo)],
   ]);
 
@@ -254,7 +252,9 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       new Set(decoded.preState.p_psi_o.map((a) => a.bigint)),
     ),
     recentHistory: decoded.preState.blockHistory,
-    d_recentHistory: decoded.preState.blockHistory as Dagger<RecentHistory>,
+    d_recentHistoryH: decoded.preState.blockHistory.h as Dagger<
+      RecentHistory["h"]
+    >,
     authPool: decoded.preState.authPool,
     accumulationHistory: [] as unknown as AccumulationHistory,
     accumulationQueue: [] as unknown as AccumulationQueue,

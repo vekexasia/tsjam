@@ -56,7 +56,6 @@ export const accumulateReports = (
     tau: Tau;
     p_tau: Posterior<Tau>;
     privServices: PrivilegedServices;
-    p_mostRecentAccumulationOutputs: Posterior<ServiceOuts>; // `θ′`
     iota: JamState["iota"];
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
@@ -185,7 +184,13 @@ export const accumulateReports = (
     deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
-    p_mostRecentAccumulationOutputs,
+    p_mostRecentAccumulationOutputs: [...p_mostRecentAccumulationOutputs], // NOTE: graypaper is wrong here in type
+    p_privServices: toPosterior(<PrivilegedServices>{
+      manager: bold_o.manager,
+      designate: bold_o.designate,
+      assign: bold_o.assign,
+      alwaysAccumulate: bold_o.alwaysAccumulate,
+    }),
     d_delta: toDagger(bold_o.delta),
     p_iota: toPosterior(bold_o.validatorKeys),
     p_authQueue: toPosterior(bold_o.authQueue),

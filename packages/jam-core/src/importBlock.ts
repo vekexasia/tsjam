@@ -225,11 +225,12 @@ export const importBlock: STF<
     {
       p_accumulationQueue,
       p_accumulationHistory,
-      p_privServices,
       d_delta,
       p_iota,
       p_authQueue,
       deferredTransfers,
+      p_mostRecentAccumulationOutputs,
+      p_privServices,
       accumulationStatistics,
     },
   ] = accumulateReports(w, {
@@ -267,7 +268,7 @@ export const importBlock: STF<
     {
       headerLookupHistory: curState.headerLookupHistory,
       delta: curState.serviceAccounts,
-      d_recentHistory,
+      d_recentHistoryH,
       recentHistory: curState.recentHistory,
       accumulationHistory: curState.accumulationHistory,
       accumulationQueue: curState.accumulationQueue,
@@ -309,14 +310,21 @@ export const importBlock: STF<
     return err(pDeltaError);
   }
 
-  const headerHash = computeHeaderHash(block.header);
-  const [, p_recentHistory] = recentHistoryToPosterior(
+  const [, p_recentHistoryB] = recentHistoryBToPosterior(
     {
-      accumulateRoot,
+      p_theta: p_mostRecentAccumulationOutputs,
+    },
+    curState.recentHistory.b,
+  ).safeRet();
+
+  const headerHash = computeHeaderHash(block.header);
+  const [, p_recentHistoryH] = recentHistoryToPosterior(
+    {
       headerHash,
+      beta_b_prime: p_recentHistoryB,
       eg: block.extrinsics.reportGuarantees,
     },
-    d_recentHistory,
+    d_recentHistoryH,
   ).safeRet();
 
   const [, p_validatorStatistics] = validatorStatisticsToPosterior(
@@ -389,7 +397,7 @@ export const importBlock: STF<
     },
     rho: p_rho,
     serviceAccounts: p_delta,
-    recentHistory: p_recentHistory,
+    recentHistory: toPosterior({ h: p_recentHistoryH, b: p_recentHistoryB }),
     accumulationQueue: p_accumulationQueue,
     accumulationHistory: p_accumulationHistory,
     privServices: p_privServices,
@@ -397,6 +405,7 @@ export const importBlock: STF<
     kappa: p_kappa,
     disputes: p_disputesState,
     headerLookupHistory: p_headerLookupHistory,
+    mostRecentAccumulationOutputs: p_mostRecentAccumulationOutputs,
   });
 
   // $(0.6.4 - 5.2)

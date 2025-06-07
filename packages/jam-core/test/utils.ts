@@ -9,6 +9,7 @@ import {
   Hash,
   JamState,
   JamStatistics,
+  PrivilegedServices,
   RecentHistory,
   RecentHistoryItem,
   SafroleState,
@@ -78,20 +79,23 @@ export const dummyState = (conf: {
       .fill(undefined)
       .map(() => []) as unknown as JamState["accumulationQueue"],
     privServices: {
-      assign: 0 as ServiceIndex,
+      assign: new Array(cores).fill(0) as PrivilegedServices["assign"],
       alwaysAccumulate: new Map(),
       manager: 0 as ServiceIndex,
       designate: 0 as ServiceIndex,
     },
-    recentHistory: new Array(80).fill(null).map(
-      () =>
-        ({
-          stateRoot: toTagged(0n),
-          headerHash: toTagged(0n),
-          reportedPackages: new Map(),
-          accumulationResultMMR: [],
-        }) as RecentHistoryItem,
-    ) as RecentHistory,
+    recentHistory: {
+      h: new Array(80).fill(null).map(
+        () =>
+          ({
+            stateRoot: toTagged(0n),
+            headerHash: toTagged(0n),
+            reportedPackages: new Map(),
+            accumulationResultMMB: toTagged(0n),
+          }) as RecentHistoryItem,
+      ) as RecentHistory["h"],
+      b: [] as RecentHistory["b"],
+    },
     statistics: {
       validators: [null, null].map(() =>
         new Array(validators).fill({
@@ -120,5 +124,6 @@ export const dummyState = (conf: {
       new Array(80).fill(0n as Hash),
     ) as AuthorizerQueue,
     headerLookupHistory: new Map(),
+    mostRecentAccumulationOutputs: [],
   };
 };

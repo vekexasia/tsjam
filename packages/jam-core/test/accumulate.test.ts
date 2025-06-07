@@ -169,7 +169,7 @@ const buildTest = (filename: string, size: string) => {
     ["p_eta_0", posteriorCodec(Blake2bHashCodec)],
     ["accQueue", AccumulationQueueCodec(EPLEN)],
     ["accHistory", AccumulationHistoryCodec(EPLEN)],
-    ["privServices", PrivilegedServicesCodec],
+    ["privServices", PrivilegedServicesCodec(NCOR)],
     ["statistics", ServiceStatisticsCodec],
     ["accounts", buildTestDeltaCodec(accumulateAccountCodec)],
   ]);
@@ -204,7 +204,7 @@ const buildTest = (filename: string, size: string) => {
         ["p_eta_0", posteriorCodec(Blake2bHashCodec)],
         ["accQueue", AccumulationQueueCodec(EPLEN)],
         ["accHistory", AccumulationHistoryCodec(EPLEN)],
-        ["privServices", PrivilegedServicesCodec],
+        ["privServices", PrivilegedServicesCodec(NCOR)],
         logCodec(["statistics", ServiceStatisticsCodec], (a) =>
           JSON.stringify(a),
         ),
@@ -214,26 +214,13 @@ const buildTest = (filename: string, size: string) => {
   ]).decode(testBin).value;
 
   throw new Error("TODO: remove this 2");
+  /*
   const { input, preState, output, postState } = decoded;
   const testSTate = dummyState({
     validators: NUMVALS,
     cores: NCOR,
     epoch: EPLEN,
   });
-  // NOTE:this is here so that we have an empty storage set fo the key used in `write` hostcall
-  // this will have w7 set to the length of value (0) and make the pvm finish with Halt at 4787
-  // instead of trap at 7464
-  // this is only for `process_one_immediate_report-1` test
-  /*
-   preState.accounts
-    .get(<ServiceIndex>1729)!
-    .storage.set(
-      <Hash>(
-        18748680343547175133990789414536130980095420973019086018915209101056353955085n
-      ),
-      Buffer.alloc(0),
-    );
-  */
   // preState.accounts.get(<ServiceIndex>1729)!.preimage_l = new Map();
   console.log("preAccumulate");
 
@@ -267,6 +254,7 @@ const buildTest = (filename: string, size: string) => {
 
   expect(p_serviceStatistics).deep.equal(postState.statistics);
 
+  */
   // TODO: compare other post states
 };
 describe("accumulate", () => {

@@ -4,7 +4,6 @@ import {
   JamCodec,
   OptBytesBigIntCodec,
   createArrayLengthDiscriminator,
-  createCodec,
   encodeWithCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
@@ -49,7 +48,7 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 };
 
 /**
- * $(0.6.4 - E.10)
+ * `Mr` - $(0.6.7 - E.10)
  */
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   const peeks = _peeks
