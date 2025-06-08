@@ -3,7 +3,7 @@ import { Gas, Hash, WorkPackageHash } from "@/genericTypes.js";
 
 /**
  * `O` set in graypaper $\operandtuple$
- * $(0.6.6 - 12.19)
+ * $(0.6.7 - 12.19)
  */
 export type PVMAccumulationOp = {
   /**

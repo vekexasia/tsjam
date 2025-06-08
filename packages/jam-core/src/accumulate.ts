@@ -399,7 +399,7 @@ export const outerAccumulation = (
     return [0, accState, [], new Set(), []];
   }
 
-  const [o_star, t_star, b_star, u_star] = parallelizedAccAccumulation(
+  const [o_star, t_star, b_star, u_star] = parallelizedAccumulation(
     accState,
     works.slice(0, i),
     gasLimits,
@@ -451,9 +451,9 @@ const preimageProvide = (
 };
 /**
  * `∆*` fn
- * $(0.6.4 - 12.17)
+ * $(0.6.7 - 12.17)
  */
-export const parallelizedAccAccumulation = (
+export const parallelizedAccumulation = (
   o: PVMAccumulationState,
   w: WorkReport[],
   f: Map<ServiceIndex, u64>,

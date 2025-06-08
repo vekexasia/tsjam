@@ -254,7 +254,7 @@ export const importBlock: STF<
   const tStats = transferStatistics(deferredTransfers, invokedOnTransfers);
 
   const [, dd_delta] = deltaToDoubleDagger(
-    { bold_x: invokedOnTransfers },
+    { bold_x: invokedOnTransfers, accumulationStatistics, p_tau },
     d_delta,
   ).safeRet();
 
