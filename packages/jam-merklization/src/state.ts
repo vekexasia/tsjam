@@ -5,15 +5,10 @@ import {
   createCodec,
   AuthorizerPoolCodec,
   AuthorizerQueueCodec,
-  BandersnatchCodec,
-  BandersnatchRingRootCodec,
-  E_1,
   E_4,
   E_4_int,
   E_8,
   HashCodec,
-  JamCodec,
-  TicketIdentifierCodec,
   ValidatorDataCodec,
   WorkReportCodec,
   bit,
@@ -23,11 +18,9 @@ import {
   StatisticsCodec,
   WorkPackageHashCodec,
   PrivilegedServicesCodec,
-  RecentHistoryCodec,
   RHOCodec,
   LengthDiscriminator,
-  Ed25519PubkeyBigIntCodec,
-  E_M,
+  E_sub_int,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -35,18 +28,28 @@ import {
   ServiceIndex,
   WorkPackageHash,
   WorkReport,
-  SafroleState,
   ByteArrayOfLength,
   SeqOfLength,
   StateRootHash,
   u32,
   StateKey,
-  Beta,
+  ServiceAccount,
+  Tau,
+  UpToSeq,
 } from "@tsjam/types";
-import { bigintToBytes, isFallbackMode } from "@tsjam/utils";
+import { bigintToBytes, toTagged } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  betaCodec,
+  disputesCodec,
+  entropyCodec,
+  safroleCodec,
+  serviceAccountDataCodec,
+} from "./stateCodecs";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import assert from "assert";
 
 /**
  * Merkelize state
@@ -174,10 +177,6 @@ export const stateKey = (
   return new Uint8Array([i, ...new Array(30).fill(0)]) as StateKey;
 };
 
-const betaCodec = createCodec<Beta>([
-  ["recentHistory", RecentHistoryCodec],
-  ["beefyBelt", E_M],
-]);
 /*
  * `T(σ)`
  * $(0.6.7 - D.2)
@@ -201,69 +200,14 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   toRet.set(stateKey(3), encodeWithCodec(betaCodec, state.beta));
   // logState("recentHistory|c3", stateKey(3));
 
-  const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(
-    EPOCH_LENGTH,
-    state.safroleState.gamma_s[0] instanceof Uint8Array // BandersnatchKey
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (BandersnatchCodec as JamCodec<any>)
-      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (TicketIdentifierCodec as JamCodec<any>),
-  );
-
-  toRet.set(
-    stateKey(4),
-    new Uint8Array([
-      ...encodeWithCodec(
-        createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-        state.safroleState.gamma_k,
-      ),
-      ...encodeWithCodec(BandersnatchRingRootCodec, state.safroleState.gamma_z),
-      ...encodeWithCodec(
-        E_1,
-        isFallbackMode(state.safroleState.gamma_s) ? 1n : 0n,
-      ),
-      ...encodeWithCodec(gamma_sCodec, state.safroleState.gamma_s),
-      ...encodeWithCodec(
-        createArrayLengthDiscriminator(TicketIdentifierCodec),
-        state.safroleState.gamma_a,
-      ),
-    ]),
-  );
+  toRet.set(stateKey(4), encodeWithCodec(safroleCodec, state.safroleState));
 
   // 5
-  toRet.set(
-    stateKey(5),
-    new Uint8Array([
-      ...encodeWithCodec(
-        createArrayLengthDiscriminator(HashCodec),
-        [...state.disputes.psi_g.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
-      ),
-      ...encodeWithCodec(
-        createArrayLengthDiscriminator(HashCodec),
-        [...state.disputes.psi_b.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
-      ),
-      ...encodeWithCodec(
-        createArrayLengthDiscriminator(HashCodec),
-        [...state.disputes.psi_w.values()].sort((a, b) => (a - b < 0 ? -1 : 1)),
-      ),
-      ...encodeWithCodec(
-        createArrayLengthDiscriminator(Ed25519PubkeyBigIntCodec),
-        [...state.disputes.psi_o.values()].sort((a, b) => Number(a - b)),
-      ),
-    ]),
-  );
+  toRet.set(stateKey(5), encodeWithCodec(disputesCodec, state.disputes));
   // logState("5|c5", stateKey(5));
 
   // 6
-  toRet.set(
-    stateKey(6),
-    new Uint8Array([
-      ...encodeWithCodec(HashCodec, state.entropy[0]),
-      ...encodeWithCodec(HashCodec, state.entropy[1]),
-      ...encodeWithCodec(HashCodec, state.entropy[2]),
-      ...encodeWithCodec(HashCodec, state.entropy[3]),
-    ]),
-  );
+  toRet.set(stateKey(6), encodeWithCodec(entropyCodec, state.entropy));
   // logState("c6", stateKey(6));
 
   // 7
@@ -373,18 +317,11 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   for (const [serviceIndex, serviceAccount] of state.serviceAccounts) {
     toRet.set(
       stateKey(255, serviceIndex),
-      new Uint8Array([
-        ...encodeWithCodec(HashCodec, serviceAccount.codeHash),
-        ...encodeWithCodec(E_8, serviceAccount.balance),
-        ...encodeWithCodec(E_8, serviceAccount.minGasAccumulate),
-        ...encodeWithCodec(E_8, serviceAccount.minGasOnTransfer),
-        ...encodeWithCodec(E_8, serviceAccount.totalOctets()),
-        ...encodeWithCodec(E_8, serviceAccount.gratisStorageOffset),
-        ...encodeWithCodec(E_4_int, serviceAccount.itemInStorage()),
-        ...encodeWithCodec(E_4_int, serviceAccount.creationTimeSlot),
-        ...encodeWithCodec(E_4_int, serviceAccount.lastAccumulationTimeSlot),
-        ...encodeWithCodec(E_4_int, serviceAccount.parentService),
-      ]),
+      encodeWithCodec(serviceAccountDataCodec, {
+        ...serviceAccount,
+        itemInStorage: serviceAccount.itemInStorage(),
+        totalOctets: serviceAccount.totalOctets(),
+      }),
     );
 
     for (const [k, v] of serviceAccount.storage.entries()) {
@@ -411,6 +348,159 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   }
 
   return toRet;
+};
+
+const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
+  const authPool = AuthorizerPoolCodec().decode(
+    merkleMap.get(stateKey(1))!,
+  ).value;
+
+  const authQueue = AuthorizerQueueCodec().decode(
+    merkleMap.get(stateKey(2))!,
+  ).value;
+
+  const beta = betaCodec.decode(merkleMap.get(stateKey(3))!).value;
+
+  const safrole = safroleCodec.decode(merkleMap.get(stateKey(4))!).value;
+
+  const disputes = disputesCodec.decode(merkleMap.get(stateKey(5))!).value;
+
+  const entropy = entropyCodec.decode(merkleMap.get(stateKey(6))!).value;
+
+  const iota = createSequenceCodec(
+    NUMBER_OF_VALIDATORS,
+    ValidatorDataCodec,
+  ).decode(merkleMap.get(stateKey(7))!).value;
+
+  const kappa = createSequenceCodec(
+    NUMBER_OF_VALIDATORS,
+    ValidatorDataCodec,
+  ).decode(merkleMap.get(stateKey(8))!).value;
+
+  const lambda = createSequenceCodec(
+    NUMBER_OF_VALIDATORS,
+    ValidatorDataCodec,
+  ).decode(merkleMap.get(stateKey(9))!).value;
+
+  const rho = RHOCodec().decode(merkleMap.get(stateKey(10))!).value;
+
+  const tau = E_4.decode(merkleMap.get(stateKey(11))!).value;
+
+  const privServices = PrivilegedServicesCodec(CORES).decode(
+    merkleMap.get(stateKey(12))!,
+  ).value;
+
+  const statistics = StatisticsCodec(NUMBER_OF_VALIDATORS, CORES).decode(
+    merkleMap.get(stateKey(13))!,
+  ).value;
+
+  const accumulationQueue = createSequenceCodec(
+    EPOCH_LENGTH,
+    createArrayLengthDiscriminator(
+      createCodec<{
+        workReport: WorkReport;
+        dependencies: WorkPackageHash[];
+      }>([
+        ["workReport", WorkReportCodec],
+        ["dependencies", createArrayLengthDiscriminator(WorkPackageHashCodec)],
+      ]),
+    ),
+  ).decode(merkleMap.get(stateKey(14))!).value;
+
+  const accumulationHistory = createSequenceCodec(
+    EPOCH_LENGTH,
+    new LengthDiscriminator<Set<WorkPackageHash>>({
+      ...createSetCodec(WorkPackageHashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
+      length(v) {
+        return v.size;
+      },
+    }),
+  ).decode(merkleMap.get(stateKey(15))!).value;
+
+  const serviceKeys = [...merkleMap.keys()].filter((k) => {
+    return (
+      k[0] === 255 &&
+      k[2] === 0 &&
+      k[4] === 0 &&
+      k[6] === 0 &&
+      k[8] === 0 &&
+      k[9] === 0 &&
+      32 + 8 * 4 + 4 === merkleMap.get(k)!.length
+    );
+  });
+  for (const serviceDataKey of serviceKeys) {
+    const serviceKey = new Uint8Array([
+      serviceDataKey[1],
+      serviceDataKey[3],
+      serviceDataKey[5],
+      serviceDataKey[7],
+    ]);
+    const serviceData = serviceAccountDataCodec.decode(
+      merkleMap.get(serviceDataKey)!,
+    ).value;
+
+    const serviceIndex = E_sub_int<ServiceIndex>(4).decode(serviceKey).value;
+    // filter out service data keys that are related to this service
+    const serviceRelatedKeys = new Set(
+      [...merkleMap.keys()].filter((k) => {
+        return (
+          k[0] === serviceKey[0] &&
+          k[2] === serviceKey[1] &&
+          k[4] === serviceKey[3] &&
+          k[6] === serviceKey[4]
+        );
+      }),
+    );
+
+    const serviceAccount: ServiceAccount = new ServiceAccountImpl(serviceIndex);
+    serviceAccount.codeHash = serviceData.codeHash;
+    serviceAccount.balance = serviceData.balance;
+    serviceAccount.minGasAccumulate = serviceData.minGasAccumulate;
+    serviceAccount.minGasOnTransfer = serviceData.minGasOnTransfer;
+    serviceAccount.gratisStorageOffset = serviceData.gratisStorageOffset;
+    serviceAccount.creationTimeSlot = serviceData.creationTimeSlot;
+    serviceAccount.lastAccumulationTimeSlot =
+      serviceData.lastAccumulationTimeSlot;
+    serviceAccount.parentService = serviceData.parentService;
+
+    const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
+      const possiblePreimage = merkleMap.get(sk)!;
+      const h = Hashing.blake2bBuf(possiblePreimage);
+
+      const p_p_key = stateKey(
+        serviceIndex,
+        new Uint8Array([...encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2)), ...h]),
+      );
+      return Buffer.compare(p_p_key, sk) === 0;
+    });
+    for (const preimagekey of preimage_p_keys) {
+      const preimage = merkleMap.get(preimagekey)!;
+      const h = Hashing.blake2b(preimage);
+      const hb = Hashing.blake2bBuf(preimage);
+      serviceAccount.preimage_p.set(h, preimage);
+
+      // get preimage l
+      //
+      const length = preimage.length;
+
+      const e_l = encodeWithCodec(E_sub_int(4), length);
+      const p_l_key = stateKey(serviceIndex, new Uint8Array([...e_l, ...hb]));
+      const pl = merkleMap.get(p_l_key);
+      assert(typeof pl !== "undefined", "Preimage l not found");
+      const pl_decoded = createArrayLengthDiscriminator<UpToSeq<Tau, 3>>(
+        E_sub_int<Tau>(4),
+      ).decode(pl).value;
+      serviceAccount.preimage_l.set(
+        h,
+        serviceAccount.preimage_l.get(h) ?? new Map(),
+      );
+      serviceAccount.preimage_l.get(h)!.set(toTagged(<u32>length), pl_decoded);
+      serviceRelatedKeys.delete(preimagekey);
+      serviceRelatedKeys.delete(p_l_key);
+    }
+  }
+
+  throw new Error();
 };
 
 if (import.meta.vitest) {

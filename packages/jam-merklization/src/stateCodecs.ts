@@ -1,0 +1,209 @@
+import {
+  createCodec,
+  BandersnatchCodec,
+  BandersnatchRingRootCodec,
+  E_1,
+  HashCodec,
+  JamCodec,
+  TicketIdentifierCodec,
+  ValidatorDataCodec,
+  createArrayLengthDiscriminator,
+  createSetCodec,
+  RecentHistoryCodec,
+  LengthDiscriminator,
+  Ed25519PubkeyBigIntCodec,
+  E_M,
+  Blake2bHashCodec,
+  createSequenceCodec,
+  create32BCodec,
+  E_8,
+  E_sub,
+  E_sub_int,
+} from "@tsjam/codec";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  Balance,
+  Beta,
+  CodeHash,
+  ED25519PublicKey,
+  Gas,
+  Hash,
+  IDisputesState,
+  JamEntropy,
+  SafroleState,
+  ServiceAccount,
+  ServiceIndex,
+  Tau,
+  u32,
+  u64,
+} from "@tsjam/types";
+import { isFallbackMode } from "@tsjam/utils";
+
+export const betaCodec = createCodec<Beta>([
+  ["recentHistory", RecentHistoryCodec],
+  ["beefyBelt", E_M],
+]);
+
+export const safroleCodec = createCodec<SafroleState>([
+  [
+    "gamma_k",
+    createSequenceCodec<SafroleState["gamma_k"]>(
+      NUMBER_OF_VALIDATORS,
+      ValidatorDataCodec,
+    ),
+  ],
+  [
+    "gamma_z",
+    BandersnatchRingRootCodec as unknown as JamCodec<SafroleState["gamma_z"]>,
+  ],
+  [
+    "gamma_s",
+    {
+      decode(bytes: Uint8Array) {
+        const isFallback = E_1.decode(bytes.subarray(0, 1)).value === 1n;
+        const codec = isFallback ? BandersnatchCodec : TicketIdentifierCodec;
+        const { value, readBytes } = createSequenceCodec<
+          SafroleState["gamma_s"]
+        >(EPOCH_LENGTH, codec as unknown as JamCodec<any>).decode(
+          bytes.subarray(1),
+        );
+        return { value, readBytes };
+      },
+
+      encodedSize(v: SafroleState["gamma_s"]): number {
+        if (isFallbackMode(v)) {
+          return (
+            1 +
+            createSequenceCodec<typeof v>(
+              EPOCH_LENGTH,
+              BandersnatchCodec,
+            ).encodedSize(v)
+          );
+        } else {
+          return (
+            1 +
+            createSequenceCodec<typeof v>(
+              EPOCH_LENGTH,
+              TicketIdentifierCodec,
+            ).encodedSize(v)
+          );
+        }
+      },
+
+      encode(v: SafroleState["gamma_s"], bytes: Uint8Array): number {
+        if (isFallbackMode(v)) {
+          E_1.encode(1n, bytes);
+          return (
+            1 +
+            createSequenceCodec<typeof v>(
+              EPOCH_LENGTH,
+              BandersnatchCodec,
+            ).encode(v, bytes.subarray(1))
+          );
+        } else {
+          E_1.encode(0n, bytes);
+          return (
+            1 +
+            createSequenceCodec<typeof v>(
+              EPOCH_LENGTH,
+              TicketIdentifierCodec,
+            ).encode(v, bytes.subarray(1))
+          );
+        }
+      },
+    },
+  ],
+  [
+    "gamma_a",
+    createArrayLengthDiscriminator<SafroleState["gamma_a"]>(
+      TicketIdentifierCodec,
+    ),
+  ],
+]);
+
+export const disputesCodec = createCodec<IDisputesState>([
+  [
+    "psi_g",
+    new LengthDiscriminator<Set<Hash>>({
+      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
+      length(v: Set<Hash>): number {
+        return v.size;
+      },
+    }),
+  ],
+  [
+    "psi_b",
+    new LengthDiscriminator<Set<Hash>>({
+      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
+      length(v: Set<Hash>): number {
+        return v.size;
+      },
+    }),
+  ],
+  [
+    "psi_w",
+    new LengthDiscriminator<Set<Hash>>({
+      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
+      length(v: Set<Hash>): number {
+        return v.size;
+      },
+    }),
+  ],
+  [
+    "psi_o",
+    new LengthDiscriminator<Set<ED25519PublicKey["bigint"]>>({
+      ...createSetCodec(Ed25519PubkeyBigIntCodec, (a, b) => Number(a - b)),
+      length(v: Set<ED25519PublicKey["bigint"]>): number {
+        return v.size;
+      },
+    }),
+  ],
+]);
+
+export const entropyCodec: JamCodec<JamEntropy> = {
+  encode(v: JamEntropy, bytes: Uint8Array): number {
+    let offset = 0;
+    for (const e of v) {
+      offset += Blake2bHashCodec.encode(e, bytes.subarray(offset));
+    }
+    return offset;
+  },
+  decode(bytes) {
+    const e0 = Blake2bHashCodec.decode(bytes.subarray(0, 32)).value;
+    const e1 = Blake2bHashCodec.decode(bytes.subarray(32, 64)).value;
+    const e2 = Blake2bHashCodec.decode(bytes.subarray(64, 96)).value;
+    const e3 = Blake2bHashCodec.decode(bytes.subarray(96, 128)).value;
+    return { value: [e0, e1, e2, e3], readBytes: 128 };
+  },
+  encodedSize(value) {
+    return 128; // 4 * 32 bytes
+  },
+};
+
+export const serviceAccountDataCodec = createCodec<
+  Pick<
+    ServiceAccount,
+    | "codeHash"
+    | "balance"
+    | "minGasAccumulate"
+    | "minGasOnTransfer"
+    | "gratisStorageOffset"
+    | "creationTimeSlot"
+    | "lastAccumulationTimeSlot"
+    | "parentService"
+  > & {
+    totalOctets: u64;
+    itemInStorage: u32;
+  }
+>([
+  ["codeHash", create32BCodec<CodeHash>()],
+  ["balance", E_sub<u64>(8)],
+  ["minGasAccumulate", E_sub<Gas>(8)],
+  ["minGasOnTransfer", E_sub<Gas>(8)],
+  ["totalOctets", E_sub<u64>(8)],
+  ["gratisStorageOffset", E_sub<u64>(8)],
+  ["itemInStorage", E_sub_int<u32>(4)],
+  ["creationTimeSlot", E_sub_int<u32>(4)],
+  ["lastAccumulationTimeSlot", E_sub_int<u32>(4)],
+  ["parentService", E_sub_int<ServiceIndex>(4)],
+]);

@@ -89,7 +89,7 @@ export const accumulateReports = (
     nAccumulatedWork,
     bold_o,
     bold_t,
-    p_mostRecentAccumulationOutputs,
+    p_mostRecentAccumulationOutputs, // θ′
     bold_u,
   ] = outerAccumulation(
     g,

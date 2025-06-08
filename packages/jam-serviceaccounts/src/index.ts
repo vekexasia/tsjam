@@ -13,6 +13,10 @@ import {
   CodeHash,
   ServiceIndex,
   StateKey,
+  Hash,
+  Tagged,
+  UpToSeq,
+  Tau,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import {
@@ -90,9 +94,8 @@ export class ServiceAccountStorageImpl implements IServiceAccountStorage {
 }
 
 export class ServiceAccountImpl implements ServiceAccount {
-  storage: IServiceAccountStorage;
-  preimage_p = new Map();
-  preimage_l = new Map();
+  preimage_p: ServiceAccount["preimage_p"] = new Map();
+  preimage_l: ServiceAccount["preimage_l"] = new Map();
   gratisStorageOffset!: u64;
   codeHash!: CodeHash;
   balance!: u64;
@@ -102,9 +105,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   lastAccumulationTimeSlot!: u32;
   parentService!: ServiceIndex;
 
-  constructor(serviceIndex: ServiceIndex) {
-    this.storage = new ServiceAccountStorageImpl(serviceIndex);
-  }
+  constructor(public storage: IServiceAccountStorage) {}
 
   /**
    * `a_i` - total number of preimage lookup dictionaries and
