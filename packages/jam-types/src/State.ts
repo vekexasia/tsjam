@@ -9,13 +9,12 @@ import { AuthorizerPool } from "./states/AuthorizerPool";
 import { AuthorizerQueue } from "./states/AuthorizerQueue";
 import { Delta } from "./states/Delta";
 import { IDisputesState } from "./states/DisputesState";
-import { RecentHistory } from "./states/RecentHistory";
+import { Beta } from "./states/RecentHistory";
 import { SafroleState } from "./states/SafroleState";
 import { RHO } from "./states/rho";
 import { Hash, SeqOfLength, ServiceIndex } from "./genericTypes";
 import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
 import { JamStatistics } from "./states/Statistics";
-import { ServiceOuts } from "./states/ServiceOuts";
 
 /**
  * `σ`
@@ -30,7 +29,7 @@ export type JamState = {
   /**
    * `β`
    */
-  recentHistory: RecentHistory;
+  beta: Beta;
   /**
    * `γ`
    */

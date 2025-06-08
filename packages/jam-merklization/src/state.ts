@@ -27,6 +27,7 @@ import {
   RHOCodec,
   LengthDiscriminator,
   Ed25519PubkeyBigIntCodec,
+  E_M,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -40,6 +41,7 @@ import {
   StateRootHash,
   u32,
   StateKey,
+  Beta,
 } from "@tsjam/types";
 import { bigintToBytes, isFallbackMode } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
@@ -172,6 +174,10 @@ export const stateKey = (
   return new Uint8Array([i, ...new Array(30).fill(0)]) as StateKey;
 };
 
+const betaCodec = createCodec<Beta>([
+  ["recentHistory", RecentHistoryCodec],
+  ["beefyBelt", E_M],
+]);
 /*
  * `T(σ)`
  * $(0.6.7 - D.2)
@@ -191,11 +197,8 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   );
   // logState("authQueue|c2", stateKey(2));
 
-  // β - recentHistory
-  toRet.set(
-    stateKey(3),
-    encodeWithCodec(RecentHistoryCodec, state.recentHistory),
-  );
+  // β
+  toRet.set(stateKey(3), encodeWithCodec(betaCodec, state.beta));
   // logState("recentHistory|c3", stateKey(3));
 
   const gamma_sCodec = createSequenceCodec<SafroleState["gamma_s"]>(

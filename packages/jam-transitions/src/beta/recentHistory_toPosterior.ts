@@ -1,4 +1,5 @@
 import {
+  Beta,
   Dagger,
   EG_Extrinsic,
   HeaderHash,
@@ -15,14 +16,14 @@ import { ok } from "neverthrow";
  * $(0.6.7 - 7.8 / 4.17)
  */
 export const recentHistoryToPosterior: STF<
-  Dagger<RecentHistory["h"]>,
+  Dagger<RecentHistory>,
   {
     headerHash: HeaderHash; // h
-    beta_b_prime: Posterior<RecentHistory["b"]>;
+    beta_b_prime: Posterior<Beta["beefyBelt"]>;
     eg: EG_Extrinsic;
   },
   never,
-  Posterior<RecentHistory["h"]>
+  Posterior<RecentHistory>
 > = (input, curState) => {
   const toRet = curState.slice();
   const b = MMRSuperPeak(input.beta_b_prime);
@@ -43,10 +44,10 @@ export const recentHistoryToPosterior: STF<
 
   if (toRet.length > RECENT_HISTORY_LENGTH) {
     return ok(
-      toRet.slice(toRet.length - RECENT_HISTORY_LENGTH) as Posterior<
-        RecentHistory["h"]
-      >,
+      toRet.slice(
+        toRet.length - RECENT_HISTORY_LENGTH,
+      ) as Posterior<RecentHistory>,
     );
   }
-  return ok(toRet as Posterior<RecentHistory["h"]>);
+  return ok(toRet as Posterior<RecentHistory>);
 };

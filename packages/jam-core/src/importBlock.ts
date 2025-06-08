@@ -27,14 +27,14 @@ import {
   gamma_aSTF,
   gamma_sSTF,
   headerLookupHistorySTF,
-  recentHistoryHToDagger,
-  recentHistoryBToPosterior,
-  recentHistoryToPosterior,
+  recentHistoryToDagger,
+  beefyBeltToPosterior,
   rotateEntropy,
   rotateKeys,
   safroleToPosterior,
   serviceStatisticsSTF,
   validatorStatisticsToPosterior,
+  recentHistoryToPosterior,
 } from "@tsjam/transitions";
 import { Timekeeping, toPosterior } from "@tsjam/utils";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
@@ -213,11 +213,11 @@ export const importBlock: STF<
    */
   const w = availableReports(ea, d_rho);
 
-  const [, d_recentHistoryH] = recentHistoryHToDagger(
+  const [, d_recentHistory] = recentHistoryToDagger(
     {
       hr: block.header.priorStateRoot,
     },
-    curState.recentHistory.h,
+    curState.beta.recentHistory,
   ).safeRet();
 
   const [
@@ -268,8 +268,8 @@ export const importBlock: STF<
     {
       headerLookupHistory: curState.headerLookupHistory,
       delta: curState.serviceAccounts,
-      d_recentHistoryH,
-      recentHistory: curState.recentHistory,
+      d_recentHistory,
+      recentHistory: curState.beta.recentHistory,
       accumulationHistory: curState.accumulationHistory,
       accumulationQueue: curState.accumulationQueue,
       rho: curState.rho,
@@ -310,21 +310,22 @@ export const importBlock: STF<
     return err(pDeltaError);
   }
 
-  const [, p_recentHistoryB] = recentHistoryBToPosterior(
+  // TODO: beefyBeltToDagger
+  const [, p_beefyBelt] = beefyBeltToPosterior(
     {
       p_theta: p_mostRecentAccumulationOutputs,
     },
-    curState.recentHistory.b,
+    curState.beta.beefyBelt,
   ).safeRet();
 
   const headerHash = computeHeaderHash(block.header);
-  const [, p_recentHistoryH] = recentHistoryToPosterior(
+  const [, p_recentHistory] = recentHistoryToPosterior(
     {
       headerHash,
-      beta_b_prime: p_recentHistoryB,
+      beta_b_prime: p_beefyBelt,
       eg: block.extrinsics.reportGuarantees,
     },
-    d_recentHistoryH,
+    d_recentHistory,
   ).safeRet();
 
   const [, p_validatorStatistics] = validatorStatisticsToPosterior(
@@ -397,7 +398,10 @@ export const importBlock: STF<
     },
     rho: p_rho,
     serviceAccounts: p_delta,
-    recentHistory: toPosterior({ h: p_recentHistoryH, b: p_recentHistoryB }),
+    beta: toPosterior({
+      recentHistory: p_recentHistory,
+      beefyBelt: p_beefyBelt,
+    }),
     accumulationQueue: p_accumulationQueue,
     accumulationHistory: p_accumulationHistory,
     privServices: p_privServices,

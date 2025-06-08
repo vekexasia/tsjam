@@ -3,14 +3,12 @@ import {
   AuthorizerPoolCodec,
   Blake2bHashCodec,
   codec_Eg,
-  create32BCodec,
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
   E_sub_int,
   Ed25519PubkeyCodec,
   eitherOneOfCodec,
-  HashCodec,
   JamCodec,
   OpaqueHashCodec,
   Optional,
@@ -20,7 +18,6 @@ import {
 } from "@tsjam/codec";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  Hash,
   AuthorizerPool,
   DoubleDagger,
   ED25519PublicKey,
@@ -29,7 +26,6 @@ import {
   OpaqueHash,
   Posterior,
   RecentHistory,
-  RecentHistoryItem,
   RHO,
   ServiceIndex,
   Tau,
@@ -39,12 +35,9 @@ import {
   Delta,
   JamHeader,
   Dagger,
-  HeaderHash,
-  StateRootHash,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { expect, vi, it, describe, beforeEach } from "vitest";
-import { mapCodec } from "@tsjam/codec";
 import { assertEGValid, EGError } from "@/validateEG";
 import {
   buildTestDeltaCodec,
@@ -252,9 +245,7 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
       new Set(decoded.preState.p_psi_o.map((a) => a.bigint)),
     ),
     recentHistory: decoded.preState.blockHistory,
-    d_recentHistoryH: decoded.preState.blockHistory.h as Dagger<
-      RecentHistory["h"]
-    >,
+    d_recentHistory: decoded.preState.blockHistory as Dagger<RecentHistory>,
     authPool: decoded.preState.authPool,
     accumulationHistory: [] as unknown as AccumulationHistory,
     accumulationQueue: [] as unknown as AccumulationQueue,

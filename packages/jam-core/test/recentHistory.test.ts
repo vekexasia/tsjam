@@ -9,8 +9,8 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import {
-  recentHistoryBToPosterior,
-  recentHistoryHToDagger,
+  recentHistoryToDagger,
+  beefyBeltToPosterior,
   recentHistoryToPosterior,
 } from "@tsjam/transitions";
 import { HashJSONCodec, RecentHistoryJSONCodec } from "@tsjam/codec";

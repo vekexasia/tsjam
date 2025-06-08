@@ -111,7 +111,7 @@ export const assertEGValid = (
   deps: {
     headerLookupHistory: HeaderLookupHistory;
     recentHistory: RecentHistory;
-    d_recentHistoryH: Dagger<RecentHistory["h"]>;
+    d_recentHistory: Dagger<RecentHistory>;
     delta: Delta;
     accumulationHistory: AccumulationHistory;
     accumulationQueue: AccumulationQueue;
@@ -296,7 +296,7 @@ export const assertEGValid = (
 
   for (const refinementContext of x) {
     // $(0.6.7 - 11.33)
-    const y = deps.d_recentHistoryH.find(
+    const y = deps.d_recentHistory.find(
       (_y) =>
         _y.headerHash === refinementContext.anchor.hash &&
         _y.stateRoot === refinementContext.anchor.stateRoot &&
@@ -343,7 +343,7 @@ export const assertEGValid = (
   );
 
   const kxp = new Set(
-    deps.recentHistory.h.map((r) => [...r.reportedPackages.keys()]).flat(),
+    deps.recentHistory.map((r) => [...r.reportedPackages.keys()]).flat(),
   );
   const _x = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
@@ -357,7 +357,7 @@ export const assertEGValid = (
 
   // $(0.6.7 - 11.39)
   const pSet = new Set(p);
-  deps.recentHistory.h
+  deps.recentHistory
     .map((r) => [...r.reportedPackages.keys()])
     .flat()
     .forEach((reportedHash) => pSet.add(reportedHash));
@@ -382,7 +382,7 @@ export const assertEGValid = (
 
     // $(0.6.7 - 11.41)
     const recentAndCurrentWP = new Map(
-      deps.recentHistory.h
+      deps.recentHistory
         .map((rh) => [...rh.reportedPackages.entries()])
         .flat()
         .concat([...p.entries()]),

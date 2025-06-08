@@ -2,6 +2,7 @@ import {
   AuthorizerPool,
   AuthorizerQueue,
   BandersnatchKey,
+  Beta,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
@@ -84,8 +85,8 @@ export const dummyState = (conf: {
       manager: 0 as ServiceIndex,
       designate: 0 as ServiceIndex,
     },
-    recentHistory: {
-      h: new Array(80).fill(null).map(
+    beta: {
+      recentHistory: new Array(80).fill(null).map(
         () =>
           ({
             stateRoot: toTagged(0n),
@@ -93,8 +94,8 @@ export const dummyState = (conf: {
             reportedPackages: new Map(),
             accumulationResultMMB: toTagged(0n),
           }) as RecentHistoryItem,
-      ) as RecentHistory["h"],
-      b: [] as RecentHistory["b"],
+      ) as RecentHistory,
+      beefyBelt: [] as Beta["beefyBelt"],
     },
     statistics: {
       validators: [null, null].map(() =>

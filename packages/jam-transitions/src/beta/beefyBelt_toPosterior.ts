@@ -1,13 +1,6 @@
-import {
-  Dagger,
-  JamHeader,
-  JamState,
-  Posterior,
-  ServiceIndex,
-} from "@tsjam/types";
+import { Beta, JamState, Posterior, ServiceIndex } from "@tsjam/types";
 import { ok } from "neverthrow";
 import { STF } from "@tsjam/types";
-import { RecentHistory } from "@tsjam/types";
 import {
   createCodec,
   E_sub_int,
@@ -25,11 +18,11 @@ const sCodec = createCodec<JamState["mostRecentAccumulationOutputs"][0]>([
 /**
  * $(0.6.7 - 7.6 / 7.7)
  */
-export const recentHistoryBToPosterior: STF<
-  RecentHistory["b"],
+export const beefyBeltToPosterior: STF<
+  Beta["beefyBelt"],
   { p_theta: JamState["mostRecentAccumulationOutputs"] },
   never,
-  Posterior<RecentHistory["b"]>
+  Posterior<Beta["beefyBelt"]>
 > = (input, curState) => {
   const s = input.p_theta.map((a) => encodeWithCodec(sCodec, a));
   return ok(

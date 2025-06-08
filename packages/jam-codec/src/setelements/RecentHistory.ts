@@ -24,23 +24,18 @@ import {
  *
  * This is defined in C(3) of state merklization
  */
-export const RecentHistoryCodec: JamCodec<RecentHistory> = createCodec([
-  [
-    "h",
-    createArrayLengthDiscriminator<RecentHistory["h"]>(
-      createCodec([
-        ["headerHash", create32BCodec<HeaderHash>()],
-        ["accumulationResultMMB", HashCodec],
-        ["stateRoot", create32BCodec<StateRootHash>()],
-        ["reportedPackages", buildKeyValueCodec(HashCodec)],
-      ]),
-    ),
-  ],
-  ["b", E_M],
-]);
+export const RecentHistoryCodec: JamCodec<RecentHistory> =
+  createArrayLengthDiscriminator<RecentHistory>(
+    createCodec([
+      ["headerHash", create32BCodec<HeaderHash>()],
+      ["accumulationResultMMB", HashCodec],
+      ["stateRoot", create32BCodec<StateRootHash>()],
+      ["reportedPackages", buildKeyValueCodec(HashCodec)],
+    ]),
+  );
 
 export const RecentHistoryJSONCodec: JSONCodec<
-  RecentHistory["h"],
+  RecentHistory,
   Array<{
     header_hash: string;
     mmb: string;

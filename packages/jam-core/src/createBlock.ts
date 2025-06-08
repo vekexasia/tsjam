@@ -108,7 +108,8 @@ export const createBlock = (
 
   const header: JamHeader = {
     parent:
-      curState.recentHistory.h[curState.recentHistory.h.length - 1].headerHash,
+      curState.beta.recentHistory[curState.beta.recentHistory.length - 1]
+        .headerHash,
     offenders,
     extrinsicHash: computeExtrinsicHash(extrinsics),
     timeSlotIndex: p_tau,
