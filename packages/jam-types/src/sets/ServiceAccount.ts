@@ -21,17 +21,16 @@ export interface IServiceAccountStorage {
 
   set(key: Uint8Array, value: Uint8Array): void;
 
-  setFromStateKey(stateKey: StateKey, value: Uint8Array): void;
-
-  entries(): IterableIterator<
-    [{ stateKey: StateKey; keyLength?: number }, Uint8Array]
-  >;
+  entries(): IterableIterator<[StateKey, Uint8Array]>;
 
   clone(): IServiceAccountStorage;
 
   readonly size: number;
 
-  octets(): u64;
+  /**
+   * The octects part of the service account that is in regard of the storage
+   */
+  readonly octets: u64;
 }
 
 /**

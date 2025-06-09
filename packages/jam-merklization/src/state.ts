@@ -324,8 +324,8 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
       }),
     );
 
-    for (const [k, v] of serviceAccount.storage.entries()) {
-      toRet.set(k.stateKey, v);
+    for (const [stateKey, v] of serviceAccount.storage.entries()) {
+      toRet.set(stateKey, v);
     }
 
     for (const [_h, p] of serviceAccount.preimage_p) {

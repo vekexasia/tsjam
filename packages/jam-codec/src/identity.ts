@@ -51,7 +51,10 @@ export const fixedSizeIdentityCodec = <
   };
 };
 
-const genericBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
+export const genericBytesBigIntCodec = <
+  K extends BigIntBytes<T>,
+  T extends number,
+>(
   num: T,
 ): JamCodec<K> => ({
   decode(bytes: Uint8Array): { value: K; readBytes: number } {

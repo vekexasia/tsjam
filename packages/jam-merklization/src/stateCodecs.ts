@@ -19,11 +19,13 @@ import {
   E_8,
   E_sub,
   E_sub_int,
+  genericBytesBigIntCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   Balance,
   Beta,
+  BigIntBytes,
   CodeHash,
   ED25519PublicKey,
   Gas,
@@ -33,6 +35,7 @@ import {
   SafroleState,
   ServiceAccount,
   ServiceIndex,
+  StateKey,
   Tau,
   u32,
   u64,
@@ -207,3 +210,7 @@ export const serviceAccountDataCodec = createCodec<
   ["lastAccumulationTimeSlot", E_sub_int<u32>(4)],
   ["parentService", E_sub_int<ServiceIndex>(4)],
 ]);
+
+export const stateKeyCodec = genericBytesBigIntCodec<StateKeyBigInt, 31>(31);
+
+export type StateKeyBigInt = BigIntBytes<31>;
