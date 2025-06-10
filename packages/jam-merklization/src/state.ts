@@ -21,6 +21,7 @@ import {
   RHOCodec,
   LengthDiscriminator,
   E_sub_int,
+  mapCodec,
 } from "@tsjam/codec";
 import {
   Hash,
@@ -36,20 +37,34 @@ import {
   ServiceAccount,
   Tau,
   UpToSeq,
+  AuthorizerPool,
+  AuthorizerQueue,
+  AccumulationQueue,
+  AccumulationHistory,
+  JamStatistics,
 } from "@tsjam/types";
 import { bigintToBytes, toTagged } from "@tsjam/utils";
 import { createSequenceCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  AUTHQUEUE_MAX_SIZE,
+  CORES,
+  EPOCH_LENGTH,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
 import {
   betaCodec,
   disputesCodec,
   entropyCodec,
   safroleCodec,
   serviceAccountDataCodec,
+  stateKeyCodec,
+  thetaCodec,
 } from "./stateCodecs";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import assert from "assert";
+import { MerkleServiceAccountStorageImpl } from "./merkleServiceAccountStorage";
+import { join } from "path";
 
 /**
  * Merkelize state
@@ -283,7 +298,9 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
             ["workReport", WorkReportCodec],
             [
               "dependencies",
-              createArrayLengthDiscriminator(WorkPackageHashCodec),
+              createArrayLengthDiscriminator<WorkPackageHash[]>(
+                WorkPackageHashCodec,
+              ),
             ],
           ]),
         ),
@@ -312,6 +329,12 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
       ),
       state.accumulationHistory,
     ),
+  );
+
+  // 16 thetha
+  toRet.set(
+    stateKey(16),
+    encodeWithCodec(thetaCodec, state.mostRecentAccumulationOutputs),
   );
 
   for (const [serviceIndex, serviceAccount] of state.serviceAccounts) {
@@ -361,23 +384,23 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
 
   const beta = betaCodec.decode(merkleMap.get(stateKey(3))!).value;
 
-  const safrole = safroleCodec.decode(merkleMap.get(stateKey(4))!).value;
+  const safroleState = safroleCodec.decode(merkleMap.get(stateKey(4))!).value;
 
   const disputes = disputesCodec.decode(merkleMap.get(stateKey(5))!).value;
 
   const entropy = entropyCodec.decode(merkleMap.get(stateKey(6))!).value;
 
-  const iota = createSequenceCodec(
+  const iota = createSequenceCodec<JamState["iota"]>(
     NUMBER_OF_VALIDATORS,
     ValidatorDataCodec,
   ).decode(merkleMap.get(stateKey(7))!).value;
 
-  const kappa = createSequenceCodec(
+  const kappa = createSequenceCodec<JamState["kappa"]>(
     NUMBER_OF_VALIDATORS,
     ValidatorDataCodec,
   ).decode(merkleMap.get(stateKey(8))!).value;
 
-  const lambda = createSequenceCodec(
+  const lambda = createSequenceCodec<JamState["lambda"]>(
     NUMBER_OF_VALIDATORS,
     ValidatorDataCodec,
   ).decode(merkleMap.get(stateKey(9))!).value;
@@ -397,13 +420,28 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
   const accumulationQueue = createSequenceCodec(
     EPOCH_LENGTH,
     createArrayLengthDiscriminator(
-      createCodec<{
-        workReport: WorkReport;
-        dependencies: WorkPackageHash[];
-      }>([
-        ["workReport", WorkReportCodec],
-        ["dependencies", createArrayLengthDiscriminator(WorkPackageHashCodec)],
-      ]),
+      mapCodec(
+        createCodec<{
+          workReport: WorkReport;
+          dependencies: WorkPackageHash[];
+        }>([
+          ["workReport", WorkReportCodec],
+          [
+            "dependencies",
+            createArrayLengthDiscriminator<WorkPackageHash[]>(
+              WorkPackageHashCodec,
+            ),
+          ],
+        ]),
+        (x) => ({
+          workReport: x.workReport,
+          dependencies: new Set(x.dependencies),
+        }),
+        (x) => ({
+          workReport: x.workReport,
+          dependencies: [...x.dependencies.values()],
+        }),
+      ),
     ),
   ).decode(merkleMap.get(stateKey(14))!).value;
 
@@ -417,6 +455,10 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
     }),
   ).decode(merkleMap.get(stateKey(15))!).value;
 
+  const mostRecentAccumulationOutputs = thetaCodec.decode(
+    merkleMap.get(stateKey(16))!,
+  ).value;
+
   const serviceKeys = [...merkleMap.keys()].filter((k) => {
     return (
       k[0] === 255 &&
@@ -428,6 +470,8 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
       32 + 8 * 4 + 4 === merkleMap.get(k)!.length
     );
   });
+
+  const serviceAccounts: Map<ServiceIndex, ServiceAccount> = new Map();
   for (const serviceDataKey of serviceKeys) {
     const serviceKey = new Uint8Array([
       serviceDataKey[1],
@@ -451,8 +495,12 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
         );
       }),
     );
+    const storage = new MerkleServiceAccountStorageImpl(
+      serviceIndex,
+      serviceData.totalOctets,
+    );
 
-    const serviceAccount: ServiceAccount = new ServiceAccountImpl(serviceIndex);
+    const serviceAccount: ServiceAccount = new ServiceAccountImpl(storage);
     serviceAccount.codeHash = serviceData.codeHash;
     serviceAccount.balance = serviceData.balance;
     serviceAccount.minGasAccumulate = serviceData.minGasAccumulate;
@@ -498,15 +546,88 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
       serviceRelatedKeys.delete(preimagekey);
       serviceRelatedKeys.delete(p_l_key);
     }
+
+    // we now miss storage stuff
+    //
+    for (const storageStateKey of serviceRelatedKeys) {
+      const storageValue = merkleMap.get(storageStateKey)!;
+      storage.setFromStateKey(storageStateKey, storageValue);
+      serviceRelatedKeys.delete(storageStateKey);
+    }
+
+    assert(
+      serviceRelatedKeys.size === 0,
+      "Not all service keys were processed",
+    );
+    serviceAccounts.set(serviceIndex, serviceAccount);
   }
 
-  throw new Error();
+  return <JamState>{
+    accumulationHistory,
+    accumulationQueue,
+    authPool,
+    authQueue,
+    beta,
+    disputes,
+    entropy,
+    iota,
+    kappa,
+    lambda,
+    mostRecentAccumulationOutputs,
+    privServices,
+    rho,
+    safroleState,
+    serviceAccounts,
+    tau,
+    statistics,
+    headerLookupHistory: new Map(),
+  };
 };
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   const fs = await import("fs");
 
+  describe("state serialization/deserialization", () => {
+    it("should deserializa to same object", () => {
+      const state: JamState = {
+        accumulationHistory: <AccumulationHistory>new Array(EPOCH_LENGTH),
+        accumulationQueue: <AccumulationQueue>new Array(EPOCH_LENGTH).fill([]),
+        authPool: <AuthorizerPool>new Array(CORES).fill([]),
+        authQueue: <AuthorizerQueue>(
+          new Array(CORES).fill(new Array(AUTHQUEUE_MAX_SIZE))
+        ),
+        mostRecentAccumulationOutputs: <
+          JamState["mostRecentAccumulationOutputs"]
+        >[],
+        statistics: {
+          validators: <JamStatistics["validators"]>new Array(2).fill(
+            new Array(NUMBER_OF_VALIDATORS).fill({
+              blocksProduced: 0,
+              ticketsIntroduced: 0,
+              preimagesIntroduced: 0,
+              totalOctetsIntroduced: 0,
+              guaranteedReports: 0,
+              availabilityAssurances: 0,
+            }),
+          ),
+          cores: <JamStatistics["cores"]>new Array(CORES).fill({
+            daLoad: 0,
+            popularity: 0,
+            imports: 0,
+            extrinsicCount: 0,
+            extrinsicSize: 0,
+            exports: 0,
+            bundleSize: 0,
+            usedGas: 0n,
+          }),
+          services: new Map(),
+        },
+
+        serviceAccounts: new Map(),
+      };
+    });
+  });
   describe("merkle", () => {
     it("test from vectors", () => {
       const r: Array<{ input: Record<string, string>; output: string }> =

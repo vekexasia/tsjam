@@ -32,6 +32,7 @@ import {
   Hash,
   IDisputesState,
   JamEntropy,
+  JamState,
   SafroleState,
   ServiceAccount,
   ServiceIndex,
@@ -211,6 +212,17 @@ export const serviceAccountDataCodec = createCodec<
   ["parentService", E_sub_int<ServiceIndex>(4)],
 ]);
 
+export const thetaCodec = createArrayLengthDiscriminator<
+  JamState["mostRecentAccumulationOutputs"]
+>(
+  createCodec<{
+    serviceIndex: ServiceIndex;
+    accumulationResult: Hash;
+  }>([
+    ["serviceIndex", E_sub_int<ServiceIndex>(4)],
+    ["accumulationResult", HashCodec],
+  ]),
+);
 export const stateKeyCodec = genericBytesBigIntCodec<StateKeyBigInt, 31>(31);
 
 export type StateKeyBigInt = BigIntBytes<31>;
