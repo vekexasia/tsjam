@@ -7,4 +7,5 @@ export default defineWorkspace([
   ...buildVitest("jam-merklization"),
   ...buildVitest("jam-core"),
   ...buildVitest("jam-transitions"),
+  ...buildVitest("jam-testnet"),
 ]);

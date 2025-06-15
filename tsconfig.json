@@ -55,6 +55,7 @@
       "@tsjam/types": ["../jam-types/dist/types/index.d.ts"],
       "@tsjam/utils": ["../jam-utils/dist/types/index.d.ts"],
       "@tsjam/serviceaccounts": ["../jam-serviceaccounts/dist/types/index.d.ts"],
+      "@tsjam/testnet": ["../jam-testnet/dist/types/index.d.ts"],
     }
 
   },

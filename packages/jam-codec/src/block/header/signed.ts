@@ -23,14 +23,18 @@ import {
   NumberJSONCodec,
 } from "@/json/JsonCodec";
 import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
  * it does use the UnsignedHeaderCodec and appends the block seal
  * $(0.6.4 - C.19)
  */
-export const SignedHeaderCodec = () => {
-  const unsignedHeaderCodec = UnsignedHeaderCodec();
+export const SignedHeaderCodec = (
+  validators: typeof NUMBER_OF_VALIDATORS = NUMBER_OF_VALIDATORS,
+  epochLength: typeof EPOCH_LENGTH = EPOCH_LENGTH,
+) => {
+  const unsignedHeaderCodec = UnsignedHeaderCodec(validators, epochLength);
   return {
     decode(bytes: Uint8Array) {
       const unsignedHeader = unsignedHeaderCodec.decode(bytes);

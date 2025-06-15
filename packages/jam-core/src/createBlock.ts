@@ -1,20 +1,10 @@
+import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
 import {
-  BandersnatchSignature,
-  ED25519PublicKey,
-  JamBlock,
-  JamHeader,
-  JamState,
-  SignedJamHeader,
-  ValidatorData,
-  Tau,
-  Posterior,
-  ValidatorIndex,
-  BandersnatchKey,
-  StateRootHash,
-} from "@tsjam/types";
+  EPOCH_LENGTH,
+  JAM_ENTROPY,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
-import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
-import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
 import { merkelizeState } from "@tsjam/merklization";
 import {
   disputesSTF,
@@ -22,8 +12,21 @@ import {
   rotateEta1_4,
   rotateKeys,
 } from "@tsjam/transitions";
-import { JAM_ENTROPY } from "@tsjam/constants";
-import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
+import {
+  BandersnatchKey,
+  BandersnatchSignature,
+  ED25519PublicKey,
+  JamBlock,
+  JamState,
+  Posterior,
+  SignedJamHeader,
+  StateRootHash,
+  Tau,
+  ValidatorData,
+  ValidatorIndex,
+} from "@tsjam/types";
+import { bigintToBytes, Timekeeping, toPosterior } from "@tsjam/utils";
+import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 
 /**
  * Creates a block given current state and some data
@@ -106,7 +109,7 @@ export const createBlock = (
     sealContext,
   );
 
-  const header: JamHeader = {
+  const header: SignedJamHeader = {
     parent:
       curState.beta.recentHistory[curState.beta.recentHistory.length - 1]
         .headerHash,
@@ -122,6 +125,7 @@ export const createBlock = (
       new Uint8Array([]), // message
       new Uint8Array([...JAM_ENTROPY, ...bigintToBytes(vrfOutputHash, 32)]),
     ),
+    blockSeal: <BandersnatchSignature>new Uint8Array(96).fill(0), // placeholder, will be filled later
   };
 
   const encodedHeader = encodeWithCodec(UnsignedHeaderCodec(), header);

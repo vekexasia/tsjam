@@ -14,6 +14,7 @@ import {
   ietfVrfVerify,
   ringVrfVerify,
   ietfVrfOutputHashFromSecret,
+  publicKey,
 } from "@tsjam/crypto-napi";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { bytesToBigInt } from "@tsjam/utils";
@@ -106,5 +107,9 @@ export const Bandersnatch = {
     });
 
     return ringRoot(inputBuf) as Uint8Array as T;
+  },
+
+  publicFromSeed(seed: Uint8Array): BandersnatchKey {
+    return new Uint8Array(publicKey(seed)) as BandersnatchKey;
   },
 };

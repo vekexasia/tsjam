@@ -6,6 +6,23 @@ import {
 import sodium from "sodium-native";
 
 export const Ed25519 = {
+  privKeyFromSeed(seed: Uint8Array): {
+    private: ED25519PrivateKey;
+    public: ED25519PublicKey["buf"];
+  } {
+    const publicKeyBuf = Buffer.alloc(32);
+    const privateKeyBuf = Buffer.alloc(64);
+    sodium.crypto_sign_seed_keypair(
+      publicKeyBuf,
+      privateKeyBuf,
+      Buffer.from(seed),
+    );
+    return {
+      private: new Uint8Array([...privateKeyBuf]) as ED25519PrivateKey,
+      public: new Uint8Array([...publicKeyBuf]) as ED25519PublicKey["buf"],
+    };
+  },
+
   /**
    * `E_{pubkey}(message) `
    */

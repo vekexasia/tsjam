@@ -26,7 +26,10 @@ import { createCodec } from "@/utils";
  * `Eu` codec
  * $(0.6.4 - C.20)
  */
-export const UnsignedHeaderCodec = () =>
+export const UnsignedHeaderCodec = (
+  validators: typeof NUMBER_OF_VALIDATORS = NUMBER_OF_VALIDATORS,
+  epochLength: typeof EPOCH_LENGTH = EPOCH_LENGTH,
+) =>
   createCodec<JamHeader>([
     ["parent", create32BCodec<HeaderHash>()],
     ["priorStateRoot", create32BCodec<StateRootHash>()],
@@ -43,7 +46,7 @@ export const UnsignedHeaderCodec = () =>
             createSequenceCodec<
               NonNullable<JamHeader["epochMarker"]>["validatorKeys"]
             >(
-              NUMBER_OF_VALIDATORS,
+              validators,
               createCodec([
                 ["bandersnatch", BandersnatchCodec],
                 ["ed25519", Ed25519PubkeyCodec],
@@ -55,7 +58,7 @@ export const UnsignedHeaderCodec = () =>
     ],
     [
       "winningTickets",
-      new Optional(createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec)),
+      new Optional(createSequenceCodec(epochLength, TicketIdentifierCodec)),
     ],
     [
       "offenders",

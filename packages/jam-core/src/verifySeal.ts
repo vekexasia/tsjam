@@ -1,4 +1,27 @@
 import {
+  BitSequence,
+  HashCodec,
+  UnsignedHeaderCodec,
+  codec_Ea,
+  codec_Ed,
+  codec_Eg_4Hx,
+  codec_Ep,
+  codec_Et,
+  encodeWithCodec,
+} from "@tsjam/codec";
+import {
+  CORES,
+  EPOCH_LENGTH,
+  JAM_AVAILABLE,
+  JAM_ENTROPY,
+  JAM_FALLBACK_SEAL,
+  JAM_TICKET_SEAL,
+  LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
+import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
+import { outsideInSequencer } from "@tsjam/transitions";
+import {
   Dagger,
   EA_Extrinsic,
   JamBlock,
@@ -13,29 +36,6 @@ import {
   TicketIdentifier,
   Validated,
 } from "@tsjam/types";
-import { Result, err, ok } from "neverthrow";
-import {
-  BitSequence,
-  HashCodec,
-  UnsignedHeaderCodec,
-  codec_Ea,
-  codec_Ed,
-  codec_Eg_4Hx,
-  codec_Ep,
-  codec_Et,
-  encodeWithCodec,
-} from "@tsjam/codec";
-import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
-import {
-  CORES,
-  EPOCH_LENGTH,
-  JAM_AVAILABLE,
-  JAM_ENTROPY,
-  JAM_FALLBACK_SEAL,
-  JAM_TICKET_SEAL,
-  LOTTERY_MAX_SLOT,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
 import {
   bigintToBytes,
   getBlockAuthorKey,
@@ -45,7 +45,7 @@ import {
   slotIndex,
   toPosterior,
 } from "@tsjam/utils";
-import { outsideInSequencer } from "@tsjam/transitions";
+import { Result, err, ok } from "neverthrow";
 
 export const sealSignContext = (
   tau: Tau,
