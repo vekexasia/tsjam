@@ -18,9 +18,11 @@ export const createSetCodec = <T>(
       return offset;
     },
     decode(bytes) {
+      throw new Error("Set Codec cannot be directly decoded");
       // NOTE: there is no indication this can work.
       // It will successfully decode only if itemCodec is capable of decoding
       // a bytearrray longer than the actual encoded value.
+      /*
       let offset = 0;
       const value = new Set<T>();
       while (offset < bytes.length) {
@@ -32,6 +34,7 @@ export const createSetCodec = <T>(
         value,
         readBytes: offset,
       };
+        */
     },
     encodedSize(value) {
       return [...value]

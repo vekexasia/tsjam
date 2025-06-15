@@ -1,6 +1,7 @@
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { IdentityCodec } from "@/identity.js";
+import { createSetCodec } from "@/set";
 export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
   /**
    * Returns the length to store in the length discriminator
@@ -75,6 +76,32 @@ export const createLengthDiscriminatedIdentity = <
   });
 };
 
+export const createLengthDiscrimantedSetCodec = <X>(
+  itemCodec: JamCodec<X>,
+  sorter: (a: X, b: X) => number,
+): JamCodec<Set<X>> => {
+  const setCodec = createSetCodec(itemCodec, sorter);
+
+  return new LengthDiscriminator<Set<X>>({
+    ...setCodec,
+    decode(bytes, length) {
+      let offset = 0;
+      const value = new Set<X>();
+      for (let i = 0; i < length; i++) {
+        const decoded = itemCodec.decode(bytes.subarray(offset));
+        value.add(decoded.value);
+        offset += decoded.readBytes;
+      }
+      return {
+        value,
+        readBytes: offset,
+      };
+    },
+    length(value) {
+      return value.size;
+    },
+  });
+};
 /**
  * Utility to encode/decode a byteArray with a length discriminator
  * TODO: rename to ....Codec

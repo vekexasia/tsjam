@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@tsjam/codec": "*",
+    "@tsjam/serviceaccounts": "*",
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/types": "*",

@@ -1,24 +1,8 @@
-import { describe, expect, it } from "vitest";
-import * as fs from "node:fs";
 import {
   deltaToPosterior,
   DeltaToPosteriorError,
   serviceStatisticsSTF,
 } from "@/index.js";
-import {
-  Delta,
-  DoubleDagger,
-  EP_Extrinsic,
-  Gas,
-  Hash,
-  Posterior,
-  ServiceAccount,
-  ServiceIndex,
-  SingleServiceStatistics,
-  Tau,
-  u32,
-  u64,
-} from "@tsjam/types";
 import {
   buildKeyValueCodec,
   codec_Ep,
@@ -36,7 +20,22 @@ import {
   buildTestDeltaCodec,
   posteriorCodec,
 } from "@tsjam/codec/test/testCodecs.js";
+import { MerkleServiceAccountStorageImpl } from "@tsjam/merklization";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import {
+  Delta,
+  DoubleDagger,
+  EP_Extrinsic,
+  Hash,
+  Posterior,
+  ServiceAccount,
+  ServiceIndex,
+  SingleServiceStatistics,
+  Tau,
+  u32,
+} from "@tsjam/types";
+import * as fs from "node:fs";
+import { describe, expect, it } from "vitest";
 
 type TestState = {
   accounts: DoubleDagger<Delta>;
@@ -94,9 +93,13 @@ const buildTest = (filename: string) => {
                 entry.tau as unknown as any,
               );
             });
-            const toRet = new ServiceAccountImpl(serviceIndex);
-            toRet.preimage_l = preimage_l;
-            toRet.preimage_p = info.preimage_p;
+            const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
+            // FIXME: 0.6.7 any should disappear
+            const toRet = new ServiceAccountImpl(<any>{
+              preimage_l,
+              preimage_p: info.preimage_p,
+              storage,
+            });
             return toRet as ServiceAccount;
           },
           (_) => {

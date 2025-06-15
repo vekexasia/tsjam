@@ -8,26 +8,22 @@ import {
   TicketIdentifierCodec,
   ValidatorDataCodec,
   createArrayLengthDiscriminator,
-  createSetCodec,
   RecentHistoryCodec,
-  LengthDiscriminator,
   Ed25519PubkeyBigIntCodec,
   E_M,
   Blake2bHashCodec,
   createSequenceCodec,
   create32BCodec,
-  E_8,
   E_sub,
   E_sub_int,
   genericBytesBigIntCodec,
+  createLengthDiscrimantedSetCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  Balance,
   Beta,
   BigIntBytes,
   CodeHash,
-  ED25519PublicKey,
   Gas,
   Hash,
   IDisputesState,
@@ -36,8 +32,6 @@ import {
   SafroleState,
   ServiceAccount,
   ServiceIndex,
-  StateKey,
-  Tau,
   u32,
   u64,
 } from "@tsjam/types";
@@ -128,39 +122,21 @@ export const safroleCodec = createCodec<SafroleState>([
 export const disputesCodec = createCodec<IDisputesState>([
   [
     "psi_g",
-    new LengthDiscriminator<Set<Hash>>({
-      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-      length(v: Set<Hash>): number {
-        return v.size;
-      },
-    }),
+    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
     "psi_b",
-    new LengthDiscriminator<Set<Hash>>({
-      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-      length(v: Set<Hash>): number {
-        return v.size;
-      },
-    }),
+    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
     "psi_w",
-    new LengthDiscriminator<Set<Hash>>({
-      ...createSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-      length(v: Set<Hash>): number {
-        return v.size;
-      },
-    }),
+    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
     "psi_o",
-    new LengthDiscriminator<Set<ED25519PublicKey["bigint"]>>({
-      ...createSetCodec(Ed25519PubkeyBigIntCodec, (a, b) => Number(a - b)),
-      length(v: Set<ED25519PublicKey["bigint"]>): number {
-        return v.size;
-      },
-    }),
+    createLengthDiscrimantedSetCodec(Ed25519PubkeyBigIntCodec, (a, b) =>
+      a - b < 0 ? -1 : 1,
+    ),
   ],
 ]);
 
@@ -179,7 +155,7 @@ export const entropyCodec: JamCodec<JamEntropy> = {
     const e3 = Blake2bHashCodec.decode(bytes.subarray(96, 128)).value;
     return { value: [e0, e1, e2, e3], readBytes: 128 };
   },
-  encodedSize(value) {
+  encodedSize() {
     return 128; // 4 * 32 bytes
   },
 };

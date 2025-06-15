@@ -1,70 +1,59 @@
-/**
+/*
  * Appendix D
  */
 import {
-  createCodec,
   AuthorizerPoolCodec,
   AuthorizerQueueCodec,
   E_4,
   E_4_int,
-  E_8,
+  E_sub_int,
   HashCodec,
+  PrivilegedServicesCodec,
+  RHOCodec,
+  StatisticsCodec,
   ValidatorDataCodec,
+  WorkPackageHashCodec,
   WorkReportCodec,
   bit,
   createArrayLengthDiscriminator,
-  createSetCodec,
+  createCodec,
+  createLengthDiscrimantedSetCodec,
+  createSequenceCodec,
   encodeWithCodec,
-  StatisticsCodec,
-  WorkPackageHashCodec,
-  PrivilegedServicesCodec,
-  RHOCodec,
-  LengthDiscriminator,
-  E_sub_int,
   mapCodec,
 } from "@tsjam/codec";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
+  ByteArrayOfLength,
   Hash,
   JamState,
-  ServiceIndex,
-  WorkPackageHash,
-  WorkReport,
-  ByteArrayOfLength,
   SeqOfLength,
-  StateRootHash,
-  u32,
-  StateKey,
   ServiceAccount,
+  ServiceIndex,
+  StateKey,
+  StateRootHash,
   Tau,
   UpToSeq,
-  AuthorizerPool,
-  AuthorizerQueue,
-  AccumulationQueue,
-  AccumulationHistory,
-  JamStatistics,
+  WorkPackageHash,
+  WorkReport,
+  u32,
+  u64,
 } from "@tsjam/types";
 import { bigintToBytes, toTagged } from "@tsjam/utils";
-import { createSequenceCodec } from "@tsjam/codec";
-import { Hashing } from "@tsjam/crypto";
-import {
-  AUTHQUEUE_MAX_SIZE,
-  CORES,
-  EPOCH_LENGTH,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
+import assert from "assert";
+import { MerkleMap } from "./merkleMap";
+import { MerkleServiceAccountStorageImpl } from "./merkleServiceAccountStorage";
 import {
   betaCodec,
   disputesCodec,
   entropyCodec,
   safroleCodec,
   serviceAccountDataCodec,
-  stateKeyCodec,
   thetaCodec,
 } from "./stateCodecs";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
-import assert from "assert";
-import { MerkleServiceAccountStorageImpl } from "./merkleServiceAccountStorage";
-import { join } from "path";
+import { stateKey } from "./utils";
 
 /**
  * Merkelize state
@@ -82,7 +71,7 @@ export const merkelizeState = (state: JamState): StateRootHash => {
   ) as StateRootHash;
 };
 
-const bits = (ar: Uint8Array): bit[] => {
+export const bits = (ar: Uint8Array): bit[] => {
   const a = [...ar]
     .map((a) =>
       a
@@ -128,7 +117,7 @@ const L_fn = (
 };
 
 // $(0.6.4 - D.6)
-const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
+export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return 0n as Hash;
   } else if (d.size === 1) {
@@ -149,55 +138,12 @@ const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   }
 };
 
-/**
- * `C` in graypaper
- * $(0.6.7 - D.1)
- */
-export const stateKey = (
-  i: number,
-  _s?: ServiceIndex | Uint8Array,
-): StateKey => {
-  if (_s instanceof Uint8Array) {
-    const h: Uint8Array = _s;
-    const a = Hashing.blake2bBuf(h);
-    const s = i;
-    const n = encodeWithCodec(E_4, BigInt(s));
-    return new Uint8Array([
-      n[0],
-      a[0],
-      n[1],
-      a[1],
-      n[2],
-      a[2],
-      n[3],
-      a[3],
-      ...a.subarray(4, 27), // ends at [26]
-    ]) as StateKey;
-  }
-  if (typeof _s === "number") {
-    // its ServiceIndex
-    const n = encodeWithCodec(E_4, BigInt(_s));
-    return new Uint8Array([
-      i,
-      n[0],
-      0,
-      n[1],
-      0,
-      n[2],
-      0,
-      n[3],
-      ...new Array(31 - 4 - 4).fill(0),
-    ]) as StateKey;
-  }
-  return new Uint8Array([i, ...new Array(30).fill(0)]) as StateKey;
-};
-
 /*
  * `T(σ)`
  * $(0.6.7 - D.2)
  */
-export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
-  const toRet = new Map<StateKey, Uint8Array>();
+export const merkleStateMap = (state: JamState): MerkleMap => {
+  const toRet = new MerkleMap();
 
   toRet.set(
     stateKey(1),
@@ -318,14 +264,9 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
     encodeWithCodec(
       createSequenceCodec(
         EPOCH_LENGTH,
-        new LengthDiscriminator<Set<WorkPackageHash>>({
-          ...createSetCodec(WorkPackageHashCodec, (a, b) =>
-            a - b < 0 ? -1 : 1,
-          ),
-          length(v) {
-            return v.size;
-          },
-        }),
+        createLengthDiscrimantedSetCodec(WorkPackageHashCodec, (a, b) =>
+          a < b ? -1 : 1,
+        ),
       ),
       state.accumulationHistory,
     ),
@@ -360,8 +301,7 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
     for (const [h, lm] of serviceAccount.preimage_l) {
       for (const [l, t] of lm) {
         const e_l = encodeWithCodec(E_4_int, l);
-        const h_h = Hashing.blake2bBuf(encodeWithCodec(HashCodec, h));
-
+        const h_h = encodeWithCodec(HashCodec, h);
         toRet.set(
           stateKey(serviceIndex, new Uint8Array([...e_l, ...h_h])),
           encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
@@ -373,7 +313,7 @@ export const merkleStateMap = (state: JamState): Map<StateKey, Uint8Array> => {
   return toRet;
 };
 
-const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
+export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
   const authPool = AuthorizerPoolCodec().decode(
     merkleMap.get(stateKey(1))!,
   ).value;
@@ -407,7 +347,7 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
 
   const rho = RHOCodec().decode(merkleMap.get(stateKey(10))!).value;
 
-  const tau = E_4.decode(merkleMap.get(stateKey(11))!).value;
+  const tau = E_sub_int<Tau>(4).decode(merkleMap.get(stateKey(11))!).value;
 
   const privServices = PrivilegedServicesCodec(CORES).decode(
     merkleMap.get(stateKey(12))!,
@@ -447,12 +387,9 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
 
   const accumulationHistory = createSequenceCodec(
     EPOCH_LENGTH,
-    new LengthDiscriminator<Set<WorkPackageHash>>({
-      ...createSetCodec(WorkPackageHashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-      length(v) {
-        return v.size;
-      },
-    }),
+    createLengthDiscrimantedSetCodec(WorkPackageHashCodec, (a, b) =>
+      a - b < 0 ? -1 : 1,
+    ),
   ).decode(merkleMap.get(stateKey(15))!).value;
 
   const mostRecentAccumulationOutputs = thetaCodec.decode(
@@ -467,7 +404,7 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
       k[6] === 0 &&
       k[8] === 0 &&
       k[9] === 0 &&
-      32 + 8 * 4 + 4 === merkleMap.get(k)!.length
+      32 + 5 * 8 + 4 * 4 === merkleMap.get(k)!.length
     );
   });
 
@@ -490,26 +427,29 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
         return (
           k[0] === serviceKey[0] &&
           k[2] === serviceKey[1] &&
-          k[4] === serviceKey[3] &&
-          k[6] === serviceKey[4]
+          k[4] === serviceKey[2] &&
+          k[6] === serviceKey[3]
         );
       }),
     );
     const storage = new MerkleServiceAccountStorageImpl(
       serviceIndex,
-      serviceData.totalOctets,
+      <u64>0n, // we fix octets later
     );
 
-    const serviceAccount: ServiceAccount = new ServiceAccountImpl(storage);
-    serviceAccount.codeHash = serviceData.codeHash;
-    serviceAccount.balance = serviceData.balance;
-    serviceAccount.minGasAccumulate = serviceData.minGasAccumulate;
-    serviceAccount.minGasOnTransfer = serviceData.minGasOnTransfer;
-    serviceAccount.gratisStorageOffset = serviceData.gratisStorageOffset;
-    serviceAccount.creationTimeSlot = serviceData.creationTimeSlot;
-    serviceAccount.lastAccumulationTimeSlot =
-      serviceData.lastAccumulationTimeSlot;
-    serviceAccount.parentService = serviceData.parentService;
+    const serviceAccount: ServiceAccount = new ServiceAccountImpl({
+      codeHash: serviceData.codeHash,
+      balance: serviceData.balance,
+      minGasAccumulate: serviceData.minGasAccumulate,
+      minGasOnTransfer: serviceData.minGasOnTransfer,
+      gratisStorageOffset: serviceData.gratisStorageOffset,
+      creationTimeSlot: serviceData.creationTimeSlot,
+      lastAccumulationTimeSlot: serviceData.lastAccumulationTimeSlot,
+      parentService: serviceData.parentService,
+      storage,
+      preimage_l: new Map(),
+      preimage_p: new Map(),
+    });
 
     const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
       const possiblePreimage = merkleMap.get(sk)!;
@@ -544,7 +484,11 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
       );
       serviceAccount.preimage_l.get(h)!.set(toTagged(<u32>length), pl_decoded);
       serviceRelatedKeys.delete(preimagekey);
-      serviceRelatedKeys.delete(p_l_key);
+      serviceRelatedKeys.delete(
+        [...serviceRelatedKeys.keys()].find(
+          (a) => Buffer.compare(a, p_l_key) === 0,
+        )!,
+      );
     }
 
     // we now miss storage stuff
@@ -554,6 +498,10 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
       storage.setFromStateKey(storageStateKey, storageValue);
       serviceRelatedKeys.delete(storageStateKey);
     }
+    // we fix the octets
+    storage.octets = <u64>(
+      (serviceData.totalOctets - serviceAccount.totalOctets())
+    );
 
     assert(
       serviceRelatedKeys.size === 0,
@@ -587,47 +535,6 @@ const stateFromMerkleMap = (merkleMap: Map<StateKey, Uint8Array>): JamState => {
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   const fs = await import("fs");
-
-  describe("state serialization/deserialization", () => {
-    it("should deserializa to same object", () => {
-      const state: JamState = {
-        accumulationHistory: <AccumulationHistory>new Array(EPOCH_LENGTH),
-        accumulationQueue: <AccumulationQueue>new Array(EPOCH_LENGTH).fill([]),
-        authPool: <AuthorizerPool>new Array(CORES).fill([]),
-        authQueue: <AuthorizerQueue>(
-          new Array(CORES).fill(new Array(AUTHQUEUE_MAX_SIZE))
-        ),
-        mostRecentAccumulationOutputs: <
-          JamState["mostRecentAccumulationOutputs"]
-        >[],
-        statistics: {
-          validators: <JamStatistics["validators"]>new Array(2).fill(
-            new Array(NUMBER_OF_VALIDATORS).fill({
-              blocksProduced: 0,
-              ticketsIntroduced: 0,
-              preimagesIntroduced: 0,
-              totalOctetsIntroduced: 0,
-              guaranteedReports: 0,
-              availabilityAssurances: 0,
-            }),
-          ),
-          cores: <JamStatistics["cores"]>new Array(CORES).fill({
-            daLoad: 0,
-            popularity: 0,
-            imports: 0,
-            extrinsicCount: 0,
-            extrinsicSize: 0,
-            exports: 0,
-            bundleSize: 0,
-            usedGas: 0n,
-          }),
-          services: new Map(),
-        },
-
-        serviceAccounts: new Map(),
-      };
-    });
-  });
   describe("merkle", () => {
     it("test from vectors", () => {
       const r: Array<{ input: Record<string, string>; output: string }> =

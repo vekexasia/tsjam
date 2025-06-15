@@ -34,6 +34,7 @@
     "@tsjam/serviceaccounts": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
+    "@tsjam/merklization": "*",
     "neverthrow": "^8.1.1"
   },
   "license": "MIT",

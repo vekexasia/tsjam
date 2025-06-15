@@ -1,4 +1,3 @@
-import fs from "fs";
 import {
   AccumulationHistoryCodec,
   AccumulationQueueCodec,
@@ -19,33 +18,30 @@ import {
   ServiceStatisticsCodec,
   WorkReportCodec,
 } from "@tsjam/codec";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  JamState,
-  Posterior,
-  Tau,
-  AccumulationHistory,
-  AccumulationQueue,
-  ServiceAccount,
-  Delta,
-  PrivilegedServices,
-  AvailableWorkReports,
-  MerkleTreeRoot,
-  JamStatistics,
-  ServiceIndex,
-  IServiceAccountStorage,
-} from "@tsjam/types";
-import { vi, it, describe, beforeEach, expect } from "vitest";
-import {
+  buildTestDeltaCodec,
   posteriorCodec,
   serviceAccountFromTestInfo,
-  buildTestDeltaCodec,
 } from "@tsjam/codec/test/testCodecs.js";
-import { accumulateReports } from "@/accumulate.js";
-import { dummyState } from "./utils";
 import { logCodec } from "@tsjam/codec/test/utils.js";
-import { _w, serviceStatisticsSTF } from "@tsjam/transitions";
-import { ServiceAccountStorageImpl } from "@tsjam/serviceaccounts";
+import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  AccumulationHistory,
+  AccumulationQueue,
+  AvailableWorkReports,
+  Delta,
+  IServiceAccountStorage,
+  JamState,
+  JamStatistics,
+  MerkleTreeRoot,
+  Posterior,
+  PrivilegedServices,
+  ServiceAccount,
+  ServiceIndex,
+  Tau,
+} from "@tsjam/types";
+import fs from "fs";
+import { beforeEach, describe, it, vi } from "vitest";
 const mocks = vi.hoisted(() => {
   return {
     CORES: 341,
@@ -126,7 +122,6 @@ const accumulateAccountCodec = (serviceIndex: ServiceIndex) =>
             (a, b) => Buffer.compare(a, b),
           ),
           (info): IServiceAccountStorage => {
-            const storage = new ServiceAccountStorageImpl(serviceIndex);
             throw new Error("reimplement me");
             //  for (const key of info.keys()) {
             //    const value = info.get(key)!;

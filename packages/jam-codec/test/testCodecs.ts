@@ -19,6 +19,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import { MerkleServiceAccountStorageImpl } from "@tsjam/merklization";
 
 export const posteriorCodec = <T>(codec: JamCodec<T>) =>
   codec as JamCodec<Posterior<T>>;
@@ -47,11 +48,16 @@ export const serviceAccountFromTestInfo = (
   return mapCodec(
     serviceInfoCodec,
     (info) => {
-      const toRet = new ServiceAccountImpl(serviceIndex);
-      toRet.codeHash = toTagged(info.codeHash);
-      toRet.balance = info.balance;
-      toRet.minGasAccumulate = info.minItemGas;
-      toRet.minGasOnTransfer = info.minMemoGas;
+      const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
+
+      // FIXME: 0.6.7 any should disappear
+      const toRet = new ServiceAccountImpl(<any>{
+        codeHash: toTagged(info.codeHash),
+        balance: info.balance,
+        minGasAccumulate: info.minItemGas,
+        minGasOnTransfer: info.minMemoGas,
+        storage,
+      });
 
       (toRet as any)["_i"] = info.items;
       (toRet as any)["_o"] = info.bytes;

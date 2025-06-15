@@ -1,22 +1,15 @@
 import { regFn } from "@/functions/fnsdb.js";
+import { W7, W8, XMod, YMod } from "@/functions/utils.js";
+import { IxMod } from "@/instructions/utils.js";
+import { toSafeMemoryAddress } from "@/pvmMemory";
+import { check_fn } from "@/utils/check_fn";
 import {
-  AuthorizerQueue,
-  DeferredTransfer,
-  Gas,
-  Hash,
-  PVMAccumulationState,
-  PVMProgramExecutionContextBase,
-  PVMResultContext,
-  ServiceAccount,
-  ServiceIndex,
-  Tagged,
-  Tau,
-  UpToSeq,
-  u32,
-  u8,
-  u64,
-  PVMExitPanicMod,
-} from "@tsjam/types";
+  E_sub,
+  E_sub_int,
+  HashCodec,
+  privilegedAssignCodec,
+  ValidatorDataCodec,
+} from "@tsjam/codec";
 import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
@@ -25,22 +18,28 @@ import {
   PREIMAGE_EXPIRATION,
   TRANSFER_MEMO_SIZE,
 } from "@tsjam/constants";
-import {
-  E_4_int,
-  E_8,
-  E_sub,
-  E_sub_int,
-  HashCodec,
-  privilegedAssignCodec,
-  ValidatorDataCodec,
-} from "@tsjam/codec";
-import { bytesToBigInt, toTagged } from "@tsjam/utils";
-import { W7, W8, XMod, YMod } from "@/functions/utils.js";
-import { IxMod } from "@/instructions/utils.js";
-import { check_fn } from "@/utils/check_fn";
-import { toSafeMemoryAddress } from "@/pvmMemory";
 import { Hashing } from "@tsjam/crypto";
+import { MerkleServiceAccountStorageImpl } from "@tsjam/merklization";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import {
+  AuthorizerQueue,
+  DeferredTransfer,
+  Gas,
+  Hash,
+  PVMAccumulationState,
+  PVMExitPanicMod,
+  PVMProgramExecutionContextBase,
+  PVMResultContext,
+  ServiceAccount,
+  ServiceIndex,
+  Tagged,
+  Tau,
+  u32,
+  u64,
+  u8,
+  UpToSeq,
+} from "@tsjam/types";
+import { bytesToBigInt, toTagged } from "@tsjam/utils";
 
 /**
  * `ΩB`
@@ -235,16 +234,27 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
         x.u.delta,
       );
 
-      const a = new ServiceAccountImpl(x.i);
-      a.codeHash = c;
+      const storage = new MerkleServiceAccountStorageImpl(x.i);
+      const a = new ServiceAccountImpl({
+        codeHash: c,
+        preimage_p: new Map(),
+        preimage_l: new Map(),
+        minGasAccumulate: g as u64 as Gas,
+        minGasOnTransfer: m as u64 as Gas,
+        creationTimeSlot: tau,
+        gratisStorageOffset: f,
+        lastAccumulationTimeSlot: <Tau>0,
+        parentService: x.service,
+        balance: <u64>0n,
+        storage,
+      });
       a.preimage_l.set(c, new Map());
-      a.preimage_l.get(c)!.set(l, []);
-      a.minGasAccumulate = g as u64 as Gas;
-      a.minGasOnTransfer = m as u64 as Gas;
-      a.creationTimeSlot = tau;
-      a.gratisStorageOffset = f;
-      a.lastAccumulationTimeSlot = <Tau>0;
-      a.parentService = x.service;
+      a.preimage_l
+        .get(c)!
+        .set(
+          <Tagged<u32, "length">>Number(l),
+          [] as unknown as UpToSeq<Tau, 3>,
+        );
       a.balance = a.gasThreshold();
 
       const x_bold_s = x.u.delta.get(x.service)!;
@@ -392,7 +402,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
  */
 export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
   fn: {
-    opCode: 22 as u8,
+    opCode: 21 as u8,
     identifier: "eject",
     gasCost: 10n as Gas,
     execute(context, x, t) {

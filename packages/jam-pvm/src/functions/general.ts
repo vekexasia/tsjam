@@ -1,4 +1,19 @@
 import { regFn } from "@/functions/fnsdb.js";
+import { W7, W8 } from "@/functions/utils.js";
+import { IxMod } from "@/instructions/utils.js";
+import { toSafeMemoryAddress } from "@/pvmMemory";
+import {
+  Blake2bHashCodec,
+  CodeHashCodec,
+  createCodec,
+  E_4_int,
+  E_sub,
+  E_sub_int,
+  encodeWithCodec,
+  Uint8ArrayJSONCodec,
+} from "@tsjam/codec";
+import { HostCallResult } from "@tsjam/constants";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
   Blake2bHash,
   Delta,
@@ -14,22 +29,7 @@ import {
   u8,
   WorkPackageWithAuth,
 } from "@tsjam/types";
-import { toSafeMemoryAddress } from "@/pvmMemory";
-import { HostCallResult } from "@tsjam/constants";
-import {
-  Blake2bHashCodec,
-  CodeHashCodec,
-  createCodec,
-  E_4_int,
-  E_sub,
-  E_sub_int,
-  encodeWithCodec,
-  Uint8ArrayJSONCodec,
-} from "@tsjam/codec";
-import { W7, W8 } from "@/functions/utils.js";
-import { IxMod } from "@/instructions/utils.js";
 import assert from "node:assert";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 
 /**
  * `ΩG`
@@ -249,9 +249,10 @@ export const omega_w = regFn<
         k = context.memory.getBytes(toSafeMemoryAddress(k0), Number(kz));
       }
 
-      const a = new ServiceAccountImpl(s);
-      Object.assign(a, bold_s);
-      a.storage = bold_s.storage.clone();
+      const a = new ServiceAccountImpl({
+        ...bold_s,
+        storage: bold_s.storage.clone(),
+      });
 
       if (vz === 0n) {
         console.log(

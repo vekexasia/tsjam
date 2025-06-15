@@ -40,8 +40,19 @@ export class ServiceAccountImpl implements ServiceAccount {
   creationTimeSlot!: u32;
   lastAccumulationTimeSlot!: u32;
   parentService!: ServiceIndex;
+  storage!: IServiceAccountStorage;
 
-  constructor(public storage: IServiceAccountStorage) {}
+  constructor(
+    values: Omit<
+      ServiceAccount,
+      "itemInStorage" | "totalOctets" | "gasThreshold" | "metadata" | "code"
+    >,
+  ) {
+    for (const key of Object.keys(values)) {
+      // @ts-ignore
+      this[key] = values[key];
+    }
+  }
 
   /**
    * `a_i` - total number of preimage lookup dictionaries and
