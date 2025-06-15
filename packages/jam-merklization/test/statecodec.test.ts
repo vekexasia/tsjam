@@ -1,5 +1,6 @@
 import { MerkleServiceAccountStorageImpl } from "@/merkleServiceAccountStorage";
 import { merkleStateMap, stateFromMerkleMap } from "@/state";
+import { traceJSONCodec } from "@/stateCodecs";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
@@ -113,6 +114,26 @@ describe("state serialization/deserialization", () => {
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
       expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
+    });
+    it("should restore from trace", () => {
+      const state: JamState = {
+        ...dummyState({
+          cores: CORES,
+          validators: NUMBER_OF_VALIDATORS,
+          epoch: EPOCH_LENGTH,
+        }),
+        serviceAccounts: new Map([
+          [serviceIndex1, acc],
+          [serviceIndex2, acc2],
+        ]),
+      };
+
+      const map = merkleStateMap(state);
+      const json = traceJSONCodec.toJSON(map);
+      const restoredMap = traceJSONCodec.fromJSON(json);
+      const json2 = traceJSONCodec.toJSON(restoredMap);
+
+      expect(json).to.deep.eq(json2);
     });
     it("should work with preimages", () => {
       const state: JamState = {

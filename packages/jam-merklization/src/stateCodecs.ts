@@ -18,6 +18,9 @@ import {
   E_sub_int,
   genericBytesBigIntCodec,
   createLengthDiscrimantedSetCodec,
+  MapJSONCodec,
+  Uint8ArrayJSONCodec,
+  JSONCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
@@ -32,6 +35,7 @@ import {
   SafroleState,
   ServiceAccount,
   ServiceIndex,
+  StateKey,
   u32,
   u64,
 } from "@tsjam/types";
@@ -202,3 +206,9 @@ export const thetaCodec = createArrayLengthDiscriminator<
 export const stateKeyCodec = genericBytesBigIntCodec<StateKeyBigInt, 31>(31);
 
 export type StateKeyBigInt = BigIntBytes<31>;
+
+export const traceJSONCodec = MapJSONCodec(
+  { key: "key", value: "value" },
+  Uint8ArrayJSONCodec as JSONCodec<StateKey, string>,
+  Uint8ArrayJSONCodec,
+);

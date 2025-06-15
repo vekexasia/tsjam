@@ -2,7 +2,7 @@ import { StateKey } from "@tsjam/types";
 import { StateKeyBigInt, stateKeyCodec } from "./stateCodecs";
 import { encodeWithCodec } from "@tsjam/codec";
 
-export class MerkleMap implements Map<StateKey | StateKeyBigInt, Uint8Array> {
+export class MerkleMap implements Map<StateKey, Uint8Array> {
   #storage: Map<StateKeyBigInt, Uint8Array> = new Map();
   clear(): void {
     this.#storage.clear();
@@ -42,8 +42,11 @@ export class MerkleMap implements Map<StateKey | StateKeyBigInt, Uint8Array> {
   get size(): number {
     return this.#storage.size;
   }
-  entries(): MapIterator<[any, Uint8Array<ArrayBufferLike>]> {
-    throw new Error("Method not implemented.");
+  entries(): MapIterator<[StateKey, Uint8Array]> {
+    return [...this.#storage.entries()].map(([skb, v]) => [
+      encodeWithCodec(stateKeyCodec, skb),
+      v,
+    ]) as unknown as MapIterator<[StateKey, Uint8Array]>;
   }
   keys(): MapIterator<StateKey> {
     return [...this.#storage.keys()].map((skb) =>
@@ -53,9 +56,7 @@ export class MerkleMap implements Map<StateKey | StateKeyBigInt, Uint8Array> {
   values(): MapIterator<Uint8Array<ArrayBufferLike>> {
     throw new Error("Method not implemented.");
   }
-  [Symbol.iterator](): MapIterator<
-    [StateKeyBigInt, Uint8Array<ArrayBufferLike>]
-  > {
+  [Symbol.iterator](): MapIterator<[StateKey, Uint8Array<ArrayBufferLike>]> {
     throw new Error("Method not implemented.");
   }
   [Symbol.toStringTag] = "MerkleMap";
