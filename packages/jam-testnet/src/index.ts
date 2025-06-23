@@ -2,12 +2,11 @@ import {
   E_4_int,
   Ed25519PubkeyBigIntCodec,
   encodeWithCodec,
-  HashJSONCodec,
   SignedHeaderCodec,
   Uint8ArrayJSONCodec,
-  UnsignedHeaderCodec,
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { importBlock } from "@tsjam/core";
 import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
@@ -16,10 +15,13 @@ import {
   ED25519PublicKey,
   Hash,
   HeaderHash,
+  JamBlock,
+  JamState,
   SignedJamHeader,
   StateRootHash,
   Tau,
   u32,
+  ValidatorData,
   ValidatorIndex,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -75,7 +77,9 @@ export const generateValidatorKeys = (howMany: number): Keys[] => {
   return keys;
 };
 
-export const generageGenesis = (numValidators: number) => {
+export const generateGenesis = (
+  numValidators: typeof NUMBER_OF_VALIDATORS = NUMBER_OF_VALIDATORS,
+): {genesis: JamBlock; state: JamState} => {
   const keys = generateValidatorKeys(numValidators);
 
   const genesis: SignedJamHeader = {
@@ -102,8 +106,44 @@ export const generageGenesis = (numValidators: number) => {
       ),
     },
   };
-  return genesis;
+  const validators: ValidatorData[] = genesis.epochMarker!.validatorKeys.map((v)=> {
+    return <ValidatorData> {
+      banderSnatch: v.bandersnatch,
+      ed25519: v.ed25519,
+      blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
+      metadata: new Uint8Array(128).fill(0) as ValidatorData["metadata"],
+    }
+  })
+  return {genesis, state: {
+    iota: toTagged(structuredClone(validators)),
+    tau: <Tau>0,
+    kappa: toTagged(
+      structuredClone(validators),
+    ),
+    lambda: toTagged(
+      structuredClone(validators),
+    ),
+    safroleState: {
+      gamma_k: toTagged(
+        structuredClone(validators),
+      ),
+      gamma_s: toTagged(
+        structuredClone(validators),
+      ),
+      gamma_z: <Blake2bHash>0n,
+      gamma_a: <Blake2bHash>0n,
+    }
+
+
+
+
+}
+  };
 };
+
+export const genesisState = (genesis: JamBlock) => {
+
+}
 
 if (import.meta.vitest) {
   const { it, expect, describe } = import.meta.vitest;
@@ -114,13 +154,32 @@ if (import.meta.vitest) {
       expect(keys.length).toBe(6);
     });
     it("should generate full genesis", () => {
-      const fullGenesis = generageGenesis(NUMBER_OF_VALIDATORS);
+      const fullGenesis = generateGenesis();
       const hash = Hashing.blake2bBuf(
         encodeWithCodec(SignedHeaderCodec(), fullGenesis),
       );
       expect(Uint8ArrayJSONCodec.toJSON(hash)).toBe(
         "0x57f075e6bb0b8778b59261fa7ec32626464e4d2f444fca4312dfbf94f3584032",
       );
+    });
+  });
+  describe("import genesis", () => {
+    it("should import genesis", () => {
+      const genesis = generateGenesis();
+      const extrinsics: JamBlock["extrinsics"] = {
+        tickets: toTagged([]),
+        disputes: {
+          verdicts: toTagged([]),
+          culprit: [],
+          faults: [],
+        },
+        preimages: [],
+        assurances: toTagged([]),
+        reportGuarantees: toTagged([]),
+      };
+      const block: JamBlock = { header: genesis, extrinsics };
+      importBlock(block).then((importedBlock) => {
+
     });
   });
 }

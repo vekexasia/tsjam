@@ -1,44 +1,3 @@
-import { BLOCK_TIME } from "@tsjam/constants";
-import { merkelizeState } from "@tsjam/merklization";
-import { err, ok } from "neverthrow";
-import {
-  HeaderHash,
-  JamBlock,
-  JamState,
-  SignedJamHeader,
-  STF,
-} from "@tsjam/types";
-import {
-  DeltaToPosteriorError,
-  DisputesToPosteriorError,
-  ETError,
-  GammaAError,
-  RHO2DoubleDagger,
-  RHO_2_Dagger,
-  RHO_2_DaggerError,
-  RHO_toPosterior,
-  _w,
-  authorizerPool_toPosterior,
-  coreStatisticsSTF,
-  deltaToDoubleDagger,
-  deltaToPosterior,
-  disputesSTF,
-  etToIdentifiers,
-  gamma_aSTF,
-  gamma_sSTF,
-  headerLookupHistorySTF,
-  recentHistoryToDagger,
-  beefyBeltToPosterior,
-  rotateEntropy,
-  rotateKeys,
-  safroleToPosterior,
-  serviceStatisticsSTF,
-  validatorStatisticsToPosterior,
-  recentHistoryToPosterior,
-} from "@tsjam/transitions";
-import { Timekeeping, toPosterior } from "@tsjam/utils";
-import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import { SignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
 import { EGError, assertEGValid, garantorsReporters } from "@/validateEG.js";
 import {
   EpochMarkerError,
@@ -51,8 +10,49 @@ import {
   verifySeal,
   verifyWinningTickets,
 } from "@/verifySeal";
-import { accumulateReports, availableReports } from "./accumulate";
+import { SignedHeaderCodec, encodeWithCodec } from "@tsjam/codec";
+import { BLOCK_TIME } from "@tsjam/constants";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
+import { merkelizeState } from "@tsjam/merklization";
 import { invokeOntransfers, transferStatistics } from "@tsjam/pvm";
+import {
+  DeltaToPosteriorError,
+  DisputesToPosteriorError,
+  ETError,
+  GammaAError,
+  RHO2DoubleDagger,
+  RHO_2_Dagger,
+  RHO_2_DaggerError,
+  RHO_toPosterior,
+  _w,
+  authorizerPool_toPosterior,
+  beefyBeltToPosterior,
+  coreStatisticsSTF,
+  deltaToDoubleDagger,
+  deltaToPosterior,
+  disputesSTF,
+  etToIdentifiers,
+  gamma_aSTF,
+  gamma_sSTF,
+  headerLookupHistorySTF,
+  recentHistoryToDagger,
+  recentHistoryToPosterior,
+  rotateEntropy,
+  rotateKeys,
+  safroleToPosterior,
+  serviceStatisticsSTF,
+  validatorStatisticsToPosterior,
+} from "@tsjam/transitions";
+import {
+  HeaderHash,
+  JamBlock,
+  JamState,
+  STF,
+  SignedJamHeader,
+} from "@tsjam/types";
+import { Timekeeping, toPosterior } from "@tsjam/utils";
+import { err, ok } from "neverthrow";
+import { accumulateReports, availableReports } from "./accumulate";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",

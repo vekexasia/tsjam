@@ -1,9 +1,5 @@
 import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
-import {
-  EPOCH_LENGTH,
-  JAM_ENTROPY,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
+import { JAM_ENTROPY } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
 import { merkelizeState } from "@tsjam/merklization";
 import {
@@ -34,25 +30,16 @@ import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 export const createBlock = (
   curState: JamState,
   data: {
+    extrinsics: JamBlock["extrinsics"];
     previousBlock: JamBlock;
     validator: ValidatorData;
     bandersnatchPrivateKey: BandersnatchKey;
   },
 ): JamBlock => {
   const offenders: ED25519PublicKey[] = [];
-  const extrinsics = {
-    disputes: {
-      faults: [],
-      culprit: [],
-      verdicts: [],
-    },
-    tickets: [],
-    preimages: [],
-    assurances: [],
-    reportGuarantees: [],
-  } as unknown as JamBlock["extrinsics"];
   const p_tau: Posterior<Tau> = toPosterior(Timekeeping.bigT());
 
+  // TODO: epochMarker in header if change of epoch
   const [, [, p_eta2, p_eta3]] = rotateEta1_4(
     {
       p_tau,
@@ -67,7 +54,7 @@ export const createBlock = (
       kappa: curState.kappa,
       curTau: data.previousBlock.header.timeSlotIndex,
       lambda: curState.lambda,
-      extrinsic: extrinsics.disputes,
+      extrinsic: data.extrinsics.disputes,
     },
     curState.disputes,
   ).safeRet();
@@ -114,7 +101,7 @@ export const createBlock = (
       curState.beta.recentHistory[curState.beta.recentHistory.length - 1]
         .headerHash,
     offenders,
-    extrinsicHash: computeExtrinsicHash(extrinsics),
+    extrinsicHash: computeExtrinsicHash(data.extrinsics),
     timeSlotIndex: p_tau,
     priorStateRoot: merkelizeState(curState) as StateRootHash,
     blockAuthorKeyIndex: p_kappa.findIndex(
@@ -142,6 +129,6 @@ export const createBlock = (
 
   return {
     header: signedHeader,
-    extrinsics,
+    extrinsics: data.extrinsics,
   };
 };

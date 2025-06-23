@@ -33,6 +33,7 @@
     "@tsjam/crypto": "*",
     "@tsjam/pvm": "*",
     "@tsjam/serviceaccounts": "*",
+    "@tsjam/merklization": "*",
     "@tsjam/transitions": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",

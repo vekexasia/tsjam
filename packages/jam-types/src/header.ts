@@ -52,8 +52,8 @@ export interface JamHeader {
    */
   epochMarker?: {
     // coming from eta
-    entropy: Blake2bHash;
-    entropy2: Blake2bHash;
+    entropy: Blake2bHash; // eta0
+    tickets_entropy: Blake2bHash; //eta1
     // 32 byte bandersnatch sequence (ordered) coming from gamma_k
     validatorKeys: SeqOfLength<
       { bandersnatch: BandersnatchKey; ed25519: ED25519PublicKey },
