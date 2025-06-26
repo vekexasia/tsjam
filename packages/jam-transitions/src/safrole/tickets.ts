@@ -1,12 +1,4 @@
-import { bigintToBytes, slotIndex } from "@tsjam/utils";
-import {
-  JamState,
-  Posterior,
-  SafroleState,
-  Tau,
-  TicketExtrinsics,
-  TicketIdentifier,
-} from "@tsjam/types";
+import { encodeWithCodec, HashCodec } from "@tsjam/codec";
 import {
   JAM_TICKET_SEAL,
   LOTTERY_MAX_SLOT,
@@ -14,7 +6,16 @@ import {
   MAX_TICKETS_PER_VALIDATOR,
 } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
-import { Result, err, ok } from "neverthrow";
+import {
+  JamState,
+  Posterior,
+  SafroleState,
+  Tau,
+  Ticket,
+  TicketExtrinsics,
+} from "@tsjam/types";
+import { slotIndex } from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -36,22 +37,23 @@ export const etToIdentifiers = (
     gamma_a: SafroleState["gamma_a"];
     p_entropy: Posterior<JamState["entropy"]>;
   },
-): Result<TicketIdentifier[], ETError> => {
+): Result<Ticket[], ETError> => {
   if (et.length === 0) {
     return ok([]); // optimization
   }
 
-  // $(0.6.4 - 6.30) | first case
+  // $(0.7.0 - 6.30) | first case
+  // NOTE: the length 0 is handled above
   if (slotIndex(input.p_tau) >= LOTTERY_MAX_SLOT) {
     return err(ETError.LOTTERY_ENDED);
   }
 
-  // $(0.6.4 - 6.30) | first case
+  // $(0.7.0 - 6.30) | first case
   if (et.length > MAX_TICKETS_PER_BLOCK) {
     return err(ETError.MAX_TICKETS_EXCEEDED);
   }
 
-  // $(0.6.5 - 6.29) | we validate the ticket
+  // $(0.7.0 - 6.29) | we validate the ticket
   for (const extrinsic of et) {
     if (
       extrinsic.entryIndex < 0 ||
@@ -64,7 +66,7 @@ export const etToIdentifiers = (
       input.p_gamma_z,
       new Uint8Array([
         ...JAM_TICKET_SEAL,
-        ...bigintToBytes(input.p_entropy[2], 32),
+        ...encodeWithCodec(HashCodec, input.p_entropy[2]),
         extrinsic.entryIndex,
       ]),
     );
@@ -73,8 +75,8 @@ export const etToIdentifiers = (
     }
   }
 
-  // $(0.6.4 - 6.31)
-  const n: TicketIdentifier[] = [];
+  // $(0.7.0 - 6.31)
+  const n: Ticket[] = [];
   for (const x of et) {
     n.push({
       id: Bandersnatch.vrfOutputRingProof(x.proof), // y

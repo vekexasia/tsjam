@@ -87,6 +87,10 @@ export type BandersnatchSignature = Tagged<
   ByteArrayOfLength<96>,
   "BandersnatchSignature"
 >;
+
+/*
+ * B°
+ */
 export type BandersnatchRingRoot = Tagged<
   ByteArrayOfLength<144>,
   "BandersnatchRingRoot"

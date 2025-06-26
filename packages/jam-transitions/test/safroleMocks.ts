@@ -1,3 +1,4 @@
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
@@ -6,13 +7,12 @@ import {
   JamHeader,
   SafroleState,
   Tau,
-  TicketIdentifier,
+  Ticket,
   UnTaggedObject,
   ValidatorData,
   ValidatorIndex,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 export const mockHeader = (
   opts: Partial<UnTaggedObject<JamHeader>> = {},
@@ -36,7 +36,7 @@ export const mockState = (
   gamma_z: toTagged(new Uint8Array(144).fill(0) as BandersnatchRingRoot),
   gamma_a: toTagged(opts.gamma_a ?? new Array(EPOCH_LENGTH)),
   gamma_s: toTagged(opts.gamma_s ?? new Array(EPOCH_LENGTH)),
-  gamma_k: toTagged(opts.gamma_k ?? new Array(NUMBER_OF_VALIDATORS)),
+  gamma_p: toTagged(opts.gamma_p ?? new Array(NUMBER_OF_VALIDATORS)),
 });
 
 export const mockValidatorData = (
@@ -56,8 +56,8 @@ export const mockValidatorData = (
 });
 
 export const mockTicketIdentifier = (
-  opts: Partial<UnTaggedObject<TicketIdentifier>> = {},
-): TicketIdentifier => ({
+  opts: Partial<UnTaggedObject<Ticket>> = {},
+): Ticket => ({
   id: toTagged(opts.id || 0n),
   attempt: opts.attempt || 0,
 });

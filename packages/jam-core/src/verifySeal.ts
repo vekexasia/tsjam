@@ -1,4 +1,27 @@
 import {
+  BitSequence,
+  HashCodec,
+  UnsignedHeaderCodec,
+  codec_Ea,
+  codec_Ed,
+  codec_Eg_4Hx,
+  codec_Ep,
+  codec_Et,
+  encodeWithCodec,
+} from "@tsjam/codec";
+import {
+  CORES,
+  EPOCH_LENGTH,
+  JAM_AVAILABLE,
+  JAM_ENTROPY,
+  JAM_FALLBACK_SEAL,
+  JAM_TICKET_SEAL,
+  LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
+import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
+import { outsideInSequencer } from "@tsjam/transitions";
+import {
   Dagger,
   EA_Extrinsic,
   JamBlock,
@@ -10,32 +33,9 @@ import {
   SeqOfLength,
   SignedJamHeader,
   Tau,
-  TicketIdentifier,
+  Ticket,
   Validated,
 } from "@tsjam/types";
-import { Result, err, ok } from "neverthrow";
-import {
-  BitSequence,
-  HashCodec,
-  UnsignedHeaderCodec,
-  codec_Ea,
-  codec_Ed,
-  codec_Eg_4Hx,
-  codec_Ep,
-  codec_Et,
-  encodeWithCodec,
-} from "@tsjam/codec";
-import { Bandersnatch, Ed25519, Hashing } from "@tsjam/crypto";
-import {
-  CORES,
-  EPOCH_LENGTH,
-  JAM_AVAILABLE,
-  JAM_ENTROPY,
-  JAM_FALLBACK_SEAL,
-  JAM_TICKET_SEAL,
-  LOTTERY_MAX_SLOT,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
 import {
   bigintToBytes,
   getBlockAuthorKey,
@@ -45,7 +45,7 @@ import {
   slotIndex,
   toPosterior,
 } from "@tsjam/utils";
-import { outsideInSequencer } from "@tsjam/transitions";
+import { Result, err, ok } from "neverthrow";
 
 export const sealSignContext = (
   tau: Tau,
@@ -65,7 +65,7 @@ export const sealSignContext = (
 };
 /**
  * Verify Hs
- * $(0.6.4 - 6.15 / 6.16 / 6.17 / 6.18 / 6.19 / 6.20)
+ * $(0.7.0 - 6.15 / 6.16 / 6.18 / 6.19 / 6.20)
  */
 export const verifySeal = (
   header: SignedJamHeader,
@@ -91,7 +91,7 @@ export const verifySeal = (
     return false;
   }
 
-  // $(0.6.4 - 6.16)
+  // $(0.7.0 - 6.16)
   if (isFallbackMode(p_state.safroleState.gamma_s)) {
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     if (i !== ha) {
@@ -99,7 +99,7 @@ export const verifySeal = (
     }
     return true;
   } else {
-    // $(0.6.4 - 6.15)
+    // $(0.7.0 - 6.15)
     const i = p_state.safroleState.gamma_s[header.timeSlotIndex % EPOCH_LENGTH];
     // verify ticket identity. if it fails, it means validator is not allowed to produce block
     if (i.id !== Bandersnatch.vrfOutputSignature(header.blockSeal)) {
@@ -111,7 +111,7 @@ export const verifySeal = (
 
 /**
  * verify `Hv`
- * @see (0.6.1 - 6.17 - 6.18)
+ * @see $(0.7.0 - 6.17 - 6.18)
  */
 export const verifyEntropySignature = (
   header: SignedJamHeader,
@@ -141,12 +141,12 @@ export enum EpochMarkerError {
 
 /**
  * Verifies epoch marker `He` is valid
- * $(0.6.4 - 6.27)
+ * $(0.7.0 - 6.27)
  */
 export const verifyEpochMarker = (
   block: JamBlock,
   curState: JamState,
-  p_gamma_k: Posterior<SafroleState["gamma_k"]>,
+  p_gamma_p: Posterior<SafroleState["gamma_p"]>,
 ): Result<undefined, EpochMarkerError> => {
   if (isNewEra(block.header.timeSlotIndex, curState.tau)) {
     if (block.header.epochMarker?.entropy !== curState.entropy[0]) {
@@ -159,11 +159,11 @@ export const verifyEpochMarker = (
       if (
         Buffer.compare(
           block.header.epochMarker!.validatorKeys[i].bandersnatch,
-          p_gamma_k[i].banderSnatch,
+          p_gamma_p[i].banderSnatch,
         ) !== 0 ||
         Buffer.compare(
           block.header.epochMarker!.validatorKeys[i].ed25519.buf,
-          p_gamma_k[i].ed25519.buf,
+          p_gamma_p[i].ed25519.buf,
         ) !== 0
       ) {
         return err(EpochMarkerError.InvalidEpochMarkerValidator);
@@ -184,7 +184,7 @@ export enum WinningTicketsError {
 }
 
 // check winning tickets Hw
-// $(0.6.4 - 6.28)
+// $(0.7.0 - 6.28)
 export const verifyWinningTickets = (
   block: JamBlock,
   curState: JamState,
@@ -201,7 +201,7 @@ export const verifyWinningTickets = (
     }
     const expectedHw = outsideInSequencer(
       curState.safroleState.gamma_a as unknown as SeqOfLength<
-        TicketIdentifier,
+        Ticket,
         typeof EPOCH_LENGTH
       >,
     );

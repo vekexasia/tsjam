@@ -181,13 +181,14 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          omega_y(
-            input.ctx,
-            workItemIndex,
-            workPackage,
-            authorizerOutput,
-            overline_i,
-          ),
+          <any> null
+         /// omega_y(
+         ///   input.ctx,
+         ///   workItemIndex,
+         ///   workPackage,
+         ///   authorizerOutput,
+         ///   overline_i,
+         /// ),
         );
       case "export":
         return applyMods(

@@ -19,16 +19,16 @@ import {
   SetJSONCodec,
   ZipJSONCodecs,
 } from "./JsonCodec";
-import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
 import { isFallbackMode } from "@tsjam/utils";
 import { ValidatorDataArrayJSONCodec } from "@/validatorDataCodec";
+import { TicketJSONCodec } from "@/setelements/TicketCodec.js";
 
 export const GammaSJSONCodec: JSONCodec<
   SafroleState["gamma_s"],
   { keys: string[] } | { tickets: Array<{ id: string; attempt: number }> }
 > = EitherOneOfJSONCodec<GammaSFallback, GammaSNormal>(
   ArrayOfJSONCodec(BufferJSONCodec()),
-  ArrayOfJSONCodec(TicketIdentifierJSONCodec),
+  ArrayOfJSONCodec(TicketJSONCodec),
   "keys",
   "tickets",
   (v) => isFallbackMode(v),
@@ -36,8 +36,8 @@ export const GammaSJSONCodec: JSONCodec<
 
 export const GammaAJsonCodec: JSONCodec<
   SafroleState["gamma_a"],
-  Array<JC_J<typeof TicketIdentifierJSONCodec>>
-> = ArrayOfJSONCodec(TicketIdentifierJSONCodec);
+  Array<JC_J<typeof TicketJSONCodec>>
+> = ArrayOfJSONCodec(TicketJSONCodec);
 
 //TODO: psi/DisputesState
 
@@ -48,8 +48,8 @@ export const EntropyJSONCodec = ArrayOfJSONCodec<
 >(HashJSONCodec());
 
 export const IOTAJSONCodec = ValidatorDataArrayJSONCodec<JamState["iota"]>();
-export const GammaKJSONCodec =
-  ValidatorDataArrayJSONCodec<SafroleState["gamma_k"]>();
+export const GammaPJSONCodec =
+  ValidatorDataArrayJSONCodec<SafroleState["gamma_p"]>();
 export const KappaJSONCodec = ValidatorDataArrayJSONCodec<JamState["kappa"]>();
 export const LambdaJSONCodec =
   ValidatorDataArrayJSONCodec<JamState["lambda"]>();

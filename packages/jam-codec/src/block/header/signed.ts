@@ -22,7 +22,7 @@ import {
   NULLORCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
-import { TicketIdentifierJSONCodec } from "@/ticketIdentifierCodec";
+import { TicketJSONCodec } from "@/setelements/TicketCodec.js";
 
 /**
  * SignedHeaderCodec is a codec for encoding and decoding signed headers
@@ -77,7 +77,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
       tickets_entropy: string;
       validators: string[];
     };
-    tickets_mark: null | Array<JC_J<typeof TicketIdentifierJSONCodec>>;
+    tickets_mark: null | Array<JC_J<typeof TicketJSONCodec>>;
     offenders_mark: string[];
     author_index: number;
     entropy_source: string;
@@ -116,7 +116,7 @@ export const SignedHeaderJSONCodec: JSONCodec<
     "winningTickets",
     "tickets_mark",
     <JSONCodec<JamHeader["winningTickets"]>>(
-      NULLORCodec(ArrayOfJSONCodec(TicketIdentifierJSONCodec))
+      NULLORCodec(ArrayOfJSONCodec(TicketJSONCodec))
     ),
   ],
   ["offenders", "offenders_mark", ArrayOfJSONCodec(Ed25519PublicKeyJSONCodec)],

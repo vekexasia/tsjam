@@ -11,7 +11,7 @@ import {
 } from "@/genericTypes.js";
 import { Tau } from "@/Tau.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { TicketIdentifier } from "@/sets/Ticket.js";
+import { Ticket } from "./sets/Ticket.js";
 
 /**
  * Represents a header of a block in the Jam chain.
@@ -68,7 +68,7 @@ export interface JamHeader {
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
    */
-  winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>;
+  winningTickets?: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
 
   /**
    * `HO`

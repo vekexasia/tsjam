@@ -45,9 +45,9 @@ export const dummyState = (conf: {
       gamma_a: new Array(validators)
         .fill(null)
         .map(dummyValidator) as unknown as SafroleState["gamma_a"],
-      gamma_k: new Array(validators)
+      gamma_p: new Array(validators)
         .fill(null)
-        .map(dummyValidator) as unknown as SafroleState["gamma_k"],
+        .map(dummyValidator) as unknown as SafroleState["gamma_p"],
       gamma_s: new Array(validators)
         .fill(null)
         .map(dummyValidator) as unknown as SafroleState["gamma_s"],

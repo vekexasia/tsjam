@@ -81,7 +81,7 @@ export const createBlock = (
       p_tau,
     },
     [
-      curState.safroleState.gamma_k,
+      curState.safroleState.gamma_p,
       curState.kappa,
       curState.lambda,
       curState.safroleState.gamma_z,
@@ -112,7 +112,7 @@ export const createBlock = (
         .headerHash,
     offenders,
     extrinsicHash: computeExtrinsicHash(extrinsics),
-    timeSlotIndex: p_tau,
+    timeSlotIndex: p_tau, // $(0.7.0 - 6.1)
     priorStateRoot: merkelizeState(curState) as StateRootHash,
     blockAuthorKeyIndex: p_kappa.findIndex(
       (a) => a.ed25519.bigint === data.validator.ed25519.bigint,

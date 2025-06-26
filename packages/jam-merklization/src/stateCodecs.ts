@@ -1,26 +1,26 @@
 import {
-  createCodec,
   BandersnatchCodec,
   BandersnatchRingRootCodec,
-  E_1,
-  HashCodec,
-  JamCodec,
-  TicketIdentifierCodec,
-  ValidatorDataCodec,
-  createArrayLengthDiscriminator,
-  RecentHistoryCodec,
-  Ed25519PubkeyBigIntCodec,
-  E_M,
   Blake2bHashCodec,
-  createSequenceCodec,
   create32BCodec,
+  createArrayLengthDiscriminator,
+  createCodec,
+  createLengthDiscrimantedSetCodec,
+  createSequenceCodec,
+  E_1,
+  E_M,
   E_sub,
   E_sub_int,
+  Ed25519PubkeyBigIntCodec,
   genericBytesBigIntCodec,
-  createLengthDiscrimantedSetCodec,
-  MapJSONCodec,
-  Uint8ArrayJSONCodec,
+  HashCodec,
+  JamCodec,
   JSONCodec,
+  MapJSONCodec,
+  RecentHistoryCodec,
+  TicketCodec,
+  Uint8ArrayJSONCodec,
+  ValidatorDataCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
@@ -48,8 +48,8 @@ export const betaCodec = createCodec<Beta>([
 
 export const safroleCodec = createCodec<SafroleState>([
   [
-    "gamma_k",
-    createSequenceCodec<SafroleState["gamma_k"]>(
+    "gamma_p",
+    createSequenceCodec<SafroleState["gamma_p"]>(
       NUMBER_OF_VALIDATORS,
       ValidatorDataCodec,
     ),
@@ -63,7 +63,7 @@ export const safroleCodec = createCodec<SafroleState>([
     {
       decode(bytes: Uint8Array) {
         const isFallback = E_1.decode(bytes.subarray(0, 1)).value === 1n;
-        const codec = isFallback ? BandersnatchCodec : TicketIdentifierCodec;
+        const codec = isFallback ? BandersnatchCodec : TicketCodec;
         const { value, readBytes } = createSequenceCodec<
           SafroleState["gamma_s"]
         >(EPOCH_LENGTH, codec as unknown as JamCodec<any>).decode(
@@ -86,7 +86,7 @@ export const safroleCodec = createCodec<SafroleState>([
             1 +
             createSequenceCodec<typeof v>(
               EPOCH_LENGTH,
-              TicketIdentifierCodec,
+              TicketCodec,
             ).encodedSize(v)
           );
         }
@@ -106,10 +106,10 @@ export const safroleCodec = createCodec<SafroleState>([
           E_1.encode(0n, bytes);
           return (
             1 +
-            createSequenceCodec<typeof v>(
-              EPOCH_LENGTH,
-              TicketIdentifierCodec,
-            ).encode(v, bytes.subarray(1))
+            createSequenceCodec<typeof v>(EPOCH_LENGTH, TicketCodec).encode(
+              v,
+              bytes.subarray(1),
+            )
           );
         }
       },
@@ -117,9 +117,7 @@ export const safroleCodec = createCodec<SafroleState>([
   ],
   [
     "gamma_a",
-    createArrayLengthDiscriminator<SafroleState["gamma_a"]>(
-      TicketIdentifierCodec,
-    ),
+    createArrayLengthDiscriminator<SafroleState["gamma_a"]>(TicketCodec),
   ],
 ]);
 

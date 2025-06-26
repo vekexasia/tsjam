@@ -16,7 +16,7 @@ import {
   SafroleState,
   ServiceIndex,
   Tau,
-  TicketIdentifier,
+  Ticket,
   u16,
   u32,
   ValidatorData,
@@ -44,10 +44,10 @@ export const dummyState = (conf: {
   const { validators, cores, epoch } = conf;
   return {
     safroleState: {
-      gamma_a: [] as TicketIdentifier[] as SafroleState["gamma_a"],
-      gamma_k: new Array(validators)
+      gamma_a: [] as Ticket[] as SafroleState["gamma_a"],
+      gamma_p: new Array(validators)
         .fill(null)
-        .map(dummyValidator) as SafroleState["gamma_k"],
+        .map(dummyValidator) as SafroleState["gamma_p"],
       gamma_s: new Array(epoch)
         .fill(null)
         .map(() => dummyValidator().banderSnatch) as SafroleState["gamma_s"],

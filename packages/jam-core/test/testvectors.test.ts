@@ -1,51 +1,51 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as fs from "node:fs";
-import { dummyState } from "./utils.js";
-import { ok } from "neverthrow";
-import {
-  BandersnatchKey,
-  DisputeExtrinsic,
-  ED25519PublicKey,
-  EA_Extrinsic,
-  EG_Extrinsic,
-  JamState,
-  OpaqueHash,
-  SafroleState,
-  Tau,
-  TicketExtrinsics,
-  TicketIdentifier,
-  SeqOfLength,
-  ValidatorIndex,
-  BandersnatchSignature,
-  ValidatorData,
-  JamBlock,
-  SignedJamHeader,
-} from "@tsjam/types";
-import { isFallbackMode, toTagged } from "@tsjam/utils";
 import { computeHeaderHash, importBlock } from "@/importBlock.js";
-import { merkelizeState } from "@tsjam/merklization";
 import {
   BandersnatchCodec,
+  BandersnatchRingRootCodec,
   Blake2bHashCodec,
   codec_Et,
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
   E_sub_int,
+  Ed25519BigIntJSONCodec,
+  Ed25519PubkeyCodec,
+  Ed25519PublicKeyJSONCodec,
   eitherOneOfCodec,
   JamCodec,
-  OpaqueHashCodec,
-  TicketIdentifierCodec,
-  ValidatorDataCodec,
-  BandersnatchRingRootCodec,
-  Optional,
   mapCodec,
-  Ed25519PubkeyCodec,
-  Ed25519BigIntJSONCodec,
-  Ed25519PublicKeyJSONCodec,
+  OpaqueHashCodec,
+  Optional,
+  TicketCodec,
+  ValidatorDataCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { merkelizeState } from "@tsjam/merklization";
+import {
+  BandersnatchKey,
+  BandersnatchSignature,
+  DisputeExtrinsic,
+  EA_Extrinsic,
+  ED25519PublicKey,
+  EG_Extrinsic,
+  JamBlock,
+  JamState,
+  OpaqueHash,
+  SafroleState,
+  SeqOfLength,
+  SignedJamHeader,
+  Tau,
+  Ticket,
+  TicketExtrinsics,
+  ValidatorData,
+  ValidatorIndex,
+} from "@tsjam/types";
+import { isFallbackMode, toTagged } from "@tsjam/utils";
+import { ok } from "neverthrow";
+import * as fs from "node:fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dummyState } from "./utils.js";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -178,11 +178,11 @@ type TestState = {
   entropy: JamState["entropy"];
   lambda: JamState["lambda"];
   kappa: JamState["kappa"];
-  gamma_k: SafroleState["gamma_k"];
+  gamma_p: SafroleState["gamma_p"];
   iota: JamState["iota"];
   gamma_a: SafroleState["gamma_a"];
   gamma_s: {
-    tickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
+    tickets?: SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">;
     keys?: SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
   };
   gamma_z: SafroleState["gamma_z"];
@@ -204,7 +204,7 @@ type TestType = {
     error?: number;
     ok?: {
       epochMark?: EpochMark;
-      ticketsMark?: TicketIdentifier[]; // epoch long
+      ticketsMark?: Ticket[]; // epoch long
     };
   };
   postState: JamState;
@@ -233,8 +233,8 @@ const buildTest = (name: string, size: "tiny" | "full") => {
       createSequenceCodec<JamState["kappa"]>(NUMVALS, ValidatorDataCodec),
     ],
     [
-      "gamma_k",
-      createSequenceCodec<SafroleState["gamma_k"]>(NUMVALS, ValidatorDataCodec),
+      "gamma_p",
+      createSequenceCodec<SafroleState["gamma_p"]>(NUMVALS, ValidatorDataCodec),
     ],
     [
       "iota",
@@ -242,9 +242,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     ],
     [
       "gamma_a",
-      createArrayLengthDiscriminator<SafroleState["gamma_a"]>(
-        TicketIdentifierCodec,
-      ),
+      createArrayLengthDiscriminator<SafroleState["gamma_a"]>(TicketCodec),
     ],
     [
       "gamma_s",
@@ -252,8 +250,8 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         [
           "tickets",
           createSequenceCodec<
-            SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
-          >(EPLEN, TicketIdentifierCodec),
+            SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">
+          >(EPLEN, TicketCodec),
         ],
         [
           "keys",
@@ -286,7 +284,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         entropy: fromTest.entropy,
         safroleState: {
           gamma_a: fromTest.gamma_a,
-          gamma_k: fromTest.gamma_k,
+          gamma_p: fromTest.gamma_p,
           gamma_z: fromTest.gamma_z,
           gamma_s: ((): SafroleState["gamma_s"] => {
             if (typeof fromTest.gamma_s.tickets !== "undefined") {
@@ -309,7 +307,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         ),
         gamma_z: fromJam.safroleState.gamma_z,
         gamma_a: fromJam.safroleState.gamma_a,
-        gamma_k: fromJam.safroleState.gamma_k,
+        gamma_p: fromJam.safroleState.gamma_p,
         gamma_s: ((gs: SafroleState["gamma_s"]) => {
           if (isFallbackMode(gs)) {
             return {
@@ -362,7 +360,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
             ] as unknown as any,
             [
               "ticketsMark",
-              new Optional(createSequenceCodec(EPLEN, TicketIdentifierCodec)),
+              new Optional(createSequenceCodec(EPLEN, TicketCodec)),
             ] as unknown as any,
           ]) as unknown as JamCodec<NonNullable<TestType["output"]["ok"]>>,
         ],
@@ -434,8 +432,8 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(newState.safroleState.gamma_a, "gamma_a").deep.eq(
     decoded.value.postState.safroleState.gamma_a,
   );
-  expect(newState.safroleState.gamma_k.map(edonly), "gamma_k").deep.eq(
-    decoded.value.postState.safroleState.gamma_k.map(edonly),
+  expect(newState.safroleState.gamma_p.map(edonly), "gamma_p").deep.eq(
+    decoded.value.postState.safroleState.gamma_p.map(edonly),
   );
   expect(newState.safroleState.gamma_s, "gamma_s").deep.eq(
     decoded.value.postState.safroleState.gamma_s,

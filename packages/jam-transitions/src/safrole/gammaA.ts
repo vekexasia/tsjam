@@ -1,32 +1,25 @@
-import {
-  Posterior,
-  STF,
-  SafroleState,
-  Tau,
-  TicketIdentifier,
-} from "@tsjam/types";
+import { Posterior, STF, SafroleState, Tau, Ticket } from "@tsjam/types";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { isNewEra } from "@tsjam/utils";
 import { ok, err } from "neverthrow";
-
-type Input = {
-  tau: Tau;
-  p_tau: Posterior<Tau>;
-  // n in the paper
-  newIdentifiers: TicketIdentifier[];
-};
 
 export enum GammaAError {
   TICKET_NOT_IN_POSTERIOR_GAMMA_A = "Ticket not in posterior gamma_a",
 }
 /**
  * update `gamma_a`
- * $(0.6.4 - 6.34 / 6.35)
+ * $(0.7.0 - 6.34 / 6.35)
  */
-export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
-  input: Input,
-  gamma_a: SafroleState["gamma_a"],
-) => {
+export const gamma_aSTF: STF<
+  SafroleState["gamma_a"],
+  {
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    // n in the paper
+    newIdentifiers: Ticket[];
+  },
+  GammaAError
+> = (input, gamma_a) => {
   const toRet = [
     ...input.newIdentifiers,
     ...(() => {
@@ -39,7 +32,7 @@ export const gamma_aSTF: STF<SafroleState["gamma_a"], Input, GammaAError> = (
     .sort((a, b) => (a.id - b.id < 0 ? -1 : 1))
     .slice(0, EPOCH_LENGTH) as Posterior<SafroleState["gamma_a"]>;
 
-  // $(0.6.4 - 6.35) | check `n` subset of p_gamma_a
+  // $(0.7.0 - 6.35) | check `n` subset of p_gamma_a
   const p_gamma_a_ids = new Set(toRet.map((x) => x.id));
   for (const x of input.newIdentifiers) {
     if (!p_gamma_a_ids.has(x.id)) {

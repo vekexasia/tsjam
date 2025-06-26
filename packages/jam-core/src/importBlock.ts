@@ -91,6 +91,7 @@ export const importBlock: STF<
 > = (block, { block: parent, state: curState }) => {
   const tauTransition = {
     tau: curState.tau,
+    // $(0.7.0 - 6.1)
     p_tau: toPosterior(block.header.timeSlotIndex),
   };
   const { p_tau } = tauTransition;
@@ -104,7 +105,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidSlot);
   }
 
-  // $(0.6.4 - 5.8)
+  // $(0.7.0 - 5.8)
   const prevMerkleRoot = merkelizeState(curState);
 
   if (prevMerkleRoot !== block.header.priorStateRoot) {
@@ -134,14 +135,14 @@ export const importBlock: STF<
     return err(p_disp_error);
   }
 
-  const [, [p_gamma_k, p_kappa, p_lambda, p_gamma_z]] = rotateKeys(
+  const [, [p_gamma_p, p_kappa, p_lambda, p_gamma_z]] = rotateKeys(
     {
       p_psi_o: toPosterior(p_disputesState.psi_o),
       iota: curState.iota,
       ...tauTransition,
     },
     [
-      curState.safroleState.gamma_k,
+      curState.safroleState.gamma_p,
       curState.kappa,
       curState.lambda,
       curState.safroleState.gamma_z,
@@ -187,7 +188,7 @@ export const importBlock: STF<
   const [, p_safroleState] = safroleToPosterior(
     {
       p_gamma_a,
-      p_gamma_k,
+      p_gamma_p,
       p_gamma_s,
       p_gamma_z,
     },
@@ -425,7 +426,7 @@ export const importBlock: STF<
     return err(ImportBlockError.InvalidEntropySignature);
   }
 
-  const x = verifyEpochMarker(block, curState, p_gamma_k);
+  const x = verifyEpochMarker(block, curState, p_gamma_p);
   if (x.isErr()) {
     return err(x.error);
   }

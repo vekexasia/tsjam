@@ -1,13 +1,4 @@
 import {
-  ED25519PublicKey,
-  HeaderHash,
-  JamHeader,
-  StateRootHash,
-  Tau,
-  ValidatorIndex,
-} from "@tsjam/types";
-import { Optional } from "@/optional.js";
-import {
   BandersnatchCodec,
   BandersnatchSignatureCodec,
   Blake2bHashCodec,
@@ -15,12 +6,21 @@ import {
   Ed25519PubkeyCodec,
   HashCodec,
 } from "@/identity.js";
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
-import { TicketIdentifierCodec } from "@/ticketIdentifierCodec.js";
-import { createSequenceCodec } from "@/sequenceCodec.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import { Optional } from "@/optional.js";
+import { createSequenceCodec } from "@/sequenceCodec.js";
+import { TicketCodec } from "@/setelements/TicketCodec.js";
 import { createCodec } from "@/utils";
+import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  ED25519PublicKey,
+  HeaderHash,
+  JamHeader,
+  StateRootHash,
+  Tau,
+  ValidatorIndex,
+} from "@tsjam/types";
 
 /**
  * `Eu` codec
@@ -55,7 +55,7 @@ export const UnsignedHeaderCodec = () =>
     ],
     [
       "winningTickets",
-      new Optional(createSequenceCodec(EPOCH_LENGTH, TicketIdentifierCodec)),
+      new Optional(createSequenceCodec(EPOCH_LENGTH, TicketCodec)),
     ],
     [
       "offenders",

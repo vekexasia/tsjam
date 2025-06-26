@@ -1,27 +1,16 @@
-import { Hash, OpaqueHash } from "@/genericTypes";
+import { Hash } from "@/genericTypes";
 
 /**
- * identified by `C` set
+ * identified by `T` set
+ * $(0.7.0 - 6.6)
  */
 export type Ticket = {
   /**
    * `y`
    */
-  identifier: Hash;
+  id: Hash;
   /**
-   * `r`
-   */
-  entryIndex: 0 | 1;
-};
-
-export type TicketIdentifier = {
-  /**
-   * `y`
-   */
-  id: OpaqueHash;
-  /**
-   * `r`
-   * either the first entry or the second entry ( a validator can have only 2 ticket entries per epoch )
+   * `e`
    */
   attempt: 0 | 1;
 };

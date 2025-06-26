@@ -1,5 +1,8 @@
+import { EPOCH_LENGTH } from "@tsjam/constants";
+import { Bandersnatch } from "@tsjam/crypto";
 import {
   BandersnatchKey,
+  Hash,
   IDisputesState,
   JamState,
   OpaqueHash,
@@ -8,12 +11,10 @@ import {
   SafroleState,
   SeqOfLength,
   Tau,
-  TicketIdentifier,
+  Ticket,
   ValidatorData,
 } from "@tsjam/types";
-import { Bandersnatch } from "@tsjam/crypto";
 import { isFallbackMode, isNewEra, toPosterior, toTagged } from "@tsjam/utils";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
@@ -43,11 +44,11 @@ export const PHI_FN = <T extends ValidatorData[]>(
 
 /**
  * rotates all keys
- * $(0.6.4 - 4.9 / 4.10 / 6.13)
+ * $(0.7.0 - 4.9 / 4.10 / 6.13)
  */
 export const rotateKeys: STF<
   [
-    SafroleState["gamma_k"],
+    SafroleState["gamma_p"],
     JamState["kappa"],
     JamState["lambda"],
     SafroleState["gamma_z"],
@@ -60,17 +61,17 @@ export const rotateKeys: STF<
   },
   never,
   [
-    Posterior<SafroleState["gamma_k"]>,
+    Posterior<SafroleState["gamma_p"]>,
     Posterior<JamState["kappa"]>,
     Posterior<JamState["lambda"]>,
     Posterior<SafroleState["gamma_z"]>,
   ]
-> = ({ p_psi_o, iota, tau, p_tau }, [gamma_k, kappa, lambda, gamma_z]) => {
+> = ({ p_psi_o, iota, tau, p_tau }, [gamma_p, kappa, lambda, gamma_z]) => {
   if (isNewEra(p_tau, tau)) {
     const p_gamma_k = PHI_FN(iota, p_psi_o) as unknown as Posterior<
-      SafroleState["gamma_k"]
+      SafroleState["gamma_p"]
     >;
-    const p_kappa = [...gamma_k] as Posterior<JamState["kappa"]>;
+    const p_kappa = [...gamma_p] as Posterior<JamState["kappa"]>;
     const p_lambda = [...kappa] as Posterior<JamState["lambda"]>;
     const p_gamma_z = Bandersnatch.ringRoot(
       p_gamma_k.map((v) => v.banderSnatch),
@@ -80,7 +81,7 @@ export const rotateKeys: STF<
   }
   return ok(
     toPosterior([
-      toPosterior(gamma_k),
+      toPosterior(gamma_p),
       toPosterior(kappa),
       toPosterior(lambda),
       toPosterior(gamma_z),
@@ -100,9 +101,9 @@ if (import.meta.vitest) {
     });
     it("should return false if gamma_s is a series of E tickets", () => {
       const gamma_s = [
-        { id: 32n as OpaqueHash, attempt: 0 },
-        { id: 32n as OpaqueHash, attempt: 1 },
-      ] as SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">;
+        { id: 32n as Hash, attempt: 0 },
+        { id: 32n as Hash, attempt: 1 },
+      ] as SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">;
       expect(isFallbackMode(gamma_s)).toBe(false);
     });
   });

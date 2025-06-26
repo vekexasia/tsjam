@@ -1,3 +1,10 @@
+import { E_4 } from "@tsjam/codec";
+import {
+  EPOCH_LENGTH,
+  LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
   BigIntBytes,
@@ -10,16 +17,9 @@ import {
   SafroleState,
   SeqOfLength,
   Tau,
-  TicketIdentifier,
+  Ticket,
   ValidatorData,
 } from "@tsjam/types";
-import { E_4 } from "@tsjam/codec";
-import { Hashing } from "@tsjam/crypto";
-import {
-  EPOCH_LENGTH,
-  LOTTERY_MAX_SLOT,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
 import {
   bigintToBytes,
   isFallbackMode,
@@ -33,7 +33,7 @@ import { ok } from "neverthrow";
 
 /**
  * it computes the posterior value of `gamma_s`
- * $(0.6.4 - 6.24)
+ * $(0.7.0 - 6.24)
  */
 export const gamma_sSTF: STF<
   SafroleState["gamma_s"],
@@ -54,12 +54,9 @@ export const gamma_sSTF: STF<
     // we've accumulated enough tickets
     // we can now compute the new posterior `gamma_s`
     const newGammaS: Posterior<
-      SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH, "gamma_s">
+      SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">
     > = outsideInSequencer(
-      input.gamma_a as unknown as SeqOfLength<
-        TicketIdentifier,
-        typeof EPOCH_LENGTH
-      >,
+      input.gamma_a as unknown as SeqOfLength<Ticket, typeof EPOCH_LENGTH>,
     );
     return ok(newGammaS);
   } else if (isSameEra(input.tau, input.p_tau)) {
@@ -88,12 +85,12 @@ export const gamma_sSTF: STF<
 /**
  * Z fn
  * exported cause it's being used to check/produce `Hw` in Header
- * $(0.6.4 - 6.25)
+ * $(0.7.0 - 6.25)
  */
 export const outsideInSequencer = <
-  T extends SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+  T extends SeqOfLength<Ticket, typeof EPOCH_LENGTH>,
 >(
-  t: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>,
+  t: SeqOfLength<Ticket, typeof EPOCH_LENGTH>,
 ): T => {
   const toRet: T = [] as unknown as T;
   // Z function (70)
@@ -205,10 +202,10 @@ if (import.meta.vitest) {
         )._unsafeUnwrap();
         expect(posterior.length).toEqual(EPOCH_LENGTH);
         expect(isFallbackMode(posterior)).toBeFalsy();
-        expect((posterior[0] as TicketIdentifier).id).toEqual(0n);
-        expect((posterior[1] as TicketIdentifier).id).toEqual(599n);
-        expect((posterior[2] as TicketIdentifier).id).toEqual(1n);
-        expect((posterior[3] as TicketIdentifier).id).toEqual(598n);
+        expect((posterior[0] as Ticket).id).toEqual(0n);
+        expect((posterior[1] as Ticket).id).toEqual(599n);
+        expect((posterior[2] as Ticket).id).toEqual(1n);
+        expect((posterior[3] as Ticket).id).toEqual(598n);
         // todo: find abetter way to test this
       });
     });

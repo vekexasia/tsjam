@@ -44,7 +44,6 @@ export * from "./block/header/unsigned.js";
 export * from "./block/header/signed.js";
 export * from "./block/block.js";
 export * from "./PVMProgramCodec.js";
-export * from "./ticketIdentifierCodec.js";
 export * from "./E_M.js";
 export * from "./dicts/keyValue.js";
 export * from "./set.js";
