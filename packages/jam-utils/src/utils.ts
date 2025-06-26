@@ -57,12 +57,12 @@ export const isFallbackMode = (
 };
 
 /**
- * `Ha` in the graypaper
+ * `HA` in the graypaper
  * @param header - the header of the blockj
  * @param state - the state of the safrole state machine
  *
  * @returns undefined in case blockAuthorKeyIndex is invalid and not within
- * $(0.6.4 - 5.9)
+ * $(0.7.0 - 5.9)
  */
 
 export const getBlockAuthorKey = (

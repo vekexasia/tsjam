@@ -222,8 +222,8 @@ export const verifyWinningTickets = (
 };
 
 /**
- * $(0.6.4 - 5.4 / 5.5)
- * uses $(0.6.4 - 5.6) - codec_Eg_4Hx
+ * $(0.7.0 - 5.4 / 5.5)
+ * uses $(0.7.0 - 5.6) - codec_Eg_4Hx
  */
 export const verifyExtrinsicHash = (
   extrinsics: JamBlock["extrinsics"],

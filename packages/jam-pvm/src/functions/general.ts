@@ -19,6 +19,7 @@ import {
   Delta,
   ExportSegment,
   Gas,
+  Hash,
   PVMExitPanicMod,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -54,8 +55,14 @@ export const omega_y = regFn<
   [
     workItemIndex: number, // i
     workPackage: WorkPackageWithAuth, // p
-    authOutput: Uint8Array, // bold_o
-    t: ExportSegment[][], // \overline_i
+    n: Hash,
+    r: any,
+    i: any,
+    overline_i: ExportSegment[][], // overline_i
+    overline_x: any,
+    bold_o: any,
+    bold_t: any,
+    any,
   ],
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({

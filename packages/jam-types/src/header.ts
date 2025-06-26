@@ -16,31 +16,31 @@ import { TicketIdentifier } from "@/sets/Ticket.js";
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
- * @see $(0.6.4 - 5.1)
+ * @see $(0.7.0 - 5.1)
  * NOTE: the following are computed values
  * `Ha`= K'[Hi]
  */
 export interface JamHeader {
   /**
-   * **Hp:** The hash of the parent header.
+   * **HP:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
   parent: HeaderHash;
 
   /**
-   * **Hr:** The hash of the state root.
+   * **HR:** The hash of the state root.
    * It's computed by applying the `Mσ` fn to the `σ`
    * @see JamState
    */
   priorStateRoot: StateRootHash;
 
   /**
-   * **Hx:** The hash of the block's extrinsic data.
+   * **HX:** The hash of the block's extrinsic data.
    */
   extrinsicHash: Hash;
 
   /**
-   * **Ht:** The block's time slot index since jam epoch (time slot is 6 secs long).
+   * **HT:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
   timeSlotIndex: Tau;
 
@@ -48,7 +48,7 @@ export interface JamHeader {
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
    * hence the length of kb or validatorKeys is `epoch-length`
-   * $(0.6.4 - 5.10)
+   * $(0.7.0 - 5.10)
    */
   epochMarker?: {
     // coming from eta
@@ -63,7 +63,7 @@ export interface JamHeader {
   };
 
   /**
-   * `Hw` - The winning tickets of the block.
+   * `HW` - The winning tickets of the block.
    * set on after end of the lottery
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
@@ -71,26 +71,26 @@ export interface JamHeader {
   winningTickets?: SeqOfLength<TicketIdentifier, typeof EPOCH_LENGTH>;
 
   /**
-   * `Ho`
+   * `HO`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
   offenders: ED25519PublicKey[];
 
   /**
-   * `Hi`
+   * `HI`
    */
   blockAuthorKeyIndex: ValidatorIndex;
 
   /**
-   * `Hv` -
+   * `HV` -
    */
   entropySignature: BandersnatchSignature;
 }
 
 export interface SignedJamHeader extends JamHeader {
   /**
-   * `Hs`
+   * `HS`
    * The signature of the block. Must be signed by the validator associated to this time slot.
    */
   blockSeal: BandersnatchSignature;

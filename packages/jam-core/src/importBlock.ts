@@ -95,7 +95,7 @@ export const importBlock: STF<
   };
   const { p_tau } = tauTransition;
 
-  // $(0.6.4 - 5.7)
+  // $(0.7.0 - 5.7)
   if (
     tauTransition.tau >= tauTransition.p_tau &&
     tauTransition.p_tau * BLOCK_TIME < Timekeeping.bigT()
