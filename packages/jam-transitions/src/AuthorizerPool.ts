@@ -11,17 +11,16 @@ import {
 import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE } from "@tsjam/constants";
 import { Ok, ok } from "neverthrow";
 
-type Input = {
-  eg: EG_Extrinsic;
-  p_queue: Posterior<AuthorizerQueue>;
-  p_tau: Posterior<Tau>;
-};
-
-// $(0.6.5 - 8.2 / 8.3)
-export const authorizerPool_toPosterior: STF<AuthorizerPool, Input, never> = (
-  input: Input,
-  curState: AuthorizerPool,
-): Ok<Posterior<AuthorizerPool>, never> => {
+// $(0.7.0 - 8.2 / 8.3)
+export const authorizerPool_toPosterior: STF<
+  AuthorizerPool,
+  {
+    eg: EG_Extrinsic;
+    p_queue: Posterior<AuthorizerQueue>;
+    p_tau: Posterior<Tau>;
+  },
+  never
+> = (input, curState): Ok<Posterior<AuthorizerPool>, never> => {
   const newState = [];
 
   for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
