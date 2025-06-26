@@ -30,7 +30,7 @@ export const deltaToDoubleDagger: STF<
     let a = input.bold_x.get(serviceIndex)![0];
     if (input.accumulationStatistics.has(serviceIndex)) {
       a = structuredClone(a);
-      a.lastAccumulationTimeSlot = input.p_tau;
+      a.lastAcc = input.p_tau;
     }
     dd_delta.set(serviceIndex, a);
   }

@@ -438,14 +438,14 @@ const preimageProvide = (
     const phash = Hashing.blake2b(preimage);
     if (
       typeof serviceAccount !== "undefined" &&
-      serviceAccount.preimage_l.get(phash)?.get(toTagged(<u32>preimage.length))
+      serviceAccount.requests.get(phash)?.get(toTagged(<u32>preimage.length))
         ?.length === 0
     ) {
       const newSa = newD.get(service)!;
-      newSa.preimage_l
+      newSa.requests
         .get(phash)!
         .set(toTagged(<u32>preimage.length), toTagged(<Tau[]>[p_tau]));
-      newSa.preimage_p.set(phash, preimage);
+      newSa.preimages.set(phash, preimage);
     }
   }
 };

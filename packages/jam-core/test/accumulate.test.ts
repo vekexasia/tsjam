@@ -112,7 +112,7 @@ type TestCase = {
 const accumulateAccountCodec = (serviceIndex: ServiceIndex) =>
   extendCodec(
     serviceAccountFromTestInfo(serviceIndex),
-    createCodec<Pick<ServiceAccount, "preimage_p" | "storage">>([
+    createCodec<Pick<ServiceAccount, "preimages" | "storage">>([
       [
         "storage",
         mapCodec(
@@ -139,7 +139,7 @@ const accumulateAccountCodec = (serviceIndex: ServiceIndex) =>
         ),
       ],
       [
-        "preimage_p",
+        "preimages",
         buildKeyValueCodec(
           new LengthDiscriminator({
             ...IdentityCodec,

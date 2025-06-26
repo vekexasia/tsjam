@@ -23,6 +23,7 @@ import { MerkleServiceAccountStorageImpl } from "@tsjam/merklization";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
   AuthorizerQueue,
+  Balance,
   DeferredTransfer,
   Gas,
   Hash,
@@ -237,32 +238,32 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
       const storage = new MerkleServiceAccountStorageImpl(x.i);
       const a = new ServiceAccountImpl({
         codeHash: c,
-        preimage_p: new Map(),
-        preimage_l: new Map(),
-        minGasAccumulate: g as u64 as Gas,
-        minGasOnTransfer: m as u64 as Gas,
-        creationTimeSlot: tau,
-        gratisStorageOffset: f,
-        lastAccumulationTimeSlot: <Tau>0,
-        parentService: x.service,
-        balance: <u64>0n,
+        preimages: new Map(),
+        requests: new Map(),
+        minAccGas: g as u64 as Gas,
+        minMemoGas: m as u64 as Gas,
+        created: tau,
+        gratis: f as u64 as Balance,
+        lastAcc: <Tau>0,
+        parent: x.service,
+        balance: <Balance>0n,
         storage,
       });
-      a.preimage_l.set(c, new Map());
-      a.preimage_l
+      a.requests.set(c, new Map());
+      a.requests
         .get(c)!
         .set(
           <Tagged<u32, "length">>Number(l),
           [] as unknown as UpToSeq<Tau, 3>,
         );
-      a.balance = a.gasThreshold();
+      a.balance = <Balance>(<u64>a.gasThreshold());
 
       const x_bold_s = x.u.delta.get(x.service)!;
 
-      const s: ServiceAccount = {
+      const s = new ServiceAccountImpl({
         ...x_bold_s,
-        balance: <u64>(x_bold_s.balance - a.balance),
-      };
+        balance: <Balance>(x_bold_s.balance - a.balance),
+      });
 
       if (s.balance < x_bold_s.gasThreshold()) {
         return [IxMod.w7(HostCallResult.CASH)];
@@ -308,8 +309,8 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
         x_bold_s_prime.codeHash = bytesToBigInt(
           context.memory.getBytes(toSafeMemoryAddress(o), 32),
         );
-        x_bold_s_prime.minGasAccumulate = g as bigint as Gas;
-        x_bold_s_prime.minGasOnTransfer = m as bigint as Gas;
+        x_bold_s_prime.minAccGas = g as bigint as Gas;
+        x_bold_s_prime.minMemoGas = m as bigint as Gas;
 
         return [
           IxMod.w7(HostCallResult.OK),
@@ -358,7 +359,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
         return [IxMod.w7(HostCallResult.WHO)];
       }
 
-      if (l < bold_d.get(Number(d) as ServiceIndex)!.minGasOnTransfer) {
+      if (l < bold_d.get(Number(d) as ServiceIndex)!.minMemoGas) {
         return [IxMod.w7(HostCallResult.LOW)];
       }
       const x_bold_s = x.u.delta.get(x.service)!;
@@ -387,7 +388,13 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
               ...x.u,
               delta: new Map([
                 ...x.u.delta.entries(),
-                [x.service, { ...x_bold_s, balance: b as bigint as u64 }],
+                [
+                  x.service,
+                  new ServiceAccountImpl({
+                    ...x_bold_s,
+                    balance: <Balance>(<u64>b),
+                  }),
+                ],
               ]),
             },
           },
@@ -427,7 +434,7 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       const d_i = bold_d.itemInStorage();
       const d_o = bold_d.totalOctets();
       const l = <u32>Number((d_o > 81 ? d_o : 81n) - 81n);
-      const dlhl = bold_d.preimage_l.get(h)?.get(toTagged(l));
+      const dlhl = bold_d.requests.get(h)?.get(toTagged(l));
 
       if (d_i !== 2 || typeof dlhl === "undefined") {
         return [IxMod.w7(HostCallResult.HUH)];
@@ -437,7 +444,7 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
         const d_prime = new Map(x.u.delta);
         d_prime.delete(d);
         const s_prime = { ...x.u.delta.get(x.service)! };
-        s_prime.balance = (s_prime.balance + bold_d.balance) as bigint as u64;
+        s_prime.balance = <Balance>(s_prime.balance + bold_d.balance);
         d_prime.set(x.service, s_prime);
         return [
           IxMod.w7(HostCallResult.OK),
@@ -469,7 +476,7 @@ export const omega_q = regFn<[x: PVMResultContext], W7 | W8>({
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       );
       const x_bold_s = x.u.delta.get(x.service)!;
-      const a = x_bold_s.preimage_l.get(h)?.get(toTagged(Number(z) as u32));
+      const a = x_bold_s.requests.get(h)?.get(toTagged(Number(z) as u32));
       if (typeof a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
       }
@@ -512,13 +519,13 @@ export const omega_s = regFn<
       const a = structuredClone(x.u.delta.get(x.service)! /* x_bold_s */);
 
       const _z = Number(z) as Tagged<u32, "length">;
-      if (typeof a.preimage_l.get(h)?.get(_z) === "undefined") {
-        a.preimage_l.set(
+      if (typeof a.requests.get(h)?.get(_z) === "undefined") {
+        a.requests.set(
           h,
           new Map([[toTagged(Number(z) as u32), toTagged([])]]),
         );
-      } else if (a.preimage_l.get(h)?.get(_z)?.length === 2) {
-        a.preimage_l.get(h)!.get(_z)!.push(tau);
+      } else if (a.requests.get(h)?.get(_z)?.length === 2) {
+        a.requests.get(h)!.get(_z)!.push(tau);
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
       }
@@ -566,14 +573,14 @@ export const omega_f = regFn<
       const h = HashCodec.decode(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       ).value;
-      const a_l: ServiceAccount["preimage_l"] = new Map(x_bold_s.preimage_l);
-      const a_p: ServiceAccount["preimage_p"] = new Map(x_bold_s.preimage_p);
+      const a_l: ServiceAccount["requests"] = new Map(x_bold_s.requests);
+      const a_p: ServiceAccount["preimages"] = new Map(x_bold_s.preimages);
 
-      if (typeof x_bold_s.preimage_l.get(h) === "undefined") {
+      if (typeof x_bold_s.requests.get(h) === "undefined") {
         return [IxMod.w7(HostCallResult.HUH)];
       }
 
-      const xslhz = x_bold_s.preimage_l.get(h)?.get(z);
+      const xslhz = x_bold_s.requests.get(h)?.get(z);
 
       if (typeof xslhz === "undefined") {
         // means we have `h` but no `z`
@@ -609,11 +616,11 @@ export const omega_f = regFn<
                 ...x.u.delta.entries(),
                 [
                   x.service,
-                  {
+                  new ServiceAccountImpl({
                     ...x.u.delta.get(x.service)!,
-                    preimage_l: a_l,
-                    preimage_p: a_p,
-                  },
+                    requests: a_l,
+                    preimages: a_p,
+                  }),
                 ],
               ]),
             },
@@ -673,9 +680,7 @@ export const omega_aries = regFn<
         return [IxMod.w7(HostCallResult.WHO)];
       }
 
-      if (
-        bold_a.preimage_l.get(Hashing.blake2b(bold_i))?.get(z)?.length !== 0
-      ) {
+      if (bold_a.requests.get(Hashing.blake2b(bold_i))?.get(z)?.length !== 0) {
         return [IxMod.w7(HostCallResult.HUH)];
       }
 

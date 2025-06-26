@@ -1,4 +1,5 @@
 import {
+  Balance,
   CodeHash,
   Gas,
   Hash,
@@ -47,7 +48,7 @@ export interface ServiceAccount {
   /**
    * `bold_p` - designed to be queried in core.
    */
-  preimage_p: Map<Hash, Uint8Array>;
+  preimages: Map<Hash, Uint8Array>;
 
   /**
    * `l` - preimage lookup dictionaries (hash, preimageLength) =&gt; Array of up to 3 timeslot indexes<br>
@@ -57,12 +58,12 @@ export interface ServiceAccount {
    * if there are 3 items, then its available since [2] no but in the past was not available[1] after being available[0]<br>
    * once all three elements are valued. we remove the first 2 only after a certain period has passed (to be defined)
    */
-  preimage_l: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>>;
+  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>>;
 
   /**
    * `f`
    */
-  gratisStorageOffset: u64;
+  gratis: Balance;
 
   /**
    * `c` - code hash
@@ -72,32 +73,32 @@ export interface ServiceAccount {
   /**
    * `b` - balance
    */
-  balance: u64;
+  balance: Balance;
 
   /**
    * `g` - gas
    */
-  minGasAccumulate: Gas;
+  minAccGas: Gas;
 
   /**
    * `m` - minimum gas for the on_initialize method
    */
-  minGasOnTransfer: Gas;
+  minMemoGas: Gas;
 
   /**
    * `r`
    */
-  creationTimeSlot: u32;
+  created: Tau;
 
   /**
    * `a`
    */
-  lastAccumulationTimeSlot: u32;
+  lastAcc: Tau;
 
   /**
    * `p`
    */
-  parentService: ServiceIndex;
+  parent: ServiceIndex;
 
   //  NOTE: Virtual elements
   /**

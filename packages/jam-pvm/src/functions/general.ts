@@ -6,7 +6,6 @@ import {
   Blake2bHashCodec,
   CodeHashCodec,
   createCodec,
-  E_4_int,
   E_sub,
   E_sub_int,
   encodeWithCodec,
@@ -15,6 +14,7 @@ import {
 import { HostCallResult } from "@tsjam/constants";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
+  Balance,
   Blake2bHash,
   Delta,
   ExportSegment,
@@ -25,6 +25,7 @@ import {
   PVMSingleModObject,
   ServiceAccount,
   ServiceIndex,
+  Tau,
   u32,
   u64,
   u8,
@@ -162,12 +163,12 @@ export const omega_l = regFn<
         // v = ∇
         return [IxMod.panic()];
       }
-      if (typeof a === "undefined" || !a.preimage_p.has(hash)) {
+      if (typeof a === "undefined" || !a.preimages.has(hash)) {
         // we can't either read memory or `a` cannot be set or the preimage has not the hash we're looking for
         return [IxMod.w7(HostCallResult.NONE)];
       }
 
-      const v = a.preimage_p.get(hash)!;
+      const v = a.preimages.get(hash)!;
 
       const w10 = context.registers[10];
       const w11 = context.registers[11];
@@ -312,16 +313,16 @@ const serviceAccountCodec = createCodec<
   }
 >([
   ["codeHash", CodeHashCodec], // c
-  ["balance", E_sub<u64>(8)], // b
+  ["balance", E_sub<Balance>(8)], // b
   ["gasThreshold", E_sub<Gas>(8)], // t - virutal element
-  ["minGasAccumulate", E_sub<Gas>(8)], // g
-  ["minGasOnTransfer", E_sub<Gas>(8)], // m
+  ["minAccGas", E_sub<Gas>(8)], // g
+  ["minMemoGas", E_sub<Gas>(8)], // m
   ["totalOctets", E_sub<u64>(8)], // o - virtual element
   ["itemInStorage", E_sub_int<u32>(4)], // i - virtual element
-  ["gratisStorageOffset", E_sub<u64>(8)], // f
-  ["creationTimeSlot", E_4_int], // r
-  ["lastAccumulationTimeSlot", E_4_int], // a
-  ["parentService", E_sub_int<ServiceIndex>(4)], // p
+  ["gratis", E_sub<Balance>(8)], // f
+  ["created", E_sub_int<Tau>(4)], // r
+  ["lastAcc", E_sub_int<Tau>(4)], // a
+  ["parent", E_sub_int<ServiceIndex>(4)], // p
 ]);
 
 /**

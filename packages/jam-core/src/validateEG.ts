@@ -277,7 +277,7 @@ export const assertEGValid = (
     }
 
     for (const res of wr.results) {
-      if (res.gasLimit < deps.delta.get(res.serviceIndex)!.minGasAccumulate) {
+      if (res.gasLimit < deps.delta.get(res.serviceIndex)!.minAccGas) {
         return err(EGError.GAS_TOO_LOW);
       }
     }

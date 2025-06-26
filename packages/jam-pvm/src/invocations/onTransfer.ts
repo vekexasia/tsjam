@@ -1,4 +1,5 @@
 import {
+  Balance,
   Dagger,
   DeferredTransfer,
   Delta,
@@ -34,6 +35,7 @@ import {
   encodeWithCodec,
 } from "@tsjam/codec";
 import { toTagged } from "@tsjam/utils";
+import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 
 const argumentInvocationTransferCodec = createCodec<{
   tau: Tau;
@@ -56,14 +58,15 @@ export const transferInvocation = (
   s: ServiceIndex,
   transfers: DeferredTransfer[],
 ): [ServiceAccount, Gas] => {
-  let bold_s = d.get(s)!;
+  let bold_s = <ServiceAccountImpl>d.get(s)!;
 
   assert(typeof bold_s !== "undefined", "Service not found in delta");
-  bold_s = {
+  bold_s = new ServiceAccountImpl({
     ...bold_s,
-    balance: (bold_s.balance +
-      transfers.reduce((acc, a) => acc + a.amount, 0n)) as u64,
-  };
+    balance: <Balance>(
+      (bold_s.balance + transfers.reduce((acc, a) => acc + a.amount, 0n))
+    ),
+  });
   assert(bold_s.balance >= 0, "Balance cannot be negative");
 
   const code = bold_s.code();

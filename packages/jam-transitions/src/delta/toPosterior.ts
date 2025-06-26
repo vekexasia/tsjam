@@ -1,3 +1,4 @@
+import { Hashing } from "@tsjam/crypto";
 import {
   Delta,
   DoubleDagger,
@@ -10,7 +11,6 @@ import {
   Tau,
   u32,
 } from "@tsjam/types";
-import { Hashing } from "@tsjam/crypto";
 import { toTagged } from "@tsjam/utils";
 import { err, ok } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";
@@ -51,14 +51,14 @@ export const deltaToPosterior: STF<
 
   // $(0.6.4 - 12.36)
   const R_fn = (d: Delta, s: ServiceIndex, h: Hash, l: number) => {
-    const alreadyProvided = new Set(d.get(s)!.preimage_p.keys()).has(h);
+    const alreadyProvided = new Set(d.get(s)!.preimages.keys()).has(h);
     if (alreadyProvided) {
       return false;
     }
 
     const inL = d
       .get(s)!
-      .preimage_l.get(h)
+      .requests.get(h)
       ?.get(l as Tagged<u32, "length">);
     if (inL?.length !== 0) {
       return false;
@@ -94,18 +94,18 @@ export const deltaToPosterior: STF<
   const result = new Map(curState) as Posterior<Delta>;
   // $(0.6.4 - 12.39)
   for (const { serviceIndex, preimage } of P) {
-    const x = result.get(serviceIndex);
+    const x = result.get(serviceIndex)!;
 
     const hash = Hashing.blake2b(preimage);
     // clone to avoid modifying original Delta
-    x!.preimage_p = new Map(x!.preimage_p);
-    x!.preimage_p.set(hash, preimage);
+    x.preimages = new Map(x.preimages);
+    x.preimages.set(hash, preimage);
 
-    x!.preimage_l = new Map(x!.preimage_l);
-    let plh = x!.preimage_l.get(hash) ?? new Map();
+    x.requests = new Map(x.requests);
+    let plh = x!.requests.get(hash) ?? new Map();
     plh = new Map(plh);
     // set
-    x!.preimage_l.set(hash, plh);
+    x!.requests.set(hash, plh);
     plh.set(toTagged(preimage.length as u32), toTagged([input.p_tau]));
   }
   return ok(result);

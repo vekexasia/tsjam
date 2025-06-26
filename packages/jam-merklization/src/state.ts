@@ -292,13 +292,13 @@ export const merkleStateMap = (state: JamState): MerkleMap => {
       toRet.set(stateKey, v);
     }
 
-    for (const [_h, p] of serviceAccount.preimage_p) {
+    for (const [_h, p] of serviceAccount.preimages) {
       const h = encodeWithCodec(HashCodec, _h);
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
       toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...h])), p);
     }
 
-    for (const [h, lm] of serviceAccount.preimage_l) {
+    for (const [h, lm] of serviceAccount.requests) {
       for (const [l, t] of lm) {
         const e_l = encodeWithCodec(E_4_int, l);
         const h_h = encodeWithCodec(HashCodec, h);
@@ -440,15 +440,15 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
     const serviceAccount: ServiceAccount = new ServiceAccountImpl({
       codeHash: serviceData.codeHash,
       balance: serviceData.balance,
-      minGasAccumulate: serviceData.minGasAccumulate,
-      minGasOnTransfer: serviceData.minGasOnTransfer,
-      gratisStorageOffset: serviceData.gratisStorageOffset,
-      creationTimeSlot: serviceData.creationTimeSlot,
-      lastAccumulationTimeSlot: serviceData.lastAccumulationTimeSlot,
-      parentService: serviceData.parentService,
+      minAccGas: serviceData.minAccGas,
+      minMemoGas: serviceData.minMemoGas,
+      gratis: serviceData.gratis,
+      created: serviceData.created,
+      lastAcc: serviceData.lastAcc,
+      parent: serviceData.parent,
       storage,
-      preimage_l: new Map(),
-      preimage_p: new Map(),
+      requests: new Map(),
+      preimages: new Map(),
     });
 
     const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
@@ -465,7 +465,7 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
       const preimage = merkleMap.get(preimagekey)!;
       const h = Hashing.blake2b(preimage);
       const hb = Hashing.blake2bBuf(preimage);
-      serviceAccount.preimage_p.set(h, preimage);
+      serviceAccount.preimages.set(h, preimage);
 
       // get preimage l
       //
@@ -478,11 +478,11 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
       const pl_decoded = createArrayLengthDiscriminator<UpToSeq<Tau, 3>>(
         E_sub_int<Tau>(4),
       ).decode(pl).value;
-      serviceAccount.preimage_l.set(
+      serviceAccount.requests.set(
         h,
-        serviceAccount.preimage_l.get(h) ?? new Map(),
+        serviceAccount.requests.get(h) ?? new Map(),
       );
-      serviceAccount.preimage_l.get(h)!.set(toTagged(<u32>length), pl_decoded);
+      serviceAccount.requests.get(h)!.set(toTagged(<u32>length), pl_decoded);
       serviceRelatedKeys.delete(preimagekey);
       serviceRelatedKeys.delete(
         [...serviceRelatedKeys.keys()].find(

@@ -159,7 +159,7 @@ export type ValidatorIndex = Tagged<
 >;
 
 /**
- * $(0.6.4 - 9.1)
+ * $(0.7.0 - 9.1)
  * unsigned 32-bit integer
  */
 export type ServiceIndex = Tagged<u32, "ServiceIndex">;

@@ -24,6 +24,7 @@ import {
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
+  Balance,
   Beta,
   BigIntBytes,
   CodeHash,
@@ -36,6 +37,7 @@ import {
   ServiceAccount,
   ServiceIndex,
   StateKey,
+  Tau,
   u32,
   u64,
 } from "@tsjam/types";
@@ -167,27 +169,27 @@ export const serviceAccountDataCodec = createCodec<
     ServiceAccount,
     | "codeHash"
     | "balance"
-    | "minGasAccumulate"
-    | "minGasOnTransfer"
-    | "gratisStorageOffset"
-    | "creationTimeSlot"
-    | "lastAccumulationTimeSlot"
-    | "parentService"
+    | "minAccGas"
+    | "minMemoGas"
+    | "gratis"
+    | "created"
+    | "lastAcc"
+    | "parent"
   > & {
     totalOctets: u64;
     itemInStorage: u32;
   }
 >([
   ["codeHash", create32BCodec<CodeHash>()],
-  ["balance", E_sub<u64>(8)],
-  ["minGasAccumulate", E_sub<Gas>(8)],
-  ["minGasOnTransfer", E_sub<Gas>(8)],
+  ["balance", E_sub<Balance>(8)],
+  ["minAccGas", E_sub<Gas>(8)],
+  ["minMemoGas", E_sub<Gas>(8)],
   ["totalOctets", E_sub<u64>(8)],
-  ["gratisStorageOffset", E_sub<u64>(8)],
+  ["gratis", E_sub<Balance>(8)],
   ["itemInStorage", E_sub_int<u32>(4)],
-  ["creationTimeSlot", E_sub_int<u32>(4)],
-  ["lastAccumulationTimeSlot", E_sub_int<u32>(4)],
-  ["parentService", E_sub_int<ServiceIndex>(4)],
+  ["created", E_sub_int<Tau>(4)],
+  ["lastAcc", E_sub_int<Tau>(4)],
+  ["parent", E_sub_int<ServiceIndex>(4)],
 ]);
 
 export const thetaCodec = createArrayLengthDiscriminator<

@@ -70,8 +70,8 @@ export const serviceAccountFromTestInfo = (
         codeHash: account.codeHash,
         balance: <u64>account.balance,
         items: (account as any)["_i"],
-        minItemGas: account.minGasAccumulate,
-        minMemoGas: account.minGasOnTransfer,
+        minItemGas: account.minAccGas,
+        minMemoGas: account.minMemoGas,
       };
     },
   );

@@ -15,12 +15,12 @@ export const historicalLookup = (
   hash: Hash,
 ): Uint8Array | undefined => {
   // TODO: 9.5 states that tau is no more than `D` timeslots old. but there is no way here to enforce that nor behavior is specified if the parameter is out of bounds
-  const ap = a.preimage_p.get(hash);
+  const ap = a.preimages.get(hash);
   if (
     typeof ap !== "undefined" &&
-    I_Fn(a.preimage_l.get(hash)!.get(toTagged(ap.length as u32))!, tau)
+    I_Fn(a.requests.get(hash)!.get(toTagged(ap.length as u32))!, tau)
   ) {
-    return a.preimage_p.get(hash)!;
+    return a.preimages.get(hash)!;
   }
 };
 

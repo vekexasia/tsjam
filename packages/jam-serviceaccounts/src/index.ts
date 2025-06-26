@@ -12,6 +12,8 @@ import {
   u64,
   CodeHash,
   ServiceIndex,
+  Balance,
+  Tau,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import {
@@ -30,16 +32,16 @@ export const serviceMetadataCodec = createCodec<{
 ]);
 
 export class ServiceAccountImpl implements ServiceAccount {
-  preimage_p: ServiceAccount["preimage_p"] = new Map();
-  preimage_l: ServiceAccount["preimage_l"] = new Map();
-  gratisStorageOffset!: u64;
+  preimages: ServiceAccount["preimages"] = new Map();
+  requests: ServiceAccount["requests"] = new Map();
+  gratis!: Balance;
   codeHash!: CodeHash;
-  balance!: u64;
-  minGasAccumulate!: Gas;
-  minGasOnTransfer!: Gas;
-  creationTimeSlot!: u32;
-  lastAccumulationTimeSlot!: u32;
-  parentService!: ServiceIndex;
+  balance!: Balance;
+  minAccGas!: Gas;
+  minMemoGas!: Gas;
+  created!: Tau;
+  lastAcc!: Tau;
+  parent!: ServiceIndex;
   storage!: IServiceAccountStorage;
 
   constructor(
@@ -59,7 +61,7 @@ export class ServiceAccountImpl implements ServiceAccount {
    * $(0.6.7 - 9.8)
    */
   itemInStorage(): u32 {
-    return toTagged(2 * this.preimage_l.size + this.storage.size);
+    return toTagged(2 * this.requests.size + this.storage.size);
   }
 
   /**
@@ -69,7 +71,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   totalOctets(): u64 {
     let sum: bigint = 0n;
 
-    for (const zmap of this.preimage_l.values()) {
+    for (const zmap of this.requests.values()) {
       for (const length of zmap.keys()) {
         sum += BigInt(length) + 81n;
       }
@@ -88,7 +90,7 @@ export class ServiceAccountImpl implements ServiceAccount {
     return <Gas>(SERVICE_MIN_BALANCE + // Bs
       SERVICE_ADDITIONAL_BALANCE_PER_ITEM * BigInt(this.itemInStorage()) + // BI*ai
       SERVICE_ADDITIONAL_BALANCE_PER_OCTET * this.totalOctets() - // BL*ao
-      this.gratisStorageOffset); // - af
+      this.gratis); // - af
   }
 
   private decodedMetaAndCode?: {
@@ -102,13 +104,13 @@ export class ServiceAccountImpl implements ServiceAccount {
    * $(0.6.6 - 9.4)
    */
   private decodeMetaAndCode(): void {
-    const codePreimage = this.preimage_p.get(this.codeHash);
+    const codePreimage = this.preimages.get(this.codeHash);
     if (typeof codePreimage === "undefined") {
       this.decodedMetaAndCode = { code: undefined, metadata: undefined };
     } else {
       // TODO: handle decoding errors
       this.decodedMetaAndCode = serviceMetadataCodec.decode(
-        this.preimage_p.get(this.codeHash)!,
+        this.preimages.get(this.codeHash)!,
       ).value;
     }
   }

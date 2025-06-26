@@ -15,6 +15,7 @@ import {
   u64,
   UpToSeq,
   u32,
+  Balance,
 } from "@tsjam/types";
 import { dummyState } from "@tsjam/utils/test/utils.js";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -43,31 +44,31 @@ describe("state serialization/deserialization", () => {
     beforeEach(() => {
       acc = new ServiceAccountImpl({
         storage: new MerkleServiceAccountStorageImpl(serviceIndex1),
-        balance: <u64>11n,
+        balance: <Balance>11n,
         codeHash: <CodeHash>12n,
-        minGasAccumulate: <Gas>13n,
-        minGasOnTransfer: <Gas>14n,
-        gratisStorageOffset: <u64>15n,
-        creationTimeSlot: <u32>16,
-        lastAccumulationTimeSlot: <u32>17,
-        parentService: <ServiceIndex>18,
-        preimage_l: new Map(),
-        preimage_p: new Map(),
+        minAccGas: <Gas>13n,
+        minMemoGas: <Gas>14n,
+        gratis: <Balance>15n,
+        created: <Tau>16,
+        lastAcc: <Tau>17,
+        parent: <ServiceIndex>18,
+        requests: new Map(),
+        preimages: new Map(),
       });
       const preimage = Buffer.from("veke", "utf8");
       const preimageHash = Hashing.blake2b(preimage);
 
       acc2 = new ServiceAccountImpl({
         storage: new MerkleServiceAccountStorageImpl(serviceIndex2),
-        balance: <u64>21n,
+        balance: <Balance>21n,
         codeHash: <CodeHash>22n,
-        minGasAccumulate: <Gas>23n,
-        minGasOnTransfer: <Gas>24n,
-        gratisStorageOffset: <u64>25n,
-        creationTimeSlot: <u32>26,
-        lastAccumulationTimeSlot: <u32>27,
-        parentService: <ServiceIndex>28,
-        preimage_l: new Map([
+        minAccGas: <Gas>23n,
+        minMemoGas: <Gas>24n,
+        gratis: <Balance>25n,
+        created: <Tau>26,
+        lastAcc: <Tau>27,
+        parent: <ServiceIndex>28,
+        requests: new Map([
           [
             preimageHash,
             new Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>([
@@ -75,7 +76,7 @@ describe("state serialization/deserialization", () => {
             ]),
           ],
         ]),
-        preimage_p: new Map([[preimageHash, preimage]]),
+        preimages: new Map([[preimageHash, preimage]]),
       });
 
       acc.storage.set(new Uint8Array([1, 2]), new Uint8Array([4, 5]));

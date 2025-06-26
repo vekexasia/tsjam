@@ -60,12 +60,12 @@ const buildTest = (filename: string) => {
       buildTestDeltaCodec<DoubleDagger<Delta>>((serviceIndex: ServiceIndex) =>
         mapCodec(
           createCodec<{
-            preimage_p: ServiceAccount["preimage_p"];
-            preimage_l: Array<{ hash: Hash; length: u32; tau: Tau[] }>;
+            preimages: ServiceAccount["preimages"];
+            requests: Array<{ hash: Hash; length: u32; tau: Tau[] }>;
           }>([
-            ["preimage_p", buildKeyValueCodec(LengthDiscrimantedIdentity)],
+            ["preimages", buildKeyValueCodec(LengthDiscrimantedIdentity)],
             [
-              "preimage_l",
+              "requests",
               createArrayLengthDiscriminator(
                 createCodec<{ hash: Hash; length: u32; tau: Tau[] }>([
                   ["hash", HashCodec],
@@ -81,8 +81,8 @@ const buildTest = (filename: string) => {
             ],
           ]),
           (info) => {
-            const preimage_l: ServiceAccount["preimage_l"] = new Map();
-            info.preimage_l.forEach((entry) => {
+            const preimage_l: ServiceAccount["requests"] = new Map();
+            info.requests.forEach((entry) => {
               preimage_l.set(
                 entry.hash,
                 preimage_l.get(entry.hash) || new Map(),
@@ -96,8 +96,8 @@ const buildTest = (filename: string) => {
             const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
             // FIXME: 0.6.7 any should disappear
             const toRet = new ServiceAccountImpl(<any>{
-              preimage_l,
-              preimage_p: info.preimage_p,
+              requests: preimage_l,
+              preimages: info.preimages,
               storage,
             });
             return toRet as ServiceAccount;
