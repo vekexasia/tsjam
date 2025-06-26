@@ -16,7 +16,7 @@ const sCodec = createCodec<JamState["mostRecentAccumulationOutputs"][0]>([
   ["accumulationResult", HashCodec],
 ]);
 /**
- * $(0.6.7 - 7.6 / 7.7)
+ * $(0.7.0 - 7.6 / 7.7)
  */
 export const beefyBeltToPosterior: STF<
   Beta["beefyBelt"],

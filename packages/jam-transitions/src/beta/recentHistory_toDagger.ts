@@ -4,7 +4,7 @@ import { STF } from "@tsjam/types";
 import { RecentHistory } from "@tsjam/types";
 
 /**
- * $(0.6.7 - 4.6 / 7.5)
+ * $(0.7.0 - 4.6 / 7.5)
  */
 export const recentHistoryToDagger: STF<
   RecentHistory,

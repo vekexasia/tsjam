@@ -13,7 +13,7 @@ import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.7 - 7.8 / 4.17)
+ * $(0.7.0 - 7.8 / 4.17)
  */
 export const recentHistoryToPosterior: STF<
   Dagger<RecentHistory>,
@@ -36,10 +36,10 @@ export const recentHistoryToPosterior: STF<
       .map((a) => [a.workPackageHash, a.segmentRoot]),
   );
   toRet.push({
-    accumulationResultMMB: b,
+    reportedPackages: p,
     headerHash: input.headerHash,
     stateRoot: 0n as StateRootHash,
-    reportedPackages: p,
+    accumulationResultMMB: b,
   });
 
   if (toRet.length > RECENT_HISTORY_LENGTH) {

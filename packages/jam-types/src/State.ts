@@ -102,6 +102,7 @@ export type JamState = {
 
   /**
    * `θ` - `\lastaccout`
+   * $(0.7.0 - 7.4)
    */
   mostRecentAccumulationOutputs: Array<{
     serviceIndex: ServiceIndex;

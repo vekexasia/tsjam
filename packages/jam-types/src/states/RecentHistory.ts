@@ -9,7 +9,6 @@ import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
 
 /*
  * @see section 7
- * (81) - 0.4.5
  */
 export interface RecentHistoryItem {
   /**
@@ -18,14 +17,14 @@ export interface RecentHistoryItem {
   headerHash: HeaderHash;
 
   /**
-   * `b`
-   */
-  accumulationResultMMB: Hash;
-
-  /**
    * `s`
    */
   stateRoot: StateRootHash;
+
+  /**
+   * `b`
+   */
+  accumulationResultMMB: Hash;
 
   /**
    * `p`
@@ -34,6 +33,9 @@ export interface RecentHistoryItem {
   reportedPackages: Map<WorkPackageHash, Hash>;
 }
 
+/**
+ * $(0.7.0 - 7.2)
+ */
 export type RecentHistory = UpToSeq<
   RecentHistoryItem,
   typeof RECENT_HISTORY_LENGTH
