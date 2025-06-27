@@ -14,7 +14,7 @@ import { CORES } from "@tsjam/constants";
 
 export const privilegedAssignCodec = (
   cores: typeof CORES,
-): JamCodec<PrivilegedServices["assign"]> => {
+): JamCodec<PrivilegedServices["assigners"]> => {
   return createSequenceCodec(cores, E_sub_int<ServiceIndex>(4));
 };
 /**
@@ -26,10 +26,10 @@ export const PrivilegedServicesCodec = (
 ): JamCodec<PrivilegedServices> =>
   createCodec([
     ["manager", E_sub_int<ServiceIndex>(4)],
-    ["assign", privilegedAssignCodec(cores)],
-    ["designate", E_sub_int<ServiceIndex>(4)],
+    ["assigners", privilegedAssignCodec(cores)],
+    ["delegator", E_sub_int<ServiceIndex>(4)],
     [
-      "alwaysAccumulate",
+      "alwaysAccers",
       buildGenericKeyValueCodec(
         E_sub_int<ServiceIndex>(4),
         E_sub<Gas>(8),
@@ -41,24 +41,24 @@ export const PrivilegedServicesCodec = (
 export const PrivilegedServicesJSONCodec: JSONCodec<
   PrivilegedServices,
   {
-    chi_m: number;
-    chi_a: number;
-    chi_v: number;
-    chi_g: null | Record<ServiceIndex, number>;
+    manager: number;
+    assigners: number[];
+    delegator: number;
+    alwaysAccers: null | Record<ServiceIndex, number>;
   }
 > = createJSONCodec([
-  ["manager", "chi_m", NumberJSONCodec<ServiceIndex>()],
+  ["manager", "manager", NumberJSONCodec<ServiceIndex>()],
   [
-    "assign",
-    "chi_a",
-    ArrayOfJSONCodec<PrivilegedServices["assign"], ServiceIndex, number>(
+    "assigners",
+    "assigners",
+    ArrayOfJSONCodec<PrivilegedServices["assigners"], ServiceIndex, number>(
       NumberJSONCodec(),
     ),
   ],
-  ["designate", "chi_v", NumberJSONCodec<ServiceIndex>()],
+  ["delegator", "delegator", NumberJSONCodec<ServiceIndex>()],
   [
-    "alwaysAccumulate",
-    "chi_g",
+    "alwaysAccers",
+    "alwaysAccers",
     {
       fromJSON(j) {
         if (j === null) {

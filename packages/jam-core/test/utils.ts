@@ -80,10 +80,10 @@ export const dummyState = (conf: {
       .fill(undefined)
       .map(() => []) as unknown as JamState["accumulationQueue"],
     privServices: {
-      assign: new Array(cores).fill(0) as PrivilegedServices["assign"],
-      alwaysAccumulate: new Map(),
+      assigners: new Array(cores).fill(0) as PrivilegedServices["assigners"],
+      alwaysAccers: new Map(),
       manager: 0 as ServiceIndex,
-      designate: 0 as ServiceIndex,
+      delegator: 0 as ServiceIndex,
     },
     beta: {
       recentHistory: new Array(80).fill(null).map(

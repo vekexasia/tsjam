@@ -1,27 +1,27 @@
 import {
-  SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
-  SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
-  SERVICE_MIN_BALANCE,
-} from "@tsjam/constants";
-import {
-  Gas,
-  PVMProgramCode,
-  IServiceAccountStorage,
-  ServiceAccount,
-  u32,
-  u64,
-  CodeHash,
-  ServiceIndex,
-  Balance,
-  Tau,
-} from "@tsjam/types";
-import { toTagged } from "@tsjam/utils";
-import {
   createCodec,
   IdentityCodec,
   JamCodec,
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
+import {
+  SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
+  SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
+  SERVICE_MIN_BALANCE,
+} from "@tsjam/constants";
+import {
+  Balance,
+  CodeHash,
+  Gas,
+  IServiceAccountStorage,
+  PVMProgramCode,
+  ServiceAccount,
+  ServiceIndex,
+  Tau,
+  u32,
+  u64,
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 
 export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;
@@ -58,7 +58,7 @@ export class ServiceAccountImpl implements ServiceAccount {
 
   /**
    * `a_i` - total number of preimage lookup dictionaries and
-   * $(0.6.7 - 9.8)
+   * $(0.7.0 - 9.8)
    */
   itemInStorage(): u32 {
     return toTagged(2 * this.requests.size + this.storage.size);
@@ -66,7 +66,7 @@ export class ServiceAccountImpl implements ServiceAccount {
 
   /**
    * `a_o` - total octets in the preimage lookup and storage
-   * $(0.6.6 - 9.8)
+   * $(0.7.0 - 9.8)
    */
   totalOctets(): u64 {
     let sum: bigint = 0n;
@@ -84,7 +84,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   /**
    * `a_t`
    * compute the gas threshold of a service account
-   * $(0.6.6 - 9.8)
+   * $(0.7.0 - 9.8)
    */
   gasThreshold(): Gas {
     return <Gas>(SERVICE_MIN_BALANCE + // Bs
@@ -101,7 +101,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   /**
    *
    * computes bold_c and bold_m
-   * $(0.6.6 - 9.4)
+   * $(0.7.0 - 9.4)
    */
   private decodeMetaAndCode(): void {
     const codePreimage = this.preimages.get(this.codeHash);

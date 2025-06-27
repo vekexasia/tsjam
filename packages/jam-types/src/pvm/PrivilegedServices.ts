@@ -2,30 +2,30 @@ import { CORES } from "@tsjam/constants";
 import { Gas, SeqOfLength, ServiceIndex } from "../genericTypes.js";
 /**
  * `χ`
- * $(0.6.6 - 9.9)
+ * $(0.7.0 - 9.9)
  */
 export type PrivilegedServices = {
   /**
-   * `m` - the index of the blessed service
+   * `M` - the index of the blessed service
    */
   manager: ServiceIndex;
+
+  /**
+   * `A`
+   * services which can alter φ one for each CORE
+   */
+  assigners: SeqOfLength<ServiceIndex, typeof CORES>;
 
   /**
    * `v`
    * service which can alter ι
    */
-  designate: ServiceIndex;
-
-  /**
-   * `a`
-   * service which can alter φ one for each CORE
-   */
-  assign: SeqOfLength<ServiceIndex, typeof CORES>;
+  delegator: ServiceIndex;
 
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits
-   * `g`
+   * `Z`
    */
-  alwaysAccumulate: Map<ServiceIndex, Gas>;
+  alwaysAccers: Map<ServiceIndex, Gas>;
 };

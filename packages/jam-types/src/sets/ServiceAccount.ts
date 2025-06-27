@@ -30,6 +30,8 @@ export interface IServiceAccountStorage {
 
   /**
    * The octects part of the service account that is in regard of the storage
+   * it should compute the second half of formula in
+   * $(0.7.0 - 9.8)
    */
   readonly octets: u64;
 }
@@ -37,7 +39,7 @@ export interface IServiceAccountStorage {
 /**
  * `A` set in the graypaper
  * The analogous to a Smart Contract in ETH.
- * $(0.6.6 - 9.3)
+ * $(0.7.0 - 9.3)
  */
 export interface ServiceAccount {
   /**

@@ -78,10 +78,7 @@ export const accumulateReports = (
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES,
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
-      [...deps.privServices.alwaysAccumulate.values()].reduce(
-        (a, b) => a + b,
-        0n,
-      ),
+      [...deps.privServices.alwaysAccers.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
   // $(0.6.7 - 12.22)
@@ -96,11 +93,14 @@ export const accumulateReports = (
     w_star,
     {
       delta: deps.serviceAccounts,
-      ...deps.privServices,
+      manager: deps.privServices.manager,
+      alwaysAccumulate: deps.privServices.alwaysAccers,
+      assign: deps.privServices.assigners,
+      designate: deps.privServices.delegator,
       authQueue: deps.authQueue,
       validatorKeys: deps.iota,
     },
-    deps.privServices.alwaysAccumulate,
+    deps.privServices.alwaysAccers,
     {
       tau: deps.tau,
       p_tau: deps.p_tau,
@@ -187,9 +187,9 @@ export const accumulateReports = (
     p_mostRecentAccumulationOutputs: [...p_mostRecentAccumulationOutputs], // NOTE: graypaper is wrong here in type
     p_privServices: toPosterior(<PrivilegedServices>{
       manager: bold_o.manager,
-      designate: bold_o.designate,
-      assign: bold_o.assign,
-      alwaysAccumulate: bold_o.alwaysAccumulate,
+      delegator: bold_o.designate,
+      assigners: bold_o.assign,
+      alwaysAccers: bold_o.alwaysAccumulate,
     }),
     d_delta: toDagger(bold_o.delta),
     p_iota: toPosterior(bold_o.validatorKeys),

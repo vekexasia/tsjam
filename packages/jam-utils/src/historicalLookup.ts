@@ -1,20 +1,19 @@
-import { Hash, ServiceAccount, Tau, UpToSeq, u32 } from "@tsjam/types";
+import { Hash, ServiceAccount, Tagged, Tau, UpToSeq, u32 } from "@tsjam/types";
 import assert from "node:assert";
 import { toTagged } from "@/utils.js";
 
 /**
  * `Λ` in the graypaper
- * $(0.6.4 - 9.7)
+ * $(0.7.0 - 9.7)
  * @param a - the service account
- * @param tau - the timeslot for the lookup
+ * @param tau - the timeslot for the lookup max -D old. not enforced here.
  * @param hash - the hash to look up
  */
 export const historicalLookup = (
   a: ServiceAccount,
-  tau: Tau,
+  tau: Tagged<Tau, "-D">, // $(0.7.0 - 9.5) states that TAU is no older than D
   hash: Hash,
 ): Uint8Array | undefined => {
-  // TODO: 9.5 states that tau is no more than `D` timeslots old. but there is no way here to enforce that nor behavior is specified if the parameter is out of bounds
   const ap = a.preimages.get(hash);
   if (
     typeof ap !== "undefined" &&

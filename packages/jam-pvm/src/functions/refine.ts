@@ -1,4 +1,20 @@
 import { regFn } from "@/functions/fnsdb.js";
+import { W7, W8 } from "@/functions/utils.js";
+import { IxMod } from "@/instructions/utils.js";
+import { basicInvocation } from "@/invocations/basic.js";
+import {
+  PVMMemory,
+  toInBoundsMemoryAddress,
+  toSafeMemoryAddress,
+} from "@/pvmMemory.js";
+import { E_8, HashCodec } from "@tsjam/codec";
+import {
+  ERASURECODE_SEGMENT_SIZE,
+  HostCallResult,
+  InnerPVMResultCode,
+  MAX_WORKPACKAGE_ENTRIES,
+  Zp,
+} from "@tsjam/constants";
 import {
   Delta,
   Gas,
@@ -14,22 +30,7 @@ import {
   u32,
   u8,
 } from "@tsjam/types";
-import { W7, W8 } from "@/functions/utils.js";
-import {
-  ERASURECODE_SEGMENT_SIZE,
-  HostCallResult,
-  InnerPVMResultCode,
-  MAX_WORKPACKAGE_ENTRIES,
-  Zp,
-} from "@tsjam/constants";
-import { toInBoundsMemoryAddress, toSafeMemoryAddress } from "@/pvmMemory.js";
-import { historicalLookup, zeroPad } from "@tsjam/utils";
-import { PVMMemory } from "@/pvmMemory.js";
-import { E_4, E_8, HashCodec } from "@tsjam/codec";
-import { basicInvocation } from "@/invocations/basic.js";
-import assert from "node:assert";
-import { IxMod } from "@/instructions/utils.js";
-import { pbkdf2 } from "node:crypto";
+import { historicalLookup, toTagged, zeroPad } from "@tsjam/utils";
 export type RefineContext = {
   m: Map<
     number,
@@ -83,7 +84,7 @@ export const omega_h = regFn<
 
       const v = historicalLookup(
         a,
-        t,
+        toTagged(t),
         HashCodec.decode(context.memory.getBytes(toSafeMemoryAddress(h), 32))
           .value,
       )!;

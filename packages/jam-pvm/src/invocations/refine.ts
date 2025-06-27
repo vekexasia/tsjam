@@ -1,37 +1,20 @@
-import { HostCallExecutor } from "@/invocations/hostCall.js";
+import { FnsDb } from "@/functions/fnsdb.js";
+import { omega_g } from "@/functions/general.js";
 import {
-  Delta,
-  ExportSegment,
-  Gas,
-  Hash,
-  RefinementContext,
-  RegularPVMExitReason,
-  ServiceIndex,
-  Tau,
-  WorkError,
-  WorkOutput,
-  WorkPackageHash,
-  WorkPackageWithAuth,
-  u32,
-} from "@tsjam/types";
-import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
-import {
-  RefineContext,
+  omega_e,
   omega_h,
   omega_k,
   omega_m,
   omega_o,
   omega_p,
   omega_x,
-  omega_e,
   omega_z,
+  RefineContext,
 } from "@/functions/refine.js";
-import { FnsDb } from "@/functions/fnsdb.js";
 import { applyMods } from "@/functions/utils.js";
-import { omega_g, omega_y } from "@/functions/general.js";
-import { historicalLookup } from "@tsjam/utils";
-import { argumentInvocation } from "@/invocations/argument.js";
 import { IxMod } from "@/instructions/utils";
+import { argumentInvocation } from "@/invocations/argument.js";
+import { HostCallExecutor } from "@/invocations/hostCall.js";
 import {
   createCodec,
   E_sub_int,
@@ -42,8 +25,25 @@ import {
   WorkPackageCodec,
   WorkPackageHashCodec,
 } from "@tsjam/codec";
+import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
+import {
+  Delta,
+  ExportSegment,
+  Gas,
+  Hash,
+  RefinementContext,
+  RegularPVMExitReason,
+  ServiceIndex,
+  Tau,
+  u32,
+  WorkError,
+  WorkOutput,
+  WorkPackageHash,
+  WorkPackageWithAuth,
+} from "@tsjam/types";
+import { historicalLookup, toTagged } from "@tsjam/utils";
 
 const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
@@ -80,7 +80,7 @@ export const refineInvocation = (
   const w = workPackage.items[index];
   const lookupResult = historicalLookup(
     deps.delta.get(w.service)!,
-    workPackage.context.lookupAnchor.timeSlot,
+    toTagged(workPackage.context.lookupAnchor.timeSlot),
     w.codeHash,
   );
   // first matching case
@@ -181,14 +181,14 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          <any> null
-         /// omega_y(
-         ///   input.ctx,
-         ///   workItemIndex,
-         ///   workPackage,
-         ///   authorizerOutput,
-         ///   overline_i,
-         /// ),
+          <any>null,
+          /// omega_y(
+          ///   input.ctx,
+          ///   workItemIndex,
+          ///   workPackage,
+          ///   authorizerOutput,
+          ///   overline_i,
+          /// ),
         );
       case "export":
         return applyMods(
