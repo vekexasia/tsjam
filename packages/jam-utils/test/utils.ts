@@ -66,10 +66,10 @@ export const dummyState = (conf: {
       .fill(null)
       .map(dummyValidator) as unknown as JamState["lambda"],
     disputes: {
-      psi_b: new Set(),
-      psi_g: new Set(),
-      psi_o: new Set(),
-      psi_w: new Set(),
+      good: new Set(),
+      bad: new Set(),
+      offenders: new Set(),
+      wonky: new Set(),
     },
     rho: new Array(cores).fill(undefined) as unknown as JamState["rho"],
     serviceAccounts: new Map(),

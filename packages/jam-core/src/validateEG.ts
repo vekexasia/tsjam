@@ -72,7 +72,7 @@ export const garantorsReporters = (input: {
   p_kappa: Posterior<JamState["kappa"]>;
   p_lambda: Posterior<JamState["lambda"]>;
   p_tau: Posterior<Tau>;
-  p_psi_o: Posterior<IDisputesState["psi_o"]>;
+  p_offenders: Posterior<IDisputesState["offenders"]>;
   p_entropy: Posterior<JamState["entropy"]>;
 }) => {
   const g_star = G_STAR_fn({
@@ -80,7 +80,7 @@ export const garantorsReporters = (input: {
     p_eta3: toPosterior(input.p_entropy[3]),
     p_kappa: input.p_kappa,
     p_lambda: input.p_lambda,
-    p_psi_o: input.p_psi_o,
+    p_offenders: input.p_offenders,
     p_tau: input.p_tau,
   });
 
@@ -89,7 +89,7 @@ export const garantorsReporters = (input: {
     p_tau: input.p_tau,
     tauOffset: 0 as u32,
     validatorKeys: input.p_kappa,
-    p_psi_o: input.p_psi_o,
+    p_offenders: input.p_offenders,
   });
 
   const reporters = new Set<ED25519PublicKey["bigint"]>();
@@ -122,7 +122,7 @@ export const assertEGValid = (
     p_kappa: Posterior<JamState["kappa"]>;
     p_lambda: Posterior<JamState["lambda"]>;
     p_tau: Posterior<Tau>;
-    p_psi_o: Posterior<IDisputesState["psi_o"]>;
+    p_offenders: Posterior<IDisputesState["offenders"]>;
   },
 ): Result<Validated<EG_Extrinsic>, EGError> => {
   if (extrinsic.length === 0) {
@@ -186,7 +186,7 @@ export const assertEGValid = (
     p_eta3: toPosterior(deps.p_entropy[3]),
     p_kappa: deps.p_kappa,
     p_lambda: deps.p_lambda,
-    p_psi_o: deps.p_psi_o,
+    p_offenders: deps.p_offenders,
     p_tau: deps.p_tau,
   });
 
@@ -195,7 +195,7 @@ export const assertEGValid = (
     p_tau: deps.p_tau,
     tauOffset: 0 as u32,
     validatorKeys: deps.p_kappa,
-    p_psi_o: deps.p_psi_o,
+    p_offenders: deps.p_offenders,
   });
 
   // $(0.6.4 - 11.26)
@@ -408,7 +408,7 @@ const G_fn = (input: {
   tauOffset: u32;
   p_tau: Posterior<Tau>;
   validatorKeys: Posterior<JamState["kappa"] | JamState["lambda"]>;
-  p_psi_o: Posterior<IDisputesState["psi_o"]>;
+  p_offenders: Posterior<IDisputesState["offenders"]>;
 }) => {
   // R(c,n) = [(x + n) mod CORES | x E c]
   const R = (c: number[], n: number) => c.map((x) => (x + n) % CORES);
@@ -431,7 +431,7 @@ const G_fn = (input: {
       (input.p_tau + input.tauOffset) as Tau,
     ),
     // k
-    validatorsED22519Key: PHI_FN(input.validatorKeys, input.p_psi_o).map(
+    validatorsED22519Key: PHI_FN(input.validatorKeys, input.p_offenders).map(
       (v) => v.ed25519,
     ),
   } as GuarantorsAssignment;
@@ -445,7 +445,7 @@ export const G_STAR_fn = (input: {
   p_eta3: Posterior<JamState["entropy"][3]>;
   p_kappa: Posterior<JamState["kappa"]>;
   p_lambda: Posterior<JamState["lambda"]>;
-  p_psi_o: Posterior<IDisputesState["psi_o"]>;
+  p_offenders: Posterior<IDisputesState["offenders"]>;
   p_tau: Posterior<Tau>;
 }) => {
   if (
@@ -457,7 +457,7 @@ export const G_STAR_fn = (input: {
       tauOffset: -VALIDATOR_CORE_ROTATION as u32,
       p_tau: input.p_tau,
       validatorKeys: input.p_kappa,
-      p_psi_o: input.p_psi_o,
+      p_offenders: input.p_offenders,
     }) as G_Star;
   } else {
     return G_fn({
@@ -465,7 +465,7 @@ export const G_STAR_fn = (input: {
       tauOffset: -VALIDATOR_CORE_ROTATION as u32,
       p_tau: input.p_tau,
       validatorKeys: input.p_lambda,
-      p_psi_o: input.p_psi_o,
+      p_offenders: input.p_offenders,
     }) as G_Star;
   }
 };

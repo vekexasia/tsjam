@@ -125,19 +125,19 @@ export const safroleCodec = createCodec<SafroleState>([
 
 export const disputesCodec = createCodec<IDisputesState>([
   [
-    "psi_g",
+    "good",
     createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
-    "psi_b",
+    "bad",
     createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
-    "psi_w",
+    "wonky",
     createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
   ],
   [
-    "psi_o",
+    "offenders",
     createLengthDiscrimantedSetCodec(Ed25519PubkeyBigIntCodec, (a, b) =>
       a - b < 0 ? -1 : 1,
     ),

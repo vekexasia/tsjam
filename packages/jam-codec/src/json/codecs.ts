@@ -59,7 +59,7 @@ export const DisputesJSONCodec: JSONCodec<
   { good: string[]; bad: string[]; wonky: string[]; offenders: string[] }
 > = createJSONCodec([
   [
-    "psi_g",
+    "good",
     "good",
     ZipJSONCodecs(
       ArrayOfJSONCodec(HashJSONCodec()),
@@ -67,7 +67,7 @@ export const DisputesJSONCodec: JSONCodec<
     ),
   ],
   [
-    "psi_b",
+    "bad",
     "bad",
     ZipJSONCodecs(
       ArrayOfJSONCodec(HashJSONCodec()),
@@ -75,7 +75,7 @@ export const DisputesJSONCodec: JSONCodec<
     ),
   ],
   [
-    "psi_w",
+    "wonky",
     "wonky",
     ZipJSONCodecs(
       ArrayOfJSONCodec(HashJSONCodec()),
@@ -83,7 +83,7 @@ export const DisputesJSONCodec: JSONCodec<
     ),
   ],
   [
-    "psi_o",
+    "offenders",
     "offenders",
     ZipJSONCodecs(
       ArrayOfJSONCodec(Ed25519BigIntJSONCodec),

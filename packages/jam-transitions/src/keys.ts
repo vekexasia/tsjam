@@ -5,7 +5,6 @@ import {
   Hash,
   IDisputesState,
   JamState,
-  OpaqueHash,
   Posterior,
   STF,
   SafroleState,
@@ -24,10 +23,10 @@ import { ok } from "neverthrow";
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper
-  p_psi_o: Posterior<IDisputesState["psi_o"]>,
+  p_offenders: Posterior<IDisputesState["offenders"]>,
 ): T => {
   return validatorKeys.map((v) => {
-    if (p_psi_o.has(v.ed25519.bigint)) {
+    if (p_offenders.has(v.ed25519.bigint)) {
       return {
         banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
         ed25519: {
@@ -54,7 +53,7 @@ export const rotateKeys: STF<
     SafroleState["gamma_z"],
   ],
   {
-    p_psi_o: Posterior<IDisputesState["psi_o"]>;
+    p_offenders: Posterior<IDisputesState["offenders"]>;
     iota: JamState["iota"];
     tau: Tau;
     p_tau: Posterior<Tau>;
@@ -66,9 +65,9 @@ export const rotateKeys: STF<
     Posterior<JamState["lambda"]>,
     Posterior<SafroleState["gamma_z"]>,
   ]
-> = ({ p_psi_o, iota, tau, p_tau }, [gamma_p, kappa, lambda, gamma_z]) => {
+> = ({ p_offenders, iota, tau, p_tau }, [gamma_p, kappa, lambda, gamma_z]) => {
   if (isNewEra(p_tau, tau)) {
-    const p_gamma_k = PHI_FN(iota, p_psi_o) as unknown as Posterior<
+    const p_gamma_k = PHI_FN(iota, p_offenders) as unknown as Posterior<
       SafroleState["gamma_p"]
     >;
     const p_kappa = [...gamma_p] as Posterior<JamState["kappa"]>;

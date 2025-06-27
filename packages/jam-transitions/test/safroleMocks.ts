@@ -65,8 +65,8 @@ export const mockTicketIdentifier = (
 export const mockDisputesState = (
   opts: Partial<UnTaggedObject<IDisputesState>> = {},
 ): IDisputesState => ({
-  psi_o: new Set(opts.psi_o || []),
-  psi_g: new Set(opts.psi_g || []),
-  psi_b: new Set(opts.psi_b || []),
-  psi_w: new Set(opts.psi_w || []),
+  offenders: new Set(opts.offenders || []),
+  good: new Set(opts.good || []),
+  bad: new Set(opts.bad || []),
+  wonky: new Set(opts.wonky || []),
 });

@@ -137,7 +137,7 @@ export const importBlock: STF<
 
   const [, [p_gamma_p, p_kappa, p_lambda, p_gamma_z]] = rotateKeys(
     {
-      p_psi_o: toPosterior(p_disputesState.psi_o),
+      p_offenders: toPosterior(p_disputesState.offenders),
       iota: curState.iota,
       ...tauTransition,
     },
@@ -280,7 +280,7 @@ export const importBlock: STF<
       p_kappa,
       p_lambda,
       p_entropy,
-      p_psi_o: toPosterior(p_disputesState.psi_o),
+      p_offenders: toPosterior(p_disputesState.offenders),
     },
   ).safeRet();
   if (egError) {
@@ -336,7 +336,7 @@ export const importBlock: STF<
         extrinsic: block.extrinsics.reportGuarantees,
         p_kappa,
         p_tau,
-        p_psi_o: toPosterior(p_disputesState.psi_o),
+        p_offenders: toPosterior(p_disputesState.offenders),
         p_lambda,
         p_entropy,
       }),

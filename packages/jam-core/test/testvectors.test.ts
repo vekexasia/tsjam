@@ -302,7 +302,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
         tau: fromJam.tau,
         lambda: fromJam.lambda,
         entropy: fromJam.entropy,
-        p_psi_o: [...fromJam.disputes.psi_o.values()].map((a) =>
+        p_psi_o: [...fromJam.disputes.offenders.values()].map((a) =>
           Ed25519PublicKeyJSONCodec.fromJSON(Ed25519BigIntJSONCodec.toJSON(a)),
         ),
         gamma_z: fromJam.safroleState.gamma_z,

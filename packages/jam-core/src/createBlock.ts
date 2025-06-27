@@ -59,7 +59,7 @@ export const createBlock = (
     [curState.entropy[1], curState.entropy[2], curState.entropy[3]],
   ).safeRet();
 
-  const [disputesError, disputes] = disputesSTF(
+  const [disputesError, p_disputes] = disputesSTF(
     {
       kappa: curState.kappa,
       curTau: data.previousBlock.header.timeSlotIndex,
@@ -75,7 +75,7 @@ export const createBlock = (
 
   const [, [, p_kappa, ,]] = rotateKeys(
     {
-      p_psi_o: toPosterior(disputes.psi_o),
+      p_offenders: toPosterior(p_disputes.offenders),
       iota: curState.iota,
       tau: curState.tau,
       p_tau,

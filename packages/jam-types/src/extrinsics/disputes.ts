@@ -10,10 +10,11 @@ import {
 import { MINIMUM_VALIDATORS } from "@tsjam/constants";
 
 /**
- * Identified ad E<sub>d</sub> in the paper
+ * Identified ad E<sub>D</sub> in the paper
  */
 export interface DisputeExtrinsic {
   /**
+   * `V`
    * one ore more verdicts. They must be ordered by .hash
    */
   verdicts: MinSeqLength<
@@ -62,6 +63,7 @@ export interface DisputeExtrinsic {
   >;
 
   /**
+   * `EC`
    * validators that brought to chain the workreport saying it was valid by guarateeing for it
    * this means that each .hash here should reference a verdict with validity === 0
    * they must be ordered by .ed25519PublicKey
@@ -78,7 +80,7 @@ export interface DisputeExtrinsic {
     hash: Hash;
 
     /**
-     * `k` - the validator public key
+     * `f` - the validator public key
      * This must be either in the current or prev set of validators
      * it must not be inside DisputesState.psi_o
      * @see DisputesState.psi_o
@@ -93,6 +95,7 @@ export interface DisputeExtrinsic {
   }>;
 
   /**
+   * `EF`
    * validators that brought to chain the workreport saying it was valid by guarateeing for it proofs of misbehaviour of one or more validators signing a judgement
    * in contraddiction with the workreport validity
    * they must be ordered by .ed25519PublicKey

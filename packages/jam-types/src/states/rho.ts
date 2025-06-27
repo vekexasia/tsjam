@@ -10,7 +10,7 @@ import { Tau } from "@/Tau.js";
  */
 export type RHO = SeqOfLength<
   | {
-      /** `w`
+      /** `r`
        */
       workReport: WorkReport;
       /**
