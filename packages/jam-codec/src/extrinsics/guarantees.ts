@@ -1,13 +1,6 @@
-import { EG_Extrinsic, u32, ValidatorIndex, WorkReport } from "@tsjam/types";
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import { JamCodec } from "@/codec";
 import { Ed25519SignatureCodec, HashCodec } from "@/identity.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
-import {
-  WorkReportCodec,
-  WorkReportJSON,
-  WorkReportJSONCodec,
-} from "@/setelements/WorkReportCodec.js";
-import { createCodec, encodeWithCodec } from "@/utils.js";
 import {
   ArrayOfJSONCodec,
   createJSONCodec,
@@ -15,8 +8,15 @@ import {
   JSONCodec,
   NumberJSONCodec,
 } from "@/json/JsonCodec";
-import { JamCodec } from "@/codec";
+import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import {
+  WorkReportCodec,
+  WorkReportJSON,
+  WorkReportJSONCodec,
+} from "@/setelements/WorkReportCodec.js";
+import { createCodec, encodeWithCodec } from "@/utils.js";
 import { Hashing } from "@tsjam/crypto";
+import { EG_Extrinsic, Tau, ValidatorIndex, WorkReport } from "@tsjam/types";
 
 /**
  * $(0.6.4 - C.16)
@@ -24,7 +24,7 @@ import { Hashing } from "@tsjam/crypto";
 export const codec_Eg = createArrayLengthDiscriminator<EG_Extrinsic>(
   createCodec<EG_Extrinsic[0]>([
     ["workReport", WorkReportCodec],
-    ["timeSlot", E_sub_int<u32>(4)],
+    ["timeSlot", E_sub_int<Tau>(4)],
     [
       "credential",
       createArrayLengthDiscriminator<EG_Extrinsic[0]["credential"]>(
@@ -60,7 +60,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<EG_Extrinsic>(
         },
       },
     ],
-    ["timeSlot", E_sub_int<u32>(4)],
+    ["timeSlot", E_sub_int<Tau>(4)],
     [
       "credential",
       createArrayLengthDiscriminator<EG_Extrinsic[0]["credential"]>(
@@ -83,7 +83,7 @@ export const codec_Eg_JSON = <JSONCodec<EG_Extrinsic>>ArrayOfJSONCodec(
     }
   >([
     ["workReport", "report", WorkReportJSONCodec],
-    ["timeSlot", "slot", NumberJSONCodec<u32>()],
+    ["timeSlot", "slot", NumberJSONCodec<Tau>()],
     [
       "credential",
       "signatures",

@@ -155,7 +155,7 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.6.4 - 11.24) - make sure they're ordered and uniqueby coreindex
+  // $(0.7.0 - 11.24) - make sure they're ordered and uniqueby core
   for (let i = 1; i < extrinsic.length; i++) {
     const [prev, next] = [extrinsic[i - 1], extrinsic[i]];
     if (prev.workReport.core >= next.workReport.core) {
@@ -385,7 +385,7 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.6.4 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
+  // $(0.7.0 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
   for (const bold_r of bold_I) {
     for (const bold_d of bold_r.digests) {
       if (bold_d.codeHash !== deps.delta.get(bold_d.serviceIndex)?.codeHash) {

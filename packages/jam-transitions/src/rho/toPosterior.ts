@@ -11,7 +11,7 @@ import {
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.4 - 11.42)
+ * $(0.7.0 - 11.43)
  */
 export const RHO_toPosterior: STF<
   DoubleDagger<RHO>,
@@ -23,14 +23,14 @@ export const RHO_toPosterior: STF<
   never,
   Posterior<RHO>
 > = (input, curState) => {
-  // $(0.6.4 - 11.42)
+  // $(0.7.0 - 11.43)
   return ok(
-    curState.map((w, coreIndex: number) => {
+    curState.map((orig, core: number) => {
       const ext = input.EG_Extrinsic.find(
-        ({ workReport }) => workReport.core === coreIndex,
+        ({ workReport }) => workReport.core === core,
       );
       if (typeof ext === "undefined") {
-        return w;
+        return orig;
       }
       return {
         workReport: ext.workReport,

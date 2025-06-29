@@ -3,9 +3,9 @@ import {
   ED25519Signature,
   UpToSeq,
   ValidatorIndex,
-  u32,
 } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
+import { Tau } from "@/Tau";
 import { CORES } from "@tsjam/constants";
 
 /**
@@ -13,7 +13,7 @@ import { CORES } from "@tsjam/constants";
  */
 type SingleWorkReportGuarantee = {
   /**
-   * `w`
+   * `bold_r`
    * the `.coreIndex` of this workload must be unique within
    * the full extrinsic
    */
@@ -22,7 +22,7 @@ type SingleWorkReportGuarantee = {
   /**
    * `t`
    */
-  timeSlot: u32;
+  timeSlot: Tau;
 
   /**
    * `a`
@@ -47,7 +47,7 @@ type SingleWorkReportGuarantee = {
 /**
  * Identified by `Eg`.
  * @see section 11.4
- * $(0.6.4 - 11.23)
+ * $(0.7.0 - 11.23)
  *
  */
 export type EG_Extrinsic = UpToSeq<SingleWorkReportGuarantee, typeof CORES>;
