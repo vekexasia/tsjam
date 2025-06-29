@@ -3,11 +3,9 @@ import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
  * Identified by `L` set
- * also called **Work Digest**
- * @see section 11.1.4
- * $(0.6.4 - 11.6)
+ * $(0.7.0 - 11.6)
  */
-export type WorkResult = {
+export type WorkDigest = {
   /**
    * `s`
    * the index of service whose state is to be altered
@@ -32,7 +30,7 @@ export type WorkResult = {
   gasLimit: Gas;
 
   /**
-   * `d` - The output of the service
+   * `bold_l` - The output of the service
    */
   result: WorkOutput;
 
@@ -40,12 +38,12 @@ export type WorkResult = {
     /**
      * `u` - effective gas used when producing this wr in onRefine
      */
-    usedGas: Gas;
+    gasUsed: Gas;
 
     /**
      * `i` - number imported segments
      */
-    imports: u16;
+    importCount: u16;
 
     /**
      * `x`
@@ -60,6 +58,6 @@ export type WorkResult = {
     /**
      * `e` - number of exported segments
      */
-    exports: u16;
+    exportCount: u16;
   };
 };

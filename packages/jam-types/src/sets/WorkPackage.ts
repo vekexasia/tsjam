@@ -7,7 +7,7 @@ import {
   ServiceIndex,
 } from "@/genericTypes";
 import { PVMProgramCode } from "@/pvm/PVMProgramCode";
-import { RefinementContext } from "@/sets/RefinementContext";
+import { WorkContext } from "@/sets/WorkContext";
 import { WorkItem } from "@/sets/WorkItem";
 import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 
@@ -36,7 +36,7 @@ export interface WorkPackage {
   /**
    * `x` - context
    */
-  context: RefinementContext;
+  context: WorkContext;
   /**
    * `w` - sequence of work items
    */

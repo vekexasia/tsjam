@@ -276,7 +276,7 @@ export const verifyEA = (
   kappa: JamState["kappa"],
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
-  // $(0.6.4 - 11.10)
+  // $(0.7.0 - 11.10)
   if (ea.length > NUMBER_OF_VALIDATORS) {
     return false;
   }
@@ -290,21 +290,21 @@ export const verifyEA = (
     }
   }
 
-  // $(0.6.4 - 11.11)
+  // $(0.7.0 - 11.11)
   for (const a of ea) {
     if (a.anchorHash !== hp) {
       return false;
     }
   }
 
-  // $(0.6.4 - 11.12)
+  // $(0.7.0 - 11.12)
   for (let i = 1; i < ea.length; i++) {
-    if (ea[i].validatorIndex <= ea[i - 1].validatorIndex) {
+    if (ea[i - 1].validatorIndex >= ea[i].validatorIndex) {
       return false;
     }
   }
 
-  // $(0.6.4 - 11.13)
+  // $(0.7.0 - 11.13)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     const signatureValid = Ed25519.verifySignature(
@@ -325,7 +325,7 @@ export const verifyEA = (
     }
   }
 
-  // $(0.6.4 - 11.13 / 11.15)
+  // $(0.7.0 - 11.15)
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];
     for (let c = 0; c < CORES; c++) {

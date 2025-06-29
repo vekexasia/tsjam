@@ -27,7 +27,7 @@ export const RHO_toPosterior: STF<
   return ok(
     curState.map((w, coreIndex: number) => {
       const ext = input.EG_Extrinsic.find(
-        ({ workReport }) => workReport.coreIndex === coreIndex,
+        ({ workReport }) => workReport.core === coreIndex,
       );
       if (typeof ext === "undefined") {
         return w;

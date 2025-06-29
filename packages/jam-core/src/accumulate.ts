@@ -131,7 +131,7 @@ export const accumulateReports = (
   for (const serviceIndex of accumulationStatistics.keys()) {
     // $(0.6.7 - 12.26)
     const n_s = slicedW
-      .map((wr) => wr.results)
+      .map((wr) => wr.digests)
       .flat()
       .filter((r) => r.serviceIndex === serviceIndex);
     if (n_s.length === 0) {
@@ -230,9 +230,7 @@ export const noPrereqAvailableReports = (
 ): AvailableNoPrereqWorkReports => {
   return toTagged(
     w.filter(
-      (wr) =>
-        wr.refinementContext.dependencies.length === 0 &&
-        wr.segmentRootLookup.size === 0,
+      (wr) => wr.context.prerequisites.length === 0 && wr.srLookup.size === 0,
     ),
   );
 };
@@ -258,7 +256,7 @@ export const E_Fn = (
 
   for (const { workReport, dependencies } of r) {
     // (ws)h ~∈ x
-    if (x.has(workReport.workPackageSpecification.workPackageHash)) {
+    if (x.has(workReport.avSpec.packageHash)) {
       continue;
     }
 
@@ -282,14 +280,11 @@ export const withPrereqAvailableReports = (
       // $(0.6.4 - 12.6) | D fn calculated inline
       w
         .filter((wr) => {
-          return (
-            wr.refinementContext.dependencies.length > 0 ||
-            wr.segmentRootLookup.size > 0
-          );
+          return wr.context.prerequisites.length > 0 || wr.srLookup.size > 0;
         })
         .map((wr) => {
-          const deps = new Set<WorkPackageHash>(wr.segmentRootLookup.keys());
-          wr.refinementContext.dependencies.forEach((rwp) => deps.add(rwp));
+          const deps = new Set<WorkPackageHash>(wr.srLookup.keys());
+          wr.context.prerequisites.forEach((rwp) => deps.add(rwp));
 
           return { workReport: wr, dependencies: deps };
         }),
@@ -302,7 +297,7 @@ export const withPrereqAvailableReports = (
  * $(0.6.4 - 12.9)
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
-  return new Set(r.map((wr) => wr.workPackageSpecification.workPackageHash));
+  return new Set(r.map((wr) => wr.avSpec.packageHash));
 };
 
 /**
@@ -387,7 +382,7 @@ export const outerAccumulation = (
   let i = 0;
   // TODO: rewrite this to a more elegant solution
   for (const w of works) {
-    sum += w.results.reduce((a, r) => a + r.gasLimit, 0n);
+    sum += w.digests.reduce((a, r) => a + r.gasLimit, 0n);
     if (sum <= gasLimit) {
       i++;
     } else {
@@ -468,7 +463,7 @@ export const parallelizedAccumulation = (
   u: U,
 ] => {
   const bold_s = new Set([
-    ...w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
+    ...w.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
     ...f.keys(),
   ]);
   const bold_s_values = [...bold_s.values()];
@@ -592,23 +587,23 @@ export const singleServiceAccumulation = (
 } => {
   let g = (f.get(s) || 0n) as Gas;
   w.forEach((wr) =>
-    wr.results
+    wr.digests
       .filter((r) => r.serviceIndex === s)
       .forEach((r) => (g = (g + r.gasLimit) as Gas)),
   );
 
   const i: PVMAccumulationOp[] = [];
   for (const wr of w) {
-    for (const r of wr.results) {
+    for (const r of wr.digests) {
       if (r.serviceIndex === s) {
         i.push({
           output: r.result,
           gasLimit: r.gasLimit,
           payloadHash: r.payloadHash,
-          authorizerOutput: wr.authorizerOutput,
-          segmentRoot: wr.workPackageSpecification.segmentRoot,
-          workPackageHash: wr.workPackageSpecification.workPackageHash,
-          authorizerHash: wr.authorizerHash,
+          authorizerOutput: wr.authTrace,
+          segmentRoot: wr.avSpec.segmentRoot,
+          workPackageHash: wr.avSpec.packageHash,
+          authorizerHash: wr.authorizer,
         });
       }
     }

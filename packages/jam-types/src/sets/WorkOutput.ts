@@ -1,6 +1,6 @@
 /**
- * defined as `J` set in the paper
- * $(0.6.4 - 11.7)
+ * defined as `E` set in the paper
+ * $(0.7.0 - 11.7)
  */
 export enum WorkError {
   /**
@@ -13,7 +13,7 @@ export enum WorkError {
    * Possibly a program failure
    * @see lightning bolt in the paper
    */
-  UnexpectedTermination = 2,
+  Panic = 2,
 
   /**
    * ⊚

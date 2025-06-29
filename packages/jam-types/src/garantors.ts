@@ -9,7 +9,7 @@ import {
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it
  * section 11.3
- * $(0.6.4 - 11.18)
+ * $(0.7.0 - 11.18)
  */
 export type GuarantorsAssignment = {
   /**

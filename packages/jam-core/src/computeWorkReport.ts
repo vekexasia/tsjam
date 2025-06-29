@@ -6,13 +6,13 @@ import {
   Gas,
   Hash,
   Tau,
+  WorkDigest,
   WorkError,
   WorkItem,
   WorkOutput,
   WorkPackageHash,
   WorkPackageWithAuth,
   WorkReport,
-  WorkResult,
   u16,
   u32,
 } from "@tsjam/types";
@@ -81,7 +81,7 @@ export const computeWorkReport = (
       return { result: workResult, out: e };
     });
 
-  const bold_r = <WorkReport["results"]>(
+  const bold_r = <WorkReport["digests"]>(
     preTransposeEls.map(({ result }) => result)
   );
 
@@ -125,19 +125,19 @@ export const computeWorkReport = (
 
   return {
     // s
-    workPackageSpecification: s,
-    // x
-    refinementContext: pac.context,
+    avSpec: s,
+    // bold_c
+    context: pac.context,
     // c
-    coreIndex: core,
+    core: core,
     // a
-    authorizerHash: pac.pa,
+    authorizer: pac.pa,
     // o
-    authorizerOutput: authOutput,
+    authTrace: authOutput,
     // l
-    segmentRootLookup: bold_l,
+    srLookup: bold_l,
     // r
-    results: bold_r,
+    digests: bold_r,
     authGasUsed: bold_o.usedGas,
   };
 };
@@ -147,7 +147,7 @@ export const computeWorkReport = (
  * $(0.6.4 - 14.16)
  */
 const A_fn = (
-  workPackageHash: WorkPackageHash,
+  packageHash: WorkPackageHash,
   bold_b: Uint8Array,
   exportedSegments: ExportSegment[], // bold_s
 ): AvailabilitySpecification => {
@@ -164,7 +164,7 @@ const A_fn = (
 
   return {
     segmentCount: exportedSegments.length as u16,
-    workPackageHash,
+    packageHash,
     bundleLength: toTagged(<u32>bold_b.length),
     segmentRoot: constantDepthBinaryTree(exportedSegments),
     erasureRoot: wellBalancedBinaryMerkleRoot(
@@ -328,8 +328,8 @@ const inner_J_fn = (
 export const C_fn = (
   workItem: WorkItem,
   out: WorkOutput,
-  usedGas: Gas,
-): WorkResult => {
+  gasUsed: Gas,
+): WorkDigest => {
   return {
     serviceIndex: workItem.service,
     codeHash: workItem.codeHash,
@@ -337,15 +337,15 @@ export const C_fn = (
     gasLimit: workItem.accumulateGasLimit,
     result: out,
     refineLoad: {
-      usedGas,
-      imports: <u16>workItem.importSegments.length,
+      gasUsed,
+      importCount: <u16>workItem.importSegments.length,
       extrinsicCount: <u16>workItem.exportedDataSegments.length,
       extrinsicSize: <u32>(
         workItem.exportedDataSegments
           .map((x) => x.length)
           .reduce((a, b) => a + b, 0)
       ),
-      exports: <u16>workItem.exportCount,
+      exportCount: <u16>workItem.exportCount,
     },
   };
 };

@@ -31,9 +31,9 @@ export const recentHistoryToPosterior: STF<
     input.eg
       .map((a) => a.workReport)
       .flat()
-      .map((a) => a.workPackageSpecification)
+      .map((a) => a.avSpec)
       .flat()
-      .map((a) => [a.workPackageHash, a.segmentRoot]),
+      .map((a) => [a.packageHash, a.segmentRoot]),
   );
   toRet.push({
     reportedPackages: p,

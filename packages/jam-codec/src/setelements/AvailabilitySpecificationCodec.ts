@@ -16,7 +16,7 @@ import {
  */
 export const AvailabilitySpecificationCodec =
   createCodec<AvailabilitySpecification>([
-    ["workPackageHash", HashCodec as unknown as JamCodec<WorkPackageHash>],
+    ["packageHash", HashCodec as unknown as JamCodec<WorkPackageHash>],
     ["bundleLength", E_sub_int<AvailabilitySpecification["bundleLength"]>(4)],
     ["erasureRoot", HashCodec],
     ["segmentRoot", HashCodec],
@@ -25,7 +25,7 @@ export const AvailabilitySpecificationCodec =
 
 export const AvailabilitySpecificationJSONCodec =
   createJSONCodec<AvailabilitySpecification>([
-    ["workPackageHash", "hash", HashJSONCodec<WorkPackageHash>()],
+    ["packageHash", "hash", HashJSONCodec<WorkPackageHash>()],
     [
       "bundleLength",
       "length",

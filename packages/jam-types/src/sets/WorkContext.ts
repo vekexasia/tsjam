@@ -8,10 +8,10 @@ import {
 
 /**
  * gives a snapshotof what was the situation when the work report was created
- * defined by `X` set
- * $(0.6.4 - 11.4)
+ * defined by `C` set
+ * $(0.7.0 - 11.4)
  */
-export type RefinementContext = {
+export type WorkContext = {
   // first block of the snapshot
   anchor: {
     /**
@@ -21,11 +21,11 @@ export type RefinementContext = {
     /**
      * `s`
      */
-    stateRoot: StateRootHash;
+    postState: StateRootHash;
     /**
      * `b`
      */
-    beefyRoot: BeefyRootHash;
+    accOutLog: BeefyRootHash;
   };
   // second block of the snapshot
   lookupAnchor: {
@@ -36,12 +36,10 @@ export type RefinementContext = {
     /**
      * `t`
      */
-    timeSlot: Tau;
+    time: Tau;
   };
   /**
    * `p`
-   * it may define a list of WorkPackages that need to be "computed"
-   * before the current one
    */
-  dependencies: WorkPackageHash[];
+  prerequisites: WorkPackageHash[];
 };

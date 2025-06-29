@@ -13,14 +13,14 @@ export * from "./extrinsics/tickets.js";
 
 export * from "./sets/AvailabilitySpecification.js";
 export * from "./sets/ExportSegment.js";
-export * from "./sets/RefinementContext.js";
+export * from "./sets/WorkContext.js";
 export * from "./sets/ServiceAccount.js";
 export * from "./sets/Ticket.js";
 export * from "./sets/WorkItem.js";
 export * from "./sets/WorkOutput.js";
 export * from "./sets/WorkPackage.js";
 export * from "./sets/WorkReport.js";
-export * from "./sets/WorkResult.js";
+export * from "./sets/WorkDigest.js";
 
 export * from "./states/AuthorizerQueue.js";
 export * from "./states/AuthorizerPool.js";

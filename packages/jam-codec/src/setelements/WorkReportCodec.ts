@@ -5,18 +5,18 @@ import {
   Hash,
   WorkPackageHash,
   WorkReport,
-  WorkResult,
+  WorkDigest,
 } from "@tsjam/types";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import {
-  WorkResultCodec,
-  WorkResultJSONCodec,
-} from "@/setelements/WorkResultCodec.js";
+  WorkDigestCodec,
+  WorkDigestJSONCodec,
+} from "@/setelements/WorkDigestCodec.js";
 import { JamCodec } from "@/codec.js";
 import {
-  RefinementContextCodec,
-  RefinementContextJSONCodec,
-} from "@/setelements/RefinementContextCodec.js";
+  WorkContextCodec,
+  WorkContextJSONCodec,
+} from "@/setelements/WorkContextCodec.js";
 import {
   AvailabilitySpecificationCodec,
   AvailabilitySpecificationJSONCodec,
@@ -42,22 +42,22 @@ import { E_bigint, E_int } from "@/ints/e";
  */
 export const WorkReportCodec = createCodec<WorkReport>([
   // s
-  ["workPackageSpecification", AvailabilitySpecificationCodec],
-  // x
-  ["refinementContext", RefinementContextCodec],
+  ["avSpec", AvailabilitySpecificationCodec],
+  // bold_c
+  ["context", WorkContextCodec],
   // c
-  ["coreIndex", E_int<CoreIndex>()],
+  ["core", E_int<CoreIndex>()],
   // a
-  ["authorizerHash", HashCodec as unknown as JamCodec<Blake2bHash>],
+  ["authorizer", HashCodec as unknown as JamCodec<Blake2bHash>],
   // o
-  ["authorizerOutput", LengthDiscrimantedIdentity],
+  ["authTrace", LengthDiscrimantedIdentity],
   // l
-  ["segmentRootLookup", buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec)],
+  ["srLookup", buildKeyValueCodec<WorkPackageHash, Hash>(HashCodec)],
   // r
   [
-    "results",
-    createArrayLengthDiscriminator(WorkResultCodec) as unknown as JamCodec<
-      WorkReport["results"]
+    "digests",
+    createArrayLengthDiscriminator(WorkDigestCodec) as unknown as JamCodec<
+      WorkReport["digests"]
     >,
   ],
   ["authGasUsed", E_bigint<Gas>()],
@@ -65,7 +65,7 @@ export const WorkReportCodec = createCodec<WorkReport>([
 
 export type WorkReportJSON = {
   package_spec: JC_J<typeof AvailabilitySpecificationJSONCodec>;
-  context: JC_J<typeof RefinementContextJSONCodec>;
+  context: JC_J<typeof WorkContextJSONCodec>;
   core_index: number;
   authorizer_hash: string;
   auth_output: string;
@@ -73,22 +73,18 @@ export type WorkReportJSON = {
     work_package_hash: string;
     segment_tree_root: string;
   }>;
-  results: Array<JC_J<typeof WorkResultJSONCodec>>;
+  results: Array<JC_J<typeof WorkDigestJSONCodec>>;
   auth_gas_used: number;
 };
 
 export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
+  ["avSpec", "package_spec", AvailabilitySpecificationJSONCodec],
+  ["context", "context", WorkContextJSONCodec],
+  ["core", "core_index", NumberJSONCodec<CoreIndex>()],
+  ["authorizer", "authorizer_hash", HashJSONCodec<Blake2bHash>()],
+  ["authTrace", "auth_output", BufferJSONCodec()],
   [
-    "workPackageSpecification",
-    "package_spec",
-    AvailabilitySpecificationJSONCodec,
-  ],
-  ["refinementContext", "context", RefinementContextJSONCodec],
-  ["coreIndex", "core_index", NumberJSONCodec<CoreIndex>()],
-  ["authorizerHash", "authorizer_hash", HashJSONCodec<Blake2bHash>()],
-  ["authorizerOutput", "auth_output", BufferJSONCodec()],
-  [
-    "segmentRootLookup",
+    "srLookup",
     "segment_root_lookup",
     MapJSONCodec(
       {
@@ -100,13 +96,13 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
     ),
   ],
   [
-    "results",
+    "digests",
     "results",
     ArrayOfJSONCodec<
-      WorkReport["results"],
-      WorkResult,
-      JC_J<typeof WorkResultJSONCodec>
-    >(WorkResultJSONCodec),
+      WorkReport["digests"],
+      WorkDigest,
+      JC_J<typeof WorkDigestJSONCodec>
+    >(WorkDigestJSONCodec),
   ],
   ["authGasUsed", "auth_gas_used", BigIntJSONCodec<Gas>()],
 ]);

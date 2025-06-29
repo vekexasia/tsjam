@@ -6,7 +6,7 @@ import {
 } from "@tsjam/types";
 import { createLengthDiscriminatedIdentity } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { E_sub_int } from "@/ints/E_subscr.js";
-import { RefinementContextCodec } from "@/setelements/RefinementContextCodec.js";
+import { WorkContextCodec } from "@/setelements/WorkContextCodec.js";
 import { CodeHashCodec } from "@/identity.js";
 import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
 import { WorkItemCodec } from "@/setelements/WorkItemCodec.js";
@@ -20,7 +20,7 @@ export const WorkPackageCodec = createCodec<WorkPackage>([
   ["authCodeHost", E_sub_int<ServiceIndex>(4)],
   ["authorizationCodeHash", CodeHashCodec],
   ["paramsBlob", createLengthDiscriminatedIdentity<AuthorizationParams>()],
-  ["context", RefinementContextCodec],
+  ["context", WorkContextCodec],
   [
     "items",
     createArrayLengthDiscriminator<WorkPackage["items"]>(WorkItemCodec),

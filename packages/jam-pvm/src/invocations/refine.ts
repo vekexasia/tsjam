@@ -21,7 +21,7 @@ import {
   encodeWithCodec,
   HashCodec,
   IdentityCodec,
-  RefinementContextCodec,
+  WorkContextCodec,
   WorkPackageCodec,
   WorkPackageHashCodec,
 } from "@tsjam/codec";
@@ -33,7 +33,7 @@ import {
   ExportSegment,
   Gas,
   Hash,
-  RefinementContext,
+  WorkContext,
   RegularPVMExitReason,
   ServiceIndex,
   Tau,
@@ -49,13 +49,13 @@ const refine_a_Codec = createCodec<{
   serviceIndex: ServiceIndex;
   payload: Uint8Array;
   packageHash: WorkPackageHash;
-  context: RefinementContext;
+  context: WorkContext;
   authorizerHash: Hash;
 }>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)],
   ["payload", IdentityCodec],
   ["packageHash", WorkPackageHashCodec],
-  ["context", RefinementContextCodec],
+  ["context", WorkContextCodec],
   ["authorizerHash", HashCodec],
 ]);
 /**
@@ -80,7 +80,7 @@ export const refineInvocation = (
   const w = workPackage.items[index];
   const lookupResult = historicalLookup(
     deps.delta.get(w.service)!,
-    toTagged(workPackage.context.lookupAnchor.timeSlot),
+    toTagged(workPackage.context.lookupAnchor.time),
     w.codeHash,
   );
   // first matching case
@@ -132,7 +132,7 @@ export const refineInvocation = (
     return {
       res:
         argOut.res === RegularPVMExitReason.Panic
-          ? WorkError.UnexpectedTermination
+          ? WorkError.Panic
           : WorkError.OutOfGas,
       out: [],
       usedGas: argOut.usedGas,

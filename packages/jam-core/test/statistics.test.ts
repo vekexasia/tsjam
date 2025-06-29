@@ -1,29 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, vi, expect, beforeAll, afterAll } from "vitest";
 import {
-  E_sub_int,
+  codec_Ea,
   codec_Ed,
   codec_Eg,
   codec_Ep,
-  ValidatorDataCodec,
-  codec_Ea,
+  codec_Et,
   createCodec,
   createSequenceCodec,
-  codec_Et,
+  E_sub_int,
+  ValidatorDataCodec,
   ValidatorStatisticsCodec,
 } from "@tsjam/codec";
+import * as constants from "@tsjam/constants";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { validatorStatisticsToPosterior } from "@tsjam/transitions";
 import {
-  Tau,
-  Posterior,
-  JamState,
-  ValidatorIndex,
   JamBlock,
+  JamState,
+  Posterior,
+  Tau,
+  ValidatorIndex,
   ValidatorStatistics,
 } from "@tsjam/types";
 import fs from "node:fs";
-import * as constants from "@tsjam/constants";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { _w, validatorStatisticsToPosterior } from "@tsjam/transitions";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 export const getCodecFixtureFile = (
   filename: string,

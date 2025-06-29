@@ -17,12 +17,12 @@ export const coreStatisticsSTF: STF<
   JamStatistics["cores"],
   {
     /**
-     * `bold W` calculated in $(0.6.4 - 11.16)
+     * `bold W` calculated in $(0.7.0 - 11.16)
      */
     availableReports: AvailableWorkReports;
 
     /**
-     * `bold w` calculated in $(0.6.4 - 11.28)
+     * `bold I` calculated in $(0.7.0 - 11.28)
      */
     guaranteedReports: WorkReport[];
     assurances: EA_Extrinsic;
@@ -46,12 +46,11 @@ export const coreStatisticsSTF: STF<
 
 const D_fn = (core: CoreIndex, availableReports: AvailableWorkReports): u32 => {
   return <u32>availableReports
-    .filter((w) => w.coreIndex === core)
+    .filter((w) => w.core === core)
     .map((w) => {
       return (
-        w.workPackageSpecification.bundleLength +
-        ERASURECODE_SEGMENT_SIZE *
-          Math.ceil((w.workPackageSpecification.segmentCount * 65) / 64)
+        w.avSpec.bundleLength +
+        ERASURECODE_SEGMENT_SIZE * Math.ceil((w.avSpec.segmentCount * 65) / 64)
       );
     })
     .reduce((a, b) => a + b, 0);
@@ -64,26 +63,26 @@ const R_fn = (
   core: CoreIndex,
   guaranteedReports: WorkReport[],
 ): Omit<JamStatistics["cores"][0], "popularity" | "daLoad"> => {
-  const filteredReports = guaranteedReports.filter((w) => w.coreIndex === core);
+  const filteredReports = guaranteedReports.filter((w) => w.core === core);
 
   const accumulator = {
-    imports: <u16>0,
-    exports: <u16>0,
+    importCount: <u16>0,
+    exportCount: <u16>0,
     extrinsicSize: <u32>0,
     extrinsicCount: <u16>0,
-    usedGas: <Gas>0n,
+    gasUsed: <Gas>0n,
     bundleSize: <u32>0,
   };
-  for (const { results, workPackageSpecification } of filteredReports) {
+  for (const { digests, avSpec } of filteredReports) {
     accumulator.bundleSize = <u32>(
-      (accumulator.bundleSize + workPackageSpecification.bundleLength)
+      (accumulator.bundleSize + avSpec.bundleLength)
     );
-    for (const result of results) {
-      accumulator.imports = <u16>(
-        (accumulator.imports + result.refineLoad.imports)
+    for (const result of digests) {
+      accumulator.importCount = <u16>(
+        (accumulator.importCount + result.refineLoad.importCount)
       );
-      accumulator.exports = <u16>(
-        (accumulator.exports + result.refineLoad.exports)
+      accumulator.exportCount = <u16>(
+        (accumulator.exportCount + result.refineLoad.exportCount)
       );
       accumulator.extrinsicSize = <u32>(
         (accumulator.extrinsicSize + result.refineLoad.extrinsicSize)
@@ -91,8 +90,8 @@ const R_fn = (
       accumulator.extrinsicCount = <u16>(
         (accumulator.extrinsicCount + result.refineLoad.extrinsicCount)
       );
-      accumulator.usedGas = <Gas>(
-        (accumulator.usedGas + result.refineLoad.usedGas)
+      accumulator.gasUsed = <Gas>(
+        (accumulator.gasUsed + result.refineLoad.gasUsed)
       );
     }
   }

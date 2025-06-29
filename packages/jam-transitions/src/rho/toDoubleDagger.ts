@@ -12,14 +12,14 @@ import { ok } from "neverthrow";
 
 /**
  * converts Dagger<RHO> to DoubleDagger<RHO>
- * $(0.6.4 - 11.17)
+ * $(0.7.0 - 11.17)
  */
 export const RHO2DoubleDagger: STF<
   Dagger<RHO>,
   {
     rho: RHO;
     p_tau: Posterior<Tau>; // Ht
-    availableReports: AvailableWorkReports;
+    availableReports: AvailableWorkReports; // bold R
   },
   never,
   DoubleDagger<RHO>
@@ -29,13 +29,13 @@ export const RHO2DoubleDagger: STF<
     if (typeof curState[c] === "undefined") {
       continue; // if no  workreport indagger then there is nothing to remove.
     }
-    const [w] = input.availableReports.filter((w) => w.coreIndex === c);
+    const [w] = input.availableReports.filter((w) => w.core === c);
     // check if workreport from rho has now become available
 
     if (
       input.rho[c] &&
       w &&
-      input.rho[c]!.workReport.authorizerHash === w.authorizerHash
+      input.rho[c]!.workReport.authorizer === w.authorizer
     ) {
       newState[c] = undefined;
     }

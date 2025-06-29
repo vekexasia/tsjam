@@ -1,4 +1,17 @@
-import { epochIndex, toPosterior } from "@tsjam/utils";
+import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
+import {
+  CORES,
+  EPOCH_LENGTH,
+  JAM_GUARANTEE,
+  MAXIMUM_AGE_LOOKUP_ANCHOR,
+  MAX_WORKREPORT_OUTPUT_SIZE,
+  MAX_WORK_PREREQUISITES,
+  NUMBER_OF_VALIDATORS,
+  TOTAL_GAS_ACCUMULATION_LOGIC,
+  VALIDATOR_CORE_ROTATION,
+} from "@tsjam/constants";
+import { Ed25519, Hashing } from "@tsjam/crypto";
+import { PHI_FN, _I } from "@tsjam/transitions";
 import {
   AccumulationHistory,
   AccumulationQueue,
@@ -22,20 +35,7 @@ import {
   WorkPackageHash,
   u32,
 } from "@tsjam/types";
-import {
-  CORES,
-  JAM_GUARANTEE,
-  MAX_WORK_PREREQUISITES,
-  MAXIMUM_AGE_LOOKUP_ANCHOR,
-  NUMBER_OF_VALIDATORS,
-  VALIDATOR_CORE_ROTATION,
-  MAX_WORKREPORT_OUTPUT_SIZE,
-  TOTAL_GAS_ACCUMULATION_LOGIC,
-  EPOCH_LENGTH,
-} from "@tsjam/constants";
-import { WorkReportCodec, encodeWithCodec } from "@tsjam/codec";
-import { Ed25519, Hashing } from "@tsjam/crypto";
-import { PHI_FN, _w } from "@tsjam/transitions";
+import { epochIndex, toPosterior } from "@tsjam/utils";
 import { Result, err, ok } from "neverthrow";
 import { FisherYatesH } from "./fisherYates";
 
@@ -65,7 +65,7 @@ export enum EGError {
   WRONG_CODEHASH = "Wrong codehash",
 }
 /**
- * $(0.6.4 - 11.26) | calculates R in it
+ * $(0.7.0 - 11.26) | calculates bold G in it
  */
 export const garantorsReporters = (input: {
   extrinsic: EG_Extrinsic;
@@ -75,7 +75,7 @@ export const garantorsReporters = (input: {
   p_offenders: Posterior<IDisputesState["offenders"]>;
   p_entropy: Posterior<JamState["entropy"]>;
 }) => {
-  const g_star = G_STAR_fn({
+  const g_star = M_STAR_fn({
     p_eta2: toPosterior(input.p_entropy[2]),
     p_eta3: toPosterior(input.p_entropy[3]),
     p_kappa: input.p_kappa,
@@ -84,7 +84,7 @@ export const garantorsReporters = (input: {
     p_tau: input.p_tau,
   });
 
-  const g = G_fn({
+  const g = M_fn({
     entropy: input.p_entropy[2],
     p_tau: input.p_tau,
     tauOffset: 0 as u32,
@@ -128,25 +128,24 @@ export const assertEGValid = (
   if (extrinsic.length === 0) {
     return ok(extrinsic as Validated<EG_Extrinsic>); // optimization
   }
-  // $(0.6.4 - 11.23)
+  // $(0.7.0 - 11.23)
   if (extrinsic.length > CORES) {
     return err(EGError.EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES);
   }
 
   for (const { workReport } of extrinsic) {
-    // $(0.6.4 - 11.3) | Check the number of dependencies in the workreports
+    // $(0.7.0 - 11.3) | Check the number of dependencies in the workreports
     if (
-      workReport.segmentRootLookup.size +
-        workReport.refinementContext.dependencies.length >
+      workReport.srLookup.size + workReport.context.prerequisites.length >
       MAX_WORK_PREREQUISITES
     ) {
       return err(EGError.TOO_MANY_PREREQUISITES);
     }
 
-    // $(0.6.4 - 11.8) | check work report total size
+    // $(0.7.0 - 11.8) | check work report total size
     const totalSize =
-      workReport.authorizerOutput.length +
-      workReport.results
+      workReport.authTrace.length +
+      workReport.digests
         .map((r) => r.result)
         .filter((ro) => ro instanceof Uint8Array)
         .map((ro) => ro.length)
@@ -159,20 +158,20 @@ export const assertEGValid = (
   // $(0.6.4 - 11.24) - make sure they're ordered and uniqueby coreindex
   for (let i = 1; i < extrinsic.length; i++) {
     const [prev, next] = [extrinsic[i - 1], extrinsic[i]];
-    if (prev.workReport.coreIndex >= next.workReport.coreIndex) {
+    if (prev.workReport.core >= next.workReport.core) {
       return err(EGError.CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED);
     }
-    if (next.workReport.coreIndex >= CORES || next.workReport.coreIndex < 0) {
+    if (next.workReport.core >= CORES || next.workReport.core < 0) {
       return err(EGError.CORE_INDEX_NOT_IN_BOUNDS);
     }
   }
 
   for (const { credential } of extrinsic) {
-    // $(0.6.4 - 11.23)
+    // $(0.7.0 - 11.23)
     if (credential.length < 2 || credential.length > 3) {
       return err(EGError.CREDS_MUST_BE_BETWEEN_2_AND_3);
     }
-    // $(0.6.4 - 11.25) | creds must be ordered by their val idx
+    // $(0.7.0 - 11.25) | creds must be ordered by their val idx
     for (let i = 1; i < credential.length; i++) {
       const [prev, next] = [credential[i - 1], credential[i]];
       if (prev.validatorIndex >= next.validatorIndex) {
@@ -181,7 +180,7 @@ export const assertEGValid = (
     }
   }
 
-  const g_star = G_STAR_fn({
+  const g_star = M_STAR_fn({
     p_eta2: toPosterior(deps.p_entropy[2]),
     p_eta3: toPosterior(deps.p_entropy[3]),
     p_kappa: deps.p_kappa,
@@ -190,7 +189,7 @@ export const assertEGValid = (
     p_tau: deps.p_tau,
   });
 
-  const g = G_fn({
+  const g = M_fn({
     entropy: deps.p_entropy[2],
     p_tau: deps.p_tau,
     tauOffset: 0 as u32,
@@ -198,7 +197,7 @@ export const assertEGValid = (
     p_offenders: deps.p_offenders,
   });
 
-  // $(0.6.4 - 11.26)
+  // $(0.7.0 - 11.26)
   const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
 
   for (const { workReport, timeSlot, credential } of extrinsic) {
@@ -208,7 +207,7 @@ export const assertEGValid = (
     const messageToSign = new Uint8Array([...JAM_GUARANTEE, ...wrh]);
 
     for (const { validatorIndex, signature } of credential) {
-      // $(0.6.4 - 11.23) | should be Nv
+      // $(0.7.0 - 11.23) | should be Nv
       if (validatorIndex < 0 || validatorIndex >= NUMBER_OF_VALIDATORS) {
         return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
       }
@@ -218,7 +217,7 @@ export const assertEGValid = (
       }
 
       if (
-        workReport.coreIndex !==
+        workReport.core !==
         correspondingG.validatorsAssignedCore[validatorIndex]
       ) {
         return err(EGError.CORE_INDEX_MISMATCH);
@@ -231,7 +230,7 @@ export const assertEGValid = (
         return err(EGError.TIMESLOT_BOUNDS_2);
       }
 
-      // $(0.6.4 - 11.26)
+      // $(0.7.0 - 11.26)
       const isValid = Ed25519.verifySignature(
         signature,
         correspondingG.validatorsED22519Key[validatorIndex],
@@ -243,101 +242,90 @@ export const assertEGValid = (
     }
   }
 
-  // $(0.6.4 - 11.28)
-  const w = _w(extrinsic);
+  // $(0.7.0 - 11.28)
+  const bold_I = _I(extrinsic);
 
-  // $(0.6.4 - 11.29) | no reports on core with pending avail
-  for (let i = 0; i < w.length; i++) {
-    const { coreIndex, authorizerHash } = w[i];
-    if (typeof deps.dd_rho[coreIndex] !== "undefined") {
+  // $(0.7.0 - 11.29) | no reports on core with pending avail
+  for (let i = 0; i < bold_I.length; i++) {
+    const { core, authorizer } = bold_I[i];
+    if (typeof deps.dd_rho[core] !== "undefined") {
       return err(EGError.REPORT_PENDING_AVAILABILITY);
     }
-    const poolHashes = new Set(deps.authPool[coreIndex]);
-    if (!poolHashes.has(authorizerHash)) {
+    const poolHashes = new Set(deps.authPool[core]);
+    if (!poolHashes.has(authorizer)) {
       return err(EGError.MISSING_AUTH);
     }
   }
 
-  // $(0.6.4 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
-  for (const _w of w) {
-    for (const r of _w.results) {
-      if (r.codeHash !== deps.delta.get(r.serviceIndex)?.codeHash) {
-        return err(EGError.WRONG_CODEHASH);
-      }
-    }
-  }
-
-  // $(0.6.4 - 11.30) | check gas requiremens
-  for (const wr of w) {
-    const usedGas = wr.results
+  // $(0.7.0 - 11.30) | check gas requiremens
+  for (const report of bold_I) {
+    const gasUsed = report.digests
       .map((r) => r.gasLimit)
       .reduce((a, b) => a + b, 0n);
-    if (usedGas > TOTAL_GAS_ACCUMULATION_LOGIC) {
+    if (gasUsed > TOTAL_GAS_ACCUMULATION_LOGIC) {
       return err(EGError.GAS_EXCEEDED_ACCUMULATION_LIMITS);
     }
 
-    for (const res of wr.results) {
+    for (const res of report.digests) {
       if (res.gasLimit < deps.delta.get(res.serviceIndex)!.minAccGas) {
         return err(EGError.GAS_TOO_LOW);
       }
     }
   }
 
-  // $(0.6.4 - 11.31)
-  const x = w.map(({ refinementContext }) => refinementContext);
-  const p = w.map(
-    ({ workPackageSpecification }) => workPackageSpecification.workPackageHash,
-  );
+  // $(0.7.0 - 11.31)
+  const x = bold_I.map(({ context }) => context);
+  const p = bold_I.map(({ avSpec }) => avSpec.packageHash);
 
-  // $(0.6.4 - 11.32)
+  // $(0.7.0 - 11.32)
   if (p.length !== new Set(p).size) {
     return err(EGError.WORK_PACKAGE_HASH_NOT_UNIQUE);
   }
 
-  for (const refinementContext of x) {
-    // $(0.6.7 - 11.33)
+  for (const workContext of x) {
+    // $(0.7.0 - 11.33)
     const y = deps.d_recentHistory.find(
       (_y) =>
-        _y.headerHash === refinementContext.anchor.hash &&
-        _y.stateRoot === refinementContext.anchor.stateRoot &&
-        _y.accumulationResultMMB === refinementContext.anchor.beefyRoot,
+        _y.headerHash === workContext.anchor.hash &&
+        _y.stateRoot === workContext.anchor.postState &&
+        _y.accumulationResultMMB === workContext.anchor.accOutLog,
     );
     if (typeof y === "undefined") {
       return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
     }
 
-    // $(0.6.4 - 11.34) each lookup anchor block within `L` timeslot
+    // $(0.7.0 - 11.34) each lookup anchor block within `L` timeslot
     if (
-      refinementContext.lookupAnchor.timeSlot <
+      workContext.lookupAnchor.time <
       deps.p_tau - MAXIMUM_AGE_LOOKUP_ANCHOR
     ) {
       return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
     }
 
-    // $(0.6.4 - 11.35)
+    // $(0.7.0 - 11.35)
     const lookupHeader = deps.headerLookupHistory.get(
-      refinementContext.lookupAnchor.timeSlot,
+      workContext.lookupAnchor.time,
     );
     if (typeof lookupHeader === "undefined") {
       return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
     }
-    if (lookupHeader.hash !== refinementContext.lookupAnchor.hash) {
+    if (lookupHeader.hash !== workContext.lookupAnchor.hash) {
       return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
     }
   }
 
-  // $(0.6.4 - 11.36)
-  const q: Set<WorkPackageHash> = new Set(
+  // $(0.7.0 - 11.36)
+  const bold_q: Set<WorkPackageHash> = new Set(
     deps.accumulationQueue
       .flat()
-      .map((a) => a.workReport.refinementContext.dependencies)
+      .map((a) => a.workReport.avSpec.packageHash)
       .flat(),
   );
 
-  // $(0.6.7 - 11.37)
-  const a: Set<WorkPackageHash> = new Set(
+  // $(0.7.0 - 11.37)
+  const bold_a: Set<WorkPackageHash> = new Set(
     deps.rho
-      .map((a) => a?.workReport.refinementContext.dependencies)
+      .map((a) => a?.workReport.avSpec.packageHash)
       .flat()
       .filter((a) => typeof a !== "undefined"),
   );
@@ -348,47 +336,47 @@ export const assertEGValid = (
   const _x = new Set(
     deps.accumulationHistory.map((a) => [...a.values()]).flat(),
   );
-  // $(0.6.4 - 11.38)
+  // $(0.7.0 - 11.38)
   for (const _p of p) {
-    if (q.has(_p) || a.has(_p) || kxp.has(_p) || _x.has(_p)) {
+    if (bold_q.has(_p) || bold_a.has(_p) || kxp.has(_p) || _x.has(_p)) {
       return err(EGError.WORKPACKAGE_IN_PIPELINE);
     }
   }
 
-  // $(0.6.7 - 11.39)
+  // $(0.7.0 - 11.39)
   const pSet = new Set(p);
   deps.recentHistory
     .map((r) => [...r.reportedPackages.keys()])
     .flat()
     .forEach((reportedHash) => pSet.add(reportedHash));
 
-  for (const _w of w) {
-    const _p = new Set([..._w.segmentRootLookup.keys()]);
-    _w.refinementContext.dependencies.forEach((rwp) => _p.add(rwp));
-    for (const _pp of _p.values()) {
-      if (!pSet.has(_pp)) {
+  for (const r of bold_I) {
+    const _p = new Set([...r.srLookup.keys()]);
+    r.context.prerequisites.forEach((rwp) => _p.add(rwp));
+    for (const p of _p.values()) {
+      if (!pSet.has(p)) {
         return err(EGError.SRLWP_NOTKNOWN);
       }
     }
   }
 
   {
-    // $(0.6.4 - 11.40)
+    // $(0.7.0 - 11.40)
     const p = new Map(
       extrinsic
-        .map((e) => e.workReport.workPackageSpecification)
-        .map((wPSpec) => [wPSpec.workPackageHash, wPSpec.segmentRoot]),
+        .map((e) => e.workReport.avSpec)
+        .map((wPSpec) => [wPSpec.packageHash, wPSpec.segmentRoot]),
     );
 
-    // $(0.6.7 - 11.41)
+    // $(0.7.0 - 11.41)
     const recentAndCurrentWP = new Map(
       deps.recentHistory
         .map((rh) => [...rh.reportedPackages.entries()])
         .flat()
         .concat([...p.entries()]),
     );
-    for (const _w of w) {
-      for (const [wph, h] of _w.segmentRootLookup) {
+    for (const bold_r of bold_I) {
+      for (const [wph, h] of bold_r.srLookup) {
         const entry = recentAndCurrentWP.get(wph);
         if (typeof entry === "undefined" || entry !== h) {
           return err(EGError.SRLWP_NOTKNOWN);
@@ -397,13 +385,22 @@ export const assertEGValid = (
     }
   }
 
+  // $(0.6.4 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
+  for (const bold_r of bold_I) {
+    for (const bold_d of bold_r.digests) {
+      if (bold_d.codeHash !== deps.delta.get(bold_d.serviceIndex)?.codeHash) {
+        return err(EGError.WRONG_CODEHASH);
+      }
+    }
+  }
+
   return ok(extrinsic as Validated<EG_Extrinsic>);
 };
 
 /**
- * $(0.6.4 - 11.19 / 11.20 / 11.21)
+ * $(0.7.0 - 11.19 / 11.20 / 11.21)
  */
-const G_fn = (input: {
+const M_fn = (input: {
   entropy: Hash;
   tauOffset: u32;
   p_tau: Posterior<Tau>;
@@ -438,9 +435,9 @@ const G_fn = (input: {
 };
 
 /**
- * $(0.6.4 - 11.22)
+ * $(0.7.0 - 11.22)
  */
-export const G_STAR_fn = (input: {
+export const M_STAR_fn = (input: {
   p_eta2: Posterior<JamState["entropy"][2]>;
   p_eta3: Posterior<JamState["entropy"][3]>;
   p_kappa: Posterior<JamState["kappa"]>;
@@ -452,7 +449,7 @@ export const G_STAR_fn = (input: {
     epochIndex((input.p_tau - VALIDATOR_CORE_ROTATION) as Tau) ==
     epochIndex(input.p_tau)
   ) {
-    return G_fn({
+    return M_fn({
       entropy: input.p_eta2,
       tauOffset: -VALIDATOR_CORE_ROTATION as u32,
       p_tau: input.p_tau,
@@ -460,7 +457,7 @@ export const G_STAR_fn = (input: {
       p_offenders: input.p_offenders,
     }) as G_Star;
   } else {
-    return G_fn({
+    return M_fn({
       entropy: input.p_eta3,
       tauOffset: -VALIDATOR_CORE_ROTATION as u32,
       p_tau: input.p_tau,

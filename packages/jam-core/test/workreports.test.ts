@@ -252,9 +252,9 @@ const buildTest = (filename: string, size: "tiny" | "full") => {
     headerLookupHistory: new Map(
       decoded.input.eg.map((a) => {
         return [
-          a.workReport.refinementContext.lookupAnchor.timeSlot as Tau,
+          a.workReport.context.lookupAnchor.time as Tau,
           {
-            hash: a.workReport.refinementContext.lookupAnchor.hash,
+            hash: a.workReport.context.lookupAnchor.hash,
             header: null as unknown as JamHeader,
           },
         ];

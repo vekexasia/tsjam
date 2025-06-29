@@ -1,4 +1,4 @@
-import { Gas, ServiceIndex, u16, u32, WorkResult } from "@tsjam/types";
+import { Gas, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
 import { HashCodec } from "@/identity.js";
 import {
   WorkOutputCodec,
@@ -18,7 +18,7 @@ import { E_bigint, E_int } from "@/ints/e";
 /**
  * $(0.6.4 - C.23)
  */
-export const WorkResultCodec = createCodec<WorkResult>([
+export const WorkDigestCodec = createCodec<WorkDigest>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)], // s
   ["codeHash", HashCodec], // c
   ["payloadHash", HashCodec], // y
@@ -26,18 +26,18 @@ export const WorkResultCodec = createCodec<WorkResult>([
   ["result", WorkOutputCodec], // d
   [
     "refineLoad",
-    createCodec<WorkResult["refineLoad"]>([
-      ["usedGas", E_bigint<Gas>()], // u
-      ["imports", E_int<u16>()], // i
+    createCodec<WorkDigest["refineLoad"]>([
+      ["gasUsed", E_bigint<Gas>()], // u
+      ["importCount", E_int<u16>()], // i
       ["extrinsicCount", E_int<u16>()], // x
       ["extrinsicSize", E_int<u32>()], // z
-      ["exports", E_int<u16>()], // e
+      ["exportCount", E_int<u16>()], // e
     ]),
   ],
 ]);
 
-export const WorkResultJSONCodec = createJSONCodec<
-  WorkResult,
+export const WorkDigestJSONCodec = createJSONCodec<
+  WorkDigest,
   {
     service_id: number;
     code_hash: string;
@@ -61,12 +61,12 @@ export const WorkResultJSONCodec = createJSONCodec<
   [
     "refineLoad",
     "refine_load",
-    createJSONCodec<WorkResult["refineLoad"]>([
-      ["usedGas", "gas_used", BigIntJSONCodec<Gas>()],
-      ["imports", "imports", NumberJSONCodec<u16>()],
+    createJSONCodec<WorkDigest["refineLoad"]>([
+      ["gasUsed", "gas_used", BigIntJSONCodec<Gas>()],
+      ["importCount", "imports", NumberJSONCodec<u16>()],
       ["extrinsicCount", "extrinsic_count", NumberJSONCodec<u16>()],
       ["extrinsicSize", "extrinsic_size", NumberJSONCodec<u32>()],
-      ["exports", "exports", NumberJSONCodec<u16>()],
+      ["exportCount", "exports", NumberJSONCodec<u16>()],
     ]),
   ],
 ]);
@@ -80,8 +80,8 @@ if (import.meta.vitest) {
   describe("WorkResultCodec", () => {
     it("work_result_1.json encoded should match work_result_1.bin (and back)", () => {
       const bin = getCodecFixtureFile("work_result_1.bin");
-      const decoded = WorkResultCodec.decode(bin);
-      const reencoded = encodeWithCodec(WorkResultCodec, decoded.value);
+      const decoded = WorkDigestCodec.decode(bin);
+      const reencoded = encodeWithCodec(WorkDigestCodec, decoded.value);
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -90,15 +90,15 @@ if (import.meta.vitest) {
       const json = JSON.parse(
         Buffer.from(getCodecFixtureFile("work_result_1.json")).toString("utf8"),
       );
-      const decodedJson = WorkResultJSONCodec.fromJSON(json);
+      const decodedJson = WorkDigestJSONCodec.fromJSON(json);
       expect(decodedJson).toStrictEqual(decoded.value);
-      const reencodedJson = WorkResultJSONCodec.toJSON(decodedJson);
+      const reencodedJson = WorkDigestJSONCodec.toJSON(decodedJson);
       expect(reencodedJson).toStrictEqual(json);
     });
     it("work_result_0.json encoded should match work_result_0.bin (and back)", () => {
       const bin = getCodecFixtureFile("work_result_0.bin");
-      const decoded = WorkResultCodec.decode(bin);
-      const reencoded = encodeWithCodec(WorkResultCodec, decoded.value);
+      const decoded = WorkDigestCodec.decode(bin);
+      const reencoded = encodeWithCodec(WorkDigestCodec, decoded.value);
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -107,9 +107,9 @@ if (import.meta.vitest) {
       const json = JSON.parse(
         Buffer.from(getCodecFixtureFile("work_result_0.json")).toString("utf8"),
       );
-      const decodedJson = WorkResultJSONCodec.fromJSON(json);
+      const decodedJson = WorkDigestJSONCodec.fromJSON(json);
       expect(decodedJson).toStrictEqual(decoded.value);
-      const reencodedJson = WorkResultJSONCodec.toJSON(decodedJson);
+      const reencodedJson = WorkDigestJSONCodec.toJSON(decodedJson);
       expect(reencodedJson).toStrictEqual(json);
     });
   });

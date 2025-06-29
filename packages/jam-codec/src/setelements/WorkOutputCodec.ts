@@ -19,7 +19,7 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
         case WorkError.OutOfGas:
           offset = E.encode(1n, bytes);
           break;
-        case WorkError.UnexpectedTermination:
+        case WorkError.Panic:
           offset = E.encode(2n, bytes);
           break;
         case WorkError.BadExports:
@@ -48,7 +48,7 @@ export const WorkOutputCodec: JamCodec<WorkOutput> = {
         return { value: WorkError.OutOfGas, readBytes: 1 };
       case 2:
         return {
-          value: WorkError.UnexpectedTermination,
+          value: WorkError.Panic,
           readBytes: 1,
         };
       case 3:
@@ -89,7 +89,7 @@ export const WorkOutputJSONCodec: JSONCodec<
     } else if ("out-of-gas" in json) {
       return WorkError.OutOfGas;
     } else if ("panic" in json) {
-      return WorkError.UnexpectedTermination;
+      return WorkError.Panic;
     } else if ("bad-exports" in json) {
       return WorkError.BadExports;
     } else if ("bad-code" in json) {
@@ -107,7 +107,7 @@ export const WorkOutputJSONCodec: JSONCodec<
     switch (value) {
       case WorkError.OutOfGas:
         return { "out-of-gas": null };
-      case WorkError.UnexpectedTermination:
+      case WorkError.Panic:
         return { panic: null };
       case WorkError.BadExports:
         return { "bad-exports": null };

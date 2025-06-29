@@ -38,7 +38,7 @@ export type SingleCoreStatistics = {
    * `i`
    * Number of segments imported from DA made by core for reported work..
    */
-  imports: u16;
+  importCount: u16;
 
   /**
    * `e`
@@ -56,7 +56,7 @@ export type SingleCoreStatistics = {
    * `x`
    * Number of segments exported into DA made by core for reported work.
    */
-  exports: u16;
+  exportCount: u16;
 
   /**
    * `b`
@@ -68,7 +68,7 @@ export type SingleCoreStatistics = {
    * `u`
    * Total gas consumed by core for reported work. includes all refinement and authorizations.
    */
-  usedGas: Gas;
+  gasUsed: Gas;
 };
 
 /**
@@ -83,12 +83,12 @@ export type SingleServiceStatistics = {
   /**
    * `r`
    */
-  refinement: { count: u32; usedGas: Gas };
+  refinement: { count: u32; gasUsed: Gas };
 
   /**
    * `i`
    */
-  imports: u32;
+  importCount: u32;
 
   /**
    * `e`
@@ -103,15 +103,15 @@ export type SingleServiceStatistics = {
   /**
    * `x`
    */
-  exports: u32;
+  exportCount: u32;
 
   /**
    * `a`
    */
-  accumulate: { count: u32; usedGas: Gas };
+  accumulate: { count: u32; gasUsed: Gas };
 
   /**
    * `t`
    */
-  transfers: { count: u32; usedGas: Gas };
+  transfers: { count: u32; gasUsed: Gas };
 };

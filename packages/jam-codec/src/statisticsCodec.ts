@@ -1,3 +1,4 @@
+import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   Gas,
   JamStatistics,
@@ -9,12 +10,10 @@ import {
   u32,
   ValidatorStatistics,
 } from "@tsjam/types";
-import { createCodec } from "./utils";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { createSequenceCodec } from "./sequenceCodec";
-import { E_4_int, E_8, E_sub, E_sub_int } from "./ints/E_subscr";
-import { buildGenericKeyValueCodec } from "./dicts/keyValue";
 import { JamCodec } from "./codec";
+import { buildGenericKeyValueCodec } from "./dicts/keyValue";
+import { E_bigint, E_int } from "./ints/e";
+import { E_4_int, E_sub, E_sub_int } from "./ints/E_subscr";
 import {
   ArrayOfJSONCodec,
   BigIntJSONCodec,
@@ -23,7 +22,8 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
 } from "./json/JsonCodec";
-import { E_bigint, E_int } from "./ints/e";
+import { createSequenceCodec } from "./sequenceCodec";
+import { createCodec } from "./utils";
 export const StatisticsCodec = (
   validatorsCount: typeof NUMBER_OF_VALIDATORS,
   cores: typeof CORES,
@@ -82,12 +82,12 @@ const coreStatisticsCodec = (cores: typeof CORES) => {
     createCodec<SingleCoreStatistics>([
       ["daLoad", E_int<u32>()],
       ["popularity", E_int<u16>()],
-      ["imports", E_int<u16>()],
-      ["exports", E_int<u16>()],
+      ["importCount", E_int<u16>()],
+      ["exportCount", E_int<u16>()],
       ["extrinsicSize", E_int<u32>()],
       ["extrinsicCount", E_int<u16>()],
       ["bundleSize", E_int<u32>()],
-      ["usedGas", E_bigint<Gas>()],
+      ["gasUsed", E_bigint<Gas>()],
     ]),
   );
 };
@@ -105,11 +105,11 @@ const coreStatisticsJSONCodec = createJSONCodec<
   SingleCoreStatistics,
   SingleCoreJSONStatistics
 >([
-  ["usedGas", "gas_used", BigIntJSONCodec<Gas>()],
-  ["imports", "imports", NumberJSONCodec<u16>()],
+  ["gasUsed", "gas_used", BigIntJSONCodec<Gas>()],
+  ["importCount", "imports", NumberJSONCodec<u16>()],
   ["extrinsicCount", "extrinsic_count", NumberJSONCodec<u16>()],
   ["extrinsicSize", "extrinsic_size", NumberJSONCodec<u32>()],
-  ["exports", "exports", NumberJSONCodec<u16>()],
+  ["exportCount", "exports", NumberJSONCodec<u16>()],
   ["bundleSize", "bundle_size", NumberJSONCodec<u32>()],
   ["daLoad", "da_load", NumberJSONCodec<u32>()],
   ["popularity", "popularity", NumberJSONCodec<u16>()],
@@ -129,25 +129,25 @@ export const ServiceStatisticsCodec = buildGenericKeyValueCodec(
       "refinement",
       createCodec<SingleServiceStatistics["refinement"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_sub<Gas>(8)],
+        ["gasUsed", E_sub<Gas>(8)],
       ]),
     ],
-    ["imports", E_int<u32>()],
-    ["exports", E_int<u32>()],
+    ["importCount", E_int<u32>()],
+    ["exportCount", E_int<u32>()],
     ["extrinsicSize", E_int<u32>()],
     ["extrinsicCount", E_int<u32>()],
     [
       "accumulate",
       createCodec<SingleServiceStatistics["accumulate"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_sub<Gas>(8)],
+        ["gasUsed", E_sub<Gas>(8)],
       ]),
     ],
     [
       "transfers",
       createCodec<SingleServiceStatistics["transfers"]>([
         ["count", E_int<u32>()],
-        ["usedGas", E_sub<Gas>(8)],
+        ["gasUsed", E_sub<Gas>(8)],
       ]),
     ],
   ]),
@@ -180,19 +180,19 @@ export const ServiceStatisticsJSONCodec: JSONCodec<
       },
       refinement: {
         count: <u32>json.refinement_count,
-        usedGas: BigInt(json.refinement_gas_used) as Gas,
+        gasUsed: BigInt(json.refinement_gas_used) as Gas,
       },
-      imports: <u32>json.imports,
+      importCount: <u32>json.imports,
       extrinsicCount: <u32>json.extrinsic_count,
       extrinsicSize: <u32>json.extrinsic_size,
-      exports: <u32>json.exports,
+      exportCount: <u32>json.exports,
       accumulate: {
         count: <u32>json.accumulate_count,
-        usedGas: BigInt(json.accumulate_gas_used) as Gas,
+        gasUsed: BigInt(json.accumulate_gas_used) as Gas,
       },
       transfers: {
         count: <u32>json.on_transfers_count,
-        usedGas: BigInt(json.on_transfers_gas_used) as Gas,
+        gasUsed: BigInt(json.on_transfers_gas_used) as Gas,
       },
     };
   },
@@ -201,15 +201,15 @@ export const ServiceStatisticsJSONCodec: JSONCodec<
       provided_count: value.provided.count,
       provided_size: value.provided.size,
       refinement_count: value.refinement.count,
-      refinement_gas_used: Number(value.refinement.usedGas),
-      imports: value.imports,
+      refinement_gas_used: Number(value.refinement.gasUsed),
+      imports: value.importCount,
       extrinsic_count: value.extrinsicCount,
       extrinsic_size: value.extrinsicSize,
-      exports: value.exports,
+      exports: value.exportCount,
       accumulate_count: value.accumulate.count,
-      accumulate_gas_used: Number(value.accumulate.usedGas),
+      accumulate_gas_used: Number(value.accumulate.gasUsed),
       on_transfers_count: value.transfers.count,
-      on_transfers_gas_used: Number(value.transfers.usedGas),
+      on_transfers_gas_used: Number(value.transfers.gasUsed),
     };
   },
 };

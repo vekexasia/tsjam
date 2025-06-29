@@ -17,7 +17,7 @@ import {
   RHO_2_Dagger,
   RHO_2_DaggerError,
   RHO_toPosterior,
-  _w,
+  _I,
   authorizerPool_toPosterior,
   coreStatisticsSTF,
   deltaToDoubleDagger,
@@ -348,7 +348,7 @@ export const importBlock: STF<
     curState.statistics.validators,
   ).safeRet();
 
-  const guaranteedReports = _w(block.extrinsics.reportGuarantees);
+  const guaranteedReports = _I(block.extrinsics.reportGuarantees);
   const [, p_coreStatistics] = coreStatisticsSTF(
     {
       availableReports: w,

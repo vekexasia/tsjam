@@ -26,13 +26,13 @@ export const authorizerPool_toPosterior: STF<
   for (let core: CoreIndex = 0 as CoreIndex; core < curState.length; core++) {
     const fromQueue = input.p_queue[core][input.p_tau % AUTHQUEUE_MAX_SIZE];
     let hashes: Hash[];
-    const firstWReport = input.eg.find((w) => w.workReport.coreIndex === core);
+    const firstWReport = input.eg.find((w) => w.workReport.core === core);
     if (typeof firstWReport === "undefined") {
       // F(c) results in queue[c]
       hashes = [...curState[core], fromQueue];
     } else {
       // F(c) says we need to remove the leftmost workReport.hash from the curState
-      const h = firstWReport.workReport.authorizerHash;
+      const h = firstWReport.workReport.authorizer;
       const index = curState[core].findIndex((hash) => hash === h);
       hashes = [
         ...curState[core].slice(0, index),

@@ -1,7 +1,7 @@
 import {
   BeefyRootHash,
   HeaderHash,
-  RefinementContext,
+  WorkContext,
   StateRootHash,
   Tau,
   WorkPackageHash,
@@ -18,30 +18,30 @@ import {
 } from "@/json/JsonCodec";
 
 /**
- * it defines codec for the RefinementContext or member of `X` set
+ * it defines codec for the WorkContext or member of `X` set
  * $(0.6.4 - C.21)
  */
-export const RefinementContextCodec = createCodec<RefinementContext>([
+export const WorkContextCodec = createCodec<WorkContext>([
   [
     "anchor",
-    createCodec<RefinementContext["anchor"]>([
+    createCodec<WorkContext["anchor"]>([
       ["hash", create32BCodec<HeaderHash>()],
-      ["stateRoot", create32BCodec<StateRootHash>()],
-      ["beefyRoot", create32BCodec<BeefyRootHash>()],
+      ["postState", create32BCodec<StateRootHash>()],
+      ["accOutLog", create32BCodec<BeefyRootHash>()],
     ]),
   ],
   [
     "lookupAnchor",
-    createCodec<RefinementContext["lookupAnchor"]>([
+    createCodec<WorkContext["lookupAnchor"]>([
       ["hash", create32BCodec<HeaderHash>()],
-      ["timeSlot", E_sub_int<Tau>(4)],
+      ["time", E_sub_int<Tau>(4)],
     ]),
   ],
-  ["dependencies", createArrayLengthDiscriminator(WorkPackageHashCodec)],
+  ["prerequisites", createArrayLengthDiscriminator(WorkPackageHashCodec)],
 ]);
 
-export const RefinementContextJSONCodec: JSONCodec<
-  RefinementContext,
+export const WorkContextJSONCodec: JSONCodec<
+  WorkContext,
   {
     anchor: string;
     state_root: string;
@@ -55,14 +55,14 @@ export const RefinementContextJSONCodec: JSONCodec<
     return {
       anchor: {
         hash: HashJSONCodec<HeaderHash>().fromJSON(json.anchor),
-        stateRoot: HashJSONCodec<StateRootHash>().fromJSON(json.state_root),
-        beefyRoot: HashJSONCodec<BeefyRootHash>().fromJSON(json.beefy_root),
+        postState: HashJSONCodec<StateRootHash>().fromJSON(json.state_root),
+        accOutLog: HashJSONCodec<BeefyRootHash>().fromJSON(json.beefy_root),
       },
       lookupAnchor: {
         hash: HashJSONCodec<HeaderHash>().fromJSON(json.lookup_anchor),
-        timeSlot: <Tau>json.lookup_anchor_slot,
+        time: <Tau>json.lookup_anchor_slot,
       },
-      dependencies: json.prerequisites.map((a) =>
+      prerequisites: json.prerequisites.map((a) =>
         HashJSONCodec<WorkPackageHash>().fromJSON(a),
       ),
     };
@@ -70,12 +70,12 @@ export const RefinementContextJSONCodec: JSONCodec<
   toJSON(value) {
     return {
       anchor: HashJSONCodec().toJSON(value.anchor.hash),
-      state_root: HashJSONCodec().toJSON(value.anchor.stateRoot),
-      beefy_root: HashJSONCodec().toJSON(value.anchor.beefyRoot),
+      state_root: HashJSONCodec().toJSON(value.anchor.postState),
+      beefy_root: HashJSONCodec().toJSON(value.anchor.accOutLog),
       lookup_anchor: HashJSONCodec().toJSON(value.lookupAnchor.hash),
-      lookup_anchor_slot: NumberJSONCodec().toJSON(value.lookupAnchor.timeSlot),
+      lookup_anchor_slot: NumberJSONCodec().toJSON(value.lookupAnchor.time),
       prerequisites: ArrayOfJSONCodec(HashJSONCodec()).toJSON(
-        value.dependencies,
+        value.prerequisites,
       ),
     };
   },
@@ -84,18 +84,16 @@ if (import.meta.vitest) {
   const { beforeAll, describe, it, expect } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/utils.js");
   const { encodeWithCodec } = await import("@/utils");
-  describe("RefinementContextCodec", () => {
+  describe("WorkContextCodec", () => {
     let bin: Uint8Array;
     beforeAll(() => {
       bin = getCodecFixtureFile("refine_context.bin");
     });
 
     it("should encode/decode properly", () => {
-      const decoded = RefinementContextCodec.decode(bin);
-      expect(RefinementContextCodec.encodedSize(decoded.value)).toBe(
-        bin.length,
-      );
-      const reencoded = encodeWithCodec(RefinementContextCodec, decoded.value);
+      const decoded = WorkContextCodec.decode(bin);
+      expect(WorkContextCodec.encodedSize(decoded.value)).toBe(bin.length);
+      const reencoded = encodeWithCodec(WorkContextCodec, decoded.value);
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

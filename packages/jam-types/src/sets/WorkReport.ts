@@ -1,5 +1,5 @@
 import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
-import { RefinementContext } from "@/sets/RefinementContext";
+import { WorkContext } from "@/sets/WorkContext";
 import {
   Blake2bHash,
   BoundedSeq,
@@ -10,49 +10,49 @@ import {
   Tagged,
   WorkPackageHash,
 } from "@/genericTypes";
-import { WorkResult } from "@/sets/WorkResult";
+import { WorkDigest } from "@/sets/WorkDigest";
 import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 import { AccumulationQueue } from "..";
 
 /**
- * Identified by `W` set
- * @see $(0.6.4 - 11.2)
+ * Identified by `R` set
+ * @see $(0.7.0 - 11.2)
  */
 export type WorkReport = {
   /**
-   * `s`
+   * `bold_s`
    */
-  workPackageSpecification: AvailabilitySpecification;
+  avSpec: AvailabilitySpecification;
 
   /**
-   * `x`
+   * `bold_c`
    */
-  refinementContext: RefinementContext;
+  context: WorkContext;
 
   /**
    * `c`
    */
-  coreIndex: CoreIndex;
+  core: CoreIndex;
 
   /**
    * `a`
    */
-  authorizerHash: Blake2bHash;
+  authorizer: Blake2bHash;
 
   /**
-   * `o`
+   * `bold_t`
    */
-  authorizerOutput: Uint8Array;
+  authTrace: Uint8Array;
 
   /**
-   * `l`
+   * `bold_l`
    */
-  segmentRootLookup: Map<WorkPackageHash, Hash>;
+  srLookup: Map<WorkPackageHash, Hash>;
 
   /**
-   * `r` - also called digests
+   * `bold_d`
    */
-  results: BoundedSeq<WorkResult, 1, typeof MAXIMUM_WORK_ITEMS>;
+  digests: BoundedSeq<WorkDigest, 1, typeof MAXIMUM_WORK_ITEMS>;
 
   /**
    * `g`
@@ -62,7 +62,7 @@ export type WorkReport = {
 
 /**
  * it's defined by the bold `W` in the paper
- * $(0.6.4 - 11.16)
+ * $(0.7.0 - 11.16)
  */
 export type AvailableWorkReports = Tagged<WorkReport[], "available">;
 
