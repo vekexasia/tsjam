@@ -131,7 +131,7 @@ export const computeWorkReport = (
     // c
     core: core,
     // a
-    authorizer: pac.pa,
+    authorizerHash: pac.pa,
     // o
     authTrace: authOutput,
     // l

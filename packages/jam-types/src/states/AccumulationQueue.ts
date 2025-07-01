@@ -3,9 +3,9 @@ import { WorkReport } from "@/sets/WorkReport";
 import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 
 /**
- * `v` in the graypaper
+ * `ω`
  * Defines the ready but not yet accumulated work reports
- * $(0.6.4 - 12.3)
+ * $(0.7.0 - 12.3)
  */
 export type AccumulationQueue = SeqOfLength<
   Array<{
@@ -16,6 +16,7 @@ export type AccumulationQueue = SeqOfLength<
 
     /**
      * `bold_d`
+     * the unaccumulated dependencies of the workreport
      */
     dependencies: Set<WorkPackageHash>;
   }>,

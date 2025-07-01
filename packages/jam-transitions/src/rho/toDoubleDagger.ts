@@ -35,7 +35,7 @@ export const RHO2DoubleDagger: STF<
     if (
       input.rho[c] &&
       w &&
-      input.rho[c]!.workReport.authorizer === w.authorizer
+      input.rho[c]!.workReport.authorizerHash === w.authorizerHash
     ) {
       newState[c] = undefined;
     }

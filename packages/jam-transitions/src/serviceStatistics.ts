@@ -25,12 +25,12 @@ export const serviceStatisticsSTF: STF<
     preimages: EP_Extrinsic;
 
     /**
-     * `bold X` - from $(0.6.4 - 12.29)
+     * `bold X` - from $(0.7.0 - 12.33)
      */
     transferStatistics: Map<ServiceIndex, { count: u32; gasUsed: Gas }>;
 
     /**
-     * `bold I` - from $(0.6.4 - 12.23)
+     * `bold S` - from $(0.7.0 - 12.26)
      */
     accumulationStatistics: Map<ServiceIndex, { count: u32; gasUsed: Gas }>;
   },

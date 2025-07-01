@@ -9,7 +9,7 @@ import { E } from "@/ints/e";
  * $(0.6.4 - C.29)
  */
 export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
-  ["workPackageHash", WorkPackageHashCodec], // h
+  ["packageHash", WorkPackageHashCodec], // p
   ["segmentRoot", HashCodec], // e
   ["authorizerHash", HashCodec], // a
   ["payloadHash", HashCodec], // y
@@ -21,6 +21,6 @@ export const PVMAccumulationOpCodec = createCodec<PVMAccumulationOp>([
       (b) => b,
     ),
   ], // g
-  ["output", WorkOutputCodec], // O(d)
-  ["authorizerOutput", LengthDiscrimantedIdentity], // o
+  ["result", WorkOutputCodec], // O(l)
+  ["authTrace", LengthDiscrimantedIdentity], // t
 ]);

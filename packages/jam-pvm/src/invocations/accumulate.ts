@@ -1,4 +1,5 @@
 import {
+  AccumulationOut,
   DeferredTransfer,
   Delta,
   Gas,
@@ -83,22 +84,22 @@ export const accumulateInvocation = (
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
-): [
-  PVMAccumulationState,
-  DeferredTransfer[],
-  Hash | undefined,
-  Gas,
-  PVMResultContext["preimages"], // p
-] => {
+): AccumulationOut => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   const yRes = structuredClone(iRes);
 
   // first case
-  if (!pvmAccState.delta.has(s)) {
-    return [iRes.u, [], undefined, toTagged(0n), []];
+  if (!pvmAccState.accounts.has(s)) {
+    return {
+      postState: iRes.u,
+      deferredTransers: [],
+      yield: undefined,
+      gasUsed: toTagged(0n),
+      provision: [],
+    };
   }
 
-  const serviceAccount = pvmAccState.delta.get(s)!;
+  const serviceAccount = pvmAccState.accounts.get(s)!;
   const code = serviceAccount.code();
   assert(typeof code !== "undefined", "Code not found in preimage");
 
@@ -123,7 +124,7 @@ const I_fn = (
   p_eta_0: Posterior<JamState["entropy"][0]>,
   p_tau: Posterior<Tau>,
 ): PVMResultContext => {
-  const d: Delta = new Map(pvmAccState.delta);
+  const d: Delta = new Map(pvmAccState.accounts);
   d.delete(service);
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
     Hashing.blake2bBuf(
@@ -142,7 +143,7 @@ const I_fn = (
 
   const i = check_fn(
     newServiceIndex,
-    pvmAccState.delta, // u_d
+    pvmAccState.accounts, // u_d
   );
 
   return {
@@ -166,8 +167,8 @@ const F_fn: (
 ) => HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }> =
   (service: ServiceIndex, tau: Tau) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
-    const bold_d = new Map([...input.out.x.u.delta.entries()]);
-    const bold_s = input.out.x.u.delta.get(service)!;
+    const bold_d = new Map([...input.out.x.u.accounts.entries()]);
+    const bold_s = input.out.x.u.accounts.get(service)!;
     switch (fnIdentifier) {
       case "read": {
         const { ctx, out } = applyMods(
@@ -274,8 +275,8 @@ const G_fn = (
 ): ReturnType<
   HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }>
 > => {
-  x.x.u = { ...x.x.u, delta: new Map([...x.x.u.delta.entries()]) };
-  x.x.u.delta.set(x.x.service, serviceAccount);
+  x.x.u = { ...x.x.u, accounts: new Map([...x.x.u.accounts.entries()]) };
+  x.x.u.accounts.set(x.x.service, serviceAccount);
   return {
     out: x,
     ctx: { ...context },
@@ -289,24 +290,30 @@ const C_fn = (
   gas: Gas,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
   d: { x: PVMResultContext; y: PVMResultContext },
-): [
-  PVMAccumulationState,
-  DeferredTransfer[],
-  Hash | undefined,
-  Gas,
-  PVMResultContext["preimages"],
-] => {
+): AccumulationOut => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
-    return [d.y.u, d.y.transfer, d.y.y, gas, d.y.preimages];
+    return {
+      postState: d.x.u,
+      deferredTransers: d.x.transfer,
+      yield: d.y.y,
+      gasUsed: toTagged(gas),
+      provision: d.x.preimages,
+    };
   } else if (o.length === 32) {
-    return [
-      d.x.u,
-      d.x.transfer,
-      bytesToBigInt(o) as unknown as Hash,
-      gas,
-      d.x.preimages,
-    ];
+    return {
+      postState: d.x.u,
+      deferredTransers: d.x.transfer,
+      yield: bytesToBigInt(o) as unknown as Hash,
+      gasUsed: toTagged(gas),
+      provision: d.x.preimages,
+    };
   } else {
-    return [d.x.u, d.x.transfer, d.x.y, gas, d.x.preimages];
+    return {
+      postState: d.x.u,
+      deferredTransers: d.x.transfer,
+      yield: d.x.y,
+      gasUsed: toTagged(gas),
+      provision: d.x.preimages,
+    };
   }
 };

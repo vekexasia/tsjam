@@ -2,14 +2,14 @@ import { WorkOutput } from "@/sets/WorkOutput.js";
 import { Gas, Hash, WorkPackageHash } from "@/genericTypes.js";
 
 /**
- * `O` set in graypaper $\operandtuple$
- * $(0.6.7 - 12.19)
+ * `I` set in graypaper $\operandtuple$
+ * $(0.7.0 - 12.19)
  */
 export type PVMAccumulationOp = {
   /**
-   * `h`
+   * `p`
    */
-  workPackageHash: WorkPackageHash;
+  packageHash: WorkPackageHash;
 
   /**
    * `e`
@@ -32,13 +32,12 @@ export type PVMAccumulationOp = {
   gasLimit: Gas;
 
   /**
-   * `d`
-   * TODO: rename to result
+   * `bold_t` - comes from Workreport
    */
-  output: WorkOutput;
+  authTrace: Uint8Array;
 
   /**
-   * `o` - comes from Workreport
+   * `bold_l`
    */
-  authorizerOutput: Uint8Array;
+  result: WorkOutput;
 };

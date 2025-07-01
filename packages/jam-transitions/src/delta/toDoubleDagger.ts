@@ -13,13 +13,16 @@ import {
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.7 - 12.29)
+ * $(0.7.0 - 12.31 / 12.32)
  */
 export const deltaToDoubleDagger: STF<
   Dagger<Delta>,
   {
     bold_x: InvokedTransfers;
-    accumulationStatistics: Map<ServiceIndex, { usedGas: Gas; count: u32 }>;
+    /**
+     * `bold S`
+     */
+    accumulationStatistics: Map<ServiceIndex, { gasUsed: Gas; count: u32 }>;
     p_tau: Posterior<Tau>;
   },
   never,

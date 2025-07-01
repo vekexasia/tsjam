@@ -4,7 +4,7 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 /**
  * `ξ` in the graypaper
  * Defines the wph that have been accumulated
- * $(0.6.4 - 12.1)
+ * $(0.7.0 - 12.1)
  */
 export type AccumulationHistory = SeqOfLength<
   Set<WorkPackageHash>,

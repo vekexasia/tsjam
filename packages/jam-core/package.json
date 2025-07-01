@@ -36,7 +36,8 @@
     "@tsjam/transitions": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
-    "neverthrow": "^8.1.1"
+    "neverthrow": "^8.1.1",
+    "uint8array-extras": "^1.4.0"
   },
   "license": "MIT"
 }

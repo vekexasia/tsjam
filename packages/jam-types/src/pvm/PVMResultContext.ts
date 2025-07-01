@@ -30,10 +30,19 @@ export interface PVMResultContext {
    */
   transfer: DeferredTransfer[];
 
-  y?: Hash;
+  y: Hash | undefined;
 
   /**
    * `p`
    */
-  preimages: Array<{ service: ServiceIndex; preimage: Uint8Array }>;
+  preimages: Array<{
+    /**
+     * `s`
+     */
+    service: ServiceIndex;
+    /**
+     * `bold_i`
+     */
+    preimage: Uint8Array;
+  }>;
 }

@@ -10,7 +10,6 @@ import {
   ServiceIndex,
   Tau,
   u32,
-  u64,
   u8,
 } from "@tsjam/types";
 import { argumentInvocation } from "./argument";
@@ -81,7 +80,7 @@ export const transferInvocation = (
   const out = argumentInvocation(
     code,
     10 as u32,
-    transfers.reduce((acc, a) => acc + a.gasLimit, 0n) as Gas,
+    transfers.reduce((acc, a) => acc + a.gas, 0n) as Gas,
     encodeWithCodec(argumentInvocationTransferCodec, {
       transfers,
       tau: t,
@@ -147,19 +146,24 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
   };
 
 /**
- * $(0.6.4 - 12.26) | R
+ * $(0.7.0 - 12.29) | X
  */
 export const filterTransfersByDestination = (
-  bold_t: DeferredTransfer[],
   destination: ServiceIndex,
+  deps: {
+    /**
+     * `bold_t`
+     */
+    transfers: DeferredTransfer[];
+  },
 ) => {
-  return bold_t
+  return deps.transfers
     .slice()
     .sort((a, b) => {
-      if (a.sender === b.sender) {
+      if (a.source === b.source) {
         return a.destination - b.destination;
       }
-      return a.sender - b.sender;
+      return a.source - b.source;
     })
     .filter((t) => t.destination === destination);
 };
@@ -171,12 +175,17 @@ export type InvokedTransfers = Map<
 
 /**
  * computes bold_x
- * $(0.6.4 - 12.27)
+ * $(0.7.0 - 12.30)
  */
 export const invokeOntransfers = (
-  transfers: DeferredTransfer[],
   d_delta: Dagger<Delta>,
   p_tau: Posterior<Tau>,
+  deps: {
+    /**
+     * `bold_t`
+     */
+    transfers: DeferredTransfer[];
+  },
 ) => {
   const x: InvokedTransfers = toTagged(new Map());
 
@@ -187,7 +196,7 @@ export const invokeOntransfers = (
         d_delta,
         p_tau,
         serviceIndex,
-        filterTransfersByDestination(transfers, serviceIndex),
+        filterTransfersByDestination(serviceIndex, deps),
       ),
     );
   }
@@ -195,20 +204,22 @@ export const invokeOntransfers = (
 };
 /**
  * computes big bold X
- * $(0.6.4 - 12.29 / 12.30)
+ * $(0.7.0 - 12.33 / 12.34)
  */
 export const transferStatistics = (
   bold_t: DeferredTransfer[],
   bold_x: InvokedTransfers,
-): Map<ServiceIndex, { count: u32; usedGas: Gas }> => {
-  const toRet = new Map<ServiceIndex, { count: u32; usedGas: Gas }>();
-  for (const [destService, [, usedGas]] of bold_x) {
-    const r = filterTransfersByDestination(bold_t, destService);
+): Map<ServiceIndex, { count: u32; gasUsed: Gas }> => {
+  const toRet = new Map<ServiceIndex, { count: u32; gasUsed: Gas }>();
+  for (const [destService, [, gasUsed /* u */]] of bold_x) {
+    const r = filterTransfersByDestination(destService, {
+      transfers: bold_t,
+    });
     if (r.length > 0) {
       toRet.set(destService, {
-        // u
-        usedGas,
         count: <u32>r.length,
+        // u
+        gasUsed,
       });
     }
   }

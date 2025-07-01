@@ -1,45 +1,43 @@
 import {
   CORES,
-  TOTAL_GAS_ACCUMULATION_ALL_CORES,
-  TOTAL_GAS_ACCUMULATION_LOGIC,
   EPOCH_LENGTH,
   NUMBER_OF_VALIDATORS,
+  TOTAL_GAS_ACCUMULATION_ALL_CORES,
+  TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
+import { accumulateInvocation } from "@tsjam/pvm";
 import {
   AccumulationHistory,
+  AccumulationOut,
   AccumulationQueue,
   AuthorizerQueue,
-  AvailableWorkReports,
-  Delta,
-  Gas,
-  JamState,
-  Posterior,
-  PrivilegedServices,
-  Tau,
   AvailableNoPrereqWorkReports,
   AvailableWithPrereqWorkReports,
+  AvailableWorkReports,
   Dagger,
   DeferredTransfer,
+  Delta,
   EA_Extrinsic,
-  Hash,
+  Gas,
+  JamState,
   PVMAccumulationOp,
   PVMAccumulationState,
+  PVMResultContext,
+  Posterior,
+  PrivilegedServices,
   RHO,
   ServiceIndex,
   Tagged,
+  Tau,
   Validated,
   WorkPackageHash,
   WorkReport,
-  u64,
   u32,
-  PVMResultContext,
-  ServiceAccount,
+  u64,
 } from "@tsjam/types";
-import { toDagger, toPosterior } from "@tsjam/utils";
+import { Timekeeping, toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
-import { toTagged } from "@tsjam/utils";
-import { accumulateInvocation } from "@tsjam/pvm";
-import { Hashing } from "@tsjam/crypto";
 import { ServiceOuts } from "../../jam-types/dist/types/states/ServiceOuts";
 
 /**
@@ -47,7 +45,7 @@ import { ServiceOuts } from "../../jam-types/dist/types/states/ServiceOuts";
  * computes a series of posterior states
  */
 export const accumulateReports = (
-  w: AvailableWorkReports,
+  r: AvailableWorkReports,
   deps: {
     accumulationHistory: AccumulationHistory;
     accumulationQueue: AccumulationQueue;
@@ -63,109 +61,104 @@ export const accumulateReports = (
   /*
    * Integrate state to calculate several posterior state
    */
-  const w_mark = noPrereqAvailableReports(w);
+  const r_mark = noPrereqAvailableReports(r);
 
-  const w_q = withPrereqAvailableReports(w, deps.accumulationHistory);
+  const r_q = withPrereqAvailableReports(r, deps.accumulationHistory);
   // console.log({ w_q: w_q });
-  const w_star = accumulatableReports(
-    w_mark,
-    w_q,
+  const r_star = accumulatableReports(
+    r_mark,
+    r_q,
     deps.accumulationQueue,
     deps.p_tau,
   );
 
-  // $(0.6.7 - 12.21)
+  // $(0.7.0 - 12.22)
   const g: Gas = [
-    TOTAL_GAS_ACCUMULATION_ALL_CORES,
-    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) +
+    TOTAL_GAS_ACCUMULATION_ALL_CORES, //GT
+    TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) + // GA*C
       [...deps.privServices.alwaysAccers.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.6.7 - 12.22)
+  // $(0.7.0 - 12.23)
+  // `e`
+  const preState: PVMAccumulationState = {
+    accounts: deps.serviceAccounts,
+    stagingSet: deps.iota,
+    authQueue: deps.authQueue,
+    manager: deps.privServices.manager,
+    assigners: deps.privServices.assigners,
+    delegator: deps.privServices.delegator,
+    alwaysAccers: deps.privServices.alwaysAccers,
+  };
+
+  // $(0.7.0 - 12.24)
   const [
-    nAccumulatedWork,
-    bold_o,
+    nAccumulatedWork, // `n`
+    postState, // `e'`
     bold_t,
     p_mostRecentAccumulationOutputs, // θ′
-    bold_u,
-  ] = outerAccumulation(
-    g,
-    w_star,
-    {
-      delta: deps.serviceAccounts,
-      manager: deps.privServices.manager,
-      alwaysAccumulate: deps.privServices.alwaysAccers,
-      assign: deps.privServices.assigners,
-      designate: deps.privServices.delegator,
-      authQueue: deps.authQueue,
-      validatorKeys: deps.iota,
-    },
-    deps.privServices.alwaysAccers,
-    {
-      tau: deps.tau,
-      p_tau: deps.p_tau,
-      p_eta_0: deps.p_eta_0,
-    },
-  );
+    gasUsed, // `bold u`
+  ] = outerAccumulation(g, r_star, preState, deps.privServices.alwaysAccers, {
+    p_tau: deps.p_tau,
+    p_eta_0: deps.p_eta_0,
+  });
 
-  // $(0.6.7 - 12.24) | I
+  // $(0.7.0 - 12.26) | S
   const accumulationStatistics: Map<
     ServiceIndex,
-    { usedGas: Gas; count: u32 }
+    { gasUsed: Gas; count: u32 }
   > = new Map();
 
-  const slicedW = w_star.slice(0, nAccumulatedWork);
-
-  // $(0.6.7 - 12.25)
-  bold_u.forEach(({ serviceIndex, usedGas }) => {
+  // $(0.7.0 - 12.27) | we compute the summary of gas used first
+  gasUsed.forEach(({ serviceIndex, gasUsed }) => {
     if (!accumulationStatistics.has(serviceIndex)) {
       accumulationStatistics.set(serviceIndex, {
-        usedGas: <Gas>0n,
+        gasUsed: <Gas>0n,
         count: <u32>0,
       });
     }
     const el = accumulationStatistics.get(serviceIndex)!;
-    el.usedGas = (el.usedGas + usedGas) as Gas;
+    el.gasUsed = (el.gasUsed + gasUsed) as Gas;
   });
 
+  const slicedR = r_star.slice(0, nAccumulatedWork);
   for (const serviceIndex of accumulationStatistics.keys()) {
-    // $(0.6.7 - 12.26)
-    const n_s = slicedW
+    // $(0.7.0 - 12.27)
+    const n_s = slicedR
       .map((wr) => wr.digests)
       .flat()
       .filter((r) => r.serviceIndex === serviceIndex);
     if (n_s.length === 0) {
-      // how can this happen?
+      // N(s) != []
       accumulationStatistics.delete(serviceIndex);
     } else {
       accumulationStatistics.get(serviceIndex)!.count = <u32>n_s.length;
     }
   }
 
-  // calculoate posterior acc history
-  // $(0.6.7 - 12.33 / 12.34)
+  // calculate posterior acc history
+  // $(0.7.0 - 12.35 / 12.36)
   const p_accumulationHistory =
     deps.accumulationHistory.slice() as AccumulationHistory as Posterior<AccumulationHistory>;
   {
-    const w_dot_n = w_star.slice(0, nAccumulatedWork);
-    p_accumulationHistory[EPOCH_LENGTH - 1] = P_fn(w_dot_n);
+    p_accumulationHistory[EPOCH_LENGTH - 1] = P_fn(slicedR);
     for (let i = 0; i < EPOCH_LENGTH - 1; i++) {
       p_accumulationHistory[i] = deps.accumulationHistory[i + 1];
     }
-  } // end of calculation of posterior accumulation history
+  }
 
-  // $(0.6.7 - 12.35) - calculate p_accumulationQueue
+  // $(0.7.0 - 12.37) - calculate p_accumulationQueue
   const p_accumulationQueue = [
     ...deps.accumulationQueue,
   ] as Posterior<AccumulationQueue>;
   {
-    const m = deps.p_tau % EPOCH_LENGTH; // $(0.6.4 - 12.10)
+    const m = deps.p_tau % EPOCH_LENGTH; // $(0.7.0 - 12.10)
 
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
       if (i === 0) {
         p_accumulationQueue[index] = toPosterior(
-          E_Fn(w_q, p_accumulationHistory[EPOCH_LENGTH - 1]),
+          E_Fn(r_q, p_accumulationHistory[EPOCH_LENGTH - 1]),
         );
       } else if (i < deps.p_tau - deps.tau) {
         p_accumulationQueue[index] = toPosterior([]);
@@ -186,21 +179,21 @@ export const accumulateReports = (
     p_accumulationQueue,
     p_mostRecentAccumulationOutputs: [...p_mostRecentAccumulationOutputs], // NOTE: graypaper is wrong here in type
     p_privServices: toPosterior(<PrivilegedServices>{
-      manager: bold_o.manager,
-      delegator: bold_o.designate,
-      assigners: bold_o.assign,
-      alwaysAccers: bold_o.alwaysAccumulate,
+      manager: postState.manager,
+      delegator: postState.delegator,
+      assigners: postState.assigners,
+      alwaysAccers: postState.alwaysAccers,
     }),
-    d_delta: toDagger(bold_o.delta),
-    p_iota: toPosterior(bold_o.validatorKeys),
-    p_authQueue: toPosterior(bold_o.authQueue),
+    d_delta: toDagger(postState.accounts),
+    p_iota: toPosterior(postState.stagingSet),
+    p_authQueue: toPosterior(postState.authQueue),
     accumulationStatistics,
   });
 };
 
 /**
- * `bold W`
- * $(0.6.4 - 11.16)
+ * `bold R`
+ * $(0.7.0 - 11.16)
  * @param ea - Availability Extrinsic
  * @param d_rho - dagger rho
  */
@@ -222,14 +215,14 @@ export const availableReports = (
 };
 
 /**
- * Computes  `W!` in the paper
- * $(0.6.4 - 12.4)
+ * Computes  `R!` in the paper
+ * $(0.7.0 - 12.4)
  */
 export const noPrereqAvailableReports = (
-  w: AvailableWorkReports,
+  bold_R: AvailableWorkReports,
 ): AvailableNoPrereqWorkReports => {
   return toTagged(
-    w.filter(
+    bold_R.filter(
       (wr) => wr.context.prerequisites.length === 0 && wr.srLookup.size === 0,
     ),
   );
@@ -237,25 +230,24 @@ export const noPrereqAvailableReports = (
 
 /**
  * Computes the union of the AccumulationHistory
- * $(0.6.4 - 12.2)
+ * $(0.7.0 - 12.2)
  */
 export const accHistoryUnion = (
   accHistory: AccumulationHistory,
-): AccumulationHistory[0] => {
+): Set<WorkPackageHash> => {
   return toTagged(new Set(accHistory.map((a) => [...a.values()]).flat()));
 };
 
 /**
- * $(0.6.4 - 12.7)
+ * $(0.7.0 - 12.7)
  */
 export const E_Fn = (
   r: AccumulationQueue[0],
-  x: AccumulationHistory[0],
+  x: Set<WorkPackageHash>,
 ): AccumulationQueue[0] => {
   const toRet: AccumulationQueue[0] = [];
 
-  for (const { workReport, dependencies } of r) {
-    // (ws)h ~∈ x
+  for (const { workReport /* w */, dependencies /* d */ } of r) {
     if (x.has(workReport.avSpec.packageHash)) {
       continue;
     }
@@ -269,23 +261,22 @@ export const E_Fn = (
 
 /**
  * `WQ` in the paper
- * $(0.6.4 - 12.5)
+ * $(0.7.0 - 12.5)
  */
 export const withPrereqAvailableReports = (
-  w: AvailableWorkReports,
+  bold_R: AvailableWorkReports,
   accHistory: AccumulationHistory,
 ): AvailableWithPrereqWorkReports => {
   return toTagged(
     E_Fn(
-      // $(0.6.4 - 12.6) | D fn calculated inline
-      w
+      bold_R
         .filter((wr) => {
           return wr.context.prerequisites.length > 0 || wr.srLookup.size > 0;
         })
         .map((wr) => {
+          // $(0.7.0 - 12.6) | D fn calculated inline
           const deps = new Set<WorkPackageHash>(wr.srLookup.keys());
           wr.context.prerequisites.forEach((rwp) => deps.add(rwp));
-
           return { workReport: wr, dependencies: deps };
         }),
       accHistoryUnion(accHistory),
@@ -294,7 +285,9 @@ export const withPrereqAvailableReports = (
 };
 
 /**
- * $(0.6.4 - 12.9)
+ * `P()`
+ * $(0.7.0 - 12.9)
+ * compute the package haches of the given work reports
  */
 export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
   return new Set(r.map((wr) => wr.avSpec.packageHash));
@@ -302,10 +295,10 @@ export const P_fn = (r: WorkReport[]): Set<WorkPackageHash> => {
 
 /**
  * `Q` fn
- * $(0.6.4 - 12.8)
+ * $(0.7.0 - 12.8)
  */
 export const computeAccumulationPriority = (
-  r: Array<{ workReport: WorkReport; dependencies: Set<WorkPackageHash> }>,
+  r: AccumulationQueue[0],
 ): WorkReport[] => {
   const g = r
     .filter(({ dependencies }) => dependencies.size === 0)
@@ -318,56 +311,58 @@ export const computeAccumulationPriority = (
 };
 
 /**
- * `W*` in the paper
- * $(0.6.4 - 12.11)
+ * `bold R*` in the paper
+ * $(0.7.0 - 12.11)
  */
 export const accumulatableReports = (
-  w_mark: ReturnType<typeof noPrereqAvailableReports>,
-  w_q: ReturnType<typeof withPrereqAvailableReports>,
+  r_mark: ReturnType<typeof noPrereqAvailableReports>,
+  r_q: ReturnType<typeof withPrereqAvailableReports>,
   accumulationQueue: AccumulationQueue,
   p_tau: Posterior<Tau>, // Ht
 ) => {
-  // $(0.6.4 - 12.10)
+  // $(0.7.0 - 12.10)
   const m = p_tau % EPOCH_LENGTH;
 
-  // console.log("W_Q", w_q);
   const accprio = computeAccumulationPriority(
-    // $(0.6.4 - 12.12)
+    // $(0.7.0 - 12.12)
     E_Fn(
       [
         ...accumulationQueue.slice(m).flat(),
         ...accumulationQueue.slice(0, m).flat(),
-        ...w_q,
+        ...r_q,
       ],
-      P_fn(w_mark),
+      P_fn(r_mark),
     ),
   );
-  // console.log("Q(q)", ArrayOfJSONCodec(WorkReportJSONCodec).toJSON(accprio));
-  return [...w_mark, ...accprio] as Tagged<WorkReport[], "W*">;
+  return [...r_mark, ...accprio] as Tagged<WorkReport[], "R*">;
 };
 
-// $(0.6.6 - 12.15)
+// $(0.7.0 - 12.15)
 /*
- * `gasusd` gas used by each service
+ * `gasused` gas used by each service
+ * also known as `U`
  */
-type U = Array<{
+type GasUsed = Array<{
   // `s`
   serviceIndex: ServiceIndex;
   // `u`
-  usedGas: Gas;
+  gasUsed: Gas;
 }>;
 
 /**
  * `∆+`
- * $(0.6.4 - 12.16)
+ * @param gasLimit - `g`
+ * @param works - `bold_w`
+ * @param accState - `bold_e` initial partial accumulation state
+ * @param freeAccServices - `bold_f`
+ * @see $(0.7.0 - 12.16)
  */
 export const outerAccumulation = (
-  gasLimit: Gas, // g
-  works: WorkReport[], // w
-  accState: PVMAccumulationState, // o
-  gasLimits: Map<ServiceIndex, u64>, // f
+  gasLimit: Gas,
+  works: WorkReport[],
+  accState: PVMAccumulationState,
+  freeAccServices: Map<ServiceIndex, u64>,
   deps: {
-    tau: Tau;
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
@@ -376,7 +371,7 @@ export const outerAccumulation = (
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
   ServiceOuts,
-  U,
+  GasUsed,
 ] => {
   let sum = 0n;
   let i = 0;
@@ -394,63 +389,43 @@ export const outerAccumulation = (
     return [0, accState, [], new Set(), []];
   }
 
-  const [o_star, t_star, b_star, u_star] = parallelizedAccumulation(
-    accState,
-    works.slice(0, i),
-    gasLimits,
-    deps,
-  );
+  const [newAccState /* e_star */, t_star, b_star, u_star] =
+    parallelizedAccumulation(
+      accState,
+      works.slice(0, i),
+      freeAccServices,
+      deps,
+    );
   const consumedGas = u_star
-    .map((a) => a.usedGas)
+    .map((a) => a.gasUsed)
     .reduce((s, e) => <Gas>(s + e), <Gas>0n);
 
-  const [j, o_prime, t, b, u] = outerAccumulation(
+  const [j, finalAccState /* e' */, t, b, u] = outerAccumulation(
     (gasLimit - consumedGas) as Gas,
     works.slice(i),
-    o_star,
+    newAccState,
     new Map(),
     deps,
   );
 
   return [
     i + j,
-    o_prime,
+    finalAccState,
     t_star.concat(t),
     new Set([...b_star.values(), ...b.values()]),
     u_star.concat(u),
   ];
 };
 
-// $(0.6.5 - 12.18) - \fnprovide
-const preimageProvide = (
-  d: Map<ServiceIndex, ServiceAccount>,
-  p: PVMResultContext["preimages"],
-  p_tau: Posterior<Tau>,
-) => {
-  const newD = structuredClone(d);
-  for (const { service, preimage } of p) {
-    const serviceAccount = newD.get(service);
-    const phash = Hashing.blake2b(preimage);
-    if (
-      typeof serviceAccount !== "undefined" &&
-      serviceAccount.requests.get(phash)?.get(toTagged(<u32>preimage.length))
-        ?.length === 0
-    ) {
-      const newSa = newD.get(service)!;
-      newSa.requests
-        .get(phash)!
-        .set(toTagged(<u32>preimage.length), toTagged(<Tau[]>[p_tau]));
-      newSa.preimages.set(phash, preimage);
-    }
-  }
-};
 /**
  * `∆*` fn
- * $(0.6.7 - 12.17)
+ * @param accState - `bold_e` initial partial accumulation state
+ * @param works - `bold_w`
+ * $(0.7.0 - 12.17)
  */
 export const parallelizedAccumulation = (
-  o: PVMAccumulationState,
-  w: WorkReport[],
+  accState: PVMAccumulationState,
+  works: WorkReport[],
   f: Map<ServiceIndex, u64>,
   deps: {
     p_tau: Posterior<Tau>;
@@ -460,164 +435,193 @@ export const parallelizedAccumulation = (
   accState: PVMAccumulationState,
   transfers: DeferredTransfer[],
   b: ServiceOuts,
-  u: U,
+  u: GasUsed,
 ] => {
-  const bold_s = new Set([
-    ...w.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
-    ...f.keys(),
-  ]);
-  const bold_s_values = [...bold_s.values()];
-  // console.log(
-  //  "∆* services:",
-  // w.map((wr) => wr.results.map((r) => r.serviceIndex)).flat(),
-  //  );
+  const bold_s = [
+    ...new Set([
+      ...works.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
+      ...f.keys(),
+    ]).values(),
+  ];
 
-  const u: U = [];
+  const u: GasUsed = [];
   const accumulatedServices: Array<
     ReturnType<typeof singleServiceAccumulation>
   > = [];
+  const t: DeferredTransfer[] = [];
   const b: ServiceOuts = new Set();
 
-  bold_s_values.forEach((s) => {
-    const acc = singleServiceAccumulation(o, w, f, s, deps);
+  bold_s.forEach((s) => {
+    const acc = singleServiceAccumulation(accState, works, f, s, deps);
 
-    u.push({ serviceIndex: s, usedGas: acc.u });
+    u.push({ serviceIndex: s, gasUsed: acc.gasUsed });
     accumulatedServices.push(acc);
 
-    if (typeof acc.b !== "undefined") {
-      b.add({ serviceIndex: s, accumulationResult: acc.b! });
+    if (typeof acc.yield !== "undefined") {
+      b.add({ serviceIndex: s, accumulationResult: acc.yield! });
     }
+    // we concat directly here
+    t.push(...acc.deferredTransers);
   });
 
-  const t = accumulatedServices
-    .reduce((a, { t }) => a.concat(t), [] as DeferredTransfer[])
-    .flat();
+  const delta: Delta = structuredClone(accState.accounts);
 
-  const delta: Delta = new Map([...o.delta.entries()]);
   // should contain "removed" services
   const m: Set<ServiceIndex> = new Set();
   // should contain "added/updated" services
   const n: Delta = new Map();
-  for (let i = 0; i < bold_s_values.length; i++) {
-    const s = bold_s_values[i];
+  for (let i = 0; i < bold_s.length; i++) {
+    const s = bold_s[i];
     const acc = accumulatedServices[i];
-    for (const k of acc.o.delta.keys()) {
+    for (const k of acc.postState.accounts.keys()) {
       if (!delta.has(k) || k === s) {
-        n.set(k, acc.o.delta.get(k)!);
+        n.set(k, acc.postState.accounts.get(k)!);
       }
     }
     for (const k of delta.keys()) {
-      if (!acc.o.delta.has(k)) {
+      if (!acc.postState.accounts.has(k)) {
         m.add(k);
       }
     }
   }
   // console.log({ n });
   // console.log({ m });
-  const delta_prime: Delta = new Map([...delta.entries(), ...n.entries()]);
+  const tmpDelta: Delta = new Map([...delta.entries(), ...n.entries()]);
   for (const k of m) {
-    delta_prime.delete(k);
+    tmpDelta.delete(k);
   }
+  const delta_prime = preimageProvide(
+    tmpDelta,
+    accumulatedServices.map((a) => a.provision).flat(),
+    deps.p_tau,
+  );
+
   const {
     manager: m_prime,
-    assign: a_star,
-    designate: v_star,
-    alwaysAccumulate: z_prime,
-  } = singleServiceAccumulation(o, w, f, o.manager, deps).o;
+    assigners: a_star,
+    delegator: v_star,
+    alwaysAccers: z_prime,
+  } = singleServiceAccumulation(
+    accState,
+    works,
+    f,
+    accState.manager,
+    deps,
+  ).postState;
 
-  const v_prime = singleServiceAccumulation(o, w, f, v_star, deps).o.designate;
-  const i_prime = singleServiceAccumulation(o, w, f, o.designate, deps).o
-    .validatorKeys;
+  const v_prime = singleServiceAccumulation(accState, works, f, v_star, deps)
+    .postState.delegator;
+  const i_prime = singleServiceAccumulation(
+    accState,
+    works,
+    f,
+    accState.delegator,
+    deps,
+  ).postState.stagingSet;
 
-  const a_prime = [] as unknown as PVMAccumulationState["assign"];
+  const a_prime = [] as unknown as PVMAccumulationState["assigners"];
   for (let c = 0; c < CORES; c++) {
-    a_prime[c] = singleServiceAccumulation(o, w, f, a_star[c], deps).o.assign[
-      c
-    ];
+    a_prime[c] = singleServiceAccumulation(
+      accState,
+      works,
+      f,
+      a_star[c],
+      deps,
+    ).postState.assigners[c];
   }
 
-  const q_prime = [] as unknown as PVMAccumulationState["authQueue"];
+  const q_prime = <AuthorizerQueue>(<unknown>[]);
   for (let c = 0; c < CORES; c++) {
     q_prime[c] = singleServiceAccumulation(
-      o,
-      w,
+      accState,
+      works,
       f,
-      o.assign[c],
+      accState.assigners[c],
       deps,
-    ).o.authQueue[c];
+    ).postState.authQueue[c];
   }
 
-  // TODO: if same service index just call once the accumulation and use the result
-
   const newState: PVMAccumulationState = {
-    delta: delta_prime,
+    accounts: delta_prime,
     // i'
-    validatorKeys: i_prime,
+    stagingSet: i_prime,
     // q'
-    authQueue: singleServiceAccumulation(o, w, f, o.designate, deps).o
-      .authQueue,
+    authQueue: q_prime,
     manager: m_prime,
-    assign: a_prime,
-    designate: v_prime,
-    alwaysAccumulate: z_prime,
+    assigners: a_prime,
+    delegator: v_prime,
+    alwaysAccers: z_prime,
   };
 
   return [newState, t, b, u];
 };
 
+// $(0.7.0 - 12.18) - \fnprovide
+// also `P()` fn
+const preimageProvide = (
+  d: Delta,
+  p: PVMResultContext["preimages"],
+  p_tau: Posterior<Tau>,
+) => {
+  const newD = structuredClone(d);
+  for (const { service, preimage } of p) {
+    const phash = Hashing.blake2b(preimage);
+    const plength: Tagged<u32, "length"> = toTagged(<u32>preimage.length);
+    if (d.get(service)?.requests.get(phash)?.get(plength)?.length === 0) {
+      newD
+        .get(service)!
+        .requests.get(phash)!
+        .set(plength, toTagged(<Tau[]>[p_tau]));
+      newD.get(service)!.preimages.set(phash, preimage);
+    }
+  }
+  return newD;
+};
+
 /**
  * `∆1` fn
- * $(0.6.5 - 12.20)
+ * @param preState - `bold_e`
+ * @param works - `bold_w`
+ * @param gasPerService - `bold_f`
+ * @param service - `s`
+ * @see $(0.7.0 - 12.21)
+ *
  */
 export const singleServiceAccumulation = (
-  o: PVMAccumulationState,
-  w: WorkReport[],
-  f: Map<ServiceIndex, u64>,
-  s: ServiceIndex,
+  preState: PVMAccumulationState,
+  works: WorkReport[],
+  gasPerService: Map<ServiceIndex, u64>,
+  service: ServiceIndex,
   deps: {
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamState["entropy"][0]>;
   },
-): {
-  o: PVMAccumulationState;
-  t: DeferredTransfer[];
-  b: Hash | undefined;
-  u: Gas;
-  p: PVMResultContext["preimages"];
-} => {
-  let g = (f.get(s) || 0n) as Gas;
-  w.forEach((wr) =>
+): AccumulationOut => {
+  let g = (gasPerService.get(service) || 0n) as Gas;
+  works.forEach((wr) =>
     wr.digests
-      .filter((r) => r.serviceIndex === s)
+      .filter((r) => r.serviceIndex === service)
       .forEach((r) => (g = (g + r.gasLimit) as Gas)),
   );
 
   const i: PVMAccumulationOp[] = [];
-  for (const wr of w) {
+  for (const wr of works) {
     for (const r of wr.digests) {
-      if (r.serviceIndex === s) {
+      if (r.serviceIndex === service) {
         i.push({
-          output: r.result,
+          result: r.result,
           gasLimit: r.gasLimit,
           payloadHash: r.payloadHash,
-          authorizerOutput: wr.authTrace,
+          authTrace: wr.authTrace,
           segmentRoot: wr.avSpec.segmentRoot,
-          workPackageHash: wr.avSpec.packageHash,
-          authorizerHash: wr.authorizer,
+          packageHash: wr.avSpec.packageHash,
+          authorizerHash: wr.authorizerHash,
         });
       }
     }
   }
-  const [_o, t, b, u, preimages] = accumulateInvocation(
-    o,
-    s,
-    g,
-    i,
-    deps.p_tau,
-    {
-      p_tau: deps.p_tau,
-      p_eta_0: deps.p_eta_0,
-    },
-  );
-  return { o: _o, t, b, u, p: preimages };
+  return accumulateInvocation(preState, service, g, i, deps.p_tau, {
+    p_tau: deps.p_tau,
+    p_eta_0: deps.p_eta_0,
+  });
 };

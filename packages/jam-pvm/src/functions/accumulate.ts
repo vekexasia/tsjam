@@ -126,7 +126,7 @@ export const omega_a = regFn<
       ) {
         return [IxMod.panic()];
       }
-      if (x.service !== x.u.assign[Number(c)]) {
+      if (x.service !== x.u.assigners[Number(c)]) {
         return [IxMod.w7(HostCallResult.HUH)];
       }
       if (c >= CORES) {
@@ -144,7 +144,7 @@ export const omega_a = regFn<
       const xc = x.u.authQueue.slice() as AuthorizerQueue;
       xc[Number(c)] = nl as AuthorizerQueue[0];
 
-      const assign = x.u.assign.slice() as PVMAccumulationState["assign"];
+      const assign = x.u.assigners.slice() as PVMAccumulationState["assigners"];
       assign[Number(c)] = Number(a) as ServiceIndex;
       return [
         IxMod.w7(HostCallResult.OK),
@@ -172,7 +172,7 @@ export const omega_d = regFn<
         return [IxMod.panic()];
       }
 
-      const validators = [] as unknown as PVMAccumulationState["validatorKeys"];
+      const validators = [] as unknown as PVMAccumulationState["stagingSet"];
       for (let i = 0n; i < NUMBER_OF_VALIDATORS; i++) {
         const c = context.memory.getBytes(
           toSafeMemoryAddress(o + 336n * i),
@@ -180,7 +180,7 @@ export const omega_d = regFn<
         );
         validators.push(ValidatorDataCodec.decode(c).value);
       }
-      if (x.service !== x.u.designate) {
+      if (x.service !== x.u.delegator) {
         return [IxMod.w7(HostCallResult.HUH)];
       }
       return [
@@ -232,7 +232,7 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
       );
       const i_star = check_fn(
         <ServiceIndex>(2 ** 8 + ((x.i - 2 ** 8 + 42) % (2 ** 32 - 2 ** 9))),
-        x.u.delta,
+        x.u.accounts,
       );
 
       const storage = new MerkleServiceAccountStorageImpl(x.i);
@@ -258,7 +258,7 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
         );
       a.balance = <Balance>(<u64>a.gasThreshold());
 
-      const x_bold_s = x.u.delta.get(x.service)!;
+      const x_bold_s = x.u.accounts.get(x.service)!;
 
       const s = new ServiceAccountImpl({
         ...x_bold_s,
@@ -276,8 +276,8 @@ export const omega_n = regFn<[x: PVMResultContext, tau: Tau], W7 | XMod>({
             i: i_star,
             u: {
               ...x.u,
-              delta: new Map([
-                ...x.u.delta.entries(),
+              accounts: new Map([
+                ...x.u.accounts.entries(),
                 [x.i, a],
                 [x.service, s],
               ]),
@@ -303,7 +303,7 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.w7(HostCallResult.OOB)];
       } else {
-        const x_bold_s = x.u.delta.get(x.service)!;
+        const x_bold_s = x.u.accounts.get(x.service)!;
         const x_bold_s_prime = { ...x_bold_s };
 
         x_bold_s_prime.codeHash = bytesToBigInt(
@@ -319,8 +319,8 @@ export const omega_u = regFn<[x: PVMResultContext], W7 | XMod>({
               ...x,
               u: {
                 ...x.u,
-                delta: new Map([
-                  ...x.u.delta.entries(),
+                accounts: new Map([
+                  ...x.u.accounts.entries(),
                   [x.service, x_bold_s_prime],
                 ]),
               },
@@ -347,7 +347,7 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
       const [d, a, l, o] = context.registers.slice(7);
 
       const bold_d = new Map<ServiceIndex, ServiceAccount>([
-        ...x.u.delta.entries(),
+        ...x.u.accounts.entries(),
       ]);
 
       const g = l as u64 as Gas;
@@ -362,17 +362,17 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
       if (l < bold_d.get(Number(d) as ServiceIndex)!.minMemoGas) {
         return [IxMod.w7(HostCallResult.LOW)];
       }
-      const x_bold_s = x.u.delta.get(x.service)!;
+      const x_bold_s = x.u.accounts.get(x.service)!;
       const b = x_bold_s.balance - a;
       if (b < x_bold_s.gasThreshold()) {
         return [IxMod.w7(HostCallResult.CASH)];
       }
 
       const t: DeferredTransfer = {
-        sender: x.service,
+        source: x.service,
         destination: Number(d) as ServiceIndex,
         amount: toTagged(a),
-        gasLimit: g as Gas,
+        gas: g as Gas,
         memo: toTagged(
           context.memory.getBytes(toSafeMemoryAddress(o), TRANSFER_MEMO_SIZE),
         ),
@@ -386,8 +386,8 @@ export const omega_t = regFn<[x: PVMResultContext], W7 | XMod>({
             transfer: x.transfer.slice().concat([t]),
             u: {
               ...x.u,
-              delta: new Map([
-                ...x.u.delta.entries(),
+              accounts: new Map([
+                ...x.u.accounts.entries(),
                 [
                   x.service,
                   new ServiceAccountImpl({
@@ -422,7 +422,7 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       const h: Hash = bytesToBigInt(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       );
-      const bold_d = x.u.delta.get(Number(d) as ServiceIndex);
+      const bold_d = x.u.accounts.get(Number(d) as ServiceIndex);
       // NOTE: the last check on codehash is probably wrong :) graypaper states E_32(x.service)but it does not make sense
       if (
         typeof bold_d === "undefined" ||
@@ -441,14 +441,14 @@ export const omega_j = regFn<[x: PVMResultContext, t: Tau], W7 | XMod>({
       }
       const [, y] = dlhl;
       if (dlhl.length === 2 && y < t - PREIMAGE_EXPIRATION) {
-        const d_prime = new Map(x.u.delta);
+        const d_prime = new Map(x.u.accounts);
         d_prime.delete(d);
-        const s_prime = { ...x.u.delta.get(x.service)! };
+        const s_prime = { ...x.u.accounts.get(x.service)! };
         s_prime.balance = <Balance>(s_prime.balance + bold_d.balance);
         d_prime.set(x.service, s_prime);
         return [
           IxMod.w7(HostCallResult.OK),
-          IxMod.obj({ x: { ...x, u: { ...x.u, delta: d_prime } } }),
+          IxMod.obj({ x: { ...x, u: { ...x.u, accounts: d_prime } } }),
         ];
       }
       return [IxMod.w7(HostCallResult.HUH)];
@@ -475,7 +475,7 @@ export const omega_q = regFn<[x: PVMResultContext], W7 | W8>({
       const h: Hash = bytesToBigInt(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       );
-      const x_bold_s = x.u.delta.get(x.service)!;
+      const x_bold_s = x.u.accounts.get(x.service)!;
       const a = x_bold_s.requests.get(h)?.get(toTagged(Number(z) as u32));
       if (typeof a === "undefined") {
         return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
@@ -516,7 +516,7 @@ export const omega_s = regFn<
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       ).value;
 
-      const a = structuredClone(x.u.delta.get(x.service)! /* x_bold_s */);
+      const a = structuredClone(x.u.accounts.get(x.service)! /* x_bold_s */);
 
       const _z = Number(z) as Tagged<u32, "length">;
       if (typeof a.requests.get(h)?.get(_z) === "undefined") {
@@ -541,7 +541,7 @@ export const omega_s = regFn<
             ...x,
             u: {
               ...x.u,
-              delta: new Map([...x.u.delta.entries(), [x.service, a]]),
+              accounts: new Map([...x.u.accounts.entries(), [x.service, a]]),
             },
           },
         }),
@@ -569,7 +569,7 @@ export const omega_f = regFn<
       if (!context.memory.canRead(toSafeMemoryAddress(o), 32)) {
         return [IxMod.panic()];
       }
-      const x_bold_s = x.u.delta.get(x.service)!;
+      const x_bold_s = x.u.accounts.get(x.service)!;
       const h = HashCodec.decode(
         context.memory.getBytes(toSafeMemoryAddress(o), 32),
       ).value;
@@ -612,12 +612,12 @@ export const omega_f = regFn<
             ...x,
             u: {
               ...x.u,
-              delta: new Map([
-                ...x.u.delta.entries(),
+              accounts: new Map([
+                ...x.u.accounts.entries(),
                 [
                   x.service,
                   new ServiceAccountImpl({
-                    ...x.u.delta.get(x.service)!,
+                    ...x.u.accounts.get(x.service)!,
                     requests: a_l,
                     preimages: a_p,
                   }),
@@ -664,7 +664,7 @@ export const omega_aries = regFn<
       const [o, _z] = context.registers.slice(8);
       const z = Number(_z) as Tagged<u32, "length">;
       const w7 = context.registers[7];
-      const bold_d = x.u.delta;
+      const bold_d = x.u.accounts;
       let s_star = <ServiceIndex>Number(w7);
       if (w7 === 2n ** 64n - 1n) {
         s_star = s;

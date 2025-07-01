@@ -48,7 +48,7 @@ export const WorkReportCodec = createCodec<WorkReport>([
   // c
   ["core", E_int<CoreIndex>()],
   // a
-  ["authorizer", HashCodec as unknown as JamCodec<Blake2bHash>],
+  ["authorizerHash", HashCodec as unknown as JamCodec<Blake2bHash>],
   // o
   ["authTrace", LengthDiscrimantedIdentity],
   // l
@@ -81,7 +81,7 @@ export const WorkReportJSONCodec = createJSONCodec<WorkReport, WorkReportJSON>([
   ["avSpec", "package_spec", AvailabilitySpecificationJSONCodec],
   ["context", "context", WorkContextJSONCodec],
   ["core", "core_index", NumberJSONCodec<CoreIndex>()],
-  ["authorizer", "authorizer_hash", HashJSONCodec<Blake2bHash>()],
+  ["authorizerHash", "authorizer_hash", HashJSONCodec<Blake2bHash>()],
   ["authTrace", "auth_output", BufferJSONCodec()],
   [
     "srLookup",

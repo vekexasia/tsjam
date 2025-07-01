@@ -1,17 +1,38 @@
-import { ByteArrayOfLength, Gas, ServiceIndex, u64 } from "@/genericTypes.js";
+import {
+  Balance,
+  ByteArrayOfLength,
+  Gas,
+  ServiceIndex,
+} from "@/genericTypes.js";
 import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 
 /**
- * `T` set in graypaper
- * $(0.6.7 - 12.14)
+ * `X` set in graypaper
+ * $(0.7.0 - 12.14)
  */
 export type DeferredTransfer = {
-  sender: ServiceIndex;
+  /**
+   * `s`
+   */
+  source: ServiceIndex;
+
+  /**
+   * `d`
+   */
   destination: ServiceIndex;
+
   /**
    * `a`
    */
-  amount: u64;
+  amount: Balance;
+
+  /**
+   * `m`
+   */
   memo: ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>;
-  gasLimit: Gas;
+
+  /**
+   * `g`
+   */
+  gas: Gas;
 };

@@ -32,7 +32,7 @@ export const authorizerPool_toPosterior: STF<
       hashes = [...curState[core], fromQueue];
     } else {
       // F(c) says we need to remove the leftmost workReport.hash from the curState
-      const h = firstWReport.workReport.authorizer;
+      const h = firstWReport.workReport.authorizerHash;
       const index = curState[core].findIndex((hash) => hash === h);
       hashes = [
         ...curState[core].slice(0, index),

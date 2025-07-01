@@ -247,12 +247,12 @@ export const assertEGValid = (
 
   // $(0.7.0 - 11.29) | no reports on core with pending avail
   for (let i = 0; i < bold_I.length; i++) {
-    const { core, authorizer } = bold_I[i];
+    const { core, authorizerHash } = bold_I[i];
     if (typeof deps.dd_rho[core] !== "undefined") {
       return err(EGError.REPORT_PENDING_AVAILABILITY);
     }
     const poolHashes = new Set(deps.authPool[core]);
-    if (!poolHashes.has(authorizer)) {
+    if (!poolHashes.has(authorizerHash)) {
       return err(EGError.MISSING_AUTH);
     }
   }
