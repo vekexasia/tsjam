@@ -226,12 +226,12 @@ export const ValidatorStatisticsCodec = (
     createSequenceCodec<ValidatorStatistics[0]>(
       validatorsCount,
       createCodec<SingleValidatorStatistics>([
-        ["blocksProduced", E_4_int],
-        ["ticketsIntroduced", E_4_int],
-        ["preimagesIntroduced", E_4_int],
-        ["totalOctetsIntroduced", E_4_int],
-        ["guaranteedReports", E_4_int],
-        ["availabilityAssurances", E_4_int],
+        ["blocks", E_4_int],
+        ["tickets", E_4_int],
+        ["preimageCount", E_4_int],
+        ["preimageSize", E_4_int],
+        ["guarantees", E_4_int],
+        ["assurances", E_4_int],
       ]),
     ),
   );
@@ -248,12 +248,12 @@ const SingleValStatisticJSONCodec: JSONCodec<
   SingleValidatorStatistics,
   SingleValidatorJSONStatistics
 > = createJSONCodec([
-  ["blocksProduced", "blocks", NumberJSONCodec()],
-  ["ticketsIntroduced", "tickets", NumberJSONCodec()],
-  ["preimagesIntroduced", "pre_images", NumberJSONCodec()],
-  ["totalOctetsIntroduced", "pre_images_size", NumberJSONCodec()],
-  ["guaranteedReports", "guarantees", NumberJSONCodec()],
-  ["availabilityAssurances", "assurances", NumberJSONCodec()],
+  ["blocks", "blocks", NumberJSONCodec()],
+  ["tickets", "tickets", NumberJSONCodec()],
+  ["preimageCount", "pre_images", NumberJSONCodec()],
+  ["preimageSize", "pre_images_size", NumberJSONCodec()],
+  ["guarantees", "guarantees", NumberJSONCodec()],
+  ["assurances", "assurances", NumberJSONCodec()],
 ]);
 
 export const ValidatorStatistcsJSONCodec: JSONCodec<

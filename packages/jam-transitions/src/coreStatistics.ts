@@ -17,7 +17,7 @@ export const coreStatisticsSTF: STF<
   JamStatistics["cores"],
   {
     /**
-     * `bold W` calculated in $(0.7.0 - 11.16)
+     * `bold R` calculated in $(0.7.0 - 11.16)
      */
     availableReports: AvailableWorkReports;
 
@@ -39,12 +39,27 @@ export const coreStatisticsSTF: STF<
           .map((a) => <number>a.bitstring[c])
           .reduce((a, b) => a + b, 0)
       ),
+      // $(0.7.0 - 13.10) - L
+      bundleSize: <u32>input.guaranteedReports
+        .filter((w) => w.core === c)
+        .map((w) => w.avSpec.bundleLength)
+        .reduce((a, b) => a + b, 0),
     };
   }
   return ok(toPosterior(toRet));
 };
 
-const D_fn = (core: CoreIndex, availableReports: AvailableWorkReports): u32 => {
+/**
+ * $(0.7.0 - 13.11)
+ */
+const D_fn = (
+  core: CoreIndex,
+  /**
+   * `bold R`
+   * $(0.7.0 - 11.16)
+   */
+  availableReports: AvailableWorkReports,
+): u32 => {
   return <u32>availableReports
     .filter((w) => w.core === core)
     .map((w) => {
@@ -57,12 +72,16 @@ const D_fn = (core: CoreIndex, availableReports: AvailableWorkReports): u32 => {
 };
 
 /**
- * $(0.6.4 - 13.9)
+ * $(0.7.0 - 13.9)
  */
 const R_fn = (
   core: CoreIndex,
+  /**
+   * `bold I`
+   * @see $(0.7.0 - 11.28)
+   */
   guaranteedReports: WorkReport[],
-): Omit<JamStatistics["cores"][0], "popularity" | "daLoad"> => {
+): Omit<JamStatistics["cores"][0], "popularity" | "daLoad" | "bundleSize"> => {
   const filteredReports = guaranteedReports.filter((w) => w.core === core);
 
   const accumulator = {
@@ -71,27 +90,23 @@ const R_fn = (
     extrinsicSize: <u32>0,
     extrinsicCount: <u16>0,
     gasUsed: <Gas>0n,
-    bundleSize: <u32>0,
   };
-  for (const { digests, avSpec } of filteredReports) {
-    accumulator.bundleSize = <u32>(
-      (accumulator.bundleSize + avSpec.bundleLength)
-    );
-    for (const result of digests) {
+  for (const { digests } of filteredReports) {
+    for (const digest of digests) {
       accumulator.importCount = <u16>(
-        (accumulator.importCount + result.refineLoad.importCount)
+        (accumulator.importCount + digest.refineLoad.importCount)
       );
       accumulator.exportCount = <u16>(
-        (accumulator.exportCount + result.refineLoad.exportCount)
+        (accumulator.exportCount + digest.refineLoad.exportCount)
       );
       accumulator.extrinsicSize = <u32>(
-        (accumulator.extrinsicSize + result.refineLoad.extrinsicSize)
+        (accumulator.extrinsicSize + digest.refineLoad.extrinsicSize)
       );
       accumulator.extrinsicCount = <u16>(
-        (accumulator.extrinsicCount + result.refineLoad.extrinsicCount)
+        (accumulator.extrinsicCount + digest.refineLoad.extrinsicCount)
       );
       accumulator.gasUsed = <Gas>(
-        (accumulator.gasUsed + result.refineLoad.gasUsed)
+        (accumulator.gasUsed + digest.refineLoad.gasUsed)
       );
     }
   }

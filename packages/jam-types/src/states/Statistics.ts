@@ -2,11 +2,14 @@ import { Gas, SeqOfLength, ServiceIndex, u16, u32 } from "@/genericTypes";
 import { ValidatorStatistics } from "./ValidatorStatistics";
 import { CORES } from "@tsjam/constants";
 
+/**
+ * $(0.7.0 - 13.1)
+ */
 export type JamStatistics = {
   validators: ValidatorStatistics;
 
   /**
-   * `πS`
+   * `πC`
    */
   cores: SeqOfLength<SingleCoreStatistics, typeof CORES>;
 
@@ -17,7 +20,7 @@ export type JamStatistics = {
 };
 
 /**
- * $(0.6.4 - 13.6)
+ * $(0.7.0 - 13.6)
  */
 export type SingleCoreStatistics = {
   /**
@@ -41,7 +44,7 @@ export type SingleCoreStatistics = {
   importCount: u16;
 
   /**
-   * `e`
+   * `x`
    * Total number of extrinsic used by core for reported work.
    */
   extrinsicCount: u16;
@@ -53,13 +56,13 @@ export type SingleCoreStatistics = {
   extrinsicSize: u32;
 
   /**
-   * `x`
+   * `e`
    * Number of segments exported into DA made by core for reported work.
    */
   exportCount: u16;
 
   /**
-   * `b`
+   * `l`
    * Thw work-bundle size. This is the size of data being placed into audits DA by the core.
    */
   bundleSize: u32;
@@ -72,7 +75,7 @@ export type SingleCoreStatistics = {
 };
 
 /**
- * $(0.6.4 - 13.7)
+ * $(0.7.0 - 13.7)
  */
 export type SingleServiceStatistics = {
   /**
@@ -91,7 +94,7 @@ export type SingleServiceStatistics = {
   importCount: u32;
 
   /**
-   * `e`
+   * `x`
    */
   extrinsicCount: u32;
 
@@ -101,7 +104,7 @@ export type SingleServiceStatistics = {
   extrinsicSize: u32;
 
   /**
-   * `x`
+   * `e`
    */
   exportCount: u32;
 

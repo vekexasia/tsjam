@@ -27,7 +27,7 @@ export const validatorStatisticsToPosterior: STF<
     curTau: Tau;
     p_tau: Tau;
     p_kappa: Posterior<JamState["kappa"]>;
-    reporters: Set<ED25519PublicKey["bigint"]>; // $(0.6.4 - 11.26) | R
+    reporters: Set<ED25519PublicKey["bigint"]>; // $(0.7.0 - 11.26) | G
   },
   never
 > = (input, state) => {
@@ -37,21 +37,20 @@ export const validatorStatisticsToPosterior: STF<
     Posterior<ValidatorStatistics[0]>
   >new Array(NUMBER_OF_VALIDATORS);
   let p_pi_l: Posterior<ValidatorStatistics[1]>;
+
+  // $(0.7.0 - 13.3 / 13.4)
   let bold_a = pi_v;
   p_pi_l = toPosterior(pi_l);
-
-  // $(0.6.4 - 13.3)
   if (isNewEra(input.p_tau, input.curTau)) {
-    // $(0.6.4 - 13.4) | second bracket
     p_pi_l = toPosterior(pi_v);
     bold_a = new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
       return {
-        blocksProduced: 0,
-        ticketsIntroduced: 0,
-        preimagesIntroduced: 0,
-        totalOctetsIntroduced: 0,
-        guaranteedReports: 0,
-        availabilityAssurances: 0,
+        blocks: 0,
+        tickets: 0,
+        preimageCount: 0,
+        preimageSize: 0,
+        guarantees: 0,
+        assurances: 0,
       };
     }) as unknown as SeqOfLength<
       SingleValidatorStatistics,
@@ -59,21 +58,20 @@ export const validatorStatisticsToPosterior: STF<
     >;
   }
 
-  for (let i = 0; i < NUMBER_OF_VALIDATORS; i++) {
-    const curV = i === input.authorIndex;
-    // $(0.6.4 - 13.5)
-    p_pi_v[i] = {
-      blocksProduced: <u32>(bold_a[i].blocksProduced + (curV ? 1 : 0)),
-      ticketsIntroduced: <u32>(
-        (bold_a[i].ticketsIntroduced +
-          (curV ? input.extrinsics.tickets.length : 0))
+  for (let v = 0; v < NUMBER_OF_VALIDATORS; v++) {
+    const curV = v === input.authorIndex;
+    // $(0.7.0 - 13.5)
+    p_pi_v[v] = {
+      blocks: <u32>(bold_a[v].blocks + (curV ? 1 : 0)),
+      tickets: <u32>(
+        (bold_a[v].tickets + (curV ? input.extrinsics.tickets.length : 0))
       ),
-      preimagesIntroduced: <u32>(
-        (bold_a[i].preimagesIntroduced +
+      preimageCount: <u32>(
+        (bold_a[v].preimageCount +
           (curV ? input.extrinsics.preimages.length : 0))
       ),
-      totalOctetsIntroduced: <u32>(
-        (bold_a[i].totalOctetsIntroduced +
+      preimageSize: <u32>(
+        (bold_a[v].preimageSize +
           (curV
             ? input.extrinsics.preimages.reduce(
                 (acc, a) => acc + a.preimage.length,
@@ -81,13 +79,13 @@ export const validatorStatisticsToPosterior: STF<
               )
             : 0))
       ),
-      guaranteedReports: <u32>(
-        (bold_a[i].guaranteedReports +
-          (input.reporters.has(input.p_kappa[i].ed25519.bigint) ? 1 : 0))
+      guarantees: <u32>(
+        (bold_a[v].guarantees +
+          (input.reporters.has(input.p_kappa[v].ed25519.bigint) ? 1 : 0))
       ),
-      availabilityAssurances: <u32>(
-        (bold_a[i].availabilityAssurances +
-          input.extrinsics.assurances.filter((a) => a.validatorIndex === i)
+      assurances: <u32>(
+        (bold_a[v].assurances +
+          input.extrinsics.assurances.filter((a) => a.validatorIndex === v)
             .length)
       ),
     };

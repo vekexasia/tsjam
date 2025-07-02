@@ -13,7 +13,7 @@ import {
 import { ok } from "neverthrow";
 
 /**
- * $(0.6.4 - 13.11)
+ * $(0.7.0 - 13.12)
  */
 export const serviceStatisticsSTF: STF<
   JamStatistics["services"],
@@ -37,20 +37,21 @@ export const serviceStatisticsSTF: STF<
   never
 > = (input) => {
   const toRet: JamStatistics["services"] = new Map();
-  // $(0.6.4 - 13.14)
-  const bold_p = new Set(input.preimages.map((p) => p.serviceIndex));
 
-  // $(0.6.4 - 13.13)
-  const bold_r = new Set(
+  // $(0.7.0 - 13.13)
+  const s_r = new Set(
     input.guaranteedReports
       .map((r) => r.digests)
       .flat()
       .map((res) => res.serviceIndex),
   );
 
+  // $(0.7.0 - 13.14)
+  const s_p = new Set(input.preimages.map((p) => p.serviceIndex));
+
   const bold_s = new Set([
-    ...bold_p,
-    ...bold_r,
+    ...s_p,
+    ...s_r,
     ...input.accumulationStatistics.keys(),
     ...input.transferStatistics.keys(),
   ]);
@@ -84,10 +85,13 @@ export const serviceStatisticsSTF: STF<
 };
 
 /**
- * $(0.6.4 - 13.15)
+ * $(0.7.0 - 13.16)
  */
 const R_fn = (
   service: ServiceIndex,
+  /**
+   * `bold I`
+   */
   guaranteedReports: WorkReport[],
 ): Pick<
   SingleServiceStatistics,
@@ -102,34 +106,34 @@ const R_fn = (
     .flat()
     .filter((result) => result.serviceIndex === service)
     .map((result) => ({
-      importCount: result.refineLoad.importCount,
-      exportCount: result.refineLoad.exportCount,
-      extrinsicSize: result.refineLoad.extrinsicSize,
-      extrinsicCount: result.refineLoad.extrinsicCount,
       refinement: { count: <u32>1, gasUsed: result.refineLoad.gasUsed },
+      importCount: result.refineLoad.importCount,
+      extrinsicCount: result.refineLoad.extrinsicCount,
+      extrinsicSize: result.refineLoad.extrinsicSize,
+      exportCount: result.refineLoad.exportCount,
     }))
     .reduce(
       (a, b) => {
         return {
-          importCount: <u32>(a.importCount + b.importCount),
-          exportCount: <u32>(a.exportCount + b.exportCount),
-          extrinsicSize: <u32>(a.extrinsicSize + b.extrinsicSize),
-          extrinsicCount: <u32>(a.extrinsicCount + b.extrinsicCount),
           refinement: {
             count: <u32>(a.refinement.count + b.refinement.count),
             gasUsed: <Gas>(a.refinement.gasUsed + b.refinement.gasUsed),
           },
+          importCount: <u32>(a.importCount + b.importCount),
+          extrinsicCount: <u32>(a.extrinsicCount + b.extrinsicCount),
+          extrinsicSize: <u32>(a.extrinsicSize + b.extrinsicSize),
+          exportCount: <u32>(a.exportCount + b.exportCount),
         };
       },
       {
-        importCount: <u32>0,
-        exportCount: <u32>0,
-        extrinsicSize: <u32>0,
-        extrinsicCount: <u32>0,
         refinement: {
           count: <u32>0,
           gasUsed: <Gas>0n,
         },
+        importCount: <u32>0,
+        extrinsicCount: <u32>0,
+        extrinsicSize: <u32>0,
+        exportCount: <u32>0,
       },
     );
 };

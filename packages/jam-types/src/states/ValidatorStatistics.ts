@@ -3,7 +3,7 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * `π`
- * $(0.6.4 - 13.2)
+ * $(0.7.0 - 13.2)
  * [0] is `πV`
  * [1] is `πL`
  */
@@ -17,27 +17,27 @@ export type ValidatorStatistics = SeqOfLength<
  */
 export type SingleValidatorStatistics = {
   /**
-   * `b`
+   * `b` - the blocks produced by the validator
    */
-  blocksProduced: u32;
+  blocks: u32;
   /**
-   * `t`
+   * `t` - The number of tickets introduced by the validator
    */
-  ticketsIntroduced: u32;
+  tickets: u32;
   /**
-   * `p`
+   * `p` - The number of preimages introduced by the validator
    */
-  preimagesIntroduced: u32;
+  preimageCount: u32;
   /**
-   * `d`
+   * `d` - The total number of octets across all preimages introduced by the validator
    */
-  totalOctetsIntroduced: u32;
+  preimageSize: u32;
   /**
-   * `g`
+   * `g` - The number of reports guaranteed by the validator
    */
-  guaranteedReports: u32;
+  guarantees: u32;
   /**
-   * `a`
+   * `a` The number of availability assurances made by the validator
    */
-  availabilityAssurances: u32;
+  assurances: u32;
 };
