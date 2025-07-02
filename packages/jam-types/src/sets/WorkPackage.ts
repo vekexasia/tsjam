@@ -14,13 +14,13 @@ import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 /**
  * Identified by `P` set
  * @see section 14.3
- * $(0.6.4 - 14.2)
+ * $(0.7.0 - 14.2)
  */
 export interface WorkPackage {
   /**
    * `j`
    */
-  authorizationToken: Authorization;
+  authToken: Authorization;
   /**
    * `h` - index of the service that hosts the authorization code
    */
@@ -28,19 +28,19 @@ export interface WorkPackage {
   /**
    * `u` - authorization code hash
    */
-  authorizationCodeHash: CodeHash;
+  authCodeHash: CodeHash;
   /**
-   * `p` - parametrization blob
+   * `bold f` - configuration blob
    */
-  paramsBlob: AuthorizationParams;
+  authConfig: AuthorizationParams;
   /**
-   * `x` - context
+   * `bold c` - context
    */
   context: WorkContext;
   /**
-   * `w` - sequence of work items
+   * `bold w` - sequence of work items
    */
-  items: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
+  workItems: BoundedSeq<WorkItem, 1, typeof MAXIMUM_WORK_ITEMS>;
 }
 
 /**

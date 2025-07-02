@@ -9,7 +9,6 @@ import {
   STF,
 } from "@tsjam/types";
 import {
-  DeltaToPosteriorError,
   DisputesToPosteriorError,
   ETError,
   GammaAError,
@@ -53,6 +52,7 @@ import {
 } from "@/verifySeal";
 import { accumulateReports, availableReports } from "./accumulate";
 import { invokeOntransfers, transferStatistics } from "@tsjam/pvm";
+import { EPError, validateEP } from "./validteEP";
 
 export enum ImportBlockError {
   InvalidEA = "Invalid EA extrinsic",
@@ -87,7 +87,7 @@ export const importBlock: STF<
   | DisputesToPosteriorError
   | EpochMarkerError
   | WinningTicketsError
-  | DeltaToPosteriorError
+  | EPError
 > = (block, { block: parent, state: curState }) => {
   const tauTransition = {
     tau: curState.tau,
@@ -246,11 +246,9 @@ export const importBlock: STF<
     p_eta_0: toPosterior(p_entropy[0]),
   }).safeRet();
 
-  const invokedOnTransfers = invokeOntransfers(
-    deferredTransfers,
-    d_delta,
-    p_tau,
-  );
+  const invokedOnTransfers = invokeOntransfers(d_delta, p_tau, {
+    transfers: deferredTransfers,
+  });
 
   const tStats = transferStatistics(deferredTransfers, invokedOnTransfers);
 
@@ -298,11 +296,17 @@ export const importBlock: STF<
   if (rhoPostErr) {
     return err(rhoPostErr);
   }
+  const [epError, validatedEP] = validateEP(block.extrinsics.preimages, {
+    delta: curState.serviceAccounts,
+  }).safeRet();
+
+  if (epError) {
+    return err(epError);
+  }
 
   const [pDeltaError, p_delta] = deltaToPosterior(
     {
-      EP_Extrinsic: block.extrinsics.preimages,
-      delta: curState.serviceAccounts,
+      ep: validatedEP,
       p_tau,
     },
     dd_delta,

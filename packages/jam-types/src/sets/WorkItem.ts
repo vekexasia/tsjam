@@ -13,9 +13,8 @@ import {
 import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
 
 /**
- * Identified by `I` set
- * @see section 14.3
- * $(0.6.4 - 14.3)
+ * Identified by `W` set
+ * $(0.7.0 - 14.3)
  */
 export interface WorkItem {
   /**
@@ -29,7 +28,7 @@ export interface WorkItem {
   codeHash: CodeHash;
 
   /**
-   * `y` - the payload of the work item
+   * `bold y` - the payload of the work item
    * Obfuscated/Opaque data fed in the refine logic that should contain info about the work that
    * needs to be done
    */
@@ -55,7 +54,7 @@ export interface WorkItem {
   exportCount: u16;
 
   /**
-   * `i`
+   * `bold i`
    * Sequence of imported Data Segments
    */
   importSegments: UpToSeq<
@@ -76,6 +75,7 @@ export interface WorkItem {
 
   /**
    * `x`
+   * Blob hash and lengths to be introduced in the block.
    */
   exportedDataSegments: UpToSeq<
     {

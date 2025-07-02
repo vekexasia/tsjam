@@ -1,41 +1,29 @@
 import { Hashing } from "@tsjam/crypto";
+import { preimageSolicitedButNotYetProvided } from "@tsjam/serviceaccounts";
 import {
   Delta,
   DoubleDagger,
   EP_Extrinsic,
-  Hash,
   Posterior,
   STF,
-  ServiceIndex,
-  Tagged,
   Tau,
   Validated,
   u32,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { err, ok } from "neverthrow";
-import { compareUint8Arrays } from "uint8array-extras";
-import { preimageSolicitedButNotYetProvided } from "../../../jam-serviceaccounts/dist/types/utils";
-
-type Input = {
-  EP_Extrinsic: Validated<EP_Extrinsic>;
-  delta: Delta;
-  p_tau: Posterior<Tau>;
-};
-
-export enum DeltaToPosteriorError {
-  PREIMAGE_PROVIDED_OR_UNSOLICITED = "Preimage Provided or unsolicied",
-  PREIMAGES_NOT_SORTED = "preimages should be sorted",
-}
+import { ok } from "neverthrow";
 
 export const deltaToPosterior: STF<
   DoubleDagger<Delta>,
-  Input,
-  DeltaToPosteriorError,
+  {
+    ep: Validated<EP_Extrinsic>;
+    p_tau: Posterior<Tau>;
+  },
+  never,
   Posterior<Delta>
 > = (input, curState) => {
   // $(0.7.0 - 12.42)
-  const p = input.EP_Extrinsic.filter((ep) =>
+  const p = input.ep.filter((ep) =>
     preimageSolicitedButNotYetProvided(
       curState,
       ep.serviceIndex,

@@ -35,6 +35,7 @@
     "@tsjam/pvm": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
+    "@tsjam/serviceaccounts": "*",
     "neverthrow": "^8.1.1"
   },
   "license": "MIT"

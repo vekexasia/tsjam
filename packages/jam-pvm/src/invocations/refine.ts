@@ -50,13 +50,13 @@ const refine_a_Codec = createCodec<{
   payload: Uint8Array;
   packageHash: WorkPackageHash;
   context: WorkContext;
-  authorizerHash: Hash;
+  authCodeHash: Hash;
 }>([
   ["serviceIndex", E_sub_int<ServiceIndex>(4)],
   ["payload", IdentityCodec],
   ["packageHash", WorkPackageHashCodec],
   ["context", WorkContextCodec],
-  ["authorizerHash", HashCodec],
+  ["authCodeHash", HashCodec],
 ]);
 /**
  * $(0.6.4 - B.5)
@@ -75,9 +75,9 @@ export const refineInvocation = (
   res: WorkOutput;
   // exported segments
   out: RefineContext["e"];
-  usedGas: Gas;
+  gasUsed: Gas;
 } => {
-  const w = workPackage.items[index];
+  const w = workPackage.workItems[index];
   const lookupResult = historicalLookup(
     deps.delta.get(w.service)!,
     toTagged(workPackage.context.lookupAnchor.time),
@@ -85,11 +85,11 @@ export const refineInvocation = (
   );
   // first matching case
   if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
-    return { res: WorkError.Bad, out: [], usedGas: <Gas>0n };
+    return { res: WorkError.Bad, out: [], gasUsed: <Gas>0n };
   }
   // second metching case
   if (lookupResult.length > SERVICECODE_MAX_SIZE) {
-    return { res: WorkError.Big, out: [], usedGas: <Gas>0n };
+    return { res: WorkError.Big, out: [], gasUsed: <Gas>0n };
   }
 
   // encode
@@ -100,7 +100,7 @@ export const refineInvocation = (
       encodeWithCodec(WorkPackageCodec, workPackage),
     ),
     context: workPackage.context,
-    authorizerHash: workPackage.authorizationCodeHash,
+    authCodeHash: workPackage.authCodeHash,
   });
   const { code } = serviceMetadataCodec.decode(lookupResult).value;
 
@@ -135,13 +135,13 @@ export const refineInvocation = (
           ? WorkError.Panic
           : WorkError.OutOfGas,
       out: [],
-      usedGas: argOut.usedGas,
+      gasUsed: argOut.gasUsed,
     };
   }
   return {
     res: argRes,
     out: argOut.out.e,
-    usedGas: argOut.usedGas,
+    gasUsed: argOut.gasUsed,
   };
 };
 

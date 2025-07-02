@@ -19,13 +19,13 @@ export const argumentInvocation = <X>(
   f: HostCallExecutor<X>,
   x: X,
 ): {
-  usedGas: Gas;
+  gasUsed: Gas;
   res: Uint8Array | RegularPVMExitReason.Panic | RegularPVMExitReason.OutOfGas;
   out: X;
 } => {
   const res = programInitialization(encodedProgram, args);
   if (typeof res === "undefined") {
-    return { usedGas: <Gas>0n, res: RegularPVMExitReason.Panic, out: x };
+    return { gasUsed: <Gas>0n, res: RegularPVMExitReason.Panic, out: x };
   }
   const { programCode, memory, registers } = res;
   const hRes = hostCallInvocation(
@@ -40,7 +40,7 @@ export const argumentInvocation = <X>(
 };
 
 type ArgumentInvocationOut<X> = {
-  usedGas: Gas;
+  gasUsed: Gas;
   res: Uint8Array | RegularPVMExitReason.Panic | RegularPVMExitReason.OutOfGas;
   out: X;
 };
@@ -55,7 +55,7 @@ const R_fn = <X>(
 
   if (hostCall.exitReason === RegularPVMExitReason.OutOfGas) {
     return {
-      usedGas: gas_prime,
+      gasUsed: gas_prime,
       res: RegularPVMExitReason.OutOfGas,
       out: hostCall.out, // x'
     };
@@ -70,7 +70,7 @@ const R_fn = <X>(
     );
     if (readable) {
       return {
-        usedGas: gas_prime,
+        gasUsed: gas_prime,
         res: hostCall.context.memory.getBytes(
           toSafeMemoryAddress(hostCall.context.registers[7]),
           Number(hostCall.context.registers[8]),
@@ -78,11 +78,11 @@ const R_fn = <X>(
         out: hostCall.out,
       };
     } else {
-      return { usedGas: gas_prime, res: new Uint8Array(0), out: hostCall.out };
+      return { gasUsed: gas_prime, res: new Uint8Array(0), out: hostCall.out };
     }
   } else {
     return {
-      usedGas: gas_prime,
+      gasUsed: gas_prime,
       res: RegularPVMExitReason.Panic,
       out: hostCall.out,
     };

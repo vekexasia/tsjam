@@ -25,10 +25,10 @@ import { applyMods } from "@/functions/utils";
  */
 export const isAuthorized = (p: WorkPackageWithAuth, c: CoreIndex) => {
   if (p.pc.length === 0) {
-    return { res: WorkError.Bad, usedGas: <Gas>0n };
+    return { res: WorkError.Bad, gasUsed: <Gas>0n };
   }
   if (p.pc.length > MAXIMUM_SIZE_IS_AUTHORIZED) {
-    return { res: WorkError.Big, usedGas: <Gas>0n };
+    return { res: WorkError.Big, gasUsed: <Gas>0n };
   }
 
   const res = argumentInvocation(
@@ -39,7 +39,16 @@ export const isAuthorized = (p: WorkPackageWithAuth, c: CoreIndex) => {
     F_Fn,
     undefined as unknown as PVMResultContext, // something is missing from the paper
   );
-  return { res: res.res, usedGas: res.usedGas };
+  return {
+    /**
+     * `bold_t`
+     */
+    res: res.res,
+    /**
+     * `g`
+     */
+    gasUsed: res.gasUsed,
+  };
 };
 
 // $(0.6.4 - B.2)

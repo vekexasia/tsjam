@@ -1,4 +1,28 @@
 import {
+  HashCodec,
+  IdentityCodec,
+  WorkPackageCodec,
+  createArrayLengthDiscriminator,
+  createCodec,
+  dlArrayOfHashesCodec,
+  dlArrayOfUint8ArrayCodec,
+  encodeWithCodec,
+} from "@tsjam/codec";
+import {
+  ERASURECODE_BASIC_SIZE,
+  ERASURECODE_EXPORTED_SIZE,
+  MAX_WORKREPORT_OUTPUT_SIZE,
+} from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
+import { erasureCoding, transpose } from "@tsjam/erasurecoding";
+import {
+  J_fn,
+  L_fn as Leaf_fn,
+  constantDepthBinaryTree,
+  wellBalancedBinaryMerkleRoot,
+} from "@tsjam/merklization";
+import { isAuthorized, refineInvocation } from "@tsjam/pvm";
+import {
   AvailabilitySpecification,
   CoreIndex,
   Delta,
@@ -16,33 +40,16 @@ import {
   u16,
   u32,
 } from "@tsjam/types";
-import { isAuthorized, refineInvocation } from "@tsjam/pvm";
 import {
-  HashCodec,
-  IdentityCodec,
-  WorkPackageCodec,
-  createArrayLengthDiscriminator,
-  createCodec,
-  dlArrayOfHashesCodec,
-  dlArrayOfUint8ArrayCodec,
-  encodeWithCodec,
-} from "@tsjam/codec";
-import { Hashing } from "@tsjam/crypto";
-import {
-  J_fn,
-  L_fn as Leaf_fn,
-  constantDepthBinaryTree,
-  wellBalancedBinaryMerkleRoot,
-} from "@tsjam/merklization";
-import { isHash, toTagged, zeroPad } from "@tsjam/utils";
-import {
-  ERASURECODE_BASIC_SIZE,
-  ERASURECODE_EXPORTED_SIZE,
-  MAX_WORKREPORT_OUTPUT_SIZE,
-} from "@tsjam/constants";
-import { erasureCoding, transpose } from "@tsjam/erasurecoding";
+  isExportingWorkPackageHash,
+  isHash,
+  toTagged,
+  zeroPad,
+} from "@tsjam/utils";
 import assert from "assert";
+import { Result, err, ok } from "neverthrow";
 
+export const computationWorkReportError = "t not in B:wr" as const;
 /**
  * `Ξ` fn section 14.4
  * @see I_fn
@@ -50,52 +57,59 @@ import assert from "assert";
  * @see A_fn
  * @see C_fn
  * @see M_fn
- * $(0.6.6 - 14.11)
+ * $(0.7.0 - 14.12)
  */
 export const computeWorkReport = (
   pac: WorkPackageWithAuth,
   core: CoreIndex,
   deps: { delta: Delta; tau: Tau },
-): WorkReport => {
-  const bold_o = isAuthorized(pac, core);
-  const authOutput = bold_o.res;
-  if (!(authOutput instanceof Uint8Array)) {
-    throw new Error("no auth output. ??????");
+): Result<WorkReport, typeof computationWorkReportError> => {
+  const { res: bold_t, gasUsed } = isAuthorized(pac, core);
+  if (
+    !(bold_t instanceof Uint8Array) ||
+    bold_t.length > MAX_WORKREPORT_OUTPUT_SIZE
+  ) {
+    return err(computationWorkReportError);
   }
+
+  const keys_in_bold_l = pac.workItems
+    .map((p) =>
+      p.importSegments
+        .map((i) => i.root)
+        .filter((x) => isExportingWorkPackageHash(x)),
+    )
+    .flat()
+    .slice(0, 8);
+
+  //TODO: $(0.7.0 - 14.14)
+  const bold_l = new Map<WorkPackageHash, Hash>();
+
   const _deps = {
     ...deps,
-    authorizerOutput: authOutput,
-    overline_i: pac.items.map((wi) => S_fn(wi, bold_l)),
+    authorizerOutput: bold_t,
+    overline_i: pac.workItems.map((w) => S_fn(w, bold_l)),
     rLengthSoFar: 0,
   };
 
-  const preTransposeEls = new Array(pac.items.length) // j \in N_{|p_w|}
+  const preTransposeEls = new Array(pac.workItems.length) // j \in N_{|p_w|}
     .fill(0)
     .map((_, j) => {
-      const { res: r, out: e, usedGas } = I_fn(pac, j, _deps);
+      const { res: r, gasUsed, out: e } = I_fn(pac, j, _deps);
       // part of I_fn optimization to avoud recomputing
       if (r instanceof Uint8Array) {
         _deps.rLengthSoFar += r.length;
       }
-      const workResult = C_fn(pac.items[j], r, usedGas);
+      const workResult = C_fn(pac.workItems[j], r, gasUsed);
       return { result: workResult, out: e };
     });
 
-  const bold_r = <WorkReport["digests"]>(
+  const bold_d = <WorkReport["digests"]>(
     preTransposeEls.map(({ result }) => result)
   );
 
   const overline_e = preTransposeEls
     .map(({ out: e }) => e)
     .flat() as ExportSegment[];
-
-  // TODO: this is defined in 14.13 and 14.11
-  const bold_l = new Map<WorkPackageHash, Hash>();
-  //const key_l: ExportingWorkPackageHash[] = pac.workItems
-  //  .map((w) => w.importedDataSegments)
-  //  .flat()
-  //  .map((i) => i.root)
-  //  .filter((root) => isExportingWorkPackageHash(root));
 
   const encodedPackage = encodeWithCodec(WorkPackageCodec, pac);
 
@@ -115,15 +129,15 @@ export const computeWorkReport = (
       ]),
       {
         encodedPackage,
-        x: pac.items.map((wi) => X_fn(wi)).flat(),
-        s: pac.items.map((wi) => S_fn(wi, bold_l)).flat(),
-        j: pac.items.map((wi) => inner_J_fn(wi, bold_l)).flat(),
+        x: pac.workItems.map((wi) => X_fn(wi)).flat(),
+        s: pac.workItems.map((wi) => S_fn(wi, bold_l)).flat(),
+        j: pac.workItems.map((wi) => inner_J_fn(wi, bold_l)).flat(),
       },
     ),
     overline_e, // exported segments
   );
 
-  return {
+  return ok({
     // s
     avSpec: s,
     // bold_c
@@ -132,14 +146,14 @@ export const computeWorkReport = (
     core: core,
     // a
     authorizerHash: pac.pa,
-    // o
-    authTrace: authOutput,
+    // bold_t
+    authTrace: bold_t,
     // l
     srLookup: bold_l,
     // r
-    digests: bold_r,
-    authGasUsed: bold_o.usedGas,
-  };
+    digests: bold_d,
+    authGasUsed: gasUsed,
+  });
 };
 /**
  * compute availability specifier
@@ -195,22 +209,31 @@ const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
 };
 
 const I_fn = (
+  /**
+   * `bold_p`
+   */
   pac: WorkPackageWithAuth,
-  workIndex: number, // `j`
+  /**
+   * `j`
+   */
+  workIndex: number,
   deps: {
     delta: Delta;
     tau: Tau;
+    /**
+     * `bold_t`
+     */
     authorizerOutput: Uint8Array;
     overline_i: ExportSegment[][];
-    rLengthSoFar: number; // `∑k<j,(r∈Y,... )=I(p,k) |r|`
+    rLengthSoFar: number; // `∑k<j,(r∈B,... )=I(p,k) |r|`
   },
 ): {
   res: WorkOutput; // `r`
+  gasUsed: Gas; // `u`
   out: Uint8Array[]; // `e`
-  usedGas: Gas; // `u`
 } => {
-  const w = pac.items[workIndex];
-  const l = pac.items
+  const w = pac.workItems[workIndex];
+  const l = pac.workItems
     .slice(0, workIndex)
     .map((wi) => wi.exportCount)
     .reduce((a, b) => a + b, 0);
@@ -226,7 +249,7 @@ const I_fn = (
   if (re.out.length + z < MAX_WORKREPORT_OUTPUT_SIZE) {
     return {
       res: WorkError.Big,
-      usedGas: re.usedGas,
+      gasUsed: re.gasUsed,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -240,7 +263,7 @@ const I_fn = (
   if (re.out.length !== w.exportCount) {
     return {
       res: WorkError.BadExports,
-      usedGas: re.usedGas,
+      gasUsed: re.gasUsed,
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
@@ -261,7 +284,7 @@ const I_fn = (
             ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
           ).fill(0),
         ),
-      usedGas: re.usedGas,
+      gasUsed: re.gasUsed,
     };
   }
   return re;
@@ -277,7 +300,7 @@ const L_fn = (
   //bold_l = segment root dictionary
   if (!isHash(hash)) {
     // ExportingWorkPackageHash
-    const x = bold_l.get(<WorkPackageHash>hash.value);
+    const x = bold_l.get(hash.value);
     assert(typeof x !== "undefined");
     return x;
   }
@@ -293,7 +316,9 @@ const X_fn = (workItem: WorkItem) => {
   });
 };
 /**
- * $(0.6.4 - 14.14)
+ * $(0.6.4 - 14.15)
+ * @param workItem `bold_w`
+ * @param segmentRootLookup `bold_l`
  */
 const S_fn = (
   workItem: WorkItem,
@@ -327,7 +352,13 @@ const inner_J_fn = (
  */
 export const C_fn = (
   workItem: WorkItem,
+  /**
+   * `bold_l`
+   */
   out: WorkOutput,
+  /**
+   * `u`
+   */
   gasUsed: Gas,
 ): WorkDigest => {
   return {

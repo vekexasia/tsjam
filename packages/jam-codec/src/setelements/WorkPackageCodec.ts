@@ -16,14 +16,14 @@ import { createCodec } from "@/utils";
  * $(0.6.4 - C.25)
  */
 export const WorkPackageCodec = createCodec<WorkPackage>([
-  ["authorizationToken", createLengthDiscriminatedIdentity<Authorization>()],
+  ["authToken", createLengthDiscriminatedIdentity<Authorization>()],
   ["authCodeHost", E_sub_int<ServiceIndex>(4)],
-  ["authorizationCodeHash", CodeHashCodec],
-  ["paramsBlob", createLengthDiscriminatedIdentity<AuthorizationParams>()],
+  ["authCodeHash", CodeHashCodec],
+  ["authConfig", createLengthDiscriminatedIdentity<AuthorizationParams>()],
   ["context", WorkContextCodec],
   [
-    "items",
-    createArrayLengthDiscriminator<WorkPackage["items"]>(WorkItemCodec),
+    "workItems",
+    createArrayLengthDiscriminator<WorkPackage["workItems"]>(WorkItemCodec),
   ],
 ]);
 

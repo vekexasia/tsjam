@@ -1,9 +1,4 @@
 import {
-  deltaToPosterior,
-  DeltaToPosteriorError,
-  serviceStatisticsSTF,
-} from "@/index.js";
-import {
   buildKeyValueCodec,
   codec_Ep,
   createArrayLengthDiscriminator,
@@ -35,7 +30,7 @@ import {
   u32,
 } from "@tsjam/types";
 import * as fs from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, it } from "vitest";
 
 type TestState = {
   accounts: DoubleDagger<Delta>;
@@ -137,39 +132,40 @@ const buildTest = (filename: string) => {
 
   const { input, preState, output, postState } = decoded;
 
-  const [err, p_delta] = deltaToPosterior(
-    {
-      p_tau: input.p_tau,
-      EP_Extrinsic: input.ep,
-      delta: preState.accounts,
-    },
-    preState.accounts,
-  ).safeRet();
-  if (typeof err !== "undefined") {
-    const ourErr = [
-      DeltaToPosteriorError.PREIMAGE_PROVIDED_OR_UNSOLICITED,
-      DeltaToPosteriorError.PREIMAGES_NOT_SORTED,
-    ][output.err!];
-
-    expect(err).toEqual(ourErr);
-    return;
-  }
-
-  expect([...p_delta.entries()]).deep.eq([...postState.accounts]);
-
-  const [, p_serviseStats] = serviceStatisticsSTF(
-    {
-      guaranteedReports: [],
-      preimages: input.ep,
-      accumulationStatistics: new Map(),
-      transferStatistics: new Map(),
-    },
-    preState.statistics,
-  ).safeRet();
-
-  expect([...p_serviseStats.entries()]).deep.eq([
-    ...postState.statistics.entries(),
-  ]);
+  throw new Error("bring me in core");
+  //  const [err, p_delta] = deltaToPosterior(
+  //    {
+  //      p_tau: input.p_tau,
+  //      EP_Extrinsic: toTagged(input.ep),
+  //      delta: preState.accounts,
+  //    },
+  //    preState.accounts,
+  //  ).safeRet();
+  //  if (typeof err !== "undefined") {
+  //    const ourErr = [
+  //      DeltaToPosteriorError.PREIMAGE_PROVIDED_OR_UNSOLICITED,
+  //      DeltaToPosteriorError.PREIMAGES_NOT_SORTED,
+  //    ][output.err!];
+  //
+  //    expect(err).toEqual(ourErr);
+  //    return;
+  //  }
+  //
+  //  expect([...p_delta.entries()]).deep.eq([...postState.accounts]);
+  //
+  //  const [, p_serviseStats] = serviceStatisticsSTF(
+  //    {
+  //      guaranteedReports: [],
+  //      preimages: input.ep,
+  //      accumulationStatistics: new Map(),
+  //      transferStatistics: new Map(),
+  //    },
+  //    preState.statistics,
+  //  ).safeRet();
+  //
+  //  expect([...p_serviseStats.entries()]).deep.eq([
+  //    ...postState.statistics.entries(),
+  //  ]);
 };
 describe("preimages-test-vectors", () => {
   describe("tiny", () => {

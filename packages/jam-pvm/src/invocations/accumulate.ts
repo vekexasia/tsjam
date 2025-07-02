@@ -1,6 +1,5 @@
 import {
   AccumulationOut,
-  DeferredTransfer,
   Delta,
   Gas,
   Hash,
@@ -112,7 +111,7 @@ export const accumulateInvocation = (
     { x: iRes, y: yRes },
   );
 
-  return C_fn(mres.usedGas, mres.res, mres.out);
+  return C_fn(mres.gasUsed, mres.res, mres.out);
 };
 
 /**
