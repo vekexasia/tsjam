@@ -1,15 +1,20 @@
-import { JamCodec } from "./codec";
-import { createJSONCodec, JSONCodec } from "./json/JsonCodec";
-import { createCodec, encodeWithCodec, mapCodec } from "./utils";
+import { JamCodec } from "@/codec";
+import { JSONCodec, createJSONCodec, NumberJSONCodec } from "@/json/JsonCodec";
+import { mapCodec, createCodec, encodeWithCodec } from "@/utils";
+import { numberCodec } from "./utilityDecorators";
 
 const CODEC_METADATA = Symbol.for("__jamcodecs__");
-
+/**
+ * used to mark that json element is the only one to be serialized/deserialized so
+ * property key should not be used and wrapped
+ */
+export const SINGLE_ELEMENT_CLASS = Symbol.for("__jamcodec__singleelclass");
 /**
  * This is a base class for JamCodecable classes.
  * It provides the basic structure for encoding and decoding
  * properties with JamCodec.
  */
-export abstract class BaseJamCodecable<T> {
+export abstract class BaseJamCodecable {
   static encode<T>(x: T, buf: Uint8Array): number {
     throw new Error("stub!");
   }
@@ -26,6 +31,10 @@ export abstract class BaseJamCodecable<T> {
     throw new Error("stub!");
   }
 
+  static toJSON<T>(value: T): object {
+    throw new Error("stub!");
+  }
+
   toBinary(): Uint8Array {
     throw new Error("stub");
   }
@@ -39,37 +48,66 @@ export abstract class BaseJamCodecable<T> {
  * Decorator to mark properties in class as JamCodecable.
  * Order of properties is preserved when encoding and decoding
  */
-export function JamProperty<T, K extends string | symbol>(
+export function binaryCodec<T, K extends string | symbol>(
   codec: JamCodec<T>,
-  jsonCodec?: JSONCodec<T>,
-  jsonKey?: string,
 ): (target: any, propertyKey: K) => void {
   return function (target: any, propertyKey: string | symbol) {
     if (!target[CODEC_METADATA]) {
       target[CODEC_METADATA] = [];
     }
-    let json: { codec: JSONCodec<T>; key?: string } | undefined;
-    if (jsonCodec) {
-      json = { codec: jsonCodec, key: jsonKey };
-    }
-    target[CODEC_METADATA].push({ propertyKey, codec, json });
+    target[CODEC_METADATA].push({ propertyKey, codec });
   };
 }
 
+export function jsonCodec<T, K extends string | symbol>(
+  codec: JSONCodec<T>,
+  key?: string | typeof SINGLE_ELEMENT_CLASS,
+): (target: any, propertyKey: K) => void {
+  return function (target: any, propertyKey: string | symbol) {
+    if (!target[CODEC_METADATA]) {
+      target[CODEC_METADATA] = [];
+    }
+    const item = (<any>target[CODEC_METADATA]).find(
+      (x: any) => x.propertyKey === propertyKey,
+    );
+    if (typeof item === "undefined") {
+      throw new Error(
+        `jsonCodec decorator for ${String(propertyKey)} must be applied after binaryCodec decorator`,
+      );
+    }
+    item.json = {
+      codec: codec,
+      key,
+    };
+  };
+}
+
+export function codec<T, K extends string | symbol>(
+  codec: JamCodec<T> & JSONCodec<T>,
+  jsonKey?: string,
+) {
+  return function (target: any, propertyKey: K) {
+    binaryCodec(codec)(target, propertyKey);
+    jsonCodec(codec, jsonKey)(target, propertyKey);
+  };
+}
 /**
  * Class decorator to mark a class as JamCodecable.
  * Be aware that it rewrites the class constructor providing both static and instance methods
  * following the BaseJamCodecable interface.
  */
 export function JamCodecable<
-  U extends BaseJamCodecable<U>,
+  U extends BaseJamCodecable,
   T extends { new (...args: any[]): U },
 >() {
   return function (constructor: T) {
     const d: Array<{
       propertyKey: string;
       codec: JamCodec<any>;
-      json?: { codec: JSONCodec<T>; key?: string };
+      json?: {
+        codec: JSONCodec<T>;
+        key?: string | typeof SINGLE_ELEMENT_CLASS;
+      };
     }> = constructor.prototype[CODEC_METADATA];
     const codec = <JamCodec<any>>mapCodec(
       createCodec(
@@ -88,13 +126,30 @@ export function JamCodecable<
       (c: any) => c,
     );
 
-    const jsonCodec = <JSONCodec<U, any>>createJSONCodec<any, any>(
-      d
-        .filter((a) => a.json)
-        .map(({ propertyKey, json }) => {
-          return [propertyKey, json!.key ?? propertyKey, json!.codec];
-        }),
+    let isMainEl = false;
+    let jsonCodec = <JSONCodec<U, any>>createJSONCodec<any, any>(
+      d.map(({ propertyKey, json }) => {
+        if (typeof json === "undefined") {
+          throw new Error(`json codec for ${propertyKey} is not defined`);
+        }
+        isMainEl = isMainEl || json.key === SINGLE_ELEMENT_CLASS;
+        return [propertyKey, json.key ?? propertyKey, json.codec];
+      }),
     );
+    if (isMainEl && d.length > 1) {
+      throw new Error("SINGLE_ELEMENT_CLASS used with more than one element");
+    }
+    if (isMainEl) {
+      const orig = jsonCodec;
+      jsonCodec = {
+        toJSON(value) {
+          return orig.toJSON(value)[SINGLE_ELEMENT_CLASS];
+        },
+        fromJSON(json) {
+          return orig.fromJSON({ [SINGLE_ELEMENT_CLASS]: json });
+        },
+      };
+    }
 
     // newConstr is needed for the instanceof Check and to make sure that the method
     // @ts-ignore
@@ -124,6 +179,9 @@ export function JamCodecable<
         }
         return <U>x;
       }
+      static toJSON(value: U): object {
+        return jsonCodec.toJSON(value);
+      }
     };
     Object.defineProperty(newConstr, "name", { value: constructor.name });
     return newConstr;
@@ -132,28 +190,32 @@ export function JamCodecable<
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
-  const { E_2_int, E_4_int } = await import("./ints/E_subscr");
+  const { E_2_int, E_4_int } = await import("../ints/E_subscr");
   @JamCodecable()
-  class C extends BaseJamCodecable<C> {
-    @JamProperty(E_4_int)
+  class C extends BaseJamCodecable {
+    @jsonCodec(NumberJSONCodec())
+    @binaryCodec(E_4_int)
     c!: number;
   }
 
   @JamCodecable()
-  class B extends BaseJamCodecable<B> {
-    @JamProperty(E_4_int)
+  class B extends BaseJamCodecable {
+    @jsonCodec(NumberJSONCodec())
+    @binaryCodec(E_4_int)
     b!: number;
 
-    @JamProperty(C)
+    @codec(C)
     c!: C;
 
-    @JamProperty(E_2_int)
+    @jsonCodec(NumberJSONCodec())
+    @binaryCodec(E_2_int)
     d!: number;
   }
 
   @JamCodecable()
   class subB extends B {
-    @JamProperty(E_4_int)
+    @jsonCodec(NumberJSONCodec())
+    @binaryCodec(E_4_int)
     cane!: number;
   }
 
@@ -180,6 +242,32 @@ if (import.meta.vitest) {
       const encoded2Inner = subBDecoded.toBinary();
 
       expect(encoded).deep.eq(encoded2Inner);
+    });
+    describe("single element class", () => {
+      it("should encode and decode single element class correctly", () => {
+        @JamCodecable()
+        class S extends BaseJamCodecable {
+          @numberCodec(4, SINGLE_ELEMENT_CLASS)
+          a!: number;
+        }
+
+        const s = new S();
+        s.a = 42;
+        expect(s.toJSON()).toEqual(42);
+        expect(S.fromJSON(42)).deep.eq(s);
+      });
+    });
+    it("should fail if more than one single element class is used", () => {
+      expect(() => {
+        @JamCodecable()
+        class S1 extends BaseJamCodecable {
+          @jsonCodec(NumberJSONCodec(), SINGLE_ELEMENT_CLASS)
+          @binaryCodec(E_4_int)
+          a!: number;
+          @numberCodec(4, SINGLE_ELEMENT_CLASS)
+          b!: number;
+        }
+      }).toThrow("SINGLE_ELEMENT_CLASS used with more than one element");
     });
   });
 }

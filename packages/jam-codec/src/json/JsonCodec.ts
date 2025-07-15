@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JamCodec } from "@/codec";
+import { JamDecodable, JamEncodable } from "@/codec";
 import { HashCodec } from "@/identity";
 import { encodeWithCodec } from "@/utils";
 import {
@@ -71,8 +71,11 @@ export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
   };
 };
 
-const BigIntBytesJSONCodec = <T extends BigIntBytes<N>, N extends number>(
-  codec: JamCodec<T>,
+export const BigIntBytesJSONCodec = <
+  T extends BigIntBytes<N>,
+  N extends number,
+>(
+  codec: JamEncodable<T> & JamDecodable<T>,
 ): JSONCodec<T, string> => {
   return {
     fromJSON(json) {

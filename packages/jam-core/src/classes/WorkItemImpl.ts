@@ -1,0 +1,215 @@
+import {
+  ArrayOfJSONCodec,
+  BaseJamCodecable,
+  bigintCodec,
+  binaryCodec,
+  BufferJSONCodec,
+  createArrayLengthDiscriminator,
+  createCodec,
+  createJSONCodec,
+  E_sub_int,
+  HashCodec,
+  hashCodec,
+  HashJSONCodec,
+  JamCodec,
+  JamCodecable,
+  jsonCodec,
+  LengthDiscrimantedIdentity,
+  numberCodec,
+  NumberJSONCodec,
+} from "@tsjam/codec";
+import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
+import {
+  CodeHash,
+  ExportingWorkPackageHash,
+  Gas,
+  Hash,
+  MerkleTreeRoot,
+  ServiceIndex,
+  u16,
+  u32,
+  UpToSeq,
+  WorkItem,
+  WorkPayload,
+} from "@tsjam/types";
+import { isHash } from "@tsjam/utils";
+
+/**
+ * $(0.7.0 - C.35) I fn
+ */
+const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
+  encode(value, bytes) {
+    const root = value.root;
+    if (!isHash(root)) {
+      let offset = HashCodec.encode(root.value, bytes.subarray(0, 32));
+      offset += E_sub_int<number>(2).encode(
+        value.index + 2 ** 15,
+        bytes.subarray(offset),
+      );
+      return offset;
+    } else {
+      let offset = HashCodec.encode(root, bytes.subarray(0, 32));
+      offset += E_sub_int<number>(2).encode(
+        value.index,
+        bytes.subarray(offset),
+      );
+      return offset;
+    }
+  },
+  decode(bytes) {
+    const { value: root } = HashCodec.decode(bytes.subarray(0, 32));
+    const { value: index } = E_sub_int<u16>(2).decode(bytes.subarray(32));
+    if (index > 2 ** 15) {
+      return {
+        value: {
+          root: <ExportingWorkPackageHash>{ value: root },
+          index: <u16>(index - 2 ** 15),
+        },
+        readBytes: 32 + 2,
+      };
+    } else {
+      return {
+        value: { root: root as MerkleTreeRoot, index },
+        readBytes: 32 + 2,
+      };
+    }
+  },
+  encodedSize() {
+    return 32 + 2;
+  },
+};
+// codec order defined in $(0.6.4 - C.29)
+@JamCodecable()
+export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
+  /**
+   * `s` - the service related to the work item
+   */
+  @numberCodec(4, "service")
+  service!: ServiceIndex;
+
+  /**
+   * `c` - the code hash of the service a time of the work item creation
+   */
+  @hashCodec("code_hash")
+  codeHash!: CodeHash;
+
+  /**
+   * `g`
+   * Gas Limit for the Refine logic
+   */
+  @bigintCodec(8, "refine_gas_limit")
+  refineGasLimit!: Gas;
+
+  /**
+   * `a`
+   * Gas limit for the Accumulate logic
+   */
+  @bigintCodec(8, "accumulate_gas_limit")
+  accumulateGasLimit!: Gas;
+
+  /**
+   * `e`
+   * - should be &lt; 2^11
+   * Number of segments exported by the work item
+   */
+
+  @numberCodec(2, "export_count")
+  exportCount!: u16;
+
+  /**
+   * `bold y` - the payload of the work item
+   * Obfuscated/Opaque data fed in the refine logic that should contain info about the work that
+   * needs to be done
+   */
+  @jsonCodec(BufferJSONCodec())
+  @binaryCodec(LengthDiscrimantedIdentity)
+  payload!: WorkPayload;
+
+  /**
+   * `bold i`
+   * Sequence of imported Data Segments
+   */
+
+  @jsonCodec(
+    ArrayOfJSONCodec(
+      createJSONCodec([
+        ["root", "tree_root", HashJSONCodec()],
+        ["index", "index", NumberJSONCodec()],
+      ]),
+    ),
+    "import_segments",
+  )
+  @binaryCodec(createArrayLengthDiscriminator(importDataSegmentCodec))
+  importSegments!: UpToSeq<
+    {
+      /**
+       * merkle tree root
+       * or hash of the exporting work package. (if tagged)
+       */
+      root: MerkleTreeRoot | ExportingWorkPackageHash;
+      /**
+       * index in the merkle tree
+       * Codec specifies that its not bigger than 2^15
+       */
+      index: u16;
+    },
+    typeof MAX_IMPORTED_ITEMS
+  >;
+
+  /**
+   * `x`
+   * Blob hash and lengths to be introduced in the block.
+   */
+  @jsonCodec(
+    ArrayOfJSONCodec(
+      createJSONCodec([
+        ["blobHash", "hash", HashJSONCodec()],
+        ["length", "len", NumberJSONCodec()],
+      ]),
+    ),
+    "extrinsic",
+  )
+  @binaryCodec(
+    createArrayLengthDiscriminator<WorkItem["exportedDataSegments"]>(
+      createCodec([
+        ["blobHash", HashCodec],
+        ["length", E_sub_int<u32>(4)],
+      ]),
+    ),
+  )
+  exportedDataSegments!: UpToSeq<
+    {
+      blobHash: Hash;
+      length: u32;
+    },
+    typeof MAX_IMPORTED_ITEMS
+  >;
+}
+
+if (import.meta.vitest) {
+  const { beforeAll, describe, it, expect } = import.meta.vitest;
+  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  describe("WorkItemCodec", () => {
+    let bin: Uint8Array;
+    let json: object;
+    beforeAll(() => {
+      bin = getCodecFixtureFile("work_item.bin");
+      json = JSON.parse(
+        Buffer.from(getCodecFixtureFile("work_item.json")).toString("utf8"),
+      );
+    });
+
+    it.fails("should encode/decode properly", () => {
+      const decoded = WorkItemImpl.decode<WorkItemImpl>(bin);
+      const reencoded = decoded.value.toBinary();
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
+    });
+    it("should encode/decode from JSON", () => {
+      const decoded = WorkItemImpl.fromJSON<WorkItemImpl>(json);
+      const reencoded = decoded.toJSON();
+      expect(reencoded).toEqual(json);
+    });
+  });
+}

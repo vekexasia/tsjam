@@ -12,32 +12,26 @@ import {
  * $(0.7.0 - 11.4)
  */
 export type WorkContext = {
-  // first block of the snapshot
-  anchor: {
-    /**
-     * `a` header hash
-     */
-    hash: HeaderHash;
-    /**
-     * `s`
-     */
-    postState: StateRootHash;
-    /**
-     * `b`
-     */
-    accOutLog: BeefyRootHash;
-  };
-  // second block of the snapshot
-  lookupAnchor: {
-    /**
-     * `l`
-     */
-    hash: HeaderHash;
-    /**
-     * `t`
-     */
-    time: Tau;
-  };
+  /**
+   * `a` header hash
+   */
+  anchorHash: HeaderHash;
+  /**
+   * `s`
+   */
+  anchorPostState: StateRootHash;
+  /**
+   * `b`
+   */
+  anchorAccOutLog: BeefyRootHash;
+  /**
+   * `l`
+   */
+  lookupAnchorHash: HeaderHash;
+  /**
+   * `t`
+   */
+  lookupAnchorTime: Tau;
   /**
    * `p`
    */

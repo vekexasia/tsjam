@@ -37,5 +37,6 @@ export enum WorkError {
 }
 /**
  * Output Data ofr the refine logic
+ * either success or error is set
  */
-export type WorkOutput = Uint8Array | WorkError;
+export type WorkOutput = { success?: Uint8Array; error?: WorkError };

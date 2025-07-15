@@ -4,7 +4,8 @@ export * from "@/ints/E_subscr.js";
 export * from "@/validatorDataCodec.js";
 export * from "@/statisticsCodec.js";
 export * from "@/utils.js";
-export * from "@/classCodec.js";
+export * from "@/class/mainDecorators.js";
+export * from "@/class/utilityDecorators.js";
 
 export * from "@/bitSequence.js";
 export * from "@/optional.js";

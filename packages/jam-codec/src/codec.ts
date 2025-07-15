@@ -1,3 +1,5 @@
+import { JSONCodec } from "./json/JsonCodec";
+
 export interface JamDecodable<T> {
   /**
    * Decode value from byte array
@@ -19,4 +21,5 @@ export interface JamEncodable<T> {
 /**
  * A codec that encodes/decodes value into/from a byte array
  */
-export interface JamCodec<T> extends JamDecodable<T>, JamEncodable<T> {}
+export interface JamCodec<T> extends JamDecodable<T>, JamEncodable<T> {
+}

@@ -2,7 +2,7 @@ import { Gas, Hash, ServiceIndex, u16, u32 } from "@/genericTypes";
 import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
- * Identified by `L` set
+ * Identified by `D` set
  * $(0.7.0 - 11.6)
  */
 export type WorkDigest = {

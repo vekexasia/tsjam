@@ -1,11 +1,16 @@
-import { JamCodec } from "../src/codec.js";
+import { JamCodec } from "@tsjam/codec";
 import * as fs from "node:fs";
 
-export const getCodecFixtureFile = (filename: string): Uint8Array => {
+export const getCodecFixtureFile = (
+  filename: string,
+  size: string = "full",
+): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
-      new URL(`../../../jamtestvectors/codec/data/${filename}`, import.meta.url)
-        .pathname,
+      new URL(
+        `../../../jamtestvectors/codec/${size}/${filename}`,
+        import.meta.url,
+      ).pathname,
     ),
   );
 };

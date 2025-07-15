@@ -1,14 +1,8 @@
 import {
   BaseJamCodecable,
-  createJSONCodec,
-  E_2_int,
-  E_4_int,
-  HashCodec,
-  HashJSONCodec,
+  hashCodec,
   JamCodecable,
-  JamProperty,
-  NumberJSONCodec,
-  WorkPackageHashCodec,
+  numberCodec,
 } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import {
@@ -24,13 +18,13 @@ import {
 
 @JamCodecable()
 export class AvailabilitySpecificationImpl
-  extends BaseJamCodecable<AvailabilitySpecificationImpl>
+  extends BaseJamCodecable
   implements AvailabilitySpecification
 {
-  @JamProperty(WorkPackageHashCodec, HashJSONCodec(), "hash")
+  @hashCodec("hash")
   packageHash!: WorkPackageHash;
 
-  @JamProperty(E_4_int, NumberJSONCodec(), "length")
+  @numberCodec(4, "length")
   bundleLength!: Tagged<
     u32,
     "l",
@@ -39,12 +33,12 @@ export class AvailabilitySpecificationImpl
     }
   >;
 
-  @JamProperty(HashCodec, HashJSONCodec(), "erasure_root")
+  @hashCodec("erasure_root")
   erasureRoot!: Hash;
 
-  @JamProperty(HashCodec, HashJSONCodec(), "exports_root")
+  @hashCodec("exports_root")
   segmentRoot!: Hash;
 
-  @JamProperty(E_2_int, NumberJSONCodec(), "exports_count")
+  @numberCodec(2, "exports_count")
   segmentCount!: u16;
 }
