@@ -56,58 +56,6 @@ export const disputesSTF: STF<
   },
   DisputesToPosteriorError
 > = (input, curState) => {
-  // $(0.6.4 - 10.2)
-  for (const v of input.extrinsic.verdicts) {
-    if (
-      v.epochIndex !== epochIndex(input.curTau) &&
-      v.epochIndex !== epochIndex(input.curTau) - 1
-    ) {
-      return err(DisputesToPosteriorError.EPOCH_INDEX_WRONG);
-    }
-
-    if (v.judgements.length !== Math.floor(2 * NUMBER_OF_VALIDATORS) / 3 + 1) {
-      return err(DisputesToPosteriorError.VERDICTS_NUM_VALIDATORS);
-    }
-  }
-
-  // verify all  verdics signatures
-  // $(0.7.0 - 10.3)
-  if (
-    false ===
-    input.extrinsic.verdicts.every((verdict) => {
-      const validatorSet =
-        verdict.epochIndex === epochIndex(input.curTau)
-          ? input.kappa
-          : input.lambda;
-      return verdict.judgements.every((judgement) => {
-        const validatorPubKey = validatorSet[judgement.validatorIndex].ed25519;
-        let message: Uint8Array;
-        if (judgement.validity === 1) {
-          message = new Uint8Array([
-            ...JAM_VALID,
-            ...bigintToBytes(verdict.hash, 32),
-          ]);
-        } else {
-          message = new Uint8Array([
-            ...JAM_INVALID,
-            ...bigintToBytes(verdict.hash, 32),
-          ]);
-        }
-        const signatureVerified = Ed25519.verifySignature(
-          judgement.signature,
-          validatorPubKey,
-          message,
-        );
-        if (!signatureVerified) {
-          return false;
-        }
-        return true;
-      });
-    })
-  ) {
-    return err(DisputesToPosteriorError.VERDICT_SIGNATURE_INVALID);
-  }
-
   const kappaULambdaNoOffenders = new Set([
     ...input.kappa.map((v) => v.ed25519.bigint),
     ...input.lambda.map((v) => v.ed25519.bigint),

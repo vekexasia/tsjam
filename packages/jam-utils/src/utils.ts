@@ -69,7 +69,7 @@ export const getBlockAuthorKey = (
   header: JamHeader,
   p_kappa: Posterior<JamState["kappa"]>,
 ): BandersnatchKey | undefined => {
-  const k: ValidatorData | undefined = p_kappa[header.blockAuthorKeyIndex];
+  const k: ValidatorData | undefined = p_kappa[header.authorIndex];
   return k?.banderSnatch;
 };
 

@@ -1,5 +1,12 @@
 import { JamCodec } from "@/codec.js";
 import { BigIntBytes } from "@tsjam/types";
+import {
+  binaryCodec,
+  jsonCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "./class/mainDecorators";
+import { NULLORCodec } from "./json/codecs";
+import { JSONCodec } from "./json/JsonCodec";
 
 /**
  * OptCodec is a codec that allows for optional values
@@ -35,6 +42,20 @@ export class Optional<T> implements JamCodec<T | undefined | null> {
     return this.codec.encodedSize(value) + 1;
   }
 }
+
+/**
+ * class property decorator
+ */
+export const optionalCodec = <T>(
+  codec: JamCodec<T> & JSONCodec<T>,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return function (target: any, propertyKey: string) {
+    binaryCodec(new Optional(codec))(target, propertyKey);
+    jsonCodec(NULLORCodec(codec), jsonKey)(target, propertyKey);
+  };
+};
+
 // utility codecs
 export const OptBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
   k: JamCodec<K>,

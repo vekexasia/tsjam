@@ -12,7 +12,17 @@ import {
 import { Tau } from "@/Tau.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Ticket } from "./sets/Ticket.js";
-
+export interface EpochMarker {
+  // coming from eta
+  entropy: Blake2bHash;
+  entropy2: Blake2bHash;
+  // 32 byte bandersnatch sequence (ordered) coming from gamma_k
+  validators: SeqOfLength<
+    { bandersnatch: BandersnatchKey; ed25519: ED25519PublicKey },
+    typeof NUMBER_OF_VALIDATORS,
+    "validators"
+  >;
+}
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
@@ -32,7 +42,7 @@ export interface JamHeader {
    * It's computed by applying the `Mσ` fn to the `σ`
    * @see JamState
    */
-  priorStateRoot: StateRootHash;
+  parentStateRoot: StateRootHash;
 
   /**
    * **HX:** The hash of the block's extrinsic data.
@@ -42,7 +52,7 @@ export interface JamHeader {
   /**
    * **HT:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  timeSlotIndex: Tau;
+  slot: Tau;
 
   /**
    * **He:** The epoch marker of the block.
@@ -50,17 +60,7 @@ export interface JamHeader {
    * hence the length of kb or validatorKeys is `epoch-length`
    * $(0.7.0 - 5.10)
    */
-  epochMarker?: {
-    // coming from eta
-    entropy: Blake2bHash;
-    entropy2: Blake2bHash;
-    // 32 byte bandersnatch sequence (ordered) coming from gamma_k
-    validatorKeys: SeqOfLength<
-      { bandersnatch: BandersnatchKey; ed25519: ED25519PublicKey },
-      typeof NUMBER_OF_VALIDATORS,
-      "validatorKeys"
-    >;
-  };
+  epochMarker?: EpochMarker;
 
   /**
    * `HW` - The winning tickets of the block.
@@ -68,24 +68,24 @@ export interface JamHeader {
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
    */
-  winningTickets?: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
+  ticketsMark?: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
 
   /**
    * `HO`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  offenders: ED25519PublicKey[];
+  offendersMark: ED25519PublicKey[];
 
   /**
    * `HI`
    */
-  blockAuthorKeyIndex: ValidatorIndex;
+  authorIndex: ValidatorIndex;
 
   /**
    * `HV` -
    */
-  entropySignature: BandersnatchSignature;
+  entropySource: BandersnatchSignature;
 }
 
 export interface SignedJamHeader extends JamHeader {
@@ -93,5 +93,5 @@ export interface SignedJamHeader extends JamHeader {
    * `HS`
    * The signature of the block. Must be signed by the validator associated to this time slot.
    */
-  blockSeal: BandersnatchSignature;
+  seal: BandersnatchSignature;
 }

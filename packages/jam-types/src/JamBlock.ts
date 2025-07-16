@@ -1,11 +1,11 @@
+import { SignedJamHeader } from "@/header";
 import {
   DisputeExtrinsic,
   EA_Extrinsic,
   EG_Extrinsic,
   EP_Extrinsic,
-  TicketExtrinsics,
+  TicketsExtrinsic,
 } from "@/index";
-import { SignedJamHeader } from "@/header";
 
 /**
  * The Jam Block
@@ -24,7 +24,7 @@ export interface JamBlockExtrinsics {
   /**
    * `Et` - Tickets, used for the mechanism which manages the selection of validators for the permissioning of block authoring.
    */
-  tickets: TicketExtrinsics;
+  tickets: TicketsExtrinsic;
 
   /**
    * `Ed` - votes by validators on dispute(s) arising between them presently taking place.

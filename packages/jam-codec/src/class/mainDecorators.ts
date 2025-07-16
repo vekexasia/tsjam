@@ -269,5 +269,25 @@ if (import.meta.vitest) {
         }
       }).toThrow("SINGLE_ELEMENT_CLASS used with more than one element");
     });
+    it("should work with inheritance", () => {
+      @JamCodecable()
+      class S extends BaseJamCodecable {
+        @eSubIntCodec(1)
+        a!: number;
+      }
+      @JamCodecable()
+      class SubS extends S {
+        @eSubIntCodec(1)
+        b!: number;
+      }
+
+      const subS = new SubS();
+      subS.a = 42;
+      subS.b = 84;
+
+      expect(subS.toJSON()).toEqual({ a: 42, b: 84 });
+      expect(subS.toBinary()[0]).toBe(42);
+      expect(subS.toBinary()[1]).toBe(84);
+    });
   });
 }

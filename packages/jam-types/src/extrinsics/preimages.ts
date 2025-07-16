@@ -5,8 +5,8 @@ import { ServiceIndex } from "@/genericTypes";
  * @see section 12.1
  */
 export type EP_Tuple = {
-  serviceIndex: ServiceIndex;
-  preimage: Uint8Array;
+  requester: ServiceIndex;
+  blob: Uint8Array;
 };
 
 /**
