@@ -2,7 +2,7 @@ import { PVMProgram, u32, u8 } from "@tsjam/types";
 import { JamCodec } from "@/codec.js";
 import { E } from "@/ints/e.js";
 import { E_1, E_sub } from "@/ints/E_subscr.js";
-import { BitSequence } from "@/bitSequence.js";
+import { BitSequenceCodec } from "@/bitSequence.js";
 
 export const PVMProgramCodec: JamCodec<PVMProgram> = {
   encode(value: PVMProgram, bytes: Uint8Array): number {
@@ -29,7 +29,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     offset += value.c.length;
 
     // E(k)
-    offset += BitSequence.encode(value.k, bytes.subarray(offset));
+    offset += BitSequenceCodec.encode(value.k, bytes.subarray(offset));
     return offset;
   },
   decode(bytes: Uint8Array): { value: PVMProgram; readBytes: number } {
@@ -62,7 +62,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
 
     // E(k)
     const elements = Math.ceil(Number(cCard.value) / 8);
-    obj.k = BitSequence.decode(
+    obj.k = BitSequenceCodec.decode(
       bytes.subarray(offset, offset + elements),
     ).value.slice(0, Number(cCard.value));
 

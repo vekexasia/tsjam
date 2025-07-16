@@ -1,8 +1,8 @@
 import {
   BaseJamCodecable,
+  eSubIntCodec,
   hashCodec,
   JamCodecable,
-  numberCodec,
 } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import {
@@ -24,7 +24,7 @@ export class AvailabilitySpecificationImpl
   @hashCodec("hash")
   packageHash!: WorkPackageHash;
 
-  @numberCodec(4, "length")
+  @eSubIntCodec(4, "length")
   bundleLength!: Tagged<
     u32,
     "l",
@@ -39,6 +39,6 @@ export class AvailabilitySpecificationImpl
   @hashCodec("exports_root")
   segmentRoot!: Hash;
 
-  @numberCodec(2, "exports_count")
+  @eSubIntCodec(2, "exports_count")
   segmentCount!: u16;
 }

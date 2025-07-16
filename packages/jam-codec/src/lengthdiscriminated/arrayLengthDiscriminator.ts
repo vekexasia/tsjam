@@ -1,9 +1,16 @@
+import {
+  binaryCodec,
+  jsonCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "@/class/mainDecorators";
 import { JamCodec } from "@/codec.js";
+import { ArrayOfJSONCodec } from "@/json/codecs";
+import { JSONCodec } from "@/json/JsonCodec";
 import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
 
 /**
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements
- * $(0.6.4 - C.8)
+ * $(0.7.0 - C.7)
  */
 export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(
   singleItemCodec: JamCodec<X>,
@@ -35,4 +42,15 @@ export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(
       );
     },
   });
+};
+
+// class property decorator
+export const lengthDiscriminatedCodec = <T>(
+  codec: JamCodec<T> & JSONCodec<T>,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(createArrayLengthDiscriminator(codec))(target, propertyKey);
+    jsonCodec(ArrayOfJSONCodec(codec), jsonKey)(target, propertyKey);
+  };
 };

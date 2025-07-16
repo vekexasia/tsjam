@@ -9,7 +9,7 @@
     "experimentalDecorators": true
   },
   "include": [
-    "src/**/*",
+    "src/**/*", "../jam-core/src/codecs/validatorDataCodec.ts", "../jam-core/src/codecs/PVMProgramCodec.ts", "../jam-core/src/codecs/statisticsCodec.ts", "../jam-core/src/codecs/privilegedServices.ts",
   ],
   "exclude": [
     "dist/**/*"

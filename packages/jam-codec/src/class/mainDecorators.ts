@@ -1,7 +1,6 @@
 import { JamCodec } from "@/codec";
-import { JSONCodec, createJSONCodec, NumberJSONCodec } from "@/json/JsonCodec";
+import { JSONCodec, createJSONCodec } from "@/json/JsonCodec";
 import { mapCodec, createCodec, encodeWithCodec } from "@/utils";
-import { numberCodec } from "./utilityDecorators";
 
 const CODEC_METADATA = Symbol.for("__jamcodecs__");
 /**
@@ -190,7 +189,9 @@ export function JamCodecable<
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
-  const { E_2_int, E_4_int } = await import("../ints/E_subscr");
+  const { NumberJSONCodec } = await import("@/json/codecs.js");
+  const { E_2_int, E_4_int, eSubIntCodec } = await import("../ints/E_subscr");
+  console.log("ciao");
   @JamCodecable()
   class C extends BaseJamCodecable {
     @jsonCodec(NumberJSONCodec())
@@ -200,8 +201,7 @@ if (import.meta.vitest) {
 
   @JamCodecable()
   class B extends BaseJamCodecable {
-    @jsonCodec(NumberJSONCodec())
-    @binaryCodec(E_4_int)
+    @eSubIntCodec(4)
     b!: number;
 
     @codec(C)
@@ -247,7 +247,7 @@ if (import.meta.vitest) {
       it("should encode and decode single element class correctly", () => {
         @JamCodecable()
         class S extends BaseJamCodecable {
-          @numberCodec(4, SINGLE_ELEMENT_CLASS)
+          @eSubIntCodec(2, SINGLE_ELEMENT_CLASS)
           a!: number;
         }
 
@@ -264,7 +264,7 @@ if (import.meta.vitest) {
           @jsonCodec(NumberJSONCodec(), SINGLE_ELEMENT_CLASS)
           @binaryCodec(E_4_int)
           a!: number;
-          @numberCodec(4, SINGLE_ELEMENT_CLASS)
+          @eSubIntCodec(4, SINGLE_ELEMENT_CLASS)
           b!: number;
         }
       }).toThrow("SINGLE_ELEMENT_CLASS used with more than one element");

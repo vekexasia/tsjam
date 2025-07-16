@@ -1,14 +1,11 @@
 import {
-  ArrayOfJSONCodec,
   BaseJamCodecable,
-  binaryCodec,
-  createArrayLengthDiscriminator,
+  eSubIntCodec,
   HashCodec,
   hashCodec,
   HashJSONCodec,
   JamCodecable,
-  jsonCodec,
-  numberCodec,
+  lengthDiscriminatedCodec,
 } from "@tsjam/codec";
 import {
   BeefyRootHash,
@@ -34,11 +31,13 @@ export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
   @hashCodec("lookup_anchor")
   lookupAnchorHash!: HeaderHash;
 
-  @numberCodec(4, "lookup_anchor_slot")
+  @eSubIntCodec(4, "lookup_anchor_slot")
   lookupAnchorTime!: Tau;
 
-  @jsonCodec(ArrayOfJSONCodec(HashJSONCodec()))
-  @binaryCodec(createArrayLengthDiscriminator(HashCodec))
+  @lengthDiscriminatedCodec({
+    ...HashCodec,
+    ...HashJSONCodec(),
+  })
   prerequisites!: WorkPackageHash[];
 }
 

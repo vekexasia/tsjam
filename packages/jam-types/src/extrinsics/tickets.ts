@@ -6,16 +6,18 @@ import { RingVRFProof, UpToSeq } from "@/genericTypes.js";
  * `K`=16 and it is allowed to be submitted only if current slot is less than Y=500 ( aka lottery did not end yet)
  * $(0.7.0 - 6.29)
  */
-export type TicketExtrinsics = UpToSeq<
-  {
-    /**
-     * `r`
-     */
-    entryIndex: 0 | 1;
-    /**
-     * `p`
-     */
-    proof: RingVRFProof;
-  },
-  16
->;
+export type TicketExtrinsics = {
+  elements: UpToSeq<
+    {
+      /**
+       * `r`
+       */
+      entryIndex: 0 | 1;
+      /**
+       * `p`
+       */
+      proof: RingVRFProof;
+    },
+    16
+  >;
+};

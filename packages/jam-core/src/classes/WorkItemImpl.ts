@@ -1,13 +1,14 @@
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
-  bigintCodec,
   binaryCodec,
   BufferJSONCodec,
   createArrayLengthDiscriminator,
   createCodec,
   createJSONCodec,
   E_sub_int,
+  eSubBigIntCodec,
+  eSubIntCodec,
   HashCodec,
   hashCodec,
   HashJSONCodec,
@@ -15,7 +16,6 @@ import {
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
-  numberCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
@@ -84,7 +84,7 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
   /**
    * `s` - the service related to the work item
    */
-  @numberCodec(4, "service")
+  @eSubIntCodec(4)
   service!: ServiceIndex;
 
   /**
@@ -97,14 +97,14 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
    * `g`
    * Gas Limit for the Refine logic
    */
-  @bigintCodec(8, "refine_gas_limit")
+  @eSubBigIntCodec(8, "refine_gas_limit")
   refineGasLimit!: Gas;
 
   /**
    * `a`
    * Gas limit for the Accumulate logic
    */
-  @bigintCodec(8, "accumulate_gas_limit")
+  @eSubBigIntCodec(8, "accumulate_gas_limit")
   accumulateGasLimit!: Gas;
 
   /**
@@ -112,8 +112,7 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
    * - should be &lt; 2^11
    * Number of segments exported by the work item
    */
-
-  @numberCodec(2, "export_count")
+  @eSubIntCodec(2, "export_count")
   exportCount!: u16;
 
   /**

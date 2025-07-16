@@ -14,4 +14,4 @@ export type EP_Tuple = {
  * they must be ordered and not duplicate
  * $(0.7.0 - 12.38)
  */
-export type EP_Extrinsic = Array<EP_Tuple>;
+export type EP_Extrinsic = { elements: Array<EP_Tuple> };

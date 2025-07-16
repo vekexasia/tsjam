@@ -1,11 +1,17 @@
+import {
+  binaryCodec,
+  jsonCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "@/class/mainDecorators";
 import { JamCodec } from "@/codec";
 import { LittleEndian } from "@/ints/littleEndian";
+import { BigIntJSONCodec, NumberJSONCodec } from "@/json/codecs";
 import { u16, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 
 /**
  * @param sub - the number of bytes to encode
- * $(0.6.4 - C.5)
+ * $(0.7.0 - C.12)
  */
 export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
   encode: (value: T, bytes: Uint8Array): number => {
@@ -72,3 +78,24 @@ export const E_sub_int = <T extends number>(sub: number): JamCodec<T> => ({
 export const E_1_int = E_sub_int<u8>(1);
 export const E_2_int = E_sub_int<u16>(2);
 export const E_4_int = E_sub_int<u32>(4);
+
+// init classes decorators
+export const eSubBigIntCodec = (
+  bytes: number,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(E_sub(bytes))(target, propertyKey);
+    jsonCodec(BigIntJSONCodec(), jsonKey)(target, propertyKey);
+  };
+};
+
+export const eSubIntCodec = (
+  bytes: number,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(E_sub_int(bytes))(target, propertyKey);
+    jsonCodec(NumberJSONCodec(), jsonKey)(target, propertyKey);
+  };
+};

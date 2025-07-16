@@ -1,61 +1,29 @@
-import {
-  BigIntBytesJSONCodec,
-  BigIntJSONCodec,
-  Ed25519PublicKeyJSONCodec,
-  HashJSONCodec,
-  NumberJSONCodec,
-} from "@/json/JsonCodec";
+import { mapCodec } from "@/utils";
 import { binaryCodec, jsonCodec, SINGLE_ELEMENT_CLASS } from "./mainDecorators";
-import { E_sub, E_sub_int } from "@/ints/E_subscr";
-import {
-  Ed25519PubkeyCodec,
-  genericBytesBigIntCodec,
-  HashCodec,
-} from "@/identity";
+import { E_1_int } from "@/ints/E_subscr";
+import { u8 } from "@tsjam/types";
 
-export const numberCodec = (
-  bytes: number,
+export const booleanCodec = (
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string | symbol) {
-    binaryCodec(E_sub_int(bytes))(target, propertyKey);
-    jsonCodec(NumberJSONCodec(), jsonKey)(target, propertyKey);
-  };
-};
-
-export const bigintCodec = (
-  bytes: number,
-  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
-) => {
-  return function (target: any, propertyKey: string | symbol) {
-    binaryCodec(E_sub(bytes))(target, propertyKey);
-    jsonCodec(BigIntJSONCodec(), jsonKey)(target, propertyKey);
-  };
-};
-
-export const hashCodec = (jsonKey?: string | typeof SINGLE_ELEMENT_CLASS) => {
-  return function (target: any, propertyKey: string | symbol) {
-    binaryCodec(HashCodec)(target, propertyKey);
-    jsonCodec(HashJSONCodec(), jsonKey)(target, propertyKey);
-  };
-};
-
-export const ed25519Codec = (
-  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
-) => {
-  return function (target: any, propertyKey: string | symbol) {
-    binaryCodec(Ed25519PubkeyCodec)(target, propertyKey);
-    jsonCodec(Ed25519PublicKeyJSONCodec, jsonKey)(target, propertyKey);
-  };
-};
-
-export const bigintBufCodec = (
-  bytes: number,
-  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
-) => {
-  return function (target: any, propertyKey: string | symbol) {
-    const codec = genericBytesBigIntCodec(bytes);
-    binaryCodec(codec)(target, propertyKey);
-    jsonCodec(BigIntBytesJSONCodec(codec), jsonKey)(target, propertyKey);
+  return (target: any, propertyKey: string | symbol) => {
+    binaryCodec(
+      mapCodec(
+        E_1_int,
+        (v) => v === 1,
+        (v) => <u8>(v ? 1 : 0),
+      ),
+    )(target, propertyKey);
+    jsonCodec(
+      {
+        fromJSON(json) {
+          return json;
+        },
+        toJSON(value) {
+          return value;
+        },
+      },
+      jsonKey,
+    )(target, propertyKey);
   };
 };

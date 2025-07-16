@@ -8,41 +8,39 @@ import { WorkReport } from "@/sets/WorkReport";
 import { Tau } from "@/Tau";
 import { CORES } from "@tsjam/constants";
 
+export type SingleWorkReportGuaranteeSignature = {
+  /**
+   * `v`
+   */
+  validatorIndex: ValidatorIndex;
+  /**
+   * `s`
+   */
+  signature: ED25519Signature;
+};
+
 /**
  * Report of newly completed workload whose accuracy is guaranteed by specific validators.
  */
-type SingleWorkReportGuarantee = {
+export type SingleWorkReportGuarantee = {
   /**
    * `bold_r`
    * the `.coreIndex` of this workload must be unique within
    * the full extrinsic
    */
-  workReport: WorkReport;
+  report: WorkReport;
 
   /**
    * `t`
    */
-  timeSlot: Tau;
+  slot: Tau;
 
   /**
    * `a`
    * the creds must be ordered by `validatorIndex`
    *
    */
-  credential: BoundedSeq<
-    {
-      /**
-       * `v`
-       */
-      validatorIndex: ValidatorIndex;
-      /**
-       * `s`
-       */
-      signature: ED25519Signature;
-    },
-    2,
-    3
-  >;
+  signatures: BoundedSeq<SingleWorkReportGuaranteeSignature, 2, 3>;
 };
 /**
  * Identified by `Eg`.
@@ -50,4 +48,6 @@ type SingleWorkReportGuarantee = {
  * $(0.7.0 - 11.23)
  *
  */
-export type EG_Extrinsic = UpToSeq<SingleWorkReportGuarantee, typeof CORES>;
+export type EG_Extrinsic = {
+  elements: UpToSeq<SingleWorkReportGuarantee, typeof CORES>;
+};

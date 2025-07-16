@@ -1,7 +1,5 @@
-import { WorkOutputCodec, WorkOutputJSONCodec } from "@/codecs/WorkOutputCodec";
 import {
   BaseJamCodecable,
-  bigintCodec,
   BigIntJSONCodec,
   binaryCodec,
   codec,
@@ -9,27 +7,20 @@ import {
   createJSONCodec,
   E_bigint,
   E_int,
+  eSubBigIntCodec,
+  eSubIntCodec,
   hashCodec,
   JamCodecable,
   jsonCodec,
-  numberCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
-import {
-  Gas,
-  Hash,
-  ServiceIndex,
-  u16,
-  u32,
-  WorkDigest,
-  WorkOutput,
-} from "@tsjam/types";
+import { Gas, Hash, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
 import { WorkOutputImpl } from "./WorkOutputImpl";
 
 // codec order defined in $(0.6.4 - C.26)
 @JamCodecable()
 export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
-  @numberCodec(4, "service_id")
+  @eSubIntCodec(4, "service_id")
   serviceIndex!: ServiceIndex;
 
   @hashCodec("code_hash")
@@ -38,7 +29,7 @@ export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
   @hashCodec("payload_hash")
   payloadHash!: Hash;
 
-  @bigintCodec(8, "accumulate_gas")
+  @eSubBigIntCodec(8, "accumulate_gas")
   gasLimit!: Gas;
 
   @codec(WorkOutputImpl)

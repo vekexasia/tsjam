@@ -1,7 +1,9 @@
+import { binaryCodec, jsonCodec } from "@/class/mainDecorators";
 import { JamCodec } from "@/codec";
-import assert from "node:assert";
 import { E_8, E_sub } from "@/ints/E_subscr.js";
+import { BigIntJSONCodec, NumberJSONCodec } from "@/json/codecs";
 import { mapCodec } from "@/utils";
+import assert from "node:assert";
 
 /**
  * E encoding allows for variable size encoding for numbers up to 2^64
@@ -99,6 +101,21 @@ export const E_int = <T extends number>() =>
     (v) => <T>Number(v),
     (v: T) => BigInt(v),
   );
+
+export const eBigIntCodec = (jsonKey?: string) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(E_bigint())(target, propertyKey);
+    jsonCodec(BigIntJSONCodec(), jsonKey)(target, propertyKey);
+  };
+};
+
+export const eIntCodec = (jsonKey?: string) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(E_int())(target, propertyKey);
+    jsonCodec(NumberJSONCodec(), jsonKey)(target, propertyKey);
+  };
+};
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("E", () => {

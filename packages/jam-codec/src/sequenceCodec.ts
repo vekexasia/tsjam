@@ -1,7 +1,15 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import { SeqOfLength } from "@tsjam/types";
+import {
+  binaryCodec,
+  jsonCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "./class/mainDecorators";
+import { ArrayOfJSONCodec } from "./json/codecs";
+import { JSONCodec } from "./json/JsonCodec";
 type ExtractLength<T> = T extends SeqOfLength<unknown, infer B> ? B : never;
+
 export const createSequenceCodec = <
   X extends SeqOfLength<T, K>,
   K extends number = ExtractLength<X>,
@@ -35,5 +43,16 @@ export const createSequenceCodec = <
     encodedSize: (value) => {
       return value.reduce((acc, item) => acc + codec.encodedSize(item), 0);
     },
+  };
+};
+
+export const sequenceCodec = <T>(
+  length: number,
+  codec: JamCodec<T> & JSONCodec<T>,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return function (target: any, propertyKey: string) {
+    binaryCodec(createSequenceCodec(length, codec))(target, propertyKey);
+    jsonCodec(ArrayOfJSONCodec(codec), jsonKey)(target, propertyKey);
   };
 };

@@ -35,7 +35,6 @@ export type AssuranceExtrinsic = {
  * anchored on the parent and ordered by `AssuranceExtrinsic.validatorIndex`
  * $(0.6.4 - 11.10)
  */
-export type EA_Extrinsic = UpToSeq<
-  AssuranceExtrinsic,
-  typeof NUMBER_OF_VALIDATORS
->;
+export type EA_Extrinsic = {
+  elements: UpToSeq<AssuranceExtrinsic, typeof NUMBER_OF_VALIDATORS>;
+};
