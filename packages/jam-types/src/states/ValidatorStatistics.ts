@@ -7,10 +7,16 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
  * [0] is `πV`
  * [1] is `πL`
  */
-export type ValidatorStatistics = SeqOfLength<
-  SeqOfLength<SingleValidatorStatistics, typeof NUMBER_OF_VALIDATORS>,
-  2
->;
+export type ValidatorStatistics = {
+  /**
+   * `πV`
+   */
+  accumulator: SingleValidatorStatistics;
+  /**
+   * `πL`
+   */
+  previous: SingleValidatorStatistics;
+};
 
 /**
  * data types (u32) is given by the codec

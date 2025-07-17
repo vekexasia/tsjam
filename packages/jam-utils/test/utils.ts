@@ -15,6 +15,7 @@ import {
   RecentHistoryItem,
   SafroleState,
   ServiceIndex,
+  SingleValidatorStatistics,
   Tau,
   Ticket,
   u16,
@@ -98,16 +99,24 @@ export const dummyState = (conf: {
       beefyBelt: [] as Beta["beefyBelt"],
     },
     statistics: {
-      validators: [null, null].map(() =>
-        new Array(validators).fill({
-          blocksProduced: 0,
-          ticketsIntroduced: 0,
-          preimagesIntroduced: 0,
-          totalOctetsIntroduced: 0,
-          guaranteedReports: 0,
-          availabilityAssurances: 0,
-        }),
-      ) as ValidatorStatistics,
+      validators: {
+        accumulator: new Array(validators).fill({
+          blocks: 0,
+          tickets: 0,
+          preimageCount: 0,
+          preimageSize: 0,
+          guarantees: 0,
+          assurances: 0,
+        }) as any as SingleValidatorStatistics,
+        previous: new Array(validators).fill({
+          blocks: 0,
+          tickets: 0,
+          preimageCount: 0,
+          preimageSize: 0,
+          guarantees: 0,
+          assurances: 0,
+        }) as any as SingleValidatorStatistics,
+      },
       cores: <JamStatistics["cores"]>new Array(cores).fill({
         daLoad: <u32>0,
         popularity: <u16>0,

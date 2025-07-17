@@ -81,12 +81,14 @@ export type SingleServiceStatistics = {
   /**
    * `p`
    */
-  provided: { count: u16; size: u32 };
+  providedCount: u16;
+  providedSize: u32;
 
   /**
    * `r`
    */
-  refinement: { count: u32; gasUsed: Gas };
+  refinementCount: u32;
+  refinementGasUsed: Gas;
 
   /**
    * `i`
@@ -111,10 +113,12 @@ export type SingleServiceStatistics = {
   /**
    * `a`
    */
-  accumulate: { count: u32; gasUsed: Gas };
+  accumulateCount: u32;
+  accumulateGasUsed: Gas;
 
   /**
    * `t`
    */
-  transfers: { count: u32; gasUsed: Gas };
+  transfersCount: u32;
+  transfersGasUsed: Gas;
 };
