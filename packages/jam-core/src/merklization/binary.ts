@@ -1,8 +1,8 @@
 import { Hash, MerkleTreeRoot } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
-import { HashFn, maybeBigintToBytes } from "@/utils.js";
 import { Hashing } from "@tsjam/crypto";
+import { HashFn, hashToBytes } from "./utils";
 
 const prefix: Uint8Array = new TextEncoder().encode("node");
 
@@ -22,8 +22,8 @@ export const binaryMerkleTree = <T extends Uint8Array | Hash>(
   const mid = Math.ceil(elements.length / 2);
   const buf = new Uint8Array([
     ...prefix,
-    ...maybeBigintToBytes(binaryMerkleTree(elements.slice(0, mid), hashFn)),
-    ...maybeBigintToBytes(binaryMerkleTree(elements.slice(mid), hashFn)),
+    ...hashToBytes(binaryMerkleTree(elements.slice(0, mid), hashFn)),
+    ...hashToBytes(binaryMerkleTree(elements.slice(mid), hashFn)),
   ]);
   return hashFn(buf);
 };
@@ -78,7 +78,7 @@ export const wellBalancedBinaryMerkleRoot = (
   hashFn: HashFn = Hashing.blake2b,
 ): MerkleTreeRoot => {
   if (elements.length === 1) {
-    return toTagged(hashFn(maybeBigintToBytes(elements[0])));
+    return toTagged(hashFn(hashToBytes(elements[0])));
   }
   // we are sure it returns Hash as the only reason binaryMerkleTree returns Uint8Array is when elements.length === 1
   // which is the case above.

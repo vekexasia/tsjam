@@ -6,8 +6,6 @@ import {
   u32,
   u64,
 } from "@tsjam/types";
-import { StateKeyBigInt, stateKeyCodec } from "./stateCodecs";
-import { stateKey } from "./utils";
 
 const computeStateKey = (serviceIndex: ServiceIndex, key: Uint8Array) => {
   const k = new Uint8Array(4 + key.length);
@@ -21,7 +19,7 @@ export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
 
   /**
    * @param serviceIndex - the index of the service account
-   * @param octets - $(0.6.6 - 9.8)
+   * @param octets - $(0.7.0 - 9.8)
    */
   constructor(
     private serviceIndex: ServiceIndex,

@@ -123,27 +123,6 @@ export const safroleCodec = createCodec<SafroleState>([
   ],
 ]);
 
-export const disputesCodec = createCodec<IDisputesState>([
-  [
-    "good",
-    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-  ],
-  [
-    "bad",
-    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-  ],
-  [
-    "wonky",
-    createLengthDiscrimantedSetCodec(HashCodec, (a, b) => (a - b < 0 ? -1 : 1)),
-  ],
-  [
-    "offenders",
-    createLengthDiscrimantedSetCodec(Ed25519PubkeyBigIntCodec, (a, b) =>
-      a - b < 0 ? -1 : 1,
-    ),
-  ],
-]);
-
 export const entropyCodec: JamCodec<JamEntropy> = {
   encode(v: JamEntropy, bytes: Uint8Array): number {
     let offset = 0;

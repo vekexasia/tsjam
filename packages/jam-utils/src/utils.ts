@@ -4,14 +4,12 @@ import {
   DoubleDagger,
   ExportingWorkPackageHash,
   Hash,
+  JamHeader,
   JamState,
   Posterior,
-  SeqOfLength,
   Tagged,
   ValidatorData,
 } from "@tsjam/types";
-import { JamHeader, SafroleState } from "@tsjam/types";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 /**
  * simple utility function to go from untagged to tagged
  */
@@ -45,18 +43,6 @@ export const toPosterior = <T>(
 };
 
 /**
- * Check if the current epoch is in fallback mode.
- * @param gamma_s - a series of E tickets or, in the case of a fallback mode, a series of E Bandersnatch keys
- * @returns
- * @see SafroleState.gamma_s
- */
-export const isFallbackMode = (
-  gamma_s: SafroleState["gamma_s"],
-): gamma_s is SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s"> => {
-  return gamma_s[0] instanceof Uint8Array;
-};
-
-/**
  * `HA` in the graypaper
  * @param header - the header of the blockj
  * @param state - the state of the safrole state machine
@@ -69,7 +55,7 @@ export const getBlockAuthorKey = (
   header: JamHeader,
   p_kappa: Posterior<JamState["kappa"]>,
 ): BandersnatchKey | undefined => {
-  const k: ValidatorData | undefined = p_kappa[header.authorIndex];
+  const k: ValidatorData | undefined = p_kappa.elements[header.authorIndex];
   return k?.banderSnatch;
 };
 

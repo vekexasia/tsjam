@@ -6,7 +6,6 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
  * Defines the wph that have been accumulated
  * $(0.7.0 - 12.1)
  */
-export type AccumulationHistory = SeqOfLength<
-  Set<WorkPackageHash>,
-  typeof EPOCH_LENGTH
->;
+export type AccumulationHistory = {
+  elements: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;
+};

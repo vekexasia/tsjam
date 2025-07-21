@@ -80,7 +80,7 @@ export type AvailableNoPrereqWorkReports = Tagged<
  * $(0.7.0 - 12.5)
  */
 export type AvailableWithPrereqWorkReports = Tagged<
-  Array<AccumulationQueue[0][0]>,
+  Array<AccumulationQueue["elements"][0][0]>,
   "available-yes-prerequisites"
 >;
 

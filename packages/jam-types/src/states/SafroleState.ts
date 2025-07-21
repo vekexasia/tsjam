@@ -6,8 +6,8 @@ import {
   UpToSeq,
 } from "@/genericTypes";
 import { Ticket } from "@/sets/Ticket";
-import { ValidatorData } from "@/ValidatorData";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { Validators } from "@/Validators";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 
 export type GammaSFallback = SeqOfLength<
   BandersnatchKey,
@@ -15,6 +15,11 @@ export type GammaSFallback = SeqOfLength<
   "gamma_s"
 >;
 export type GammaSNormal = SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">;
+
+export type GammaS = {
+  keys?: GammaSFallback;
+  tickets?: GammaSNormal;
+};
 /**
  * Denoted with gamma (y) in the Greek alphabet.
  * This is the basic state of the Safrole state machine.
@@ -42,7 +47,7 @@ export interface SafroleState {
    * mode, a series of EPOCH_LENGTH Bandersnatch keys
    * @see $(0.7.0 - 6.5)
    */
-  gamma_s: GammaSNormal | GammaSFallback;
+  gamma_s: GammaS;
 
   /**
    * `YP`
@@ -50,5 +55,5 @@ export interface SafroleState {
    * the next gamma_z
    * @see $(0.7.0 - 6.7)
    */
-  gamma_p: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "gamma_k">;
+  gamma_p: Tagged<Validators, "gamma_k">;
 }

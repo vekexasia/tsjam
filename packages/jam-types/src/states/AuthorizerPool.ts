@@ -11,7 +11,6 @@ import { AUTHPOOL_SIZE, CORES } from "@tsjam/constants";
  * we need to remove the leftmost authorizer from the pool that matches the workreport submitted
  * $(0.7.0 - 8.1)
  */
-export type AuthorizerPool = SeqOfLength<
-  UpToSeq<Hash, typeof AUTHPOOL_SIZE>,
-  typeof CORES
->;
+export type AuthorizerPool = {
+  elements: SeqOfLength<UpToSeq<Hash, typeof AUTHPOOL_SIZE>, typeof CORES>;
+};

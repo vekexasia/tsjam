@@ -36,10 +36,9 @@ export interface RecentHistoryItem {
 /**
  * $(0.7.0 - 7.2)
  */
-export type RecentHistory = UpToSeq<
-  RecentHistoryItem,
-  typeof RECENT_HISTORY_LENGTH
->;
+export type RecentHistory = {
+  elements: UpToSeq<RecentHistoryItem, typeof RECENT_HISTORY_LENGTH>;
+};
 /**
  * @see section 7
  * they're ordered so that entry 0 is the most recent

@@ -1,6 +1,7 @@
 import { JamCodec } from "@/codec";
 import { JSONCodec, createJSONCodec } from "@/json/JsonCodec";
 import { mapCodec, createCodec, encodeWithCodec } from "@/utils";
+import assert from "assert";
 
 const CODEC_METADATA = Symbol.for("__jamcodecs__");
 /**
@@ -14,24 +15,51 @@ export const SINGLE_ELEMENT_CLASS = Symbol.for("__jamcodec__singleelclass");
  * properties with JamCodec.
  */
 export abstract class BaseJamCodecable {
-  static encode<T>(x: T, buf: Uint8Array): number {
+  static encode<T extends typeof BaseJamCodecable>(
+    this: T,
+    x: InstanceType<T>,
+    buf: Uint8Array,
+  ): number {
     throw new Error("stub!");
   }
 
-  static decode<T>(bytes: Uint8Array): { value: T; readBytes: number } {
+  static decode<T extends typeof BaseJamCodecable>(
+    this: T,
+    bytes: Uint8Array,
+  ): { value: InstanceType<T>; readBytes: number } {
     throw new Error("stub!");
   }
 
-  static encodedSize<T>(value: T): number {
+  static encodedSize<T extends typeof BaseJamCodecable>(
+    this: T,
+    value: InstanceType<T>,
+  ): number {
     throw new Error("stub!");
   }
 
-  static fromJSON<T>(json: any): T {
+  static fromJSON<T extends typeof BaseJamCodecable>(
+    this: T,
+    json: any,
+  ): InstanceType<T> {
     throw new Error("stub!");
   }
 
-  static toJSON<T>(value: T): object {
+  static toJSON<T extends typeof BaseJamCodecable>(
+    this: T,
+    value: InstanceType<T>,
+  ): object {
     throw new Error("stub!");
+  }
+
+  static codecOf<
+    T extends typeof BaseJamCodecable,
+    X extends keyof InstanceType<T>,
+  >(this: T, x: X): JamCodec<InstanceType<T>[X]> & JSONCodec<InstanceType<T>> {
+    const el = (<any>this.prototype)[CODEC_METADATA]?.find(
+      (a: any) => a.propertyKey === x,
+    );
+    assert(el, `Codec for property ${String(x)} not found`);
+    return { ...el.codec, ...el.json };
   }
 
   toBinary(): Uint8Array {
@@ -191,7 +219,6 @@ if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   const { NumberJSONCodec } = await import("@/json/codecs.js");
   const { E_2_int, E_4_int, eSubIntCodec } = await import("../ints/E_subscr");
-  console.log("ciao");
   @JamCodecable()
   class C extends BaseJamCodecable {
     @jsonCodec(NumberJSONCodec())
@@ -230,7 +257,7 @@ if (import.meta.vitest) {
       const encoded = encodeWithCodec(subB, t);
       const encodedInner = t.toBinary();
       expect(encoded).deep.eq(encodedInner);
-      const subBDecoded = subB.decode<subB>(encoded).value;
+      const subBDecoded = subB.decode(encoded).value;
       expect(subBDecoded.b).toBe(1234);
       expect(subBDecoded.d).toBe(10);
       expect(subBDecoded.cane).toBe(42);
@@ -288,6 +315,29 @@ if (import.meta.vitest) {
       expect(subS.toJSON()).toEqual({ a: 42, b: 84 });
       expect(subS.toBinary()[0]).toBe(42);
       expect(subS.toBinary()[1]).toBe(84);
+    });
+    describe("codecOf", () => {
+      it("should codecOf properly", () => {
+        @JamCodecable()
+        class S extends BaseJamCodecable {
+          @eSubIntCodec(1)
+          a!: number;
+          @eSubIntCodec(2)
+          b!: number;
+        }
+        expect(S.codecOf("a").encode(42, new Uint8Array(2))).eq(1);
+        expect(S.codecOf("b").encode(42, new Uint8Array(2))).eq(2);
+      });
+      it("should fail if codec is not found", () => {
+        @JamCodecable()
+        class S extends BaseJamCodecable {
+          a!: number;
+          @eSubIntCodec(2)
+          b!: number;
+        }
+
+        expect(() => S.codecOf("a")).to.throw("Codec for property a not found");
+      });
     });
   });
 }

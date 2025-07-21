@@ -42,7 +42,7 @@ export const BigIntBytesJSONCodec = <
 /**
  * An array of `X` in json converted in Set of `X`
  */
-export const SetJSONCodec = <T extends Set<X>, X>(
+const _setJSONCodec = <T extends Set<X>, X>(
   sorter?: (a: X, b: X) => number,
 ): JSONCodec<T, X[]> => {
   return {
@@ -57,6 +57,13 @@ export const SetJSONCodec = <T extends Set<X>, X>(
       return toRet;
     },
   };
+};
+
+export const SetJSONCodec = <T>(
+  codec: JSONCodec<T>,
+  sorter?: (a: T, b: T) => number,
+): JSONCodec<Set<T>, T[]> => {
+  return ZipJSONCodecs(ArrayOfJSONCodec(codec), _setJSONCodec(sorter));
 };
 
 export const NumberJSONCodec = <T extends number>(): JSONCodec<T, number> => {
@@ -132,7 +139,7 @@ export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   },
 };
 
-export const ArrayOfJSONCodec = <K extends T[], T, X>(
+export const ArrayOfJSONCodec = <K extends T[], T = K[0], X = any>(
   singleCodec: JSONCodec<T, X>,
 ): JSONCodec<K, X[]> => {
   return {

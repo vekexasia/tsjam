@@ -1,11 +1,11 @@
 import { Hash, ServiceIndex } from "@/genericTypes";
 
-/*
- * `servouts` or `B`
- * $(0.7.0 - 12.15)
+/**
+ * `θ` - `\lastaccout`
+ * $(0.7.0 - 7.4)
  */
-export type ServiceOuts = {
-  elements: Set<{
+export type LastAccOuts = {
+  elements: Array<{
     serviceIndex: ServiceIndex;
     accumulationResult: Hash;
   }>;

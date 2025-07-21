@@ -7,4 +7,6 @@ import { ServiceAccount } from "@/sets/ServiceAccount";
  * It's a dictionary of service accounts
  * $(0.7.0 - 9.2)
  */
-export type Delta = Map<ServiceIndex, ServiceAccount>;
+export type Delta = {
+  elements: Map<ServiceIndex, ServiceAccount>;
+};

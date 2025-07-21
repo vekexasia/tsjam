@@ -16,7 +16,6 @@ export * from "./json/JsonCodec.js";
 export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
 
-export * from "./E_M.js";
 export * from "./dicts/keyValue.js";
 export * from "./set.js";
 export * from "./eitherOneOf.js";

@@ -1,7 +1,7 @@
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { ValidatorData } from "./ValidatorData";
 import { JamEntropy } from "./Entropy";
 import { Tau } from "./Tau";
+import { Validators } from "./Validators";
+import { Hash, ServiceIndex, Tagged } from "./genericTypes";
 import { PrivilegedServices } from "./pvm/PrivilegedServices";
 import { AccumulationHistory } from "./states/AccumulationHistory";
 import { AccumulationQueue } from "./states/AccumulationQueue";
@@ -9,12 +9,12 @@ import { AuthorizerPool } from "./states/AuthorizerPool";
 import { AuthorizerQueue } from "./states/AuthorizerQueue";
 import { Delta } from "./states/Delta";
 import { IDisputesState } from "./states/DisputesState";
+import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
+import { LastAccOuts } from "./states/LastAccOuts";
 import { Beta } from "./states/RecentHistory";
 import { SafroleState } from "./states/SafroleState";
-import { RHO } from "./states/rho";
-import { Hash, SeqOfLength, ServiceIndex } from "./genericTypes";
-import { HeaderLookupHistory } from "./states/HeaderLookupHistory";
 import { JamStatistics } from "./states/Statistics";
+import { RHO } from "./states/rho";
 
 /**
  * `σ`
@@ -38,17 +38,17 @@ export type JamState = {
   /**
    * `λ` Validator keys and metadata which were active in the prior epoch.
    */
-  lambda: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "lambda">;
+  lambda: Tagged<Validators, "lambda">;
 
   /**
    * `κ` Validator keys and metadata which are active in the current epoch.
    */
-  kappa: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "kappa">;
+  kappa: Tagged<Validators, "kappa">;
 
   /**
    * `ι` Validator keys and metadata which will be active in the next epoch.
    */
-  iota: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, "iota">;
+  iota: Tagged<Validators, "iota">;
 
   /**
    * `δ`
@@ -104,10 +104,7 @@ export type JamState = {
    * `θ` - `\lastaccout`
    * $(0.7.0 - 7.4)
    */
-  mostRecentAccumulationOutputs: Array<{
-    serviceIndex: ServiceIndex;
-    accumulationResult: Hash;
-  }>;
+  mostRecentAccumulationOutputs: LastAccOuts;
 
   /**
    * NOTE: this is not included in gp but used as per type doc

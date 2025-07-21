@@ -1,11 +1,11 @@
 import { Blake2bHash } from "./genericTypes";
 /**
  * `η`
- * $(0.6.4 - 6.22)
+ * $(0.7.0 - 6.21)
  */
-export type JamEntropy = [
-  _0: Blake2bHash,
-  _1: Blake2bHash,
-  _2: Blake2bHash,
-  _3: Blake2bHash,
-];
+export type JamEntropy = {
+  _0: Blake2bHash;
+  _1: Blake2bHash;
+  _2: Blake2bHash;
+  _3: Blake2bHash;
+};

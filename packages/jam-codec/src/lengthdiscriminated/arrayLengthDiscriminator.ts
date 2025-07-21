@@ -4,9 +4,10 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@/class/mainDecorators";
 import { JamCodec } from "@/codec.js";
-import { ArrayOfJSONCodec } from "@/json/codecs";
+import { ArrayOfJSONCodec, SetJSONCodec, ZipJSONCodecs } from "@/json/codecs";
 import { JSONCodec } from "@/json/JsonCodec";
 import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import { mapCodec } from "@/utils";
 
 /**
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements
@@ -14,7 +15,7 @@ import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.j
  */
 export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(
   singleItemCodec: JamCodec<X>,
-) => {
+): JamCodec<T> => {
   return new LengthDiscriminator<T>({
     encode: (value, bytes) => {
       return value.reduce(
@@ -52,5 +53,25 @@ export const lengthDiscriminatedCodec = <T>(
   return (target: any, propertyKey: string) => {
     binaryCodec(createArrayLengthDiscriminator(codec))(target, propertyKey);
     jsonCodec(ArrayOfJSONCodec(codec), jsonKey)(target, propertyKey);
+  };
+};
+
+export const createLengthDiscrimantedSetCodec = <X>(
+  itemCodec: JamCodec<X>,
+): JamCodec<Set<X>> => {
+  return mapCodec(
+    createArrayLengthDiscriminator(itemCodec),
+    (v) => new Set<X>(v),
+    (v) => Array.from(v.values()),
+  );
+};
+
+export const lengthDiscriminatedSetCodec = <T>(
+  codec: JamCodec<T> & JSONCodec<T>,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return (target: any, propertyKey: string) => {
+    binaryCodec(createLengthDiscrimantedSetCodec(codec))(target, propertyKey);
+    jsonCodec(SetJSONCodec(codec), jsonKey)(target, propertyKey);
   };
 };

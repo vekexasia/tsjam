@@ -2,18 +2,10 @@
  * Appendix D
  */
 import {
-  AuthorizerPoolCodec,
-  AuthorizerQueueCodec,
   E_4,
   E_4_int,
   E_sub_int,
   HashCodec,
-  PrivilegedServicesCodec,
-  RHOCodec,
-  StatisticsCodec,
-  ValidatorDataCodec,
-  WorkPackageHashCodec,
-  WorkReportCodec,
   bit,
   createArrayLengthDiscriminator,
   createCodec,
@@ -24,7 +16,6 @@ import {
 } from "@tsjam/codec";
 import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
   ByteArrayOfLength,
   Hash,
@@ -44,7 +35,7 @@ import {
 import { bigintToBytes, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { MerkleMap } from "./merkleMap";
-import { MerkleServiceAccountStorageImpl } from "./merkleServiceAccountStorage";
+import { MerkleServiceAccountStorageImpl } from "../classes/MerkleServiceAccountStorageImpl";
 import {
   betaCodec,
   disputesCodec,
@@ -54,6 +45,7 @@ import {
   thetaCodec,
 } from "./stateCodecs";
 import { stateKey } from "./utils";
+import { JamStateImpl } from "@/classes/JamStateImpl";
 
 /**
  * Merkelize state
@@ -142,86 +134,47 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
  * `T(σ)`
  * $(0.6.7 - D.2)
  */
-export const merkleStateMap = (state: JamState): MerkleMap => {
+export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
   const toRet = new MerkleMap();
 
-  toRet.set(
-    stateKey(1),
-    encodeWithCodec(AuthorizerPoolCodec(), state.authPool),
-  );
-  // logState("authPool|c1", stateKey(1));
+  toRet.set(stateKey(1), state.authPool.toBinary());
 
-  toRet.set(
-    stateKey(2),
-    encodeWithCodec(AuthorizerQueueCodec(), state.authQueue),
-  );
-  // logState("authQueue|c2", stateKey(2));
+  toRet.set(stateKey(2), state.authQueue.toBinary());
 
   // β
-  toRet.set(stateKey(3), encodeWithCodec(betaCodec, state.beta));
-  // logState("recentHistory|c3", stateKey(3));
+  toRet.set(stateKey(3), state.beta.toBinary());
 
   toRet.set(stateKey(4), encodeWithCodec(safroleCodec, state.safroleState));
 
   // 5
-  toRet.set(stateKey(5), encodeWithCodec(disputesCodec, state.disputes));
-  // logState("5|c5", stateKey(5));
+  toRet.set(stateKey(5), state.disputes.toBinary());
 
   // 6
-  toRet.set(stateKey(6), encodeWithCodec(entropyCodec, state.entropy));
-  // logState("c6", stateKey(6));
+  toRet.set(stateKey(6), state.entropy.toBinary());
 
   // 7
-  toRet.set(
-    stateKey(7),
-    encodeWithCodec(
-      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.iota,
-    ),
-  );
-  // logState("c7", stateKey(7));
+  toRet.set(stateKey(7), state.iota.toBinary());
 
   // 8
-  toRet.set(
-    stateKey(8),
-    encodeWithCodec(
-      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.kappa,
-    ),
-  );
+  toRet.set(stateKey(8), state.kappa.toBinary());
 
   // 9
-  toRet.set(
-    stateKey(9),
-    encodeWithCodec(
-      createSequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataCodec),
-      state.lambda,
-    ),
-  );
+  toRet.set(stateKey(9), state.lambda.toBinary());
 
   // 10
-  toRet.set(stateKey(10), encodeWithCodec(RHOCodec(), state.rho));
+  toRet.set(stateKey(10), state.rho.toBinary());
 
   // 11
   toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
 
   // 12
-  toRet.set(
-    stateKey(12),
-    encodeWithCodec(PrivilegedServicesCodec(CORES), state.privServices),
-  );
+  toRet.set(stateKey(12), state.privServices.toBinary());
 
   // 13
-  toRet.set(
-    stateKey(13),
-    encodeWithCodec(
-      StatisticsCodec(NUMBER_OF_VALIDATORS, CORES),
-      state.statistics,
-    ),
-  );
+  toRet.set(stateKey(13), state.statistics.toBinary());
 
   // 14
-  const sortedDepsQueue = state.accumulationQueue.map((a) =>
+  const sortedDepsQueue = state.accumulationQueue.elements.map((a) =>
     a.map((b) => ({
       workReport: b.workReport,
       dependencies: [...b.dependencies.values()].sort((a, b) =>
@@ -259,24 +212,10 @@ export const merkleStateMap = (state: JamState): MerkleMap => {
   );
 
   // 15 - accumulationHistory
-  toRet.set(
-    stateKey(15),
-    encodeWithCodec(
-      createSequenceCodec(
-        EPOCH_LENGTH,
-        createLengthDiscrimantedSetCodec(WorkPackageHashCodec, (a, b) =>
-          a < b ? -1 : 1,
-        ),
-      ),
-      state.accumulationHistory,
-    ),
-  );
+  toRet.set(stateKey(15), state.accumulationHistory.toBinary());
 
   // 16 thetha
-  toRet.set(
-    stateKey(16),
-    encodeWithCodec(thetaCodec, state.mostRecentAccumulationOutputs),
-  );
+  toRet.set(stateKey(16), state.mostRecentAccumulationOutputs.toBinary());
 
   for (const [serviceIndex, serviceAccount] of state.serviceAccounts) {
     toRet.set(

@@ -4,6 +4,7 @@ export * from "./genericTypes.js";
 export * from "./ValidatorData.js";
 export * from "./STF.js";
 export * from "./State.js";
+export * from "./Validators.js";
 
 export * from "./extrinsics/assurances.js";
 export * from "./extrinsics/disputes.js";
@@ -28,6 +29,7 @@ export * from "./states/AccumulationQueue.js";
 export * from "./states/AccumulationHistory.js";
 export * from "./states/Delta.js";
 export * from "./states/DisputesState.js";
+export * from "./states/LastAccOuts.js";
 export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";

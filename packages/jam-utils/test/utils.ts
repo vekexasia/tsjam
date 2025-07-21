@@ -6,6 +6,7 @@ import {
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
+  GammaSFallback,
   Gas,
   Hash,
   JamState,
@@ -21,7 +22,6 @@ import {
   u16,
   u32,
   ValidatorData,
-  ValidatorStatistics,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 
@@ -46,40 +46,44 @@ export const dummyState = (conf: {
   return {
     safroleState: {
       gamma_a: [] as Ticket[] as SafroleState["gamma_a"],
-      gamma_p: new Array(validators)
-        .fill(null)
-        .map(dummyValidator) as SafroleState["gamma_p"],
-      gamma_s: new Array(epoch)
-        .fill(null)
-        .map(() => dummyValidator().banderSnatch) as SafroleState["gamma_s"],
+      gamma_p: {
+        elements: new Array(validators).fill(null).map(dummyValidator),
+      } as SafroleState["gamma_p"],
+      gamma_s: {
+        keys: new Array(epoch)
+          .fill(null)
+          .map(() => dummyValidator().banderSnatch) as GammaSFallback,
+      },
       gamma_z: new Uint8Array(144) as unknown as SafroleState["gamma_z"],
     },
     tau: 0 as Tau,
-    entropy: [0n, 0n, 0n, 0n].map(toTagged) as JamState["entropy"],
-    iota: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["iota"],
+    entropy: { _0: 0n, _1: 0n, _2: 0n, _3: 0n } as JamState["entropy"],
+    iota: {
+      elements: new Array(validators).fill(null).map(dummyValidator),
+    } as unknown as JamState["iota"],
 
-    kappa: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["kappa"],
-    lambda: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["lambda"],
+    kappa: {
+      elements: new Array(validators).fill(null).map(dummyValidator),
+    } as unknown as JamState["kappa"],
+    lambda: {
+      elements: new Array(validators).fill(null).map(dummyValidator),
+    } as unknown as JamState["lambda"],
     disputes: {
       good: new Set(),
       bad: new Set(),
       offenders: new Set(),
       wonky: new Set(),
     },
-    rho: new Array(cores).fill(undefined) as unknown as JamState["rho"],
-    serviceAccounts: new Map(),
-    accumulationHistory: new Array(epoch)
-      .fill(undefined)
-      .map(() => new Set()) as unknown as JamState["accumulationHistory"],
-    accumulationQueue: new Array(epoch)
-      .fill(undefined)
-      .map(() => []) as unknown as JamState["accumulationQueue"],
+    rho: {
+      elements: new Array(cores).fill(undefined),
+    } as unknown as JamState["rho"],
+    serviceAccounts: { elements: new Map() },
+    accumulationHistory: {
+      elements: new Array(epoch).fill(undefined).map(() => new Set()),
+    } as unknown as JamState["accumulationHistory"],
+    accumulationQueue: {
+      elements: new Array(epoch).fill(undefined).map(() => []),
+    } as unknown as JamState["accumulationQueue"],
     privServices: {
       assigners: new Array(cores).fill(0) as PrivilegedServices["assigners"],
       alwaysAccers: new Map(),
@@ -87,15 +91,17 @@ export const dummyState = (conf: {
       delegator: 0 as ServiceIndex,
     },
     beta: {
-      recentHistory: new Array(80).fill(null).map(
-        () =>
-          ({
-            stateRoot: toTagged(0n),
-            headerHash: toTagged(0n),
-            reportedPackages: new Map(),
-            accumulationResultMMB: toTagged(0n),
-          }) as RecentHistoryItem,
-      ) as RecentHistory,
+      recentHistory: {
+        elements: new Array(80).fill(null).map(
+          () =>
+            ({
+              stateRoot: toTagged(0n),
+              headerHash: toTagged(0n),
+              reportedPackages: new Map(),
+              accumulationResultMMB: toTagged(0n),
+            }) as RecentHistoryItem,
+        ),
+      } as RecentHistory,
       beefyBelt: [] as Beta["beefyBelt"],
     },
     statistics: {
@@ -129,11 +135,13 @@ export const dummyState = (conf: {
       }),
       services: new Map(),
     },
-    authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
-    authQueue: new Array(cores).fill(
-      new Array(80).fill(0n as Hash),
-    ) as AuthorizerQueue,
-    headerLookupHistory: new Map(),
-    mostRecentAccumulationOutputs: [],
+    authPool: {
+      elements: new Array(cores).fill([]),
+    } as unknown as AuthorizerPool,
+    authQueue: {
+      elements: new Array(cores).fill(new Array(80).fill(0n as Hash)),
+    } as AuthorizerQueue,
+    headerLookupHistory: { elements: new Map() },
+    mostRecentAccumulationOutputs: { elements: [] },
   };
 };

@@ -8,16 +8,16 @@ import { Tau } from "@/Tau.js";
  *       yet available indexed by core index
  * $(0.7.0 - 11.1)
  */
-export type RHO = SeqOfLength<
-  | {
-      /** `bold_r`
-       */
-      workReport: WorkReport;
-      /**
-       * `t`
-       */
-      reportTime: Tau;
-    }
-  | undefined,
-  typeof CORES
->;
+export type RHO = {
+  elements: SeqOfLength<RHOElement | undefined, typeof CORES>;
+};
+
+export type RHOElement = {
+  /** `bold_r`
+   */
+  workReport: WorkReport;
+  /**
+   * `t`
+   */
+  reportTime: Tau;
+};

@@ -1,11 +1,10 @@
-import { E_4, encodeWithCodec } from "@tsjam/codec";
+import { E_4, encodeWithCodec, HashCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Hash, ServiceIndex, StateKey } from "@tsjam/types";
-import { bigintToBytes } from "@tsjam/utils";
 
 export type HashFn = (preimage: Uint8Array) => Hash;
-export const maybeBigintToBytes = (x: Uint8Array | Hash): Uint8Array =>
-  typeof x === "bigint" ? bigintToBytes(x, 32) : x;
+export const hashToBytes = (x: Uint8Array | Hash): Uint8Array =>
+  typeof x === "bigint" ? encodeWithCodec(HashCodec, x) : x;
 
 /**
  * `C` in graypaper

@@ -1,0 +1,64 @@
+import {
+  BaseJamCodecable,
+  binaryCodec,
+  buildGenericKeyValueCodec,
+  E_sub,
+  E_sub_int,
+  eSubIntCodec,
+  JamCodecable,
+  jsonCodec,
+  MapJSONCodec,
+  NumberJSONCodec,
+} from "@tsjam/codec";
+import { CORES } from "@tsjam/constants";
+import {
+  Gas,
+  PrivilegedServices,
+  SeqOfLength,
+  ServiceIndex,
+} from "@tsjam/types";
+
+/**
+ * Priv services impl
+ * Codec is following the C(12) in $(0.7.0 - D.2)
+ */
+@JamCodecable()
+export class PrivilegedServicesImpl
+  extends BaseJamCodecable
+  implements PrivilegedServices
+{
+  /**
+   * `M` - the index of the blessed service
+   */
+  @eSubIntCodec(4)
+  manager!: ServiceIndex;
+  /**
+   * `A`
+   * services which can alter φ one for each CORE
+   */
+
+  @eSubIntCodec(4)
+  assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
+  /**
+   * `v`
+   * service which can alter ι
+   */
+  @eSubIntCodec(4)
+  delegator!: ServiceIndex;
+  /**
+   * map of services which are automatically accumulated in each block
+   * along with their gas limits
+   * `Z`
+   */
+  @jsonCodec(
+    MapJSONCodec(
+      { key: "service", value: "gas" },
+      NumberJSONCodec(),
+      NumberJSONCodec(),
+    ),
+  )
+  @binaryCodec(
+    buildGenericKeyValueCodec(E_sub_int(4), E_sub(8), (a, b) => a - b),
+  )
+  alwaysAccers!: Map<ServiceIndex, Gas>;
+}

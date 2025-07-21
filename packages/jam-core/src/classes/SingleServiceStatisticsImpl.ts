@@ -1,7 +1,6 @@
 import {
   BaseJamCodecable,
   buildGenericKeyValueCodec,
-  buildKeyValueCodec,
   E_sub_int,
   eIntCodec,
   eSubBigIntCodec,
