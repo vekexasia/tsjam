@@ -11,9 +11,12 @@ import {
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AccumulationHistory,
+  Posterior,
   SeqOfLength,
   WorkPackageHash,
 } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
+import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 
 @JamCodecable()
 export class AccumulationHistoryImpl
@@ -30,4 +33,23 @@ export class AccumulationHistoryImpl
     SINGLE_ELEMENT_CLASS,
   )
   elements!: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;
+
+  /**
+   * $(0.7.0 - 12.35 / 12.36)
+   */
+  toPosterior(deps: {
+    r_star: AccumulatableWorkReports;
+    nAccumulatedWork: number;
+  }): Posterior<AccumulationHistoryImpl> {
+    const toRet = new AccumulationHistoryImpl();
+    toRet.elements = structuredClone(this.elements);
+    const slicedR = deps.r_star.slice(0, deps.nAccumulatedWork);
+
+    toRet.elements[EPOCH_LENGTH - 1] =
+      WorkReportImpl.extractWorkPackageHashes(slicedR);
+    for (let i = 0; i < EPOCH_LENGTH - 1; i++) {
+      toRet.elements[i] = this.elements[i + 1];
+    }
+    return toPosterior(toRet);
+  }
 }

@@ -1,70 +1,74 @@
+import { AccumulationOutImpl } from "@/classes/AccumulationOutImpl";
+import { PVMAccumulationOpImpl } from "@/classes/PVMAccumulationOPImpl";
+import { PVMAccumulationStateImpl } from "@/classes/PVMAccumulationStateImpl";
+import { PVMResultContextImpl } from "@/classes/PVMResultContextImpl";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import {
-  AccumulationOut,
-  Delta,
-  Gas,
-  Hash,
-  JamState,
-  Posterior,
-  PVMAccumulationOp,
-  PVMAccumulationState,
-  PVMProgramExecutionContext,
-  PVMResultContext,
-  RegularPVMExitReason,
-  ServiceAccount,
-  ServiceIndex,
-  Tau,
-  u32,
-} from "@tsjam/types";
-import { argumentInvocation } from "@/invocations/argument.js";
-import { HostCallExecutor } from "@/invocations/hostCall.js";
-import { FnsDb } from "@/functions/fnsdb.js";
-import {
-  omega_a,
-  omega_c,
-  omega_d,
-  omega_b,
-  omega_f,
-  omega_n,
-  omega_j,
-  omega_y,
-  omega_q,
-  omega_s,
-  omega_t,
-  omega_u,
-  omega_aries,
-} from "@/functions/accumulate.js";
-import { applyMods } from "@/functions/utils.js";
-import {
-  E_4_int,
+  createCodec,
   E_int,
+  createArrayLengthDiscriminator,
+  JamCodec,
+  encodeWithCodec,
+  E_4_int,
   E_sub_int,
   HashCodec,
-  PVMAccumulationOpCodec,
-  createArrayLengthDiscriminator,
-  createCodec,
-  encodeWithCodec,
 } from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
 import {
-  omega_g,
-  omega_i,
-  omega_l,
+  Hash,
+  Tau,
+  ServiceIndex,
+  Gas,
+  Posterior,
+  JamEntropy,
+  u32,
+  PVMProgramExecutionContext,
+  RegularPVMExitReason,
+} from "@tsjam/types";
+import { toTagged, bytesToBigInt } from "@tsjam/utils";
+import assert from "assert";
+import {
+  omega_b,
+  omega_a,
+  omega_d,
+  omega_c,
+  omega_n,
+  omega_u,
+  omega_t,
+  omega_j,
+  omega_q,
+  omega_s,
+  omega_f,
+  omega_y,
+  omega_aries,
+} from "../functions/accumulate";
+import { FnsDb } from "../functions/fnsdb";
+import {
   omega_r,
   omega_w,
-} from "@/functions/general.js";
-import { check_fn } from "@/utils/check_fn.js";
-import { bytesToBigInt, toTagged } from "@tsjam/utils";
-import assert from "assert";
-import { Hashing } from "@tsjam/crypto";
-import { IxMod } from "@/instructions/utils";
+  omega_l,
+  omega_g,
+  omega_i,
+} from "../functions/general";
+import { applyMods } from "../functions/utils";
+import { IxMod } from "../instructions/utils";
+import { check_fn } from "../utils/check_fn";
+import { argumentInvocation } from "./argument";
+import { HostCallExecutor } from "./hostCall";
 
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
   s: ServiceIndex;
-  o: PVMAccumulationOp[];
+  o: PVMAccumulationOpImpl[];
 }>([
   ["t", E_int<Tau>()],
   ["s", E_int<ServiceIndex>()],
-  ["o", createArrayLengthDiscriminator(PVMAccumulationOpCodec)],
+  [
+    "o",
+    createArrayLengthDiscriminator(
+      <JamCodec<PVMAccumulationOpImpl>>PVMAccumulationOpImpl,
+    ),
+  ],
 ]);
 
 /**
@@ -74,28 +78,28 @@ const AccumulateArgsCodec = createCodec<{
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
-  pvmAccState: PVMAccumulationState, // u
+  pvmAccState: PVMAccumulationStateImpl, // u
   s: ServiceIndex, // s
   gas: Gas, // g
-  o: PVMAccumulationOp[], // bold_o
+  o: PVMAccumulationOpImpl[], // bold_o
   t: Tau, // t
   deps: {
     p_tau: Posterior<Tau>;
-    p_eta_0: Posterior<JamState["entropy"][0]>;
+    p_eta_0: Posterior<JamEntropy["_0"]>;
   },
-): AccumulationOut => {
+): AccumulationOutImpl => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   const yRes = structuredClone(iRes);
 
   // first case
   if (!pvmAccState.accounts.has(s)) {
-    return {
+    return new AccumulationOutImpl({
       postState: iRes.u,
-      deferredTransers: [],
+      deferredTransfers: [],
       yield: undefined,
       gasUsed: toTagged(0n),
       provision: [],
-    };
+    });
   }
 
   const serviceAccount = pvmAccState.accounts.get(s)!;
@@ -118,12 +122,12 @@ export const accumulateInvocation = (
  * $(0.6.5 - B.10)
  */
 const I_fn = (
-  pvmAccState: PVMAccumulationState,
+  pvmAccState: PVMAccumulationStateImpl,
   service: ServiceIndex,
-  p_eta_0: Posterior<JamState["entropy"][0]>,
+  p_eta_0: Posterior<JamEntropy["_0"]>,
   p_tau: Posterior<Tau>,
-): PVMResultContext => {
-  const d: Delta = new Map(pvmAccState.accounts);
+): PVMResultContextImpl => {
+  const d = pvmAccState.accounts.clone();
   d.delete(service);
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
     Hashing.blake2bBuf(
@@ -145,16 +149,14 @@ const I_fn = (
     pvmAccState.accounts, // u_d
   );
 
-  return {
+  return new PVMResultContextImpl({
     service,
-    u: {
-      ...structuredClone(pvmAccState),
-    },
+    u: structuredClone(pvmAccState),
     i,
     transfer: [],
     y: undefined,
     preimages: [],
-  };
+  });
 };
 
 /**
@@ -163,11 +165,12 @@ const I_fn = (
 const F_fn: (
   service: ServiceIndex,
   tau: Tau,
-) => HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }> =
+) => HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }> =
   (service: ServiceIndex, tau: Tau) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
-    const bold_d = new Map([...input.out.x.u.accounts.entries()]);
-    const bold_s = input.out.x.u.accounts.get(service)!;
+    const bold_d = input.out.x.u.accounts.clone();
+
+    const bold_s = input.out.x.boldS(service)!;
     switch (fnIdentifier) {
       case "read": {
         const { ctx, out } = applyMods(
@@ -178,7 +181,7 @@ const F_fn: (
         return G_fn(ctx, bold_s, out);
       }
       case "write": {
-        const m = applyMods<{ bold_s: ServiceAccount }>(
+        const m = applyMods<{ bold_s: ServiceAccountImpl }>(
           input.ctx,
           { bold_s },
           omega_w(input.ctx, bold_s, input.out.x.service),
@@ -269,12 +272,12 @@ const F_fn: (
  */
 const G_fn = (
   context: PVMProgramExecutionContext,
-  serviceAccount: ServiceAccount,
-  x: { x: PVMResultContext; y: PVMResultContext },
+  serviceAccount: ServiceAccountImpl,
+  x: { x: PVMResultContextImpl; y: PVMResultContextImpl },
 ): ReturnType<
-  HostCallExecutor<{ x: PVMResultContext; y: PVMResultContext }>
+  HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }>
 > => {
-  x.x.u = { ...x.x.u, accounts: new Map([...x.x.u.accounts.entries()]) };
+  x.x.u = { ...x.x.u, accounts: x.x.u.accounts.clone() };
   x.x.u.accounts.set(x.x.service, serviceAccount);
   return {
     out: x,
@@ -288,31 +291,31 @@ const G_fn = (
 const C_fn = (
   gas: Gas,
   o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
-  d: { x: PVMResultContext; y: PVMResultContext },
-): AccumulationOut => {
+  d: { x: PVMResultContextImpl; y: PVMResultContextImpl },
+): AccumulationOutImpl => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
-    return {
+    return new AccumulationOutImpl({
       postState: d.x.u,
-      deferredTransers: d.x.transfer,
+      deferredTransfers: d.x.transfer,
       yield: d.y.y,
       gasUsed: toTagged(gas),
       provision: d.x.preimages,
-    };
+    });
   } else if (o.length === 32) {
-    return {
+    return new AccumulationOutImpl({
       postState: d.x.u,
-      deferredTransers: d.x.transfer,
+      deferredTransfers: d.x.transfer,
       yield: bytesToBigInt(o) as unknown as Hash,
       gasUsed: toTagged(gas),
       provision: d.x.preimages,
-    };
+    });
   } else {
-    return {
+    return new AccumulationOutImpl({
       postState: d.x.u,
-      deferredTransers: d.x.transfer,
+      deferredTransfers: d.x.transfer,
       yield: d.x.y,
       gasUsed: toTagged(gas),
       provision: d.x.preimages,
-    };
+    });
   }
 };

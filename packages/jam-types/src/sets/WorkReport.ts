@@ -59,36 +59,3 @@ export type WorkReport = {
    */
   authGasUsed: Gas;
 };
-
-/**
- * `bold R`
- * $(0.7.0 - 11.16)
- */
-export type AvailableWorkReports = Tagged<WorkReport[], "available">;
-
-/**
- * `bold R!` in the paper
- * $(0.7.0 - 12.4)
- */
-export type AvailableNoPrereqWorkReports = Tagged<
-  WorkReport[],
-  "available-no-prerequisites"
->;
-
-/**
- * `bold RQ` in the paper
- * $(0.7.0 - 12.5)
- */
-export type AvailableWithPrereqWorkReports = Tagged<
-  Array<AccumulationQueue["elements"][0][0]>,
-  "available-yes-prerequisites"
->;
-
-/**
- * `bold Q`
- * $(0.6.4 - 17.1)
- */
-export type AuditRequiredWorkReports = SeqOfLength<
-  WorkReport | undefined,
-  typeof CORES
->;

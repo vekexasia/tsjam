@@ -1,22 +1,16 @@
-import { WorkOutputCodec, WorkOutputJSONCodec } from "@/codecs/WorkOutputCodec";
 import {
   BaseJamCodecable,
-  bigintCodec,
   binaryCodec,
   BufferJSONCodec,
   codec,
+  eSubBigIntCodec,
   hashCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
-import {
-  Gas,
-  Hash,
-  PVMAccumulationOp,
-  WorkOutput,
-  WorkPackageHash,
-} from "@tsjam/types";
+import { Gas, Hash, PVMAccumulationOp, WorkPackageHash } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "./WorkOutputImpl";
 
 // codec order defined in $(0.6.4 - C.29)
@@ -37,7 +31,7 @@ export class PVMAccumulationOpImpl
   @hashCodec()
   payloadHash!: Hash;
 
-  @bigintCodec(8)
+  @eSubBigIntCodec(8)
   gasLimit!: Gas;
 
   @codec(WorkOutputImpl)
@@ -46,4 +40,9 @@ export class PVMAccumulationOpImpl
   @jsonCodec(BufferJSONCodec())
   @binaryCodec(LengthDiscrimantedIdentity)
   authTrace!: Uint8Array;
+
+  constructor(config: ConditionalExcept<PVMAccumulationOpImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 }

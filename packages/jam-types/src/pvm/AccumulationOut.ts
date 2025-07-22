@@ -15,7 +15,7 @@ export type AccumulationOut = {
   /**
    * `bold_t`
    */
-  deferredTransers: DeferredTransfer[];
+  deferredTransfers: DeferredTransfer[];
   /**
    * `y`
    */

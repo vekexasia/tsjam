@@ -1,8 +1,8 @@
 import { Gas, SeqOfLength, ServiceIndex } from "@/genericTypes";
 import { AuthorizerQueue } from "@/states/AuthorizerQueue";
 import { Delta } from "@/states/Delta";
-import { ValidatorData } from "@/ValidatorData";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { Validators } from "@/Validators";
+import { CORES } from "@tsjam/constants";
 
 /**
  * `S` in the graypaper
@@ -17,7 +17,7 @@ export interface PVMAccumulationState {
   /**
    * `bold i` - the upcoming validator keys `ι`
    */
-  stagingSet: SeqOfLength<ValidatorData, typeof NUMBER_OF_VALIDATORS, string>;
+  stagingSet: Validators;
 
   /**
    * **`bold q`** - the authorizer queue

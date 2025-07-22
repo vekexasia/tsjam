@@ -1,10 +1,6 @@
-import {
-  BaseJamCodecable,
-  binaryCodec,
-  buildGenericKeyValueCodec,
-  JamCodecable,
-} from "@tsjam/codec";
-import { Delta, ServiceAccount, ServiceIndex } from "@tsjam/types";
+import { BaseJamCodecable, JamCodecable } from "@tsjam/codec";
+import { Delta, ServiceIndex } from "@tsjam/types";
+import { ServiceAccountImpl } from "./ServiceAccountImpl";
 
 /**
  * `δ` or delta in the graypaper
@@ -14,5 +10,23 @@ import { Delta, ServiceAccount, ServiceIndex } from "@tsjam/types";
  */
 @JamCodecable()
 export class DeltaImpl extends BaseJamCodecable implements Delta {
-  elements!: Map<ServiceIndex, ServiceAccount>;
+  elements!: Map<ServiceIndex, ServiceAccountImpl>;
+  has(key: ServiceIndex): boolean {
+    return this.elements.has(key);
+  }
+  get(key: ServiceIndex): ServiceAccountImpl | undefined {
+    return this.elements.get(key);
+  }
+  set(key: ServiceIndex, value: ServiceAccountImpl): this {
+    this.elements.set(key, value);
+    return this;
+  }
+  clone(): DeltaImpl {
+    const clone = new DeltaImpl();
+    clone.elements = new Map(this.elements);
+    return clone;
+  }
+  delete(key: ServiceIndex): boolean {
+    return this.elements.delete(key);
+  }
 }

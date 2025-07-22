@@ -58,6 +58,10 @@ export class AssurancesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(AssuranceExtrinsicImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<AssuranceExtrinsic, typeof NUMBER_OF_VALIDATORS>;
+
+  nPositiveVotes(core: number) {
+    return this.elements.reduce((a, b) => a + b.bitstring[core], 0);
+  }
 }
 //TODO: implement isValid
 

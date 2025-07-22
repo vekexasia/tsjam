@@ -1,35 +1,19 @@
-import { BaseJamCodecable } from "@tsjam/codec";
-import {
-  AccumulationHistory,
-  AccumulationQueue,
-  AuthorizerQueue,
-  Delta,
-  Hash,
-  HeaderLookupHistory,
-  IDisputesState,
-  JamEntropy,
-  JamState,
-  JamStatistics,
-  PrivilegedServices,
-  RHO,
-  SafroleState,
-  ServiceIndex,
-  Tagged,
-  Tau,
-  Validators,
-} from "@tsjam/types";
-import { AuthorizerPoolImpl } from "./AuthorizerPoolImpl";
-import { BetaImpl } from "./BetaImpl";
-import { ValidatorsImpl } from "./ValidatorsImpl";
-import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
-import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
-import { DisputesStateImpl } from "./DisputesStateImpl";
-import { RHOImpl } from "./RHOImpl";
-import { JamStatisticsImpl } from "./JamStatisticsImpl";
+import { JamState, Tagged, Tau } from "@tsjam/types";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { AccumulationQueueImpl } from "./AccumulationQueueImpl";
-import { LastAccOutsImpl } from "./LastAccOutsImpl";
+import { AuthorizerPoolImpl } from "./AuthorizerPoolImpl";
+import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
+import { BetaImpl } from "./BetaImpl";
+import { DeltaImpl } from "./DeltaImpl";
+import { DisputesStateImpl } from "./DisputesStateImpl";
+import { HeaderLookupHistoryImpl } from "./HeaderLookupHistoryImpl";
 import { JamEntropyImpl } from "./JamEntropyImpl";
+import { JamStatisticsImpl } from "./JamStatisticsImpl";
+import { LastAccOutsImpl } from "./LastAccOutsImpl";
+import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
+import { RHOImpl } from "./RHOImpl";
+import { SafroleStateImpl } from "./SafroleStateImpl";
+import { ValidatorsImpl } from "./ValidatorsImpl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -43,7 +27,7 @@ export class JamStateImpl implements JamState {
   /**
    * `γ`
    */
-  safroleState: SafroleState;
+  safroleState!: SafroleStateImpl;
   /**
    * `λ` Validator keys and metadata which were active in the prior epoch.
    */
@@ -95,7 +79,7 @@ export class JamStateImpl implements JamState {
   /**
    * `τ` - the most recent block timeslot
    */
-  tau: Tau;
+  tau!: Tau;
   /**
    * `θ` - `\lastaccout`
    * $(0.7.0 - 7.4)
@@ -104,5 +88,5 @@ export class JamStateImpl implements JamState {
   /**
    * NOTE: this is not included in gp but used as per type doc
    */
-  headerLookupHistory: HeaderLookupHistory;
+  headerLookupHistory!: HeaderLookupHistoryImpl;
 }

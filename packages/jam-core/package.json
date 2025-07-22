@@ -31,12 +31,9 @@
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
-    "@tsjam/pvm": "*",
-    "@tsjam/serviceaccounts": "*",
-    "@tsjam/transitions": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*",
     "neverthrow": "^8.1.1",
+    "type-fest": "^4.41.0",
     "uint8array-extras": "^1.4.0"
   },
   "license": "MIT"

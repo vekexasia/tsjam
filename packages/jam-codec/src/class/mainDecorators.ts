@@ -54,12 +54,15 @@ export abstract class BaseJamCodecable {
   static codecOf<
     T extends typeof BaseJamCodecable,
     X extends keyof InstanceType<T>,
-  >(this: T, x: X): JamCodec<InstanceType<T>[X]> & JSONCodec<InstanceType<T>> {
+  >(
+    this: T,
+    x: X,
+  ): JamCodec<InstanceType<T>[X]> & JSONCodec<InstanceType<T>[X]> {
     const el = (<any>this.prototype)[CODEC_METADATA]?.find(
       (a: any) => a.propertyKey === x,
     );
     assert(el, `Codec for property ${String(x)} not found`);
-    return { ...el.codec, ...el.json };
+    return { ...el.codec, ...el.json.codec };
   }
 
   toBinary(): Uint8Array {

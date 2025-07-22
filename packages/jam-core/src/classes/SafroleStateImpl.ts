@@ -11,15 +11,13 @@ import {
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   BandersnatchRingRoot,
-  GammaSFallback,
-  GammaSNormal,
   SafroleState,
   Tagged,
-  Ticket,
   UpToSeq,
 } from "@tsjam/types";
 import { ValidatorsImpl } from "./ValidatorsImpl";
 import { TicketImpl } from "./TicketImpl";
+import { GammaSImpl } from "./GammaSImpl";
 
 /**
  * Denoted with gamma (y) in the Greek alphabet.
@@ -53,7 +51,8 @@ export class SafroleStateImpl extends BaseJamCodecable implements SafroleState {
    * mode, a series of EPOCH_LENGTH Bandersnatch keys
    * @see $(0.7.0 - 6.5)
    */
-  gamma_s!: GammaSNormal | GammaSFallback;
+  @codec(GammaSImpl)
+  gamma_s!: GammaSImpl;
 
   /**
    * `γa` is the ticket accumulator, a series of highest scoring ticket identifiers to be used for the next epoch
