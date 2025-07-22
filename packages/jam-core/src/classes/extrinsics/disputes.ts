@@ -22,7 +22,6 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
-  JamState,
   MinSeqLength,
   SeqOfLength,
   Tau,
@@ -32,6 +31,7 @@ import {
 } from "@tsjam/types";
 import { epochIndex, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
+import { JamStateImpl } from "../JamStateImpl";
 
 @JamCodecable()
 export class DisputeVerdictJudgementImpl
@@ -189,8 +189,8 @@ export class DisputeExtrinsicImpl
     extrinsic: DisputeExtrinsicImpl,
     deps: {
       tau: Tau;
-      kappa: JamState["kappa"];
-      lambda: JamState["lambda"];
+      kappa: JamStateImpl["kappa"];
+      lambda: JamStateImpl["lambda"];
     },
   ): Result<Validated<DisputeExtrinsicImpl>, string> {
     // $(0.6.4 - 10.2)
@@ -214,7 +214,7 @@ export class DisputeExtrinsicImpl
         const validatorSet =
           verdict.age === epochIndex(deps.tau) ? deps.kappa : deps.lambda;
         return verdict.judgements.every((judgement) => {
-          const validatorPubKey = validatorSet[judgement.index].ed25519;
+          const validatorPubKey = validatorSet.at(judgement.index).ed25519;
           let message: Uint8Array;
           if (judgement.vote) {
             message = new Uint8Array([
@@ -253,8 +253,7 @@ if (import.meta.vitest) {
   describe("codecEd", () => {
     it("disputes_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("disputes_extrinsic.bin");
-      const { value: ed } =
-        DisputeExtrinsicImpl.decode<DisputeExtrinsicImpl>(bin);
+      const { value: ed } = DisputeExtrinsicImpl.decode(bin);
       expect(Buffer.from(ed.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

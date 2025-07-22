@@ -18,6 +18,11 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
       count: u32;
     }
   >;
+
+  has(serviceIndex: ServiceIndex): boolean {
+    return this.elements.has(serviceIndex);
+  }
+
   static compute(deps: {
     r_star: AccumulatableWorkReports;
     nAccumulatedWork: number;

@@ -5,11 +5,11 @@ import {
   BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
+  eSubIntCodec,
   hashCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
-  numberCodec,
 } from "@tsjam/codec";
 import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 import {
@@ -29,7 +29,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
    * `h` - index of the service that hosts the authorization code
    */
-  @numberCodec(4, "auth_code_host")
+  @eSubIntCodec(4, "auth_code_host")
   authCodeHost!: ServiceIndex;
 
   /**

@@ -199,14 +199,14 @@ if (import.meta.vitest) {
     });
 
     it.fails("should encode/decode properly", () => {
-      const decoded = WorkItemImpl.decode<WorkItemImpl>(bin);
+      const decoded = WorkItemImpl.decode(bin);
       const reencoded = decoded.value.toBinary();
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
     });
     it("should encode/decode from JSON", () => {
-      const decoded = WorkItemImpl.fromJSON<WorkItemImpl>(json);
+      const decoded = WorkItemImpl.fromJSON(json);
       const reencoded = decoded.toJSON();
       expect(reencoded).toEqual(json);
     });

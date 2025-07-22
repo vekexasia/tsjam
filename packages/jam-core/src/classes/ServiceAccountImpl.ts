@@ -13,6 +13,7 @@ import {
   Balance,
   CodeHash,
   Gas,
+  Hash,
   IServiceAccountStorage,
   PVMProgramCode,
   ServiceAccount,
@@ -127,5 +128,15 @@ export class ServiceAccountImpl implements ServiceAccount {
       this.decodeMetaAndCode();
     }
     return this.decodedMetaAndCode!.code;
+  }
+
+  /**
+   * $(0.7.0 - 12.41)
+   */
+  isPreimageSolicitedButNotYetProvided(hash: Hash, length: number): boolean {
+    return (
+      !this.preimages.has(hash) &&
+      (this.requests.get(hash)?.get(toTagged(<u32>length))?.length ?? 0) !== 0
+    );
   }
 }

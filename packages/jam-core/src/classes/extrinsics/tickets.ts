@@ -49,8 +49,7 @@ if (import.meta.vitest) {
   describe("TicketsExtrinsicImpl", () => {
     it("tickets_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("tickets_extrinsic.bin");
-      const { value: eg } =
-        TicketsExtrinsicImpl.decode<TicketsExtrinsicImpl>(bin);
+      const { value: eg } = TicketsExtrinsicImpl.decode(bin);
       expect(Buffer.from(eg.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

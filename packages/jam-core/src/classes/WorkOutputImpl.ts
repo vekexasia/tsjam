@@ -19,8 +19,13 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
     return this.success instanceof Uint8Array;
   }
 
-  static encode<T>(_value: T, bytes: Uint8Array): number {
+  static encode<T extends typeof BaseJamCodecable>(
+    this: T,
+    _value: InstanceType<T>,
+    bytes: Uint8Array,
+  ): number {
     let offset = 0;
+
     const value = _value as WorkOutputImpl;
 
     if (value.isSuccess()) {
@@ -53,7 +58,11 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
     }
     return offset;
   }
-  static encodedSize<T>(_value: T): number {
+
+  static encodedSize<T extends typeof BaseJamCodecable>(
+    this: T,
+    _value: InstanceType<T>,
+  ): number {
     const value = <WorkOutputImpl>_value;
     if (value.isSuccess()) {
       return (
@@ -64,13 +73,19 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
     return E.encodedSize(1n);
   }
 
-  static decode<T>(bytes: Uint8Array) {
+  static decode<T extends typeof BaseJamCodecable>(
+    this: T,
+    bytes: Uint8Array,
+  ): {
+    value: InstanceType<T>;
+    readBytes: number;
+  } {
     const toRet = new WorkOutputImpl();
     if (bytes[0] === 0) {
       const r = LengthDiscrimantedIdentity.decode(bytes.subarray(1));
       toRet.success = r.value;
       return {
-        value: toRet as unknown as T,
+        value: toRet as unknown as InstanceType<T>,
         readBytes: r.readBytes + 1,
       };
     }
@@ -97,12 +112,13 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
       default:
         throw new Error(`Invalid value ${bytes[0]}`);
     }
-    return { value: toRet as unknown as T, readBytes: 1 };
+    return { value: toRet as unknown as InstanceType<T>, readBytes: 1 };
   }
 
   toBinary(): Uint8Array {
     return encodeWithCodec(WorkOutputImpl, this);
   }
+
   toJSON(): object {
     if (this.isSuccess()) {
       return { ok: BufferJSONCodec().toJSON(<any>this.success!) };
@@ -149,32 +165,4 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
     }
     throw new Error(`Cannot convert ${value} to JSON`);
   }
-}
-
-if (import.meta.vitest) {
-  const { beforeAll, describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
-  describe("WorkItemCodec", () => {
-    let bin: Uint8Array;
-    let json: object;
-    beforeAll(() => {
-      bin = getCodecFixtureFile("work_item.bin");
-      json = JSON.parse(
-        Buffer.from(getCodecFixtureFile("work_item.json")).toString("utf8"),
-      );
-    });
-
-    it.fails("should encode/decode properly", () => {
-      const decoded = WorkItemImpl.decode<WorkItemImpl>(bin);
-      const reencoded = decoded.value.toBinary();
-      expect(Buffer.from(reencoded).toString("hex")).toBe(
-        Buffer.from(bin).toString("hex"),
-      );
-    });
-    it("should encode/decode from JSON", () => {
-      const decoded = WorkItemImpl.fromJSON<WorkItemImpl>(json);
-      const reencoded = decoded.toJSON();
-      expect(reencoded).toEqual(json);
-    });
-  });
 }

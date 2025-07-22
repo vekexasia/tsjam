@@ -19,7 +19,7 @@ if (import.meta.vitest) {
   describe("JamBlockImpl", () => {
     it("block.bin", () => {
       const bin = getCodecFixtureFile("block.bin");
-      const { value: header } = JamBlockImpl.decode<JamBlockImpl>(bin);
+      const { value: header } = JamBlockImpl.decode(bin);
       console.log(header.toJSON(), "a");
       expect(Buffer.from(header.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),

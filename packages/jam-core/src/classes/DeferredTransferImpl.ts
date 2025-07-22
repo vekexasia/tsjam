@@ -2,11 +2,11 @@ import {
   JamCodecable,
   BaseJamCodecable,
   fixedSizeIdentityCodec,
-  numberCodec,
-  bigintCodec,
   binaryCodec,
   jsonCodec,
   BufferJSONCodec,
+  eSubIntCodec,
+  eSubBigIntCodec,
 } from "@tsjam/codec";
 import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 import {
@@ -22,19 +22,19 @@ export class DeferredTransferImpl
   extends BaseJamCodecable
   implements DeferredTransfer
 {
-  @numberCodec(4)
+  @eSubIntCodec(4)
   source!: ServiceIndex;
 
-  @numberCodec(4)
+  @eSubIntCodec(4)
   destination!: ServiceIndex;
 
-  @bigintCodec(8)
+  @eSubBigIntCodec(8)
   amount!: Balance;
 
   @jsonCodec(BufferJSONCodec())
   @binaryCodec(fixedSizeIdentityCodec(TRANSFER_MEMO_SIZE))
   memo!: ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>;
 
-  @bigintCodec(8)
+  @eSubBigIntCodec(8)
   gas!: Gas;
 }

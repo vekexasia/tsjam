@@ -15,13 +15,6 @@ import {
 import { Bandersnatch } from "@tsjam/crypto";
 import { computeExtrinsicHash, sealSignContext } from "./verifySeal";
 import { bigintToBytes, toPosterior, Timekeeping } from "@tsjam/utils";
-import { merkelizeState } from "@tsjam/merklization";
-import {
-  disputesSTF,
-  gamma_sSTF,
-  rotateEta1_4,
-  rotateKeys,
-} from "@tsjam/transitions";
 import { JAM_ENTROPY } from "@tsjam/constants";
 import { encodeWithCodec, UnsignedHeaderCodec } from "@tsjam/codec";
 

@@ -55,8 +55,7 @@ if (import.meta.vitest) {
   describe("JamBlockExtrinsicsImpl", () => {
     it("extrinsic.bin", () => {
       const bin = getCodecFixtureFile("extrinsic.bin");
-      const { value: header } =
-        JamBlockExtrinsicsImpl.decode<JamBlockExtrinsicsImpl>(bin);
+      const { value: header } = JamBlockExtrinsicsImpl.decode(bin);
       expect(Buffer.from(header.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

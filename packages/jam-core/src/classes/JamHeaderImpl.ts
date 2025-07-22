@@ -155,9 +155,7 @@ if (import.meta.vitest) {
   describe("JamSignedHeaderImpl", () => {
     it("header_0.bin", () => {
       const bin = getCodecFixtureFile("header_0.bin");
-      const { value: header } =
-        JamSignedHeaderImpl.decode<JamSignedHeaderImpl>(bin);
-      console.log(header.toJSON(), "a");
+      const { value: header } = JamSignedHeaderImpl.decode(bin);
       expect(Buffer.from(header.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -166,15 +164,13 @@ if (import.meta.vitest) {
       const json = JSON.parse(
         Buffer.from(getCodecFixtureFile("header_0.json")).toString("utf8"),
       );
-      const eg: JamSignedHeaderImpl = JamSignedHeaderImpl.fromJSON(json);
+      const eg = JamSignedHeaderImpl.fromJSON(json);
 
       expect(eg.toJSON()).to.deep.eq(json);
     });
     it("header_1.bin", () => {
       const bin = getCodecFixtureFile("header_1.bin");
-      const { value: header } =
-        JamSignedHeaderImpl.decode<JamSignedHeaderImpl>(bin);
-      console.log(header.toJSON(), "a");
+      const { value: header } = JamSignedHeaderImpl.decode(bin);
       expect(Buffer.from(header.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -183,7 +179,7 @@ if (import.meta.vitest) {
       const json = JSON.parse(
         Buffer.from(getCodecFixtureFile("header_1.json")).toString("utf8"),
       );
-      const eg: JamSignedHeaderImpl = JamSignedHeaderImpl.fromJSON(json);
+      const eg = JamSignedHeaderImpl.fromJSON(json);
 
       expect(eg.toJSON()).to.deep.eq(json);
     });

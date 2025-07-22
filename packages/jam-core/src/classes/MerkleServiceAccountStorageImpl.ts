@@ -1,3 +1,5 @@
+import { StateKeyBigInt, stateKeyCodec } from "@/merklization/stateCodecs";
+import { stateKey } from "@/merklization/utils";
 import { E_4_int, encodeWithCodec } from "@tsjam/codec";
 import {
   IServiceAccountStorage,

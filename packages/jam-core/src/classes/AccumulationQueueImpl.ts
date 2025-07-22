@@ -13,7 +13,6 @@ import {
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AccumulationQueue,
-  AvailableWithPrereqWorkReports,
   Posterior,
   SeqOfLength,
   Tau,

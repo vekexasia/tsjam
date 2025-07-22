@@ -71,8 +71,7 @@ if (import.meta.vitest) {
   describe("codecEa", () => {
     it("assurances_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("assurances_extrinsic.bin");
-      const { value: ea } =
-        AssurancesExtrinsicImpl.decode<AssurancesExtrinsicImpl>(bin);
+      const { value: ea } = AssurancesExtrinsicImpl.decode(bin);
       expect(Buffer.from(ea.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );

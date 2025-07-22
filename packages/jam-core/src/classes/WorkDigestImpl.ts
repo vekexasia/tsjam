@@ -84,28 +84,28 @@ if (import.meta.vitest) {
 
     describe("bin0", () => {
       it("should encode/decode properly", () => {
-        const decoded = WorkDigestImpl.decode<WorkDigestImpl>(bin0);
+        const decoded = WorkDigestImpl.decode(bin0);
         const reencoded = decoded.value.toBinary();
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin0).toString("hex"),
         );
       });
       it("should encode/decode from JSON", () => {
-        const decoded = WorkDigestImpl.fromJSON<WorkDigestImpl>(json0);
+        const decoded = WorkDigestImpl.fromJSON(json0);
         const reencoded = decoded.toJSON();
         expect(reencoded).toEqual(json0);
       });
     });
     describe("bin1", () => {
       it("should encode/decode properly", () => {
-        const decoded = WorkDigestImpl.decode<WorkDigestImpl>(bin1);
+        const decoded = WorkDigestImpl.decode(bin1);
         const reencoded = decoded.value.toBinary();
         expect(Buffer.from(reencoded).toString("hex")).toBe(
           Buffer.from(bin1).toString("hex"),
         );
       });
       it("should encode/decode from JSON", () => {
-        const decoded = WorkDigestImpl.fromJSON<WorkDigestImpl>(json1);
+        const decoded = WorkDigestImpl.fromJSON(json1);
         const reencoded = decoded.toJSON();
         expect(reencoded).toEqual(json1);
       });

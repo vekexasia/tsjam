@@ -16,4 +16,9 @@ export class ServiceOutsImpl implements ServiceOuts {
   add(serviceIndex: ServiceIndex, accumulationResult: Hash): void {
     this.elements.add({ serviceIndex, accumulationResult });
   }
+
+  static union(a: ServiceOuts, b: ServiceOuts): ServiceOutsImpl {
+    // TODO: no checks are performed on duplicated elements despite using Set
+    return new ServiceOutsImpl(new Set([...a.elements, ...b.elements]));
+  }
 }

@@ -26,7 +26,7 @@ export class PreimagesExtrinsicImpl
   implements EP_Extrinsic
 {
   @lengthDiscriminatedCodec(PreimageElement, SINGLE_ELEMENT_CLASS)
-  elements!: EP_Tuple[];
+  elements!: PreimageElement[];
 }
 
 if (import.meta.vitest) {
@@ -35,8 +35,7 @@ if (import.meta.vitest) {
   describe("PreimagesExtrinsicImpl", () => {
     it("preimages_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("preimages_extrinsic.bin");
-      const { value: eg } =
-        PreimagesExtrinsicImpl.decode<PreimagesExtrinsicImpl>(bin);
+      const { value: eg } = PreimagesExtrinsicImpl.decode(bin);
       expect(Buffer.from(eg.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
@@ -47,7 +46,7 @@ if (import.meta.vitest) {
           "utf8",
         ),
       );
-      const eg: PreimagesExtrinsicImpl = PreimagesExtrinsicImpl.fromJSON(json);
+      const eg = PreimagesExtrinsicImpl.fromJSON(json);
 
       expect(eg.toJSON()).to.deep.eq(json);
     });

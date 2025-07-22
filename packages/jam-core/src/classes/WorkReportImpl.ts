@@ -8,6 +8,7 @@ import {
   createArrayLengthDiscriminator,
   E,
   E_int,
+  encodeWithCodec,
   HashCodec,
   hashCodec,
   HashJSONCodec,
@@ -19,7 +20,6 @@ import {
 } from "@tsjam/codec";
 import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 import {
-  AccumulationQueue,
   Blake2bHash,
   BoundedSeq,
   CoreIndex,
@@ -30,10 +30,12 @@ import {
   WorkPackageHash,
   WorkReport,
 } from "@tsjam/types";
-import { WorkDigestImpl } from "./WorkDigestImpl";
+import { AccumulationQueueItem } from "./AccumulationQueueImpl";
 import { AvailabilitySpecificationImpl } from "./AvailabilitySpecificationImpl";
 import { WorkContextImpl } from "./WorkContextImpl";
-import { AccumulationQueueItem } from "./AccumulationQueueImpl";
+import { WorkDigestImpl } from "./WorkDigestImpl";
+import { RHOImpl } from "./RHOImpl";
+import { Hashing } from "@tsjam/crypto";
 
 // codec order defined in $(0.7.0 - C.27)
 @JamCodecable()
@@ -99,6 +101,10 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   @binaryCodec(createArrayLengthDiscriminator(WorkDigestImpl))
   digests!: BoundedSeq<WorkDigestImpl, 1, typeof MAXIMUM_WORK_ITEMS>;
 
+  hash() {
+    return Hashing.blake2b(this.toBinary());
+  }
+
   /**
    * `P()`
    * $(0.7.0 - 12.9)
@@ -106,6 +112,31 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
    */
   static extractWorkPackageHashes(r: WorkReportImpl[]): Set<WorkPackageHash> {
     return new Set(r.map((wr) => wr.avSpec.packageHash));
+  }
+
+  /**
+   * Comutes `bold Q` in thye paper which is the sequence of work reports which may be required
+   * to be audited by the validator
+   * $(0.6.4 - 17.2)
+   */
+
+  static computeRequiredWorkReports(
+    rho: RHOImpl,
+    bold_w: AvailableWorkReports,
+  ): AuditRequiredWorkReports {
+    const toRet = [] as unknown[] as AuditRequiredWorkReports;
+
+    const wSet = new Set(bold_w.map((wr) => wr.hash()));
+
+    for (let c = 0; c < CORES; c++) {
+      const rc = rho.elementAt(c);
+      if (rc && wSet.has(rc.workReport.hash())) {
+        toRet.push(rc.workReport);
+      } else {
+        toRet.push(undefined);
+      }
+    }
+    return toRet;
   }
 }
 

@@ -57,14 +57,14 @@ if (import.meta.vitest) {
     });
 
     it("should encode/decode properly", () => {
-      const decoded = WorkContextImpl.decode<WorkContextImpl>(bin);
+      const decoded = WorkContextImpl.decode(bin);
       const reencoded = decoded.value.toBinary();
       expect(Buffer.from(reencoded).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
     });
     it("should encode/decode json properly", () => {
-      const decoded = WorkContextImpl.fromJSON<WorkContextImpl>(json);
+      const decoded = WorkContextImpl.fromJSON(json);
       const reencoded = decoded.toJSON();
       expect(reencoded).toEqual(json);
     });

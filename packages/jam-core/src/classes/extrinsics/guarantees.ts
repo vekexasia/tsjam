@@ -44,7 +44,7 @@ export class SingleWorkReportGuaranteeImpl
 {
   /**
    * `bold_r`
-   * the `.coreIndex` of this workload must be unique within
+   * the `.core` of this workload must be unique within
    * the full extrinsic
    */
   @codec(WorkReportImpl)
@@ -72,6 +72,10 @@ export class GuaranteesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>;
+
+  elementForCore(core: number) {
+    return this.elements.find((el) => el.report.coreIndex === core);
+  }
 }
 
 if (import.meta.vitest) {
@@ -80,8 +84,7 @@ if (import.meta.vitest) {
   describe("codecEG", () => {
     it("guarantees_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
-      const { value: eg } =
-        GuaranteesExtrinsicImpl.decode<GuaranteesExtrinsicImpl>(bin);
+      const { value: eg } = GuaranteesExtrinsicImpl.decode(bin);
       expect(Buffer.from(eg.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
