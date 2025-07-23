@@ -7,7 +7,6 @@ import {
   HashJSONCodec,
   JamCodecable,
   jsonCodec,
-  mapCodec,
   MapJSONCodec,
 } from "@tsjam/codec";
 import {
@@ -53,4 +52,9 @@ export class RecentHistoryItemImpl
   )
   @binaryCodec(buildKeyValueCodec(HashCodec))
   reportedPackages!: Map<WorkPackageHash, Hash>;
+
+  constructor(config: RecentHistoryItem) {
+    super();
+    Object.assign(this, config);
+  }
 }

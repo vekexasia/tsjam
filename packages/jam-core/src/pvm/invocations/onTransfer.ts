@@ -35,6 +35,7 @@ import {
 } from "@tsjam/codec";
 import { toTagged } from "@tsjam/utils";
 import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
+import { InvokedTransfersImpl } from "@/classes/InvokedTransfersImpl";
 
 const argumentInvocationTransferCodec = createCodec<{
   tau: Tau;
@@ -187,7 +188,7 @@ export const invokeOntransfers = (
     transfers: DeferredTransfer[];
   },
 ) => {
-  const x: InvokedTransfers = toTagged(new Map());
+  const x: InvokedTransfers = new InvokedTransfersImpl({ elements: new Map() });
 
   for (const [serviceIndex] of d_delta) {
     x.set(

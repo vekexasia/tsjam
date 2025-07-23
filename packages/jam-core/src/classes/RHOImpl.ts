@@ -1,7 +1,6 @@
 import {
   BaseJamCodecable,
   codec,
-  encodeWithCodec,
   eSubIntCodec,
   JamCodec,
   JamCodecable,
@@ -13,9 +12,9 @@ import {
 } from "@tsjam/codec";
 import { CORES, WORK_TIMEOUT } from "@tsjam/constants";
 import {
+  CoreIndex,
   Dagger,
   DoubleDagger,
-  JamState,
   Posterior,
   RHO,
   RHOElement,
@@ -23,14 +22,13 @@ import {
   Tau,
   Validated,
 } from "@tsjam/types";
-import assert, { ok } from "assert";
-import { DisputesStateImpl } from "./DisputesStateImpl";
-import { AvailableWorkReports, WorkReportImpl } from "./WorkReportImpl";
-import { Hashing } from "@tsjam/crypto";
-import { toTagged, toDagger, toDoubleDagger, toPosterior } from "@tsjam/utils";
+import { toDagger, toDoubleDagger, toPosterior } from "@tsjam/utils";
+import assert from "assert";
 import { ConditionalExcept } from "type-fest";
+import { DisputesStateImpl } from "./DisputesStateImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { JamStateImpl } from "./JamStateImpl";
+import { AvailableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 
 @JamCodecable()
 export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
@@ -67,7 +65,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     Object.assign(this, config);
   }
 
-  elementAt(core: number): RHOElementImpl | undefined {
+  elementAt(core: CoreIndex): RHOElementImpl | undefined {
     assert(core >= 0 && core < CORES, "Core index out of bounds");
     return this.elements[core];
   }

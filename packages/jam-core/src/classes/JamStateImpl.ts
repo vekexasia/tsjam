@@ -18,6 +18,9 @@ import { JamBlockImpl } from "./JamBlockImpl";
 import { isNewEra, toPosterior } from "@tsjam/utils";
 import { Bandersnatch } from "@tsjam/crypto";
 import { err } from "neverthrow";
+import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import { accumulateReports } from "@/accumulate";
+import { invokeOntransfers, transferStatistics } from "@/pvm";
 
 export class JamStateImpl implements JamState {
   /**
@@ -157,11 +160,71 @@ export class JamStateImpl implements JamState {
       return err(p_gamma_aErr);
     }
 
-    const p_thisroleState = this.safroleState.toPosterior({
+    const p_safroleState = this.safroleState.toPosterior({
       p_gamma_p,
       p_gamma_z,
       p_gamma_a,
       p_gamma_s,
+    });
+
+    const d_rho = this.rho.toDagger({ p_disputes });
+
+    if (
+      !block.extrinsics.assurances.isValid({
+        header: block.header,
+        kappa: this.kappa,
+        d_rho,
+      })
+    ) {
+      throw new Error("TODO neverthrow");
+    }
+
+    const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
+      block.extrinsics.assurances,
+      d_rho,
+    );
+
+    const [
+      ,
+      {
+        p_accumulationQueue,
+        p_accumulationHistory,
+        d_delta,
+        p_iota,
+        p_authQueue,
+        deferredTransfers,
+        p_mostRecentAccumulationOutputs,
+        p_privServices,
+        accumulationStatistics,
+      },
+    ] = accumulateReports(bold_R, {
+      tau: this.tau,
+      p_tau,
+      accumulationHistory: this.accumulationHistory,
+      accumulationQueue: this.accumulationQueue,
+      authQueue: this.authQueue,
+      serviceAccounts: this.serviceAccounts,
+      privServices: this.privServices,
+      iota: this.iota,
+      p_eta_0: toPosterior(p_entropy._0),
+    }).safeRet();
+    const invokedOnTransfers = invokeOntransfers(d_delta, p_tau, {
+      transfers: deferredTransfers,
+    });
+
+    const tStats = transferStatistics(deferredTransfers, invokedOnTransfers);
+
+    const d_recentHistory = this.beta.recentHistory.toDagger(block.header);
+
+    const dd_delta = DeltaImpl.toDoubleDagger(d_delta, {
+      bold_x: invokedOnTransfers,
+      accumulationStatistics,
+    });
+
+    const dd_rho = RHOImpl.toDoubleDagger(d_rho, {
+      p_tau,
+      availableReports,
+      rho: this.rho,
     });
   }
 }

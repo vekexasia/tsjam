@@ -11,4 +11,8 @@ export class InvokedTransfersImpl implements InvokedTransfers {
   for(serviceIndex: ServiceIndex) {
     return this.elements.get(serviceIndex);
   }
+  set(service: ServiceIndex, t: { account: ServiceAccountImpl; gasUsed: Gas }) {
+    this.elements.set(service, t);
+    return this;
+  }
 }

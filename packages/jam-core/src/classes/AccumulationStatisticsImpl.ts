@@ -27,7 +27,7 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
     r_star: AccumulatableWorkReports;
     nAccumulatedWork: number;
     gasUsed: GasUsed;
-  }): AccumulationStatistics {
+  }): AccumulationStatisticsImpl {
     const toRet = new AccumulationStatisticsImpl();
     toRet.elements = new Map();
     // $(0.7.0 - 12.27) | we compute the summary of gas used first

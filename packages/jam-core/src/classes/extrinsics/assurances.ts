@@ -1,23 +1,35 @@
 import {
   BaseJamCodecable,
+  BitSequenceCodec,
   bitSequenceCodec,
   ed25519SignatureCodec,
+  encodeWithCodec,
   eSubIntCodec,
+  HashCodec,
   hashCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES, JAM_AVAILABLE, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   AssuranceExtrinsic,
+  CoreIndex,
+  Dagger,
   EA_Extrinsic,
   ED25519Signature,
   Hash,
   SeqOfLength,
   UpToSeq,
+  Validated,
   ValidatorIndex,
 } from "@tsjam/types";
+import { JamHeaderImpl } from "../JamHeaderImpl";
+import { JamStateImpl } from "../JamStateImpl";
+import { RHOImpl } from "../RHOImpl";
+import { Ed25519, Hashing } from "@tsjam/crypto";
+import { toTagged } from "@tsjam/utils";
+import { AvailableWorkReports, WorkReportImpl } from "../WorkReportImpl";
 
 // Single extrinsic element
 // codec order defined in $(0.7.0 - C.27)
@@ -49,6 +61,61 @@ export class AssuranceExtrinsicImpl
    */
   @ed25519SignatureCodec("signature")
   signature!: ED25519Signature;
+
+  /**
+   * $(0.7.0 - 11.13)
+   */
+  isSignatureValid(deps: {
+    kappa: JamStateImpl["kappa"];
+    header: JamHeaderImpl;
+  }) {
+    return Ed25519.verifySignature(
+      this.signature,
+      deps.kappa.at(this.validatorIndex).ed25519,
+      new Uint8Array([
+        ...JAM_AVAILABLE, // XA
+        ...Hashing.blake2bBuf(
+          new Uint8Array([
+            ...encodeWithCodec(HashCodec, deps.header.parent),
+            ...encodeWithCodec(BitSequenceCodec(CORES), this.bitstring),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  isValid(deps: {
+    header: JamHeaderImpl;
+    kappa: JamStateImpl["kappa"];
+    d_rho: Dagger<RHOImpl>;
+  }): this is Validated<AssuranceExtrinsicImpl> {
+    // begin with $(0.7.0 - 11.10)
+    if (this.validatorIndex >= NUMBER_OF_VALIDATORS) {
+      return false;
+    }
+    if (this.bitstring.length !== CORES) {
+      return false;
+    }
+
+    // $(0.7.0 - 11.11)
+    if (this.anchorHash !== deps.header.parent) {
+      return false;
+    }
+
+    // $(0.7.0 - 11.15)
+    for (let c = <CoreIndex>0; c < CORES; c++) {
+      if (this.bitstring[c] === 1) {
+        // af[c]
+        // bit must be set only if corresponding core has a report pending availability
+        if (typeof deps.d_rho.elementAt(c) === "undefined") {
+          return false;
+        }
+      }
+    }
+
+    // $(0.7.0 - 11.13)
+    return this.isSignatureValid({ kappa: deps.kappa, header: deps.header });
+  }
 }
 
 @JamCodecable()
@@ -57,13 +124,64 @@ export class AssurancesExtrinsicImpl
   implements EA_Extrinsic
 {
   @lengthDiscriminatedCodec(AssuranceExtrinsicImpl, SINGLE_ELEMENT_CLASS)
-  elements!: UpToSeq<AssuranceExtrinsic, typeof NUMBER_OF_VALIDATORS>;
+  elements!: UpToSeq<AssuranceExtrinsicImpl, typeof NUMBER_OF_VALIDATORS>;
 
-  nPositiveVotes(core: number) {
+  nPositiveVotes(core: CoreIndex) {
     return this.elements.reduce((a, b) => a + b.bitstring[core], 0);
   }
+
+  isValid(deps: {
+    header: JamHeaderImpl;
+    kappa: JamStateImpl["kappa"];
+    d_rho: Dagger<RHOImpl>;
+  }): this is Validated<AssuranceExtrinsicImpl> {
+    // $(0.7.0 - 11.10)
+    if (this.elements.length > NUMBER_OF_VALIDATORS) {
+      return false;
+    }
+
+    // $(0.7.0 - 11.12)
+    for (let i = 1; i < this.elements.length; i++) {
+      if (
+        this.elements[i - 1].validatorIndex >= this.elements[i].validatorIndex
+      ) {
+        return false;
+      }
+    }
+
+    for (let i = 0; i < this.elements.length; i++) {
+      if (
+        !this.elements[i].isValid({
+          header: deps.header,
+          kappa: deps.kappa,
+          d_rho: deps.d_rho,
+        })
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Computes `bold R` in
+   * $(0.7.0 - 11.16)
+   */
+  static newlyAvailableReports(
+    ea: Validated<AssurancesExtrinsicImpl>,
+    d_rho: Dagger<RHOImpl>,
+  ): AvailableWorkReports {
+    const W: WorkReportImpl[] = [];
+    for (let c = <CoreIndex>0; c < CORES; c++) {
+      const sum = ea.nPositiveVotes(c);
+
+      if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
+        W.push(d_rho.elementAt(c)!.workReport);
+      }
+    }
+    return toTagged(W);
+  }
 }
-//TODO: implement isValid
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
