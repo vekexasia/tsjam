@@ -3,11 +3,17 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { SeqOfLength, Validators } from "@tsjam/types";
 import { ValidatorDataImpl } from "./ValidatorDataImpl";
 import assert from "assert";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class ValidatorsImpl extends BaseJamCodecable implements Validators {
   @sequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataImpl)
   elements!: SeqOfLength<ValidatorDataImpl, typeof NUMBER_OF_VALIDATORS>;
+
+  constructor(config: ConditionalExcept<ValidatorsImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 
   at(index: number): ValidatorDataImpl {
     assert(index >= 0 && index < NUMBER_OF_VALIDATORS, "Index out of bounds");

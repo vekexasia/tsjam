@@ -14,6 +14,10 @@ import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
+import { JamBlockImpl } from "./JamBlockImpl";
+import { isNewEra, toPosterior } from "@tsjam/utils";
+import { Bandersnatch } from "@tsjam/crypto";
+import { err } from "neverthrow";
 
 export class JamStateImpl implements JamState {
   /**
@@ -89,4 +93,53 @@ export class JamStateImpl implements JamState {
    * NOTE: this is not included in gp but used as per type doc
    */
   headerLookupHistory!: HeaderLookupHistoryImpl;
+
+  applyBlock(block: JamBlockImpl) {
+    const p_tau = toPosterior(block.header.slot);
+    let p_kappa = toPosterior(this.kappa);
+    let p_lambda = toPosterior(this.lambda);
+    if (isNewEra(block.header.slot, this.tau)) {
+      p_kappa = <any>structuredClone(this.safroleState.gamma_p);
+      p_lambda = <any>structuredClone(this.kappa);
+    }
+
+    const p_entropy = this.entropy.toPosterior(this, {
+      p_tau,
+      vrfOutputHash: Bandersnatch.vrfOutputSignature(
+        block.header.entropySource,
+      ),
+    });
+
+    const [p_disputesError, p_disputes] = this.disputes
+      .toPosterior(this, {
+        extrinsic: block.extrinsics.disputes,
+      })
+      .safeRet();
+    if (typeof p_disputesError !== "undefined") {
+      return err(p_disputesError);
+    }
+
+    const [newTicketsErr, newTickets] = block.extrinsics.tickets
+      .newTickets({
+        p_tau,
+        p_gamma_z,
+        gamma_a: this.safroleState.gamma_a,
+        p_entropy,
+      })
+      .safeRet();
+
+    if (typeof newTicketsErr !== "undefined") {
+      return err(newTicketsErr);
+    }
+    const [p_safroleState_err, p_safroleState] = this.safroleState.toPosterior(
+      this,
+      {
+        p_kappa,
+        p_tau,
+        p_entropy,
+        p_offenders: toPosterior(p_disputes.offenders),
+        newTickets,
+      },
+    );
+  }
 }

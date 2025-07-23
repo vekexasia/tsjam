@@ -1,3 +1,4 @@
+import { PHI_FN } from "@/utils";
 import {
   BandersnatchRingRootCodec,
   BaseJamCodecable,
@@ -6,18 +7,25 @@ import {
   codec,
   JamCodecable,
   jsonCodec,
-  lengthDiscriminatedCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH } from "@tsjam/constants";
+import { Bandersnatch } from "@tsjam/crypto";
 import {
   BandersnatchRingRoot,
+  Posterior,
   SafroleState,
   Tagged,
-  UpToSeq,
+  Tau,
 } from "@tsjam/types";
-import { ValidatorsImpl } from "./ValidatorsImpl";
-import { TicketImpl } from "./TicketImpl";
+import { isNewEra, toPosterior, toTagged } from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
+import { ConditionalExcept } from "type-fest";
+import { DisputesStateImpl } from "./DisputesStateImpl";
+import { GammaAError, GammaAImpl } from "./GammaAImpl";
 import { GammaSImpl } from "./GammaSImpl";
+import { JamEntropyImpl } from "./JamEntropyImpl";
+import { JamStateImpl } from "./JamStateImpl";
+import { TicketImpl } from "./TicketImpl";
+import { ValidatorsImpl } from "./ValidatorsImpl";
 
 /**
  * Denoted with gamma (y) in the Greek alphabet.
@@ -58,6 +66,59 @@ export class SafroleStateImpl extends BaseJamCodecable implements SafroleState {
    * `γa` is the ticket accumulator, a series of highest scoring ticket identifiers to be used for the next epoch
    * @see $(0.7.0 - 6.5)
    */
-  @lengthDiscriminatedCodec(TicketImpl)
-  gamma_a!: UpToSeq<TicketImpl, typeof EPOCH_LENGTH, "gamma_a">;
+  @codec(GammaAImpl)
+  gamma_a!: GammaAImpl;
+
+  constructor(config: ConditionalExcept<SafroleStateImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
+
+  toPosterior(
+    curState: JamStateImpl,
+    deps: {
+      p_offenders: Posterior<DisputesStateImpl["offenders"]>;
+      p_tau: Posterior<Tau>;
+      p_entropy: Posterior<JamEntropyImpl>;
+      p_kappa: Posterior<JamStateImpl["kappa"]>;
+      // n in the paper
+      newTickets: TicketImpl[];
+    },
+  ): Result<Posterior<SafroleStateImpl>, GammaAError> {
+    let p_gamma_p = this.gamma_p;
+    let p_gamma_z = this.gamma_z;
+    // $(0.7.0 - 6.13)
+    if (isNewEra(deps.p_tau, curState.tau)) {
+      p_gamma_p = toTagged(
+        new ValidatorsImpl({
+          elements: PHI_FN(curState.iota.elements, deps.p_offenders),
+        }),
+      );
+      p_gamma_z = Bandersnatch.ringRoot(
+        p_gamma_p.elements.map((v) => v.banderSnatch),
+      );
+    }
+
+    const [p_gamma_err, p_gamma_a] = this.gamma_a
+      .toPosterior(curState, {
+        p_tau: deps.p_tau,
+        newTickets: deps.newTickets,
+      })
+      .safeRet();
+    if (typeof p_gamma_err !== "undefined") {
+      return err(p_gamma_err);
+    }
+
+    const toRet = new SafroleStateImpl({
+      gamma_p: p_gamma_p,
+      gamma_z: p_gamma_z,
+      gamma_a: p_gamma_a,
+      gamma_s: this.gamma_s.toPosterior(curState, {
+        p_tau: deps.p_tau,
+        p_eta2: toPosterior(deps.p_entropy._2),
+        p_kappa: deps.p_kappa,
+      }),
+    });
+    return ok(toPosterior(toRet));
+  }
 }

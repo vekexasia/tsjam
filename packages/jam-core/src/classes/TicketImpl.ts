@@ -5,6 +5,7 @@ import {
   JamCodecable,
 } from "@tsjam/codec";
 import { Hash, Ticket } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class TicketImpl extends BaseJamCodecable implements Ticket {
@@ -18,4 +19,9 @@ export class TicketImpl extends BaseJamCodecable implements Ticket {
    */
   @eSubIntCodec(1)
   attempt!: 0 | 1;
+
+  constructor(config: ConditionalExcept<TicketImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 }

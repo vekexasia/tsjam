@@ -45,7 +45,7 @@ export const dummyState = (conf: {
   const { validators, cores, epoch } = conf;
   return {
     safroleState: {
-      gamma_a: [] as Ticket[] as SafroleState["gamma_a"],
+      gamma_a: { elements: [] as Ticket[] } as SafroleState["gamma_a"],
       gamma_p: {
         elements: new Array(validators).fill(null).map(dummyValidator),
       } as SafroleState["gamma_p"],

@@ -9,6 +9,7 @@ import {
 } from "@tsjam/codec";
 import {
   BoundedSeq,
+  CoreIndex,
   ED25519Signature,
   EG_Extrinsic,
   SingleWorkReportGuarantee,
@@ -73,8 +74,8 @@ export class GuaranteesExtrinsicImpl
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>;
 
-  elementForCore(core: number) {
-    return this.elements.find((el) => el.report.coreIndex === core);
+  elementForCore(core: CoreIndex) {
+    return this.elements.find((el) => el.report.core === core);
   }
 }
 

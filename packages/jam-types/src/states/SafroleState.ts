@@ -20,6 +20,10 @@ export type GammaS = {
   keys?: GammaSFallback;
   tickets?: GammaSNormal;
 };
+
+export type GammaA = {
+  elements: UpToSeq<Ticket, typeof EPOCH_LENGTH, "gamma_a">;
+};
 /**
  * Denoted with gamma (y) in the Greek alphabet.
  * This is the basic state of the Safrole state machine.
@@ -38,7 +42,7 @@ export interface SafroleState {
    * `γa` is the ticket accumulator, a series of highest scoring ticket identifiers to be used for the next epoch
    * @see $(0.7.0 - 6.5)
    */
-  gamma_a: UpToSeq<Ticket, typeof EPOCH_LENGTH, "gamma_a">;
+  gamma_a: GammaA;
 
   /**
    * `γs`

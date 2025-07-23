@@ -8,7 +8,12 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
-import { AuthorizerHash, AuthorizerQueue, SeqOfLength } from "@tsjam/types";
+import {
+  AuthorizerHash,
+  AuthorizerQueue,
+  CoreIndex,
+  SeqOfLength,
+} from "@tsjam/types";
 
 export class AuthorizerQueueImpl
   extends BaseJamCodecable
@@ -28,4 +33,8 @@ export class AuthorizerQueueImpl
     SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE>,
     typeof CORES
   >;
+
+  queueAtCore(core: CoreIndex) {
+    return this.elements[core];
+  }
 }
