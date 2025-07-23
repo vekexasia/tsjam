@@ -24,6 +24,10 @@ export type GammaS = {
 export type GammaA = {
   elements: UpToSeq<Ticket, typeof EPOCH_LENGTH, "gamma_a">;
 };
+
+export type GammaZ = {
+  root: BandersnatchRingRoot;
+};
 /**
  * Denoted with gamma (y) in the Greek alphabet.
  * This is the basic state of the Safrole state machine.
@@ -36,7 +40,7 @@ export interface SafroleState {
    * epoch’s validators, defined in gamma_k
    * @see $(0.7.0 - 6.4)
    */
-  gamma_z: Tagged<BandersnatchRingRoot, "gamma_z">;
+  gamma_z: GammaZ;
 
   /**
    * `γa` is the ticket accumulator, a series of highest scoring ticket identifiers to be used for the next epoch
@@ -59,5 +63,5 @@ export interface SafroleState {
    * the next gamma_z
    * @see $(0.7.0 - 6.7)
    */
-  gamma_p: Tagged<Validators, "gamma_k">;
+  gamma_p: Tagged<Validators, "gamma_p">;
 }

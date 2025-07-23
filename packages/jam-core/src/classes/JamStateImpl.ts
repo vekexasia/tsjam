@@ -119,6 +119,15 @@ export class JamStateImpl implements JamState {
       return err(p_disputesError);
     }
 
+    const p_gamma_p = this.safroleState.gamma_p.toPosterior(this, {
+      p_tau,
+      p_offenders: toPosterior(p_disputes.offenders),
+    });
+    const p_gamma_z = this.safroleState.gamma_z.toPosterior(this, {
+      p_tau,
+      p_gamma_p,
+    });
+
     const [newTicketsErr, newTickets] = block.extrinsics.tickets
       .newTickets({
         p_tau,
@@ -131,15 +140,28 @@ export class JamStateImpl implements JamState {
     if (typeof newTicketsErr !== "undefined") {
       return err(newTicketsErr);
     }
-    const [p_safroleState_err, p_safroleState] = this.safroleState.toPosterior(
-      this,
-      {
-        p_kappa,
+
+    const p_gamma_s = this.safroleState.gamma_s.toPosterior(this, {
+      p_tau,
+      p_kappa,
+      p_eta2: toPosterior(p_entropy._2),
+    });
+
+    const [p_gamma_aErr, p_gamma_a] = this.safroleState.gamma_a
+      .toPosterior(this, {
         p_tau,
-        p_entropy,
-        p_offenders: toPosterior(p_disputes.offenders),
         newTickets,
-      },
-    );
+      })
+      .safeRet();
+    if (typeof p_gamma_aErr !== "undefined") {
+      return err(p_gamma_aErr);
+    }
+
+    const p_thisroleState = this.safroleState.toPosterior({
+      p_gamma_p,
+      p_gamma_z,
+      p_gamma_a,
+      p_gamma_s,
+    });
   }
 }
