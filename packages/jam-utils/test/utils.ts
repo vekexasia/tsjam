@@ -16,7 +16,7 @@ import {
   RecentHistoryItem,
   SafroleState,
   ServiceIndex,
-  SingleValidatorStatistics,
+  ValidatorStatisticsCollection,
   Tau,
   Ticket,
   u16,
@@ -106,22 +106,26 @@ export const dummyState = (conf: {
     },
     statistics: {
       validators: {
-        accumulator: new Array(validators).fill({
-          blocks: 0,
-          tickets: 0,
-          preimageCount: 0,
-          preimageSize: 0,
-          guarantees: 0,
-          assurances: 0,
-        }) as any as SingleValidatorStatistics,
-        previous: new Array(validators).fill({
-          blocks: 0,
-          tickets: 0,
-          preimageCount: 0,
-          preimageSize: 0,
-          guarantees: 0,
-          assurances: 0,
-        }) as any as SingleValidatorStatistics,
+        accumulator: {
+          elements: new Array(validators).fill({
+            blocks: 0,
+            tickets: 0,
+            preimageCount: 0,
+            preimageSize: 0,
+            guarantees: 0,
+            assurances: 0,
+          }),
+        } as any as ValidatorStatisticsCollection,
+        previous: {
+          elements: new Array(validators).fill({
+            blocks: 0,
+            tickets: 0,
+            preimageCount: 0,
+            preimageSize: 0,
+            guarantees: 0,
+            assurances: 0,
+          }),
+        } as any as ValidatorStatisticsCollection,
       },
       cores: <JamStatistics["cores"]>new Array(cores).fill({
         daLoad: <u32>0,

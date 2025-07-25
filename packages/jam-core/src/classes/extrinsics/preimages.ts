@@ -1,3 +1,4 @@
+import { EPError } from "@/validteEP";
 import {
   BaseJamCodecable,
   binaryCodec,
@@ -9,7 +10,12 @@ import {
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { EP_Extrinsic, EP_Tuple, ServiceIndex } from "@tsjam/types";
+import { Hashing } from "@tsjam/crypto";
+import { EP_Extrinsic, EP_Tuple, ServiceIndex, Validated } from "@tsjam/types";
+import { Result, err, ok } from "neverthrow";
+import { compareUint8Arrays } from "uint8array-extras";
+import { DeltaImpl } from "../DeltaImpl";
+import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
@@ -27,6 +33,47 @@ export class PreimagesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(PreimageElement, SINGLE_ELEMENT_CLASS)
   elements!: PreimageElement[];
+
+  checkValidity(deps: {
+    serviceAccounts: DeltaImpl;
+  }): Result<Validated<PreimagesExtrinsicImpl>, EPError> {
+    for (const { requester } of this.elements) {
+      if (requester < 0 || requester >= 2 ** 32) {
+        return err(EPError.VALIDATION_ERROR);
+      }
+    }
+
+    // $(0.7.0 - 12.39)
+    for (let i = 1; i < this.elements.length; i++) {
+      const prev = this.elements[i - 1];
+      if (prev.requester > this.elements[i].requester) {
+        return err(EPError.PREIMAGES_NOT_SORTED);
+      } else if (prev.requester === this.elements[i].requester) {
+        const comparisonResult = compareUint8Arrays(
+          prev.blob,
+          this.elements[i].blob,
+        );
+        if (comparisonResult !== -1) {
+          return err(EPError.PREIMAGES_NOT_SORTED);
+        }
+      }
+    }
+    // $(0.7.0 - 12.40) data must be solicited by a service but not yet provided
+    for (const { requester, blob } of this.elements) {
+      if (
+        !deps.serviceAccounts
+          .get(requester)!
+          .isPreimageSolicitedButNotYetProvided(
+            Hashing.blake2b(blob),
+            blob.length,
+          )
+      ) {
+        return err(EPError.PREIMAGE_PROVIDED_OR_UNSOLICITED);
+      }
+    }
+
+    return ok(toTagged(this));
+  }
 }
 
 if (import.meta.vitest) {

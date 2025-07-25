@@ -17,4 +17,8 @@ export class HeaderLookupHistoryImpl
       hash: HeaderHash;
     }
   >;
+
+  get(t: Tau) {
+    return this.elements.get(t);
+  }
 }

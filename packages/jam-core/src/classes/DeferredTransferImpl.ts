@@ -17,24 +17,43 @@ import {
   ServiceIndex,
 } from "@tsjam/types";
 
+/**
+ * `X` set in graypaper
+ * $(0.7.0 - 12.14)
+ */
 @JamCodecable()
 export class DeferredTransferImpl
   extends BaseJamCodecable
   implements DeferredTransfer
 {
+  /**
+   * `s`
+   */
   @eSubIntCodec(4)
   source!: ServiceIndex;
 
+  /**
+   * `d`
+   */
   @eSubIntCodec(4)
   destination!: ServiceIndex;
 
+  /**
+   * `a`
+   */
   @eSubBigIntCodec(8)
   amount!: Balance;
 
+  /**
+   * `m`
+   */
   @jsonCodec(BufferJSONCodec())
   @binaryCodec(fixedSizeIdentityCodec(TRANSFER_MEMO_SIZE))
   memo!: ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>;
 
+  /**
+   * `g`
+   */
   @eSubBigIntCodec(8)
   gas!: Gas;
 }

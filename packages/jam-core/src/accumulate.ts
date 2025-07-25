@@ -1,16 +1,11 @@
 import {
   CORES,
   EPOCH_LENGTH,
-  NUMBER_OF_VALIDATORS,
   TOTAL_GAS_ACCUMULATION_ALL_CORES,
   TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
-  AuthorizerQueue,
-  Dagger,
-  DeferredTransfer,
-  Delta,
   Gas,
   GasUsed,
   JamEntropy,
@@ -21,7 +16,6 @@ import {
   ServiceIndex,
   Tagged,
   Tau,
-  Validated,
   WorkPackageHash,
   WorkReport,
   u32,
@@ -39,11 +33,9 @@ import { AccumulationStatisticsImpl } from "./classes/AccumulationStatisticsImpl
 import { AuthorizerQueueImpl } from "./classes/AuthorizerQueueImpl";
 import { DeferredTransferImpl } from "./classes/DeferredTransferImpl";
 import { DeltaImpl } from "./classes/DeltaImpl";
-import { AssurancesExtrinsicImpl } from "./classes/extrinsics/assurances";
 import { PrivilegedServicesImpl } from "./classes/PrivilegedServicesImpl";
 import { PVMAccumulationOpImpl } from "./classes/PVMAccumulationOPImpl";
 import { PVMAccumulationStateImpl } from "./classes/PVMAccumulationStateImpl";
-import { RHOImpl } from "./classes/RHOImpl";
 import { ServiceOutsImpl } from "./classes/ServiceOutsImpl";
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
 import {
@@ -53,6 +45,7 @@ import {
   WorkReportImpl,
 } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
+import { DeferredTransfersImpl } from "./classes/DeferredTransfersImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -154,27 +147,6 @@ export const accumulateReports = (
     p_authQueue: toPosterior(postState.authQueue),
     accumulationStatistics,
   });
-};
-
-/**
- * `bold R`
- * $(0.7.0 - 11.16)
- * @param ea - Availability Extrinsic
- * @param d_rho - dagger rho
- */
-export const availableReports = (
-  ea: Validated<AssurancesExtrinsicImpl>,
-  d_rho: Dagger<RHOImpl>,
-): AvailableWorkReports => {
-  const W: WorkReportImpl[] = [];
-  for (let c = 0; c < CORES; c++) {
-    const sum = ea.nPositiveVotes(c);
-
-    if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
-      W.push(d_rho.elements[c]!.workReport);
-    }
-  }
-  return toTagged(W);
 };
 
 /**
@@ -323,7 +295,7 @@ export const outerAccumulation = (
 ): [
   nAccumulatedWork: number,
   accState: PVMAccumulationStateImpl,
-  transfers: DeferredTransferImpl[],
+  transfers: DeferredTransfersImpl,
   ServiceOutsImpl,
   GasUsed,
 ] => {
@@ -343,7 +315,7 @@ export const outerAccumulation = (
     return [
       0,
       accState,
-      [],
+      new DeferredTransfersImpl([]),
       new ServiceOutsImpl(new Set()),
       <GasUsed>{ elements: [] },
     ];
@@ -371,7 +343,7 @@ export const outerAccumulation = (
   return [
     i + j,
     finalAccState,
-    t_star.concat(t),
+    new DeferredTransfersImpl(t_star.concat(t.elements)),
     ServiceOutsImpl.union(b_star, b),
     <GasUsed>{ elements: u_star.elements.concat(u.elements) },
   ];

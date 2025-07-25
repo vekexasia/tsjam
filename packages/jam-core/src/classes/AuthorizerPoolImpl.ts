@@ -35,6 +35,10 @@ export class AuthorizerPoolImpl
   )
   elements!: SeqOfLength<UpToSeq<Hash, typeof AUTHPOOL_SIZE>, typeof CORES>;
 
+  elementAt(core: CoreIndex): UpToSeq<Hash, typeof AUTHPOOL_SIZE> {
+    return this.elements[core];
+  }
+
   // $(0.7.0 - 8.2 / 8.3)
   toPosterior(deps: {
     eg: GuaranteesExtrinsicImpl;

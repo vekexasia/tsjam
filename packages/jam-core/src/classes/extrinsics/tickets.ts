@@ -99,7 +99,7 @@ export class TicketsExtrinsicImpl
       }
       const sig = Bandersnatch.verifyVrfProof(
         extrinsic.proof,
-        deps.p_gamma_z,
+        deps.p_gamma_z.root,
         new Uint8Array([
           ...JAM_TICKET_SEAL,
           ...encodeWithCodec(HashCodec, deps.p_entropy._2),

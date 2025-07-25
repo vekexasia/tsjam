@@ -185,6 +185,23 @@ export class DisputeExtrinsicImpl
   @lengthDiscriminatedCodec(DisputeFaultImpl)
   faults!: Array<DisputeFaultImpl>;
 
+  /**
+   * computes bold_v as $(0.7.0 - 10.11 / 10.12)
+   */
+  verdictsVotes() {
+    const bold_v: Array<{ reportHash: Hash; votes: number }> =
+      this.verdicts.map((verdict) => {
+        return {
+          reportHash: verdict.target,
+          votes: verdict.judgements.reduce(
+            (acc, curr) => acc + (curr.vote ? 1 : 0),
+            0,
+          ),
+        };
+      });
+    return bold_v;
+  }
+
   static isValid(
     extrinsic: DisputeExtrinsicImpl,
     deps: {

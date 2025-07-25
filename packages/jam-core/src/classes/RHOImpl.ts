@@ -111,7 +111,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     },
   ): DoubleDagger<RHOImpl> {
     const newState = structuredClone(d_rho);
-    for (let c = 0; c < CORES; c++) {
+    for (let c = <CoreIndex>0; c < CORES; c++) {
       if (typeof d_rho.elements[c] === "undefined") {
         continue; // if no  workreport indagger then there is nothing to remove.
       }
@@ -145,7 +145,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     },
   ): Posterior<RHOImpl> {
     const newState = structuredClone(dd_rho);
-    for (let core = 0; core < CORES; core++) {
+    for (let core = <CoreIndex>0; core < CORES; core++) {
       const ext = deps.EG_Extrinsic.elementForCore(core);
       if (typeof ext !== "undefined") {
         // extrinsic replace the current entry (if any)

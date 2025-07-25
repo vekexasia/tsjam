@@ -114,7 +114,7 @@ export const verifySeal = (
  * @see $(0.7.0 - 6.17 - 6.18)
  */
 export const verifyEntropySignature = (
-  header: SignedJamHeader,
+  header: SignedJamHeaderImpl,
   state: Posterior<JamState>,
 ): boolean => {
   const ha = getBlockAuthorKey(header, toPosterior(state.kappa));
@@ -128,7 +128,10 @@ export const verifyEntropySignature = (
     new Uint8Array([]), // message - empty to not bias the entropy
     new Uint8Array([
       ...JAM_ENTROPY,
-      ...bigintToBytes(Bandersnatch.vrfOutputSignature(header.blockSeal), 32),
+      ...encodeWithCodec(
+        HashCodec,
+        Bandersnatch.vrfOutputSignature(header.blockSeal),
+      ),
     ]),
   );
 };

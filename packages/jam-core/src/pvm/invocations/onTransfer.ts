@@ -1,71 +1,57 @@
+import { DeferredTransfersImpl } from "@/classes/DeferredTransfersImpl";
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { InvokedTransferResultImpl } from "@/classes/InvokedTransferResultImpl";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { createCodec, E_int, encodeWithCodec } from "@tsjam/codec";
+import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import {
   Balance,
-  Dagger,
-  DeferredTransfer,
-  Delta,
   Gas,
-  Posterior,
   PVMProgramExecutionContext,
-  ServiceAccount,
   ServiceIndex,
   Tau,
   u32,
   u8,
 } from "@tsjam/types";
-import { argumentInvocation } from "./argument";
-import { FnsDb } from "@/functions/fnsdb";
+import assert from "node:assert";
+import { FnsDb } from "../functions/fnsdb";
 import {
   omega_g,
   omega_i,
   omega_l,
   omega_r,
   omega_w,
-} from "@/functions/general";
-import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
-import { applyMods } from "@/functions/utils";
-import assert from "node:assert";
+  omega_y,
+} from "../functions/general";
+import { applyMods } from "../functions/utils";
+import { IxMod } from "../instructions/utils";
+import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
-import { IxMod } from "@/instructions/utils";
-import {
-  createArrayLengthDiscriminator,
-  createCodec,
-  DeferredTransferCodec,
-  E_sub_int,
-  encodeWithCodec,
-} from "@tsjam/codec";
-import { toTagged } from "@tsjam/utils";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
-import { InvokedTransfersImpl } from "@/classes/InvokedTransfersImpl";
 
 const argumentInvocationTransferCodec = createCodec<{
   tau: Tau;
   serviceIndex: ServiceIndex;
-  transfers: DeferredTransfer[];
+  transfersLength: number;
 }>([
-  ["tau", E_sub_int<Tau>(4)],
-  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
-  [
-    "transfers",
-    createArrayLengthDiscriminator<DeferredTransfer[]>(DeferredTransferCodec),
-  ],
+  ["tau", E_int<Tau>()],
+  ["serviceIndex", E_int<ServiceIndex>()],
+  ["transfersLength", E_int()],
 ]);
 /**
  * $(0.6.5 - B.15)
  */
 export const transferInvocation = (
-  d: Delta,
+  d: DeltaImpl,
   t: Tau,
   s: ServiceIndex,
-  transfers: DeferredTransfer[],
-): [ServiceAccount, Gas] => {
+  transfers: DeferredTransfersImpl, // bold_t
+): InvokedTransferResultImpl => {
   let bold_s = <ServiceAccountImpl>d.get(s)!;
 
   assert(typeof bold_s !== "undefined", "Service not found in delta");
   bold_s = new ServiceAccountImpl({
     ...bold_s,
-    balance: <Balance>(
-      (bold_s.balance + transfers.reduce((acc, a) => acc + a.amount, 0n))
-    ),
+    balance: <Balance>(bold_s.balance + transfers.totalAmount()),
   });
   assert(bold_s.balance >= 0, "Balance cannot be negative");
 
@@ -73,39 +59,53 @@ export const transferInvocation = (
   if (
     typeof code === "undefined" ||
     code.length > SERVICECODE_MAX_SIZE ||
-    transfers.length === 0
+    transfers.length() === 0
   ) {
-    return [bold_s, <Gas>0n];
+    return new InvokedTransferResultImpl({ account: bold_s, gasUsed: <Gas>0n });
   }
 
   const out = argumentInvocation(
     code,
     10 as u32,
-    transfers.reduce((acc, a) => acc + a.gas, 0n) as Gas,
+    transfers.totalGasUsed(),
     encodeWithCodec(argumentInvocationTransferCodec, {
-      transfers,
       tau: t,
       serviceIndex: s,
+      transfersLength: transfers.elements.length,
     }),
     F_fn(d, s),
     bold_s,
   );
 
-  return [out.out, <Gas>0n];
+  return new InvokedTransferResultImpl({
+    account: out.out,
+    gasUsed: out.gasUsed,
+  });
 };
 
 /**
  * $(0.6.4 - B.16)
  */
-const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
-  (d: Delta, s: ServiceIndex) =>
+const F_fn: (
+  d: DeltaImpl,
+  s: ServiceIndex,
+) => HostCallExecutor<ServiceAccountImpl> =
+  (d: DeltaImpl, s: ServiceIndex) =>
   (input: {
     hostCallOpcode: u8;
     ctx: PVMProgramExecutionContext;
-    out: ServiceAccount;
+    out: ServiceAccountImpl;
   }) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
     switch (fnIdentifier) {
+      case "gas": {
+        return applyMods(input.ctx, input.out, omega_g(input.ctx));
+      }
+      case "fetch": {
+        // @ts-ignore FIXME:
+        return applyMods(input.ctx, input.out, omega_y(input.ctx));
+      }
+
       case "lookup": {
         return applyMods(
           input.ctx,
@@ -121,7 +121,7 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
         );
       }
       case "write": {
-        const m = applyMods<{ bold_s: ServiceAccount }>(
+        const m = applyMods<{ bold_s: ServiceAccountImpl }>(
           input.ctx,
           { bold_s: input.out },
           omega_w(input.ctx, input.out, s),
@@ -130,9 +130,6 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
           ctx: m.ctx,
           out: m.out.bold_s,
         };
-      }
-      case "gas": {
-        return applyMods(input.ctx, input.out, omega_g(input.ctx));
       }
       case "info": {
         const res = omega_i(input.ctx, s, d);
@@ -145,84 +142,3 @@ const F_fn: (d: Delta, s: ServiceIndex) => HostCallExecutor<ServiceAccount> =
         ]);
     }
   };
-
-/**
- * $(0.7.0 - 12.29) | X
- */
-export const filterTransfersByDestination = (
-  destination: ServiceIndex,
-  deps: {
-    /**
-     * `bold_t`
-     */
-    transfers: DeferredTransfer[];
-  },
-) => {
-  return deps.transfers
-    .slice()
-    .sort((a, b) => {
-      if (a.source === b.source) {
-        return a.destination - b.destination;
-      }
-      return a.source - b.source;
-    })
-    .filter((t) => t.destination === destination);
-};
-
-export type InvokedTransfers = Map<
-  ServiceIndex,
-  ReturnType<typeof transferInvocation>
->;
-
-/**
- * computes bold_x
- * $(0.7.0 - 12.30)
- */
-export const invokeOntransfers = (
-  d_delta: Dagger<Delta>,
-  p_tau: Posterior<Tau>,
-  deps: {
-    /**
-     * `bold_t`
-     */
-    transfers: DeferredTransfer[];
-  },
-) => {
-  const x: InvokedTransfers = new InvokedTransfersImpl({ elements: new Map() });
-
-  for (const [serviceIndex] of d_delta) {
-    x.set(
-      serviceIndex,
-      transferInvocation(
-        d_delta,
-        p_tau,
-        serviceIndex,
-        filterTransfersByDestination(serviceIndex, deps),
-      ),
-    );
-  }
-  return x;
-};
-/**
- * computes big bold X
- * $(0.7.0 - 12.33 / 12.34)
- */
-export const transferStatistics = (
-  bold_t: DeferredTransfer[],
-  bold_x: InvokedTransfers,
-): Map<ServiceIndex, { count: u32; gasUsed: Gas }> => {
-  const toRet = new Map<ServiceIndex, { count: u32; gasUsed: Gas }>();
-  for (const [destService, [, gasUsed /* u */]] of bold_x) {
-    const r = filterTransfersByDestination(destService, {
-      transfers: bold_t,
-    });
-    if (r.length > 0) {
-      toRet.set(destService, {
-        count: <u32>r.length,
-        // u
-        gasUsed,
-      });
-    }
-  }
-  return toRet;
-};

@@ -131,7 +131,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   }
 
   /**
-   * $(0.7.0 - 12.41)
+   * $(0.7.0 - 12.41) | Y()
    */
   isPreimageSolicitedButNotYetProvided(hash: Hash, length: number): boolean {
     return (

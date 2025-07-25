@@ -1,9 +1,9 @@
-import { Gas, InvokedTransfers, ServiceIndex } from "@tsjam/types";
+import { InvokedTransfers, ServiceIndex } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
-import { ServiceAccountImpl } from "./ServiceAccountImpl";
+import { InvokedTransferResultImpl } from "./InvokedTransferResultImpl";
 
 export class InvokedTransfersImpl implements InvokedTransfers {
-  elements!: Map<ServiceIndex, { account: ServiceAccountImpl; gasUsed: Gas }>;
+  elements!: Map<ServiceIndex, InvokedTransferResultImpl>;
   constructor(config: ConditionalExcept<InvokedTransfersImpl, Function>) {
     Object.assign(this, config);
   }
@@ -11,8 +11,9 @@ export class InvokedTransfersImpl implements InvokedTransfers {
   for(serviceIndex: ServiceIndex) {
     return this.elements.get(serviceIndex);
   }
-  set(service: ServiceIndex, t: { account: ServiceAccountImpl; gasUsed: Gas }) {
-    this.elements.set(service, t);
+
+  set(service: ServiceIndex, result: InvokedTransferResultImpl) {
+    this.elements.set(service, result);
     return this;
   }
 }

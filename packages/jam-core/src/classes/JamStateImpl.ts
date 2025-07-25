@@ -15,12 +15,13 @@ import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
 import { JamBlockImpl } from "./JamBlockImpl";
-import { isNewEra, toPosterior } from "@tsjam/utils";
+import { isNewEra, toDagger, toPosterior } from "@tsjam/utils";
 import { Bandersnatch } from "@tsjam/crypto";
 import { err } from "neverthrow";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { accumulateReports } from "@/accumulate";
-import { invokeOntransfers, transferStatistics } from "@/pvm";
+import { ValidatorDataImpl } from "./ValidatorDataImpl";
+import assert from "assert";
 
 export class JamStateImpl implements JamState {
   /**
@@ -96,6 +97,20 @@ export class JamStateImpl implements JamState {
    * NOTE: this is not included in gp but used as per type doc
    */
   headerLookupHistory!: HeaderLookupHistoryImpl;
+
+  /**
+   * `HA` in the graypaper
+   * @param header - the header of the blockj
+   * @param state - the state of the safrole state machine
+   *
+   * $(0.7.0 - 5.9)
+   *
+   */
+  blockAuthor(): ValidatorDataImpl {
+    const lookupResult = this.headerLookupHistory.get(this.tau)!;
+    assert(lookupResult, "Header lookup history should have the current tau");
+    return this.kappa.at(lookupResult.header.authorIndex);
+  }
 
   applyBlock(block: JamBlockImpl) {
     const p_tau = toPosterior(block.header.slot);
@@ -208,23 +223,68 @@ export class JamStateImpl implements JamState {
       iota: this.iota,
       p_eta_0: toPosterior(p_entropy._0),
     }).safeRet();
-    const invokedOnTransfers = invokeOntransfers(d_delta, p_tau, {
-      transfers: deferredTransfers,
-    });
+    const { invokedTransfers, stats: transferStatistics } =
+      deferredTransfers.invokeOnTransfer({
+        d_delta,
+        p_tau,
+      });
 
-    const tStats = transferStatistics(deferredTransfers, invokedOnTransfers);
-
-    const d_recentHistory = this.beta.recentHistory.toDagger(block.header);
+    const d_beta = this.beta.toDagger(block.header);
 
     const dd_delta = DeltaImpl.toDoubleDagger(d_delta, {
-      bold_x: invokedOnTransfers,
+      p_tau,
+      bold_x: invokedTransfers,
       accumulationStatistics,
+    });
+
+    const [epError, validatedEP] = block.extrinsics.preimages
+      .checkValidity({ serviceAccounts: this.serviceAccounts })
+      .safeRet();
+
+    if (epError) {
+      return err(epError);
+    }
+
+    const p_delta = DeltaImpl.toPosterior(dd_delta, {
+      p_tau,
+      ep: validatedEP,
     });
 
     const dd_rho = RHOImpl.toDoubleDagger(d_rho, {
       p_tau,
-      availableReports,
+      availableReports: bold_R,
       rho: this.rho,
     });
+
+    const [egError, validatedEG] = block.extrinsics.reportGuarantees
+      .checkValidity(this, {
+        dd_rho,
+        d_recentHistory: toDagger(d_beta.recentHistory),
+        p_entropy,
+        p_kappa,
+        p_lambda,
+        p_disputes,
+        p_tau,
+      })
+      .safeRet();
+    if (typeof egError !== "undefined") {
+      return err(egError);
+    }
+
+    const p_rho = RHOImpl.toPosterior(dd_rho, {
+      p_tau,
+      EG_Extrinsic: validatedEG,
+      kappa: this.kappa,
+    });
+
+    const headerHash = block.header.signedHash();
+
+    const p_beta = BetaImpl.toPosterior(d_beta, {
+      headerHash,
+      eg: validatedEG,
+      p_theta,
+    });
   }
+
+  static createNewBlock() {}
 }

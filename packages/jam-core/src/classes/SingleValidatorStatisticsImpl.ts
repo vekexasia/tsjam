@@ -1,5 +1,6 @@
 import { BaseJamCodecable, eSubIntCodec } from "@tsjam/codec";
 import { SingleValidatorStatistics, u32 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 export class SingleValidatorStatisticsImpl
   extends BaseJamCodecable
@@ -35,4 +36,11 @@ export class SingleValidatorStatisticsImpl
    */
   @eSubIntCodec(4)
   assurances!: u32;
+
+  constructor(
+    config: ConditionalExcept<SingleValidatorStatisticsImpl, Function>,
+  ) {
+    super();
+    Object.assign(this, config);
+  }
 }

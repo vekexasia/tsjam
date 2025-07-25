@@ -9,6 +9,7 @@ import {
   createSequenceCodec,
   Ed25519PubkeyCodec,
   Ed25519PublicKeyJSONCodec,
+  encodeWithCodec,
   eSubIntCodec,
   hashCodec,
   JamCodecable,
@@ -33,6 +34,7 @@ import {
   ValidatorIndex,
 } from "@tsjam/types";
 import { TicketImpl } from "./TicketImpl";
+import { Hashing } from "@tsjam/crypto";
 
 @JamCodecable()
 export class EpochMarkerImpl extends BaseJamCodecable implements EpochMarker {
@@ -137,6 +139,10 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    */
   @bandersnatchSignatureCodec("entropy_source")
   entropySource!: BandersnatchSignature;
+
+  unsignedHash(): HeaderHash {
+    return Hashing.blake2b(encodeWithCodec(JamHeaderImpl, this));
+  }
 }
 
 @JamCodecable()
@@ -146,6 +152,10 @@ export class JamSignedHeaderImpl
 {
   @bandersnatchSignatureCodec()
   seal!: BandersnatchSignature;
+
+  signedHash(): HeaderHash {
+    return Hashing.blake2b(this.toBinary());
+  }
 }
 
 if (import.meta.vitest) {

@@ -17,7 +17,6 @@ import {
 import { err, ok, Result } from "neverthrow";
 import { JamStateImpl } from "./JamStateImpl";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import { verdictsVotes } from "@/transitions";
 import {
   JAM_GUARANTEE,
   JAM_VALID,
@@ -235,7 +234,7 @@ export class DisputesStateImpl
     }
 
     // ensure that judgements are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
-    const bold_v = verdictsVotes(deps.extrinsic.verdicts);
+    const bold_v = deps.extrinsic.verdictsVotes();
     if (
       false ===
       bold_v.every((v) => {

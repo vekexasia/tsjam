@@ -57,4 +57,8 @@ export class RecentHistoryItemImpl
     super();
     Object.assign(this, config);
   }
+
+  packageHashes(): Set<WorkPackageHash> {
+    return new Set(this.reportedPackages.keys());
+  }
 }

@@ -2,7 +2,7 @@ import { Posterior, Tagged, Tau } from "@tsjam/types";
 import { DisputesStateImpl } from "./DisputesStateImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
-import { isNewEra, toPosterior } from "@tsjam/utils";
+import { isNewEra, toPosterior, toTagged } from "@tsjam/utils";
 import { PHI_FN } from "@/utils";
 
 export class GammaPImpl extends ValidatorsImpl {
@@ -23,6 +23,6 @@ export class GammaPImpl extends ValidatorsImpl {
         ),
       );
     }
-    return toPosterior(this);
+    return toPosterior(toTagged(this));
   }
 }

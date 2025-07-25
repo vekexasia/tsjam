@@ -1,14 +1,10 @@
 import {
-  BandersnatchKey,
   Dagger,
   DoubleDagger,
   ExportingWorkPackageHash,
   Hash,
-  JamHeader,
-  JamState,
   Posterior,
   Tagged,
-  ValidatorData,
 } from "@tsjam/types";
 /**
  * simple utility function to go from untagged to tagged
@@ -40,23 +36,6 @@ export const toPosterior = <T>(
   value: Dagger<T> | DoubleDagger<T> | T,
 ): Posterior<T> => {
   return value as Posterior<T>;
-};
-
-/**
- * `HA` in the graypaper
- * @param header - the header of the blockj
- * @param state - the state of the safrole state machine
- *
- * @returns undefined in case blockAuthorKeyIndex is invalid and not within
- * $(0.7.0 - 5.9)
- */
-
-export const getBlockAuthorKey = (
-  header: JamHeader,
-  p_kappa: Posterior<JamState["kappa"]>,
-): BandersnatchKey | undefined => {
-  const k: ValidatorData | undefined = p_kappa.elements[header.authorIndex];
-  return k?.banderSnatch;
 };
 
 /**

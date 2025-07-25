@@ -11,11 +11,15 @@ export type ValidatorStatistics = {
   /**
    * `πV`
    */
-  accumulator: SingleValidatorStatistics;
+  accumulator: ValidatorStatisticsCollection;
   /**
    * `πL`
    */
-  previous: SingleValidatorStatistics;
+  previous: ValidatorStatisticsCollection;
+};
+
+export type ValidatorStatisticsCollection = {
+  elements: SeqOfLength<SingleValidatorStatistics, typeof NUMBER_OF_VALIDATORS>;
 };
 
 /**

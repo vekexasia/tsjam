@@ -451,9 +451,3 @@ export const importBlock: STF<
 
   return ok(toPosterior({ block, state: p_state }));
 };
-
-export const computeHeaderHash = (header: SignedJamHeader) => {
-  return Hashing.blake2b<HeaderHash>(
-    encodeWithCodec(SignedHeaderCodec(), header),
-  );
-};

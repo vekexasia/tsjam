@@ -8,7 +8,6 @@ import {
   createArrayLengthDiscriminator,
   E,
   E_int,
-  encodeWithCodec,
   HashCodec,
   hashCodec,
   HashJSONCodec,
@@ -128,7 +127,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
 
     const wSet = new Set(bold_w.map((wr) => wr.hash()));
 
-    for (let c = 0; c < CORES; c++) {
+    for (let c = <CoreIndex>0; c < CORES; c++) {
       const rc = rho.elementAt(c);
       if (rc && wSet.has(rc.workReport.hash())) {
         toRet.push(rc.workReport);

@@ -1,7 +1,5 @@
-import { regFn } from "@/functions/fnsdb.js";
-import { W7, W8 } from "@/functions/utils.js";
-import { IxMod } from "@/instructions/utils.js";
-import { toSafeMemoryAddress } from "@/pvmMemory";
+import { DeferredTransfersImpl } from "@/classes/DeferredTransfersImpl";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import {
   Blake2bHashCodec,
   CodeHashCodec,
@@ -12,7 +10,6 @@ import {
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
 import { HostCallResult } from "@tsjam/constants";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
   Balance,
   Blake2bHash,
@@ -32,6 +29,11 @@ import {
   WorkPackageWithAuth,
 } from "@tsjam/types";
 import assert from "node:assert";
+import { IxMod } from "../instructions/utils";
+import { toSafeMemoryAddress } from "../pvmMemory";
+import { regFn } from "./fnsdb";
+import { W7, W8 } from "./utils";
+import { DeltaImpl } from "@/classes/DeltaImpl";
 
 /**
  * `ΩG`
@@ -54,16 +56,14 @@ export const omega_g = regFn<[], W7 | W8>({
  */
 export const omega_y = regFn<
   [
-    workItemIndex: number, // i
     workPackage: WorkPackageWithAuth, // p
     n: Hash,
-    r: any,
+    bold_r: any,
     i: any,
     overline_i: ExportSegment[][], // overline_i
     overline_x: any,
     bold_o: any,
-    bold_t: any,
-    any,
+    bold_t: DeferredTransfersImpl,
   ],
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
@@ -137,15 +137,20 @@ export const omega_y = regFn<
  * `ΩL`
  */
 export const omega_l = regFn<
-  [Xs: ServiceAccount, s: ServiceIndex, delta: Delta],
+  [Xs: ServiceAccountImpl, s: ServiceIndex, delta: DeltaImpl],
   PVMExitPanicMod | W7 | PVMSingleModMemory
 >({
   fn: {
     opCode: 2 as u8,
     identifier: "lookup",
     gasCost: 10n as Gas,
-    execute(context, bold_s: ServiceAccount, s: ServiceIndex, d: Delta) {
-      let a: ServiceAccount | undefined;
+    execute(
+      context,
+      bold_s: ServiceAccountImpl,
+      s: ServiceIndex,
+      d: DeltaImpl,
+    ) {
+      let a: ServiceAccountImpl | undefined;
       const w7 = context.registers[7];
       if (Number(w7) === s || w7 === 2n ** 64n - 1n) {
         a = bold_s;
@@ -241,14 +246,14 @@ export const omega_r = regFn<
  * `ΩW`
  */
 export const omega_w = regFn<
-  [bold_s: ServiceAccount, s: ServiceIndex],
-  PVMExitPanicMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccount }>
+  [bold_s: ServiceAccountImpl, s: ServiceIndex],
+  PVMExitPanicMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
 >({
   fn: {
     opCode: 4 as u8,
     identifier: "write",
     gasCost: 10n as Gas,
-    execute(context, bold_s: ServiceAccount, s: ServiceIndex) {
+    execute(context, bold_s: ServiceAccountImpl, s: ServiceIndex) {
       const [k0, kz, v0, vz] = context.registers.slice(7);
       let k: Uint8Array;
       if (!context.memory.canRead(toSafeMemoryAddress(k0), Number(kz))) {
@@ -329,16 +334,16 @@ const serviceAccountCodec = createCodec<
  * `ΩI`
  */
 export const omega_i = regFn<
-  [s: ServiceIndex, d: Delta],
+  [s: ServiceIndex, d: DeltaImpl],
   W7 | PVMSingleModMemory | PVMExitPanicMod
 >({
   fn: {
     opCode: 4 as u8,
     identifier: "info",
     gasCost: 10n as Gas,
-    execute(context, s: ServiceIndex, d: Delta) {
+    execute(context, s: ServiceIndex, d: DeltaImpl) {
       const w7 = context.registers[7];
-      let bold_a: ServiceAccount | undefined;
+      let bold_a: ServiceAccountImpl | undefined;
       if (w7 === 2n ** 64n - 1n) {
         bold_a = d.get(s);
       } else {
