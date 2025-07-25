@@ -1,4 +1,9 @@
+import { accumulateReports } from "@/accumulate";
+import { Bandersnatch } from "@tsjam/crypto";
 import { JamState, Tagged, Tau } from "@tsjam/types";
+import { isNewEra, toDagger, toPosterior } from "@tsjam/utils";
+import assert from "assert";
+import { err } from "neverthrow";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { AccumulationQueueImpl } from "./AccumulationQueueImpl";
 import { AuthorizerPoolImpl } from "./AuthorizerPoolImpl";
@@ -6,22 +11,17 @@ import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { BetaImpl } from "./BetaImpl";
 import { DeltaImpl } from "./DeltaImpl";
 import { DisputesStateImpl } from "./DisputesStateImpl";
+import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { HeaderLookupHistoryImpl } from "./HeaderLookupHistoryImpl";
+import { JamBlockImpl } from "./JamBlockImpl";
 import { JamEntropyImpl } from "./JamEntropyImpl";
 import { JamStatisticsImpl } from "./JamStatisticsImpl";
 import { LastAccOutsImpl } from "./LastAccOutsImpl";
 import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
-import { ValidatorsImpl } from "./ValidatorsImpl";
-import { JamBlockImpl } from "./JamBlockImpl";
-import { isNewEra, toDagger, toPosterior } from "@tsjam/utils";
-import { Bandersnatch } from "@tsjam/crypto";
-import { err } from "neverthrow";
-import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { accumulateReports } from "@/accumulate";
 import { ValidatorDataImpl } from "./ValidatorDataImpl";
-import assert from "assert";
+import { ValidatorsImpl } from "./ValidatorsImpl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -109,7 +109,7 @@ export class JamStateImpl implements JamState {
   blockAuthor(): ValidatorDataImpl {
     const lookupResult = this.headerLookupHistory.get(this.tau)!;
     assert(lookupResult, "Header lookup history should have the current tau");
-    return this.kappa.at(lookupResult.header.authorIndex);
+    return this.kappa.at(lookupResult.authorIndex);
   }
 
   applyBlock(block: JamBlockImpl) {
@@ -282,7 +282,33 @@ export class JamStateImpl implements JamState {
     const p_beta = BetaImpl.toPosterior(d_beta, {
       headerHash,
       eg: validatedEG,
-      p_theta,
+      p_theta: p_mostRecentAccumulationOutputs,
+    });
+
+    const p_statistics = this.statistics.toPosterior({
+      transferStatistics,
+      accumulationStatistics,
+      p_kappa,
+      p_entropy,
+      p_disputes,
+      p_tau,
+      p_lambda,
+      authorIndex: block.header.authorIndex,
+      tau: this.tau,
+      ea: block.extrinsics.assurances,
+      ep: validatedEP,
+      extrinsics: block.extrinsics,
+      d_rho,
+    });
+
+    const p_authPool = this.authPool.toPosterior({
+      p_tau,
+      eg: validatedEG,
+      p_queue: p_authQueue,
+    });
+
+    const p_headerLookupHistory = this.headerLookupHistory.toPosterior({
+      header: block.header,
     });
   }
 

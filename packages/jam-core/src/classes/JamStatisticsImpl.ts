@@ -1,25 +1,30 @@
+import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import {
-  BaseJamCodecable,
-  binaryCodec,
-  buildGenericKeyValueCodec,
-  codec,
-  E_int,
-  JamCodecable,
-  jsonCodec,
-  MapJSONCodec,
-  NumberJSONCodec,
-  sequenceCodec,
-} from "@tsjam/codec";
-import { CORES } from "@tsjam/constants";
-import {
+  Dagger,
+  Gas,
   JamStatistics,
-  SeqOfLength,
+  Posterior,
   ServiceIndex,
-  SingleServiceStatistics,
+  Tagged,
+  Tau,
+  u32,
+  Validated,
 } from "@tsjam/types";
-import { SingleCoreStatisticsImpl } from "./SingleCoreStatisticsImpl";
+import { CoreStatisticsImpl } from "./CoreStatisticsImpl";
+import { ServicesStatisticsImpl } from "./ServicesStatisticsImpl";
 import { ValidatorStatisticsImpl } from "./ValidatorStatisticsImpl";
-import { SingleServiceStatisticsImpl } from "./SingleServiceStatisticsImpl";
+import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import { RHOImpl } from "./RHOImpl";
+import { WorkReportImpl, AvailableWorkReports } from "./WorkReportImpl";
+import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
+import { DisputesStateImpl } from "./DisputesStateImpl";
+import { JamEntropyImpl } from "./JamEntropyImpl";
+import { JamStateImpl } from "./JamStateImpl";
+import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
+import { toPosterior } from "@tsjam/utils";
+import { JamHeaderImpl } from "./JamHeaderImpl";
 
 @JamCodecable()
 export class JamStatisticsImpl
@@ -32,26 +37,61 @@ export class JamStatisticsImpl
   /**
    * `πC`
    */
-  @sequenceCodec(CORES, SingleCoreStatisticsImpl)
-  cores!: SeqOfLength<SingleCoreStatisticsImpl, typeof CORES>;
+  @codec(CoreStatisticsImpl)
+  cores!: CoreStatisticsImpl;
 
   /**
    * `πS`
    */
+  @codec(ServicesStatisticsImpl)
+  services!: ServicesStatisticsImpl;
 
-  @jsonCodec(
-    MapJSONCodec(
-      { key: "id", value: "record" },
-      NumberJSONCodec(),
-      SingleServiceStatisticsImpl,
-    ),
-  )
-  @binaryCodec(
-    buildGenericKeyValueCodec(
-      E_int(),
-      SingleServiceStatisticsImpl,
-      (a, b) => a - b,
-    ),
-  )
-  services!: Map<ServiceIndex, SingleServiceStatisticsImpl>;
+  toPosterior(deps: {
+    tau: Tau;
+    p_tau: Posterior<Tau>;
+    extrinsics: JamBlockExtrinsicsImpl;
+    ea: Validated<AssurancesExtrinsicImpl>;
+    ep: Validated<PreimagesExtrinsicImpl>;
+    d_rho: Dagger<RHOImpl>;
+    p_disputes: Posterior<DisputesStateImpl>;
+    authorIndex: JamHeaderImpl["authorIndex"];
+    p_entropy: Posterior<JamEntropyImpl>;
+    p_kappa: Posterior<JamStateImpl["kappa"]>;
+    p_lambda: Posterior<JamStateImpl["lambda"]>;
+    accumulationStatistics: AccumulationStatisticsImpl;
+    transferStatistics: Map<ServiceIndex, { gasUsed: Gas; count: u32 }>;
+  }): Posterior<JamStatistics> {
+    const bold_I = deps.extrinsics.reportGuarantees.workReports();
+    const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
+      deps.ea,
+      deps.d_rho,
+    );
+    const toRet = new JamStatisticsImpl();
+    toRet.validators = this.validators.toPosterior({
+      tau: deps.tau,
+      p_tau: deps.p_tau,
+      extrinsics: deps.extrinsics,
+      p_disputes: deps.p_disputes,
+      authorIndex: deps.authorIndex,
+      p_entropy: deps.p_entropy,
+      p_kappa: deps.p_kappa,
+      p_lambda: deps.p_lambda,
+    });
+
+    toRet.cores = this.cores.toPosterior({
+      ea: deps.ea,
+      d_rho: deps.d_rho,
+      bold_I,
+      bold_R,
+    });
+
+    toRet.services = this.services.toPosterior({
+      ep: deps.ep,
+      guaranteedReports: bold_I,
+      accumulationStatistics: deps.accumulationStatistics,
+      transferStatistics: deps.transferStatistics,
+    });
+
+    return toPosterior(toRet);
+  }
 }

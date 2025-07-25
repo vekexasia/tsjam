@@ -1,16 +1,11 @@
 import {
-  ArrayOfJSONCodec,
   BaseJamCodecable,
-  createSequenceCodec,
   eBigIntCodec,
   eIntCodec,
-  JamCodec,
   JamCodecable,
-  JSONCodec,
-  sequenceCodec,
 } from "@tsjam/codec";
-import { CORES } from "@tsjam/constants";
 import { Gas, SingleCoreStatistics, u16, u32 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleCoreStatisticsImpl
@@ -75,11 +70,8 @@ export class SingleCoreStatisticsImpl
   @eBigIntCodec()
   gasUsed!: Gas;
 
-  static coreSequenceCodec: JSONCodec<SingleCoreStatisticsImpl[]> &
-    JamCodec<SingleCoreStatisticsImpl[]>;
+  constructor(config: ConditionalExcept<SingleCoreStatisticsImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 }
-
-SingleCoreStatisticsImpl.coreSequenceCodec = {
-  ...createSequenceCodec<any>(CORES, SingleCoreStatisticsImpl),
-  ...ArrayOfJSONCodec<any, any, any>(SingleCoreStatisticsImpl),
-};

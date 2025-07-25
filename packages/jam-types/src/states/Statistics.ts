@@ -11,14 +11,21 @@ export type JamStatistics = {
   /**
    * `πC`
    */
-  cores: SeqOfLength<SingleCoreStatistics, typeof CORES>;
+  cores: CoreStatistics;
 
   /**
    * `πS`
    */
-  services: Map<ServiceIndex, SingleServiceStatistics>;
+  services: ServicesStatistics;
 };
 
+export type CoreStatistics = {
+  elements: SeqOfLength<SingleCoreStatistics, typeof CORES>;
+};
+
+export type ServicesStatistics = {
+  elements: Map<ServiceIndex, SingleServiceStatistics>;
+};
 /**
  * $(0.7.0 - 13.6)
  */

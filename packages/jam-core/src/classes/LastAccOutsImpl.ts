@@ -7,6 +7,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { Hash, LastAccOuts, ServiceIndex } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleAccOutImpl extends BaseJamCodecable {
@@ -14,9 +15,16 @@ export class SingleAccOutImpl extends BaseJamCodecable {
   serviceIndex!: ServiceIndex;
   @hashCodec()
   accumulationResult!: Hash;
+
+  constructor(config: ConditionalExcept<SingleAccOutImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 }
 /**
  * `θ` - `\lastaccout`
+ * Also implements `\servouts` or `B` defined in
+ * $(0.7.0 - 12.15)
  * $(0.7.0 - 7.4)
  *
  * Codec is C(16) in $(0.7.0 - D.2)
@@ -25,4 +33,22 @@ export class SingleAccOutImpl extends BaseJamCodecable {
 export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
   @lengthDiscriminatedCodec(SingleAccOutImpl, SINGLE_ELEMENT_CLASS)
   elements!: Array<SingleAccOutImpl>;
+
+  constructor(elements: Array<SingleAccOutImpl>) {
+    super();
+    this.elements = elements;
+  }
+
+  add(serviceIndex: ServiceIndex, accumulationResult: Hash): void {
+    this.elements.push(
+      new SingleAccOutImpl({ serviceIndex, accumulationResult }),
+    );
+  }
+
+  static union(a: LastAccOutsImpl, b: LastAccOutsImpl): LastAccOutsImpl {
+    // TODO: no checks are performed on duplicated elements despite using Set
+    return new LastAccOutsImpl([
+      ...new Set([...a.elements, ...b.elements]).values(),
+    ]);
+  }
 }

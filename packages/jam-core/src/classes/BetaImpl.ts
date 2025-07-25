@@ -1,7 +1,7 @@
+import { appendMMR, wellBalancedBinaryMerkleRoot } from "@/merklization";
 import {
   BaseJamCodecable,
   codec,
-  encodeWithCodec,
   HashCodec,
   HashJSONCodec,
   JamCodec,
@@ -10,31 +10,14 @@ import {
   NULLORCodec,
   Optional,
 } from "@tsjam/codec";
-import {
-  Beta,
-  Dagger,
-  Hash,
-  HeaderHash,
-  Posterior,
-  RecentHistory,
-  StateRootHash,
-  Validated,
-} from "@tsjam/types";
+import { Hashing } from "@tsjam/crypto";
+import { Beta, Dagger, Hash, HeaderHash, Validated } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { JamHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { RecentHistoryImpl } from "./RecentHistoryImpl";
-import {
-  appendMMR,
-  MMRSuperPeak,
-  wellBalancedBinaryMerkleRoot,
-} from "@/merklization";
-import { Hashing } from "@tsjam/crypto";
-import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
-import { ok } from "assert";
-import { RecentHistoryItemImpl } from "./RecentHistoryItemImpl";
 
 @JamCodecable()
 export class BetaImpl extends BaseJamCodecable implements Beta {

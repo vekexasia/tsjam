@@ -371,7 +371,6 @@ export const importBlock: STF<
     },
     curState.statistics.services,
   ).safeRet();
-
   const [, p_authorizerPool] = authorizerPool_toPosterior(
     {
       p_queue: p_authQueue,
@@ -389,6 +388,7 @@ export const importBlock: STF<
     curState.headerLookupHistory,
   ).safeRet();
 
+  // TODO: ---
   const p_state = toPosterior({
     entropy: p_entropy,
     tau: tauTransition.p_tau,

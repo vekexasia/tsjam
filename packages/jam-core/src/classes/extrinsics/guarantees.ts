@@ -40,6 +40,7 @@ import {
   Posterior,
   SingleWorkReportGuarantee,
   SingleWorkReportGuaranteeSignature,
+  Tagged,
   Tau,
   u32,
   UpToSeq,
@@ -231,8 +232,8 @@ export class GuaranteesExtrinsicImpl
    * which contains a list of all work reports included in the extrinsic
    * $(0.7.0 - 11.28)
    */
-  workReports() {
-    return this.elements.map((el) => el.report);
+  workReports(): Tagged<WorkReportImpl[], "bold I"> {
+    return toTagged(this.elements.map((el) => el.report));
   }
 
   /**

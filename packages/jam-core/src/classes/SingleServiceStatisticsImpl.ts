@@ -16,6 +16,7 @@ import {
   u16,
   u32,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 export class SingleServiceStatisticsImpl
   extends BaseJamCodecable
@@ -77,19 +78,10 @@ export class SingleServiceStatisticsImpl
   @eSubBigIntCodec(8)
   transfersGasUsed!: Gas;
 
-  static mapCodec: JamCodec<Map<ServiceIndex, SingleServiceStatisticsImpl>> &
-    JSONCodec<Map<ServiceIndex, SingleServiceStatisticsImpl>>;
+  constructor(
+    config: ConditionalExcept<SingleServiceStatisticsImpl, Function>,
+  ) {
+    super();
+    Object.assign(this, config);
+  }
 }
-
-SingleServiceStatisticsImpl.mapCodec = {
-  ...buildGenericKeyValueCodec(
-    E_sub_int<ServiceIndex>(4),
-    SingleServiceStatisticsImpl,
-    (a, b) => a - b,
-  ),
-  ...MapJSONCodec(
-    { key: "id", value: "record" },
-    NumberJSONCodec(),
-    <JSONCodec<SingleServiceStatisticsImpl>>SingleServiceStatisticsImpl,
-  ),
-};

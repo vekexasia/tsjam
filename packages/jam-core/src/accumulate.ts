@@ -36,7 +36,6 @@ import { DeltaImpl } from "./classes/DeltaImpl";
 import { PrivilegedServicesImpl } from "./classes/PrivilegedServicesImpl";
 import { PVMAccumulationOpImpl } from "./classes/PVMAccumulationOPImpl";
 import { PVMAccumulationStateImpl } from "./classes/PVMAccumulationStateImpl";
-import { ServiceOutsImpl } from "./classes/ServiceOutsImpl";
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
 import {
   AccumulatableWorkReports,
@@ -46,6 +45,7 @@ import {
 } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
 import { DeferredTransfersImpl } from "./classes/DeferredTransfersImpl";
+import { LastAccOutsImpl } from "./classes/LastAccOutsImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -296,7 +296,7 @@ export const outerAccumulation = (
   nAccumulatedWork: number,
   accState: PVMAccumulationStateImpl,
   transfers: DeferredTransfersImpl,
-  ServiceOutsImpl,
+  LastAccOutsImpl,
   GasUsed,
 ] => {
   let sum = 0n;
@@ -316,7 +316,7 @@ export const outerAccumulation = (
       0,
       accState,
       new DeferredTransfersImpl([]),
-      new ServiceOutsImpl(new Set()),
+      new LastAccOutsImpl([]),
       <GasUsed>{ elements: [] },
     ];
   }
@@ -344,7 +344,7 @@ export const outerAccumulation = (
     i + j,
     finalAccState,
     new DeferredTransfersImpl(t_star.concat(t.elements)),
-    ServiceOutsImpl.union(b_star, b),
+    LastAccOutsImpl.union(b_star, b),
     <GasUsed>{ elements: u_star.elements.concat(u.elements) },
   ];
 };
@@ -366,7 +366,7 @@ export const parallelizedAccumulation = (
 ): [
   accState: PVMAccumulationStateImpl,
   transfers: DeferredTransferImpl[],
-  b: ServiceOutsImpl,
+  b: LastAccOutsImpl,
   u: GasUsed,
 ] => {
   const bold_s = [
@@ -381,7 +381,7 @@ export const parallelizedAccumulation = (
     ReturnType<typeof singleServiceAccumulation>
   > = [];
   const t: DeferredTransferImpl[] = [];
-  const b = new ServiceOutsImpl(new Set());
+  const b = new LastAccOutsImpl([]);
 
   bold_s.forEach((s) => {
     const acc = singleServiceAccumulation(accState, works, f, s, deps);

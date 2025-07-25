@@ -16,6 +16,7 @@ import {
   SeqOfLength,
   Tau,
   UpToSeq,
+  Validated,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
@@ -41,7 +42,7 @@ export class AuthorizerPoolImpl
 
   // $(0.7.0 - 8.2 / 8.3)
   toPosterior(deps: {
-    eg: GuaranteesExtrinsicImpl;
+    eg: Validated<GuaranteesExtrinsicImpl>;
     p_queue: Posterior<AuthorizerQueueImpl>;
     p_tau: Posterior<Tau>;
   }): Posterior<AuthorizerPoolImpl> {
