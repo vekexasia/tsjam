@@ -20,7 +20,7 @@ import {
 
 /**
  * Priv services impl
- * Codec is following the C(12) in $(0.7.0 - D.2)
+ * Codec is following the C(12) in $(0.7.1 - D.2)
  */
 @JamCodecable()
 export class PrivilegedServicesImpl
@@ -40,11 +40,14 @@ export class PrivilegedServicesImpl
   @eSubIntCodec(4)
   assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
   /**
-   * `v`
+   * `V`
    * service which can alter ι
    */
   @eSubIntCodec(4)
   delegator!: ServiceIndex;
+
+  @eSubIntCodec(4)
+  registrar!: ServiceIndex;
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits

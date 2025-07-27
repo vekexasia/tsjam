@@ -1,22 +1,19 @@
-import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
-import { WorkContext } from "@/sets/WorkContext";
 import {
   Blake2bHash,
   BoundedSeq,
   CoreIndex,
   Gas,
   Hash,
-  SeqOfLength,
-  Tagged,
   WorkPackageHash,
 } from "@/genericTypes";
+import { AvailabilitySpecification } from "@/sets/AvailabilitySpecification";
+import { WorkContext } from "@/sets/WorkContext";
 import { WorkDigest } from "@/sets/WorkDigest";
-import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
-import { AccumulationQueue } from "..";
+import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
 
 /**
  * Identified by `R` set
- * @see $(0.7.0 - 11.2)
+ * @see $(0.7.1 - 11.2)
  */
 export type WorkReport = {
   /**

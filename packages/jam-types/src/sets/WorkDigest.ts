@@ -3,7 +3,7 @@ import { WorkOutput } from "@/sets/WorkOutput";
 
 /**
  * Identified by `D` set
- * $(0.7.0 - 11.6)
+ * $(0.7.1 - 11.6)
  */
 export type WorkDigest = {
   /**

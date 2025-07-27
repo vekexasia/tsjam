@@ -78,14 +78,14 @@ export class SingleWorkReportGuaranteeSignatureImpl
     messageToSign: Uint8Array;
     reportCore: CoreIndex;
   }): Result<Validated<SingleWorkReportGuaranteeSignatureImpl>, EGError> {
-    // $(0.7.0 - 11.23) | should be Nv
+    // $(0.7.1 - 11.23) | should be Nv
     if (
       this.validatorIndex < 0 ||
       this.validatorIndex >= NUMBER_OF_VALIDATORS
     ) {
       return err(EGError.VALIDATOR_INDEX_MUST_BE_IN_BOUNDS);
     }
-    // $(0.7.0 - 11.26)
+    // $(0.7.1 - 11.26)
     const isValid = Ed25519.verifySignature(
       this.signature,
       deps.guarantorAssignment.validatorsED22519Key[this.validatorIndex],
@@ -94,9 +94,11 @@ export class SingleWorkReportGuaranteeSignatureImpl
     if (!isValid) {
       return err(EGError.SIGNATURE_INVALID);
     }
+
+    // c_v = r_c
     if (
-      deps.reportCore !==
-      deps.guarantorAssignment.validatorsAssignedCore[this.validatorIndex]
+      deps.guarantorAssignment.validatorsAssignedCore[this.validatorIndex] !==
+      deps.reportCore
     ) {
       // validator was not assigned to the core in workreport
       return err(EGError.CORE_INDEX_MISMATCH);
@@ -134,19 +136,19 @@ export class SingleWorkReportGuaranteeImpl
   signatures!: BoundedSeq<SingleWorkReportGuaranteeSignatureImpl, 2, 3>;
 
   totalSize(): number {
-    // $(0.7.0 - 11.8)
+    // $(0.7.1 - 11.8)
     return (
       this.report.authTrace.length +
       this.report.digests
         .map((r) => r.result)
-        .filter((ro) => ro instanceof Uint8Array)
-        .map((ro) => ro.length)
+        .filter((ro) => ro.isSuccess()) // check if binary in graypaper
+        .map((ro) => ro.success!.length)
         .reduce((a, b) => a + b, 0)
     );
   }
 
   messageToSign(): Uint8Array {
-    // $(0.7.0 - 11.26)
+    // $(0.7.1 - 11.26)
     return new Uint8Array([
       ...JAM_GUARANTEE,
       ...encodeWithCodec(HashCodec, this.report.hash()),
@@ -158,7 +160,7 @@ export class SingleWorkReportGuaranteeImpl
     M: GuarantorsAssignment;
     p_tau: Posterior<Tau>;
   }): Result<Validated<SingleWorkReportGuaranteeImpl>, EGError> {
-    // $(0.7.0 - 11.3) | Check the number of dependencies in the workreports
+    // $(0.7.1 - 11.3) | Check the number of dependencies in the workreports
     if (
       this.report.srLookup.size + this.report.context.prerequisites.length >
       MAX_WORK_PREREQUISITES
@@ -166,25 +168,26 @@ export class SingleWorkReportGuaranteeImpl
       return err(EGError.TOO_MANY_PREREQUISITES);
     }
 
-    // $(0.7.0 - 11.8) | check work report total size
+    // $(0.7.1 - 11.8) | check work report total size
     if (this.totalSize() > MAX_WORKREPORT_OUTPUT_SIZE) {
       return err(EGError.WORKREPORT_SIZE_EXCEEDED);
     }
 
-    // $(0.7.0 - 11.23)
+    // $(0.7.1 - 11.23)
     if (this.signatures.length < 2 || this.signatures.length > 3) {
       return err(EGError.CREDS_MUST_BE_BETWEEN_2_AND_3);
     }
-    // $(0.7.0 - 11.25) | creds must be ordered by their val idx
+    // $(0.7.1 - 11.25) | creds must be ordered by their val idx
     for (let i = 1; i < this.signatures.length; i++) {
       const [prev, next] = [this.signatures[i - 1], this.signatures[i]];
       if (prev.validatorIndex >= next.validatorIndex) {
         return err(EGError.VALIDATOR_INDEX_MUST_BE_UNIQUE_AND_ORDERED);
       }
     }
+    // tau'/R
     const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
 
-    // And of $(0.7.0 - 11.26)
+    // And of $(0.7.1 - 11.26)
     if (VALIDATOR_CORE_ROTATION * (curRotation - 1) > this.slot) {
       return err(EGError.TIMESLOT_BOUNDS_1);
     }
@@ -192,7 +195,7 @@ export class SingleWorkReportGuaranteeImpl
       return err(EGError.TIMESLOT_BOUNDS_2);
     }
 
-    // $(0.7.0 - 11.26)
+    // $(0.7.1 - 11.26)
     const messageToSign = this.messageToSign();
     for (const signature of this.signatures) {
       let guarantorAssignment = deps.M_STAR;
@@ -230,14 +233,14 @@ export class GuaranteesExtrinsicImpl
   /**
    * calculates bold I
    * which contains a list of all work reports included in the extrinsic
-   * $(0.7.0 - 11.28)
+   * $(0.7.1 - 11.28)
    */
   workReports(): Tagged<WorkReportImpl[], "bold I"> {
     return toTagged(this.elements.map((el) => el.report));
   }
 
   /**
-   * $(0.7.0 - 11.22)
+   * $(0.7.1 - 11.22)
    */
   M_star(deps: {
     p_entropy: Posterior<JamEntropyImpl>;
@@ -257,7 +260,7 @@ export class GuaranteesExtrinsicImpl
   }
 
   /**
-   * $(0.7.0 - 11.19 / 11.20 / 11.21)
+   * $(0.7.1 - 11.19 / 11.20 / 11.21)
    */
   M(deps: {
     p_entropy: Posterior<JamEntropyImpl>;
@@ -275,7 +278,7 @@ export class GuaranteesExtrinsicImpl
   }
 
   /**
-   * $(0.7.0 - 11.26) | calculates bold G in it
+   * $(0.7.1 - 11.26) | calculates bold G in it
    */
   reporters(deps: {
     p_kappa: Posterior<JamStateImpl["kappa"]>;
@@ -328,18 +331,17 @@ export class GuaranteesExtrinsicImpl
     if (this.elements.length === 0) {
       return ok(toTagged(this)); // optimization
     }
-    // $(0.7.0 - 11.23)
+    // $(0.7.1 - 11.23)
     if (this.elements.length > CORES) {
       return err(EGError.EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES);
     }
 
-    // $(0.7.0 - 11.24) - make sure they're ordered and uniqueby core
+    // $(0.7.1 - 11.24) - make sure they're ordered and uniqueby core
     for (let i = 1; i < this.elements.length; i++) {
       const [prev, next] = [this.elements[i - 1], this.elements[i]];
       if (prev.report.core >= next.report.core) {
         return err(EGError.CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED);
       }
-      // TODO: move to WorkReportImpl =>
       if (next.report.core >= CORES || next.report.core < 0) {
         return err(EGError.CORE_INDEX_NOT_IN_BOUNDS);
       }
@@ -372,7 +374,7 @@ export class GuaranteesExtrinsicImpl
 
     const bold_I = this.workReports();
 
-    // $(0.7.0 - 11.29) | no reports on core with pending avail
+    // $(0.7.1 - 11.29) | no reports on core with pending avail
     for (let i = 0; i < bold_I.length; i++) {
       const { core, authorizerHash } = bold_I[i];
       if (typeof deps.dd_rho.elementAt(core) !== "undefined") {
@@ -384,7 +386,7 @@ export class GuaranteesExtrinsicImpl
       }
     }
 
-    // $(0.7.0 - 11.30) | check gas requiremens
+    // $(0.7.1 - 11.30) | check gas requiremens
     for (const report of bold_I) {
       const gasUsed = report.digests
         .map((r) => r.gasLimit)
@@ -393,27 +395,27 @@ export class GuaranteesExtrinsicImpl
         return err(EGError.GAS_EXCEEDED_ACCUMULATION_LIMITS);
       }
 
-      for (const res of report.digests) {
+      for (const bold_d of report.digests) {
         if (
-          res.gasLimit <
-          curState.serviceAccounts.get(res.serviceIndex)!.minAccGas
+          bold_d.gasLimit <
+          curState.serviceAccounts.get(bold_d.serviceIndex)!.minAccGas
         ) {
           return err(EGError.GAS_TOO_LOW);
         }
       }
     }
 
-    // $(0.7.0 - 11.31)
-    const x = bold_I.map(({ context }) => context);
-    const p = bold_I.map(({ avSpec }) => avSpec.packageHash);
+    // $(0.7.1 - 11.31)
+    const bold_x = bold_I.map(({ context }) => context);
+    const bold_p = bold_I.map(({ avSpec }) => avSpec.packageHash);
 
-    // $(0.7.0 - 11.32)
-    if (p.length !== new Set(p).size) {
+    // $(0.7.1 - 11.32)
+    if (bold_p.length !== new Set(bold_p).size) {
       return err(EGError.WORK_PACKAGE_HASH_NOT_UNIQUE);
     }
 
-    for (const workContext of x) {
-      // $(0.7.0 - 11.33)
+    for (const workContext of bold_x) {
+      // $(0.7.1 - 11.33)
       const y = deps.d_recentHistory.elements.find(
         (_y) =>
           _y.headerHash === workContext.anchorHash &&
@@ -424,7 +426,7 @@ export class GuaranteesExtrinsicImpl
         return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
       }
 
-      // $(0.7.0 - 11.34) each lookup anchor block within `L` timeslot
+      // $(0.7.1 - 11.34) each lookup anchor block within `L` timeslot
       if (
         workContext.lookupAnchorTime <
         deps.p_tau - MAXIMUM_AGE_LOOKUP_ANCHOR
@@ -432,28 +434,28 @@ export class GuaranteesExtrinsicImpl
         return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
       }
 
-      // $(0.7.0 - 11.35)
+      // $(0.7.1 - 11.35)
       const lookupHeader = curState.headerLookupHistory.get(
         workContext.lookupAnchorTime,
       );
       if (typeof lookupHeader === "undefined") {
         return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
       }
-      if (lookupHeader.hash !== workContext.lookupAnchorHash) {
+      if (lookupHeader.signedHash() !== workContext.lookupAnchorHash) {
         return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
       }
     }
 
-    // $(0.7.0 - 11.36)
-    const bold_q: Set<WorkPackageHash> = new Set(
+    // $(0.7.1 - 11.36)
+    const bold_q = new Set<WorkPackageHash>(
       curState.accumulationQueue.elements
         .flat()
         .map((a) => a.workReport.avSpec.packageHash)
         .flat(),
     );
 
-    // $(0.7.0 - 11.37)
-    const bold_a: Set<WorkPackageHash> = new Set(
+    // $(0.7.1 - 11.37)
+    const bold_a = new Set<WorkPackageHash>(
       curState.rho.elements
         .map((a) => a?.workReport.avSpec.packageHash)
         .flat()
@@ -465,20 +467,20 @@ export class GuaranteesExtrinsicImpl
     const _x = new Set(
       curState.accumulationHistory.elements.map((a) => [...a.values()]).flat(),
     );
-    // $(0.7.0 - 11.38)
-    for (const _p of p) {
-      if (bold_q.has(_p) || bold_a.has(_p) || kxp.has(_p) || _x.has(_p)) {
+    // $(0.7.1 - 11.38)
+    for (const p of bold_p) {
+      if (bold_q.has(p) || bold_a.has(p) || kxp.has(p) || _x.has(p)) {
         return err(EGError.WORKPACKAGE_IN_PIPELINE);
       }
     }
 
-    // $(0.7.0 - 11.39)
-    const pSet = new Set(p);
+    // $(0.7.1 - 11.39)
+    const pSet = new Set(bold_p);
     kxp.forEach((reportedHash) => pSet.add(reportedHash));
 
     for (const r of bold_I) {
       const _p = new Set([...r.srLookup.keys()]);
-      r.context.prerequisites.forEach((rwp) => _p.add(rwp));
+      r.context.prerequisites.forEach((rcp) => _p.add(rcp));
       for (const p of _p.values()) {
         if (!pSet.has(p)) {
           return err(EGError.SRLWP_NOTKNOWN);
@@ -487,19 +489,19 @@ export class GuaranteesExtrinsicImpl
     }
 
     {
-      // $(0.7.0 - 11.40)
-      const p = new Map(
+      // $(0.7.1 - 11.40)
+      const bold_p = new Map(
         this.elements
           .map((e) => e.report.avSpec)
           .map((wPSpec) => [wPSpec.packageHash, wPSpec.segmentRoot]),
       );
 
-      // $(0.7.0 - 11.41)
+      // $(0.7.1 - 11.41)
       const recentAndCurrentWP = new Map(
         curState.beta.recentHistory.elements
           .map((rh) => [...rh.reportedPackages.entries()])
           .flat()
-          .concat([...p.entries()]),
+          .concat([...bold_p.entries()]),
       );
       for (const bold_r of bold_I) {
         for (const [wph, h] of bold_r.srLookup) {
@@ -511,7 +513,7 @@ export class GuaranteesExtrinsicImpl
       }
     }
 
-    // $(0.7.0 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
+    // $(0.7.1 - 11.42) | check the result serviceIndex & codeHash match what we have in delta
     for (const bold_r of bold_I) {
       for (const bold_d of bold_r.digests) {
         if (

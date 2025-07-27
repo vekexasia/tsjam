@@ -72,7 +72,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
 
   /**
    * Input should be the newly added hashes to phi_b and phi_w
-   * $(0.7.0 - 10.15)
+   * $(0.7.1 - 10.15)
    */
   toDagger(deps: {
     p_disputes: Posterior<DisputesStateImpl>;
@@ -100,14 +100,14 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
 
   /**
    * converts Dagger<RHO> to DoubleDagger<RHO>
-   * $(0.7.0 - 11.17)
+   * $(0.7.1 - 11.17)
    */
   static toDoubleDagger(
     d_rho: Dagger<RHOImpl>,
     deps: {
       rho: RHOImpl;
       p_tau: Posterior<Tau>; // Ht
-      availableReports: AvailableWorkReports; // bold R
+      newReports: AvailableWorkReports; // bold R
     },
   ): DoubleDagger<RHOImpl> {
     const newState = structuredClone(d_rho);
@@ -115,14 +115,14 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
       if (typeof d_rho.elements[c] === "undefined") {
         continue; // if no  workreport indagger then there is nothing to remove.
       }
-      const [w] = deps.availableReports.filter((w) => w.core === c);
-      // check if workreport from rho has now become available
+      if (typeof deps.rho.elements[c] === "undefined") {
+        continue;
+      }
 
-      if (
-        deps.rho.elements[c] &&
-        w &&
-        deps.rho.elements[c]!.workReport.authorizerHash === w.authorizerHash
-      ) {
+      // check if workreport from rho has now become available
+      // we use this by creating a set of report hashes and cheching if 'p[c]r' is in it
+      const newReportsSet = new Set(deps.newReports.map((r) => r.hash()));
+      if (newReportsSet.has(deps.rho.elementAt(c)!.workReport.hash())) {
         newState.elements[c] = undefined;
       }
 

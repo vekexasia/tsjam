@@ -67,7 +67,7 @@ export class CoreStatisticsImpl
         ...R_fn(<CoreIndex>c, deps.bold_I),
         daLoad: D_fn(<CoreIndex>c, deps.bold_R),
         popularity: <u16>deps.ea.nPositiveVotes(c),
-        // $(0.7.0 - 13.10) - L
+        // $(0.7.1 - 13.10) - L
         bundleSize: <u32>deps.bold_I
           .filter((w) => w.core === c)
           .map((w) => w.avSpec.bundleLength)
@@ -80,13 +80,13 @@ export class CoreStatisticsImpl
 }
 
 /**
- * $(0.7.0 - 13.11)
+ * $(0.7.1 - 13.11)
  */
 const D_fn = (
   core: CoreIndex,
   /**
    * `bold R`
-   * $(0.7.0 - 11.16)
+   * $(0.7.1 - 11.16)
    */
   availableReports: AvailableWorkReports,
 ): u32 => {
@@ -102,13 +102,13 @@ const D_fn = (
 };
 
 /**
- * $(0.7.0 - 13.9)
+ * $(0.7.1 - 13.9)
  */
 const R_fn = (
   core: CoreIndex,
   /**
    * `bold I`
-   * @see $(0.7.0 - 11.28)
+   * @see $(0.7.1 - 11.28)
    */
   guaranteedReports: WorkReport[],
 ): Omit<SingleCoreStatistics, "popularity" | "daLoad" | "bundleSize"> => {

@@ -15,6 +15,11 @@ import {
   SeqOfLength,
 } from "@tsjam/types";
 
+/**
+ * `ϕ`
+ * $(0.7.0 - 8.1)
+ * A queue of AuthorizerHash-es, each of which will be rotated in the AuthorizerPool
+ */
 export class AuthorizerQueueImpl
   extends BaseJamCodecable
   implements AuthorizerQueue

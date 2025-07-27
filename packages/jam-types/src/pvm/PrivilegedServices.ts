@@ -2,7 +2,7 @@ import { CORES } from "@tsjam/constants";
 import { Gas, SeqOfLength, ServiceIndex } from "../genericTypes.js";
 /**
  * `χ`
- * $(0.7.0 - 9.9)
+ * $(0.7.1 - 9.9 / 9.10 / 9.11)
  */
 export type PrivilegedServices = {
   /**
@@ -21,6 +21,11 @@ export type PrivilegedServices = {
    * service which can alter ι
    */
   delegator: ServiceIndex;
+
+  /**
+   * `R`
+   */
+  registrar: ServiceIndex;
 
   /**
    * map of services which are automatically accumulated in each block

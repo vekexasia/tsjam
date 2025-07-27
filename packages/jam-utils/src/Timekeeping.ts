@@ -1,5 +1,6 @@
 import { EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
-import { Posterior, Tau } from "@tsjam/types";
+import { Posterior, Tagged, Tau, u32 } from "@tsjam/types";
+import { toTagged } from "./utils";
 
 export class Timekeeping {
   static getJamSlotSinceEpoch() {
@@ -37,18 +38,18 @@ export const slotIndex = (timeSlot: Tau) => timeSlot % EPOCH_LENGTH;
  * @see section 6.1 - Timekeeping
  * $(0.7.0 - 6.2)
  */
-export const epochIndex = (timeSlot: number) =>
-  Math.floor(timeSlot / EPOCH_LENGTH);
+export const epochIndex = (timeSlot: Tau): Tagged<u32, "epoch-index"> =>
+  toTagged(<u32>Math.floor(timeSlot / EPOCH_LENGTH));
 
 /**
  * check if the header is the first block of a new era
  * Note: this returns true even in the case of a skipped era
  */
-export const isNewEra = (newSlotIndex: number, curSlotIndex: number) => {
+export const isNewEra = (newSlotIndex: Tau, curSlotIndex: Tau) => {
   return epochIndex(newSlotIndex) > epochIndex(curSlotIndex);
 };
 
-export const isSameEra = (newSlotIndex: number, curSlotIndex: number) => {
+export const isSameEra = (newSlotIndex: Tau, curSlotIndex: Tau) => {
   return epochIndex(newSlotIndex) === epochIndex(curSlotIndex);
 };
 

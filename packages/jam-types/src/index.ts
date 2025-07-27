@@ -33,7 +33,6 @@ export * from "./states/LastAccOuts.js";
 export * from "./states/rho.js";
 export * from "./states/RecentHistory.js";
 export * from "./states/SafroleState.js";
-export * from "./states/ServiceOuts.js";
 export * from "./states/Statistics.js";
 export * from "./states/ValidatorStatistics.js";
 export * from "./states/HeaderLookupHistory.js";

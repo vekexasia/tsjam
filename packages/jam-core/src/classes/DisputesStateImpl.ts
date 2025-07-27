@@ -13,6 +13,7 @@ import {
   Hash,
   IDisputesState,
   Posterior,
+  Validated,
 } from "@tsjam/types";
 import { err, ok, Result } from "neverthrow";
 import { JamStateImpl } from "./JamStateImpl";
@@ -29,10 +30,10 @@ import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 
 /**
- * Codec follows C(5) from $(0.7.0 - D.2)
+ * Codec follows C(5) from $(0.7.1 - D.2)
  *
  * `X`
- * $(0.7.0 - 10.1)
+ * $(0.7.1 - 10.1)
  */
 @JamCodecable()
 export class DisputesStateImpl
@@ -77,45 +78,42 @@ export class DisputesStateImpl
 
   /**
    * Computes state transition for disputes state
-   * $(0.6.4 - 4.11)
+   * $(0.7.1 - 4.11)
    */
-
   toPosterior(
     curState: JamStateImpl,
     deps: {
-      extrinsic: DisputeExtrinsicImpl;
+      extrinsic: Validated<DisputeExtrinsicImpl>;
     },
   ): Result<Posterior<DisputesStateImpl>, DisputesToPosteriorError> {
-    const kappaULambdaNoOffenders = new Set([
+    const bold_k = new Set([
       ...curState.kappa.elements.map((v) => v.ed25519.bigint),
       ...curState.lambda.elements.map((v) => v.ed25519.bigint),
     ]);
 
     // remove offenders
-    this.offenders.forEach((offender) =>
-      kappaULambdaNoOffenders.delete(offender),
-    );
+    this.offenders.forEach((offender) => bold_k.delete(offender));
 
     // check culprit key is in lambda or kappa
-    // $(0.7.0 - 10.5) - partial
+    // $(0.7.1 - 10.5) - partial
     const checkCulpritKeys = deps.extrinsic.culprits.every(({ key }) =>
-      kappaULambdaNoOffenders.has(key.bigint),
+      bold_k.has(key.bigint),
     );
     if (!checkCulpritKeys) {
       return err(DisputesToPosteriorError.CULPRITKEYNOTINK);
     }
 
     // check faults key is in lambda or kappa
-    // $(0.7.0 - 10.6) - partial
+    // $(0.7.1 - 10.6) - partial
     const checkFaultKeys = deps.extrinsic.faults.every(({ key }) =>
-      kappaULambdaNoOffenders.has(key.bigint),
+      bold_k.has(key.bigint),
     );
     if (!checkFaultKeys) {
       return err(DisputesToPosteriorError.FAULTKEYNOTINK);
     }
 
     // check culprit signature is valid
-    // $(0.7.0 - 10.5) - partial
+    // $(0.7.1 - 10.5) - partial
     const _checkculprit = deps.extrinsic.culprits.map((culprit) => {
       const verified = Ed25519.verifySignature(
         culprit.signature,
@@ -135,7 +133,7 @@ export class DisputesStateImpl
     }
 
     // enforce faults signature is valid
-    // $(0.7.0 - 10.6) - partial
+    // $(0.7.1 - 10.6) - partial
     const _checkfaults = deps.extrinsic.faults.map((fault) => {
       const verified = Ed25519.verifySignature(
         fault.signature,
@@ -155,7 +153,7 @@ export class DisputesStateImpl
     }
 
     // enforce verdicts are ordered and not duplicated by report hash
-    // $(0.7.0 - 10.7)
+    // $(0.7.1 - 10.7)
     for (let i = 1; i < deps.extrinsic.verdicts.length; i++) {
       const [prev, curr] = [
         deps.extrinsic.verdicts[i - 1],
@@ -169,7 +167,7 @@ export class DisputesStateImpl
     }
 
     // enforce culprit are ordered by ed25519PublicKey
-    // $(0.7.0 - 10.8)
+    // $(0.7.1 - 10.8)
     if (deps.extrinsic.culprits.length > 0) {
       for (let i = 1; i < deps.extrinsic.culprits.length; i++) {
         const [prev, curr] = [
@@ -185,7 +183,7 @@ export class DisputesStateImpl
     }
 
     // enforce faults are ordered by ed25519PublicKey
-    // $(0.7.0 - 10.8)
+    // $(0.7.1 - 10.8)
     if (deps.extrinsic.faults.length > 0) {
       for (let i = 1; i < deps.extrinsic.faults.length; i++) {
         const [prev, curr] = [
@@ -202,7 +200,7 @@ export class DisputesStateImpl
 
     // ensure verdict report hashes are not in psi_g or psi_b or psi_w
     // aka not in the set of work reports that were judged to be valid, bad or wonky already
-    // $(0.7.0 - 10.9)
+    // $(0.7.1 - 10.9)
     for (const verdict of deps.extrinsic.verdicts) {
       if (this.good.has(verdict.target)) {
         return err(DisputesToPosteriorError.VERDICTS_IN_PSI_G);
@@ -216,7 +214,7 @@ export class DisputesStateImpl
     }
 
     // ensure judgements are ordered by validatorIndex and no duplicates
-    // $(0.7.0 - 10.10)
+    // $(0.7.1 - 10.10)
     if (
       false ===
       deps.extrinsic.verdicts.every((verdict) => {
@@ -233,7 +231,8 @@ export class DisputesStateImpl
       );
     }
 
-    // ensure that judgements are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
+    // ensure that verdict votes are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
+    // $(0.7.1 - 10.11)
     const bold_v = deps.extrinsic.verdictsVotes();
     if (
       false ===
@@ -257,7 +256,7 @@ export class DisputesStateImpl
     );
 
     // ensure any positive verdicts are in faults
-    // $(0.7.0 - 10.13)
+    // $(0.7.1 - 10.13)
     if (
       false ===
       positiveVerdicts.every(
@@ -268,7 +267,7 @@ export class DisputesStateImpl
     }
 
     // ensure any negative verdicts have at least 2 in cuprit
-    // $(0.7.0 - 10.14)
+    // $(0.7.1 - 10.14)
     if (
       false ===
       negativeVerdicts.every((v) => {
@@ -285,7 +284,7 @@ export class DisputesStateImpl
     }
 
     const p_state = new DisputesStateImpl({
-      // $(0.7.0 - 10.16)
+      // $(0.7.1 - 10.16)
       good: new Set([
         ...this.good,
         ...bold_v
@@ -293,7 +292,7 @@ export class DisputesStateImpl
           .map(({ reportHash }) => reportHash),
       ]),
 
-      // $(0.7.0 - 10.17)
+      // $(0.7.1 - 10.17)
       bad: new Set([
         ...this.bad,
         ...bold_v
@@ -301,7 +300,7 @@ export class DisputesStateImpl
           .map(({ reportHash }) => reportHash),
       ]),
 
-      // $(0.7.0 - 10.18)
+      // $(0.7.1 - 10.18)
       wonky: new Set([
         ...this.wonky,
         ...bold_v
@@ -309,7 +308,7 @@ export class DisputesStateImpl
           .map(({ reportHash }) => reportHash),
       ]),
 
-      // $(0.7.0 - 10.19)
+      // $(0.7.1 - 10.19)
       offenders: new Set([
         ...this.offenders,
         ...deps.extrinsic.culprits.map(({ key }) => key.bigint),
@@ -317,7 +316,7 @@ export class DisputesStateImpl
       ]),
     });
 
-    // $(0.7.0 - 10.5) - end
+    // $(0.7.1 - 10.5) - end
     // culprit `r` should be in psi_b'
     for (let i = 0; i < deps.extrinsic.culprits.length; i++) {
       const { target } = deps.extrinsic.culprits[i];
@@ -327,7 +326,7 @@ export class DisputesStateImpl
     }
 
     // perform some other last checks
-    // $(0.7.0 - 10.6) - end
+    // $(0.7.1 - 10.6) - end
     // faults reports should be in psi_b' or psi_g'
     for (let i = 0; i < deps.extrinsic.faults.length; i++) {
       const { target, vote } = deps.extrinsic.faults[i];

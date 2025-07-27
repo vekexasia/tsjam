@@ -279,9 +279,6 @@ export const verifyEA = (
   kappa: JamState["kappa"],
   d_rho: Dagger<RHO>,
 ): ea is Validated<EA_Extrinsic> => {
-  // $(0.7.0 - 11.10)
-  if (ea.length > NUMBER_OF_VALIDATORS) {
-    return false;
   }
   for (let i = 0; i < ea.length; i++) {
     const a = ea[i];

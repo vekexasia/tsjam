@@ -82,7 +82,7 @@ export class ServicesStatisticsImpl
     const bold_s = new Set([
       ...s_p,
       ...s_r,
-      ...deps.accumulationStatistics.keys(),
+      ...deps.accumulationStatistics.services(),
       ...deps.transferStatistics.keys(),
     ]);
 

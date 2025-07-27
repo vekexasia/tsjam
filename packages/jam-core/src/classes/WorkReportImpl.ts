@@ -104,6 +104,15 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
     return Hashing.blake2b(this.toBinary());
   }
 
+  equals(other: WorkReportImpl): boolean {
+    // TODO: improve performance of this by checking elements
+    return (
+      this.core === other.core &&
+      this.authorizerHash === other.authorizerHash &&
+      this.hash() === other.hash()
+    );
+  }
+
   /**
    * `P()`
    * $(0.7.0 - 12.9)

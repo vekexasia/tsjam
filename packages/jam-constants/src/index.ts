@@ -124,12 +124,12 @@ export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
 export const JAM_AUDIT = new TextEncoder().encode("jam_audit");
 /**
  * Denoted with `Xtrue` in the paper. It's value is `jam_valid`
- * $(0.7.0 - 10.4)
+ * $(0.7.1 - 10.4)
  */
 export const JAM_VALID = new TextEncoder().encode("jam_valid");
 /**
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
- * $(0.7.0 - 10.4)
+ * $(0.7.1 - 10.4)
  */
 export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
 

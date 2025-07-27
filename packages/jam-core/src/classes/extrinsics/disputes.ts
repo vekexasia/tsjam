@@ -24,6 +24,7 @@ import {
   Hash,
   MinSeqLength,
   SeqOfLength,
+  Tagged,
   Tau,
   u32,
   Validated,
@@ -77,7 +78,7 @@ export class DisputeVerdictImpl
    * it can be either current or previous epoch
    */
   @eSubIntCodec(4)
-  age!: u32;
+  age!: Tagged<u32, "epoch-index">;
   /**
    * `j` - the length of this sequence must be = 2/3+1
    *
@@ -202,16 +203,13 @@ export class DisputeExtrinsicImpl
     return bold_v;
   }
 
-  static isValid(
-    extrinsic: DisputeExtrinsicImpl,
-    deps: {
-      tau: Tau;
-      kappa: JamStateImpl["kappa"];
-      lambda: JamStateImpl["lambda"];
-    },
-  ): Result<Validated<DisputeExtrinsicImpl>, string> {
+  checkValidity(deps: {
+    tau: Tau;
+    kappa: JamStateImpl["kappa"];
+    lambda: JamStateImpl["lambda"];
+  }): Result<Validated<DisputeExtrinsicImpl>, string> {
     // $(0.6.4 - 10.2)
-    for (const v of extrinsic.verdicts) {
+    for (const v of this.verdicts) {
       if (
         v.age !== epochIndex(deps.tau) &&
         v.age !== epochIndex(deps.tau) - 1
@@ -223,11 +221,12 @@ export class DisputeExtrinsicImpl
         return err("judgements-length-wrong");
       }
     }
+
     // verify all  verdics signatures
-    // $(0.7.0 - 10.3)
+    // $(0.7.1 - 10.3)
     if (
       false ===
-      extrinsic.verdicts.every((verdict) => {
+      this.verdicts.every((verdict) => {
         const validatorSet =
           verdict.age === epochIndex(deps.tau) ? deps.kappa : deps.lambda;
         return verdict.judgements.every((judgement) => {
@@ -259,8 +258,8 @@ export class DisputeExtrinsicImpl
       return err("verdict-signatures-wrong");
     }
 
-    // TODO: finish implementing
-    return ok(toTagged(extrinsic));
+    // NOTE: culprits and verdics are checked by disputesState
+    return ok(toTagged(this));
   }
 }
 

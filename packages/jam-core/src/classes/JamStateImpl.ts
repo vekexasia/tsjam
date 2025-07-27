@@ -73,7 +73,7 @@ export class JamStateImpl implements JamState {
    */
   statistics!: JamStatisticsImpl;
   /**
-   * `θ`
+   * `ω`
    */
   accumulationQueue!: AccumulationQueueImpl;
   /**
@@ -127,10 +127,21 @@ export class JamStateImpl implements JamState {
         block.header.entropySource,
       ),
     });
+    const [dispExErr, disputesExtrinsic] = block.extrinsics.disputes
+      .checkValidity({
+        tau: this.tau,
+        kappa: this.kappa,
+        lambda: this.lambda,
+      })
+      .safeRet();
+
+    if (typeof dispExErr !== "undefined") {
+      return err(dispExErr);
+    }
 
     const [p_disputesError, p_disputes] = this.disputes
       .toPosterior(this, {
-        extrinsic: block.extrinsics.disputes,
+        extrinsic: disputesExtrinsic,
       })
       .safeRet();
     if (typeof p_disputesError !== "undefined") {
@@ -252,7 +263,7 @@ export class JamStateImpl implements JamState {
 
     const dd_rho = RHOImpl.toDoubleDagger(d_rho, {
       p_tau,
-      availableReports: bold_R,
+      newReports: bold_R,
       rho: this.rho,
     });
 

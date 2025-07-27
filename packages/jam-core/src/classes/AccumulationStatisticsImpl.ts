@@ -23,6 +23,10 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
     return this.elements.has(serviceIndex);
   }
 
+  services(): ServiceIndex[] {
+    return Array.from(this.elements.keys());
+  }
+
   static compute(deps: {
     r_star: AccumulatableWorkReports;
     nAccumulatedWork: number;

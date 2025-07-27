@@ -9,7 +9,7 @@ import {
 /**
  * gives a snapshotof what was the situation when the work report was created
  * defined by `C` set
- * $(0.7.0 - 11.4)
+ * $(0.7.1 - 11.4)
  */
 export type WorkContext = {
   /**
@@ -33,7 +33,7 @@ export type WorkContext = {
    */
   lookupAnchorTime: Tau;
   /**
-   * `p`
+   * `bold_p`
    */
   prerequisites: WorkPackageHash[];
 };

@@ -8,8 +8,8 @@ import {
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it
- * section 11.3
- * $(0.7.0 - 11.18)
+ * `bold M`
+ * $(0.7.1 - 11.18)
  */
 export type GuarantorsAssignment = {
   /**
@@ -27,4 +27,4 @@ export type GuarantorsAssignment = {
 };
 
 // defined in $(0.6.4 - 11.22)
-export type G_Star = Tagged<GuarantorsAssignment, "G*">;
+export type M_Star = Tagged<GuarantorsAssignment, "M*">;

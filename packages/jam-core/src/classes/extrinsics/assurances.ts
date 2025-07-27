@@ -32,7 +32,7 @@ import { toTagged } from "@tsjam/utils";
 import { AvailableWorkReports, WorkReportImpl } from "../WorkReportImpl";
 
 // Single extrinsic element
-// codec order defined in $(0.7.0 - C.27)
+// codec order defined in $(0.7.1 - C.27)
 @JamCodecable()
 export class AssuranceExtrinsicImpl
   extends BaseJamCodecable
@@ -63,7 +63,7 @@ export class AssuranceExtrinsicImpl
   signature!: ED25519Signature;
 
   /**
-   * $(0.7.0 - 11.13)
+   * $(0.7.1 - 11.13)
    */
   isSignatureValid(deps: {
     kappa: JamStateImpl["kappa"];
@@ -89,7 +89,7 @@ export class AssuranceExtrinsicImpl
     kappa: JamStateImpl["kappa"];
     d_rho: Dagger<RHOImpl>;
   }): this is Validated<AssuranceExtrinsicImpl> {
-    // begin with $(0.7.0 - 11.10)
+    // begin with $(0.7.1 - 11.10)
     if (this.validatorIndex >= NUMBER_OF_VALIDATORS) {
       return false;
     }
@@ -97,12 +97,12 @@ export class AssuranceExtrinsicImpl
       return false;
     }
 
-    // $(0.7.0 - 11.11)
+    // $(0.7.1 - 11.11)
     if (this.anchorHash !== deps.header.parent) {
       return false;
     }
 
-    // $(0.7.0 - 11.15)
+    // $(0.7.1 - 11.15)
     for (let c = <CoreIndex>0; c < CORES; c++) {
       if (this.bitstring[c] === 1) {
         // af[c]
@@ -113,7 +113,7 @@ export class AssuranceExtrinsicImpl
       }
     }
 
-    // $(0.7.0 - 11.13)
+    // $(0.7.1 - 11.13)
     return this.isSignatureValid({ kappa: deps.kappa, header: deps.header });
   }
 }
@@ -135,12 +135,12 @@ export class AssurancesExtrinsicImpl
     kappa: JamStateImpl["kappa"];
     d_rho: Dagger<RHOImpl>;
   }): this is Validated<AssuranceExtrinsicImpl> {
-    // $(0.7.0 - 11.10)
+    // $(0.7.1 - 11.10)
     if (this.elements.length > NUMBER_OF_VALIDATORS) {
       return false;
     }
 
-    // $(0.7.0 - 11.12)
+    // $(0.7.1 - 11.12)
     for (let i = 1; i < this.elements.length; i++) {
       if (
         this.elements[i - 1].validatorIndex >= this.elements[i].validatorIndex
@@ -165,21 +165,21 @@ export class AssurancesExtrinsicImpl
 
   /**
    * Computes `bold R` in
-   * $(0.7.0 - 11.16)
+   * $(0.7.1 - 11.16)
    */
   static newlyAvailableReports(
     ea: Validated<AssurancesExtrinsicImpl>,
     d_rho: Dagger<RHOImpl>,
   ): AvailableWorkReports {
-    const W: WorkReportImpl[] = [];
+    const bold_R: WorkReportImpl[] = [];
     for (let c = <CoreIndex>0; c < CORES; c++) {
       const sum = ea.nPositiveVotes(c);
 
       if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
-        W.push(d_rho.elementAt(c)!.workReport);
+        bold_R.push(d_rho.elementAt(c)!.workReport);
       }
     }
-    return toTagged(W);
+    return toTagged(bold_R);
   }
 }
 

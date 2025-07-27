@@ -45,7 +45,7 @@ export type SingleWorkReportGuarantee = {
 /**
  * Identified by `Eg`.
  * @see section 11.4
- * $(0.7.0 - 11.23)
+ * $(0.7.1 - 11.23)
  *
  */
 export type EG_Extrinsic = {

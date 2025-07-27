@@ -22,6 +22,10 @@ import { toPosterior, toTagged } from "@tsjam/utils";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 
+/**
+ * `α`
+ * $(0.7.0 - 8.1)
+ */
 export class AuthorizerPoolImpl
   extends BaseJamCodecable
   implements AuthorizerPool
