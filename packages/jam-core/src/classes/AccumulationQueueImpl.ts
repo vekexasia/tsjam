@@ -64,6 +64,13 @@ export class AccumulationQueueImpl
   )
   elements!: SeqOfLength<Array<AccumulationQueueItem>, typeof EPOCH_LENGTH>;
 
+  constructor(config?: ConditionalExcept<AccumulationQueueImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
+
   toPosterior(deps: {
     tau: Tau;
     p_tau: Posterior<Tau>;

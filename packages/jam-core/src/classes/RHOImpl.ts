@@ -60,9 +60,11 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
   )
   elements!: SeqOfLength<RHOElementImpl | undefined, typeof CORES>;
 
-  constructor(config: ConditionalExcept<RHOImpl, Function>) {
+  constructor(config?: ConditionalExcept<RHOImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   elementAt(core: CoreIndex): RHOElementImpl | undefined {

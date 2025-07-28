@@ -1,6 +1,4 @@
 import { FisherYatesH } from "@/fisherYates";
-import { PHI_FN } from "@/transitions";
-import { M_fn, M_STAR_fn } from "@/validateEG";
 import {
   BaseJamCodecable,
   codec,
@@ -582,9 +580,9 @@ const M_fn = (input: {
       (input.p_tau + input.tauOffset) as Tau,
     ),
     // k
-    validatorsED22519Key: PHI_FN(input.validatorKeys, input.p_offenders).map(
-      (v) => v.ed25519,
-    ),
+    validatorsED22519Key: input.validatorKeys
+      .phi(input.p_offenders)
+      .elements.map((v) => v.ed25519),
   } as GuarantorsAssignment;
 };
 
@@ -606,7 +604,7 @@ const M_STAR_fn = (input: {
       p_tau: input.p_tau,
       validatorKeys: input.p_kappa,
       p_offenders: input.p_offenders,
-    }) as G_Star;
+    });
   } else {
     return M_fn({
       entropy: input.p_eta3,
@@ -614,7 +612,7 @@ const M_STAR_fn = (input: {
       p_tau: input.p_tau,
       validatorKeys: input.p_lambda,
       p_offenders: input.p_offenders,
-    }) as G_Star;
+    });
   }
 };
 if (import.meta.vitest) {

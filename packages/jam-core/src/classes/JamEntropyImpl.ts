@@ -28,9 +28,11 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   @hashCodec()
   _3!: Blake2bHash;
 
-  constructor(config: JamEntropy) {
+  constructor(config?: JamEntropy) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   toPosterior(

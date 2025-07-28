@@ -19,9 +19,11 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
   @sequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataImpl)
   elements!: SeqOfLength<ValidatorDataImpl, typeof NUMBER_OF_VALIDATORS>;
 
-  constructor(config: ConditionalExcept<ValidatorsImpl, Function>) {
+  constructor(config?: ConditionalExcept<ValidatorsImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   at(index: number): ValidatorDataImpl {

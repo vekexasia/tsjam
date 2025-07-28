@@ -1,4 +1,3 @@
-import { EPError } from "@/validteEP";
 import {
   BaseJamCodecable,
   binaryCodec,
@@ -74,6 +73,12 @@ export class PreimagesExtrinsicImpl
 
     return ok(toTagged(this));
   }
+}
+
+export enum EPError {
+  VALIDATION_ERROR = "EP Validation Error",
+  PREIMAGE_PROVIDED_OR_UNSOLICITED = "Preimage Provided or unsolicied",
+  PREIMAGES_NOT_SORTED = "preimages should be sorted",
 }
 
 if (import.meta.vitest) {

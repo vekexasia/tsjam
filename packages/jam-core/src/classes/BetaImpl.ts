@@ -36,9 +36,11 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
   })
   beefyBelt!: Array<Hash | undefined>;
 
-  constructor(config: ConditionalExcept<BetaImpl, Function>) {
+  constructor(config?: ConditionalExcept<BetaImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   /**

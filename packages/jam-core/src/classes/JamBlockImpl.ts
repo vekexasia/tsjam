@@ -12,6 +12,10 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
   @codec(JamBlockExtrinsicsImpl, "extrinsic")
   extrinsics!: JamBlockExtrinsicsImpl;
 
+  isParentOf(block: JamBlockImpl): boolean {
+    return this.header.signedHash() === block.header.parent;
+  }
+
   static create(curState: JamStateImpl) {
     // const offenders: ED25519PublicKey[] = [];
     // const extrinsics = {

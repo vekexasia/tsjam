@@ -34,9 +34,13 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
   @lengthDiscriminatedCodec(SingleAccOutImpl, SINGLE_ELEMENT_CLASS)
   elements!: Array<SingleAccOutImpl>;
 
-  constructor(elements: Array<SingleAccOutImpl>) {
+  constructor(elements?: Array<SingleAccOutImpl>) {
     super();
-    this.elements = elements;
+    if (typeof elements !== "undefined") {
+      this.elements = elements;
+    } else {
+      this.elements = [];
+    }
   }
 
   add(serviceIndex: ServiceIndex, accumulationResult: Hash): void {

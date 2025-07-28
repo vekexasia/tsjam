@@ -71,9 +71,11 @@ export class DisputesStateImpl
   })
   offenders!: Set<ED25519PublicKey["bigint"]>;
 
-  constructor(config: ConditionalExcept<DisputesStateImpl, Function>) {
+  constructor(config?: ConditionalExcept<DisputesStateImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   /**

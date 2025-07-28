@@ -1,16 +1,25 @@
 import { accumulateReports } from "@/accumulate";
 import { Bandersnatch } from "@tsjam/crypto";
-import { JamState, Tagged, Tau } from "@tsjam/types";
-import { isNewEra, toDagger, toPosterior } from "@tsjam/utils";
-import assert from "assert";
-import { err } from "neverthrow";
+import { JamState, Posterior, StateRootHash, Tagged, Tau } from "@tsjam/types";
+import {
+  isNewEra,
+  Timekeeping,
+  toDagger,
+  toPosterior,
+  toTagged,
+} from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
+import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { AccumulationQueueImpl } from "./AccumulationQueueImpl";
 import { AuthorizerPoolImpl } from "./AuthorizerPoolImpl";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { BetaImpl } from "./BetaImpl";
 import { DeltaImpl } from "./DeltaImpl";
-import { DisputesStateImpl } from "./DisputesStateImpl";
+import {
+  DisputesStateImpl,
+  DisputesToPosteriorError,
+} from "./DisputesStateImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { HeaderLookupHistoryImpl } from "./HeaderLookupHistoryImpl";
 import { JamBlockImpl } from "./JamBlockImpl";
@@ -22,8 +31,21 @@ import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { ValidatorDataImpl } from "./ValidatorDataImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
+import { BLOCK_TIME } from "@tsjam/constants";
+import { merkleStateMap, M_fn, bits } from "@/merklization";
+import { GammaAError } from "./GammaAImpl";
+import { DisputesExtrinsicValidationError } from "./extrinsics/disputes";
+import { EGError } from "./extrinsics/guarantees";
+import { ETError } from "./extrinsics/tickets";
+import { EPError } from "./extrinsics/preimages";
+import assert from "assert";
 
 export class JamStateImpl implements JamState {
+  /**
+   * The block which produced this state
+   * or undefined if state was reconstructed without block
+   */
+  block?: JamBlockImpl;
   /**
    * `α`
    */
@@ -98,6 +120,10 @@ export class JamStateImpl implements JamState {
    */
   headerLookupHistory!: HeaderLookupHistoryImpl;
 
+  constructor(config: ConditionalExcept<JamStateImpl, Function>) {
+    Object.assign(this, config);
+  }
+
   /**
    * `HA` in the graypaper
    * @param header - the header of the blockj
@@ -107,17 +133,54 @@ export class JamStateImpl implements JamState {
    *
    */
   blockAuthor(): ValidatorDataImpl {
-    const lookupResult = this.headerLookupHistory.get(this.tau)!;
-    assert(lookupResult, "Header lookup history should have the current tau");
-    return this.kappa.at(lookupResult.authorIndex);
+    return this.kappa.at(this.block!.header.authorIndex)!;
   }
 
-  applyBlock(block: JamBlockImpl) {
-    const p_tau = toPosterior(block.header.slot);
+  merkleRoot(): StateRootHash {
+    const stateMap = merkleStateMap(this);
+    return M_fn(
+      new Map(
+        [...stateMap.entries()].map(([k, v]) => {
+          return [bits(k), [k, v]];
+        }),
+      ),
+    ) as StateRootHash;
+  }
+
+  applyBlock(
+    newBlock: JamBlockImpl,
+  ): Result<
+    Posterior<JamStateImpl>,
+    | ImportBlockError
+    | DisputesToPosteriorError
+    | GammaAError
+    | DisputesExtrinsicValidationError
+    | ETError
+    | EPError
+    | EGError
+  > {
+    assert(this.block, "Cannot apply block to a state without a block");
+    if (!this.block.isParentOf(newBlock)) {
+      return err(ImportBlockError.InvalidParentHeader);
+    }
+
+    // $(0.7.0 - 6.1)
+    const p_tau = toPosterior(newBlock.header.slot);
+
+    // $(0.7.0 - 5.7)
+    if (this.tau >= p_tau || p_tau * BLOCK_TIME > Timekeeping.bigT()) {
+      return err(ImportBlockError.InvalidSlot);
+    }
+
+    // $(0.7.0 - 5.8)
+    if (this.merkleRoot() !== newBlock.header.parentStateRoot) {
+      return err(ImportBlockError.InvalidParentStateRoot);
+    }
+
     // $(0.7.1 - 6.13)
     let p_kappa = toPosterior(this.kappa);
     let p_lambda = toPosterior(this.lambda);
-    if (isNewEra(block.header.slot, this.tau)) {
+    if (isNewEra(p_tau, this.tau)) {
       p_kappa = <any>structuredClone(this.safroleState.gamma_p);
       p_lambda = <any>structuredClone(this.kappa);
     }
@@ -125,10 +188,10 @@ export class JamStateImpl implements JamState {
     const p_entropy = this.entropy.toPosterior(this, {
       p_tau,
       vrfOutputHash: Bandersnatch.vrfOutputSignature(
-        block.header.entropySource,
+        newBlock.header.entropySource,
       ),
     });
-    const [dispExErr, disputesExtrinsic] = block.extrinsics.disputes
+    const [dispExErr, disputesExtrinsic] = newBlock.extrinsics.disputes
       .checkValidity({
         tau: this.tau,
         kappa: this.kappa,
@@ -158,7 +221,7 @@ export class JamStateImpl implements JamState {
       p_gamma_p,
     });
 
-    const [newTicketsErr, newTickets] = block.extrinsics.tickets
+    const [newTicketsErr, newTickets] = newBlock.extrinsics.tickets
       .newTickets({
         p_tau,
         p_gamma_z,
@@ -197,17 +260,17 @@ export class JamStateImpl implements JamState {
     const d_rho = this.rho.toDagger({ p_disputes });
 
     if (
-      !block.extrinsics.assurances.isValid({
-        header: block.header,
+      !newBlock.extrinsics.assurances.isValid({
+        header: newBlock.header,
         kappa: this.kappa,
         d_rho,
       })
     ) {
-      throw new Error("TODO neverthrow");
+      return err(ImportBlockError.InvalidEA);
     }
 
     const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
-      block.extrinsics.assurances,
+      newBlock.extrinsics.assurances,
       d_rho,
     );
 
@@ -241,7 +304,7 @@ export class JamStateImpl implements JamState {
         p_tau,
       });
 
-    const d_beta = this.beta.toDagger(block.header);
+    const d_beta = this.beta.toDagger(newBlock.header);
 
     const dd_delta = DeltaImpl.toDoubleDagger(d_delta, {
       p_tau,
@@ -249,7 +312,7 @@ export class JamStateImpl implements JamState {
       accumulationStatistics,
     });
 
-    const [epError, validatedEP] = block.extrinsics.preimages
+    const [epError, validatedEP] = newBlock.extrinsics.preimages
       .checkValidity({ serviceAccounts: this.serviceAccounts })
       .safeRet();
 
@@ -268,7 +331,7 @@ export class JamStateImpl implements JamState {
       rho: this.rho,
     });
 
-    const [egError, validatedEG] = block.extrinsics.reportGuarantees
+    const [egError, validatedEG] = newBlock.extrinsics.reportGuarantees
       .checkValidity(this, {
         dd_rho,
         d_recentHistory: toDagger(d_beta.recentHistory),
@@ -288,7 +351,7 @@ export class JamStateImpl implements JamState {
       EG_Extrinsic: validatedEG,
     });
 
-    const headerHash = block.header.signedHash();
+    const headerHash = newBlock.header.signedHash();
 
     const p_beta = BetaImpl.toPosterior(d_beta, {
       headerHash,
@@ -304,11 +367,11 @@ export class JamStateImpl implements JamState {
       p_disputes,
       p_tau,
       p_lambda,
-      authorIndex: block.header.authorIndex,
+      authorIndex: newBlock.header.authorIndex,
       tau: this.tau,
-      ea: block.extrinsics.assurances,
+      ea: newBlock.extrinsics.assurances,
       ep: validatedEP,
-      extrinsics: block.extrinsics,
+      extrinsics: newBlock.extrinsics,
       d_rho,
     });
 
@@ -319,9 +382,79 @@ export class JamStateImpl implements JamState {
     });
 
     const p_headerLookupHistory = this.headerLookupHistory.toPosterior({
-      header: block.header,
+      header: newBlock.header,
     });
+
+    const p_state = toPosterior(
+      new JamStateImpl({
+        block: newBlock,
+        entropy: p_entropy,
+        tau: newBlock.header.slot,
+        iota: toTagged(p_iota),
+        authPool: p_authPool,
+        authQueue: p_authQueue,
+        safroleState: p_safroleState,
+        statistics: p_statistics,
+        rho: p_rho,
+        serviceAccounts: p_delta,
+        beta: p_beta,
+        accumulationQueue: p_accumulationQueue,
+        accumulationHistory: p_accumulationHistory,
+        privServices: p_privServices,
+        lambda: toTagged(p_lambda),
+        kappa: toTagged(p_kappa),
+        disputes: p_disputes,
+        headerLookupHistory: p_headerLookupHistory,
+        mostRecentAccumulationOutputs: p_mostRecentAccumulationOutputs,
+      }),
+    );
+
+    if (false === newBlock.header.verifySeal(p_state)) {
+      return err(ImportBlockError.InvalidSeal);
+    }
+    if (false === newBlock.header.verifyEntropy(p_state)) {
+      return err(ImportBlockError.InvalidEntropySignature);
+    }
+
+    if (false === newBlock.header.verifyEpochMarker(this, p_gamma_p)) {
+      return err(ImportBlockError.InvalidEpochMarker);
+    }
+
+    if (false === newBlock.header.verifyTicketsMark(this)) {
+      return err(ImportBlockError.InvalidTicketsMark);
+    }
+
+    if (false === newBlock.header.verifyExtrinsicHash(newBlock.extrinsics)) {
+      return err(ImportBlockError.InvalidHx);
+    }
+
+    if (
+      false === newBlock.header.verifyOffenders(newBlock.extrinsics.disputes)
+    ) {
+      return err(ImportBlockError.InvalidOffenders);
+    }
+    return ok(p_state);
   }
 
   static createNewBlock() {}
+}
+
+export enum ImportBlockError {
+  InvalidParent = "Invalid parent",
+  InvalidEA = "Invalid extrinsic assurances",
+
+  InvalidHx = "Invalid extrinsic hash",
+  InvalidSlot = "Invalid slot",
+  InvalidSeal = "Invalid seal",
+  InvalidEntropySignature = "Invalid entropy signature",
+  InvalidEntropy = "Invalid entropy",
+  InvalidEpochMarker = "Epoch marker set but not in new epoch",
+  InvalidEpochMarkerValidator = "Epoch marker validator key mismatch",
+  InvalidOffenders = "Invalid offenders",
+  InvalidParentStateRoot = "Invalid parent state root",
+  WinningTicketsNotEnoughLong = "Winning tickets not EPOCH long",
+  WinningTicketsNotExpected = "Winning tickets set but not expected",
+  WinningTicketMismatch = "WInning ticket mismatch",
+  InvalidTicketsMark = "InvalidTicketsMark",
+  InvalidParentHeader = "InvalidParentHeader",
 }

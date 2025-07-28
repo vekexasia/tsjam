@@ -17,6 +17,7 @@ import {
   SeqOfLength,
   ServiceIndex,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * Priv services impl
@@ -64,4 +65,11 @@ export class PrivilegedServicesImpl
     buildGenericKeyValueCodec(E_sub_int(4), E_sub(8), (a, b) => a - b),
   )
   alwaysAccers!: Map<ServiceIndex, Gas>;
+
+  constructor(config?: ConditionalExcept<PrivilegedServicesImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 }

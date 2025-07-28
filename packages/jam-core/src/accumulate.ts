@@ -125,12 +125,15 @@ export const accumulateReports = (
     p_accumulationHistory,
     p_accumulationQueue,
     p_mostRecentAccumulationOutputs,
-    p_privServices: toPosterior(<PrivilegedServices>{
-      manager: postState.manager,
-      delegator: postState.delegator,
-      assigners: postState.assigners,
-      alwaysAccers: postState.alwaysAccers,
-    }),
+    p_privServices: toPosterior(
+      new PrivilegedServicesImpl({
+        manager: postState.manager,
+        delegator: postState.delegator,
+        assigners: postState.assigners,
+        alwaysAccers: postState.alwaysAccers,
+        registrar: <ServiceIndex>0, // FIXME: 0.7.1
+      }),
+    ),
     d_delta: toDagger(postState.accounts),
     p_iota: toPosterior(postState.stagingSet),
     p_authQueue: toPosterior(postState.authQueue),

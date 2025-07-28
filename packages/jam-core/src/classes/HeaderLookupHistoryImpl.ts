@@ -2,7 +2,7 @@ import { BaseJamCodecable } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import { HeaderLookupHistory, Tau } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { JamHeaderImpl, JamSignedHeaderImpl } from "./JamHeaderImpl";
+import { JamSignedHeaderImpl } from "./JamHeaderImpl";
 
 /**
  * This is not really defined in graypaper
@@ -18,7 +18,7 @@ export class HeaderLookupHistoryImpl
     return this.elements.get(t);
   }
 
-  toPosterior(deps: { header: JamSignedHeaderImpl }): HeaderLookupHistory {
+  toPosterior(deps: { header: JamSignedHeaderImpl }): HeaderLookupHistoryImpl {
     const toRet = structuredClone(this);
 
     toRet.elements.set(deps.header.slot, deps.header);

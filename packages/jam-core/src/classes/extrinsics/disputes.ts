@@ -207,18 +207,21 @@ export class DisputeExtrinsicImpl
     tau: Tau;
     kappa: JamStateImpl["kappa"];
     lambda: JamStateImpl["lambda"];
-  }): Result<Validated<DisputeExtrinsicImpl>, string> {
+  }): Result<
+    Validated<DisputeExtrinsicImpl>,
+    DisputesExtrinsicValidationError
+  > {
     // $(0.6.4 - 10.2)
     for (const v of this.verdicts) {
       if (
         v.age !== epochIndex(deps.tau) &&
         v.age !== epochIndex(deps.tau) - 1
       ) {
-        return err("epoch-index-wrong-in-verdicts");
+        return err(DisputesExtrinsicValidationError.EPOCH_INDEX_WRONG);
       }
 
       if (v.judgements.length !== MINIMUM_VALIDATORS) {
-        return err("judgements-length-wrong");
+        return err(DisputesExtrinsicValidationError.JUDGEMENTS_LENGTH_WRONG);
       }
     }
 
@@ -255,12 +258,18 @@ export class DisputeExtrinsicImpl
         });
       })
     ) {
-      return err("verdict-signatures-wrong");
+      return err(DisputesExtrinsicValidationError.VERDICT_SIGNATURES_WRONG);
     }
 
     // NOTE: culprits and verdics are checked by disputesState
     return ok(toTagged(this));
   }
+}
+
+export enum DisputesExtrinsicValidationError {
+  VERDICT_SIGNATURES_WRONG = "verdict-signatures-wrong",
+  EPOCH_INDEX_WRONG = "epoch-index-wrong-in-verdicts",
+  JUDGEMENTS_LENGTH_WRONG = "JUDGEMENTS_LENGTH_WRONG",
 }
 
 if (import.meta.vitest) {

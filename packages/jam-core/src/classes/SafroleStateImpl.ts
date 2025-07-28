@@ -48,9 +48,11 @@ export class SafroleStateImpl extends BaseJamCodecable implements SafroleState {
   @codec(GammaAImpl)
   gamma_a!: GammaAImpl;
 
-  constructor(config: ConditionalExcept<SafroleStateImpl, Function>) {
+  constructor(config?: ConditionalExcept<SafroleStateImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   toPosterior(deps: {
