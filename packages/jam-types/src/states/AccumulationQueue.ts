@@ -5,7 +5,7 @@ import { SeqOfLength, WorkPackageHash } from "@/genericTypes";
 /**
  * `ω`
  * Defines the ready but not yet accumulated work reports
- * $(0.7.0 - 12.3)
+ * $(0.7.1 - 12.3)
  */
 export type AccumulationQueue = {
   elements: SeqOfLength<

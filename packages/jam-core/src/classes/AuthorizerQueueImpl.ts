@@ -16,9 +16,9 @@ import {
 } from "@tsjam/types";
 
 /**
- * `ϕ`
- * $(0.7.0 - 8.1)
- * A queue of AuthorizerHash-es, each of which will be rotated in the AuthorizerPool
+ * `ω`
+ * Defines the ready but not yet accumulated work reports
+ * $(0.7.1 - 12.3)
  */
 export class AuthorizerQueueImpl
   extends BaseJamCodecable

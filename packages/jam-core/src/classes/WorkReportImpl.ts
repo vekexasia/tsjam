@@ -35,6 +35,7 @@ import { WorkContextImpl } from "./WorkContextImpl";
 import { WorkDigestImpl } from "./WorkDigestImpl";
 import { RHOImpl } from "./RHOImpl";
 import { Hashing } from "@tsjam/crypto";
+import { type NewWorkReportsImpl } from "./NewWorkReportsImpl";
 
 // codec order defined in $(0.7.0 - C.27)
 @JamCodecable()
@@ -104,15 +105,6 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
     return Hashing.blake2b(this.toBinary());
   }
 
-  equals(other: WorkReportImpl): boolean {
-    // TODO: improve performance of this by checking elements
-    return (
-      this.core === other.core &&
-      this.authorizerHash === other.authorizerHash &&
-      this.hash() === other.hash()
-    );
-  }
-
   /**
    * `P()`
    * $(0.7.0 - 12.9)
@@ -130,11 +122,11 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
 
   static computeRequiredWorkReports(
     rho: RHOImpl,
-    bold_w: AvailableWorkReports,
+    bold_w: NewWorkReportsImpl,
   ): AuditRequiredWorkReports {
     const toRet = [] as unknown[] as AuditRequiredWorkReports;
 
-    const wSet = new Set(bold_w.map((wr) => wr.hash()));
+    const wSet = new Set(bold_w.elements.map((wr) => wr.hash()));
 
     for (let c = <CoreIndex>0; c < CORES; c++) {
       const rc = rho.elementAt(c);
@@ -148,16 +140,6 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   }
 }
 
-/**
- * `bold R`
- * $(0.7.0 - 11.16)
- */
-export type AvailableWorkReports = Tagged<WorkReportImpl[], "available">;
-
-/**
- * `bold R!` in the paper
- * $(0.7.0 - 12.4)
- */
 export type AvailableNoPrereqWorkReports = Tagged<
   WorkReportImpl[],
   "available-no-prerequisites"

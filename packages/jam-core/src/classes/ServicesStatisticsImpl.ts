@@ -52,6 +52,9 @@ export class ServicesStatisticsImpl
     Object.assign(this, config);
   }
 
+  /**
+   * $(0.7.0 - 13.12)
+   */
   toPosterior(deps: {
     ep: Validated<PreimagesExtrinsicImpl>;
     /**

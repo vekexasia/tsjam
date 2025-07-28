@@ -28,8 +28,7 @@ import { JamHeaderImpl } from "../JamHeaderImpl";
 import { JamStateImpl } from "../JamStateImpl";
 import { RHOImpl } from "../RHOImpl";
 import { Ed25519, Hashing } from "@tsjam/crypto";
-import { toTagged } from "@tsjam/utils";
-import { AvailableWorkReports, WorkReportImpl } from "../WorkReportImpl";
+import { NewWorkReportsImpl } from "../NewWorkReportsImpl";
 
 // Single extrinsic element
 // codec order defined in $(0.7.1 - C.27)
@@ -170,16 +169,16 @@ export class AssurancesExtrinsicImpl
   static newlyAvailableReports(
     ea: Validated<AssurancesExtrinsicImpl>,
     d_rho: Dagger<RHOImpl>,
-  ): AvailableWorkReports {
-    const bold_R: WorkReportImpl[] = [];
+  ): NewWorkReportsImpl {
+    const bold_R = new NewWorkReportsImpl();
     for (let c = <CoreIndex>0; c < CORES; c++) {
       const sum = ea.nPositiveVotes(c);
 
       if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
-        bold_R.push(d_rho.elementAt(c)!.workReport);
+        bold_R.elements.push(d_rho.elementAt(c)!.workReport);
       }
     }
-    return toTagged(bold_R);
+    return bold_R;
   }
 }
 

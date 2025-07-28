@@ -1,6 +1,5 @@
 import {
   CORES,
-  EPOCH_LENGTH,
   TOTAL_GAS_ACCUMULATION_ALL_CORES,
   TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
@@ -16,8 +15,6 @@ import {
   ServiceIndex,
   Tagged,
   Tau,
-  WorkPackageHash,
-  WorkReport,
   u32,
   u64,
 } from "@tsjam/types";
@@ -25,34 +22,27 @@ import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import { AccumulationHistoryImpl } from "./classes/AccumulationHistoryImpl";
 import { AccumulationOutImpl } from "./classes/AccumulationOutImpl";
-import {
-  AccumulationQueueImpl,
-  AccumulationQueueItem,
-} from "./classes/AccumulationQueueImpl";
+import { AccumulationQueueImpl } from "./classes/AccumulationQueueImpl";
 import { AccumulationStatisticsImpl } from "./classes/AccumulationStatisticsImpl";
 import { AuthorizerQueueImpl } from "./classes/AuthorizerQueueImpl";
 import { DeferredTransferImpl } from "./classes/DeferredTransferImpl";
+import { DeferredTransfersImpl } from "./classes/DeferredTransfersImpl";
 import { DeltaImpl } from "./classes/DeltaImpl";
+import { LastAccOutsImpl } from "./classes/LastAccOutsImpl";
+import { NewWorkReportsImpl } from "./classes/NewWorkReportsImpl";
 import { PrivilegedServicesImpl } from "./classes/PrivilegedServicesImpl";
 import { PVMAccumulationOpImpl } from "./classes/PVMAccumulationOPImpl";
 import { PVMAccumulationStateImpl } from "./classes/PVMAccumulationStateImpl";
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
-import {
-  AccumulatableWorkReports,
-  AvailableNoPrereqWorkReports,
-  AvailableWorkReports,
-  WorkReportImpl,
-} from "./classes/WorkReportImpl";
+import { WorkReportImpl } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
-import { DeferredTransfersImpl } from "./classes/DeferredTransfersImpl";
-import { LastAccOutsImpl } from "./classes/LastAccOutsImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
  * computes a series of posterior states
  */
 export const accumulateReports = (
-  r: AvailableWorkReports,
+  r: NewWorkReportsImpl,
   deps: {
     accumulationHistory: AccumulationHistoryImpl;
     accumulationQueue: AccumulationQueueImpl;
@@ -68,16 +58,15 @@ export const accumulateReports = (
   /*
    * Integrate state to calculate several posterior state
    */
-  const r_mark = noPrereqAvailableReports(r);
 
-  const r_q = withPrereqAvailableReports(r, deps.accumulationHistory);
+  const r_q = r.queueable(deps.accumulationHistory);
+
   // console.log({ w_q: w_q });
-  const r_star = accumulatableReports(
-    r_mark,
-    r_q,
-    deps.accumulationQueue,
-    deps.p_tau,
-  );
+  const r_star = r.accumulatableReports({
+    accQueue: deps.accumulationQueue,
+    accHistory: deps.accumulationHistory,
+    p_tau: deps.p_tau,
+  });
 
   // $(0.7.0 - 12.22)
   const g: Gas = [
@@ -147,132 +136,6 @@ export const accumulateReports = (
     p_authQueue: toPosterior(postState.authQueue),
     accumulationStatistics,
   });
-};
-
-/**
- * Computes  `R!` in the paper
- * $(0.7.0 - 12.4)
- */
-export const noPrereqAvailableReports = (
-  bold_R: AvailableWorkReports,
-): AvailableNoPrereqWorkReports => {
-  return toTagged(
-    bold_R.filter(
-      (wr) => wr.context.prerequisites.length === 0 && wr.srLookup.size === 0,
-    ),
-  );
-};
-
-/**
- * Computes the union of the AccumulationHistory
- * $(0.7.0 - 12.2)
- */
-export const accHistoryUnion = (
-  accHistory: AccumulationHistoryImpl,
-): Set<WorkPackageHash> => {
-  return toTagged(
-    new Set(accHistory.elements.map((a) => [...a.values()]).flat()),
-  );
-};
-
-/**
- * $(0.7.0 - 12.7)
- */
-export const E_Fn = (
-  r: AccumulationQueueItem[],
-  x: Set<WorkPackageHash>,
-): AccumulationQueueItem[] => {
-  const toRet: AccumulationQueueItem[] = [];
-
-  for (const { workReport /* w */, dependencies /* d */ } of r) {
-    if (x.has(workReport.avSpec.packageHash)) {
-      continue;
-    }
-
-    const newDeps = new Set(dependencies);
-    x.forEach((packageHash) => newDeps.delete(packageHash));
-    toRet.push(
-      new AccumulationQueueItem({ workReport, dependencies: newDeps }),
-    );
-  }
-  return toRet;
-};
-
-/**
- * `WQ` in the paper
- * $(0.7.0 - 12.5)
- */
-export const withPrereqAvailableReports = (
-  bold_R: AvailableWorkReports,
-  accHistory: AccumulationHistoryImpl,
-): Tagged<Array<AccumulationQueueItem>, "available-yes-prerequisites"> => {
-  return toTagged(
-    E_Fn(
-      bold_R
-        .filter((wr) => {
-          return wr.context.prerequisites.length > 0 || wr.srLookup.size > 0;
-        })
-        .map((wr) => {
-          // $(0.7.0 - 12.6) | D fn calculated inline
-          const deps = new Set<WorkPackageHash>(wr.srLookup.keys());
-          wr.context.prerequisites.forEach((rwp) => deps.add(rwp));
-          return new AccumulationQueueItem({
-            workReport: wr,
-            dependencies: deps,
-          });
-        }),
-      accHistoryUnion(accHistory),
-    ),
-  );
-};
-
-/**
- * `Q` fn
- * $(0.7.0 - 12.8)
- */
-export const computeAccumulationPriority = (
-  r: AccumulationQueueItem[],
-): WorkReport[] => {
-  const g = r
-    .filter(({ dependencies }) => dependencies.size === 0)
-    .map(({ workReport }) => workReport);
-  if (g.length === 0) {
-    return [];
-  }
-
-  return [
-    ...g,
-    ...computeAccumulationPriority(
-      E_Fn(r, WorkReportImpl.extractWorkPackageHashes(g)),
-    ),
-  ];
-};
-
-/**
- * `bold R*` in the paper
- * $(0.7.0 - 12.11)
- */
-export const accumulatableReports = (
-  r_mark: ReturnType<typeof noPrereqAvailableReports>,
-  r_q: ReturnType<typeof withPrereqAvailableReports>,
-  accumulationQueue: AccumulationQueueImpl,
-  p_tau: Posterior<Tau>, // Ht
-): AccumulatableWorkReports => {
-  // $(0.7.0 - 12.10)
-  const m = p_tau % EPOCH_LENGTH;
-
-  const accprio = computeAccumulationPriority(
-    // $(0.7.0 - 12.12)
-    E_Fn(
-      [
-        ...accumulationQueue.elements.slice(m).flat(),
-        ...accumulationQueue.elements.slice(0, m).flat(),
-        ...r_q,
-      ],
-      WorkReportImpl.extractWorkPackageHashes(r_mark),
-    ),
-  );
-  return [...r_mark, ...accprio] as AccumulatableWorkReports;
 };
 
 /**

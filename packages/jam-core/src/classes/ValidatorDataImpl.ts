@@ -15,6 +15,7 @@ import {
   ED25519PublicKey,
   ValidatorData,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class ValidatorDataImpl
@@ -60,4 +61,9 @@ export class ValidatorDataImpl
   @jsonCodec(BufferJSONCodec())
   @binaryCodec(fixedSizeIdentityCodec(128))
   metadata!: ByteArrayOfLength<128>;
+
+  constructor(config: ConditionalExcept<ValidatorDataImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
 }

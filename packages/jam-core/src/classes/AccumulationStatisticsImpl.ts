@@ -23,6 +23,10 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
     return this.elements.has(serviceIndex);
   }
 
+  get(serviceIndex: ServiceIndex) {
+    return this.elements.get(serviceIndex);
+  }
+
   services(): ServiceIndex[] {
     return Array.from(this.elements.keys());
   }

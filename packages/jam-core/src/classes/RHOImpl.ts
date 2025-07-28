@@ -27,8 +27,8 @@ import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import { DisputesStateImpl } from "./DisputesStateImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { JamStateImpl } from "./JamStateImpl";
-import { AvailableWorkReports, WorkReportImpl } from "./WorkReportImpl";
+import { WorkReportImpl } from "./WorkReportImpl";
+import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 
 @JamCodecable()
 export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
@@ -107,7 +107,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     deps: {
       rho: RHOImpl;
       p_tau: Posterior<Tau>; // Ht
-      newReports: AvailableWorkReports; // bold R
+      newReports: NewWorkReportsImpl; // bold R
     },
   ): DoubleDagger<RHOImpl> {
     const newState = structuredClone(d_rho);
@@ -121,7 +121,9 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
 
       // check if workreport from rho has now become available
       // we use this by creating a set of report hashes and cheching if 'p[c]r' is in it
-      const newReportsSet = new Set(deps.newReports.map((r) => r.hash()));
+      const newReportsSet = new Set(
+        deps.newReports.elements.map((r) => r.hash()),
+      );
       if (newReportsSet.has(deps.rho.elementAt(c)!.workReport.hash())) {
         newState.elements[c] = undefined;
       }
@@ -134,13 +136,12 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
   }
 
   /**
-   * $(0.7.0 - 11.43)
+   * $(0.7.1 - 11.43)
    */
   static toPosterior(
     dd_rho: DoubleDagger<RHOImpl>,
     deps: {
       EG_Extrinsic: Validated<GuaranteesExtrinsicImpl>;
-      kappa: JamStateImpl["kappa"];
       p_tau: Posterior<Tau>;
     },
   ): Posterior<RHOImpl> {

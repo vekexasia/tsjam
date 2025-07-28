@@ -5,26 +5,23 @@ import {
   JamStatistics,
   Posterior,
   ServiceIndex,
-  Tagged,
   Tau,
   u32,
   Validated,
 } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
+import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
 import { CoreStatisticsImpl } from "./CoreStatisticsImpl";
+import { DisputesStateImpl } from "./DisputesStateImpl";
+import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
+import { JamEntropyImpl } from "./JamEntropyImpl";
+import { JamHeaderImpl } from "./JamHeaderImpl";
+import { JamStateImpl } from "./JamStateImpl";
+import { RHOImpl } from "./RHOImpl";
 import { ServicesStatisticsImpl } from "./ServicesStatisticsImpl";
 import { ValidatorStatisticsImpl } from "./ValidatorStatisticsImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { RHOImpl } from "./RHOImpl";
-import { WorkReportImpl, AvailableWorkReports } from "./WorkReportImpl";
-import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
-import { DisputesStateImpl } from "./DisputesStateImpl";
-import { JamEntropyImpl } from "./JamEntropyImpl";
-import { JamStateImpl } from "./JamStateImpl";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
-import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
-import { toPosterior } from "@tsjam/utils";
-import { JamHeaderImpl } from "./JamHeaderImpl";
 
 @JamCodecable()
 export class JamStatisticsImpl

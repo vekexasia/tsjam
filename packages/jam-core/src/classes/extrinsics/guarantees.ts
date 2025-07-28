@@ -32,7 +32,6 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   EG_Extrinsic,
-  G_Star,
   GuarantorsAssignment,
   Hash,
   IDisputesState,

@@ -27,7 +27,8 @@ import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { RHOImpl } from "./RHOImpl";
 import { SingleCoreStatisticsImpl } from "./SingleCoreStatisticsImpl";
 import { SingleServiceStatisticsImpl } from "./SingleServiceStatisticsImpl";
-import { AvailableWorkReports, WorkReportImpl } from "./WorkReportImpl";
+import { WorkReportImpl } from "./WorkReportImpl";
+import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 
 export class CoreStatisticsImpl
   extends BaseJamCodecable
@@ -58,7 +59,7 @@ export class CoreStatisticsImpl
     ea: Validated<AssurancesExtrinsicImpl>;
     d_rho: Dagger<RHOImpl>;
     bold_I: Tagged<WorkReportImpl[], "bold I">;
-    bold_R: AvailableWorkReports;
+    bold_R: NewWorkReportsImpl;
   }) {
     const toRet = structuredClone(this);
 
@@ -88,9 +89,9 @@ const D_fn = (
    * `bold R`
    * $(0.7.1 - 11.16)
    */
-  availableReports: AvailableWorkReports,
+  availableReports: NewWorkReportsImpl,
 ): u32 => {
-  return <u32>availableReports
+  return <u32>availableReports.elements
     .filter((w) => w.core === core)
     .map((w) => {
       return (

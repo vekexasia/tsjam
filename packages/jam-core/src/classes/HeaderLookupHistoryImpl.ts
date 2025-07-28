@@ -18,7 +18,7 @@ export class HeaderLookupHistoryImpl
     return this.elements.get(t);
   }
 
-  toPosterior(deps: { header: JamHeaderImpl }): HeaderLookupHistory {
+  toPosterior(deps: { header: JamSignedHeaderImpl }): HeaderLookupHistory {
     const toRet = structuredClone(this);
 
     toRet.elements.set(deps.header.slot, deps.header);

@@ -19,10 +19,10 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { WorkReportImpl } from "./WorkReportImpl";
-import { E_Fn } from "@/accumulate";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
+import { E_Fn } from "./NewWorkReportsImpl";
 
 @JamCodecable()
 export class AccumulationQueueItem extends BaseJamCodecable {
@@ -44,6 +44,12 @@ export class AccumulationQueueItem extends BaseJamCodecable {
   }
 }
 
+/**
+ * `ω`
+ * Defines the ready but not yet accumulated work reports
+ * $(0.7.1 - 12.3)
+ */
+@JamCodecable()
 export class AccumulationQueueImpl
   extends BaseJamCodecable
   implements AccumulationQueue

@@ -18,6 +18,11 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 
+/**
+ * `ξ` in the graypaper
+ * Defines the wph that have been accumulated
+ * $(0.7.1 - 12.1)
+ */
 @JamCodecable()
 export class AccumulationHistoryImpl
   extends BaseJamCodecable
@@ -33,6 +38,14 @@ export class AccumulationHistoryImpl
     SINGLE_ELEMENT_CLASS,
   )
   elements!: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;
+
+  /**
+   * Computes the union of the AccumulationHistory
+   * $(0.7.1 - 12.2)
+   */
+  union() {
+    return new Set(this.elements.map((a) => [...a.values()]).flat());
+  }
 
   /**
    * $(0.7.0 - 12.35 / 12.36)

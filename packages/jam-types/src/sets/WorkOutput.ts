@@ -1,6 +1,6 @@
 /**
  * defined as `E` set in the paper
- * $(0.7.0 - 11.7)
+ * $(0.7.1 - 11.7)
  */
 export enum WorkError {
   /**

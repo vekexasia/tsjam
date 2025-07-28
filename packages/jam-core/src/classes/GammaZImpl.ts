@@ -25,6 +25,9 @@ export class GammaZImpl extends BaseJamCodecable implements GammaZ {
     Object.assign(this, config);
   }
 
+  /**
+   * $(0.7.1 - 6.13)
+   */
   toPosterior(
     curState: JamStateImpl,
     deps: { p_tau: Posterior<Tau>; p_gamma_p: Posterior<GammaPImpl> },

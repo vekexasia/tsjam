@@ -114,6 +114,7 @@ export class JamStateImpl implements JamState {
 
   applyBlock(block: JamBlockImpl) {
     const p_tau = toPosterior(block.header.slot);
+    // $(0.7.1 - 6.13)
     let p_kappa = toPosterior(this.kappa);
     let p_lambda = toPosterior(this.lambda);
     if (isNewEra(block.header.slot, this.tau)) {
@@ -285,7 +286,6 @@ export class JamStateImpl implements JamState {
     const p_rho = RHOImpl.toPosterior(dd_rho, {
       p_tau,
       EG_Extrinsic: validatedEG,
-      kappa: this.kappa,
     });
 
     const headerHash = block.header.signedHash();
