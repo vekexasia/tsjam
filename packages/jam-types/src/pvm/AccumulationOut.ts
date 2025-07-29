@@ -29,5 +29,5 @@ export type AccumulationOut = {
   /**
    * `bold_p`
    */
-  provision: PVMResultContext["preimages"];
+  provisions: PVMResultContext["provisions"];
 };

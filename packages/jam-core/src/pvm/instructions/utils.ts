@@ -6,12 +6,12 @@ import {
   PVMExitPageFaultMod,
   PVMExitPanicMod,
   PVMProgramExecutionContext,
+  PVMRegisterRawValue,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
-  RegisterValue,
   RegularPVMExitReason,
   u32,
   u8,
@@ -74,7 +74,7 @@ export const IxMod = {
       type: "register",
       data: {
         index: register,
-        value: BigInt(value) as RegisterValue,
+        value: BigInt(value) as PVMRegisterRawValue,
       },
     };
   },

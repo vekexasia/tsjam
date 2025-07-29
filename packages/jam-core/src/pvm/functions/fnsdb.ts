@@ -1,29 +1,34 @@
 import {
   Gas,
+  PVMExitReasonMod,
   PVMFn,
-  u8,
+  PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
   PVMSingleModGas,
-  PVMExitReasonMod,
+  u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { IxMod } from "@/instructions/utils";
+import { IxMod } from "../instructions/utils";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 
 export const FnsDb = {
   byCode: new Map<u8, string>(),
-  byIdentifier: new Map<string, PVMFn<never, unknown>>(),
+  byIdentifier: new Map<
+    string,
+    PVMFn<never, unknown, PVMProgramExecutionContextImpl>
+  >(),
 };
 /**
  * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
 export interface DetailedPVMFn<
-  Args extends unknown[],
+  Args extends unknown,
   Out,
-  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
+  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContext,
 > {
-  execute(context: CTX, ...args: Args): Out;
-  gasCost: Gas | ((ctx: CTX, ...args: Args) => Gas);
+  execute(context: CTX, args: Args): Out;
+  gasCost: Gas | ((ctx: CTX, args: Args) => Gas);
   opCode: number;
   identifier: string;
 }
@@ -32,9 +37,13 @@ export interface DetailedPVMFn<
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regFn = <Args extends unknown[], Out>(conf: {
-  fn: DetailedPVMFn<Args, Out[]>;
-}): PVMFn<Args, Array<Out | PVMSingleModGas> | PVMExitReasonMod[]> => {
+export const regFn = <Args extends unknown, Out>(conf: {
+  fn: DetailedPVMFn<Args, Out[], PVMProgramExecutionContextImpl>;
+}): PVMFn<
+  Args,
+  Array<Out | PVMSingleModGas> | PVMExitReasonMod[],
+  PVMProgramExecutionContextImpl
+> => {
   if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
     throw new Error(`duplicate opCode ${conf.fn.opCode} ${conf.fn.identifier}`);
   }
@@ -43,23 +52,49 @@ export const regFn = <Args extends unknown[], Out>(conf: {
   }
   const newfn: PVMFn<
     Args,
-    Array<Out | PVMSingleModGas> | [PVMExitReasonMod]
-  > = (ctx: PVMProgramExecutionContextBase, ...args) => {
+    Array<Out | PVMSingleModGas> | [PVMExitReasonMod],
+    PVMProgramExecutionContextImpl
+  > = (ctx: PVMProgramExecutionContextImpl, args) => {
     // $(0.6.4 - B.17 / B.19 / B.21)
     const gas =
       typeof conf.fn.gasCost === "function"
-        ? conf.fn.gasCost(ctx, ...args)
+        ? conf.fn.gasCost(ctx, args)
         : conf.fn.gasCost;
     if (gas > ctx.gas) {
       // $(0.6.4 - B.18 / B.20 / B.22) | first bracket
       return [IxMod.outOfGas()];
     }
-    return [...conf.fn.execute(ctx, ...args), IxMod.gas(gas)];
+    return [...conf.fn.execute(ctx, args), IxMod.gas(gas)];
   };
 
   FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn.identifier);
   FnsDb.byIdentifier.set(conf.fn.identifier, newfn);
   return newfn;
+};
+
+export const HostFn = <Args extends unknown, Out>(
+  opCode: number,
+  gasCost: Gas | ((ctx: PVMProgramExecutionContextImpl, args: Args) => Gas) = <
+    Gas
+  >10n,
+) => {
+  return (
+    _target: unknown,
+    propertyKey: string,
+    descriptor: TypedPropertyDescriptor<
+      (ctx: PVMProgramExecutionContextImpl, args: Args) => Out[]
+    >,
+  ) => {
+    regFn<Args, Out>({
+      fn: {
+        opCode: opCode as u8,
+        identifier: propertyKey,
+        execute: descriptor.value!,
+        gasCost,
+      },
+    });
+    return descriptor;
+  };
 };
 
 // test

@@ -36,3 +36,7 @@ export type DeferredTransfer = {
    */
   gas: Gas;
 };
+
+export type DeferredTransfers = {
+  elements: Array<DeferredTransfer>;
+};

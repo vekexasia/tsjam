@@ -23,6 +23,8 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
     super();
     if (typeof config !== "undefined") {
       Object.assign(this, config);
+    } else {
+      this.elements = toTagged([] as ValidatorDataImpl[]);
     }
   }
 

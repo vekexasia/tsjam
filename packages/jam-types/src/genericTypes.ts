@@ -45,7 +45,7 @@ export type Z_Gas = Tagged<i64, "gas">;
  * Defines the value held by a register
  * RegisterValue is a 64-bit unsigned integer
  */
-export type RegisterValue = Tagged<u64, "registerValue">;
+export type PVMRegisterRawValue = Tagged<u64, "registerValue">;
 
 /**
  * Define a bigint whose max value is 2^(8*T) - 1 (if unsigned)

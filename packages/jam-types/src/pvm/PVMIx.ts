@@ -8,20 +8,14 @@ import {
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModRegister,
-  PVMExitPanicMod,
-  PVMExitHaltMod,
-  PVMExitPageFaultMod,
-  PVMExitHostCallMod,
+  PVMExitReasonMod,
 } from "./PVMModifications";
 export type PVMIxReturnMods = Array<
   | PVMSingleModPointer
   | PVMSingleModGas
   | PVMSingleModMemory
   | PVMSingleModRegister<RegisterIdentifier>
-  | PVMExitPanicMod
-  | PVMExitHaltMod
-  | PVMExitPageFaultMod
-  | PVMExitHostCallMod
+  | PVMExitReasonMod
 >;
 
 export type PVMIxEvaluateFNContext = {

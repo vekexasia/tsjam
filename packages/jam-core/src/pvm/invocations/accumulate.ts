@@ -1,7 +1,7 @@
 import { AccumulationOutImpl } from "@/classes/AccumulationOutImpl";
-import { PVMAccumulationOpImpl } from "@/classes/PVMAccumulationOPImpl";
-import { PVMAccumulationStateImpl } from "@/classes/PVMAccumulationStateImpl";
-import { PVMResultContextImpl } from "@/classes/PVMResultContextImpl";
+import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
+import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
+import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import {
   createCodec,

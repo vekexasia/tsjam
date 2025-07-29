@@ -203,7 +203,7 @@ export const ERASURECODE_SEGMENT_SIZE = <4104>(
 );
 
 /**
- * `WM` in the paper
+ * `WX` in the paper
  */
 export const MAX_EXPORTED_ITEMS = 3072;
 
@@ -233,3 +233,6 @@ export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
 export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
 // $(0.6.4 - 4.25)
 export const Zp = 2 ** 12;
+
+// `S`
+export const MINIMUM_PUBLIC_SERVICE_INDEX = 2 ** 16;

@@ -6,7 +6,7 @@ import {
   PVMAccumulationState,
   ServiceIndex,
 } from "@tsjam/types";
-import { PVMAccumulationStateImpl } from "./PVMAccumulationStateImpl";
+import { PVMAccumulationStateImpl } from "./pvm/PVMAccumulationStateImpl";
 import { DeferredTransferImpl } from "./DeferredTransferImpl";
 import { ConditionalExcept } from "type-fest";
 

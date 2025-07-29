@@ -1,43 +1,46 @@
 import { Hash, PVMResultContext, ServiceIndex } from "@tsjam/types";
-import { DeferredTransferImpl } from "./DeferredTransferImpl";
 import { PVMAccumulationStateImpl } from "./PVMAccumulationStateImpl";
 import { ConditionalExcept } from "type-fest";
-import { ServiceAccountImpl } from "./ServiceAccountImpl";
+import { DeferredTransfersImpl } from "../DeferredTransfersImpl";
 
 /**
- * `X` in the graypaper
- * $(0.6.4 - B.7)
+ * `L` in the graypaper
+ * $(0.7.1 - B.7)
+ *
  */
 export class PVMResultContextImpl implements PVMResultContext {
   /**
    * `s`
    */
-  service!: ServiceIndex;
+  id!: ServiceIndex;
   /**
-   * `u`
+   * `bold e`
    */
-  u!: PVMAccumulationStateImpl;
+  state!: PVMAccumulationStateImpl;
   /**
    * `i`
    */
-  i!: ServiceIndex;
+  nextFreeID!: ServiceIndex;
   /**
-   * `t`
+   * `bold_t`
    */
-  transfer!: DeferredTransferImpl[];
-  y!: Hash | undefined;
+  transfers!: DeferredTransfersImpl;
+  /**
+   * `y`
+   */
+  yield!: Hash | undefined;
   /**
    * `p`
    */
-  preimages!: Array<{
+  provisions!: Array<{
     /**
      * `s`
      */
-    service: ServiceIndex;
+    serviceId: ServiceIndex;
     /**
      * `bold_i`
      */
-    preimage: Uint8Array;
+    blob: Uint8Array;
   }>;
 
   constructor(config: ConditionalExcept<PVMResultContextImpl, Function>) {
@@ -45,9 +48,9 @@ export class PVMResultContextImpl implements PVMResultContext {
   }
 
   /**
-   * $(0.6.4 - B.9)
+   * $(0.7.1 - B.8)
    */
-  boldS(service: ServiceIndex = this.service): ServiceAccountImpl | undefined {
-    return this.u.accounts.get(service);
+  bold_s() {
+    return this.state.accounts.get(this.id)!;
   }
 }

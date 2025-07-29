@@ -16,6 +16,7 @@ import {
   Gas,
   ServiceIndex,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * `X` set in graypaper
@@ -56,4 +57,11 @@ export class DeferredTransferImpl
    */
   @eSubBigIntCodec(8)
   gas!: Gas;
+
+  constructor(config?: ConditionalExcept<DeferredTransferImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 }

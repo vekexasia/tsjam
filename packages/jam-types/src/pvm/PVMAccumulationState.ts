@@ -6,7 +6,7 @@ import { CORES } from "@tsjam/constants";
 
 /**
  * `S` in the graypaper
- * $(0.7.0 - 12.13)
+ * $(0.7.1 - 12.16)
  */
 export interface PVMAccumulationState {
   /**
@@ -40,6 +40,12 @@ export interface PVMAccumulationState {
    * service which can alter ι
    */
   delegator: ServiceIndex;
+
+  /**
+   * `r`
+   */
+  registrar: ServiceIndex;
+
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits

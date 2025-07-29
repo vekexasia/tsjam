@@ -1,48 +1,48 @@
 import { Hash, ServiceIndex } from "@/genericTypes.js";
-import { DeferredTransfer } from "@/pvm/DeferredTransfer.js";
+import { DeferredTransfer, DeferredTransfers } from "@/pvm/DeferredTransfer.js";
 import { PVMAccumulationState } from "./PVMAccumulationState";
 
 /**
- * `X` in the graypaper
- * $(0.6.4 - B.7)
+ * `L` in the graypaper
+ * $(0.7.1 - B.7)
  *
  * NOTE:there are the following virtual computed
- * X_bold_s = X.u.delta.get(X.service)  - $(0.6.4 - B.9)
+ * X_bold_s = X.u.delta.get(X.service)  - $(0.7.1 - B.8)
  */
 export interface PVMResultContext {
   /**
    * `s`
    */
-  service: ServiceIndex;
-
+  id: ServiceIndex;
   /**
-   * `u`
+   * `bold e`
    */
-  u: PVMAccumulationState;
-
+  state: PVMAccumulationState;
   /**
    * `i`
    */
-  i: ServiceIndex;
+  nextFreeID: ServiceIndex;
+  /**
+   * `bold_t`
+   */
+  transfers: DeferredTransfers;
 
   /**
-   * `t`
+   * `y`
    */
-  transfer: DeferredTransfer[];
-
-  y: Hash | undefined;
+  yield: Hash | undefined;
 
   /**
    * `p`
    */
-  preimages: Array<{
+  provisions: Array<{
     /**
      * `s`
      */
-    service: ServiceIndex;
+    serviceId: ServiceIndex;
     /**
      * `bold_i`
      */
-    preimage: Uint8Array;
+    blob: Uint8Array;
   }>;
 }

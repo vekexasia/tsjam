@@ -1,26 +1,26 @@
+import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import {
   Gas,
-  PVMExitReason,
   PVMExitMod,
+  PVMExitReason,
   PVMProgramExecutionContext,
   PVMProgramExecutionContextBase,
-  PVMResultContext,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
 } from "@tsjam/types";
-import { PVMMemory } from "@/pvmMemory.js";
-import { IxMod } from "@/instructions/utils";
+import { IxMod } from "../instructions/utils";
+import { PVMMemory } from "../pvmMemory";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
 export type W7 = PVMSingleModRegister<7>;
 export type W8 = PVMSingleModRegister<8>;
 
-export type XMod = PVMSingleModObject<{ x: PVMResultContext }>;
-export type YMod = PVMSingleModObject<{ y: PVMResultContext }>;
+export type XMod = PVMSingleModObject<{ x: PVMResultContextImpl }>;
+export type YMod = PVMSingleModObject<{ y: PVMResultContextImpl }>;
 
 /**
  * applies modifications from fns output to compute new ctx and out

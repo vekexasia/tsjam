@@ -62,8 +62,10 @@ export class ValidatorDataImpl
   @binaryCodec(fixedSizeIdentityCodec(128))
   metadata!: ByteArrayOfLength<128>;
 
-  constructor(config: ConditionalExcept<ValidatorDataImpl, Function>) {
+  constructor(config?: ConditionalExcept<ValidatorDataImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 }

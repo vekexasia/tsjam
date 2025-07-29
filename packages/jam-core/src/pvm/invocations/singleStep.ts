@@ -1,23 +1,23 @@
-import { toPosterior } from "@tsjam/utils";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import {
   IParsedProgram,
-  PVMExitReason,
   PVMProgram,
-  PVMProgramExecutionContext,
   Posterior,
   RegularPVMExitReason,
 } from "@tsjam/types";
-import { applyMods } from "@/functions/utils";
-import { IxMod, TRAP_COST } from "@/instructions/utils";
+import { toPosterior } from "@tsjam/utils";
+import { applyMods } from "../functions/utils";
+import { IxMod, TRAP_COST } from "../instructions/utils";
 
 type Output = {
-  p_context: Posterior<PVMProgramExecutionContext>;
-  exitReason?: PVMExitReason;
+  p_context: Posterior<PVMProgramExecutionContextImpl>;
+  exitReason?: PVMExitReasonImpl;
 };
 
-export const debugContext = (ctx: PVMProgramExecutionContext) => {
+export const debugContext = (ctx: PVMProgramExecutionContextImpl) => {
   // pvmLogger.debug("regs", { regs: ctx.registers.join(", ") });
-  return `\t regs:[${ctx.registers.join(" ")}] gas:${ctx.gas}`;
+  return `\t regs:[${ctx.registers.elements.join(" ")}] gas:${ctx.gas}`;
 };
 
 /**
@@ -27,7 +27,7 @@ export const debugContext = (ctx: PVMProgramExecutionContext) => {
  */
 export const pvmSingleStep = (
   p: { program: PVMProgram; parsedProgram: IParsedProgram },
-  ctx: PVMProgramExecutionContext,
+  ctx: PVMProgramExecutionContextImpl,
 ): Output => {
   const ix = p.parsedProgram.ixAt(ctx.instructionPointer);
   if (process.env.DEBUG_STEPS === "true") {

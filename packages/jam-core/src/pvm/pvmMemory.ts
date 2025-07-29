@@ -37,8 +37,11 @@ export class PVMMemory implements IPVMMemory {
     // }
   }
 
-  #locationFromAddress(address: u32) {
-    return { page: Math.floor(address / Zp), offset: address % Zp };
+  #locationFromAddress(address: u32 | bigint) {
+    return {
+      page: Math.floor(Number(address) / Zp),
+      offset: Number(address) % Zp,
+    };
   }
 
   #pagesInRange(address: u32, length: number) {
@@ -62,7 +65,7 @@ export class PVMMemory implements IPVMMemory {
     return memory;
   }
 
-  #setBytes(address: u32, bytes: Uint8Array): void {
+  #setBytes(address: u32 | bigint, bytes: Uint8Array): void {
     const { page, offset } = this.#locationFromAddress(address);
     const memory = this.#getPageMemory(page);
     const bytesToWrite = Math.min(bytes.length, Zp - offset);
@@ -84,7 +87,7 @@ export class PVMMemory implements IPVMMemory {
   /**
    * Returns copy of content in single Uint8Array
    */
-  #getBytes(address: u32, length: number): Uint8Array {
+  #getBytes(address: u32 | bigint, length: number): Uint8Array {
     const { page, offset } = this.#locationFromAddress(address);
     const memory = this.#getPageMemory(page);
     const bytesToRead = Math.min(length, Zp - offset);
@@ -128,7 +131,7 @@ export class PVMMemory implements IPVMMemory {
     return this;
   }
 
-  getBytes(address: u32, length: number): Uint8Array {
+  getBytes(address: u32 | bigint, length: number): Uint8Array {
     assert(this.canRead(address, length), "Memory is not readable");
     const r = this.#getBytes(address, length);
     return r;
@@ -207,8 +210,4 @@ export class PVMMemory implements IPVMMemory {
 export const toInBoundsMemoryAddress = (rawAddr: bigint): u32 => {
   assert(rawAddr < 2n ** 32n, "Address is out of memory bounds");
   return <u32>Number(rawAddr);
-};
-
-export const toSafeMemoryAddress = (rawAddr: bigint | number): u32 => {
-  return <u32>Number(BigInt(rawAddr) % 2n ** 32n);
 };

@@ -1,4 +1,4 @@
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { CORES } from "@tsjam/constants";
 import {
   Gas,
   PVMAccumulationState,
@@ -6,14 +6,13 @@ import {
   ServiceIndex,
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
-import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
-import { DeltaImpl } from "./DeltaImpl";
-import { ValidatorDataImpl } from "./ValidatorDataImpl";
-import { ValidatorsImpl } from "./ValidatorsImpl";
+import { AuthorizerQueueImpl } from "../AuthorizerQueueImpl";
+import { DeltaImpl } from "../DeltaImpl";
+import { ValidatorsImpl } from "../ValidatorsImpl";
 
 /**
  * `S` in the graypaper
- * $(0.7.0 - 12.13)
+ * $(0.7.1 - 12.16)
  */
 export class PVMAccumulationStateImpl implements PVMAccumulationState {
   /**
@@ -42,6 +41,11 @@ export class PVMAccumulationStateImpl implements PVMAccumulationState {
    * service which can alter ι
    */
   delegator!: ServiceIndex;
+
+  /**
+   * `r`
+   */
+  registrar!: ServiceIndex;
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits

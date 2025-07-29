@@ -1,7 +1,8 @@
-import { RegisterValue, SeqOfLength } from "@/genericTypes";
+import { PVMRegisterRawValue, SeqOfLength } from "@/genericTypes";
 
+export type PVMRegisterValue = { value: PVMRegisterRawValue };
 /**
  * The array of the registers in the PVM
  * `ω`
  */
-export type PVMRegisters = SeqOfLength<RegisterValue, 13>;
+export type PVMRegisters = { elements: SeqOfLength<PVMRegisterValue, 13> };

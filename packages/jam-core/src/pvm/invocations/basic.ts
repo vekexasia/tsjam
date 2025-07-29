@@ -1,12 +1,9 @@
-import {
-  PVMExitReason,
-  PVMProgram,
-  PVMProgramExecutionContext,
-  RegularPVMExitReason,
-} from "@tsjam/types";
-import { pvmSingleStep } from "@/invocations/singleStep.js";
-import { PVMProgramCodec } from "@tsjam/codec";
-import { ParsedProgram } from "@/parseProgram";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
+import { PVMProgramCodec } from "@/codecs/PVMProgramCodec";
+import { PVMProgram } from "@tsjam/types";
+import { ParsedProgram } from "../parseProgram";
+import { pvmSingleStep } from "./singleStep";
 
 /**
  * Basic invocation
@@ -15,8 +12,11 @@ import { ParsedProgram } from "@/parseProgram";
  */
 export const basicInvocation = (
   bold_p: Uint8Array,
-  executionContext: PVMProgramExecutionContext,
-): { context: PVMProgramExecutionContext; exitReason: PVMExitReason } => {
+  executionContext: PVMProgramExecutionContextImpl,
+): {
+  context: PVMProgramExecutionContextImpl;
+  exitReason: PVMExitReasonImpl;
+} => {
   let program: PVMProgram;
   try {
     program = PVMProgramCodec.decode(bold_p).value;
@@ -24,7 +24,7 @@ export const basicInvocation = (
   } catch (e) {
     return {
       context: executionContext,
-      exitReason: RegularPVMExitReason.Panic,
+      exitReason: PVMExitReasonImpl.panic(),
     };
   }
   const parsedProgram = ParsedProgram.parse(program);
@@ -35,18 +35,14 @@ export const basicInvocation = (
     const out = pvmSingleStep(p, intermediateState);
     if (typeof out.exitReason !== "undefined") {
       return {
-        context: {
-          ...out.p_context,
-        },
+        context: structuredClone(out.p_context),
         exitReason: out.exitReason,
       };
     }
     intermediateState = out.p_context;
   }
   return {
-    context: {
-      ...intermediateState,
-    },
-    exitReason: RegularPVMExitReason.OutOfGas,
+    context: structuredClone(intermediateState),
+    exitReason: PVMExitReasonImpl.outOfGas(),
   };
 };
