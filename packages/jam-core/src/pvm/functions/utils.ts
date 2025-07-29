@@ -1,10 +1,10 @@
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
+import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import {
   Gas,
-  PVMExitMod,
   PVMExitReason,
-  PVMProgramExecutionContext,
-  PVMProgramExecutionContextBase,
+  PVMExitReasonMod,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -30,12 +30,12 @@ export type YMod = PVMSingleModObject<{ y: PVMResultContextImpl }>;
  * it's idempotent
  */
 export const applyMods = <T extends object>(
-  ctx: PVMProgramExecutionContext,
+  ctx: PVMProgramExecutionContextImpl,
   out: T,
   mods: Array<
     | PVMSingleModRegister<number>
     | PVMSingleModPointer
-    | PVMExitMod
+    | PVMExitReasonMod
     | XMod
     | YMod
     | PVMSingleModMemory
@@ -43,15 +43,13 @@ export const applyMods = <T extends object>(
     | PVMSingleModGas
   >,
 ): {
-  ctx: PVMProgramExecutionContext;
+  ctx: PVMProgramExecutionContextImpl;
   out: T;
   exitReason?: PVMExitReason;
 } => {
   const newCtx = {
     ...ctx,
-    registers: [
-      ...ctx.registers,
-    ] as PVMProgramExecutionContextBase["registers"],
+    registers: structuredClone(ctx.registers),
   };
   let exitReason: PVMExitReason | undefined;
   // we cycle through all mods and stop at the end or if
@@ -66,7 +64,9 @@ export const applyMods = <T extends object>(
       exitReason = mod.data;
     } else if (mod.type === "register") {
       // console.log(`✏️ Reg[${mod.data.index}] = ${mod.data.value.toString(16)}`);
-      newCtx.registers[mod.data.index] = mod.data.value;
+      newCtx.registers.elements[mod.data.index] = new PVMRegisterImpl(
+        mod.data.value,
+      );
     } else if (mod.type === "memory") {
       // we check for page fault before applying
       const firstUnwriteable = newCtx.memory.firstUnwriteable(

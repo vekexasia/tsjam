@@ -3,6 +3,7 @@ import { DeltaImpl } from "@/classes/DeltaImpl";
 import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
 import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
+import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
@@ -24,7 +25,6 @@ import {
   HostCallResult,
   InnerPVMResultCode,
   MAX_EXPORTED_ITEMS,
-  MAX_WORKPACKAGE_ENTRIES,
   MINIMUM_PUBLIC_SERVICE_INDEX,
   NUMBER_OF_VALIDATORS,
   PREIMAGE_EXPIRATION,
@@ -41,10 +41,8 @@ import {
   Gas,
   Hash,
   IrregularPVMExitReason,
-  PVMExitPanicMod,
+  PVMExitReasonMod,
   PVMMemoryAccessKind,
-  PVMProgramExecutionContextBase,
-  PVMRegisterRawValue,
   PVMSingleModMemory,
   PVMSingleModObject,
   RegularPVMExitReason,
@@ -54,18 +52,15 @@ import {
   Tau,
   u32,
   u64,
-  u8,
   UpToSeq,
 } from "@tsjam/types";
 import { toTagged, zeroPad } from "@tsjam/utils";
 import { IxMod } from "../instructions/utils";
+import { basicInvocation } from "../invocations/basic";
+import { PVMMemory } from "../pvmMemory";
 import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { a } from "vitest/dist/chunks/suite.B2jumIFP.js";
-import { PVMMemory } from "../pvmMemory";
-import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
-import { basicInvocation } from "../invocations/basic";
 
 export class HostFunctions {
   @HostFn(0)
@@ -78,7 +73,7 @@ export class HostFunctions {
   fetch(
     context: PVMProgramExecutionContextImpl,
     _: undefined,
-  ): Array<W7 | PVMExitPanicMod> {
+  ): Array<W7 | PVMExitReasonMod> {
     //TODO: implement fetch
     return [IxMod.panic()];
   }
@@ -91,7 +86,7 @@ export class HostFunctions {
   lookup(
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<W7 | PVMExitPanicMod | PVMSingleModMemory> {
+  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
     let bold_a: ServiceAccountImpl | undefined;
     const w7 = context.registers.w7();
     if (Number(w7) === args.s || w7.value === 2n ** 64n - 1n) {
@@ -103,16 +98,16 @@ export class HostFunctions {
     const [h, o] = context.registers.slice(8);
 
     let hash: Blake2bHash;
-    if (context.memory.canRead(h.toSafeMemoryAddress(), 32)) {
+    if (context.memory.canRead(h.value, 32)) {
       hash = Blake2bHashCodec.decode(
-        context.memory.getBytes(h.toSafeMemoryAddress(), 32),
+        context.memory.getBytes(h.value, 32),
       ).value;
     } else {
       // v = ∇
       return [IxMod.panic()];
     }
 
-    if (!context.memory.canWrite(o.toSafeMemoryAddress(), 32)) {
+    if (!context.memory.canWrite(o.value, 32)) {
       return [IxMod.panic()];
     }
 
@@ -133,7 +128,7 @@ export class HostFunctions {
 
     return [
       IxMod.w7(bold_v.length),
-      IxMod.memory(o, bold_v.subarray(Number(f), Number(f + l))),
+      IxMod.memory(o.value, bold_v.subarray(Number(f), Number(f + l))),
     ];
   }
 
@@ -144,10 +139,11 @@ export class HostFunctions {
    *
    * start and length are determined by w11 and w12
    */
+  @HostFn(0)
   read(
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<PVMExitPanicMod | W7 | PVMSingleModMemory> {
+  ): Array<PVMExitReasonMod | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
     let bold_a: ServiceAccountImpl | undefined = args.bold_s;
     let s_star = args.s;
@@ -194,7 +190,7 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
   ): Array<
-    PVMExitPanicMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
+    PVMExitReasonMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
   > {
     const [ko, kz, vo, vz] = context.registers.slice(7);
     let bold_k: Uint8Array;
@@ -258,7 +254,7 @@ export class HostFunctions {
   info(
     context: PVMProgramExecutionContextImpl,
     args: { s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<PVMExitPanicMod | W7 | PVMSingleModMemory> {
+  ): Array<PVMExitReasonMod | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
     let bold_a: ServiceAccountImpl | undefined;
     if (w7.value === 2n ** 64n - 1n) {
@@ -306,7 +302,7 @@ export class HostFunctions {
   historical_lookup(
     context: PVMProgramExecutionContextImpl,
     args: { s: ServiceIndex; bold_d: DeltaImpl; tau: Tau },
-  ): Array<W7 | PVMExitPanicMod | PVMSingleModMemory> {
+  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
     const [w7, h, o, w10, w11] = context.registers.slice(7);
     if (!h.fitsInU32() || !context.memory.canRead(h.checked_u32(), 32)) {
       return [IxMod.panic()];
@@ -349,7 +345,7 @@ export class HostFunctions {
   export(
     context: PVMProgramExecutionContextImpl,
     args: { refineCtx: RefineContext; segmentOffset: number },
-  ): Array<W7 | PVMExitPanicMod | PVMSingleModObject<RefineContext>> {
+  ): Array<W7 | PVMExitReasonMod | PVMSingleModObject<RefineContext>> {
     const [p, w8] = context.registers.slice(7);
     const z = Math.min(Number(w8), ERASURECODE_SEGMENT_SIZE);
 
@@ -406,7 +402,7 @@ export class HostFunctions {
     newContext.bold_m.set(n, {
       code: bold_p,
       ram: bold_u,
-      instructionPointer: i.value,
+      instructionPointer: <u32>Number(i.value),
     });
     return [
       IxMod.w7(n), // new Service index?
@@ -471,10 +467,7 @@ export class HostFunctions {
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    if (
-      !s.fitsInU32() ||
-      !refineCtx.bold_m.get(Number(n))!.ram.canRead(s, Number(z))
-    ) {
+    if (!refineCtx.bold_m.get(Number(n))!.ram.canRead(s.value, Number(z))) {
       return [IxMod.w7(HostCallResult.OOB)];
     }
 
@@ -566,7 +559,7 @@ export class HostFunctions {
       registers: bold_w,
       memory: structuredClone(refineCtx.bold_m.get(Number(n))!.ram),
     });
-    const res = basicInvocation(refineCtx.bold_m.get(n)!.programCode, pvmCtx);
+    const res = basicInvocation(refineCtx.bold_m.get(Number(n))!.code, pvmCtx);
 
     // compute u*
     const newMemory = <PVMSingleModMemory["data"]>{
@@ -622,6 +615,23 @@ export class HostFunctions {
         ];
       }
     }
+  }
+
+  @HostFn(13)
+  expunge(
+    context: PVMProgramExecutionContextImpl,
+    refineCtx: RefineContext,
+  ): Array<W7 | PVMSingleModObject<RefineContext>> {
+    const [n] = context.registers.slice(7);
+    if (!refineCtx.bold_m.has(Number(n))) {
+      return [IxMod.w7(HostCallResult.WHO)];
+    }
+    const newRefineCtx = structuredClone(refineCtx);
+    newRefineCtx.bold_m.delete(Number(n));
+    return [
+      IxMod.w7(refineCtx.bold_m.get(Number(n))!.instructionPointer),
+      IxMod.obj(newRefineCtx),
+    ];
   }
 
   /**
