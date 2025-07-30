@@ -13,5 +13,6 @@ export type PVMExitReasonHostCall = { type: "host-call"; opCode: u8 };
 export type PVMExitReasonPageFault = { type: "page-fault"; address: u32 };
 export type PVMExitReason = {
   reason: RegularPVMExitReason | IrregularPVMExitReason;
-  data?: u32;
+  address?: u32;
+  opCode?: u8;
 };

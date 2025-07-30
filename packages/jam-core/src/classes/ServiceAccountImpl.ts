@@ -135,6 +135,9 @@ export class ServiceAccountImpl implements ServiceAccount {
     return this.decodedMetaAndCode!.metadata;
   }
 
+  /**
+   * `bold_c`
+   */
   code(): PVMProgramCode | undefined {
     if (typeof this.decodedMetaAndCode === "undefined") {
       this.decodeMetaAndCode();

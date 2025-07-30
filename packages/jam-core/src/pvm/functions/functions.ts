@@ -96,6 +96,7 @@ import { PVMMemory } from "../pvmMemory";
 import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -116,7 +117,7 @@ export class HostFunctions {
       overline_x?: Uint8Array[][];
       bold_i: PVMAccumulationOpImpl[];
     },
-  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
+  ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
     const o = w7;
     let v: Uint8Array | undefined;
@@ -330,7 +331,7 @@ export class HostFunctions {
   lookup(
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
+  ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     let bold_a: ServiceAccountImpl | undefined;
     const w7 = context.registers.w7();
     if (Number(w7) === args.s || w7.value === 2n ** 64n - 1n) {
@@ -387,7 +388,7 @@ export class HostFunctions {
   read(
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<PVMExitReasonMod | W7 | PVMSingleModMemory> {
+  ): Array<PVMExitReasonMod<PVMExitReasonImpl> | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
     let bold_a: ServiceAccountImpl | undefined = args.bold_s;
     let s_star = args.s;
@@ -434,7 +435,9 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
   ): Array<
-    PVMExitReasonMod | W7 | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
+    | PVMExitReasonMod<PVMExitReasonImpl>
+    | W7
+    | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
   > {
     const [ko, kz, vo, vz] = context.registers.slice(7);
     let bold_k: Uint8Array;
@@ -498,7 +501,7 @@ export class HostFunctions {
   info(
     context: PVMProgramExecutionContextImpl,
     args: { s: ServiceIndex; bold_d: DeltaImpl },
-  ): Array<PVMExitReasonMod | W7 | PVMSingleModMemory> {
+  ): Array<PVMExitReasonMod<PVMExitReasonImpl> | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
     let bold_a: ServiceAccountImpl | undefined;
     if (w7.value === 2n ** 64n - 1n) {
@@ -546,7 +549,7 @@ export class HostFunctions {
   historical_lookup(
     context: PVMProgramExecutionContextImpl,
     args: { s: ServiceIndex; bold_d: DeltaImpl; tau: Tau },
-  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
+  ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, h, o, w10, w11] = context.registers.slice(7);
     if (!h.fitsInU32() || !context.memory.canRead(h.checked_u32(), 32)) {
       return [IxMod.panic()];
@@ -589,7 +592,9 @@ export class HostFunctions {
   export(
     context: PVMProgramExecutionContextImpl,
     args: { refineCtx: RefineContext; segmentOffset: number },
-  ): Array<W7 | PVMExitReasonMod | PVMSingleModObject<RefineContext>> {
+  ): Array<
+    W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModObject<RefineContext>
+  > {
     const [p, w8] = context.registers.slice(7);
     const z = Math.min(Number(w8), ERASURECODE_SEGMENT_SIZE);
 
@@ -619,7 +624,9 @@ export class HostFunctions {
   machine(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModObject<RefineContext> | PVMExitReasonMod> {
+  ): Array<
+    W7 | PVMSingleModObject<RefineContext> | PVMExitReasonMod<PVMExitReasonImpl>
+  > {
     const [po, pz, i] = context.registers.slice(7);
     if (
       !po.fitsInU32() ||
@@ -661,7 +668,7 @@ export class HostFunctions {
   peek(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod> {
+  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [n, o, s, z] = context.registers.slice(7);
     if (
       !o.fitsInU32() ||
@@ -698,7 +705,7 @@ export class HostFunctions {
   poke(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod> {
+  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [n, o, s, z] = context.registers.slice(7);
     if (
       !o.fitsInU32() ||
@@ -783,7 +790,7 @@ export class HostFunctions {
     | W8
     | PVMSingleModMemory
     | PVMSingleModObject<RefineContext>
-    | PVMExitReasonMod
+    | PVMExitReasonMod<PVMExitReasonImpl>
   > {
     const [n, o] = context.registers.slice(7);
     if (!context.memory.canWrite(o.value, 112)) {
@@ -823,7 +830,7 @@ export class HostFunctions {
           res.context.instructionPointer + 1,
         );
         return [
-          IxMod.w8(res.exitReason.data!),
+          IxMod.w8(res.exitReason.opCode!),
           IxMod.w7(InnerPVMResultCode.HOST),
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
@@ -832,7 +839,7 @@ export class HostFunctions {
       case IrregularPVMExitReason.PageFault: {
         return [
           IxMod.w7(InnerPVMResultCode.FAULT),
-          IxMod.w8(res.exitReason.data!), // address
+          IxMod.w8(res.exitReason.address!), // address
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
@@ -886,7 +893,7 @@ export class HostFunctions {
   bless(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [m, a, v, r, o, n] = context.registers.slice(7);
     if (!context.memory.canRead(a.toSafeMemoryAddress(), 4 * CORES)) {
       return [IxMod.panic()];
@@ -942,7 +949,7 @@ export class HostFunctions {
   assign(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [c, o, a] = context.registers.slice(7);
 
     if (
@@ -987,7 +994,7 @@ export class HostFunctions {
   designate(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const o = context.registers.w7();
     if (
       !context.memory.canRead(
@@ -1023,7 +1030,7 @@ export class HostFunctions {
   checkpoint(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | YMod | PVMExitReasonMod> {
+  ): Array<W7 | YMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     // deep clone x
     const p_y = structuredClone(x);
     const gasAfter = context.gas - 10n; // gas cost of checkpoint = 10
@@ -1038,7 +1045,7 @@ export class HostFunctions {
   new(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, l, g, m, f, i] = context.registers.slice(7);
 
     if (
@@ -1132,7 +1139,7 @@ export class HostFunctions {
   upgrade(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, g, m] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1166,7 +1173,7 @@ export class HostFunctions {
   transfer(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [d, a, l, o] = context.registers.slice(7);
 
     const bold_d = structuredClone(x.state.accounts);
@@ -1211,7 +1218,7 @@ export class HostFunctions {
   eject(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [d, o] = context.registers.slice(7);
 
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1264,7 +1271,7 @@ export class HostFunctions {
   query(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | W8 | PVMExitReasonMod> {
+  ): Array<W7 | W8 | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
 
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1301,7 +1308,7 @@ export class HostFunctions {
   solicit(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1338,7 +1345,7 @@ export class HostFunctions {
   forget(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1403,7 +1410,7 @@ export class HostFunctions {
   yield(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const o = context.registers.w7();
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1420,7 +1427,7 @@ export class HostFunctions {
   provide(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(8);
     const w7 = context.registers.w7();
 
@@ -1470,7 +1477,15 @@ export class HostFunctions {
       }),
     ];
   }
+
+  @HostFn(100, <Gas>10n)
+  log(context: PVMProgramExecutionContextImpl, _: undefined): Array<any> {
+    console.log("log host call");
+    return [];
+  }
 }
+
+export const hostFunctions = new HostFunctions();
 /**
  * used in fetch
  */

@@ -11,7 +11,6 @@ import {
   PVMAccumulationState,
   PVMResultContext,
   Posterior,
-  PrivilegedServices,
   ServiceIndex,
   Tagged,
   Tau,
@@ -75,15 +74,15 @@ export const accumulateReports = (
       [...deps.privServices.alwaysAccers.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.7.0 - 12.23)
-  // `e`
+  // $(0.7.1 - 12.24) | e
   const preState = new PVMAccumulationStateImpl({
     accounts: deps.serviceAccounts,
     stagingSet: deps.iota,
-    authQueue: deps.authQueue,
+    authQueue: new AuthorizerQueueImpl(),
     manager: deps.privServices.manager,
     assigners: deps.privServices.assigners,
     delegator: deps.privServices.delegator,
+    registrar: deps.privServices.registrar,
     alwaysAccers: deps.privServices.alwaysAccers,
   });
 
@@ -144,13 +143,15 @@ export const accumulateReports = (
 /**
  * `∆+`
  * @param gasLimit - `g`
- * @param works - `bold_w`
+ * @param deferredTransfers - `bold_t`
+ * @param works - `bold_r`
  * @param accState - `bold_e` initial partial accumulation state
  * @param freeAccServices - `bold_f`
- * @see $(0.7.0 - 12.16)
+ * @see $(0.7.1 - 12.18)
  */
 export const outerAccumulation = (
   gasLimit: Gas,
+  transfers: DeferredTransfersImpl,
   works: WorkReportImpl[],
   accState: PVMAccumulationStateImpl,
   freeAccServices: Map<ServiceIndex, u64>,
@@ -158,13 +159,12 @@ export const outerAccumulation = (
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
-): [
-  nAccumulatedWork: number,
-  accState: PVMAccumulationStateImpl,
-  transfers: DeferredTransfersImpl,
-  LastAccOutsImpl,
-  GasUsed,
-] => {
+): {
+  nAccumulatedWork: number;
+  postAccState: PVMAccumulationStateImpl;
+  lastAccOutputs: LastAccOutsImpl;
+  gasUsed: GasUsed;
+} => {
   let sum = 0n;
   let i = 0;
   // TODO: rewrite this to a more elegant solution
@@ -178,13 +178,12 @@ export const outerAccumulation = (
   }
 
   if (i == 0) {
-    return [
-      0,
-      accState,
-      new DeferredTransfersImpl([]),
-      new LastAccOutsImpl([]),
-      <GasUsed>{ elements: [] },
-    ];
+    return {
+      nAccumulatedWork: 0,
+      postAccState: accState,
+      lastAccOutputs: new LastAccOutsImpl([]),
+      gasUsed: <GasUsed>{ elements: [] },
+    };
   }
 
   const [newAccState /* e_star */, t_star, b_star, u_star] =

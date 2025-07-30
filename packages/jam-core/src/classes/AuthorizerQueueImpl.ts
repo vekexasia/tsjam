@@ -39,6 +39,10 @@ export class AuthorizerQueueImpl
     typeof CORES
   >;
 
+  constructor() {
+    super();
+  }
+
   queueAtCore(core: CoreIndex) {
     return this.elements[core];
   }

@@ -37,7 +37,11 @@ import { RHOImpl } from "./RHOImpl";
 import { Hashing } from "@tsjam/crypto";
 import { type NewWorkReportsImpl } from "./NewWorkReportsImpl";
 
-// codec order defined in $(0.7.0 - C.27)
+/**
+ * Identified by `R` set
+ * @see $(0.7.1 - 11.2)
+ * codec order defined in $(0.7.0 - C.27)
+ */
 @JamCodecable()
 export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**

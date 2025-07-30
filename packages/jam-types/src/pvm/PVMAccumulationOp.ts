@@ -2,8 +2,8 @@ import { WorkOutput } from "@/sets/WorkOutput.js";
 import { Gas, Hash, WorkPackageHash } from "@/genericTypes.js";
 
 /**
- * `I` set in graypaper $\operandtuple$
- * $(0.7.0 - 12.19)
+ * `U` set in graypaper $\operandtuple$
+ * $(0.7.1 - 12.13)
  */
 export type PVMAccumulationOp = {
   /**

@@ -37,6 +37,7 @@ export * from "./states/Statistics.js";
 export * from "./states/ValidatorStatistics.js";
 export * from "./states/HeaderLookupHistory.js";
 
+export * from "./pvm/AccumulationInput.js";
 export * from "./pvm/AccumulationOut.js";
 export * from "./pvm/AccumulationStatistics.js";
 export * from "./pvm/DeferredTransfer.js";

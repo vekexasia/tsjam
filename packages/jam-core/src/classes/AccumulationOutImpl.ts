@@ -1,18 +1,11 @@
-import {
-  AccumulationOut,
-  DeferredTransfer,
-  Gas,
-  Hash,
-  PVMAccumulationState,
-  ServiceIndex,
-} from "@tsjam/types";
-import { PVMAccumulationStateImpl } from "./pvm/PVMAccumulationStateImpl";
-import { DeferredTransferImpl } from "./DeferredTransferImpl";
+import { AccumulationOut, Gas, Hash, ServiceIndex } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
+import { DeferredTransfersImpl } from "./DeferredTransfersImpl";
+import { PVMAccumulationStateImpl } from "./pvm/PVMAccumulationStateImpl";
 
 /**
  * `O`
- * $(0.7.0 - 12.20)
+ * $(0.7.1 - 12.22)
  */
 export class AccumulationOutImpl implements AccumulationOut {
   /**
@@ -22,7 +15,7 @@ export class AccumulationOutImpl implements AccumulationOut {
   /**
    * `bold_t`
    */
-  deferredTransfers!: DeferredTransferImpl[];
+  deferredTransfers!: DeferredTransfersImpl;
   /**
    * `y`
    */
@@ -34,15 +27,15 @@ export class AccumulationOutImpl implements AccumulationOut {
   /**
    * `bold_p`
    */
-  provision!: Array<{
+  provisions!: Array<{
     /**
      * `s`
      */
-    service: ServiceIndex;
+    serviceId: ServiceIndex;
     /**
      * `bold_i`
      */
-    preimage: Uint8Array;
+    blob: Uint8Array;
   }>;
 
   constructor(config: ConditionalExcept<AccumulationOutImpl, Function>) {

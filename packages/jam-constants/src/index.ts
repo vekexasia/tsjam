@@ -166,11 +166,6 @@ export const MAX_SIZE_ENCODED_PACKAGE = 13_794_305;
 export const SERVICECODE_MAX_SIZE = 4_000_0000;
 
 /**
- * `WE`
- */
-export const BASIC_ERASURECODE_SIZE = 684;
-
-/**
  * `BS` in the paper
  */
 export const SERVICE_MIN_BALANCE = 100n;

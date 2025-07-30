@@ -1,5 +1,7 @@
-import { PVMExitReason, PVMProgramExecutionContext, u8 } from "@tsjam/types";
-import { basicInvocation } from "@/invocations/basic.js";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
+import { u8 } from "@tsjam/types";
+import { basicInvocation } from "./basic";
 
 /**
  * Host call invocation
@@ -8,15 +10,12 @@ import { basicInvocation } from "@/invocations/basic.js";
  */
 export const hostCallInvocation = <X>(
   program: Uint8Array,
-  ctx: PVMProgramExecutionContext, // ı, ξ, ω, μ
+  ctx: PVMProgramExecutionContextImpl, // ı, ξ, ω, μ
   f: HostCallExecutor<X>,
   x: X,
 ): HostCallOut<X> => {
   const out = basicInvocation(program, ctx);
-  if (
-    typeof out.exitReason == "object" &&
-    out.exitReason.type === "host-call"
-  ) {
+  if (out.exitReason.isHostCall()) {
     const hostCallRes = f({
       hostCallOpcode: out.exitReason.opCode,
       ctx: out.context,
@@ -28,12 +27,11 @@ export const hostCallInvocation = <X>(
       typeof hostCallRes.exitReason !== "undefined"
     ) {
       const exitReason = hostCallRes.exitReason;
-      if (typeof exitReason === "object" && exitReason.type === "page-fault") {
+      if (exitReason.isPageFault()) {
         // if page fault we need to use the context from basic invocation
-
         return {
           exitReason,
-          context: out.context as unknown as PVMProgramExecutionContext,
+          context: out.context,
           out: x,
         };
       } else {
@@ -66,14 +64,14 @@ export const hostCallInvocation = <X>(
     return {
       exitReason: out.exitReason,
       out: x,
-      context: out.context as unknown as PVMProgramExecutionContext,
+      context: out.context,
     };
   }
 };
 
 export type HostCallOut<X> = {
-  exitReason?: PVMExitReason;
-  context: PVMProgramExecutionContext;
+  exitReason?: PVMExitReasonImpl;
+  context: PVMProgramExecutionContextImpl;
   out: X;
 };
 
@@ -83,10 +81,10 @@ export type HostCallOut<X> = {
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
-  ctx: PVMProgramExecutionContext;
+  ctx: PVMProgramExecutionContextImpl;
   out: X;
 }) => {
-  exitReason?: PVMExitReason;
+  exitReason?: PVMExitReasonImpl;
   out: X;
-  ctx: PVMProgramExecutionContext;
+  ctx: PVMProgramExecutionContextImpl;
 };

@@ -9,10 +9,25 @@ import { ConditionalExcept } from "type-fest";
 
 export class PVMExitReasonImpl implements PVMExitReason {
   reason!: RegularPVMExitReason | IrregularPVMExitReason;
-  data?: u32 | undefined;
+  address?: u32;
+  opCode?: u8;
 
   constructor(config: ConditionalExcept<PVMExitReasonImpl, Function>) {
     Object.assign(this, config);
+  }
+
+  isHostCall(): this is PVMExitReasonImpl & {
+    reason: IrregularPVMExitReason.HostCall;
+    opCode: u8;
+  } {
+    return this.reason === IrregularPVMExitReason.HostCall;
+  }
+
+  isPageFault(): this is PVMExitReasonImpl & {
+    reason: IrregularPVMExitReason.PageFault;
+    address: u32;
+  } {
+    return this.reason === IrregularPVMExitReason.PageFault;
   }
 
   static panic() {

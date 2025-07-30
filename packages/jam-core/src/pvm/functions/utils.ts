@@ -5,6 +5,7 @@ import {
   Gas,
   PVMExitReason,
   PVMExitReasonMod,
+  PVMSingleMod,
   PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
@@ -13,6 +14,7 @@ import {
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
 import { PVMMemory } from "../pvmMemory";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -35,7 +37,7 @@ export const applyMods = <T extends object>(
   mods: Array<
     | PVMSingleModRegister<number>
     | PVMSingleModPointer
-    | PVMExitReasonMod
+    | PVMSingleMod<"exit", PVMExitReasonImpl>
     | XMod
     | YMod
     | PVMSingleModMemory
@@ -45,13 +47,13 @@ export const applyMods = <T extends object>(
 ): {
   ctx: PVMProgramExecutionContextImpl;
   out: T;
-  exitReason?: PVMExitReason;
+  exitReason?: PVMExitReasonImpl;
 } => {
   const newCtx = {
     ...ctx,
     registers: structuredClone(ctx.registers),
   };
-  let exitReason: PVMExitReason | undefined;
+  let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)
   for (let i = 0; i < mods.length && typeof exitReason === "undefined"; i++) {

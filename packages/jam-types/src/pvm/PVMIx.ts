@@ -15,7 +15,7 @@ export type PVMIxReturnMods = Array<
   | PVMSingleModGas
   | PVMSingleModMemory
   | PVMSingleModRegister<RegisterIdentifier>
-  | PVMExitReasonMod
+  | PVMExitReasonMod<any>
 >;
 
 export type PVMIxEvaluateFNContext = {

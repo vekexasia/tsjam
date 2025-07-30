@@ -14,4 +14,4 @@ export type PVMSingleModRegister<T extends number> = PVMSingleMod<
   { index: T; value: PVMRegisterRawValue }
 >;
 
-export type PVMExitReasonMod = PVMSingleMod<"exit", PVMExitReason>;
+export type PVMExitReasonMod<X extends PVMExitReason> = PVMSingleMod<"exit", X>;

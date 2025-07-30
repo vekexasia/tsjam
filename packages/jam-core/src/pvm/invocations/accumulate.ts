@@ -1,57 +1,38 @@
 import { AccumulationOutImpl } from "@/classes/AccumulationOutImpl";
-import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
+import { DeferredTransfersImpl } from "@/classes/DeferredTransfersImpl";
+import { AccumulationInputInpl } from "@/classes/pvm/AccumulationInputImpl";
 import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import {
   createCodec,
-  E_int,
-  createArrayLengthDiscriminator,
-  JamCodec,
-  encodeWithCodec,
   E_4_int,
+  E_int,
   E_sub_int,
+  encodeWithCodec,
   HashCodec,
 } from "@tsjam/codec";
+import {
+  MINIMUM_PUBLIC_SERVICE_INDEX,
+  SERVICECODE_MAX_SIZE,
+} from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
-  Hash,
-  Tau,
-  ServiceIndex,
+  Balance,
   Gas,
-  Posterior,
+  Hash,
   JamEntropy,
-  u32,
-  PVMProgramExecutionContext,
+  Posterior,
   RegularPVMExitReason,
+  ServiceIndex,
+  Tau,
+  u32,
 } from "@tsjam/types";
-import { toTagged, bytesToBigInt } from "@tsjam/utils";
-import assert from "assert";
-import {
-  omega_b,
-  omega_a,
-  omega_d,
-  omega_c,
-  omega_n,
-  omega_u,
-  omega_t,
-  omega_j,
-  omega_q,
-  omega_s,
-  omega_f,
-  omega_y,
-  omega_aries,
-} from "../functions/accumulate";
+import { toTagged } from "@tsjam/utils";
 import { FnsDb } from "../functions/fnsdb";
-import {
-  omega_r,
-  omega_w,
-  omega_l,
-  omega_g,
-  omega_i,
-} from "../functions/general";
+import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
-import { IxMod } from "../instructions/utils";
 import { check_fn } from "../utils/check_fn";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
@@ -59,30 +40,25 @@ import { HostCallExecutor } from "./hostCall";
 const AccumulateArgsCodec = createCodec<{
   t: Tau;
   s: ServiceIndex;
-  o: PVMAccumulationOpImpl[];
+  bold_i_length: number;
 }>([
   ["t", E_int<Tau>()],
   ["s", E_int<ServiceIndex>()],
-  [
-    "o",
-    createArrayLengthDiscriminator(
-      <JamCodec<PVMAccumulationOpImpl>>PVMAccumulationOpImpl,
-    ),
-  ],
+  ["bold_i_length", E_int()],
 ]);
 
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.6.4 - B.9)
+ * $(0.7.1 - B.9)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
-  pvmAccState: PVMAccumulationStateImpl, // u
+  pvmAccState: PVMAccumulationStateImpl, // bold_e
+  t: Tau, // t
   s: ServiceIndex, // s
   gas: Gas, // g
-  o: PVMAccumulationOpImpl[], // bold_o
-  t: Tau, // t
+  accumulateOps: AccumulationInputInpl[], // bold_i
   deps: {
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
@@ -90,28 +66,39 @@ export const accumulateInvocation = (
 ): AccumulationOutImpl => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   const yRes = structuredClone(iRes);
+  const bold_c = pvmAccState.accounts.get(s)?.code();
 
   // first case
-  if (!pvmAccState.accounts.has(s)) {
+  if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
+    const bold_s = structuredClone(pvmAccState);
+    bold_s.accounts.get(s)!.balance = <Balance>(pvmAccState.accounts.get(s)!
+      .balance +
+      BigInt(
+        accumulateOps
+          .filter((op) => op.isTransfer())
+          .map((op) => op.transfer!.amount)
+          .reduce((a, b) => a + b, 0n),
+      ));
+
     return new AccumulationOutImpl({
-      postState: iRes.u,
-      deferredTransfers: [],
+      postState: bold_s,
+      deferredTransfers: new DeferredTransfersImpl([]),
       yield: undefined,
       gasUsed: toTagged(0n),
-      provision: [],
+      provisions: [],
     });
   }
 
-  const serviceAccount = pvmAccState.accounts.get(s)!;
-  const code = serviceAccount.code();
-  assert(typeof code !== "undefined", "Code not found in preimage");
-
   const mres = argumentInvocation(
-    code,
+    bold_c,
     5 as u32, // instructionPointer
     gas,
-    encodeWithCodec(AccumulateArgsCodec, { t, s, o }),
-    F_fn(s, t),
+    encodeWithCodec(AccumulateArgsCodec, {
+      t,
+      s,
+      bold_i_length: accumulateOps.length,
+    }),
+    F_fn(t),
     { x: iRes, y: yRes },
   );
 
@@ -119,11 +106,11 @@ export const accumulateInvocation = (
 };
 
 /**
- * $(0.6.5 - B.10)
+ * $(0.7.1 - B.10)
  */
 const I_fn = (
-  pvmAccState: PVMAccumulationStateImpl,
-  service: ServiceIndex,
+  pvmAccState: PVMAccumulationStateImpl, // bold_e
+  service: ServiceIndex, // s
   p_eta_0: Posterior<JamEntropy["_0"]>,
   p_tau: Posterior<Tau>,
 ): PVMResultContextImpl => {
@@ -141,8 +128,8 @@ const I_fn = (
       ),
     ),
   ).value %
-    (2 ** 32 - 2 ** 9)) +
-    2 ** 8);
+    (2 ** 32 - MINIMUM_PUBLIC_SERVICE_INDEX - 2 ** 8)) +
+    MINIMUM_PUBLIC_SERVICE_INDEX);
 
   const i = check_fn(
     newServiceIndex,
@@ -150,12 +137,12 @@ const I_fn = (
   );
 
   return new PVMResultContextImpl({
-    service,
-    u: structuredClone(pvmAccState),
-    i,
-    transfer: [],
-    y: undefined,
-    preimages: [],
+    id: service,
+    state: structuredClone(pvmAccState),
+    nextFreeID: i,
+    transfers: new DeferredTransfersImpl([]),
+    yield: undefined,
+    provisions: [],
   });
 };
 
@@ -163,20 +150,22 @@ const I_fn = (
  * $(0.6.4 - B.11)
  */
 const F_fn: (
-  service: ServiceIndex,
   tau: Tau,
 ) => HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }> =
-  (service: ServiceIndex, tau: Tau) => (input) => {
+  (tau: Tau) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
-    const bold_d = input.out.x.u.accounts.clone();
-
-    const bold_s = input.out.x.boldS(service)!;
+    const bold_s = input.out.x.bold_s();
+    const e_bold_d = input.out.x.state.accounts;
     switch (fnIdentifier) {
       case "read": {
         const { ctx, out } = applyMods(
           input.ctx,
           input.out,
-          omega_r(input.ctx, bold_s, input.out.x.service, bold_d),
+          hostFunctions.read(input.ctx, {
+            bold_s,
+            s: input.out.x.id,
+            bold_d: e_bold_d,
+          }),
         );
         return G_fn(ctx, bold_s, out);
       }
@@ -184,7 +173,11 @@ const F_fn: (
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(
           input.ctx,
           { bold_s },
-          omega_w(input.ctx, bold_s, input.out.x.service),
+          hostFunctions.write(input.ctx, {
+            bold_s,
+            s: input.out.x.id,
+            bold_d: e_bold_d,
+          }),
         );
         return G_fn(m.ctx, m.out.bold_s, input.out);
       }
@@ -192,101 +185,144 @@ const F_fn: (
         const m = applyMods(
           input.ctx,
           input.out,
-          omega_l(input.ctx, bold_s, input.out.x.service, bold_d),
+          hostFunctions.lookup(input.ctx, {
+            bold_s,
+            s: input.out.x.id,
+            bold_d: e_bold_d,
+          }),
         );
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "gas": {
-        const m = applyMods(input.ctx, input.out, omega_g(input.ctx));
+        const m = applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.gas(input.ctx, undefined),
+        );
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "info": {
         const m = applyMods(
           input.ctx,
           input.out,
-          omega_i(input.ctx, input.out.x.service, bold_d),
+          hostFunctions.info(input.ctx, {
+            bold_d: e_bold_d,
+            s: input.out.x.id,
+          }),
         );
 
         return G_fn(m.ctx, bold_s, m.out);
       }
       case "bless":
-        return applyMods(input.ctx, input.out, omega_b(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.bless(input.ctx, input.out.x),
+        );
+
       case "assign":
-        return applyMods(input.ctx, input.out, omega_a(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.assign(input.ctx, input.out.x),
+        );
       case "designate":
-        return applyMods(input.ctx, input.out, omega_d(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.designate(input.ctx, input.out.x),
+        );
       case "checkpoint":
         return applyMods(
           input.ctx,
           input.out,
-          omega_c(input.ctx, input.out.x, input.out.y),
+          hostFunctions.checkpoint(input.ctx, input.out.x),
         );
       case "new":
         return applyMods(
           input.ctx,
           input.out,
-          omega_n(input.ctx, input.out.x, tau),
+          hostFunctions.new(input.ctx, { x: input.out.x, tau }),
         );
       case "upgrade":
-        return applyMods(input.ctx, input.out, omega_u(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.upgrade(input.ctx, input.out.x),
+        );
       case "transfer":
-        return applyMods(input.ctx, input.out, omega_t(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.transfer(input.ctx, input.out.x),
+        );
       case "eject":
         return applyMods(
           input.ctx,
           input.out,
-          omega_j(input.ctx, input.out.x, tau),
+          hostFunctions.eject(input.ctx, { x: input.out.x, tau }),
         );
       case "query":
-        return applyMods(input.ctx, input.out, omega_q(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.query(input.ctx, input.out.x),
+        );
       case "solicit":
         return applyMods(
           input.ctx,
           input.out,
-          omega_s(input.ctx, input.out.x, tau),
+          hostFunctions.solicit(input.ctx, { x: input.out.x, tau }),
         );
       case "forget":
         return applyMods(
           input.ctx,
           input.out,
-          omega_f(input.ctx, input.out.x, tau),
+          hostFunctions.forget(input.ctx, { x: input.out.x, tau }),
         );
       case "yield":
-        return applyMods(input.ctx, input.out, omega_y(input.ctx, input.out.x));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.yield(input.ctx, input.out.x),
+        );
       case "provide":
         return applyMods(
           input.ctx,
           input.out,
-          omega_aries(input.ctx, input.out.x, input.out.x.service),
+          hostFunctions.provide(input.ctx, input.out.x),
         );
-    }
-    if (input.hostCallOpcode === 100) {
-      // TODO: https://docs.jamcha.in/knowledge/testing/polka-vm/host-call-log
-      return applyMods(input.ctx, input.out, [IxMod.gas(10n)]);
+
+      //case "log":
+      //  return applyMods(
+      //    input.ctx,
+      //    input.out,
+      //    hostFunctions.log(input.ctx, undefined),
+      //  );
     }
     throw new Error("not implemented" + input.hostCallOpcode);
   };
-//
+
 /**
- * $(0.6.4 - B.12)
+ * $(0.7.1 - B.12)
  */
 const G_fn = (
-  context: PVMProgramExecutionContext,
+  context: PVMProgramExecutionContextImpl,
   serviceAccount: ServiceAccountImpl,
   x: { x: PVMResultContextImpl; y: PVMResultContextImpl },
 ): ReturnType<
   HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }>
 > => {
-  x.x.u = { ...x.x.u, accounts: x.x.u.accounts.clone() };
-  x.x.u.accounts.set(x.x.service, serviceAccount);
+  const x_star = structuredClone(x.x);
+  x_star.state.accounts.set(x.x.id, serviceAccount);
   return {
-    out: x,
+    out: { x: x_star, y: x.y },
     ctx: { ...context },
   };
 };
 
 /**
- * $(0.6.5 - B.11)
+ * $(0.7.1 - B.13)
  */
 const C_fn = (
   gas: Gas,
@@ -295,27 +331,27 @@ const C_fn = (
 ): AccumulationOutImpl => {
   if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
     return new AccumulationOutImpl({
-      postState: d.x.u,
-      deferredTransfers: d.x.transfer,
-      yield: d.y.y,
+      postState: d.y.state,
+      deferredTransfers: d.y.transfers,
+      yield: d.y.yield,
       gasUsed: toTagged(gas),
-      provision: d.x.preimages,
+      provisions: d.y.provisions,
     });
   } else if (o.length === 32) {
     return new AccumulationOutImpl({
-      postState: d.x.u,
-      deferredTransfers: d.x.transfer,
-      yield: bytesToBigInt(o) as unknown as Hash,
+      postState: d.x.state,
+      deferredTransfers: d.x.transfers,
+      yield: HashCodec.decode(o).value,
       gasUsed: toTagged(gas),
-      provision: d.x.preimages,
+      provisions: d.x.provisions,
     });
   } else {
     return new AccumulationOutImpl({
-      postState: d.x.u,
-      deferredTransfers: d.x.transfer,
-      yield: d.x.y,
+      postState: d.x.state,
+      deferredTransfers: d.x.transfers,
+      yield: d.x.yield,
       gasUsed: toTagged(gas),
-      provision: d.x.preimages,
+      provisions: d.x.provisions,
     });
   }
 };

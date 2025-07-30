@@ -11,9 +11,12 @@ import {
 } from "@tsjam/codec";
 import { Gas, Hash, PVMAccumulationOp, WorkPackageHash } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
-import { WorkOutputImpl } from "./WorkOutputImpl";
 
-// codec order defined in $(0.6.4 - C.29)
+/**
+ * `I` set in graypaper $\operandtuple$
+ * $(0.7.0 - 12.19)
+ * codec order defined in $(0.6.4 - C.29)
+ */
 @JamCodecable()
 export class PVMAccumulationOpImpl
   extends BaseJamCodecable
