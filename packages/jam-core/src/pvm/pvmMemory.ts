@@ -211,3 +211,7 @@ export const toInBoundsMemoryAddress = (rawAddr: bigint): u32 => {
   assert(rawAddr < 2n ** 32n, "Address is out of memory bounds");
   return <u32>Number(rawAddr);
 };
+
+export const toSafeMemoryAddress = (rawAddr: u32 | bigint): u32 => {
+  return <u32>Number(BigInt(rawAddr) % 2n ** 32n);
+};

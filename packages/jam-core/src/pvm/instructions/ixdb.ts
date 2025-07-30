@@ -1,11 +1,5 @@
-import {
-  Gas,
-  PVMIx,
-  PVMIxDecodeFN,
-  PVMIxEvaluateFNContext,
-  PVMIxReturnMods,
-  u8,
-} from "@tsjam/types";
+import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/PVMIxEvaluateFNContextImpl";
+import { Gas, PVMIx, PVMIxDecodeFN, PVMIxReturnMods, u8 } from "@tsjam/types";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown>>(),
@@ -40,7 +34,7 @@ export const regIx = <T>(
 export const Ix = <
   Descriptor extends
     | ((args: Args) => EvaluateReturn)
-    | ((args: Args, context: PVMIxEvaluateFNContext) => EvaluateReturn),
+    | ((args: Args, context: PVMIxEvaluateFNContextImpl) => EvaluateReturn),
   Args,
   EvaluateReturn extends PVMIxReturnMods,
 >(

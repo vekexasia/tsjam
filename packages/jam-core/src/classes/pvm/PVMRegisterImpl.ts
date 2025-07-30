@@ -1,3 +1,4 @@
+import { toSafeMemoryAddress } from "@/pvm";
 import {
   BaseJamCodecable,
   eSubBigIntCodec,
@@ -35,7 +36,7 @@ export class PVMRegisterImpl
   }
 
   toSafeMemoryAddress(): u32 {
-    return <u32>Number(this.value % 2n ** 32n);
+    return toSafeMemoryAddress(this.value);
   }
 
   [Symbol.toPrimitive](hint: string): string | number {
