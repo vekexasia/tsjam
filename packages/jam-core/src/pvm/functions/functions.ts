@@ -2,14 +2,19 @@ import { DeferredTransferImpl } from "@/classes/DeferredTransferImpl";
 import { DeltaImpl } from "@/classes/DeltaImpl";
 import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
 import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
+import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
+import { WorkItemImpl } from "@/classes/WorkItemImpl";
+import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
+import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
 import {
   Blake2bHashCodec,
   CodeHashCodec,
+  createArrayLengthDiscriminator,
   createCodec,
   E_8,
   E_sub,
@@ -19,16 +24,43 @@ import {
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
 import {
+  AUTHPOOL_SIZE,
   AUTHQUEUE_MAX_SIZE,
+  BLOCK_TIME,
   CORES,
+  EPOCH_LENGTH,
+  ERASURECODE_BASIC_SIZE,
+  ERASURECODE_EXPORTED_SIZE,
   ERASURECODE_SEGMENT_SIZE,
   HostCallResult,
   InnerPVMResultCode,
+  LOTTERY_MAX_SLOT,
   MAX_EXPORTED_ITEMS,
+  MAX_GAS_ACCUMULATION,
+  MAX_GAS_IS_AUTHORIZED,
+  MAX_SIZE_ENCODED_PACKAGE,
+  MAX_TICKETS_PER_BLOCK,
+  MAX_TICKETS_PER_VALIDATOR,
+  MAX_TOT_SIZE_BLOBS_WORKREPORT,
+  MAX_WORK_PREREQUISITES,
+  MAX_WORKPACKAGE_ENTRIES,
+  MAXIMUM_AGE_LOOKUP_ANCHOR,
+  MAXIMUM_EXTRINSICS_IN_WP,
+  MAXIMUM_SIZE_IS_AUTHORIZED,
+  MAXIMUM_WORK_ITEMS,
   MINIMUM_PUBLIC_SERVICE_INDEX,
   NUMBER_OF_VALIDATORS,
   PREIMAGE_EXPIRATION,
+  RECENT_HISTORY_LENGTH,
+  SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
+  SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
+  SERVICE_MIN_BALANCE,
+  SERVICECODE_MAX_SIZE,
+  TOTAL_GAS_ACCUMULATION_ALL_CORES,
+  TOTAL_GAS_REFINEMENT_LOGIC,
   TRANSFER_MEMO_SIZE,
+  VALIDATOR_CORE_ROTATION,
+  WORK_TIMEOUT,
   Zp,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
@@ -38,6 +70,7 @@ import {
   Blake2bHash,
   ByteArrayOfLength,
   CodeHash,
+  ExportSegment,
   Gas,
   Hash,
   IrregularPVMExitReason,
@@ -55,6 +88,8 @@ import {
   UpToSeq,
 } from "@tsjam/types";
 import { toTagged, zeroPad } from "@tsjam/utils";
+import assert from "node:assert";
+import { ConditionalExcept } from "type-fest";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation } from "../invocations/basic";
 import { PVMMemory } from "../pvmMemory";
@@ -72,10 +107,219 @@ export class HostFunctions {
   @HostFn(1)
   fetch(
     context: PVMProgramExecutionContextImpl,
-    _: undefined,
-  ): Array<W7 | PVMExitReasonMod> {
-    //TODO: implement fetch
-    return [IxMod.panic()];
+    args: {
+      p: WorkPackageImpl;
+      n?: Hash; // TODO: discover what this is
+      bold_r: WorkOutputImpl;
+      i?: number; // workPackage.work item index
+      overline_i?: ExportSegment[][];
+      overline_x?: Uint8Array[][];
+      bold_i: PVMAccumulationOpImpl[];
+    },
+  ): Array<W7 | PVMExitReasonMod | PVMSingleModMemory> {
+    const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
+    const o = w7;
+    let v: Uint8Array | undefined;
+    switch (w10.value) {
+      case 0n: {
+        v = new Uint8Array([
+          ...encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_ITEM), // Bi
+          ...encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_OCTET), // BL
+          ...encodeWithCodec(E_8, SERVICE_MIN_BALANCE), // BS
+          ...encodeWithCodec(E_sub_int(2), CORES), // C
+          ...encodeWithCodec(E_sub_int(4), PREIMAGE_EXPIRATION), // D
+          ...encodeWithCodec(E_sub_int(4), EPOCH_LENGTH), // E
+          ...encodeWithCodec(E_8, MAX_GAS_ACCUMULATION), // GA
+          ...encodeWithCodec(E_8, MAX_GAS_IS_AUTHORIZED), // GI
+          ...encodeWithCodec(E_8, TOTAL_GAS_REFINEMENT_LOGIC), // GR
+          ...encodeWithCodec(E_8, TOTAL_GAS_ACCUMULATION_ALL_CORES), // GT
+          ...encodeWithCodec(E_sub_int(2), RECENT_HISTORY_LENGTH), // H
+          ...encodeWithCodec(E_sub_int(2), MAXIMUM_WORK_ITEMS), // I
+          ...encodeWithCodec(E_sub_int(2), MAX_WORK_PREREQUISITES), // J
+          ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_BLOCK), // K
+          ...encodeWithCodec(E_sub_int(4), MAXIMUM_AGE_LOOKUP_ANCHOR), // L
+          ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_VALIDATOR), // N
+          ...encodeWithCodec(E_sub_int(2), AUTHPOOL_SIZE), // O
+          ...encodeWithCodec(E_sub_int(2), BLOCK_TIME), // P
+          ...encodeWithCodec(E_sub_int(2), AUTHQUEUE_MAX_SIZE), // Q
+          ...encodeWithCodec(E_sub_int(2), VALIDATOR_CORE_ROTATION), // R
+          ...encodeWithCodec(E_sub_int(2), MAXIMUM_EXTRINSICS_IN_WP), // T
+          ...encodeWithCodec(E_sub_int(2), WORK_TIMEOUT), // U
+          ...encodeWithCodec(E_sub_int(2), NUMBER_OF_VALIDATORS), // V
+          ...encodeWithCodec(E_sub_int(4), MAXIMUM_SIZE_IS_AUTHORIZED), // WA
+          ...encodeWithCodec(E_sub_int(4), MAX_SIZE_ENCODED_PACKAGE), // WB
+          ...encodeWithCodec(E_sub_int(4), SERVICECODE_MAX_SIZE), // WC
+          ...encodeWithCodec(E_sub_int(4), ERASURECODE_BASIC_SIZE), // WE
+          ...encodeWithCodec(E_sub_int(4), MAX_WORKPACKAGE_ENTRIES), // WM
+          ...encodeWithCodec(E_sub_int(4), ERASURECODE_EXPORTED_SIZE), // WP
+          ...encodeWithCodec(E_sub_int(4), MAX_TOT_SIZE_BLOBS_WORKREPORT), // WR
+          ...encodeWithCodec(E_sub_int(4), TRANSFER_MEMO_SIZE), // WM
+          ...encodeWithCodec(E_sub_int(4), MAX_EXPORTED_ITEMS), // WX
+          ...encodeWithCodec(E_sub_int(4), LOTTERY_MAX_SLOT), // Y
+        ]);
+        break;
+      }
+      case 1n: {
+        if (typeof args.n !== "undefined") {
+          v = encodeWithCodec(HashCodec, args.n);
+        }
+        break;
+      }
+      case 2n: {
+        if (typeof args.bold_r !== "undefined") {
+          assert(args.bold_r.isSuccess(), "bold_r must be success");
+          v = args.bold_r.success!;
+        }
+        break;
+      }
+      case 3n: {
+        if (
+          typeof args.overline_x !== "undefined" &&
+          w11.value < args.overline_x.length &&
+          w12.value < args.overline_x[Number(w11)].length
+        ) {
+          v = args.overline_x[Number(w11)][Number(w12)];
+        }
+        break;
+      }
+      case 4n: {
+        if (
+          typeof args.overline_x !== "undefined" &&
+          typeof args.i !== "undefined" &&
+          w11.value < (args.overline_x[args.i]?.length ?? 0)
+        ) {
+          v = args.overline_x[args.i]![Number(w11)];
+        }
+        break;
+      }
+      case 5n: {
+        if (
+          typeof args.overline_i !== "undefined" &&
+          w11.value < args.overline_i.length &&
+          w12.value < args.overline_i[Number(w11)].length
+        ) {
+          v = args.overline_i[Number(w11)][Number(w12)];
+        }
+        break;
+      }
+      case 6n: {
+        if (
+          typeof args.overline_i !== "undefined" &&
+          typeof args.i !== "undefined" &&
+          w11.value < (args.overline_i[args.i]?.length ?? 0)
+        ) {
+          v = args.overline_i[args.i][Number(w11)];
+        }
+        break;
+      }
+      case 7n: {
+        if (typeof args.p !== "undefined") {
+          v = args.p.toBinary();
+        }
+        break;
+      }
+      case 8n: {
+        if (typeof args.p !== "undefined") {
+          v = new Uint8Array([
+            ...encodeWithCodec(
+              WorkPackageImpl.codecOf("authCodeHash"),
+              args.p.authCodeHash,
+            ),
+            ...encodeWithCodec(
+              WorkPackageImpl.codecOf("authConfig"),
+              args.p.authConfig,
+            ),
+          ]);
+        }
+        break;
+      }
+      case 9n: {
+        if (typeof args.p !== "undefined") {
+          v = args.p.authToken;
+        }
+        break;
+      }
+      case 10n: {
+        if (typeof args.p !== "undefined") {
+          v = encodeWithCodec(
+            WorkPackageImpl.codecOf("context"),
+            args.p.context,
+          );
+        }
+        break;
+      }
+      case 11n: {
+        if (typeof args.p !== "undefined") {
+          v = encodeWithCodec(
+            createArrayLengthDiscriminator(SCodec),
+            args.p.workItems.map((w) => {
+              return {
+                ...w,
+                iLength: w.importSegments.length,
+                xLength: w.exportedDataSegments.length,
+                yLength: w.payload.length,
+              };
+            }),
+          );
+        }
+        break;
+      }
+      case 12n: {
+        if (
+          typeof args.p !== "undefined" &&
+          w11.value < args.p.workItems.length
+        ) {
+          const w = args.p.workItems[Number(w11)];
+          v = encodeWithCodec(SCodec, {
+            ...w,
+            iLength: w.importSegments.length,
+            xLength: w.exportedDataSegments.length,
+            yLength: w.payload.length,
+          });
+        }
+        break;
+      }
+      case 13n: {
+        if (
+          typeof args.p !== "undefined" &&
+          w11.value < args.p.workItems.length
+        ) {
+          const w = args.p.workItems[Number(w11)];
+          v = w.payload;
+        }
+        break;
+      }
+      case 14n: {
+        if (typeof args.bold_i !== "undefined") {
+          v = encodeWithCodec(
+            createArrayLengthDiscriminator(PVMAccumulationOpImpl),
+            args.bold_i,
+          );
+        }
+        break;
+      }
+      case 15n: {
+        if (
+          typeof args.bold_i !== "undefined" &&
+          w11.value < args.bold_i.length
+        ) {
+          v = args.bold_i[Number(w11)].toBinary();
+        }
+        break;
+      }
+    }
+
+    if (typeof v === "undefined") {
+      return [IxMod.w7(HostCallResult.NONE)];
+    }
+
+    const f = w8.value < v.length ? Number(w8.value) : v.length;
+    const l = w9.value < v.length - f ? Number(w9.value) : v.length - f;
+    if (!context.memory.canWrite(o.value, l)) {
+      return [IxMod.panic()];
+    }
+
+    return [IxMod.w7(v.length), IxMod.memory(o.value, v.subarray(f, f + l))];
   }
 
   /**
@@ -375,7 +619,7 @@ export class HostFunctions {
   machine(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModObject<RefineContext> | PVMExitPanicMod> {
+  ): Array<W7 | PVMSingleModObject<RefineContext> | PVMExitReasonMod> {
     const [po, pz, i] = context.registers.slice(7);
     if (
       !po.fitsInU32() ||
@@ -417,7 +661,7 @@ export class HostFunctions {
   peek(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModMemory | PVMExitPanicMod> {
+  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod> {
     const [n, o, s, z] = context.registers.slice(7);
     if (
       !o.fitsInU32() ||
@@ -454,7 +698,7 @@ export class HostFunctions {
   poke(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModMemory | PVMExitPanicMod> {
+  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod> {
     const [n, o, s, z] = context.registers.slice(7);
     if (
       !o.fitsInU32() ||
@@ -539,7 +783,7 @@ export class HostFunctions {
     | W8
     | PVMSingleModMemory
     | PVMSingleModObject<RefineContext>
-    | PVMExitPanicMod
+    | PVMExitReasonMod
   > {
     const [n, o] = context.registers.slice(7);
     if (!context.memory.canWrite(o.value, 112)) {
@@ -642,7 +886,7 @@ export class HostFunctions {
   bless(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [m, a, v, r, o, n] = context.registers.slice(7);
     if (!context.memory.canRead(a.toSafeMemoryAddress(), 4 * CORES)) {
       return [IxMod.panic()];
@@ -698,7 +942,7 @@ export class HostFunctions {
   assign(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [c, o, a] = context.registers.slice(7);
 
     if (
@@ -743,7 +987,7 @@ export class HostFunctions {
   designate(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const o = context.registers.w7();
     if (
       !context.memory.canRead(
@@ -779,7 +1023,7 @@ export class HostFunctions {
   checkpoint(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | YMod | PVMExitPanicMod> {
+  ): Array<W7 | YMod | PVMExitReasonMod> {
     // deep clone x
     const p_y = structuredClone(x);
     const gasAfter = context.gas - 10n; // gas cost of checkpoint = 10
@@ -794,7 +1038,7 @@ export class HostFunctions {
   new(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [o, l, g, m, f, i] = context.registers.slice(7);
 
     if (
@@ -888,7 +1132,7 @@ export class HostFunctions {
   upgrade(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [o, g, m] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -922,7 +1166,7 @@ export class HostFunctions {
   transfer(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [d, a, l, o] = context.registers.slice(7);
 
     const bold_d = structuredClone(x.state.accounts);
@@ -967,7 +1211,7 @@ export class HostFunctions {
   eject(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [d, o] = context.registers.slice(7);
 
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1020,7 +1264,7 @@ export class HostFunctions {
   query(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | W8 | PVMExitPanicMod> {
+  ): Array<W7 | W8 | PVMExitReasonMod> {
     const [o, z] = context.registers.slice(7);
 
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1057,7 +1301,7 @@ export class HostFunctions {
   solicit(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1094,7 +1338,7 @@ export class HostFunctions {
   forget(
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: Tau },
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1159,7 +1403,7 @@ export class HostFunctions {
   yield(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const o = context.registers.w7();
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
@@ -1176,7 +1420,7 @@ export class HostFunctions {
   provide(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitPanicMod> {
+  ): Array<W7 | XMod | PVMExitReasonMod> {
     const [o, z] = context.registers.slice(8);
     const w7 = context.registers.w7();
 
@@ -1227,6 +1471,25 @@ export class HostFunctions {
     ];
   }
 }
+/**
+ * used in fetch
+ */
+const SCodec = createCodec<
+  ConditionalExcept<WorkItemImpl, Function> & {
+    iLength: number;
+    xLength: number;
+    yLength: number;
+  }
+>([
+  ["service", WorkItemImpl.codecOf("service")],
+  ["codeHash", WorkItemImpl.codecOf("codeHash")],
+  ["refineGasLimit", WorkItemImpl.codecOf("refineGasLimit")],
+  ["accumulateGasLimit", WorkItemImpl.codecOf("accumulateGasLimit")],
+  ["exportCount", WorkItemImpl.codecOf("exportCount")],
+  ["iLength", E_sub_int(2)],
+  ["xLength", E_sub_int(2)],
+  ["yLength", E_sub_int(4)],
+]);
 
 const serviceAccountCodec = createCodec<
   Omit<ServiceAccount, "itemInStorage" | "totalOctets" | "gasThreshold"> & {

@@ -16,6 +16,7 @@ import {
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
+  lengthDiscriminatedCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
@@ -78,6 +79,15 @@ const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
     return 32 + 2;
   },
 };
+
+@JamCodecable()
+export class WorkItemExportedSegment extends BaseJamCodecable {
+  @hashCodec("hash")
+  blobHash!: Hash;
+  @eSubIntCodec(4, "len")
+  length!: u32;
+}
+
 // codec order defined in $(0.6.4 - C.29)
 @JamCodecable()
 export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
@@ -159,28 +169,9 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
    * `x`
    * Blob hash and lengths to be introduced in the block.
    */
-  @jsonCodec(
-    ArrayOfJSONCodec(
-      createJSONCodec([
-        ["blobHash", "hash", HashJSONCodec()],
-        ["length", "len", NumberJSONCodec()],
-      ]),
-    ),
-    "extrinsic",
-  )
-  @binaryCodec(
-    createArrayLengthDiscriminator<WorkItem["exportedDataSegments"]>(
-      createCodec([
-        ["blobHash", HashCodec],
-        ["length", E_sub_int<u32>(4)],
-      ]),
-    ),
-  )
+  @lengthDiscriminatedCodec(WorkItemExportedSegment, "extrinsic")
   exportedDataSegments!: UpToSeq<
-    {
-      blobHash: Hash;
-      length: u32;
-    },
+    WorkItemExportedSegment,
     typeof MAX_IMPORTED_ITEMS
   >;
 }

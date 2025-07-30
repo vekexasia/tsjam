@@ -8,9 +8,12 @@ export const JAM_COMMON_ERA = 1704110400;
  * also known as slot period
  */
 export const BLOCK_TIME = 6;
+/**
+ * `H`
+ */
 export const RECENT_HISTORY_LENGTH = 8;
 /**
- * referred as constant `V` in the paper
+ * `V` in the paper
  */
 export const NUMBER_OF_VALIDATORS = 1023;
 export const MINIMUM_VALIDATORS = 683;
@@ -42,7 +45,7 @@ export const MAX_TICKETS_PER_VALIDATOR = 2;
 export const WORK_TIMEOUT = 5;
 
 /**
- * referred as constant `R` in the paper
+ * `R` in the paper
  */
 export const VALIDATOR_CORE_ROTATION = 10;
 
@@ -73,8 +76,7 @@ export const MAX_WORKREPORT_OUTPUT_SIZE = 48 * 2 ** 10;
  */
 export const MAX_WORK_PREREQUISITES = 8;
 /**
- * defined in timeslots
- * @see L in the paper
+ * `L` in the paper
  *
  * it's essentially 1 day = 14400 * 6s = 86400s
  */
@@ -154,9 +156,19 @@ export const AUTHPOOL_SIZE = 8;
 export const AUTHQUEUE_MAX_SIZE = 80;
 
 /**
+ * `WB`
+ */
+export const MAX_SIZE_ENCODED_PACKAGE = 13_794_305;
+
+/**
  * `WC` in the paper
  */
 export const SERVICECODE_MAX_SIZE = 4_000_0000;
+
+/**
+ * `WE`
+ */
+export const BASIC_ERASURECODE_SIZE = 684;
 
 /**
  * `BS` in the paper
@@ -201,6 +213,11 @@ export const ERASURECODE_EXPORTED_SIZE = 6;
 export const ERASURECODE_SEGMENT_SIZE = <4104>(
   (ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE)
 );
+
+/**
+ * `WR` in the paper
+ */
+export const MAX_TOT_SIZE_BLOBS_WORKREPORT = 48 * 2 ** 10;
 
 /**
  * `WX` in the paper
