@@ -21,7 +21,7 @@ export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
 
   /**
    * @param serviceIndex - the index of the service account
-   * @param octets - $(0.7.0 - 9.8)
+   * @param octets - $(0.7.1 - 9.8)
    */
   constructor(
     private serviceIndex: ServiceIndex,

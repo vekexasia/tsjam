@@ -26,7 +26,6 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
-import { a } from "vitest/dist/chunks/suite.B2jumIFP.js";
 
 export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;

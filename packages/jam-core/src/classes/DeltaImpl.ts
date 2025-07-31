@@ -20,7 +20,7 @@ import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
  * `δ` or delta in the graypaper
  *
  * It's a dictionary of service accounts
- * $(0.7.0 - 9.2)
+ * $(0.7.1 - 9.2)
  */
 @JamCodecable()
 export class DeltaImpl extends BaseJamCodecable implements Delta {
