@@ -24,7 +24,7 @@ import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 
 /**
  * `α`
- * $(0.7.0 - 8.1)
+ * $(0.7.1 - 8.1)
  */
 export class AuthorizerPoolImpl
   extends BaseJamCodecable
@@ -44,7 +44,7 @@ export class AuthorizerPoolImpl
     return this.elements[core];
   }
 
-  // $(0.7.0 - 8.2 / 8.3)
+  // $(0.7.1 - 8.2 / 8.3)
   toPosterior(deps: {
     eg: Validated<GuaranteesExtrinsicImpl>;
     p_queue: Posterior<AuthorizerQueueImpl>;
@@ -58,6 +58,7 @@ export class AuthorizerPoolImpl
         deps.p_queue.queueAtCore(core)[deps.p_tau % AUTHQUEUE_MAX_SIZE];
       let hashes: Hash[];
       const firstWReport = deps.eg.elementForCore(core);
+      // second bracket
       if (typeof firstWReport === "undefined") {
         // F(c) results in queue[c]
         hashes = [...this.elements[core], fromQueue];

@@ -9,7 +9,7 @@ import { AUTHPOOL_SIZE, CORES } from "@tsjam/constants";
  * - if there is no workreport, then the pool new value would be (pool + AuthorizerQueue[coreIndex][Ht]) modulo 80
  * after this operation, we take the resulting array and keep the last 8 elements
  * we need to remove the leftmost authorizer from the pool that matches the workreport submitted
- * $(0.7.0 - 8.1)
+ * $(0.7.1 - 8.1)
  */
 export type AuthorizerPool = {
   elements: SeqOfLength<UpToSeq<Hash, typeof AUTHPOOL_SIZE>, typeof CORES>;
