@@ -52,6 +52,9 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
     return encodeWithCodec(GammaSImpl, this);
   }
 
+  /**
+   * $(0.6.4 - 6.24)
+   */
   toPosterior(
     curState: JamStateImpl,
     deps: {
@@ -79,14 +82,14 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
       return toPosterior(this);
     } else {
       // we're in fallback mode
-      // F(eta'_2, kappa' ) $(0.6.4 - 6.24)
+      // F(eta'_2, kappa' )
       const newGammaS = [] as unknown as SeqOfLength<
         BandersnatchKey,
         typeof EPOCH_LENGTH,
         "gamma_s"
       >;
       const p_eta2 = encodeWithCodec(HashCodec, deps.p_eta2);
-      // $(0.6.4 - 6.26)
+      // $(0.7.1 - 6.26) F calculated in place
       for (let i = 0; i < EPOCH_LENGTH; i++) {
         const e4Buf = new Uint8Array(4);
         E_4.encode(BigInt(i), e4Buf);

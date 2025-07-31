@@ -1282,12 +1282,9 @@ __metadata:
     "@tsjam/codec": "npm:*"
     "@tsjam/constants": "npm:*"
     "@tsjam/crypto": "npm:*"
-    "@tsjam/pvm": "npm:*"
-    "@tsjam/serviceaccounts": "npm:*"
-    "@tsjam/transitions": "npm:*"
     "@tsjam/types": "npm:*"
-    "@tsjam/utils": "npm:*"
     neverthrow: "npm:^8.1.1"
+    type-fest: "npm:^4.41.0"
     uint8array-extras: "npm:^1.4.0"
   languageName: unknown
   linkType: soft
@@ -1323,62 +1320,6 @@ __metadata:
   dependencies:
     "@tsjam/constants": "npm:*"
     "@tsjam/types": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@tsjam/merklization@npm:*, @tsjam/merklization@workspace:packages/jam-merklization":
-  version: 0.0.0-use.local
-  resolution: "@tsjam/merklization@workspace:packages/jam-merklization"
-  dependencies:
-    "@tsjam/codec": "npm:*"
-    "@tsjam/constants": "npm:*"
-    "@tsjam/crypto": "npm:*"
-    "@tsjam/serviceaccounts": "npm:*"
-    "@tsjam/types": "npm:*"
-    "@tsjam/utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@tsjam/pvm@npm:*, @tsjam/pvm@workspace:packages/jam-pvm":
-  version: 0.0.0-use.local
-  resolution: "@tsjam/pvm@workspace:packages/jam-pvm"
-  dependencies:
-    "@tsjam/codec": "npm:*"
-    "@tsjam/constants": "npm:*"
-    "@tsjam/crypto": "npm:*"
-    "@tsjam/merklization": "npm:*"
-    "@tsjam/serviceaccounts": "npm:*"
-    "@tsjam/types": "npm:*"
-    "@tsjam/utils": "npm:*"
-    "@types/json-bigint": "npm:^1"
-    json-bigint: "npm:^1.0.0"
-    neverthrow: "npm:^8.1.1"
-  languageName: unknown
-  linkType: soft
-
-"@tsjam/serviceaccounts@npm:*, @tsjam/serviceaccounts@workspace:packages/jam-serviceaccounts":
-  version: 0.0.0-use.local
-  resolution: "@tsjam/serviceaccounts@workspace:packages/jam-serviceaccounts"
-  dependencies:
-    "@tsjam/codec": "npm:*"
-    "@tsjam/constants": "npm:*"
-    "@tsjam/types": "npm:*"
-    "@tsjam/utils": "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@tsjam/transitions@npm:*, @tsjam/transitions@workspace:packages/jam-transitions":
-  version: 0.0.0-use.local
-  resolution: "@tsjam/transitions@workspace:packages/jam-transitions"
-  dependencies:
-    "@tsjam/codec": "npm:*"
-    "@tsjam/constants": "npm:*"
-    "@tsjam/crypto": "npm:*"
-    "@tsjam/merklization": "npm:*"
-    "@tsjam/pvm": "npm:*"
-    "@tsjam/types": "npm:*"
-    "@tsjam/utils": "npm:*"
-    neverthrow: "npm:^8.1.1"
   languageName: unknown
   linkType: soft
 
@@ -1457,13 +1398,6 @@ __metadata:
   dependencies:
     "@types/unist": "npm:*"
   checksum: 10c0/3249781a511b38f1d330fd1e3344eed3c4e7ea8eff82e835d35da78e637480d36fad37a78be5a7aed8465d237ad0446abc1150859d0fde395354ea634decf9f7
-  languageName: node
-  linkType: hard
-
-"@types/json-bigint@npm:^1":
-  version: 1.0.4
-  resolution: "@types/json-bigint@npm:1.0.4"
-  checksum: 10c0/bb567bac8d64f541abb3cb716d5c699c460b9aa4a9fc5fc81a3cee9cb57fe8c03914022049dcdadff213972979a5d08267405d55d2ed6aa95d3558f08347008a
   languageName: node
   linkType: hard
 
@@ -2399,13 +2333,6 @@ __metadata:
     bindings: "npm:^1.3.0"
     node-gyp: "npm:latest"
   checksum: 10c0/aa41e53d38242a2f05f85b08eaf592635f92e5328822784cda518232b1644efdbf29ab3664951b174cc645848add4605488e25c9439bcc749660c885b4ff6118
-  languageName: node
-  linkType: hard
-
-"bignumber.js@npm:^9.0.0":
-  version: 9.1.2
-  resolution: "bignumber.js@npm:9.1.2"
-  checksum: 10c0/e17786545433f3110b868725c449fa9625366a6e675cd70eb39b60938d6adbd0158cb4b3ad4f306ce817165d37e63f4aa3098ba4110db1d9a3b9f66abfbaf10d
   languageName: node
   linkType: hard
 
@@ -5232,15 +5159,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-bigint@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "json-bigint@npm:1.0.0"
-  dependencies:
-    bignumber.js: "npm:^9.0.0"
-  checksum: 10c0/e3f34e43be3284b573ea150a3890c92f06d54d8ded72894556357946aeed9877fd795f62f37fe16509af189fd314ab1104d0fd0f163746ad231b9f378f5b33f4
-  languageName: node
-  linkType: hard
-
 "json-buffer@npm:3.0.1":
   version: 3.0.1
   resolution: "json-buffer@npm:3.0.1"
@@ -7866,6 +7784,13 @@ __metadata:
   version: 4.29.0
   resolution: "type-fest@npm:4.29.0"
   checksum: 10c0/de11f04e141e4dd2caf8ba9cb4894955f73d60c06303f93836feea66f162166a2d66e81e7aca270721627cdc7fef2d248b21917fe1346598a66c3d6b856d2d7f
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^4.41.0":
+  version: 4.41.0
+  resolution: "type-fest@npm:4.41.0"
+  checksum: 10c0/f5ca697797ed5e88d33ac8f1fec21921839871f808dc59345c9cf67345bfb958ce41bd821165dbf3ae591cedec2bf6fe8882098dfdd8dc54320b859711a2c1e4
   languageName: node
   linkType: hard
 

@@ -14,7 +14,7 @@ export type TicketsExtrinsicElement = {
  *
  * `Et` the maximum number of tickets in a block is
  * `K`=16 and it is allowed to be submitted only if current slot is less than Y=500 ( aka lottery did not end yet)
- * $(0.7.0 - 6.29)
+ * $(0.7.1 - 6.29)
  */
 export type TicketsExtrinsic = {
   elements: UpToSeq<TicketsExtrinsicElement, 16>;

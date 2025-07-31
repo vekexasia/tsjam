@@ -86,17 +86,23 @@ export const accumulateReports = (
     alwaysAccers: deps.privServices.alwaysAccers,
   });
 
-  // $(0.7.0 - 12.24)
-  const [
+  // $(0.7.1 - 12.24)
+  const {
     nAccumulatedWork, // `n`
-    postState, // `e'`
-    bold_t,
-    p_mostRecentAccumulationOutputs, // θ′
+    postAccState, // `e'`
+    lastAccOutputs, // θ′
     gasUsed, // `bold u`
-  ] = outerAccumulation(g, r_star, preState, deps.privServices.alwaysAccers, {
-    p_tau: deps.p_tau,
-    p_eta_0: deps.p_eta_0,
-  });
+  } = outerAccumulation(
+    g,
+    new DeferredTransfersImpl([]),
+    r_star,
+    preState, // e
+    deps.privServices.alwaysAccers,
+    {
+      p_tau: deps.p_tau,
+      p_eta_0: deps.p_eta_0,
+    },
+  );
 
   const accumulationStatistics = AccumulationStatisticsImpl.compute({
     r_star,
@@ -123,19 +129,19 @@ export const accumulateReports = (
     deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
-    p_mostRecentAccumulationOutputs,
+    p_mostRecentAccumulationOutputs: lastAccOutputs,
     p_privServices: toPosterior(
       new PrivilegedServicesImpl({
-        manager: postState.manager,
-        delegator: postState.delegator,
-        assigners: postState.assigners,
-        alwaysAccers: postState.alwaysAccers,
-        registrar: <ServiceIndex>0, // FIXME: 0.7.1
+        manager: postAccState.manager,
+        delegator: postAccState.delegator,
+        assigners: postAccState.assigners,
+        alwaysAccers: postAccState.alwaysAccers,
+        registrar: postAccState.registrar,
       }),
     ),
-    d_delta: toDagger(postState.accounts),
-    p_iota: toPosterior(postState.stagingSet),
-    p_authQueue: toPosterior(postState.authQueue),
+    d_delta: toDagger(postAccState.accounts),
+    p_iota: toPosterior(postAccState.stagingSet),
+    p_authQueue: toPosterior(postAccState.authQueue),
     accumulationStatistics,
   });
 };

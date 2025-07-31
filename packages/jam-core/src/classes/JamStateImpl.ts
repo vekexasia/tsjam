@@ -124,18 +124,6 @@ export class JamStateImpl implements JamState {
     Object.assign(this, config);
   }
 
-  /**
-   * `HA` in the graypaper
-   * @param header - the header of the blockj
-   * @param state - the state of the safrole state machine
-   *
-   * $(0.7.0 - 5.9)
-   *
-   */
-  blockAuthor(): ValidatorDataImpl {
-    return this.kappa.at(this.block!.header.authorIndex)!;
-  }
-
   merkleRoot(): StateRootHash {
     const stateMap = merkleStateMap(this);
     return M_fn(
@@ -164,15 +152,15 @@ export class JamStateImpl implements JamState {
       return err(ImportBlockError.InvalidParentHeader);
     }
 
-    // $(0.7.0 - 6.1)
+    // $(0.7.1 - 6.1)
     const p_tau = toPosterior(newBlock.header.slot);
 
-    // $(0.7.0 - 5.7)
+    // $(0.7.1 - 5.7)
     if (this.tau >= p_tau || p_tau * BLOCK_TIME > Timekeeping.bigT()) {
       return err(ImportBlockError.InvalidSlot);
     }
 
-    // $(0.7.0 - 5.8)
+    // $(0.7.1 - 5.8)
     if (this.merkleRoot() !== newBlock.header.parentStateRoot) {
       return err(ImportBlockError.InvalidParentStateRoot);
     }

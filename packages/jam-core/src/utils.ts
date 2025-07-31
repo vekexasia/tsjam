@@ -12,7 +12,7 @@ import { toTagged } from "@tsjam/utils";
 /**
  * Z fn
  * exported cause it's being used to check/produce `Hw` in Header
- * $(0.7.0 - 6.25)
+ * $(0.7.1 - 6.25)
  */
 export const outsideInSequencer = <
   T extends SeqOfLength<TicketImpl, typeof EPOCH_LENGTH>,
@@ -30,7 +30,7 @@ export const outsideInSequencer = <
 /**
  * Phi function
  * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
- * @see $(0.7.0 - 6.14)
+ * @see $(0.7.1 - 6.14)
  */
 export const PHI_FN = <T extends ValidatorData[]>(
   validatorKeys: ValidatorData[], // `k` in the graypaper

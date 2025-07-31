@@ -12,7 +12,7 @@ import { JamStateImpl } from "./JamStateImpl";
 
 /**
  * `η`
- * $(0.7.0 - 6.21)
+ * $(0.7.1 - 6.21)
  */
 @JamCodecable()
 export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
@@ -43,7 +43,7 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
       vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
     },
   ): Posterior<JamEntropyImpl> {
-    // $(0.7.0 - 6.22) | rotate `η_0`
+    // $(0.7.1 - 6.22) | rotate `η_0`
     const p_0 = Hashing.blake2b(
       new Uint8Array([
         ...encodeWithCodec(HashCodec, this._0),
@@ -51,7 +51,7 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
       ]),
     );
 
-    // $(0.7.0 - 6.23) | rotate `η_1`, `η_2`, `η_3`
+    // $(0.7.1 - 6.23) | rotate `η_1`, `η_2`, `η_3`
 
     let [p_1, p_2, p_3] = [this._1, this._2, this._3];
 

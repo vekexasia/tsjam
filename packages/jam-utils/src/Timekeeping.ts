@@ -28,7 +28,7 @@ export class Timekeeping {
  * `m` in the graypaper
  * @param timeSlot - the time slot or `Ht` in the graypaper
  * @see section 6.1 - Timekeeping
- * $(0.7.0 - 6.2)
+ * $(0.7.1 - 6.2)
  */
 export const slotIndex = (timeSlot: Tau) => timeSlot % EPOCH_LENGTH;
 
@@ -36,7 +36,7 @@ export const slotIndex = (timeSlot: Tau) => timeSlot % EPOCH_LENGTH;
  * `r` in the graypaper
  * @param timeSlot - the time slot or `Ht` in the graypaper
  * @see section 6.1 - Timekeeping
- * $(0.7.0 - 6.2)
+ * $(0.7.1 - 6.2)
  */
 export const epochIndex = (timeSlot: Tau): Tagged<u32, "epoch-index"> =>
   toTagged(<u32>Math.floor(timeSlot / EPOCH_LENGTH));

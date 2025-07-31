@@ -12,6 +12,9 @@ import {
 import { Tau } from "@/Tau.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Ticket } from "./sets/Ticket.js";
+/**
+ * $(0.7.1 - 5.10)
+ */
 export interface EpochMarker {
   // coming from eta
   entropy: Blake2bHash;
@@ -26,7 +29,7 @@ export interface EpochMarker {
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
- * @see $(0.7.0 - 5.1)
+ * @see $(0.7.1 - 5.1)
  * NOTE: the following are computed values
  * `Ha`= K'[Hi]
  */
@@ -58,7 +61,7 @@ export interface JamHeader {
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
    * hence the length of kb or validatorKeys is `epoch-length`
-   * $(0.7.0 - 5.10)
+   *
    */
   epochMarker?: EpochMarker;
 

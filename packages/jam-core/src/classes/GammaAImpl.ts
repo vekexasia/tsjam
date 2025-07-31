@@ -28,7 +28,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
   }
 
   /**
-   * $(0.7.0 - 6.34)
+   * $(0.7.1 - 6.34)
    */
   toPosterior(
     curState: JamStateImpl,
@@ -52,7 +52,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
         .slice(0, EPOCH_LENGTH),
     });
 
-    // $(0.7.0 - 6.35) | check `n` subset of p_gamma_a after slice
+    // $(0.7.1 - 6.35) | check `n` subset of p_gamma_a after slice
     const p_gamma_a_ids = new Set(toRet.elements.map((x) => x.id));
     for (const x of deps.newTickets) {
       if (!p_gamma_a_ids.has(x.id)) {

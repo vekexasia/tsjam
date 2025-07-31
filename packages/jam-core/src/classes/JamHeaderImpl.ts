@@ -44,7 +44,7 @@ import {
   Tau,
   ValidatorIndex,
 } from "@tsjam/types";
-import { isNewEra, isSameEra, slotIndex } from "@tsjam/utils";
+import { isNewEra, isSameEra, slotIndex, toPosterior } from "@tsjam/utils";
 import { compareUint8Arrays } from "uint8array-extras";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
@@ -52,6 +52,9 @@ import { JamStateImpl } from "./JamStateImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { TicketImpl } from "./TicketImpl";
 
+/**
+ * $(0.7.1 - 5.10)
+ */
 @JamCodecable()
 export class EpochMarkerImpl extends BaseJamCodecable implements EpochMarker {
   @hashCodec()
@@ -112,7 +115,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * **He:** The epoch marker of the block.
    * it basically contains the epoch-length bandersnatch keys in case next epoch is in fallback mode
    * hence the length of kb or validatorKeys is `epoch-length`
-   * $(0.7.0 - 5.10)
+   *
    */
   @optionalCodec(EpochMarkerImpl, "epoch_mark")
   epochMarker?: EpochMarkerImpl;
@@ -197,15 +200,22 @@ export class JamSignedHeaderImpl
   }
 
   /**
+   * $(0.7.1 - 5.9)
+   */
+  blockAuthor(p_kappa: Posterior<JamStateImpl["kappa"]>) {
+    return p_kappa.at(this.authorIndex)!.banderSnatch;
+  }
+
+  /**
    * Verify Hs
-   * $(0.7.0 - 6.15 / 6.16 / 6.18 / 6.19 / 6.20)
+   * $(0.7.1 - 6.18 / 6.19 / 6.20) and others inside
    * @param p_state the state of which this header is associated with
    */
   verifySeal(p_state: Posterior<JamStateImpl>) {
-    const ha = p_state.blockAuthor();
+    const ha = this.blockAuthor(toPosterior(p_state.kappa));
     const verified = Bandersnatch.verifySignature(
       this.seal,
-      ha.banderSnatch,
+      ha,
       this.toBinary(), // message
       this.sealSignContext(p_state),
     );
@@ -213,15 +223,15 @@ export class JamSignedHeaderImpl
       return false;
     }
 
-    // $(0.7.0 - 6.16)
+    // $(0.7.1 - 6.16)
     if (p_state.safroleState.gamma_s.isFallback()) {
       const i = p_state.safroleState.gamma_s.keys![this.slot % EPOCH_LENGTH];
-      if (compareUint8Arrays(i, ha.banderSnatch) !== 0) {
+      if (compareUint8Arrays(i, ha) !== 0) {
         return false;
       }
       return true;
     } else {
-      // $(0.7.0 - 6.15)
+      // $(0.7.1 - 6.15)
       const i = p_state.safroleState.gamma_s.tickets![this.slot % EPOCH_LENGTH];
       // verify ticket identity. if it fails, it means validator is not allowed to produce block
       if (i.id !== Bandersnatch.vrfOutputSignature(this.seal)) {
@@ -233,13 +243,13 @@ export class JamSignedHeaderImpl
 
   /**
    * verify `Hv`
-   * @see $(0.7.0 - 6.17 - 6.18)
+   * $(0.7.1 - 6.17 / 6.18)
    */
   verifyEntropy(p_state: Posterior<JamStateImpl>) {
-    const ha = p_state.blockAuthor();
+    const ha = this.blockAuthor(toPosterior(p_state.kappa));
     return Bandersnatch.verifySignature(
       this.entropySource,
-      ha.banderSnatch,
+      ha,
       new Uint8Array([]), // message - empty to not bias the entropy
       new Uint8Array([
         ...JAM_ENTROPY,
@@ -250,9 +260,10 @@ export class JamSignedHeaderImpl
       ]),
     );
   }
+
   /**
    * Verifies epoch marker `He` is valid
-   * $(0.7.0 - 6.27)
+   * $(0.7.1 - 6.27)
    */
   verifyEpochMarker = (
     prevState: JamStateImpl,
@@ -287,8 +298,10 @@ export class JamSignedHeaderImpl
     return true;
   };
 
-  // check winning tickets Hw
-  // $(0.7.0 - 6.28)
+  /**
+   * check winning tickets Hw
+   * $(0.7.1 - 6.28)
+   */
   verifyTicketsMark(prevState: JamStateImpl) {
     if (
       isSameEra(this.slot, prevState.tau) &&

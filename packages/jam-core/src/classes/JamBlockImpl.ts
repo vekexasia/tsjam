@@ -82,7 +82,7 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
     //       .headerHash,
     //   offenders,
     //   extrinsicHash: computeExtrinsicHash(extrinsics),
-    //   timeSlotIndex: p_tau, // $(0.7.0 - 6.1)
+    //   timeSlotIndex: p_tau, // $(0.7.1 - 6.1)
     //   priorStateRoot: merkelizeState(curState) as StateRootHash,
     //   blockAuthorKeyIndex: p_kappa.findIndex(
     //     (a) => a.ed25519.bigint === data.validator.ed25519.bigint,

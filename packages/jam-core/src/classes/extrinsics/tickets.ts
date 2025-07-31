@@ -25,13 +25,15 @@ import {
   TicketsExtrinsic,
   TicketsExtrinsicElement,
   UpToSeq,
+  Validated,
 } from "@tsjam/types";
-import { slotIndex } from "@tsjam/utils";
+import { slotIndex, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { GammaAImpl } from "../GammaAImpl";
 import { JamEntropyImpl } from "../JamEntropyImpl";
 import { SafroleStateImpl } from "../SafroleStateImpl";
 import { TicketImpl } from "../TicketImpl";
+import { GammaZImpl } from "../GammaZImpl";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -58,8 +60,36 @@ export class TicketsExtrinsicElementImpl
   @jsonCodec(BufferJSONCodec(), "signature")
   @binaryCodec(fixedSizeIdentityCodec(784))
   proof!: RingVRFProof;
+
+  /**
+   * $(0.7.1 - 6.29) | we validate the ticket
+   */
+  checkValidity(deps: {
+    p_gamma_z: Posterior<GammaZImpl>;
+    p_entropy: Posterior<JamEntropyImpl>;
+  }): Result<Validated<TicketsExtrinsicElementImpl>, ETError> {
+    if (this.attempt < 0 || this.attempt >= MAX_TICKETS_PER_VALIDATOR) {
+      return err(ETError.INVALID_ENTRY_INDEX);
+    }
+    const sig = Bandersnatch.verifyVrfProof(
+      this.proof,
+      deps.p_gamma_z.root,
+      new Uint8Array([
+        ...JAM_TICKET_SEAL,
+        ...encodeWithCodec(HashCodec, deps.p_entropy._2),
+        this.attempt,
+      ]),
+    );
+    if (!sig) {
+      return err(ETError.INVALID_VRF_PROOF);
+    }
+    return ok(toTagged(this));
+  }
 }
 
+/**
+ * $(0.7.1 - 6.29)
+ */
 @JamCodecable()
 export class TicketsExtrinsicImpl
   extends BaseJamCodecable
@@ -78,40 +108,30 @@ export class TicketsExtrinsicImpl
       return ok([]); // optimization
     }
 
-    // $(0.7.0 - 6.30) | first case
+    // $(0.7.1 - 6.30) | first case
     // NOTE: the length 0 is handled above
     if (slotIndex(deps.p_tau) >= LOTTERY_MAX_SLOT) {
       return err(ETError.LOTTERY_ENDED);
     }
 
-    // $(0.7.0 - 6.30) | first case
+    // $(0.7.1 - 6.30) | first case
     if (this.elements.length > MAX_TICKETS_PER_BLOCK) {
       return err(ETError.MAX_TICKETS_EXCEEDED);
     }
 
-    // $(0.7.0 - 6.29) | we validate the ticket
     for (const extrinsic of this.elements) {
-      if (
-        extrinsic.attempt < 0 ||
-        extrinsic.attempt >= MAX_TICKETS_PER_VALIDATOR
-      ) {
-        return err(ETError.INVALID_ENTRY_INDEX);
-      }
-      const sig = Bandersnatch.verifyVrfProof(
-        extrinsic.proof,
-        deps.p_gamma_z.root,
-        new Uint8Array([
-          ...JAM_TICKET_SEAL,
-          ...encodeWithCodec(HashCodec, deps.p_entropy._2),
-          extrinsic.attempt,
-        ]),
-      );
-      if (!sig) {
-        return err(ETError.INVALID_VRF_PROOF);
+      const [e] = extrinsic
+        .checkValidity({
+          p_entropy: deps.p_entropy,
+          p_gamma_z: deps.p_gamma_z,
+        })
+        .safeRet();
+      if (typeof e !== "undefined") {
+        return err(e);
       }
     }
 
-    // $(0.7.0 - 6.31)
+    // $(0.7.1 - 6.31)
     const n: TicketImpl[] = [];
     for (const x of this.elements) {
       n.push(
@@ -122,14 +142,14 @@ export class TicketsExtrinsicImpl
       );
     }
 
-    // $(0.6.4 - 6.32) | tickets should be in order and unique
+    // $(0.7.1 - 6.32) | tickets should be in order and unique
     for (let i = 1; i < n.length; i++) {
       if (n[i - 1].id >= n[i].id) {
         return err(ETError.UNSORTED_VRF_PROOFS);
       }
     }
 
-    // $(0.6.4 - 6.33) | make sure ticket were not submitted already
+    // $(0.7.1 - 6.33) | make sure ticket were not submitted already
     const gamma_a_ids = new Set(deps.gamma_a.elements.map((x) => x.id));
     for (const x of n) {
       if (gamma_a_ids.has(x.id)) {

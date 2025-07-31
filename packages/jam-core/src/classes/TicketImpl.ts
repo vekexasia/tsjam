@@ -7,6 +7,10 @@ import {
 import { Hash, Ticket } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 
+/**
+ * identified by `T` set
+ * $(0.7.1 - 6.6)
+ */
 @JamCodecable()
 export class TicketImpl extends BaseJamCodecable implements Ticket {
   /**

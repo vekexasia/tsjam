@@ -6,7 +6,7 @@ import { isNewEra, toPosterior, toTagged } from "@tsjam/utils";
 import { PHI_FN } from "@/utils";
 
 export class GammaPImpl extends ValidatorsImpl {
-  // $(0.7.0 - 6.13)
+  // $(0.7.1 - 6.13)
   toPosterior(
     curState: JamStateImpl,
     deps: {
