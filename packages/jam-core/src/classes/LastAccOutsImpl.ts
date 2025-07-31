@@ -25,7 +25,7 @@ export class SingleAccOutImpl extends BaseJamCodecable {
  * `θ` - `\lastaccout`
  * Also implements `\servouts` or `B` defined in
  * $(0.7.0 - 12.15)
- * $(0.7.0 - 7.4)
+ * $(0.7.1 - 7.4)
  *
  * Codec is C(16) in $(0.7.0 - D.2)
  */

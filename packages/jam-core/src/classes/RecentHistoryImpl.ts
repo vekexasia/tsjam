@@ -34,7 +34,7 @@ export class RecentHistoryImpl
     return this.elements.find((el) => el.headerHash === headerHash);
   }
   /**
-   * $(0.7.0 - 4.6 / 7.5)
+   * $(0.7.1 - 4.6 / 7.5)
    */
   toDagger(header: JamHeaderImpl): Dagger<RecentHistoryImpl> {
     if (this.elements.length === 0) {
@@ -58,7 +58,7 @@ export class RecentHistoryImpl
   }
 
   /**
-   * $(0.7.0 - 7.8 / 4.17)
+   * $(0.7.1 - 7.8 / 4.17)
    */
   static toPosterior(
     d_recentHistory: Dagger<RecentHistoryImpl>,
@@ -70,7 +70,7 @@ export class RecentHistoryImpl
   ) {
     const toRet = structuredClone(d_recentHistory);
     const b = MMRSuperPeak(deps.p_beefyBelt);
-    const p = new Map(
+    const bold_p = new Map(
       deps.eg
         .workReports()
         .map((a) => a.avSpec)
@@ -79,9 +79,9 @@ export class RecentHistoryImpl
     );
     toRet.elements.push(
       new RecentHistoryItemImpl({
-        reportedPackages: p,
+        reportedPackages: bold_p,
         headerHash: deps.headerHash,
-        stateRoot: 0n as StateRootHash,
+        stateRoot: <StateRootHash>0n,
         accumulationResultMMB: b,
       }),
     );

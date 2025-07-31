@@ -46,75 +46,92 @@ export class JamStateImpl implements JamState {
    * or undefined if state was reconstructed without block
    */
   block?: JamBlockImpl;
+
   /**
    * `α`
    */
   authPool!: AuthorizerPoolImpl;
+
   /**
    * `β`
    */
   beta!: BetaImpl;
+
   /**
    * `γ`
    */
   safroleState!: SafroleStateImpl;
+
   /**
    * `λ` Validator keys and metadata which were active in the prior epoch.
    */
   lambda!: Tagged<ValidatorsImpl, "lambda">;
+
   /**
    * `κ` Validator keys and metadata which are active in the current epoch.
    */
   kappa!: Tagged<ValidatorsImpl, "kappa">;
+
   /**
    * `ι` Validator keys and metadata which will be active in the next epoch.
    */
   iota!: Tagged<ValidatorsImpl, "iota">;
+
   /**
    * `δ`
    */
   serviceAccounts!: DeltaImpl;
+
   /**
    * `η`
    */
   entropy!: JamEntropyImpl;
+
   /**
    * `φ`
    */
   authQueue!: AuthorizerQueueImpl;
+
   /**
    * `χ`
    */
   privServices!: PrivilegedServicesImpl;
+
   /**
    * `ψ`
    */
   disputes!: DisputesStateImpl;
+
   /**
    * `π`
    */
   statistics!: JamStatisticsImpl;
+
   /**
    * `ω`
    */
   accumulationQueue!: AccumulationQueueImpl;
+
   /**
    * `ξ`
    */
   accumulationHistory!: AccumulationHistoryImpl;
+
   /**
    * `ρ`
    */
   rho!: RHOImpl;
+
   /**
    * `τ` - the most recent block timeslot
    */
   tau!: Tau;
+
   /**
    * `θ` - `\lastaccout`
-   * $(0.7.0 - 7.4)
    */
   mostRecentAccumulationOutputs!: LastAccOutsImpl;
+
   /**
    * NOTE: this is not included in gp but used as per type doc
    */

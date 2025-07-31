@@ -11,14 +11,25 @@ import {
   Optional,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { Beta, Dagger, Hash, HeaderHash, Validated } from "@tsjam/types";
+import {
+  Beta,
+  Dagger,
+  Hash,
+  HeaderHash,
+  Posterior,
+  Validated,
+} from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { JamHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { RecentHistoryImpl } from "./RecentHistoryImpl";
+import { LastAccOutsImpl } from "./LastAccOutsImpl";
 
+/**
+ * $(0.7.1 - 7.1 / 7.3)
+ */
 @JamCodecable()
 export class BetaImpl extends BaseJamCodecable implements Beta {
   /**
@@ -58,17 +69,18 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
   static toPosterior(
     d_beta: Dagger<BetaImpl>,
     deps: {
-      p_theta: JamStateImpl["mostRecentAccumulationOutputs"];
+      p_theta: Posterior<LastAccOutsImpl>;
       headerHash: HeaderHash; // h
       eg: Validated<GuaranteesExtrinsicImpl>;
     },
   ) {
-    // $(0.7.0 - 7.7) - beefyBelt
-    const s = deps.p_theta.elements.map((a) => a.toBinary());
+    // $(0.7.1 - 7.6) - calculate bold_s
+    const bold_s = deps.p_theta.elements.map((a) => a.toBinary());
+    // $(0.7.1 - 7.7) - calculate beefyBelt
     const p_beefyBelt = toPosterior(
       appendMMR(
         d_beta.beefyBelt,
-        wellBalancedBinaryMerkleRoot(s, Hashing.keccak256),
+        wellBalancedBinaryMerkleRoot(bold_s, Hashing.keccak256),
         Hashing.keccak256,
       ),
     );

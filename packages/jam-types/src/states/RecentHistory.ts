@@ -34,7 +34,7 @@ export interface RecentHistoryItem {
 }
 
 /**
- * $(0.7.0 - 7.2)
+ * $(0.7.1 - 7.2)
  */
 export type RecentHistory = {
   elements: UpToSeq<RecentHistoryItem, typeof RECENT_HISTORY_LENGTH>;
@@ -42,7 +42,7 @@ export type RecentHistory = {
 /**
  * @see section 7
  * they're ordered so that entry 0 is the most recent
- * $(0.6.7 - 7.1 / 7.3)
+ * $(0.7.1 - 7.1 / 7.3)
  */
 export type Beta = {
   /**
