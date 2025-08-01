@@ -17,17 +17,17 @@ import {
 } from "@tsjam/types";
 import { err, ok, Result } from "neverthrow";
 import { JamStateImpl } from "./JamStateImpl";
-import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
+import { DisputeExtrinsicImpl, VerdictVoteKind } from "./extrinsics/disputes";
 import {
   JAM_GUARANTEE,
   JAM_VALID,
   JAM_INVALID,
   NUMBER_OF_VALIDATORS,
-  MINIMUM_VALIDATORS,
 } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
+import { V } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 /**
  * Codec follows C(5) from $(0.7.1 - D.2)
@@ -233,28 +233,13 @@ export class DisputesStateImpl
       );
     }
 
-    // ensure that verdict votes are either 0 or 1/3 NUM_VALIDATORS or 2/3+1 of NUM_VALIDATORS
-    // $(0.7.1 - 10.11)
     const bold_v = deps.extrinsic.verdictsVotes();
-    if (
-      false ===
-      bold_v.every((v) => {
-        switch (v.votes) {
-          case 0:
-          case NUMBER_OF_VALIDATORS / 3:
-          case MINIMUM_VALIDATORS:
-            return true;
-          default:
-            return false;
-        }
-      })
-    ) {
-      return err(DisputesToPosteriorError.VERDICTS_NUM_VALIDATORS);
-    }
 
-    const negativeVerdicts = bold_v.filter((v) => v.votes === 0);
+    const negativeVerdicts = bold_v.filter(
+      (v) => v.votes === VerdictVoteKind.ZERO,
+    );
     const positiveVerdicts = bold_v.filter(
-      (v) => v.votes === MINIMUM_VALIDATORS,
+      (v) => v.votes === VerdictVoteKind.TWO_THIRD_PLUS_ONE,
     );
 
     // ensure any positive verdicts are in faults
@@ -290,7 +275,7 @@ export class DisputesStateImpl
       good: new Set([
         ...this.good,
         ...bold_v
-          .filter(({ votes }) => votes == (NUMBER_OF_VALIDATORS * 2) / 3 + 1)
+          .filter(({ votes }) => votes == VerdictVoteKind.TWO_THIRD_PLUS_ONE)
           .map(({ reportHash }) => reportHash),
       ]),
 
@@ -298,7 +283,7 @@ export class DisputesStateImpl
       bad: new Set([
         ...this.bad,
         ...bold_v
-          .filter(({ votes }) => votes == 0)
+          .filter(({ votes }) => votes == VerdictVoteKind.ZERO)
           .map(({ reportHash }) => reportHash),
       ]),
 
@@ -306,7 +291,7 @@ export class DisputesStateImpl
       wonky: new Set([
         ...this.wonky,
         ...bold_v
-          .filter(({ votes }) => votes == NUMBER_OF_VALIDATORS / 3)
+          .filter(({ votes }) => votes == VerdictVoteKind.ONE_THIRD)
           .map(({ reportHash }) => reportHash),
       ]),
 

@@ -187,19 +187,36 @@ export class DisputeExtrinsicImpl
   faults!: Array<DisputeFaultImpl>;
 
   /**
-   * computes bold_v as $(0.7.0 - 10.11 / 10.12)
+   * computes bold_v as $(0.7.1 - 10.11 / 10.12)
+   * @returns undefined if votes are
    */
+  verdictsVotes(
+    this: Validated<DisputeExtrinsicImpl>,
+  ): Array<{ reportHash: Hash; votes: VerdictVoteKind }>;
+  verdictsVotes(
+    this: DisputeExtrinsicImpl,
+  ): Array<{ reportHash: Hash; votes: VerdictVoteKind | number }>;
   verdictsVotes() {
-    const bold_v: Array<{ reportHash: Hash; votes: number }> =
-      this.verdicts.map((verdict) => {
-        return {
-          reportHash: verdict.target,
-          votes: verdict.judgements.reduce(
-            (acc, curr) => acc + (curr.vote ? 1 : 0),
-            0,
-          ),
-        };
-      });
+    const bold_v: Array<{
+      reportHash: Hash;
+      votes: VerdictVoteKind | number;
+    }> = this.verdicts.map((verdict) => {
+      const numericVotes = verdict.judgements.reduce(
+        (acc, curr) => acc + (curr.vote ? 1 : 0),
+        0,
+      );
+      return {
+        reportHash: verdict.target,
+        votes:
+          numericVotes === 0
+            ? VerdictVoteKind.ZERO
+            : numericVotes === MINIMUM_VALIDATORS
+              ? VerdictVoteKind.TWO_THIRD_PLUS_ONE
+              : numericVotes === Math.floor(MINIMUM_VALIDATORS / 3)
+                ? VerdictVoteKind.ONE_THIRD
+                : numericVotes,
+      };
+    });
     return bold_v;
   }
 
@@ -211,7 +228,7 @@ export class DisputeExtrinsicImpl
     Validated<DisputeExtrinsicImpl>,
     DisputesExtrinsicValidationError
   > {
-    // $(0.6.4 - 10.2)
+    // $(0.7.1 - 10.2)
     for (const v of this.verdicts) {
       if (
         v.age !== epochIndex(deps.tau) &&
@@ -223,6 +240,18 @@ export class DisputeExtrinsicImpl
       if (v.judgements.length !== MINIMUM_VALIDATORS) {
         return err(DisputesExtrinsicValidationError.JUDGEMENTS_LENGTH_WRONG);
       }
+    }
+
+    const bold_v = this.verdictsVotes();
+    if (
+      bold_v.some(
+        (v) =>
+          v.votes !== VerdictVoteKind.ZERO &&
+          v.votes !== VerdictVoteKind.ONE_THIRD &&
+          v.votes !== VerdictVoteKind.TWO_THIRD_PLUS_ONE,
+      )
+    ) {
+      return err(DisputesExtrinsicValidationError.JUDGEMENTS_WRONG);
     }
 
     // verify all  verdics signatures
@@ -266,10 +295,17 @@ export class DisputeExtrinsicImpl
   }
 }
 
+export enum VerdictVoteKind {
+  ZERO,
+  ONE_THIRD,
+  TWO_THIRD_PLUS_ONE,
+}
+
 export enum DisputesExtrinsicValidationError {
   VERDICT_SIGNATURES_WRONG = "verdict-signatures-wrong",
   EPOCH_INDEX_WRONG = "epoch-index-wrong-in-verdicts",
   JUDGEMENTS_LENGTH_WRONG = "JUDGEMENTS_LENGTH_WRONG",
+  JUDGEMENTS_WRONG = "JUDGEMENTS_WRONG",
 }
 
 if (import.meta.vitest) {

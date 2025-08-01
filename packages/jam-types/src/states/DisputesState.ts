@@ -2,7 +2,7 @@ import { ED25519PublicKey, Hash } from "@/genericTypes";
 
 /**
  * `X`
- * $(0.7.0 - 10.1)
+ * $(0.7.1 - 10.1)
  */
 export interface IDisputesState {
   /**
