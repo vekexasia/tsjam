@@ -8,7 +8,7 @@ import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 
 /**
  * `X` set in graypaper
- * $(0.7.0 - 12.14)
+ * $(0.7.1 - 12.14)
  */
 export type DeferredTransfer = {
   /**

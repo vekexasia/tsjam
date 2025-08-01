@@ -16,7 +16,7 @@ export class NewWorkReportsImpl {
 
   /**
    * `bold R!` in the paper
-   * $(0.7.0 - 12.4)
+   * $(0.7.1 - 12.4)
    */
   immediatelyAccumulable() {
     return this.elements.filter(
@@ -59,11 +59,11 @@ export class NewWorkReportsImpl {
     const r_mark = this.immediatelyAccumulable();
     const r_q = this.queueable(deps.accHistory);
 
-    // $(0.7.0 - 12.10)
+    // $(0.7.1 - 12.10)
     const m = deps.p_tau % EPOCH_LENGTH;
 
     const accprio = computeAccumulationPriority(
-      // $(0.7.0 - 12.12)
+      // $(0.7.1 - 12.12)
       E_Fn(
         [
           ...deps.accQueue.elements.slice(m).flat(),

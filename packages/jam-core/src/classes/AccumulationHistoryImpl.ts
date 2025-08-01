@@ -48,7 +48,7 @@ export class AccumulationHistoryImpl
   }
 
   /**
-   * $(0.7.0 - 12.35 / 12.36)
+   * $(0.7.1 - 12.30 / 12.31)
    */
   toPosterior(deps: {
     r_star: AccumulatableWorkReports;
@@ -58,6 +58,7 @@ export class AccumulationHistoryImpl
     toRet.elements = structuredClone(this.elements);
     const slicedR = deps.r_star.slice(0, deps.nAccumulatedWork);
 
+    // $(0.7.1 - 12.30)
     toRet.elements[EPOCH_LENGTH - 1] =
       WorkReportImpl.extractWorkPackageHashes(slicedR);
     for (let i = 0; i < EPOCH_LENGTH - 1; i++) {

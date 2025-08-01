@@ -26,5 +26,5 @@ export type GuarantorsAssignment = {
   >;
 };
 
-// defined in $(0.6.4 - 11.22)
+// defined in $(0.7.1 - 11.22)
 export type M_Star = Tagged<GuarantorsAssignment, "M*">;

@@ -14,6 +14,7 @@ import {
   CoreIndex,
   SeqOfLength,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * `ω`
@@ -39,8 +40,9 @@ export class AuthorizerQueueImpl
     typeof CORES
   >;
 
-  constructor() {
+  constructor(config?: ConditionalExcept<AuthorizerQueueImpl, Function>) {
     super();
+    Object.assign(this, config);
   }
 
   queueAtCore(core: CoreIndex) {

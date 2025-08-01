@@ -336,7 +336,7 @@ export class JamSignedHeaderImpl
 
   /**
    * Verify `Ho`
-   * $(0.6.4 - 10.20)
+   * $(0.7.1 - 10.20)
    */
   verifyOffenders(disputesExtrinsic: DisputeExtrinsicImpl) {
     const allOffenders = new Set(this.offendersMark.map((p) => p.bigint));

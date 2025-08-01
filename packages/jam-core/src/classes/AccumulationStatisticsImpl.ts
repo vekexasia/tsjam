@@ -8,7 +8,7 @@ import {
 import { AccumulatableWorkReports } from "./WorkReportImpl";
 
 /**
- * $(0.7.0 - 12.26) | S
+ * $(0.7.1 - 12.26) | S
  */
 export class AccumulationStatisticsImpl implements AccumulationStatistics {
   elements!: Map<
@@ -38,7 +38,7 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
   }): AccumulationStatisticsImpl {
     const toRet = new AccumulationStatisticsImpl();
     toRet.elements = new Map();
-    // $(0.7.0 - 12.27) | we compute the summary of gas used first
+    // $(0.7.1 - 12.27) | we compute the summary of gas used first
     deps.gasUsed.elements.forEach(({ serviceIndex, gasUsed }) => {
       if (!toRet.elements.has(serviceIndex)) {
         toRet.elements.set(serviceIndex, {
@@ -52,7 +52,7 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
 
     const slicedR = deps.r_star.slice(0, deps.nAccumulatedWork);
     for (const serviceIndex of toRet.elements.keys()) {
-      // $(0.7.0 - 12.27)
+      // $(0.7.1 - 12.27)
       const n_s = slicedR
         .map((wr) => wr.digests)
         .flat()

@@ -24,7 +24,7 @@ export class SingleAccOutImpl extends BaseJamCodecable {
 /**
  * `θ` - `\lastaccout`
  * Also implements `\servouts` or `B` defined in
- * $(0.7.0 - 12.15)
+ * $(0.7.1 - 12.17)
  * $(0.7.1 - 7.4)
  *
  * Codec is C(16) in $(0.7.0 - D.2)
@@ -43,6 +43,11 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
     }
   }
 
+  /**
+   * Adds a new element to the last accumulation outputs.
+   * @param serviceIndex - The index of the service.
+   * @param accumulationResult - The hash of the accumulation result. it's coming from the yield field
+   */
   add(serviceIndex: ServiceIndex, accumulationResult: Hash): void {
     this.elements.push(
       new SingleAccOutImpl({ serviceIndex, accumulationResult }),

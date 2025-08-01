@@ -111,7 +111,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
 
   /**
    * `P()`
-   * $(0.7.0 - 12.9)
+   * $(0.7.1 - 12.9)
    * compute the package haches of the given work reports
    */
   static extractWorkPackageHashes(r: WorkReportImpl[]): Set<WorkPackageHash> {
@@ -144,23 +144,9 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   }
 }
 
-export type AvailableNoPrereqWorkReports = Tagged<
-  WorkReportImpl[],
-  "available-no-prerequisites"
->;
-
-/**
- * `bold RQ` in the paper
- * $(0.7.0 - 12.5)
- */
-export type AvailableWithPrereqWorkReports = Tagged<
-  Array<AccumulationQueueItem>,
-  "available-yes-prerequisites"
->;
-
 /**
  * `bold R*` in the paper
- * $(0.7.0 - 12.11)
+ * $(0.7.1 - 12.11)
  */
 export type AccumulatableWorkReports = Tagged<WorkReportImpl[], "R*">;
 /**

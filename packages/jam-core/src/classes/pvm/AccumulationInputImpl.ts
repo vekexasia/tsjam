@@ -3,6 +3,9 @@ import { PVMAccumulationOpImpl } from "./PVMAccumulationOPImpl";
 import { DeferredTransferImpl } from "../DeferredTransferImpl";
 import { ConditionalExcept } from "type-fest";
 
+/**
+ * $(0.7.1 - 12.15)
+ */
 export class AccumulationInputInpl implements AccumulationInput {
   operand?: PVMAccumulationOpImpl;
   transfer?: DeferredTransferImpl;

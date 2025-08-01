@@ -20,7 +20,7 @@ import { ConditionalExcept } from "type-fest";
 
 /**
  * `X` set in graypaper
- * $(0.7.0 - 12.14)
+ * $(0.7.1 - 12.14)
  */
 @JamCodecable()
 export class DeferredTransferImpl

@@ -43,7 +43,6 @@ export * from "./pvm/AccumulationStatistics.js";
 export * from "./pvm/DeferredTransfer.js";
 export * from "./pvm/GasUsed.js";
 export * from "./pvm/IParsedProgram.js";
-export * from "./pvm/InvokedTransfers.js";
 export * from "./pvm/PrivilegedServices.js";
 export * from "./pvm/PVMAccumulationOp.js";
 export * from "./pvm/PVMAccumulationState.js";

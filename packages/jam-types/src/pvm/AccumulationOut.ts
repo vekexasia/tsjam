@@ -5,7 +5,7 @@ import { PVMResultContext } from "./PVMResultContext";
 
 /**
  * `O`
- * $(0.7.0 - 12.20)
+ * $(0.7.1 - 12.22)
  */
 export type AccumulationOut = {
   /**

@@ -42,7 +42,7 @@ export class PreimagesExtrinsicImpl
       }
     }
 
-    // $(0.7.0 - 12.39)
+    // $(0.7.1 - 12.34)
     for (let i = 1; i < this.elements.length; i++) {
       const prev = this.elements[i - 1];
       if (prev.requester > this.elements[i].requester) {
@@ -57,7 +57,7 @@ export class PreimagesExtrinsicImpl
         }
       }
     }
-    // $(0.7.0 - 12.40) data must be solicited by a service but not yet provided
+    // $(0.7.1 - 12.35) data must be solicited by a service but not yet provided
     for (const { requester, blob } of this.elements) {
       if (
         !deps.serviceAccounts

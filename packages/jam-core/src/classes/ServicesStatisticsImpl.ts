@@ -57,13 +57,9 @@ export class ServicesStatisticsImpl
    */
   toPosterior(deps: {
     ep: Validated<PreimagesExtrinsicImpl>;
-    /**
-     * `bold X` - from $(0.7.0 - 12.33)
-     */
-    transferStatistics: Map<ServiceIndex, { count: u32; gasUsed: Gas }>;
 
     /**
-     * `bold S` - from $(0.7.0 - 12.26)
+     * `bold S` - from $(0.7.1 - 12.26)
      */
     accumulationStatistics: AccumulationStatisticsImpl;
 

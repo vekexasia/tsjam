@@ -5,6 +5,7 @@ import {
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
+  CoreIndex,
   Gas,
   GasUsed,
   JamEntropy,
@@ -35,6 +36,7 @@ import { PVMAccumulationStateImpl } from "./classes/pvm/PVMAccumulationStateImpl
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
 import { WorkReportImpl } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
+import { AccumulationInputInpl } from "./classes/pvm/AccumulationInputImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -67,7 +69,7 @@ export const accumulateReports = (
     p_tau: deps.p_tau,
   });
 
-  // $(0.7.0 - 12.22)
+  // $(0.7.1 - 12.24) | g
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES, //GT
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) + // GA*C
@@ -116,7 +118,7 @@ export const accumulateReports = (
     nAccumulatedWork,
   });
 
-  // $(0.7.0 - 12.37) - calculate p_accumulationQueue
+  // calculate p_accumulationQueue
   const p_accumulationQueue = deps.accumulationQueue.toPosterior({
     tau: deps.tau,
     p_tau: deps.p_tau,
@@ -126,7 +128,6 @@ export const accumulateReports = (
   // end of calculation of posterior accumulation queue
 
   return ok({
-    deferredTransfers: bold_t,
     p_accumulationHistory,
     p_accumulationQueue,
     p_mostRecentAccumulationOutputs: lastAccOutputs,
@@ -223,48 +224,66 @@ export const outerAccumulation = (
 /**
  * `∆*` fn
  * @param accState - `bold_e` initial partial accumulation state
+ * @param transfers - `bold_t`
  * @param works - `bold_w`
- * $(0.7.0 - 12.17)
+ *
+ * $(0.7.1 - 12.19)
+ * $(0.7.1 - 12.20) is calculated in place
  */
 export const parallelizedAccumulation = (
   accState: PVMAccumulationStateImpl,
+  transfers: DeferredTransfersImpl,
   works: WorkReportImpl[],
-  f: Map<ServiceIndex, u64>,
+  bold_f: Map<ServiceIndex, Gas>,
   deps: {
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
-): [
-  accState: PVMAccumulationStateImpl,
-  transfers: DeferredTransferImpl[],
-  b: LastAccOutsImpl,
-  u: GasUsed,
-] => {
+): {
+  postAccState: PVMAccumulationStateImpl;
+  transfers: DeferredTransfersImpl;
+  /**
+   * `bold b`
+   */
+  accOut: LastAccOutsImpl;
+  /**
+   * `bold u`
+   */
+  gasUsed: GasUsed;
+} => {
   const bold_s = [
     ...new Set([
       ...works.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
-      ...f.keys(),
+      ...bold_f.keys(),
+      ...transfers.elements.map((t) => t.destination),
     ]).values(),
   ];
 
-  const u = <GasUsed>{ elements: [] };
-  const accumulatedServices: Array<
-    ReturnType<typeof singleServiceAccumulation>
-  > = [];
-  const t: DeferredTransferImpl[] = [];
-  const b = new LastAccOutsImpl([]);
+  const bold_u = <GasUsed>{ elements: [] };
+  const accumulatedServices: Array<AccumulationOutImpl> = [];
+  const p_bold_t: DeferredTransfersImpl = new DeferredTransfersImpl([]);
+  const bold_b = new LastAccOutsImpl([]);
 
   bold_s.forEach((s) => {
-    const acc = singleServiceAccumulation(accState, works, f, s, deps);
+    const acc = singleServiceAccumulation(
+      accState,
+      transfers,
+      works,
+      bold_f,
+      s,
+      deps,
+    );
 
-    u.elements.push({ serviceIndex: s, gasUsed: acc.gasUsed });
-    accumulatedServices.push(acc);
+    bold_u.elements.push({ serviceIndex: s, gasUsed: acc.gasUsed });
 
     if (typeof acc.yield !== "undefined") {
-      b.add(s, acc.yield);
+      bold_b.add(s, acc.yield);
     }
+
     // we concat directly here
-    t.push(...acc.deferredTransfers);
+    p_bold_t.elements.push(...acc.deferredTransfers.elements);
+
+    accumulatedServices.push(acc);
   });
 
   const delta: DeltaImpl = structuredClone(accState.accounts);
@@ -277,6 +296,7 @@ export const parallelizedAccumulation = (
     const s = bold_s[i];
     const acc = accumulatedServices[i];
     for (const k of acc.postState.accounts.services()) {
+      // if k is a new service and it's not the current one
       if (!delta.has(k) || k === s) {
         n.set(k, acc.postState.accounts.get(k)!);
       }
@@ -287,59 +307,81 @@ export const parallelizedAccumulation = (
       }
     }
   }
-  // console.log({ n });
-  // console.log({ m });
 
   const tmpDelta = DeltaImpl.union(delta, n);
   for (const k of m) {
     tmpDelta.delete(k);
   }
-  const delta_prime = preimageProvide(
-    tmpDelta,
-    accumulatedServices.map((a) => a.provision).flat(),
+  const delta_prime = tmpDelta.preimageIntegration(
+    accumulatedServices.map((a) => a.provisions).flat(),
     deps.p_tau,
   );
 
-  const {
-    manager: m_prime,
-    assigners: a_star,
-    delegator: v_star,
-    alwaysAccers: z_prime,
-  } = singleServiceAccumulation(
+  const eStar = singleServiceAccumulation(
     accState,
+    transfers,
     works,
-    f,
+    bold_f,
     accState.manager,
     deps,
   ).postState;
 
-  const v_prime = singleServiceAccumulation(accState, works, f, v_star, deps)
-    .postState.delegator;
+  const a_prime = structuredClone(accState.assigners);
+  for (let c = <CoreIndex>0; c < CORES; c++) {
+    if (accState.assigners[c] !== eStar.assigners[c]) {
+      // if the assigner has changed, we need to accumulate it
+      // otherwise we can just copy the state
+      a_prime[c] = singleServiceAccumulation(
+        accState,
+        transfers,
+        works,
+        bold_f,
+        eStar.assigners[c],
+        deps,
+      ).postState.assigners[c];
+    }
+  }
+
+  let v_prime = structuredClone(accState.delegator);
+  if (accState.delegator !== eStar.delegator) {
+    v_prime = singleServiceAccumulation(
+      accState,
+      transfers,
+      works,
+      bold_f,
+      accState.delegator,
+      deps,
+    ).postState.delegator;
+  }
+
+  let r_prime = structuredClone(accState.registrar);
+  if (accState.registrar !== eStar.registrar) {
+    r_prime = singleServiceAccumulation(
+      accState,
+      transfers,
+      works,
+      bold_f,
+      accState.registrar,
+      deps,
+    ).postState.registrar;
+  }
+
   const i_prime = singleServiceAccumulation(
     accState,
+    transfers,
     works,
-    f,
+    bold_f,
     accState.delegator,
     deps,
   ).postState.stagingSet;
 
-  const a_prime = [] as unknown as PVMAccumulationState["assigners"];
-  for (let c = 0; c < CORES; c++) {
-    a_prime[c] = singleServiceAccumulation(
-      accState,
-      works,
-      f,
-      a_star[c],
-      deps,
-    ).postState.assigners[c];
-  }
-
-  const q_prime = new AuthorizerQueueImpl();
+  const q_prime = new AuthorizerQueueImpl({ elements: toTagged([]) });
   for (let c = 0; c < CORES; c++) {
     q_prime.elements[c] = singleServiceAccumulation(
       accState,
+      transfers,
       works,
-      f,
+      bold_f,
       accState.assigners[c],
       deps,
     ).postState.authQueue.elements[c];
@@ -347,53 +389,37 @@ export const parallelizedAccumulation = (
 
   const newState = new PVMAccumulationStateImpl({
     accounts: delta_prime,
-    // i'
     stagingSet: i_prime,
-    // q'
     authQueue: q_prime,
-    manager: m_prime,
+    manager: eStar.manager,
     assigners: a_prime,
     delegator: v_prime,
-    alwaysAccers: z_prime,
+    registrar: r_prime,
+    alwaysAccers: eStar.alwaysAccers,
   });
 
-  return [newState, t, b, u];
-};
-
-// $(0.7.0 - 12.18) - \fnprovide
-// also `P()` fn
-const preimageProvide = (
-  d: DeltaImpl,
-  p: PVMResultContext["preimages"],
-  p_tau: Posterior<Tau>,
-) => {
-  const newD = structuredClone(d);
-  for (const { service, preimage } of p) {
-    const phash = Hashing.blake2b(preimage);
-    const plength: Tagged<u32, "length"> = toTagged(<u32>preimage.length);
-    if (d.get(service)?.requests.get(phash)?.get(plength)?.length === 0) {
-      newD
-        .get(service)!
-        .requests.get(phash)!
-        .set(plength, toTagged(<Tau[]>[p_tau]));
-      newD.get(service)!.preimages.set(phash, preimage);
-    }
-  }
-  return newD;
+  return {
+    postAccState: newState,
+    transfers: p_bold_t,
+    accOut: bold_b,
+    gasUsed: bold_u,
+  };
 };
 
 /**
  * `∆1` fn
  * @param preState - `bold_e`
- * @param works - `bold_w`
+ * @param transfers - `bold_t`
+ * @param reports - `bold_r`
  * @param gasPerService - `bold_f`
  * @param service - `s`
- * @see $(0.7.0 - 12.21)
+ * @see $(0.7.1 - 12.23)
  *
  */
 export const singleServiceAccumulation = (
   preState: PVMAccumulationStateImpl,
-  works: WorkReportImpl[],
+  transfers: DeferredTransfersImpl,
+  reports: WorkReportImpl[],
   gasPerService: Map<ServiceIndex, u64>,
   service: ServiceIndex,
   deps: {
@@ -402,31 +428,49 @@ export const singleServiceAccumulation = (
   },
 ): AccumulationOutImpl => {
   let g = (gasPerService.get(service) || 0n) as Gas;
-  works.forEach((wr) =>
+  reports.forEach((wr) =>
     wr.digests
       .filter((r) => r.serviceIndex === service)
-      .forEach((r) => (g = (g + r.gasLimit) as Gas)),
+      .forEach((r) => (g = <Gas>(g + r.gasLimit))),
   );
+  transfers.elements.forEach((t) => {
+    if (t.destination === service) {
+      g = <Gas>(g + t.gas);
+    }
+  });
 
-  const i: PVMAccumulationOpImpl[] = [];
-  for (const wr of works) {
-    for (const r of wr.digests) {
-      if (r.serviceIndex === service) {
-        i.push(
-          new PVMAccumulationOpImpl({
-            result: r.result,
-            gasLimit: r.gasLimit,
-            payloadHash: r.payloadHash,
-            authTrace: wr.authTrace,
-            segmentRoot: wr.avSpec.segmentRoot,
-            packageHash: wr.avSpec.packageHash,
-            authorizerHash: wr.authorizerHash,
+  const bold_i: AccumulationInputInpl[] = [];
+  for (const t of transfers.elements) {
+    if (t.destination === service) {
+      bold_i.push(
+        new AccumulationInputInpl({
+          transfer: t,
+        }),
+      );
+    }
+  }
+
+  for (const r of reports) {
+    for (const d of r.digests) {
+      if (d.serviceIndex === service) {
+        bold_i.push(
+          new AccumulationInputInpl({
+            operand: new PVMAccumulationOpImpl({
+              result: d.result,
+              gasLimit: d.gasLimit,
+              payloadHash: d.payloadHash,
+              authTrace: r.authTrace,
+              segmentRoot: r.avSpec.segmentRoot,
+              packageHash: r.avSpec.packageHash,
+              authorizerHash: r.authorizerHash,
+            }),
           }),
         );
       }
     }
   }
-  return accumulateInvocation(preState, service, g, i, deps.p_tau, {
+
+  return accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
     p_tau: deps.p_tau,
     p_eta_0: deps.p_eta_0,
   });

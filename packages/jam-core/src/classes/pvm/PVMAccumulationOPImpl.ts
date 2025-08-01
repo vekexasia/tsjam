@@ -11,10 +11,11 @@ import {
 } from "@tsjam/codec";
 import { Gas, Hash, PVMAccumulationOp, WorkPackageHash } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
+import { WorkOutputImpl } from "../WorkOutputImpl";
 
 /**
- * `I` set in graypaper $\operandtuple$
- * $(0.7.0 - 12.19)
+ * `U` set in graypaper $\operandtuple$
+ * $(0.7.1 - 12.13)
  * codec order defined in $(0.6.4 - C.29)
  */
 @JamCodecable()
@@ -22,24 +23,45 @@ export class PVMAccumulationOpImpl
   extends BaseJamCodecable
   implements PVMAccumulationOp
 {
+  /**
+   * `p`
+   */
   @hashCodec()
   packageHash!: WorkPackageHash;
 
+  /**
+   * `e`
+   */
   @hashCodec()
   segmentRoot!: Hash;
 
+  /**
+   * `a`
+   */
   @hashCodec()
   authorizerHash!: Hash;
 
+  /**
+   * `y`
+   */
   @hashCodec()
   payloadHash!: Hash;
 
+  /**
+   * `g`
+   */
   @eSubBigIntCodec(8)
   gasLimit!: Gas;
 
+  /**
+   * `bold_l`
+   */
   @codec(WorkOutputImpl)
   result!: WorkOutputImpl;
 
+  /**
+   * `bold_t` - comes from Workreport
+   */
   @jsonCodec(BufferJSONCodec())
   @binaryCodec(LengthDiscrimantedIdentity)
   authTrace!: Uint8Array;

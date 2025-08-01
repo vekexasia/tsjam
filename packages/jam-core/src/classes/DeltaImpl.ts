@@ -5,14 +5,15 @@ import {
   Delta,
   DoubleDagger,
   Posterior,
+  PVMResultContext,
   ServiceIndex,
+  Tagged,
   Tau,
   u32,
   Validated,
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
-import { InvokedTransfersImpl } from "./InvokedTransfersImpl";
 import { ServiceAccountImpl } from "./ServiceAccountImpl";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 
@@ -52,12 +53,37 @@ export class DeltaImpl extends BaseJamCodecable implements Delta {
   }
 
   /**
-   * $(0.7.0 - 12.31 / 12.32)
+   * $(0.7.1 - 12.21) - \fnprovide
+   * also `P()` fn
+   * @returns a new DeltaImpl with the preimages integrated
+   */
+  preimageIntegration(
+    provisions: PVMResultContext["provisions"],
+    p_tau: Posterior<Tau>,
+  ) {
+    const newD = structuredClone(this);
+    for (const { serviceId, blob } of provisions) {
+      const phash = Hashing.blake2b(blob);
+      const plength: Tagged<u32, "length"> = toTagged(<u32>blob.length);
+      if (
+        this.get(serviceId)?.requests.get(phash)?.get(plength)?.length === 0
+      ) {
+        newD
+          .get(serviceId)!
+          .requests.get(phash)!
+          .set(plength, toTagged(<Tau[]>[p_tau]));
+        newD.get(serviceId)!.preimages.set(phash, blob);
+      }
+    }
+    return newD;
+  }
+
+  /**
+   * $(0.7.1 - 12.28 / 12.29)
    */
   static toDoubleDagger(
     d_delta: Dagger<DeltaImpl>,
     deps: {
-      bold_x: InvokedTransfersImpl;
       /**
        * `bold S`
        */
@@ -67,9 +93,8 @@ export class DeltaImpl extends BaseJamCodecable implements Delta {
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = new DeltaImpl();
     for (const serviceIndex of d_delta.services()) {
-      let a = deps.bold_x.for(serviceIndex)!.account;
+      const a = structuredClone(d_delta.get(serviceIndex)!);
       if (deps.accumulationStatistics.has(serviceIndex)) {
-        a = structuredClone(a);
         a.lastAcc = deps.p_tau;
       }
       dd_delta.set(serviceIndex, a);
@@ -77,6 +102,9 @@ export class DeltaImpl extends BaseJamCodecable implements Delta {
     return toDoubleDagger(toDagger(dd_delta));
   }
 
+  /**
+   * $(0.7.1 - 12.36)
+   */
   static toPosterior(
     dd_delta: DoubleDagger<DeltaImpl>,
     deps: {
@@ -84,7 +112,6 @@ export class DeltaImpl extends BaseJamCodecable implements Delta {
       p_tau: Posterior<Tau>;
     },
   ): Posterior<DeltaImpl> {
-    // $(0.7.0 - 12.42)
     const p = deps.ep.elements.filter((ep) =>
       dd_delta
         .get(ep.requester)!
@@ -95,7 +122,6 @@ export class DeltaImpl extends BaseJamCodecable implements Delta {
     );
 
     const result = structuredClone(dd_delta);
-    // $(0.7.0 - 12.43)
     for (const { requester, blob } of p) {
       const x = result.get(requester)!;
 

@@ -6,7 +6,7 @@ import { JamSignedHeaderImpl } from "./JamHeaderImpl";
 
 /**
  * This is not really defined in graypaper
- * but used to compute $(0.6.4 - 11.34)
+ * but used to compute $(0.7.1 - 11.34)
  */
 export class HeaderLookupHistoryImpl
   extends BaseJamCodecable

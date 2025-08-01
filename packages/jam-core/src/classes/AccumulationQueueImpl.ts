@@ -71,6 +71,9 @@ export class AccumulationQueueImpl
     }
   }
 
+  /**
+   * $(0.7.1 - 12.32)
+   */
   toPosterior(deps: {
     tau: Tau;
     p_tau: Posterior<Tau>;
@@ -79,7 +82,7 @@ export class AccumulationQueueImpl
   }): Posterior<AccumulationQueueImpl> {
     const toRet: AccumulationQueueImpl = new AccumulationQueueImpl();
     toRet.elements = structuredClone(this.elements);
-    const m = deps.p_tau % EPOCH_LENGTH; // $(0.7.0 - 12.10)
+    const m = deps.p_tau % EPOCH_LENGTH; // $(0.7.1 - 12.10)
 
     for (let i = 0; i < EPOCH_LENGTH; i++) {
       const index = (m - i + EPOCH_LENGTH) % EPOCH_LENGTH;
@@ -92,7 +95,7 @@ export class AccumulationQueueImpl
       } else {
         toRet.elements[index] = toPosterior(
           E_Fn(
-            toRet.elements[index],
+            this.elements[index],
             deps.p_accumulationHistory.elements[EPOCH_LENGTH - 1],
           ),
         );
