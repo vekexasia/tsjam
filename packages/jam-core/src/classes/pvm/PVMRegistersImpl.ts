@@ -12,6 +12,11 @@ export class PVMRegistersImpl extends BaseJamCodecable implements PVMRegisters {
   @sequenceCodec(13, PVMRegisterImpl, SINGLE_ELEMENT_CLASS)
   elements!: SeqOfLength<PVMRegisterImpl, 13>;
 
+  constructor(elements: SeqOfLength<PVMRegisterImpl, 13>) {
+    super();
+    this.elements = elements;
+  }
+
   slice(start: number, end?: number): PVMRegisterImpl[] {
     return this.elements.slice(start, end);
   }

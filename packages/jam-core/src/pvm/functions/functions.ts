@@ -111,11 +111,11 @@ export class HostFunctions {
     args: {
       p: WorkPackageImpl;
       n?: Hash; // TODO: discover what this is
-      bold_r: WorkOutputImpl;
+      bold_r?: Uint8Array;
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
       overline_x?: Uint8Array[][];
-      bold_i: PVMAccumulationOpImpl[];
+      bold_i?: PVMAccumulationOpImpl[];
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
@@ -168,8 +168,7 @@ export class HostFunctions {
       }
       case 2n: {
         if (typeof args.bold_r !== "undefined") {
-          assert(args.bold_r.isSuccess(), "bold_r must be success");
-          v = args.bold_r.success!;
+          v = args.bold_r;
         }
         break;
       }

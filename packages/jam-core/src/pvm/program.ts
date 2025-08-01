@@ -1,17 +1,17 @@
+import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
+import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
+import { createCodec, E_4_int, E_sub_int } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import {
-  IPVMMemory,
   Page,
   PVMMemoryAccessKind,
   PVMProgramCode,
-  RegisterValue,
-  SeqOfLength,
   u16,
   u24,
   u32,
 } from "@tsjam/types";
-import { E_sub_int, E_4_int, createCodec } from "@tsjam/codec";
-import { MemoryContent, PVMHeap, PVMMemory } from "@/pvmMemory.js";
+import { toTagged } from "@tsjam/utils";
+import { MemoryContent, PVMHeap, PVMMemory } from "./pvmMemory";
 
 // constants defined in $(0.6.4 - A.38)
 const Zz = 2 ** 16;
@@ -42,8 +42,8 @@ export const programInitialization = (
   | undefined
   | {
       programCode: PVMProgramCode;
-      memory: IPVMMemory;
-      registers: SeqOfLength<RegisterValue, 13>;
+      memory: PVMMemory;
+      registers: PVMRegistersImpl;
     } => {
   // $(0.6.4 - A.35) | start
   const {
@@ -93,21 +93,25 @@ export const programInitialization = (
   }
 
   // registers $(0.6.4 - A.39)
-  const registers = [
-    2n ** 32n - 2n ** 16n,
-    2n ** 32n - 2n * BigInt(Zz) - BigInt(Zi),
-    0n,
-    0n,
-    0n,
-    0n,
-    0n,
-    2n ** 32n - BigInt(Zz) - BigInt(Zi), // 7
-    BigInt(argument.length), // 8
-    0n,
-    0n,
-    0n,
-    0n,
-  ] as SeqOfLength<RegisterValue, 13>;
+  const registers = new PVMRegistersImpl(
+    toTagged(
+      [
+        2n ** 32n - 2n ** 16n,
+        2n ** 32n - 2n * BigInt(Zz) - BigInt(Zi),
+        0n,
+        0n,
+        0n,
+        0n,
+        0n,
+        2n ** 32n - BigInt(Zz) - BigInt(Zi), // 7
+        BigInt(argument.length), // 8
+        0n,
+        0n,
+        0n,
+        0n,
+      ].map((x) => new PVMRegisterImpl(toTagged(x))),
+    ),
+  );
 
   const heap: PVMHeap = {
     pointer: <u32>0,

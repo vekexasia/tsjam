@@ -5,25 +5,57 @@ import {
   BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
+  E_2_int,
+  encodeWithCodec,
   eSubIntCodec,
+  HashCodec,
   hashCodec,
+  IdentityCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
+  lengthDiscriminatedCodec,
 } from "@tsjam/codec";
-import { MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
+import {
+  HostCallResult,
+  MAXIMUM_SIZE_IS_AUTHORIZED,
+  MAXIMUM_WORK_ITEMS,
+  TOTAL_GAS_IS_AUTHORIZED,
+} from "@tsjam/constants";
 import {
   Authorization,
   AuthorizationParams,
   BoundedSeq,
   CodeHash,
+  CoreIndex,
+  Delta,
+  Gas,
+  Hash,
+  PVMProgramCode,
+  PVMResultContext,
   ServiceIndex,
+  u32,
+  WorkError,
   WorkPackage,
+  WorkPackageHash,
 } from "@tsjam/types";
 import { WorkContextImpl } from "./WorkContextImpl";
 import { WorkItemImpl } from "./WorkItemImpl";
+import { Hashing } from "@tsjam/crypto";
+import { DeltaImpl } from "./DeltaImpl";
+import { toTagged } from "@tsjam/utils";
+import { argumentInvocation } from "@/pvm/invocations/argument";
+import { applyMods } from "@/pvm/functions/utils";
+import { IxMod } from "@/pvm/instructions/utils";
+import { HostCallExecutor } from "@/pvm/invocations/hostCall";
+import { hostFunctions, HostFunctions } from "@/pvm/functions/functions";
+import { WorkOutputImpl } from "./WorkOutputImpl";
 
-// codec order defined in $(0.7.0 - C.28)
+/**
+ * Identified by `P` set
+ * $(0.7.1 - 14.2)
+ * codec order defined in $(0.7.0 - C.28)
+ */
 @JamCodecable()
 export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
@@ -64,4 +96,118 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   @jsonCodec(ArrayOfJSONCodec(WorkItemImpl))
   @binaryCodec(createArrayLengthDiscriminator(WorkItemImpl))
   workItems!: BoundedSeq<WorkItemImpl, 1, typeof MAXIMUM_WORK_ITEMS>;
+
+  hash(): WorkPackageHash {
+    return Hashing.blake2b(this.toBinary());
+  }
+  /**
+   * `p_a`
+   * $(0.7.1 - 14.10)
+   */
+  authorizer(): Hash {
+    return Hashing.blake2b(
+      new Uint8Array([
+        ...encodeWithCodec(HashCodec, this.authCodeHash),
+        ...this.authConfig,
+      ]),
+    );
+  }
+
+  /**
+   * $(0.7.1 - 14.10)
+   */
+  #metaAndCode(delta: DeltaImpl) {
+    const encodedData = delta
+      .get(this.authCodeHost)!
+      .historicalLookup(
+        toTagged(this.context.lookupAnchorTime),
+        this.authCodeHash,
+      )!;
+
+    const { value: metadata, readBytes: skip } =
+      LengthDiscrimantedIdentity.decode(encodedData);
+
+    const code = encodedData.slice(skip);
+    return { metadata, code };
+  }
+
+  /**
+   * `p_{bold_u}`
+   */
+  code(delta: DeltaImpl) {
+    return <PVMProgramCode>this.#metaAndCode(delta).code;
+  }
+
+  /**
+   * `p_{bold_m}`
+   */
+  metadata(delta: DeltaImpl) {
+    return this.#metaAndCode(delta).metadata;
+  }
+
+  /**
+   * $(0.7.1 - B.1)
+   */
+  isAuthorized(
+    c: CoreIndex,
+    deps: { delta: DeltaImpl },
+  ): {
+    res: WorkOutputImpl<
+      WorkError.Bad | WorkError.Big | WorkError.OutOfGas | WorkError.Panic
+    >;
+    gasUsed: Gas;
+  } {
+    const code = this.code(deps.delta);
+    if (code.length === 0) {
+      return { res: WorkOutputImpl.bad(), gasUsed: <Gas>0n };
+    }
+    if (code.length > MAXIMUM_SIZE_IS_AUTHORIZED) {
+      return { res: WorkOutputImpl.big(), gasUsed: <Gas>0n };
+    }
+
+    const res = argumentInvocation(
+      code,
+      0 as u32, // instruction pointer
+      TOTAL_GAS_IS_AUTHORIZED as Gas,
+      encodeWithCodec(E_2_int, c),
+      F_Fn(this),
+      undefined as unknown as PVMResultContext, // something is missing from the paper
+    );
+
+    return {
+      /**
+       * `bold_t`
+       */
+      res: res.res,
+      /**
+       * `g`
+       */
+      gasUsed: res.gasUsed,
+    };
+  }
 }
+
+// $(0.7.1 - B.2)
+const F_Fn =
+  (bold_p: WorkPackageImpl): HostCallExecutor<unknown> =>
+  (input) => {
+    if (input.hostCallOpcode === 0 /** ΩG */) {
+      return applyMods(
+        input.ctx,
+        input.out as never,
+        hostFunctions.gas(input.ctx, undefined),
+      );
+    } else if (input.hostCallOpcode === 1 /** fetc */) {
+      return applyMods(
+        input.ctx,
+        input.out as never,
+        hostFunctions.fetch(input.ctx, {
+          p: bold_p,
+        }),
+      );
+    }
+    return applyMods(input.ctx, input.out as never, [
+      IxMod.gas(10n),
+      IxMod.reg(7, HostCallResult.WHAT),
+    ]);
+  };

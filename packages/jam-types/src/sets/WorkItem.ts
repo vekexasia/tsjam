@@ -14,7 +14,7 @@ import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
 
 /**
  * Identified by `W` set
- * $(0.7.0 - 14.3)
+ * $(0.7.1 - 14.3)
  */
 export interface WorkItem {
   /**

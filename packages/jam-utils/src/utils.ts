@@ -44,7 +44,7 @@ export const toPosterior = <T>(
  * `P` in the graypaper
  * @param buf - original buffer
  * @param n - the multiple of which the end buffer length should be
- * @see $(0.6.4 - 14.17)
+ * @see $(0.7.1 - 14.18)
  */
 export const zeroPad = <T extends number>(
   n: T,

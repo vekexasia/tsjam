@@ -6,17 +6,47 @@ import {
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 import { WorkError, WorkOutput } from "@tsjam/types";
-import { WorkItemImpl } from "./WorkItemImpl";
 
 // codec order defined in $(0.7.0 - C.34)
-export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
+export class WorkOutputImpl<E extends WorkError>
+  extends BaseJamCodecable
+  implements WorkOutput
+{
   success?: Uint8Array;
-  error?: WorkError;
-  isError() {
+  error?: E;
+
+  constructor(d: Uint8Array | E) {
+    super();
+    if (d instanceof Uint8Array) {
+      this.success = d;
+    } else {
+      this.error = d;
+    }
+  }
+  isError(): this is { error: E } {
     return !(this.success instanceof Uint8Array);
   }
-  isSuccess() {
+  isSuccess(): this is { success: Uint8Array } {
     return this.success instanceof Uint8Array;
+  }
+  isPanic(): this is { error: WorkError.Panic } {
+    return this.error === WorkError.Panic;
+  }
+  isOutOfGas(): this is { error: WorkError.OutOfGas } {
+    return this.error === WorkError.OutOfGas;
+  }
+
+  static big() {
+    return new WorkOutputImpl(WorkError.Big);
+  }
+  static bad() {
+    return new WorkOutputImpl(WorkError.Bad);
+  }
+  static outOfGas(): WorkOutputImpl<WorkError.OutOfGas> {
+    return new WorkOutputImpl(WorkError.OutOfGas);
+  }
+  static panic(): WorkOutputImpl<WorkError.Panic> {
+    return new WorkOutputImpl(WorkError.Panic);
   }
 
   static encode<T extends typeof BaseJamCodecable>(
@@ -26,7 +56,7 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
   ): number {
     let offset = 0;
 
-    const value = _value as WorkOutputImpl;
+    const value = _value as WorkOutputImpl<any>;
 
     if (value.isSuccess()) {
       offset = E.encode(0n, bytes);
@@ -63,7 +93,7 @@ export class WorkOutputImpl extends BaseJamCodecable implements WorkOutput {
     this: T,
     _value: InstanceType<T>,
   ): number {
-    const value = <WorkOutputImpl>_value;
+    const value = <WorkOutputImpl<any>>_value;
     if (value.isSuccess()) {
       return (
         E.encodedSize(0n) +

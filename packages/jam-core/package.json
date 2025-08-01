@@ -31,6 +31,7 @@
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
+    "@tsjam/erasurecoding": "*",
     "@tsjam/types": "*",
     "neverthrow": "^8.1.1",
     "type-fest": "^4.41.0",

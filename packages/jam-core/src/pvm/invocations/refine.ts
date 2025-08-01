@@ -1,114 +1,110 @@
-import { FnsDb } from "@/functions/fnsdb.js";
-import { omega_g } from "@/functions/general.js";
-import {
-  omega_e,
-  omega_h,
-  omega_k,
-  omega_m,
-  omega_o,
-  omega_p,
-  omega_x,
-  omega_z,
-  RefineContext,
-} from "@/functions/refine.js";
-import { applyMods } from "@/functions/utils.js";
-import { IxMod } from "@/instructions/utils";
-import { argumentInvocation } from "@/invocations/argument.js";
-import { HostCallExecutor } from "@/invocations/hostCall.js";
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
+import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
 import {
   createCodec,
-  E_sub_int,
+  E_int,
   encodeWithCodec,
   HashCodec,
-  IdentityCodec,
-  WorkContextCodec,
-  WorkPackageCodec,
-  WorkPackageHashCodec,
+  LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import { serviceMetadataCodec } from "@tsjam/serviceaccounts";
 import {
-  Delta,
+  CoreIndex,
   ExportSegment,
   Gas,
   Hash,
-  WorkContext,
-  RegularPVMExitReason,
+  PVMProgramCode,
   ServiceIndex,
   Tau,
   u32,
   WorkError,
-  WorkOutput,
-  WorkPackageHash,
-  WorkPackageWithAuth,
 } from "@tsjam/types";
-import { historicalLookup, toTagged } from "@tsjam/utils";
+import { toTagged } from "@tsjam/utils";
+import { FnsDb } from "../functions/fnsdb";
+import { hostFunctions, RefineContext } from "../functions/functions";
+import { applyMods } from "../functions/utils";
+import { IxMod } from "../instructions/utils";
+import { argumentInvocation } from "./argument";
+import { HostCallExecutor } from "./hostCall";
 
 const refine_a_Codec = createCodec<{
-  serviceIndex: ServiceIndex;
-  payload: Uint8Array;
-  packageHash: WorkPackageHash;
-  context: WorkContext;
-  authCodeHash: Hash;
+  c: CoreIndex; // `c`
+  i: number;
+  w_s: ServiceIndex;
+  card_w_y: number;
+  h_p: Hash;
 }>([
-  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
-  ["payload", IdentityCodec],
-  ["packageHash", WorkPackageHashCodec],
-  ["context", WorkContextCodec],
-  ["authCodeHash", HashCodec],
+  ["c", E_int<CoreIndex>()],
+  ["i", E_int()],
+  ["w_s", E_int<ServiceIndex>()],
+  ["card_w_y", E_int()], // `|w_y|`
+  ["h_p", HashCodec],
 ]);
+
 /**
- * $(0.6.4 - B.5)
+ * $(0.7.1 - B.5)
+ * @param core - `c`
+ * @param index - `i`
+ * @param workPackage - `p`
+ * @param authorizerOutput - `bold_r`
+ * @param importSegments - `\overline{i}`
+ * @param exportSegmentOffset - `ς`
  */
 export const refineInvocation = (
-  index: number, // `i`
-  workPackage: WorkPackageWithAuth, // `p`
-  authorizerOutput: Uint8Array, // `bold_o`
-  importSegments: ExportSegment[][], // `\overline{i}`
-  exportSegmentOffset: number, // `ς`
+  core: CoreIndex,
+  index: number,
+  workPackage: WorkPackageImpl,
+  authorizerOutput: Uint8Array,
+  importSegments: ExportSegment[][],
+  exportSegmentOffset: number,
   deps: {
-    delta: Delta;
+    delta: DeltaImpl;
     tau: Tau;
   },
 ): {
-  res: WorkOutput;
+  res: WorkOutputImpl<
+    WorkError.Bad | WorkError.Big | WorkError.Panic | WorkError.OutOfGas
+  >;
   // exported segments
-  out: RefineContext["e"];
+  out: RefineContext["segments"];
   gasUsed: Gas;
 } => {
   const w = workPackage.workItems[index];
-  const lookupResult = historicalLookup(
-    deps.delta.get(w.service)!,
-    toTagged(workPackage.context.lookupAnchor.time),
-    w.codeHash,
-  );
+  const lookupRes = deps.delta
+    .get(w.service)
+    ?.historicalLookup(
+      toTagged(workPackage.context.lookupAnchorTime),
+      w.codeHash,
+    );
+
   // first matching case
-  if (!deps.delta.has(w.service) || typeof lookupResult === "undefined") {
-    return { res: WorkError.Bad, out: [], gasUsed: <Gas>0n };
+  if (!deps.delta.has(w.service) || typeof lookupRes === "undefined") {
+    return { res: WorkOutputImpl.bad(), out: [], gasUsed: <Gas>0n };
   }
   // second metching case
-  if (lookupResult.length > SERVICECODE_MAX_SIZE) {
-    return { res: WorkError.Big, out: [], gasUsed: <Gas>0n };
+  if (lookupRes.length > SERVICECODE_MAX_SIZE) {
+    return { res: WorkOutputImpl.big(), out: [], gasUsed: <Gas>0n };
   }
 
-  // encode
-  const a = encodeWithCodec(refine_a_Codec, {
-    serviceIndex: w.service,
-    payload: w.payload,
-    packageHash: Hashing.blake2b<WorkPackageHash>(
-      encodeWithCodec(WorkPackageCodec, workPackage),
-    ),
-    context: workPackage.context,
-    authCodeHash: workPackage.authCodeHash,
+  const bold_a = encodeWithCodec(refine_a_Codec, {
+    c: core,
+    i: index,
+    w_s: w.service,
+    card_w_y: w.payload.length,
+    h_p: Hashing.blake2b(workPackage.toBinary()),
   });
-  const { code } = serviceMetadataCodec.decode(lookupResult).value;
+  const { value: bold_z, readBytes: skip } =
+    LengthDiscrimantedIdentity.decode(lookupRes);
+
+  const bold_c = <PVMProgramCode>lookupRes.subarray(skip);
 
   const argOut = argumentInvocation(
-    code,
+    bold_c,
     <u32>0, // instructionPointer
     w.refineGasLimit,
-    a,
+    bold_a,
     F_fn(
       w.service,
       deps.delta,
@@ -120,96 +116,129 @@ export const refineInvocation = (
       index,
     ),
     {
-      m: new Map(),
-      e: [],
+      bold_m: new Map(),
+      segments: [],
     },
   );
   const argRes = argOut.res;
-  if (
-    argRes === RegularPVMExitReason.Panic ||
-    argRes === RegularPVMExitReason.OutOfGas
-  ) {
+  if (argRes.isPanic() || argRes.isOutOfGas()) {
     return {
-      res:
-        argOut.res === RegularPVMExitReason.Panic
-          ? WorkError.Panic
-          : WorkError.OutOfGas,
+      res: argRes,
       out: [],
       gasUsed: argOut.gasUsed,
     };
   }
   return {
     res: argRes,
-    out: argOut.out.e,
+    out: argOut.out.segments,
     gasUsed: argOut.gasUsed,
   };
 };
 
 /**
- * $(0.6.4 - B.6)
+ * $(0.7.1 - B.6)
  */
 const F_fn: (
   service: ServiceIndex,
-  delta: Delta,
+  delta: DeltaImpl,
   tau: Tau,
-  overline_i: ExportSegment[][],
+  importSegments: ExportSegment[][],
   exportSegmentOffset: number,
-  authorizerOutput: Uint8Array,
-  workPackage: WorkPackageWithAuth,
-  workIndex: number,
+  authorizerOutput: Uint8Array, // bold_r
+  workPackage: WorkPackageImpl,
+  workItemIndex: number, // i
 ) => HostCallExecutor<RefineContext> =
   (
     service: ServiceIndex,
-    delta: Delta,
+    delta: DeltaImpl,
     tau: Tau,
-    overline_i: ExportSegment[][],
+    importSegments: ExportSegment[][],
     exportSegmentOffset: number,
     authorizerOutput: Uint8Array,
-    workPackage: WorkPackageWithAuth,
+    workPackage: WorkPackageImpl,
     workItemIndex: number,
   ) =>
   (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
     switch (fnIdentifier) {
-      case "historical_lookup":
+      case "gas":
         return applyMods(
           input.ctx,
           input.out,
-          omega_h(input.ctx, service, delta, tau),
+          hostFunctions.gas(input.ctx, undefined),
         );
+
       case "fetch":
         return applyMods(
           input.ctx,
           input.out,
-          <any>null,
-          /// omega_y(
-          ///   input.ctx,
-          ///   workItemIndex,
-          ///   workPackage,
-          ///   authorizerOutput,
-          ///   overline_i,
-          /// ),
+          hostFunctions.fetch(input.ctx, {
+            p: workPackage,
+            n: <Hash>0n,
+            bold_r: authorizerOutput,
+            i: workItemIndex,
+            overline_i: importSegments,
+            overline_x: workPackage.workItems.map((wi) =>
+              wi.exportedDataSegments.map((wx) => wx.preimage()),
+            ),
+            bold_i: undefined,
+          }),
+        );
+      case "historical_lookup":
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.historical_lookup(input.ctx, {
+            s: service,
+            bold_d: delta,
+            tau: tau,
+          }),
         );
       case "export":
         return applyMods(
           input.ctx,
           input.out,
-          omega_e(input.ctx, input.out, exportSegmentOffset),
+          hostFunctions.export(input.ctx, {
+            refineCtx: input.out,
+            segmentOffset: exportSegmentOffset,
+          }),
         );
-      case "gas":
-        return applyMods(input.ctx, input.out, omega_g(input.ctx));
       case "machine":
-        return applyMods(input.ctx, input.out, omega_m(input.ctx, input.out));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.machine(input.ctx, input.out),
+        );
       case "peek":
-        return applyMods(input.ctx, input.out, omega_p(input.ctx, input.out));
-      case "zero":
-        return applyMods(input.ctx, input.out, omega_z(input.ctx, input.out));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.peek(input.ctx, input.out),
+        );
       case "poke":
-        return applyMods(input.ctx, input.out, omega_o(input.ctx, input.out));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.poke(input.ctx, input.out),
+        );
+      case "pages":
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.pages(input.ctx, input.out),
+        );
       case "invoke":
-        return applyMods(input.ctx, input.out, omega_k(input.ctx, input.out));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.invoke(input.ctx, input.out),
+        );
       case "expunge":
-        return applyMods(input.ctx, input.out, omega_x(input.ctx, input.out));
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.expunge(input.ctx, input.out),
+        );
       default:
         return applyMods(input.ctx, input.out, [
           IxMod.gas(10n),

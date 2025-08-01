@@ -1,15 +1,24 @@
-import { Gas, PVMProgramCode, RegularPVMExitReason, u32 } from "@tsjam/types";
+import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
 import {
-  HostCallExecutor,
-  HostCallOut,
-  hostCallInvocation,
-} from "@/invocations/hostCall.js";
-import { toSafeMemoryAddress } from "@/pvmMemory";
-import { programInitialization } from "@/program.js";
+  Gas,
+  PVMProgramCode,
+  RegularPVMExitReason,
+  u32,
+  WorkError,
+} from "@tsjam/types";
+import { programInitialization } from "../program";
+import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./hostCall";
 
 /**
  * `ΨM` in the paper
- * $(0.6.5 - A.43)
+ * $(0.7.1 - A.44)
+ * @param encodedProgram - bold_p
+ * @param instructionPointer - ı
+ * @param gas - ϱ
+ * @param args - bold_a
+ * @param f - host call executor
+ * @param x - out
+ *
  */
 export const argumentInvocation = <X>(
   encodedProgram: PVMProgramCode,
@@ -20,12 +29,12 @@ export const argumentInvocation = <X>(
   x: X,
 ): {
   gasUsed: Gas;
-  res: Uint8Array | RegularPVMExitReason.Panic | RegularPVMExitReason.OutOfGas;
+  res: WorkOutputImpl<WorkError.Panic | WorkError.OutOfGas>;
   out: X;
 } => {
   const res = programInitialization(encodedProgram, args);
   if (typeof res === "undefined") {
-    return { gasUsed: <Gas>0n, res: RegularPVMExitReason.Panic, out: x };
+    return { gasUsed: <Gas>0n, res: WorkOutputImpl.panic(), out: x };
   }
   const { programCode, memory, registers } = res;
   const hRes = hostCallInvocation(
@@ -41,11 +50,12 @@ export const argumentInvocation = <X>(
 
 type ArgumentInvocationOut<X> = {
   gasUsed: Gas;
-  res: Uint8Array | RegularPVMExitReason.Panic | RegularPVMExitReason.OutOfGas;
+  // in reality its either panic or out of gas
+  res: WorkOutputImpl<WorkError.OutOfGas | WorkError.Panic>;
   out: X;
 };
 
-// $(0.6.4 - A.43)
+// $(0.7.1 - A.44)
 const R_fn = <X>(
   gas: Gas,
   hostCall: HostCallOut<X>,
@@ -53,37 +63,40 @@ const R_fn = <X>(
   const u_prime = hostCall.context.gas;
   const gas_prime: Gas = <Gas>(gas - (u_prime > 0n ? u_prime : 0n));
 
-  if (hostCall.exitReason === RegularPVMExitReason.OutOfGas) {
+  if (hostCall.exitReason?.reason === RegularPVMExitReason.OutOfGas) {
     return {
       gasUsed: gas_prime,
-      res: RegularPVMExitReason.OutOfGas,
+      res: WorkOutputImpl.outOfGas(),
       out: hostCall.out, // x'
     };
   }
-  if (
-    typeof hostCall.exitReason === "undefined" ||
-    hostCall.exitReason === RegularPVMExitReason.Halt
-  ) {
+  if (hostCall.exitReason?.reason === RegularPVMExitReason.Halt) {
     const readable = hostCall.context.memory.canRead(
-      toSafeMemoryAddress(hostCall.context.registers[7]),
-      Number(hostCall.context.registers[8]),
+      hostCall.context.registers.w7().value,
+      Number(hostCall.context.registers.w8()),
     );
     if (readable) {
       return {
         gasUsed: gas_prime,
-        res: hostCall.context.memory.getBytes(
-          toSafeMemoryAddress(hostCall.context.registers[7]),
-          Number(hostCall.context.registers[8]),
+        res: new WorkOutputImpl<any>(
+          hostCall.context.memory.getBytes(
+            hostCall.context.registers.w7().value,
+            Number(hostCall.context.registers.w8()),
+          ),
         ),
         out: hostCall.out,
       };
     } else {
-      return { gasUsed: gas_prime, res: new Uint8Array(0), out: hostCall.out };
+      return {
+        gasUsed: gas_prime,
+        res: new WorkOutputImpl<any>(new Uint8Array()),
+        out: hostCall.out,
+      };
     }
   } else {
     return {
       gasUsed: gas_prime,
-      res: RegularPVMExitReason.Panic,
+      res: WorkOutputImpl.panic(),
       out: hostCall.out,
     };
   }

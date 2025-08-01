@@ -4,7 +4,6 @@ import {
   binaryCodec,
   BufferJSONCodec,
   createArrayLengthDiscriminator,
-  createCodec,
   createJSONCodec,
   E_sub_int,
   eSubBigIntCodec,
@@ -80,6 +79,10 @@ const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
   },
 };
 
+/**
+ * Identified by `W` set
+ * $(0.7.1 - 14.3)
+ */
 @JamCodecable()
 export class WorkItemExportedSegment extends BaseJamCodecable {
   @hashCodec("hash")

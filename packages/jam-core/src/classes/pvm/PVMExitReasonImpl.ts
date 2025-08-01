@@ -49,14 +49,14 @@ export class PVMExitReasonImpl implements PVMExitReason {
   static hostCall(opCode: u8) {
     return new PVMExitReasonImpl({
       reason: IrregularPVMExitReason.HostCall,
-      data: opCode as number as u32,
+      opCode: opCode,
     });
   }
 
   static pageFault(address: u32) {
     return new PVMExitReasonImpl({
       reason: IrregularPVMExitReason.PageFault,
-      data: address,
+      address: address,
     });
   }
 }
