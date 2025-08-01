@@ -23,6 +23,9 @@ import { ValidatorStatisticsImpl } from "./ValidatorStatisticsImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 
+/**
+ * $(0.7.1 - 13.1)
+ */
 @JamCodecable()
 export class JamStatisticsImpl
   extends BaseJamCodecable

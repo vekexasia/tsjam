@@ -1,23 +1,13 @@
 import {
   BaseJamCodecable,
-  buildGenericKeyValueCodec,
-  E_sub_int,
   eIntCodec,
   eSubBigIntCodec,
-  JamCodec,
-  JSONCodec,
-  MapJSONCodec,
-  NumberJSONCodec,
+  JamCodecable,
 } from "@tsjam/codec";
-import {
-  Gas,
-  ServiceIndex,
-  SingleServiceStatistics,
-  u16,
-  u32,
-} from "@tsjam/types";
+import { Gas, SingleServiceStatistics, u16, u32 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 
+@JamCodecable()
 export class SingleServiceStatisticsImpl
   extends BaseJamCodecable
   implements SingleServiceStatistics
@@ -69,14 +59,6 @@ export class SingleServiceStatisticsImpl
   accumulateCount!: u32;
   @eSubBigIntCodec(8)
   accumulateGasUsed!: Gas;
-
-  /**
-   * `t`
-   */
-  @eIntCodec()
-  transfersCount!: u32;
-  @eSubBigIntCodec(8)
-  transfersGasUsed!: Gas;
 
   constructor(
     config: ConditionalExcept<SingleServiceStatisticsImpl, Function>,

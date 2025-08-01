@@ -3,7 +3,7 @@ import { ValidatorStatistics } from "./ValidatorStatistics";
 import { CORES } from "@tsjam/constants";
 
 /**
- * $(0.7.0 - 13.1)
+ * $(0.7.1 - 13.1)
  */
 export type JamStatistics = {
   validators: ValidatorStatistics;
@@ -26,8 +26,9 @@ export type CoreStatistics = {
 export type ServicesStatistics = {
   elements: Map<ServiceIndex, SingleServiceStatistics>;
 };
+
 /**
- * $(0.7.0 - 13.6)
+ * $(0.7.1 - 13.6)
  */
 export type SingleCoreStatistics = {
   /**
@@ -82,7 +83,7 @@ export type SingleCoreStatistics = {
 };
 
 /**
- * $(0.7.0 - 13.7)
+ * $(0.7.1 - 13.7)
  */
 export type SingleServiceStatistics = {
   /**
@@ -122,10 +123,4 @@ export type SingleServiceStatistics = {
    */
   accumulateCount: u32;
   accumulateGasUsed: Gas;
-
-  /**
-   * `t`
-   */
-  transfersCount: u32;
-  transfersGasUsed: Gas;
 };

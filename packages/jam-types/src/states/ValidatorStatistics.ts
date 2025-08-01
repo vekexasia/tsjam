@@ -3,7 +3,7 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**
  * `π`
- * $(0.7.0 - 13.2)
+ * $(0.7.1 - 13.2)
  * [0] is `πV`
  * [1] is `πL`
  */

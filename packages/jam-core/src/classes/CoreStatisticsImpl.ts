@@ -55,6 +55,9 @@ export class CoreStatisticsImpl
     Object.assign(this, config);
   }
 
+  /**
+   * $(0.7.1 - 13.8)
+   */
   toPosterior(deps: {
     ea: Validated<AssurancesExtrinsicImpl>;
     d_rho: Dagger<RHOImpl>;

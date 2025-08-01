@@ -1,22 +1,14 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
-import {
-  Posterior,
-  SeqOfLength,
-  SingleValidatorStatistics,
-  Tau,
-  u32,
-  ValidatorIndex,
-  ValidatorStatistics,
-} from "@tsjam/types";
-import { SingleValidatorStatisticsImpl } from "./SingleValidatorStatisticsImpl";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { Posterior, Tau, u32, ValidatorStatistics } from "@tsjam/types";
+import { isNewEra, toTagged } from "@tsjam/utils";
+import { DisputesStateImpl } from "./DisputesStateImpl";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
+import { JamEntropyImpl } from "./JamEntropyImpl";
 import { JamHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { isNewEra, toPosterior, toTagged } from "@tsjam/utils";
+import { SingleValidatorStatisticsImpl } from "./SingleValidatorStatisticsImpl";
 import { ValidatorStatisticsCollectionImpl } from "./ValidatorStatisticsCollectionImpl";
-import { DisputesStateImpl } from "./DisputesStateImpl";
-import { JamEntropyImpl } from "./JamEntropyImpl";
 
 /**
  * data types (u32) is given by the codec
@@ -57,7 +49,7 @@ export class ValidatorStatisticsImpl
     });
     const toRet = structuredClone(this);
 
-    // $(0.7.0 - 13.3 / 13.4)
+    // $(0.7.1 - 13.3 / 13.4)
     let bold_a = toRet.previous;
     if (isNewEra(deps.p_tau, deps.tau)) {
       bold_a = new ValidatorStatisticsCollectionImpl({
@@ -78,7 +70,7 @@ export class ValidatorStatisticsImpl
 
     for (let v = 0; v < NUMBER_OF_VALIDATORS; v++) {
       const curV = v === deps.authorIndex;
-      // $(0.7.0 - 13.5)
+      // $(0.7.1 - 13.5)
       toRet.previous.elements[v] = new SingleValidatorStatisticsImpl({
         blocks: <u32>(bold_a.elements[v].blocks + (curV ? 1 : 0)),
         tickets: <u32>(

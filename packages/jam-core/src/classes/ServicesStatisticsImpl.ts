@@ -53,11 +53,10 @@ export class ServicesStatisticsImpl
   }
 
   /**
-   * $(0.7.0 - 13.12)
+   * $(0.7.1 - 13.12)
    */
   toPosterior(deps: {
     ep: Validated<PreimagesExtrinsicImpl>;
-
     /**
      * `bold S` - from $(0.7.1 - 12.26)
      */
@@ -67,7 +66,7 @@ export class ServicesStatisticsImpl
   }): Posterior<ServicesStatisticsImpl> {
     const toRet = new ServicesStatisticsImpl({ elements: new Map() });
 
-    // $(0.7.0 - 13.13)
+    // $(0.7.1 - 13.14)
     const s_r = new Set(
       deps.guaranteedReports
         .map((r) => r.digests)
@@ -75,14 +74,14 @@ export class ServicesStatisticsImpl
         .map((res) => res.serviceIndex),
     );
 
-    // $(0.7.0 - 13.14)
+    // $(0.7.1 - 13.15)
     const s_p = new Set(deps.ep.elements.map((p) => p.requester));
 
+    // $(0.7.1 - 13.13)
     const bold_s = new Set([
       ...s_p,
       ...s_r,
       ...deps.accumulationStatistics.services(),
-      ...deps.transferStatistics.keys(),
     ]);
 
     for (const service of bold_s) {
@@ -123,7 +122,7 @@ export class ServicesStatisticsImpl
 }
 
 /**
- * $(0.7.0 - 13.16)
+ * $(0.7.1 - 13.16)
  */
 const R_fn = (
   service: ServiceIndex,
