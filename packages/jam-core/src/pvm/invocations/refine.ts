@@ -179,7 +179,7 @@ const F_fn: (
             i: workItemIndex,
             overline_i: importSegments,
             overline_x: workPackage.workItems.map((wi) =>
-              wi.exportedDataSegments.map((wx) => wx.preimage()),
+              wi.exportedDataSegments.map((wx) => wx.originalBlob()),
             ),
             bold_i: undefined,
           }),

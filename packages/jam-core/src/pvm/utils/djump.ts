@@ -2,10 +2,10 @@ import {
   PVMSingleModPointer,
   u32,
   PVMIxEvaluateFNContext,
-  PVMExitPanicMod,
-  PVMExitHaltMod,
+  PVMExitReasonMod,
 } from "@tsjam/types";
-import { IxMod } from "@/instructions/utils";
+import { IxMod } from "../instructions/utils";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 const ZA = 2;
 /**
@@ -18,7 +18,9 @@ export const djump = (
   context: PVMIxEvaluateFNContext,
   a: u32,
 ): Array<
-  PVMSingleModPointer | PVMSingleModPointer | PVMExitHaltMod | PVMExitPanicMod
+  | PVMSingleModPointer
+  | PVMSingleModPointer
+  | PVMExitReasonMod<PVMExitReasonImpl>
 > => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {

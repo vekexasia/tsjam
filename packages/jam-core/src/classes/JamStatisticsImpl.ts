@@ -59,7 +59,6 @@ export class JamStatisticsImpl
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     accumulationStatistics: AccumulationStatisticsImpl;
-    transferStatistics: Map<ServiceIndex, { gasUsed: Gas; count: u32 }>;
   }): Posterior<JamStatisticsImpl> {
     const bold_I = deps.extrinsics.reportGuarantees.workReports();
     const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
@@ -89,7 +88,6 @@ export class JamStatisticsImpl
       ep: deps.ep,
       guaranteedReports: bold_I,
       accumulationStatistics: deps.accumulationStatistics,
-      transferStatistics: deps.transferStatistics,
     });
 
     return toPosterior(toRet);

@@ -13,6 +13,7 @@ import {
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 
 // Codec is defined in: $(0.6.4 - C.22)
 
@@ -41,4 +42,11 @@ export class AvailabilitySpecificationImpl
 
   @eSubIntCodec(2, "exports_count")
   segmentCount!: u16;
+
+  constructor(
+    config: ConditionalExcept<AvailabilitySpecificationImpl, Function>,
+  ) {
+    super();
+    Object.assign(this, config);
+  }
 }

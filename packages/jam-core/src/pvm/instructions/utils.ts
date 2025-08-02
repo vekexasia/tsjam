@@ -1,6 +1,7 @@
 import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import {
   Gas,
+  IrregularPVMExitReason,
   PVMExitReasonMod,
   PVMProgramExecutionContext,
   PVMRegisterRawValue,
@@ -9,7 +10,6 @@ import {
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
-  RegularPVMExitReason,
   u32,
   u8,
 } from "@tsjam/types";
@@ -42,14 +42,18 @@ export const IxMod = {
     type: "ip",
     data: toTagged(value),
   }),
-  hostCall: (opCode: u8): PVMExitReasonMod => ({
+  hostCall: (opCode: u8): PVMExitReasonMod<PVMExitReasonImpl> => ({
     type: "exit",
     data: PVMExitReasonImpl.hostCall(opCode),
   }),
   pageFault: (
     location: u32,
     context: PVMProgramExecutionContext,
-  ): [PVMSingleModGas, PVMSingleModPointer, PVMExitReasonMod] => [
+  ): [
+    PVMSingleModGas,
+    PVMSingleModPointer,
+    PVMExitReasonMod<PVMExitReasonImpl>,
+  ] => [
     IxMod.gas(TRAP_COST), // trap
     IxMod.ip(context.instructionPointer), // override any other skip
     { type: "exit", data: PVMExitReasonImpl.pageFault(location) },
@@ -84,15 +88,15 @@ export const IxMod = {
       data,
     },
   }),
-  outOfGas: (): PVMExitReasonMod => ({
+  outOfGas: (): PVMExitReasonMod<PVMExitReasonImpl> => ({
     type: "exit",
     data: PVMExitReasonImpl.outOfGas(),
   }),
-  halt: (): PVMExitReasonMod => ({
+  halt: (): PVMExitReasonMod<PVMExitReasonImpl> => ({
     type: "exit",
     data: PVMExitReasonImpl.halt(),
   }),
-  panic: (): PVMExitReasonMod => ({
+  panic: (): PVMExitReasonMod<PVMExitReasonImpl> => ({
     type: "exit",
     data: PVMExitReasonImpl.panic(),
   }),

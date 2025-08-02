@@ -1,4 +1,6 @@
 import { accumulateReports } from "@/accumulate";
+import { bits, M_fn, merkleStateMap } from "@/merklization";
+import { BLOCK_TIME } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
 import { JamState, Posterior, StateRootHash, Tagged, Tau } from "@tsjam/types";
 import {
@@ -8,6 +10,7 @@ import {
   toPosterior,
   toTagged,
 } from "@tsjam/utils";
+import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
@@ -21,6 +24,11 @@ import {
   DisputesToPosteriorError,
 } from "./DisputesStateImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import { DisputesExtrinsicValidationError } from "./extrinsics/disputes";
+import { EGError } from "./extrinsics/guarantees";
+import { EPError } from "./extrinsics/preimages";
+import { ETError } from "./extrinsics/tickets";
+import { GammaAError } from "./GammaAImpl";
 import { HeaderLookupHistoryImpl } from "./HeaderLookupHistoryImpl";
 import { JamBlockImpl } from "./JamBlockImpl";
 import { JamEntropyImpl } from "./JamEntropyImpl";
@@ -29,16 +37,7 @@ import { LastAccOutsImpl } from "./LastAccOutsImpl";
 import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
-import { ValidatorDataImpl } from "./ValidatorDataImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
-import { BLOCK_TIME } from "@tsjam/constants";
-import { merkleStateMap, M_fn, bits } from "@/merklization";
-import { GammaAError } from "./GammaAImpl";
-import { DisputesExtrinsicValidationError } from "./extrinsics/disputes";
-import { EGError } from "./extrinsics/guarantees";
-import { ETError } from "./extrinsics/tickets";
-import { EPError } from "./extrinsics/preimages";
-import assert from "assert";
 
 export class JamStateImpl implements JamState {
   /**
@@ -46,7 +45,6 @@ export class JamStateImpl implements JamState {
    * or undefined if state was reconstructed without block
    */
   block?: JamBlockImpl;
-
   /**
    * `α`
    */
@@ -282,14 +280,13 @@ export class JamStateImpl implements JamState {
     const [
       ,
       {
-        p_accumulationQueue,
         p_accumulationHistory,
+        p_accumulationQueue,
+        p_mostRecentAccumulationOutputs,
+        p_privServices,
         d_delta,
         p_iota,
         p_authQueue,
-        deferredTransfers,
-        p_mostRecentAccumulationOutputs,
-        p_privServices,
         accumulationStatistics,
       },
     ] = accumulateReports(bold_R, {
@@ -303,17 +300,10 @@ export class JamStateImpl implements JamState {
       iota: this.iota,
       p_eta_0: toPosterior(p_entropy._0),
     }).safeRet();
-    const { invokedTransfers, stats: transferStatistics } =
-      deferredTransfers.invokeOnTransfer({
-        d_delta,
-        p_tau,
-      });
-
     const d_beta = this.beta.toDagger(newBlock.header);
 
     const dd_delta = DeltaImpl.toDoubleDagger(d_delta, {
       p_tau,
-      bold_x: invokedTransfers,
       accumulationStatistics,
     });
 
@@ -365,19 +355,18 @@ export class JamStateImpl implements JamState {
     });
 
     const p_statistics = this.statistics.toPosterior({
-      transferStatistics,
-      accumulationStatistics,
-      p_kappa,
-      p_entropy,
-      p_disputes,
-      p_tau,
-      p_lambda,
-      authorIndex: newBlock.header.authorIndex,
       tau: this.tau,
+      p_tau,
+      extrinsics: newBlock.extrinsics,
       ea: newBlock.extrinsics.assurances,
       ep: validatedEP,
-      extrinsics: newBlock.extrinsics,
       d_rho,
+      p_disputes,
+      authorIndex: newBlock.header.authorIndex,
+      p_entropy,
+      p_kappa,
+      p_lambda,
+      accumulationStatistics,
     });
 
     const p_authPool = this.authPool.toPosterior({

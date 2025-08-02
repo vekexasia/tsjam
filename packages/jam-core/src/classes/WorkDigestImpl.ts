@@ -15,6 +15,7 @@ import {
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { Gas, Hash, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "./WorkOutputImpl";
 
 // codec order defined in $(0.6.4 - C.26)
@@ -61,6 +62,13 @@ export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
     extrinsicSize: u32;
     exportCount: u16;
   };
+
+  constructor(config?: ConditionalExcept<WorkDigestImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 }
 
 if (import.meta.vitest) {

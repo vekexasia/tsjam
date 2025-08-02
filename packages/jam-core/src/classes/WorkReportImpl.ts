@@ -29,13 +29,13 @@ import {
   WorkPackageHash,
   WorkReport,
 } from "@tsjam/types";
-import { AccumulationQueueItem } from "./AccumulationQueueImpl";
 import { AvailabilitySpecificationImpl } from "./AvailabilitySpecificationImpl";
 import { WorkContextImpl } from "./WorkContextImpl";
 import { WorkDigestImpl } from "./WorkDigestImpl";
 import { RHOImpl } from "./RHOImpl";
 import { Hashing } from "@tsjam/crypto";
 import { type NewWorkReportsImpl } from "./NewWorkReportsImpl";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * Identified by `R` set
@@ -104,6 +104,13 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   @jsonCodec(ArrayOfJSONCodec(WorkDigestImpl), "results")
   @binaryCodec(createArrayLengthDiscriminator(WorkDigestImpl))
   digests!: BoundedSeq<WorkDigestImpl, 1, typeof MAXIMUM_WORK_ITEMS>;
+
+  constructor(config?: ConditionalExcept<WorkReportImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   hash() {
     return Hashing.blake2b(this.toBinary());

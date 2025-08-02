@@ -1,6 +1,6 @@
 import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
-import { Ixdb } from "@/instructions/ixdb.js";
+import { Ixdb } from "./instructions/ixdb";
 
 export class ParsedProgram implements IParsedProgram {
   #blockBeginnings: Set<u32>;
@@ -71,7 +71,7 @@ export class ParsedProgram implements IParsedProgram {
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  await import("@/instructions/instructions.js");
+  await import("@/pvm/instructions/instructions.js");
   describe("ParsedProgram", () => {
     it.skip("should instantiate the context", () => {
       const program: PVMProgram = {

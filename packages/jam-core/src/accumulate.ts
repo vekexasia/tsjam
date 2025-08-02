@@ -3,19 +3,15 @@ import {
   TOTAL_GAS_ACCUMULATION_ALL_CORES,
   TOTAL_GAS_ACCUMULATION_LOGIC,
 } from "@tsjam/constants";
-import { Hashing } from "@tsjam/crypto";
 import {
   CoreIndex,
   Gas,
   GasUsed,
   JamEntropy,
-  PVMAccumulationState,
-  PVMResultContext,
   Posterior,
   ServiceIndex,
   Tagged,
   Tau,
-  u32,
   u64,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
@@ -25,18 +21,17 @@ import { AccumulationOutImpl } from "./classes/AccumulationOutImpl";
 import { AccumulationQueueImpl } from "./classes/AccumulationQueueImpl";
 import { AccumulationStatisticsImpl } from "./classes/AccumulationStatisticsImpl";
 import { AuthorizerQueueImpl } from "./classes/AuthorizerQueueImpl";
-import { DeferredTransferImpl } from "./classes/DeferredTransferImpl";
 import { DeferredTransfersImpl } from "./classes/DeferredTransfersImpl";
 import { DeltaImpl } from "./classes/DeltaImpl";
 import { LastAccOutsImpl } from "./classes/LastAccOutsImpl";
 import { NewWorkReportsImpl } from "./classes/NewWorkReportsImpl";
 import { PrivilegedServicesImpl } from "./classes/PrivilegedServicesImpl";
+import { AccumulationInputInpl } from "./classes/pvm/AccumulationInputImpl";
 import { PVMAccumulationOpImpl } from "./classes/pvm/PVMAccumulationOPImpl";
 import { PVMAccumulationStateImpl } from "./classes/pvm/PVMAccumulationStateImpl";
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
 import { WorkReportImpl } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
-import { AccumulationInputInpl } from "./classes/pvm/AccumulationInputImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -130,7 +125,7 @@ export const accumulateReports = (
   return ok({
     p_accumulationHistory,
     p_accumulationQueue,
-    p_mostRecentAccumulationOutputs: lastAccOutputs,
+    p_mostRecentAccumulationOutputs: toPosterior(lastAccOutputs),
     p_privServices: toPosterior(
       new PrivilegedServicesImpl({
         manager: postAccState.manager,
@@ -161,7 +156,7 @@ export const outerAccumulation = (
   transfers: DeferredTransfersImpl,
   works: WorkReportImpl[],
   accState: PVMAccumulationStateImpl,
-  freeAccServices: Map<ServiceIndex, u64>,
+  freeAccServices: Map<ServiceIndex, Gas>,
   deps: {
     p_tau: Posterior<Tau>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
@@ -193,32 +188,43 @@ export const outerAccumulation = (
     };
   }
 
-  const [newAccState /* e_star */, t_star, b_star, u_star] =
-    parallelizedAccumulation(
-      accState,
-      works.slice(0, i),
-      freeAccServices,
-      deps,
-    );
+  //const [newAccState /* e_star */, t_star, b_star, u_star]
+  const {
+    postAccState: newAccState /* e_star */,
+    transfers: t_star,
+    accOut: b_star,
+    gasUsed: u_star,
+  } = parallelizedAccumulation(
+    accState,
+    transfers,
+    works.slice(0, i),
+    freeAccServices,
+    deps,
+  );
   const consumedGas = u_star.elements
     .map((a) => a.gasUsed)
     .reduce((s, e) => <Gas>(s + e), <Gas>0n);
 
-  const [j, finalAccState /* e' */, t, b, u] = outerAccumulation(
+  // const [j, finalAccState /* e' */, t, b, u];
+  const {
+    postAccState: finalAccState /* e' */,
+    lastAccOutputs: b,
+    gasUsed: u,
+    nAccumulatedWork: j,
+  } = outerAccumulation(
     (gasLimit - consumedGas) as Gas,
+    t_star,
     works.slice(i),
     newAccState,
     new Map(),
     deps,
   );
-
-  return [
-    i + j,
-    finalAccState,
-    new DeferredTransfersImpl(t_star.concat(t.elements)),
-    LastAccOutsImpl.union(b_star, b),
-    <GasUsed>{ elements: u_star.elements.concat(u.elements) },
-  ];
+  return {
+    nAccumulatedWork: i + j,
+    postAccState: finalAccState,
+    lastAccOutputs: LastAccOutsImpl.union(b_star, b),
+    gasUsed: <GasUsed>{ elements: u_star.elements.concat(u.elements) },
+  };
 };
 
 /**

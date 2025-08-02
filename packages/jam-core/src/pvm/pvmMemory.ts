@@ -78,7 +78,7 @@ export class PVMMemory implements IPVMMemory {
     // if offset + bytes.length exceeds page we should call setbytes again
     if (bytesToWrite < bytes.length) {
       this.#setBytes(
-        toSafeMemoryAddress(address + bytesToWrite),
+        toSafeMemoryAddress(BigInt(address) + BigInt(bytesToWrite)),
         bytes.subarray(bytesToWrite),
       );
     }
@@ -97,7 +97,7 @@ export class PVMMemory implements IPVMMemory {
     // );
     if (bytesToRead !== length) {
       const sub = this.#getBytes(
-        toSafeMemoryAddress(address + bytesToRead),
+        toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),
         length - bytesToRead,
       );
       const toRet = new Uint8Array(chunk.length + sub.length);

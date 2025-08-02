@@ -89,6 +89,13 @@ export class WorkItemExportedSegment extends BaseJamCodecable {
   blobHash!: Hash;
   @eSubIntCodec(4, "len")
   length!: u32;
+
+  /**
+   * $(0.7.1 - 14.14) - X
+   */
+  originalBlob(): Uint8Array {
+    throw new Error("X() not implemented");
+  }
 }
 
 // codec order defined in $(0.6.4 - C.29)

@@ -7,46 +7,67 @@ import {
 } from "@tsjam/codec";
 import { WorkError, WorkOutput } from "@tsjam/types";
 
+export interface WorkOutputError<E extends WorkError>
+  extends WorkOutputImpl<E> {
+  error: E;
+}
+export interface WorkOutputSuccess extends WorkOutputImpl {
+  success: Uint8Array;
+}
 // codec order defined in $(0.7.0 - C.34)
-export class WorkOutputImpl<E extends WorkError>
+export class WorkOutputImpl<T extends WorkError = WorkError>
   extends BaseJamCodecable
   implements WorkOutput
 {
   success?: Uint8Array;
-  error?: E;
+  error?: T;
 
-  constructor(d: Uint8Array | E) {
+  constructor(d?: Uint8Array | T) {
     super();
-    if (d instanceof Uint8Array) {
-      this.success = d;
-    } else {
-      this.error = d;
+    if (typeof d !== "undefined") {
+      if (d instanceof Uint8Array) {
+        this.success = d;
+      } else {
+        this.error = d;
+      }
     }
   }
-  isError(): this is { error: E } {
+  isError(): this is WorkOutputError<WorkError> {
     return !(this.success instanceof Uint8Array);
   }
-  isSuccess(): this is { success: Uint8Array } {
+  isSuccess(): this is WorkOutputSuccess {
     return this.success instanceof Uint8Array;
   }
-  isPanic(): this is { error: WorkError.Panic } {
+  isPanic(): this is WorkOutputError<WorkError.Panic> {
     return this.error === WorkError.Panic;
   }
-  isOutOfGas(): this is { error: WorkError.OutOfGas } {
+  isOutOfGas(): this is WorkOutputError<WorkError.OutOfGas> {
     return this.error === WorkError.OutOfGas;
   }
 
   static big() {
     return new WorkOutputImpl(WorkError.Big);
   }
+  static badExports() {
+    return new WorkOutputImpl(WorkError.BadExports);
+  }
   static bad() {
     return new WorkOutputImpl(WorkError.Bad);
   }
-  static outOfGas(): WorkOutputImpl<WorkError.OutOfGas> {
-    return new WorkOutputImpl(WorkError.OutOfGas);
+  static outOfGas(): WorkOutputError<WorkError.OutOfGas> {
+    return <WorkOutputError<WorkError.OutOfGas>>(
+      new WorkOutputImpl(WorkError.OutOfGas)
+    );
   }
-  static panic(): WorkOutputImpl<WorkError.Panic> {
-    return new WorkOutputImpl(WorkError.Panic);
+  static panic(): WorkOutputError<WorkError.Panic> {
+    return <WorkOutputError<WorkError.Panic>>(
+      new WorkOutputImpl(WorkError.Panic)
+    );
+  }
+  static oversize(): WorkOutputError<WorkError.Oversize> {
+    return <WorkOutputError<WorkError.Oversize>>(
+      new WorkOutputImpl(WorkError.Oversize)
+    );
   }
 
   static encode<T extends typeof BaseJamCodecable>(
@@ -56,7 +77,7 @@ export class WorkOutputImpl<E extends WorkError>
   ): number {
     let offset = 0;
 
-    const value = _value as WorkOutputImpl<any>;
+    const value = _value as WorkOutputImpl;
 
     if (value.isSuccess()) {
       offset = E.encode(0n, bytes);
@@ -93,7 +114,7 @@ export class WorkOutputImpl<E extends WorkError>
     this: T,
     _value: InstanceType<T>,
   ): number {
-    const value = <WorkOutputImpl<any>>_value;
+    const value = <WorkOutputImpl>_value;
     if (value.isSuccess()) {
       return (
         E.encodedSize(0n) +
@@ -110,39 +131,43 @@ export class WorkOutputImpl<E extends WorkError>
     value: InstanceType<T>;
     readBytes: number;
   } {
-    const toRet = new WorkOutputImpl();
     if (bytes[0] === 0) {
       const r = LengthDiscrimantedIdentity.decode(bytes.subarray(1));
-      toRet.success = r.value;
       return {
-        value: toRet as unknown as InstanceType<T>,
+        value: new WorkOutputImpl(r.value) as InstanceType<T>,
         readBytes: r.readBytes + 1,
       };
     }
+
     // construct with placeholder
     switch (bytes[0]) {
       case 1:
-        toRet.error = WorkError.OutOfGas;
-        break;
+        return {
+          value: WorkOutputImpl.outOfGas() as InstanceType<T>,
+          readBytes: 1,
+        };
       case 2:
-        toRet.error = WorkError.Panic;
-        break;
+        return {
+          value: WorkOutputImpl.panic() as InstanceType<T>,
+          readBytes: 1,
+        };
       case 3:
-        toRet.error = WorkError.BadExports;
-        break;
+        return {
+          value: WorkOutputImpl.badExports() as InstanceType<T>,
+          readBytes: 1,
+        };
       case 4:
-        toRet.error = WorkError.Oversize;
-        break;
+        return {
+          value: WorkOutputImpl.oversize() as InstanceType<T>,
+          readBytes: 1,
+        };
       case 5:
-        toRet.error = WorkError.Bad;
-        break;
+        return { value: WorkOutputImpl.bad() as InstanceType<T>, readBytes: 1 };
       case 6:
-        toRet.error = WorkError.Big;
-        break;
+        return { value: WorkOutputImpl.big() as InstanceType<T>, readBytes: 1 };
       default:
         throw new Error(`Invalid value ${bytes[0]}`);
     }
-    return { value: toRet as unknown as InstanceType<T>, readBytes: 1 };
   }
 
   toBinary(): Uint8Array {
@@ -153,7 +178,7 @@ export class WorkOutputImpl<E extends WorkError>
     if (this.isSuccess()) {
       return { ok: BufferJSONCodec().toJSON(<any>this.success!) };
     }
-    switch (this.error!) {
+    switch (<WorkError>this.error!) {
       case WorkError.OutOfGas:
         return { "out-of-gas": null };
       case WorkError.Panic:

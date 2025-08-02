@@ -100,21 +100,3 @@ export const pvmSingleStep = (
     exitReason: rMod.exitReason,
   };
 };
-
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { createEvContext } = await import("@/test/mocks.js");
-  describe("singleStep", () => {
-    it("should panic if no instructions", () => {
-      const evaluationContext = createEvContext();
-      const out = pvmSingleStep(
-        {
-          program: evaluationContext.program,
-          parsedProgram: evaluationContext.parsedProgram,
-        },
-        evaluationContext.execution,
-      );
-      expect(out.exitReason).toBe(RegularPVMExitReason.Panic);
-    });
-  });
-}

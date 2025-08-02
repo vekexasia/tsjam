@@ -1,12 +1,16 @@
-import { Delta, ServiceIndex } from "@tsjam/types";
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { MINIMUM_PUBLIC_SERVICE_INDEX } from "@tsjam/constants";
+import { ServiceIndex } from "@tsjam/types";
 
 /**
- * $(0.6.4 - B.14)
+ * $(0.7.1 - B.14)
  */
-export function check_fn(i: ServiceIndex, delta: Delta): ServiceIndex {
+export function check_fn(i: ServiceIndex, delta: DeltaImpl): ServiceIndex {
   if (delta.has(i)) {
     return check_fn(
-      (((i - 2 ** 8 + 1) % (2 ** 32 - 2 ** 9)) + 2 ** 8) as ServiceIndex,
+      (((i - MINIMUM_PUBLIC_SERVICE_INDEX + 1) %
+        (2 ** 32 - 2 ** 8 - MINIMUM_PUBLIC_SERVICE_INDEX)) +
+        MINIMUM_PUBLIC_SERVICE_INDEX) as ServiceIndex,
       delta,
     );
   } else {

@@ -5,6 +5,7 @@ import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
 import {
   createCodec,
   E_4_int,
@@ -24,10 +25,10 @@ import {
   Hash,
   JamEntropy,
   Posterior,
-  RegularPVMExitReason,
   ServiceIndex,
   Tau,
   u32,
+  WorkError,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { FnsDb } from "../functions/fnsdb";
@@ -326,10 +327,10 @@ const G_fn = (
  */
 const C_fn = (
   gas: Gas,
-  o: Uint8Array | RegularPVMExitReason.OutOfGas | RegularPVMExitReason.Panic,
+  o: WorkOutputImpl<WorkError.OutOfGas | WorkError.Panic>,
   d: { x: PVMResultContextImpl; y: PVMResultContextImpl },
 ): AccumulationOutImpl => {
-  if (o === RegularPVMExitReason.OutOfGas || o === RegularPVMExitReason.Panic) {
+  if (o.isPanic() || o.isOutOfGas()) {
     return new AccumulationOutImpl({
       postState: d.y.state,
       deferredTransfers: d.y.transfers,
@@ -337,11 +338,11 @@ const C_fn = (
       gasUsed: toTagged(gas),
       provisions: d.y.provisions,
     });
-  } else if (o.length === 32) {
+  } else if (o.isSuccess() && o.success.length === 32) {
     return new AccumulationOutImpl({
       postState: d.x.state,
       deferredTransfers: d.x.transfers,
-      yield: HashCodec.decode(o).value,
+      yield: HashCodec.decode(o.success).value,
       gasUsed: toTagged(gas),
       provisions: d.x.provisions,
     });

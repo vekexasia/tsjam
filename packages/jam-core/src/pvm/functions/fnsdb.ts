@@ -1,5 +1,6 @@
 import {
   Gas,
+  PVMExitReason,
   PVMExitReasonMod,
   PVMFn,
   PVMProgramExecutionContext,
@@ -41,7 +42,7 @@ export const regFn = <Args extends unknown, Out>(conf: {
   fn: DetailedPVMFn<Args, Out[], PVMProgramExecutionContextImpl>;
 }): PVMFn<
   Args,
-  Array<Out | PVMSingleModGas> | PVMExitReasonMod[],
+  Array<Out | PVMSingleModGas> | PVMExitReasonMod<PVMExitReason>[],
   PVMProgramExecutionContextImpl
 > => {
   if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
@@ -52,7 +53,7 @@ export const regFn = <Args extends unknown, Out>(conf: {
   }
   const newfn: PVMFn<
     Args,
-    Array<Out | PVMSingleModGas> | [PVMExitReasonMod],
+    Array<Out | PVMSingleModGas> | [PVMExitReasonMod<PVMExitReason>],
     PVMProgramExecutionContextImpl
   > = (ctx: PVMProgramExecutionContextImpl, args) => {
     // $(0.6.4 - B.17 / B.19 / B.21)

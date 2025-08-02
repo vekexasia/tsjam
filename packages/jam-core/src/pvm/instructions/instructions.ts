@@ -264,25 +264,25 @@ export class Instructions {
 
   @Ix(70, OneRegTwoImmIxDecoder)
   store_imm_ind_u8({ wA, vX, vY }: OneRegTwoImmArgs) {
-    const location = wA + vX;
+    const location = wA.value + vX;
     return [IxMod.memory(location, new Uint8Array([Number(vY % 0xffn)]))];
   }
 
   @Ix(71, OneRegTwoImmIxDecoder)
   store_imm_ind_u16({ wA, vX, vY }: OneRegTwoImmArgs) {
-    const location = wA + vX;
+    const location = wA.value + vX;
     return [IxMod.memory(location, encodeWithCodec(E_2, vY % 2n ** 16n))];
   }
 
   @Ix(72, OneRegTwoImmIxDecoder)
   store_imm_ind_u32({ wA, vX, vY }: OneRegTwoImmArgs) {
-    const location = wA + vX;
+    const location = wA.value + vX;
     return [IxMod.memory(location, encodeWithCodec(E_4, vY % 2n ** 32n))];
   }
 
   @Ix(73, OneRegTwoImmIxDecoder)
   store_imm_ind_u64({ wA, vX, vY }: OneRegTwoImmArgs) {
-    const location = wA + vX;
+    const location = wA.value + vX;
     return [IxMod.memory(location, encodeWithCodec(E_8, vY))];
   }
 
@@ -512,7 +512,7 @@ export class Instructions {
   ) {
     return [
       IxMod.reg(args.rA, args.vX),
-      ...djump(context, Number((args.wB + args.vY) % 2n ** 32n) as u32),
+      ...djump(context, Number((args.wB.value + args.vY) % 2n ** 32n) as u32),
     ];
   }
 
@@ -597,7 +597,7 @@ export class Instructions {
 
   @Ix(120, TwoRegOneImmIxDecoder)
   store_ind_u8({ wB, vX, wA }: TwoRegOneImmArgs) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     return [
       IxMod.memory(location as u32, new Uint8Array([Number(wA.value & 0xffn)])),
     ];
@@ -605,13 +605,13 @@ export class Instructions {
 
   @Ix(121, TwoRegOneImmIxDecoder)
   store_ind_u16({ wA, wB, vX }: TwoRegOneImmArgs) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     return [IxMod.memory(location, encodeWithCodec(E_2, wA.value & 0xffffn))];
   }
 
   @Ix(122, TwoRegOneImmIxDecoder)
   store_ind_u32({ wA, wB, vX }: TwoRegOneImmArgs) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     const tmp = new Uint8Array(4);
     E_4.encode(BigInt(wA.value % 2n ** 32n), tmp);
     return [IxMod.memory(location, tmp)];
@@ -619,7 +619,7 @@ export class Instructions {
 
   @Ix(123, TwoRegOneImmIxDecoder)
   store_ind_u64({ wA, wB, vX }: TwoRegOneImmArgs) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     return [IxMod.memory(location, encodeWithCodec(E_8, wA.value))];
   }
 
@@ -629,7 +629,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 1)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 1)!,
@@ -646,7 +646,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 2)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 2)!,
@@ -662,7 +662,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 4)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 4)!,
@@ -678,7 +678,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 8)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 8)!,
@@ -695,7 +695,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 1)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 1)!,
@@ -712,7 +712,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 2)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 2)!,
@@ -729,7 +729,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    const location = toSafeMemoryAddress(wB + vX);
+    const location = toSafeMemoryAddress(wB.value + vX);
     if (!context.execution.memory.canRead(location, 4)) {
       return handleMemoryFault(
         context.execution.memory.firstUnreadable(location, 4)!,
@@ -744,7 +744,7 @@ export class Instructions {
   // math
   @Ix(131, TwoRegOneImmIxDecoder)
   add_imm_32({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, X_4((wB + vX) % 2n ** 32n))];
+    return [IxMod.reg(rA, X_4((wB.value + vX) % 2n ** 32n))];
   }
 
   @Ix(132, TwoRegOneImmIxDecoder)
@@ -807,7 +807,7 @@ export class Instructions {
 
   @Ix(142, TwoRegOneImmIxDecoder)
   set_gt_u_imm({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, wB > vX ? 1 : 0)];
+    return [IxMod.reg(rA, wB.value > vX ? 1 : 0)];
   }
 
   @Ix(143, TwoRegOneImmIxDecoder)

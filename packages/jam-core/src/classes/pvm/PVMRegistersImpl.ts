@@ -1,20 +1,29 @@
-import { PVMRegisters, SeqOfLength } from "@tsjam/types";
-import { PVMRegisterImpl } from "./PVMRegisterImpl";
 import {
-  JamCodecable,
   BaseJamCodecable,
+  JamCodecable,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
+import { PVMRegisterRawValue, PVMRegisters, SeqOfLength } from "@tsjam/types";
+import { PVMRegisterImpl } from "./PVMRegisterImpl";
+import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class PVMRegistersImpl extends BaseJamCodecable implements PVMRegisters {
   @sequenceCodec(13, PVMRegisterImpl, SINGLE_ELEMENT_CLASS)
   elements!: SeqOfLength<PVMRegisterImpl, 13>;
 
-  constructor(elements: SeqOfLength<PVMRegisterImpl, 13>) {
+  constructor(elements?: SeqOfLength<PVMRegisterImpl, 13>) {
     super();
-    this.elements = elements;
+    if (typeof elements !== "undefined") {
+      this.elements = elements;
+    } else {
+      this.elements = toTagged(
+        new Array(13)
+          .fill(null)
+          .map(() => new PVMRegisterImpl(<PVMRegisterRawValue>0n)),
+      );
+    }
   }
 
   slice(start: number, end?: number): PVMRegisterImpl[] {

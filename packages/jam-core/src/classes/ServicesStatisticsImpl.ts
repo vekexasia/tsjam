@@ -109,10 +109,6 @@ export class ServicesStatisticsImpl
             deps.accumulationStatistics.get(service)?.count ?? <u32>0,
           accumulateGasUsed:
             deps.accumulationStatistics.get(service)?.gasUsed ?? <Gas>0n,
-
-          transfersCount: deps.transferStatistics.get(service)?.count ?? <u32>0,
-          transfersGasUsed:
-            deps.transferStatistics.get(service)?.gasUsed ?? <Gas>0n,
         }),
       );
     }

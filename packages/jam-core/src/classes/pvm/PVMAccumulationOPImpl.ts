@@ -9,7 +9,13 @@ import {
   jsonCodec,
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
-import { Gas, Hash, PVMAccumulationOp, WorkPackageHash } from "@tsjam/types";
+import {
+  Gas,
+  Hash,
+  PVMAccumulationOp,
+  WorkError,
+  WorkPackageHash,
+} from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "../WorkOutputImpl";
 
@@ -57,7 +63,7 @@ export class PVMAccumulationOpImpl
    * `bold_l`
    */
   @codec(WorkOutputImpl)
-  result!: WorkOutputImpl;
+  result!: WorkOutputImpl<WorkError>;
 
   /**
    * `bold_t` - comes from Workreport

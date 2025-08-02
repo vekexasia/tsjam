@@ -1,10 +1,11 @@
 import {
-  PVMExitPanicMod,
   PVMIxEvaluateFNContext,
-  PVMSingleModPointer,
   u32,
+  PVMSingleModPointer,
+  PVMExitReasonMod,
 } from "@tsjam/types";
-import { IxMod } from "@/instructions/utils";
+import { IxMod } from "../instructions/utils";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 /**
  * Branch to the given address if the condition is true.
@@ -19,7 +20,7 @@ export const branch = (
   context: PVMIxEvaluateFNContext,
   address: u32,
   condition: boolean | 0 | 1,
-): Array<PVMSingleModPointer | PVMExitPanicMod> => {
+): Array<PVMSingleModPointer | PVMExitReasonMod<PVMExitReasonImpl>> => {
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that

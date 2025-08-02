@@ -1,3 +1,8 @@
+import { hostFunctions } from "@/pvm/functions/functions";
+import { applyMods } from "@/pvm/functions/utils";
+import { IxMod } from "@/pvm/instructions/utils";
+import { argumentInvocation } from "@/pvm/invocations/argument";
+import { HostCallExecutor } from "@/pvm/invocations/hostCall";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -10,11 +15,9 @@ import {
   eSubIntCodec,
   HashCodec,
   hashCodec,
-  IdentityCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
-  lengthDiscriminatedCodec,
 } from "@tsjam/codec";
 import {
   HostCallResult,
@@ -22,15 +25,15 @@ import {
   MAXIMUM_WORK_ITEMS,
   TOTAL_GAS_IS_AUTHORIZED,
 } from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
 import {
   Authorization,
   AuthorizationParams,
+  Blake2bHash,
   BoundedSeq,
   CodeHash,
   CoreIndex,
-  Delta,
   Gas,
-  Hash,
   PVMProgramCode,
   PVMResultContext,
   ServiceIndex,
@@ -39,16 +42,10 @@ import {
   WorkPackage,
   WorkPackageHash,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
+import { DeltaImpl } from "./DeltaImpl";
 import { WorkContextImpl } from "./WorkContextImpl";
 import { WorkItemImpl } from "./WorkItemImpl";
-import { Hashing } from "@tsjam/crypto";
-import { DeltaImpl } from "./DeltaImpl";
-import { toTagged } from "@tsjam/utils";
-import { argumentInvocation } from "@/pvm/invocations/argument";
-import { applyMods } from "@/pvm/functions/utils";
-import { IxMod } from "@/pvm/instructions/utils";
-import { HostCallExecutor } from "@/pvm/invocations/hostCall";
-import { hostFunctions, HostFunctions } from "@/pvm/functions/functions";
 import { WorkOutputImpl } from "./WorkOutputImpl";
 
 /**
@@ -104,7 +101,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
    * `p_a`
    * $(0.7.1 - 14.10)
    */
-  authorizer(): Hash {
+  authorizer(): Blake2bHash {
     return Hashing.blake2b(
       new Uint8Array([
         ...encodeWithCodec(HashCodec, this.authCodeHash),
