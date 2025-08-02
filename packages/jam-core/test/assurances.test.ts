@@ -1,189 +1,99 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { verifyEA } from "@/verifySeal";
+import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
+import { JamSignedHeaderImpl } from "@/classes/JamHeaderImpl";
+import { RHOImpl } from "@/classes/RHOImpl";
+import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
+import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
-  E_sub_int,
-  JamCodec,
-  ValidatorDataCodec,
-  WorkReportCodec,
-  codec_Ea,
+  BaseJamCodecable,
+  JamCodecable,
+  codec,
   createArrayLengthDiscriminator,
-  createCodec,
-  createSequenceCodec,
-  Optional,
-  create32BCodec,
+  eSubIntCodec,
+  hashCodec,
 } from "@tsjam/codec";
-import {
-  Tau,
-  EA_Extrinsic,
-  WorkReport,
-  RHO,
-  Posterior,
-  ValidatorData,
-  JamState,
-  Dagger,
-  Validated,
-  HeaderHash,
-} from "@tsjam/types";
+import { Dagger, HeaderHash, Tagged, Tau } from "@tsjam/types";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
-import { beforeEach } from "vitest";
-import { TestOutputCodec } from "@tsjam/codec/test/utils.js";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { RHO2DoubleDagger } from "@tsjam/transitions";
-import { toPosterior } from "@tsjam/utils";
-import { availableReports } from "@/accumulate";
+import { TestOutputCodec } from "./codec_utils";
 
-const mocks = vi.hoisted(() => {
-  return {
-    CORES: 341,
-    NUMBER_OF_VALIDATORS: 1023,
-  };
-});
-
-vi.mock("@tsjam/constants", async (importOriginal) => {
-  const toRet = {
-    ...(await importOriginal<typeof import("@tsjam/constants")>()),
-    ...mocks,
-  };
-  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
-    get() {
-      return mocks.NUMBER_OF_VALIDATORS;
-    },
-  });
-  Object.defineProperty(toRet, "CORES", {
-    get() {
-      return mocks.CORES;
-    },
-  });
-  return toRet;
-});
-
-const RHOCodec = (cores: number): JamCodec<RHO> => {
-  const opt = new Optional(
-    createCodec<{ workReport: WorkReport; reportTime: Tau }>([
-      ["workReport", WorkReportCodec],
-      ["reportTime", E_sub_int<Tau>(4)],
-    ]),
-  );
-  const toRet: JamCodec<RHO> = {
-    encode(value, bytes) {
-      let offset = 0;
-      for (let i = 0; i < cores; i++) {
-        offset += opt.encode(value[i], bytes.subarray(offset));
-      }
-      return offset;
-    },
-    decode(bytes) {
-      const toRet = [] as unknown as RHO;
-      let offset = 0;
-      for (let i = 0; i < cores; i++) {
-        const { value, readBytes } = opt.decode(bytes.subarray(offset));
-        offset += readBytes;
-        toRet.push(value);
-      }
-      return { value: toRet, readBytes: offset };
-    },
-    encodedSize(value) {
-      let size = 0;
-      for (let i = 0; i < cores; i++) {
-        size += opt.encodedSize(value[i]);
-      }
-      return size;
-    },
-  };
-  return toRet;
-};
 export const getCodecFixtureFile = (
   filename: string,
-  kind: "tiny" | "full",
+  kind: "full",
 ): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/assurances/${kind}/${filename}`,
+        `../../../jamtestvectors/stf/assurances/${kind}/${filename}`,
         import.meta.url,
       ).pathname,
     ),
   );
 };
-type TestState = { rho: RHO; p_kappa: ValidatorData[] };
+@JamCodecable()
+class TestState extends BaseJamCodecable {
+  @codec(RHOImpl)
+  d_rho!: Dagger<RHOImpl>;
+  @codec(ValidatorsImpl)
+  kappa!: Tagged<ValidatorsImpl, "kappa">;
+}
+@JamCodecable()
+class TestInput extends BaseJamCodecable {
+  @codec(AssurancesExtrinsicImpl)
+  ea!: AssurancesExtrinsicImpl;
+
+  @eSubIntCodec(4)
+  slot!: Tau;
+
+  @hashCodec()
+  parentHash!: HeaderHash;
+}
+
+@JamCodecable()
+class Test extends BaseJamCodecable {
+  @codec(TestInput)
+  input!: TestInput;
+
+  @codec(TestState)
+  preState!: TestState;
+
+  @codec(TestOutputCodec(createArrayLengthDiscriminator(WorkReportImpl)))
+  output!: { error?: 0 | 1 | 2 | 3 | 4 | 5; output?: WorkReportImpl[] };
+
+  @codec(TestState)
+  postState!: TestState;
+}
+
 describe("assurances", () => {
-  const doTest = (filename: string, kind: "tiny" | "full") => {
-    const stateCodec = createCodec<TestState>([
-      ["rho", RHOCodec(CORES)],
-      [
-        "p_kappa",
-        createSequenceCodec(
-          NUMBER_OF_VALIDATORS,
-          ValidatorDataCodec,
-        ) as unknown as JamCodec<ValidatorData[]>,
-      ],
-    ]);
-
-    const newTestCodec = createCodec<{
-      input: { ea: EA_Extrinsic; slot: Tau; parent: HeaderHash };
-      output: { error?: 0 | 1 | 2 | 3 | 4 | 5; output?: WorkReport[] };
-      preState: TestState;
-      postState: TestState;
-    }>([
-      [
-        "input",
-        createCodec<{ ea: EA_Extrinsic; slot: Tau; parent: HeaderHash }>([
-          ["ea", codec_Ea],
-          ["slot", E_sub_int<Tau>(4)],
-          ["parent", create32BCodec<HeaderHash>()],
-        ]),
-      ],
-      ["preState", stateCodec],
-      [
-        "output",
-        TestOutputCodec<0 | 1 | 2 | 3 | 4 | 5, WorkReport[]>(
-          createArrayLengthDiscriminator(WorkReportCodec),
-        ),
-      ],
-      ["postState", stateCodec],
-    ]);
-
-    const decoded = newTestCodec.decode(
+  const doTest = (filename: string, kind: "full") => {
+    const { value: test } = Test.decode(
       getCodecFixtureFile(`${filename}.bin`, kind),
     );
-    expect(decoded.value.preState.p_kappa).deep.eq([
-      ...decoded.value.postState.p_kappa,
-    ]);
-    const eaVerified = verifyEA(
-      decoded.value.input.ea,
-      decoded.value.input.parent,
-      // decoded.value.input.slot,
-      decoded.value.preState.p_kappa as Posterior<JamState["kappa"]>,
-      decoded.value.preState.rho as Dagger<RHO>,
-    );
-    const shouldBeVerified = typeof decoded.value.output.error === "undefined";
+    expect(test.preState.kappa).deep.eq(test.postState.kappa);
+    const eaVerified = test.input.ea.isValid({
+      header: new JamSignedHeaderImpl({ parent: test.input.parentHash }),
+      kappa: test.preState.kappa,
+      d_rho: test.preState.d_rho,
+    });
+    const shouldBeVerified = typeof test.output.error === "undefined";
 
     expect(eaVerified).eq(shouldBeVerified);
-    if (!shouldBeVerified) {
+    if (!eaVerified) {
       return;
     }
-    const [, dd_rho] = RHO2DoubleDagger(
-      {
-        rho: decoded.value.preState.rho,
-        p_tau: toPosterior(decoded.value.input.slot),
-        availableReports: availableReports(
-          decoded.value.input.ea as Validated<EA_Extrinsic>,
-          decoded.value.preState.rho as Dagger<RHO>,
-        ),
-      },
-      decoded.value.preState.rho as Dagger<RHO>,
-    ).safeRet();
-    expect(dd_rho, "dd_rho").deep.eq(decoded.value.postState.rho);
+    const dd_rho = RHOImpl.toDoubleDagger(test.preState.d_rho, {
+      rho: test.preState.d_rho,
+      p_tau: toPosterior(test.input.slot),
+      newReports: AssurancesExtrinsicImpl.newlyAvailableReports(
+        toTagged(test.input.ea),
+        test.preState.d_rho,
+      ),
+    });
+    expect(dd_rho, "dd_rho").deep.eq(test.postState.d_rho);
     return true;
   };
-  const set = "tiny" as "tiny" | "full";
-  beforeEach(() => {
-    if (set === "tiny") {
-      mocks.CORES = 2;
-      mocks.NUMBER_OF_VALIDATORS = 6;
-    }
-  });
+  const set = "full";
 
   it("no_assurances-1", () => {
     doTest("no_assurances-1", set);

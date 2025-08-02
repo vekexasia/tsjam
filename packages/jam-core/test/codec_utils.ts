@@ -1,4 +1,4 @@
-import { JamCodec } from "@tsjam/codec";
+import { JamCodec, JSONCodec } from "@tsjam/codec";
 import * as fs from "node:fs";
 
 export const getCodecFixtureFile = (
@@ -17,7 +17,8 @@ export const getCodecFixtureFile = (
 
 export const TestOutputCodec = <Error extends number, Output>(
   outputCodec: JamCodec<Output>,
-): JamCodec<{ error?: Error; output?: Output }> => {
+): JamCodec<{ error?: Error; output?: Output }> &
+  JSONCodec<{ error?: Error; output?: Output }> => {
   const toRet: JamCodec<{ error?: Error; output?: Output }> = {
     encode() {
       throw new Error("Not implemented");
@@ -46,7 +47,15 @@ export const TestOutputCodec = <Error extends number, Output>(
       );
     },
   };
-  return toRet;
+  return {
+    ...toRet,
+    fromJSON(json) {
+      return json;
+    },
+    toJSON(value) {
+      return value;
+    },
+  };
 };
 
 export const logCodec = <A, B>(

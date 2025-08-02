@@ -51,6 +51,7 @@ import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { TicketImpl } from "./TicketImpl";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * $(0.7.1 - 5.10)
@@ -178,6 +179,14 @@ export class JamSignedHeaderImpl
 {
   @bandersnatchSignatureCodec()
   seal!: BandersnatchSignature;
+  constructor(
+    config?: Partial<ConditionalExcept<JamSignedHeaderImpl, Function>>,
+  ) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   signedHash(): HeaderHash {
     return Hashing.blake2b(this.toBinary());
