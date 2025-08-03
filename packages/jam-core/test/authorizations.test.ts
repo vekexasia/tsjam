@@ -1,175 +1,121 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { verifyEA } from "@/verifySeal";
 import {
-  E_sub_int,
-  HashCodec,
-  JamCodec,
-  ValidatorDataCodec,
-  WorkReportCodec,
-  codec_Ea,
+  BaseJamCodecable,
+  Blake2bHashCodec,
+  codec,
   createArrayLengthDiscriminator,
   createCodec,
-  createSequenceCodec,
-  Optional,
-  AuthorizerPoolCodec,
-  AuthorizerQueueCodec,
-  Blake2bHashCodec,
+  E_sub_int,
+  eSubIntCodec,
+  JamCodecable,
+  mapCodec,
 } from "@tsjam/codec";
 import {
-  Hash,
-  Tau,
-  Posterior,
-  EA_Extrinsic,
-  WorkReport,
-  RHO,
-  ValidatorData,
-  JamState,
-  Dagger,
-  Validated,
   AuthorizerPool,
   AuthorizerQueue,
-  CoreIndex,
   Blake2bHash,
+  CoreIndex,
   EG_Extrinsic,
+  Posterior,
+  Tau,
+  Validated,
 } from "@tsjam/types";
+import { bigintToBytes, toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
-import { mapCodec } from "@tsjam/codec";
 import { beforeEach } from "vitest";
-import { TestOutputCodec } from "@tsjam/codec/test/utils.js";
-import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
+import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
 import {
-  authorizerPool_toPosterior,
-  RHO2DoubleDagger,
-} from "@tsjam/transitions";
-import { bigintToBytes, toPosterior } from "@tsjam/utils";
-import { dot } from "node:test/reporters";
-
-const mocks = vi.hoisted(() => {
-  return {
-    CORES: 341,
-    NUMBER_OF_VALIDATORS: 1023,
-  };
-});
-
-vi.mock("@tsjam/constants", async (importOriginal) => {
-  const toRet = {
-    ...(await importOriginal<typeof import("@tsjam/constants")>()),
-    ...mocks,
-  };
-  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
-    get() {
-      return mocks.NUMBER_OF_VALIDATORS;
-    },
-  });
-  Object.defineProperty(toRet, "CORES", {
-    get() {
-      return mocks.CORES;
-    },
-  });
-  return toRet;
-});
+  GuaranteesExtrinsicImpl,
+  SingleWorkReportGuaranteeImpl,
+} from "@/classes/extrinsics/guarantees";
+import { WorkReportImpl } from "@/classes/WorkReportImpl";
 
 export const getCodecFixtureFile = (
   filename: string,
-  kind: "tiny" | "full",
+  kind: "full",
 ): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/authorizations/${kind}/${filename}`,
+        `../../../jamtestvectors/stf/authorizations/${kind}/${filename}`,
         import.meta.url,
       ).pathname,
     ),
   );
 };
-type TestState = { authPool: AuthorizerPool; authQueue: AuthorizerQueue };
-type Input = {
-  slot: Posterior<Tau>;
-  eg: EG_Extrinsic;
-};
+
+@JamCodecable()
+class TestState extends BaseJamCodecable {
+  @codec(AuthorizerPoolImpl)
+  authPool!: AuthorizerPoolImpl;
+  @codec(AuthorizerQueueImpl)
+  authQueue!: Posterior<AuthorizerQueueImpl>;
+}
+@JamCodecable()
+class TestInput extends BaseJamCodecable {
+  @eSubIntCodec(4)
+  slot!: Posterior<Tau>;
+  @codec(
+    <any>mapCodec(
+      createArrayLengthDiscriminator<
+        Array<{ core: CoreIndex; authHash: Blake2bHash }>
+      >(
+        createCodec([
+          ["core", E_sub_int<CoreIndex>(2)],
+          ["authHash", Blake2bHashCodec],
+        ]),
+      ),
+      (a): GuaranteesExtrinsicImpl => {
+        return new GuaranteesExtrinsicImpl(
+          toTagged(
+            a.map((x) => {
+              return new SingleWorkReportGuaranteeImpl({
+                report: new WorkReportImpl({
+                  core: x.core,
+                  authorizerHash: x.authHash,
+                }),
+              });
+            }),
+          ),
+        );
+      },
+      (x) => {
+        return null as unknown as any;
+      },
+    ),
+  )
+  eg!: Validated<GuaranteesExtrinsicImpl>;
+}
+@JamCodecable()
+class Test extends BaseJamCodecable {
+  @codec(TestInput)
+  input!: TestInput;
+  @codec(TestState)
+  preState!: TestState;
+  @codec(TestState)
+  postState!: TestState;
+}
 
 describe("authorizations", () => {
-  const doTest = (filename: string, kind: "tiny" | "full") => {
-    const stateCodec = createCodec<TestState>([
-      ["authPool", AuthorizerPoolCodec()],
-      ["authQueue", AuthorizerQueueCodec()],
-    ]);
-
-    const newTestCodec = createCodec<{
-      input: Input;
-      preState: TestState;
-      postState: TestState;
-    }>([
-      [
-        "input",
-        createCodec<Input>([
-          ["slot", E_sub_int<Posterior<Tau>>(4)],
-          [
-            "eg",
-            mapCodec(
-              createArrayLengthDiscriminator<
-                Array<{ core: CoreIndex; authHash: Blake2bHash }>
-              >(
-                createCodec([
-                  ["core", E_sub_int<CoreIndex>(2)],
-                  ["authHash", Blake2bHashCodec],
-                ]),
-              ),
-              (a): EG_Extrinsic => {
-                return a.map((x) => {
-                  return {
-                    workReport: {
-                      coreIndex: x.core,
-                      authorizerHash: x.authHash,
-                    },
-                  } as unknown as EG_Extrinsic[0];
-                }) as EG_Extrinsic;
-              },
-              (x) => {
-                return null as unknown as any;
-              },
-            ),
-          ],
-        ]),
-      ],
-      ["preState", stateCodec],
-      ["postState", stateCodec],
-    ]);
-
+  const doTest = (filename: string, kind: "full") => {
     const testBin = fs.readFileSync(
-      `${__dirname}/../../../jamtestvectors/authorizations/${kind}/${filename}.bin`,
+      `${__dirname}/../../../jamtestvectors/stf/authorizations/${kind}/${filename}.bin`,
     );
 
-    const { value } = newTestCodec.decode(testBin);
-    const [, p_pool] = authorizerPool_toPosterior(
-      {
-        eg: value.input.eg,
-        p_tau: value.input.slot,
-        p_queue: toPosterior(value.preState.authQueue),
-      },
-      value.preState.authPool,
-    ).safeRet();
+    const { value } = Test.decode(testBin);
+    const p_pool = value.preState.authPool.toPosterior({
+      eg: value.input.eg,
+      p_tau: value.input.slot,
+      p_queue: value.preState.authQueue,
+    });
     expect(value.preState.authQueue, "authQueue is invariant").deep.eq(
       value.postState.authQueue,
     );
-    expect(
-      p_pool.map((c) =>
-        c.map((h) => Buffer.from(bigintToBytes(h, 32)).toString("hex")),
-      ),
-    ).deep.eq(
-      value.postState.authPool.map((c) =>
-        c.map((h) => Buffer.from(bigintToBytes(h, 32)).toString("hex")),
-      ),
-    );
+    expect(p_pool.toJSON()).deep.eq(value.postState.authPool.toJSON());
   };
-  const set = "tiny" as "tiny" | "full";
-  beforeEach(() => {
-    if (set === "tiny") {
-      mocks.CORES = 2;
-      mocks.NUMBER_OF_VALIDATORS = 6;
-    }
-  });
+  const set = "full";
   it("progress_authorizations-1", () => {
     doTest("progress_authorizations-1", set);
   });

@@ -53,6 +53,7 @@ import { JamStateImpl } from "../JamStateImpl";
 import { RecentHistoryImpl } from "../RecentHistoryImpl";
 import { RHOImpl } from "../RHOImpl";
 import { WorkReportImpl } from "../WorkReportImpl";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -132,6 +133,16 @@ export class SingleWorkReportGuaranteeImpl
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeSignatureImpl)
   signatures!: BoundedSeq<SingleWorkReportGuaranteeSignatureImpl, 2, 3>;
 
+  constructor(
+    config?: Partial<
+      ConditionalExcept<SingleWorkReportGuaranteeImpl, Function>
+    >,
+  ) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
   totalSize(): number {
     // $(0.7.1 - 11.8)
     return (
@@ -222,6 +233,14 @@ export class GuaranteesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>;
+  constructor(elements?: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>) {
+    super();
+    if (typeof elements !== "undefined") {
+      this.elements = elements;
+    } else {
+      this.elements = toTagged([]);
+    }
+  }
 
   elementForCore(core: CoreIndex) {
     return this.elements.find((el) => el.report.core === core);

@@ -4,6 +4,7 @@ import {
   createSequenceCodec,
   HashCodec,
   HashJSONCodec,
+  JamCodecable,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
@@ -21,6 +22,7 @@ import { ConditionalExcept } from "type-fest";
  * Defines the ready but not yet accumulated work reports
  * $(0.7.1 - 12.3)
  */
+@JamCodecable()
 export class AuthorizerQueueImpl
   extends BaseJamCodecable
   implements AuthorizerQueue

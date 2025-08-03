@@ -4,7 +4,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@/class/mainDecorators";
 import { JamCodec } from "@/codec.js";
-import { ArrayOfJSONCodec, SetJSONCodec, ZipJSONCodecs } from "@/json/codecs";
+import { ArrayOfJSONCodec, SetJSONCodec } from "@/json/codecs";
 import { JSONCodec } from "@/json/JsonCodec";
 import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
 import { mapCodec } from "@/utils";

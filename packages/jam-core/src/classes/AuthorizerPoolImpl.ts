@@ -4,6 +4,7 @@ import {
   createArrayLengthDiscriminator,
   HashCodec,
   HashJSONCodec,
+  JamCodecable,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
@@ -21,11 +22,12 @@ import {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-
+const codec = createArrayLengthDiscriminator(HashCodec);
 /**
  * `α`
  * $(0.7.1 - 8.1)
  */
+@JamCodecable()
 export class AuthorizerPoolImpl
   extends BaseJamCodecable
   implements AuthorizerPool
@@ -33,7 +35,9 @@ export class AuthorizerPoolImpl
   @sequenceCodec(
     CORES,
     {
-      ...createArrayLengthDiscriminator(HashCodec),
+      encode: codec.encode.bind(codec),
+      decode: codec.decode.bind(codec),
+      encodedSize: codec.encodedSize.bind(codec),
       ...ArrayOfJSONCodec(HashJSONCodec()),
     },
     SINGLE_ELEMENT_CLASS,

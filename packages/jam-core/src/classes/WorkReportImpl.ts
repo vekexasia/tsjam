@@ -105,7 +105,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   @binaryCodec(createArrayLengthDiscriminator(WorkDigestImpl))
   digests!: BoundedSeq<WorkDigestImpl, 1, typeof MAXIMUM_WORK_ITEMS>;
 
-  constructor(config?: ConditionalExcept<WorkReportImpl, Function>) {
+  constructor(config?: Partial<ConditionalExcept<WorkReportImpl, Function>>) {
     super();
     if (typeof config !== "undefined") {
       Object.assign(this, config);

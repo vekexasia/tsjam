@@ -20,35 +20,35 @@ export abstract class BaseJamCodecable {
     x: InstanceType<T>,
     buf: Uint8Array,
   ): number {
-    throw new Error("stub!");
+    throw new Error(`stub! ${this.name}`);
   }
 
   static decode<T extends typeof BaseJamCodecable>(
     this: T,
     bytes: Uint8Array,
   ): { value: InstanceType<T>; readBytes: number } {
-    throw new Error("stub!");
+    throw new Error(`stub! ${this.name}`);
   }
 
   static encodedSize<T extends typeof BaseJamCodecable>(
     this: T,
     value: InstanceType<T>,
   ): number {
-    throw new Error("stub!");
+    throw new Error(`stub! ${this.name}`);
   }
 
   static fromJSON<T extends typeof BaseJamCodecable>(
     this: T,
     json: any,
   ): InstanceType<T> {
-    throw new Error("stub!");
+    throw new Error(`stub! ${this.name}`);
   }
 
   static toJSON<T extends typeof BaseJamCodecable>(
     this: T,
     value: InstanceType<T>,
   ): object {
-    throw new Error("stub!");
+    throw new Error(`stub! ${this.name}`);
   }
 
   static codecOf<
