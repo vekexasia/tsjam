@@ -25,6 +25,10 @@ export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
   @binaryCodec(LengthDiscrimantedIdentity)
   blob!: Uint8Array;
 }
+
+/**
+ * $(0.7.1 - C.18) | codec
+ */
 @JamCodecable()
 export class PreimagesExtrinsicImpl
   extends BaseJamCodecable

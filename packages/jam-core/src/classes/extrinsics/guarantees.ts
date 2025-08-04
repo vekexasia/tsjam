@@ -118,6 +118,7 @@ export class SingleWorkReportGuaranteeImpl
    */
   @codec(WorkReportImpl)
   report!: WorkReportImpl;
+
   /**
    * `t`
    */
@@ -129,7 +130,6 @@ export class SingleWorkReportGuaranteeImpl
    * the creds must be ordered by `validatorIndex`
    *
    */
-
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeSignatureImpl)
   signatures!: BoundedSeq<SingleWorkReportGuaranteeSignatureImpl, 2, 3>;
 
@@ -226,6 +226,9 @@ export class SingleWorkReportGuaranteeImpl
   }
 }
 
+/**
+ * $(0.7.1 - C.19) | codec
+ */
 @JamCodecable()
 export class GuaranteesExtrinsicImpl
   extends BaseJamCodecable
@@ -638,7 +641,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
   describe("codecEG", () => {
-    it.fails("guarantees_extrinsic.bin", () => {
+    it("guarantees_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("guarantees_extrinsic.bin");
       const { value: eg } = GuaranteesExtrinsicImpl.decode(bin);
       expect(Buffer.from(eg.toBinary()).toString("hex")).toBe(

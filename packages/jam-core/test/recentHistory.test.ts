@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import * as fs from "node:fs";
 
 import {
@@ -9,63 +9,66 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import {
-  recentHistoryToDagger,
-  beefyBeltToPosterior,
-  recentHistoryToPosterior,
-} from "@tsjam/transitions";
-import { HashJSONCodec, RecentHistoryJSONCodec } from "@tsjam/codec";
+  BaseJamCodecable,
+  codec,
+  createCodec,
+  HashCodec,
+  hashCodec,
+  HashJSONCodec,
+  JamCodecable,
+  lengthDiscriminatedCodec,
+} from "@tsjam/codec";
+import { Hash } from "node:crypto";
+import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
 
-const getUTF8FixtureFile = (filename: string): string => {
+const getFixtureFile = (filename: string): Uint8Array => {
   return fs.readFileSync(
     new URL(
-      `../../../jamtestvectors/history/data/${filename}.json`,
+      `../../../jamtestvectors/stf/history/full/${filename}.bin`,
       import.meta.url,
     ).pathname,
-    "utf8",
   );
 };
 
+@JamCodecable()
+class TestInput extends BaseJamCodecable {
+  @hashCodec()
+  headerHash!: HeaderHash;
+
+  @hashCodec()
+  parentStateRoot!: StateRootHash;
+
+  @hashCodec()
+  accumulateRoot!: Hash;
+
+  @lengthDiscriminatedCodec({ ...(<any>createCodec([
+      ["hash", HashCodec],
+      ["exportsRoot", HashCodec],
+    ])), fromJSON(json) {}, toJSON(value) {} })
+  workPackages!: Array<{
+    hash: WorkPackageHash;
+    exportsRoot: Hash;
+  }>;
+}
+
+@JamCodecable()
+class TestState extends BaseJamCodecable {
+  @codec(RecentHistoryImpl)
+  beta!: RecentHistoryImpl;
+}
+
+@JamCodecable()
+class TestCase extends BaseJamCodecable {
+  @codec(TestInput)
+  input!: TestInput;
+  @codec(TestState)
+  preState!: TestState;
+  @codec(TestState)
+  postState!: TestState;
+}
+
 const buildTest = (name: string) => {
-  /*
-  const test = JSON.parse(getUTF8FixtureFile(name));
-  const curState = RecentHistoryJSONCodec.fromJSON(test.pre_state.beta);
-  const [, dagger] = recentHistoryHToDagger(
-    {
-      hr: HashJSONCodec<StateRootHash>().fromJSON(test.input.parent_state_root),
-    },
-    curState,
-  ).safeRet();
-  const [, posterior] = recentHistoryBToPosterior(
-    {
-      headerHash: HashJSONCodec<HeaderHash>().fromJSON(test.input.header_hash),
-      : HashJSONCodec<MerkleTreeRoot>().fromJSON(
-        test.input.accumulate_root,
-      ),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      eg: <EG_Extrinsic>test.input.work_packages.map((wp: any) => {
-        return {
-          workReport: {
-            workPackageSpecification: {
-              workPackageHash: HashJSONCodec<WorkPackageHash>().fromJSON(
-                wp.hash,
-              ),
-              segmentRoot: HashJSONCodec().fromJSON(wp.exports_root),
-            },
-          },
-        };
-      }),
-    },
-    dagger,
-  ).safeRet();
-
-  const normalizedPosterior = RecentHistoryJSONCodec.toJSON(posterior)!;
-
-  for (let i = 0; i < normalizedPosterior.length; i++) {
-    expect(normalizedPosterior[i], `${i}`).toEqual(test.post_state.beta[i]);
-  }
-
-  expect(normalizedPosterior).toEqual(test.post_state.beta);
-  */
+  // TODO:
 };
 describe("recenthistory-test-vectors", () => {
   const test = (name: string) => buildTest(name);

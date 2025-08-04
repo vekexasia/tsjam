@@ -79,10 +79,6 @@ const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
   },
 };
 
-/**
- * Identified by `W` set
- * $(0.7.1 - 14.3)
- */
 @JamCodecable()
 export class WorkItemExportedSegment extends BaseJamCodecable {
   @hashCodec("hash")
@@ -98,7 +94,11 @@ export class WorkItemExportedSegment extends BaseJamCodecable {
   }
 }
 
-// codec order defined in $(0.6.4 - C.29)
+/**
+ * Identified by `W` set
+ * $(0.7.1 - 14.3)
+ * $(0.7.1 - C.29) | codec
+ */
 @JamCodecable()
 export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
   /**
@@ -199,7 +199,7 @@ if (import.meta.vitest) {
       );
     });
 
-    it.fails("should encode/decode properly", () => {
+    it("should encode/decode properly", () => {
       const decoded = WorkItemImpl.decode(bin);
       const reencoded = decoded.value.toBinary();
       expect(Buffer.from(reencoded).toString("hex")).toBe(

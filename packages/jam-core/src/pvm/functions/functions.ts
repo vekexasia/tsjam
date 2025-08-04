@@ -3,13 +3,13 @@ import { DeltaImpl } from "@/classes/DeltaImpl";
 import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
 import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
 import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkItemImpl } from "@/classes/WorkItemImpl";
-import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
 import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
 import {
   Blake2bHashCodec,
@@ -88,7 +88,6 @@ import {
   UpToSeq,
 } from "@tsjam/types";
 import { toTagged, zeroPad } from "@tsjam/utils";
-import assert from "node:assert";
 import { ConditionalExcept } from "type-fest";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation } from "../invocations/basic";
@@ -96,7 +95,6 @@ import { PVMMemory } from "../pvmMemory";
 import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -383,7 +381,7 @@ export class HostFunctions {
    *
    * start and length are determined by w11 and w12
    */
-  @HostFn(0)
+  @HostFn(3)
   read(
     context: PVMProgramExecutionContextImpl,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },

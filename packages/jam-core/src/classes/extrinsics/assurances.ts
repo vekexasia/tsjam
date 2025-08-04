@@ -30,8 +30,10 @@ import { RHOImpl } from "../RHOImpl";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { NewWorkReportsImpl } from "../NewWorkReportsImpl";
 
-// Single extrinsic element
-// codec order defined in $(0.7.1 - C.27)
+/**
+ * Single extrinsic element
+ * codec order defined in $(0.7.1 - C.27)
+ */
 @JamCodecable()
 export class AssuranceExtrinsicImpl
   extends BaseJamCodecable
@@ -117,6 +119,10 @@ export class AssuranceExtrinsicImpl
   }
 }
 
+/**
+ * Assurances Extrinsic
+ * $(0.7.1 - C.20) | codec
+ */
 @JamCodecable()
 export class AssurancesExtrinsicImpl
   extends BaseJamCodecable

@@ -3,7 +3,7 @@ import {
   binaryCodec,
   BufferJSONCodec,
   codec,
-  eSubBigIntCodec,
+  eBigIntCodec,
   hashCodec,
   JamCodecable,
   jsonCodec,
@@ -22,7 +22,7 @@ import { WorkOutputImpl } from "../WorkOutputImpl";
 /**
  * `U` set in graypaper $\operandtuple$
  * $(0.7.1 - 12.13)
- * codec order defined in $(0.6.4 - C.29)
+ * $(0.7.1 - C.32) | codec
  */
 @JamCodecable()
 export class PVMAccumulationOpImpl
@@ -56,7 +56,8 @@ export class PVMAccumulationOpImpl
   /**
    * `g`
    */
-  @eSubBigIntCodec(8)
+  // NOTE: - codec is set as E() but usually is E_8
+  @eBigIntCodec()
   gasLimit!: Gas;
 
   /**

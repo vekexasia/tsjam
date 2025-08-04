@@ -150,8 +150,9 @@ export class DisputeFaultImpl extends BaseJamCodecable implements DisputeFault {
   @ed25519SignatureCodec()
   signature!: ED25519Signature;
 }
-// Single extrinsic element
-// codec order defined in $(0.7.0 - C.27)
+/**
+ * codec order defined in $(0.7.1 - C.21)
+ */
 @JamCodecable()
 export class DisputeExtrinsicImpl
   extends BaseJamCodecable

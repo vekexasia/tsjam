@@ -15,16 +15,25 @@ import {
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 
-// Codec is defined in: $(0.6.4 - C.22)
-
+/**
+ * identified by `Y` set
+ * $(0.7.1 - 11.5)
+ * $(0.7.1 - C.25) | codec
+ */
 @JamCodecable()
 export class AvailabilitySpecificationImpl
   extends BaseJamCodecable
   implements AvailabilitySpecification
 {
+  /**
+   * `p`
+   */
   @hashCodec("hash")
   packageHash!: WorkPackageHash;
 
+  /**
+   * `l`
+   */
   @eSubIntCodec(4, "length")
   bundleLength!: Tagged<
     u32,
@@ -34,12 +43,22 @@ export class AvailabilitySpecificationImpl
     }
   >;
 
+  /**
+   * `u` -
+   */
   @hashCodec("erasure_root")
   erasureRoot!: Hash;
 
+  /**
+   * `e`
+   */
   @hashCodec("exports_root")
   segmentRoot!: Hash;
 
+  /**
+   * `n`
+   * Exported segment count
+   */
   @eSubIntCodec(2, "exports_count")
   segmentCount!: u16;
 

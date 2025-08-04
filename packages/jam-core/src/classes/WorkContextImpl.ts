@@ -16,24 +16,45 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 
-// codec order defined in $(0.6.4 - C.21)
+/**
+ * `C` set
+ * $(0.7.1 - C.24) | codec
+ */
 @JamCodecable()
 export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
+  /**
+   * `a` header hash
+   */
   @hashCodec("anchor")
   anchorHash!: HeaderHash;
 
+  /**
+   * `s`
+   */
   @hashCodec("state_root")
   anchorPostState!: StateRootHash;
 
+  /**
+   * `b`
+   */
   @hashCodec("beefy_root")
   anchorAccOutLog!: BeefyRootHash;
 
+  /**
+   * `l`
+   */
   @hashCodec("lookup_anchor")
   lookupAnchorHash!: HeaderHash;
 
+  /**
+   * `t`
+   */
   @eSubIntCodec(4, "lookup_anchor_slot")
   lookupAnchorTime!: Tau;
 
+  /**
+   * `bold_p`
+   */
   @lengthDiscriminatedCodec({
     ...HashCodec,
     ...HashJSONCodec(),

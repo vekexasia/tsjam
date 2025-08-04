@@ -8,6 +8,8 @@ import {
   JamCodecable,
   lengthDiscriminatedSetCodec,
 } from "@tsjam/codec";
+import { JAM_GUARANTEE, JAM_INVALID, JAM_VALID } from "@tsjam/constants";
+import { Ed25519 } from "@tsjam/crypto";
 import {
   ED25519PublicKey,
   Hash,
@@ -15,19 +17,11 @@ import {
   Posterior,
   Validated,
 } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
+import { ConditionalExcept } from "type-fest";
 import { JamStateImpl } from "./JamStateImpl";
 import { DisputeExtrinsicImpl, VerdictVoteKind } from "./extrinsics/disputes";
-import {
-  JAM_GUARANTEE,
-  JAM_VALID,
-  JAM_INVALID,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
-import { Ed25519 } from "@tsjam/crypto";
-import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
-import { V } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 /**
  * Codec follows C(5) from $(0.7.1 - D.2)

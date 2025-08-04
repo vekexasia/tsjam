@@ -89,6 +89,7 @@ export class TicketsExtrinsicElementImpl
 
 /**
  * $(0.7.1 - 6.29)
+ * $(0.7.1 - C.17) | codec
  */
 @JamCodecable()
 export class TicketsExtrinsicImpl
@@ -96,7 +97,7 @@ export class TicketsExtrinsicImpl
   implements TicketsExtrinsic
 {
   @lengthDiscriminatedCodec(TicketsExtrinsicElementImpl, SINGLE_ELEMENT_CLASS)
-  elements!: UpToSeq<TicketsExtrinsicElementImpl, 16>;
+  elements!: UpToSeq<TicketsExtrinsicElementImpl, typeof MAX_TICKETS_PER_BLOCK>;
 
   newTickets(deps: {
     p_tau: Posterior<Tau>;
@@ -171,7 +172,6 @@ if (import.meta.vitest) {
       expect(Buffer.from(eg.toBinary()).toString("hex")).toBe(
         Buffer.from(bin).toString("hex"),
       );
-      console.log(eg.toJSON());
     });
     it("tickets_extrinsic.json", () => {
       const json = JSON.parse(

@@ -1,5 +1,4 @@
 import {
-  JamCodecable,
   BaseJamCodecable,
   codec,
   createArrayLengthDiscriminator,
@@ -9,25 +8,18 @@ import {
   encodeWithCodec,
   HashCodec,
   JamCodec,
+  JamCodecable,
 } from "@tsjam/codec";
-import {
-  EG_Extrinsic,
-  Hash,
-  JamBlockExtrinsics,
-  Tau,
-  u32,
-  ValidatorIndex,
-  WorkReport,
-} from "@tsjam/types";
-import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
-import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { Hashing } from "@tsjam/crypto";
+import { Hash, JamBlockExtrinsics, Tau, ValidatorIndex } from "@tsjam/types";
+import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import {
   GuaranteesExtrinsicImpl,
   SingleWorkReportGuaranteeImpl,
 } from "./extrinsics/guarantees";
-import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { Hashing } from "@tsjam/crypto";
+import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { WorkReportImpl } from "./WorkReportImpl";
 
 @JamCodecable() // $(0.7.0 - C.16)

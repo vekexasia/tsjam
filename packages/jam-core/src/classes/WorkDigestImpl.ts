@@ -18,21 +18,43 @@ import { Gas, Hash, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "./WorkOutputImpl";
 
-// codec order defined in $(0.6.4 - C.26)
+/**
+ * Identified by `D` set
+ * $(0.7.1 - 11.6)
+ * $(0.7.1 - C.26) | codec
+ */
 @JamCodecable()
 export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
+  /**
+   * `s`
+   * the index of service whose state is to be altered
+   */
   @eSubIntCodec(4, "service_id")
   serviceIndex!: ServiceIndex;
 
+  /**
+   * `c` - the hash of the code of the sevice at the time of being reported
+   * it must be predicted within the work-report according to (153)
+   */
   @hashCodec("code_hash")
   codeHash!: Hash;
 
+  /**
+   * `y` - The hash of the payload which produced this result
+   * in the refine stage
+   */
   @hashCodec("payload_hash")
   payloadHash!: Hash;
 
+  /**
+   * `g` -The gas
+   */
   @eSubBigIntCodec(8, "accumulate_gas")
   gasLimit!: Gas;
 
+  /**
+   * `bold_l` - The output of the service
+   */
   @codec(WorkOutputImpl)
   result!: WorkOutputImpl;
 
@@ -56,10 +78,29 @@ export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
     ]),
   )
   refineLoad!: {
+    /**
+     * `u` - effective gas used when producing this wr in onRefine
+     */
     gasUsed: Gas;
+
+    /**
+     * `i` - number imported segments
+     */
     importCount: u16;
+
+    /**
+     * `x`
+     */
     extrinsicCount: u16;
+
+    /**
+     * `z`
+     */
     extrinsicSize: u32;
+
+    /**
+     * `e` - number of exported segments
+     */
     exportCount: u16;
   };
 

@@ -4,6 +4,9 @@ import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
 import { JamSignedHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
 
+/**
+ * codec: $(0.7.1 - C.16)
+ */
 @JamCodecable()
 export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
   @codec(JamSignedHeaderImpl)

@@ -1,6 +1,9 @@
 import { Balance, Gas } from "@tsjam/types";
 import { DeferredTransferImpl } from "./DeferredTransferImpl";
 
+/**
+ * $(0.7.1 - 12.14)
+ */
 export class DeferredTransfersImpl {
   elements: DeferredTransferImpl[];
 

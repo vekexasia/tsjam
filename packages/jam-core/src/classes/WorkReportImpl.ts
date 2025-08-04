@@ -59,7 +59,6 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**
    * `c`
    */
-
   @jsonCodec(NumberJSONCodec(), "core_index")
   @binaryCodec(E_int())
   core!: CoreIndex;
@@ -171,7 +170,7 @@ if (import.meta.vitest) {
 
   describe("WorkReportImpl", () => {
     describe("codec", () => {
-      it.fails("should encode/decode binary", () => {
+      it("should encode/decode binary", () => {
         const bin = getCodecFixtureFile("work_report.bin");
         const value = WorkReportImpl.decode(bin).value;
         const reencoded = value.toBinary();

@@ -64,7 +64,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
    * `u` - authorization code hash
    */
-  @hashCodec()
+  @hashCodec("auth_code_hash")
   authCodeHash!: CodeHash;
 
   /**
@@ -76,21 +76,21 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
    * `j`
    */
-  @jsonCodec(BufferJSONCodec())
+  @jsonCodec(BufferJSONCodec(), "authorization")
   @binaryCodec(LengthDiscrimantedIdentity)
   authToken!: Authorization;
 
   /**
    * `bold f` - configuration blob
    */
-  @jsonCodec(BufferJSONCodec())
+  @jsonCodec(BufferJSONCodec(), "authorizer_config")
   @binaryCodec(LengthDiscrimantedIdentity)
   authConfig!: AuthorizationParams;
 
   /**
    * `bold w` - sequence of work items
    */
-  @jsonCodec(ArrayOfJSONCodec(WorkItemImpl))
+  @jsonCodec(ArrayOfJSONCodec(WorkItemImpl), "items")
   @binaryCodec(createArrayLengthDiscriminator(WorkItemImpl))
   workItems!: BoundedSeq<WorkItemImpl, 1, typeof MAXIMUM_WORK_ITEMS>;
 
@@ -208,3 +208,26 @@ const F_Fn =
       IxMod.reg(7, HostCallResult.WHAT),
     ]);
   };
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  describe("WorkPackageImpl codec", () => {
+    it("should encode/decode properly", () => {
+      const bin = getCodecFixtureFile("work_package.bin");
+      const decoded = WorkPackageImpl.decode(bin);
+      const reencoded = decoded.value.toBinary();
+      expect(Buffer.from(reencoded).toString("hex")).toBe(
+        Buffer.from(bin).toString("hex"),
+      );
+    });
+    it("should encode/decode from JSON", () => {
+      const json = JSON.parse(
+        Buffer.from(getCodecFixtureFile("work_package.json")).toString("utf8"),
+      );
+      const decoded = WorkPackageImpl.fromJSON(json);
+      const reencoded = decoded.toJSON();
+      expect(reencoded).toEqual(json);
+    });
+  });
+}

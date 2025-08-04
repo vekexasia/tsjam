@@ -1282,6 +1282,7 @@ __metadata:
     "@tsjam/codec": "npm:*"
     "@tsjam/constants": "npm:*"
     "@tsjam/crypto": "npm:*"
+    "@tsjam/erasurecoding": "npm:*"
     "@tsjam/types": "npm:*"
     neverthrow: "npm:^8.1.1"
     type-fest: "npm:^4.41.0"
@@ -1314,7 +1315,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tsjam/erasurecoding@workspace:packages/jam-erasurecoding":
+"@tsjam/erasurecoding@npm:*, @tsjam/erasurecoding@workspace:packages/jam-erasurecoding":
   version: 0.0.0-use.local
   resolution: "@tsjam/erasurecoding@workspace:packages/jam-erasurecoding"
   dependencies:

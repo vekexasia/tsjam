@@ -1,20 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  codec_Ea,
-  codec_Ed,
-  codec_Eg,
-  codec_Ep,
-  codec_Et,
-  createCodec,
-  createSequenceCodec,
-  E_sub_int,
-  ValidatorDataCodec,
-  ValidatorStatisticsCodec,
-} from "@tsjam/codec";
-import * as constants from "@tsjam/constants";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { validatorStatisticsToPosterior } from "@tsjam/transitions";
-import {
   JamBlock,
   JamState,
   Posterior,
@@ -25,14 +10,11 @@ import {
 import fs from "node:fs";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-export const getCodecFixtureFile = (
-  filename: string,
-  kind: "tiny" | "full",
-): Uint8Array => {
+export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/statistics/${kind}/${filename}`,
+        `../../../jamtestvectors/stf/statistics/full/${filename}`,
         import.meta.url,
       ).pathname,
     ),
@@ -45,7 +27,7 @@ type TestState = {
   p_kappa: Posterior<JamState["kappa"]>;
 };
 describe("statistics", () => {
-  const doTest = (filename: string, kind: "tiny" | "full") => {
+  const doTest = (filename: string) => {
     const innerNUMOFVAL = <typeof NUMBER_OF_VALIDATORS>(
       (kind == "tiny" ? 6 : 1023)
     );

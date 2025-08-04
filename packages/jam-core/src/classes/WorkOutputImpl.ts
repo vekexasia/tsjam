@@ -14,7 +14,10 @@ export interface WorkOutputError<E extends WorkError>
 export interface WorkOutputSuccess extends WorkOutputImpl {
   success: Uint8Array;
 }
-// codec order defined in $(0.7.0 - C.34)
+/**
+ * `E u B`
+ * $(0.7.1 - C.34) | codec
+ */
 export class WorkOutputImpl<T extends WorkError = WorkError>
   extends BaseJamCodecable
   implements WorkOutput

@@ -19,8 +19,9 @@ import {
 import { ConditionalExcept } from "type-fest";
 
 /**
- * `X` set in graypaper
+ * `X`
  * $(0.7.1 - 12.14)
+ * $(0.7.1 - C.31) | codec
  */
 @JamCodecable()
 export class DeferredTransferImpl
