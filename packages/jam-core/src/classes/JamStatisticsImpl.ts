@@ -22,6 +22,7 @@ import { ServicesStatisticsImpl } from "./ServicesStatisticsImpl";
 import { ValidatorStatisticsImpl } from "./ValidatorStatisticsImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * $(0.7.1 - 13.1)
@@ -45,6 +46,13 @@ export class JamStatisticsImpl
    */
   @codec(ServicesStatisticsImpl)
   services!: ServicesStatisticsImpl;
+
+  constructor(config?: ConditionalExcept<JamStatisticsImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   toPosterior(deps: {
     tau: Tau;

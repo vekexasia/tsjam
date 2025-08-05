@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-
 import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
-import { JamSignedHeaderImpl } from "@/classes/JamHeaderImpl";
 import { RHOImpl } from "@/classes/RHOImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkReportImpl } from "@/classes/WorkReportImpl";
@@ -17,6 +15,7 @@ import { Dagger, HeaderHash, Tagged, Tau } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { TestOutputCodec } from "./codec_utils";
+import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
 
 export const getCodecFixtureFile = (
   filename: string,

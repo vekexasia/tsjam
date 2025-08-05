@@ -50,9 +50,11 @@ export class CoreStatisticsImpl
   )
   elements!: SeqOfLength<SingleCoreStatisticsImpl, typeof CORES>;
 
-  constructor(config: ConditionalExcept<CoreStatisticsImpl, Function>) {
+  constructor(config?: ConditionalExcept<CoreStatisticsImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   /**

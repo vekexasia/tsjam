@@ -2,17 +2,19 @@ import { BaseJamCodecable } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import { HeaderLookupHistory, Tau } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { JamSignedHeaderImpl } from "./JamHeaderImpl";
+import { JamSignedHeaderImpl } from "./JamSignedHeaderImpl";
 
 /**
  * This is not really defined in graypaper
  * but used to compute $(0.7.1 - 11.34)
  */
-export class HeaderLookupHistoryImpl
-  extends BaseJamCodecable
-  implements HeaderLookupHistory
-{
+export class HeaderLookupHistoryImpl implements HeaderLookupHistory {
   elements!: Map<Tau, JamSignedHeaderImpl>;
+  constructor(elements?: Map<Tau, JamSignedHeaderImpl>) {
+    if (elements) {
+      this.elements = elements;
+    }
+  }
 
   get(t: Tau) {
     return this.elements.get(t);

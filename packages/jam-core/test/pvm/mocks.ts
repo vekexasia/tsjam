@@ -1,43 +1,44 @@
-import { vi } from "vitest";
-import {
-  Gas,
-  IPVMMemory,
-  IParsedProgram,
-  PVMIx,
-  PVMProgram,
-  PVMProgramExecutionContext,
-  RegisterValue,
-  SeqOfLength,
-  u8,
-} from "@tsjam/types";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
+import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
+import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
+import { PVMMemory } from "@/pvm";
+import { applyMods } from "@/pvm/functions/utils";
+import { Gas, IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { applyMods } from "@/functions/utils";
+import { vi } from "vitest";
 
-const mockMemory = (): IPVMMemory => ({
-  setBytes: vi.fn(),
-  getBytes: vi.fn(),
-  canRead: vi.fn(),
-  canWrite: vi.fn(),
-  firstUnwriteable: vi.fn(),
-  firstUnreadable: vi.fn(),
-  changeAcl: vi.fn(),
-  clone: vi.fn().mockReturnThis(),
-  firstWriteableInHeap: vi.fn(),
-});
+const mockMemory = (): PVMMemory => {
+  const pvmMemory = new PVMMemory([], new Map(), {
+    pointer: <u32>0,
+    start: <u32>0,
+    end: <u32>0,
+  });
+  pvmMemory.setBytes = vi.fn();
+
+  pvmMemory.setBytes = vi.fn();
+  pvmMemory.getBytes = vi.fn();
+  pvmMemory.canRead = vi.fn();
+  pvmMemory.canWrite = vi.fn();
+  pvmMemory.firstUnwriteable = vi.fn();
+  pvmMemory.firstUnreadable = vi.fn();
+  pvmMemory.changeAcl = vi.fn();
+  pvmMemory.clone = vi.fn().mockReturnThis();
+  pvmMemory.firstWriteableInHeap = vi.fn();
+  return pvmMemory;
+};
 export const createEvContext = (): {
-  execution: PVMProgramExecutionContext;
+  execution: PVMProgramExecutionContextImpl;
   program: PVMProgram;
   parsedProgram: IParsedProgram;
 } => ({
-  execution: {
+  execution: new PVMProgramExecutionContextImpl({
     instructionPointer: toTagged(0),
     gas: 0n as Gas,
     memory: mockMemory(),
-    registers: new Array(13).fill(0n as RegisterValue) as SeqOfLength<
-      RegisterValue,
-      13
-    >,
-  },
+    registers: new PVMRegistersImpl(
+      toTagged(new Array(13).fill(null).map(() => new PVMRegisterImpl())),
+    ),
+  }),
   program: {
     j: [],
     z: 0 as u8,

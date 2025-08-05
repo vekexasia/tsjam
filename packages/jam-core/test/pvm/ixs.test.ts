@@ -1,11 +1,7 @@
 import "@/instructions/instructions.js";
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
-import { createEvContext } from "@/test/mocks.js";
 import { toTagged } from "@tsjam/utils";
-import { PVMProgramCodec } from "@tsjam/codec";
-import { ParsedProgram } from "@/parseProgram.js";
-import { basicInvocation } from "@/invocations/basic.js";
 import {
   Gas,
   Page,
@@ -14,8 +10,10 @@ import {
   RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
-import { PVMMemory } from "@/pvmMemory.js";
 import JSONBig from "json-bigint";
+import { PVMMemory } from "@/pvm";
+import { basicInvocation } from "@/pvm/invocations/basic";
+import { createEvContext } from "./mocks";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
 describe("pvm", () => {
@@ -59,13 +57,13 @@ describe("pvm", () => {
       <PVMProgramCode>new Uint8Array(json.program),
       context.execution,
     );
-    if (r.exitReason === RegularPVMExitReason.Panic) {
+    if (r.exitReason.isPanic()) {
       expect("panic").toEqual(json["expected-status"]);
-    } else if (RegularPVMExitReason.Halt === r.exitReason) {
+    } else if (r.exitReason.isHalt()) {
       expect("halt").toEqual(json["expected-status"]);
-    } else if (RegularPVMExitReason.OutOfGas === r.exitReason) {
+    } else if (r.exitReason.isOutOfGas()) {
       expect("out-of-gas").toEqual(json["expected-status"]);
-    } else if (r.exitReason.type === "page-fault") {
+    } else if (r.exitReason.isPageFault()) {
       expect("page-fault").toEqual(json["expected-status"]);
       expect(r.exitReason.address).toEqual(json["expected-page-fault-address"]);
     }

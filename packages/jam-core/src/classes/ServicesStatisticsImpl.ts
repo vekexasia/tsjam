@@ -47,9 +47,11 @@ export class ServicesStatisticsImpl
   )
   elements!: Map<ServiceIndex, SingleServiceStatisticsImpl>;
 
-  constructor(config: ConditionalExcept<ServicesStatisticsImpl, Function>) {
+  constructor(config?: ConditionalExcept<ServicesStatisticsImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 
   /**

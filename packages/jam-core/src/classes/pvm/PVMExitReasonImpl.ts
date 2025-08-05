@@ -30,6 +30,24 @@ export class PVMExitReasonImpl implements PVMExitReason {
     return this.reason === IrregularPVMExitReason.PageFault;
   }
 
+  isPanic(): this is PVMExitReasonImpl & {
+    reason: RegularPVMExitReason.Panic;
+  } {
+    return this.reason === RegularPVMExitReason.Panic;
+  }
+
+  isHalt(): this is PVMExitReasonImpl & {
+    reason: RegularPVMExitReason.Halt;
+  } {
+    return this.reason === RegularPVMExitReason.Halt;
+  }
+
+  isOutOfGas(): this is PVMExitReasonImpl & {
+    reason: RegularPVMExitReason.OutOfGas;
+  } {
+    return this.reason === RegularPVMExitReason.OutOfGas;
+  }
+
   static panic() {
     return new PVMExitReasonImpl({
       reason: RegularPVMExitReason.Panic,

@@ -17,6 +17,7 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * `ξ` in the graypaper
@@ -38,6 +39,12 @@ export class AccumulationHistoryImpl
     SINGLE_ELEMENT_CLASS,
   )
   elements!: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;
+  constructor(config?: ConditionalExcept<AccumulationHistoryImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   /**
    * Computes the union of the AccumulationHistory

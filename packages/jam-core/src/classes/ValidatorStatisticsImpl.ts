@@ -9,6 +9,7 @@ import { JamHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { SingleValidatorStatisticsImpl } from "./SingleValidatorStatisticsImpl";
 import { ValidatorStatisticsCollectionImpl } from "./ValidatorStatisticsCollectionImpl";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * data types (u32) is given by the codec
@@ -29,6 +30,13 @@ export class ValidatorStatisticsImpl
    */
   @codec(ValidatorStatisticsCollectionImpl)
   accumulator!: ValidatorStatisticsCollectionImpl;
+
+  constructor(config?: ConditionalExcept<ValidatorStatisticsImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   toPosterior(deps: {
     extrinsics: JamBlockExtrinsicsImpl;

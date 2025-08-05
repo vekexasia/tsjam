@@ -1,32 +1,27 @@
-import { MerkleServiceAccountStorageImpl } from "@/merkleServiceAccountStorage";
-import { merkleStateMap, stateFromMerkleMap } from "@/state";
-import { traceJSONCodec } from "@/stateCodecs";
-import { CORES, EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { JamStateImpl } from "@/classes/JamStateImpl";
+import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { merkleStateMap, stateFromMerkleMap } from "@/merklization";
+import { traceJSONCodec } from "@/merklization/stateCodecs";
 import { Hashing } from "@tsjam/crypto";
-import { ServiceAccountImpl } from "@tsjam/serviceaccounts";
 import {
+  Balance,
   CodeHash,
   Gas,
   JamState,
-  ServiceAccount,
   ServiceIndex,
   Tagged,
   Tau,
-  u64,
-  UpToSeq,
   u32,
-  Balance,
+  UpToSeq,
 } from "@tsjam/types";
-import { dummyState } from "@tsjam/utils/test/utils.js";
 import { beforeEach, describe, expect, it } from "vitest";
+import { dummyState } from "../utils";
 
 describe("state serialization/deserialization", () => {
   it("should deserializa to same object", () => {
-    const state: JamState = dummyState({
-      cores: CORES,
-      validators: NUMBER_OF_VALIDATORS,
-      epoch: EPOCH_LENGTH,
-    });
+    const state: JamStateImpl = dummyState();
 
     const map = merkleStateMap(state);
     const restoredState = stateFromMerkleMap(map);
@@ -39,8 +34,8 @@ describe("state serialization/deserialization", () => {
   describe("serviceAccounts", () => {
     const serviceIndex1 = <ServiceIndex>20000;
     const serviceIndex2 = <ServiceIndex>30000;
-    let acc: ServiceAccount;
-    let acc2: ServiceAccount;
+    let acc: ServiceAccountImpl;
+    let acc2: ServiceAccountImpl;
     beforeEach(() => {
       acc = new ServiceAccountImpl({
         storage: new MerkleServiceAccountStorageImpl(serviceIndex1),
@@ -87,47 +82,33 @@ describe("state serialization/deserialization", () => {
       );
     });
     it("should work with one acc", () => {
-      const state: JamState = {
-        ...dummyState({
-          cores: CORES,
-          validators: NUMBER_OF_VALIDATORS,
-          epoch: EPOCH_LENGTH,
-        }),
-        serviceAccounts: new Map([[serviceIndex1, acc]]),
-      };
+      const state = dummyState();
+      state.serviceAccounts = new DeltaImpl(new Map([[serviceIndex1, acc]]));
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
       expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
     });
     it("should work with two accs", () => {
-      const state: JamState = {
-        ...dummyState({
-          cores: CORES,
-          validators: NUMBER_OF_VALIDATORS,
-          epoch: EPOCH_LENGTH,
-        }),
-        serviceAccounts: new Map([
+      const state = dummyState();
+      state.serviceAccounts = new DeltaImpl(
+        new Map([
           [serviceIndex1, acc],
           [serviceIndex2, acc2],
         ]),
-      };
+      );
 
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
       expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
     });
     it("should restore from trace", () => {
-      const state: JamState = {
-        ...dummyState({
-          cores: CORES,
-          validators: NUMBER_OF_VALIDATORS,
-          epoch: EPOCH_LENGTH,
-        }),
-        serviceAccounts: new Map([
+      const state = dummyState();
+      state.serviceAccounts = new DeltaImpl(
+        new Map([
           [serviceIndex1, acc],
           [serviceIndex2, acc2],
         ]),
-      };
+      );
 
       const map = merkleStateMap(state);
       const json = traceJSONCodec.toJSON(map);
@@ -137,14 +118,8 @@ describe("state serialization/deserialization", () => {
       expect(json).to.deep.eq(json2);
     });
     it("should work with preimages", () => {
-      const state: JamState = {
-        ...dummyState({
-          cores: CORES,
-          validators: NUMBER_OF_VALIDATORS,
-          epoch: EPOCH_LENGTH,
-        }),
-        serviceAccounts: new Map([[serviceIndex2, acc2]]),
-      };
+      const state = dummyState();
+      state.serviceAccounts = new DeltaImpl(new Map([[serviceIndex2, acc2]]));
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
       expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);

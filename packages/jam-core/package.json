@@ -37,5 +37,9 @@
     "type-fest": "^4.41.0",
     "uint8array-extras": "^1.4.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/json-bigint": "^1",
+    "json-bigint": "^1.0.0"
+  }
 }

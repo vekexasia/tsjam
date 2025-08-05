@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { computeHeaderHash, importBlock } from "@/importBlock.js";
 import {
   BandersnatchCodec,
   BandersnatchRingRootCodec,
+  BaseJamCodecable,
   Blake2bHashCodec,
-  codec_Et,
+  codec,
   createArrayLengthDiscriminator,
   createCodec,
   createSequenceCodec,
@@ -13,12 +13,14 @@ import {
   Ed25519PubkeyCodec,
   Ed25519PublicKeyJSONCodec,
   eitherOneOfCodec,
+  eSubIntCodec,
+  hashCodec,
   JamCodec,
+  JamCodecable,
+  lengthDiscriminatedCodec,
   mapCodec,
   OpaqueHashCodec,
   Optional,
-  TicketCodec,
-  ValidatorDataCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { merkelizeState } from "@tsjam/merklization";
@@ -32,162 +34,72 @@ import {
   JamBlock,
   JamState,
   OpaqueHash,
+  Posterior,
   SafroleState,
   SeqOfLength,
   SignedJamHeader,
   Tau,
   Ticket,
-  TicketExtrinsics,
   ValidatorData,
   ValidatorIndex,
 } from "@tsjam/types";
-import { isFallbackMode, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
 import * as fs from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dummyState } from "./utils.js";
+import { JamEntropyImpl } from "@/classes/JamEntropyImpl.js";
+import { JamStateImpl } from "@/classes/JamStateImpl.js";
+import { ValidatorsImpl } from "@/classes/ValidatorsImpl.js";
+import { SafroleStateImpl } from "@/classes/SafroleStateImpl.js";
+import { TicketsExtrinsicImpl } from "@/classes/extrinsics/tickets.js";
 
-const mocks = vi.hoisted(() => {
-  return {
-    LOTTERY_MAX_SLOT: 500,
-    MAX_TICKETS_PER_BLOCK: 16,
-    NUMBER_OF_VALIDATORS: 1023,
-    EPOCH_LENGTH: 600,
-    CORES: 341,
-    MAX_TICKETS_PER_VALIDATOR: 2,
-    psi_o: new Set<ED25519PublicKey["bigint"]>(),
-    toTagged: (a: any) => a,
-    vrfOutputSignature: (a: any) => {
-      return a;
-    },
-  };
-});
-vi.mock("@tsjam/transitions", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("@tsjam/transitions")>();
-  const toRet = {
-    ...orig,
-  };
-  Object.defineProperty(toRet, "disputesSTF", {
-    get() {
-      return () => {
-        return {
-          safeRet() {
-            return [
-              undefined,
-              {
-                psi_g: new Set(),
-                psi_b: new Set(),
-                psi_w: new Set(),
-                psi_o: mocks.psi_o,
-              },
-            ];
-          },
-        };
-      };
-    },
-  });
-  return toRet;
-});
-vi.mock("@/verifySeal", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("@/verifySeal")>();
+@JamCodecable()
+class TestState extends BaseJamCodecable {
+  @eSubIntCodec(4)
+  tau!: Tau;
+  @codec(JamEntropyImpl)
+  eta!: JamEntropyImpl;
 
-  const toRet = {
-    ...orig,
-  };
-  Object.defineProperty(toRet, "verifySeal", {
-    get() {
-      return () => true;
-    },
-  });
-  Object.defineProperty(toRet, "verifyEntropySignature", {
-    get() {
-      return () => true;
-    },
-  });
-  Object.defineProperty(toRet, "verifyEpochMarker", {
-    get() {
-      return () => ok(undefined);
-    },
-  });
+  @codec(ValidatorsImpl)
+  lambda!: JamStateImpl["lambda"];
 
-  Object.defineProperty(toRet, "verifyWinningTickets", {
-    get() {
-      return () => ok(undefined);
-    },
-  });
+  @codec(ValidatorsImpl)
+  kappa!: JamStateImpl["kappa"];
 
-  Object.defineProperty(toRet, "verifyExtrinsicHash", {
-    get() {
-      return () => true;
-    },
-  });
-  return toRet;
-});
-vi.mock("@tsjam/crypto", async (importOriginal) => {
-  const origCrytpo = await importOriginal<typeof import("@tsjam/crypto")>();
-  const toRet = {
-    ...origCrytpo,
-  };
-  Object.defineProperty(toRet.Bandersnatch, "vrfOutputSignature", {
-    get() {
-      return mocks.vrfOutputSignature;
-    },
-  });
-  return toRet;
-});
-vi.mock("@tsjam/constants", async (importOriginal) => {
-  const toRet = {
-    ...(await importOriginal<typeof import("@tsjam/constants")>()),
-    ...mocks,
-  };
-  Object.defineProperty(toRet, "CORES", {
-    get() {
-      return mocks.CORES;
-    },
-  });
-  Object.defineProperty(toRet, "LOTTERY_MAX_SLOT", {
-    get() {
-      return mocks.LOTTERY_MAX_SLOT;
-    },
-  });
-  Object.defineProperty(toRet, "MAX_TICKETS_PER_BLOCK", {
-    get() {
-      return mocks.MAX_TICKETS_PER_BLOCK;
-    },
-  });
-  Object.defineProperty(toRet, "NUMBER_OF_VALIDATORS", {
-    get() {
-      return mocks.NUMBER_OF_VALIDATORS;
-    },
-  });
-  Object.defineProperty(toRet, "EPOCH_LENGTH", {
-    get() {
-      return mocks.EPOCH_LENGTH;
-    },
-  });
-  Object.defineProperty(toRet, "MAX_TICKETS_PER_VALIDATOR", {
-    get() {
-      return mocks.MAX_TICKETS_PER_VALIDATOR;
-    },
-  });
+  @codec(SafroleStateImpl.codecOf("gamma_p"))
+  gamma_p!: SafroleStateImpl["gamma_p"];
 
-  return toRet;
-});
-type TestState = {
-  tau: Tau;
-  entropy: JamState["entropy"];
-  lambda: JamState["lambda"];
-  kappa: JamState["kappa"];
-  gamma_p: SafroleState["gamma_p"];
-  iota: JamState["iota"];
-  gamma_a: SafroleState["gamma_a"];
-  gamma_s: {
-    tickets?: SeqOfLength<Ticket, typeof EPOCH_LENGTH, "gamma_s">;
-    keys?: SeqOfLength<BandersnatchKey, typeof EPOCH_LENGTH, "gamma_s">;
-  };
-  gamma_z: SafroleState["gamma_z"];
-  p_psi_o: ED25519PublicKey[];
-};
+  @codec(ValidatorsImpl)
+  iota!: JamStateImpl["iota"];
+
+  @codec(SafroleStateImpl.codecOf("gamma_a"))
+  gamma_a!: SafroleStateImpl["gamma_a"];
+
+  @codec(SafroleStateImpl.codecOf("gamma_s"))
+  gamma_s!: SafroleStateImpl["gamma_s"];
+
+  @codec(SafroleStateImpl.codecOf("gamma_z"))
+  gamma_z!: SafroleStateImpl["gamma_z"];
+
+  @lengthDiscriminatedCodec({
+    ...Ed25519PubkeyCodec,
+    ...Ed25519PublicKeyJSONCodec,
+  })
+  p_psi_o!: ED25519PublicKey[];
+}
+
+@JamCodecable()
+class TestInput extends BaseJamCodecable {
+  @eSubIntCodec(4, "slot")
+  slot!: Posterior<Tau>;
+
+  @hashCodec()
+  entropy!: OpaqueHash; // Y(Hv)
+
+  @codec(TicketsExtrinsicImpl)
+  extrinsic: TicketsExtrinsicImpl;
+}
+
 type EpochMark = {
   entropy: OpaqueHash;
   ticketsEntropy: OpaqueHash;

@@ -1,130 +1,165 @@
+import { AccumulationHistoryImpl } from "@/classes/AccumulationHistoryImpl";
 import {
-  AuthorizerPool,
-  AuthorizerQueue,
+  AccumulationQueueImpl,
+  AccumulationQueueItem,
+} from "@/classes/AccumulationQueueImpl";
+import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
+import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
+import { BetaImpl } from "@/classes/BetaImpl";
+import { CoreStatisticsImpl } from "@/classes/CoreStatisticsImpl";
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
+import { HeaderLookupHistoryImpl } from "@/classes/HeaderLookupHistoryImpl";
+import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
+import { JamStateImpl } from "@/classes/JamStateImpl";
+import { JamStatisticsImpl } from "@/classes/JamStatisticsImpl";
+import { LastAccOutsImpl, SingleAccOutImpl } from "@/classes/LastAccOutsImpl";
+import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
+import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
+import { RecentHistoryItemImpl } from "@/classes/RecentHistoryItemImpl";
+import { RHOImpl } from "@/classes/RHOImpl";
+import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
+import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
+import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
+import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
+import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
+import {
+  AUTHPOOL_SIZE,
+  AUTHQUEUE_MAX_SIZE,
+  CORES,
+  EPOCH_LENGTH,
+  NUMBER_OF_VALIDATORS,
+  RECENT_HISTORY_LENGTH,
+} from "@tsjam/constants";
+import {
   BandersnatchKey,
-  Beta,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
-  Gas,
   Hash,
-  JamState,
-  JamStatistics,
-  PrivilegedServices,
-  RecentHistory,
-  RecentHistoryItem,
-  SafroleState,
   ServiceIndex,
   Tau,
-  u16,
-  u32,
-  ValidatorData,
-  ValidatorStatistics,
+  WorkPackageHash,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 
-export const dummyValidator = (): ValidatorData => {
-  return {
+export const dummyValidator = (): ValidatorDataImpl => {
+  return new ValidatorDataImpl({
     banderSnatch: Buffer.alloc(32).fill(0) as Uint8Array as BandersnatchKey,
     ed25519: {
       buf: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey["buf"],
-      bigint: toTagged(0n),
+      bigint: toTagged(0n) as ED25519PublicKey["bigint"],
     },
     blsKey: new Uint8Array(144).fill(0) as BLSKey,
     metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
-  } as unknown as ValidatorData;
+  });
 };
-export const dummyState = (conf: {
-  validators: number;
-  cores: number;
-  epoch: number;
-}): JamState => {
-  const { validators, cores, epoch } = conf;
-  return {
-    safroleState: {
-      gamma_a: new Array(validators)
-        .fill(null)
-        .map(dummyValidator) as unknown as SafroleState["gamma_a"],
-      gamma_p: new Array(validators)
-        .fill(null)
-        .map(dummyValidator) as unknown as SafroleState["gamma_p"],
-      gamma_s: new Array(validators)
-        .fill(null)
-        .map(dummyValidator) as unknown as SafroleState["gamma_s"],
-      gamma_z: new Uint8Array(144) as unknown as SafroleState["gamma_z"],
-    },
-    tau: 0 as Tau,
-    entropy: [0n, 0n, 0n, 0n].map(toTagged) as JamState["entropy"],
-    iota: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["iota"],
+export const dummyValidators = <T extends ValidatorsImpl>(): T => {
+  return new ValidatorsImpl({
+    elements: toTagged(
+      new Array<ValidatorDataImpl>(NUMBER_OF_VALIDATORS).fill(dummyValidator()),
+    ),
+  }) as T;
+};
+export const dummySafroleState = (): SafroleStateImpl => {
+  return new SafroleStateImpl();
+};
+export const dummyAuthPool = (): AuthorizerPoolImpl => {
+  return new AuthorizerPoolImpl({
+    elements: toTagged(
+      new Array(CORES).fill(new Array(AUTHPOOL_SIZE).fill(toTagged(0n))),
+    ),
+  });
+};
+export const dummyBeta = (): BetaImpl => {
+  return new BetaImpl({
+    recentHistory: new RecentHistoryImpl({
+      elements: toTagged(
+        new Array(RECENT_HISTORY_LENGTH).fill(null).map(
+          () =>
+            new RecentHistoryItemImpl({
+              stateRoot: toTagged(0n),
+              reportedPackages: new Map(),
+              headerHash: toTagged(0n),
+              accumulationResultMMB: toTagged(0n),
+            }),
+        ),
+      ),
+    }),
+    beefyBelt: new Array<Hash | undefined>(),
+  });
+};
+export const dummyAuthQueue = (): AuthorizerQueueImpl => {
+  return new AuthorizerQueueImpl({
+    elements: toTagged(
+      new Array(CORES)
+        .fill(toTagged(0n))
+        .map(() =>
+          toTagged(
+            new Array(AUTHQUEUE_MAX_SIZE).fill(null).map(() => toTagged(0n)),
+          ),
+        ),
+    ),
+  });
+};
 
-    kappa: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["kappa"],
-    lambda: new Array(validators)
-      .fill(null)
-      .map(dummyValidator) as unknown as JamState["lambda"],
-    disputes: {
-      bad: new Set(),
-      good: new Set(),
-      offenders: new Set(),
-      wonky: new Set(),
-    },
-    rho: new Array(cores).fill(undefined) as unknown as JamState["rho"],
-    serviceAccounts: new Map(),
-    accumulationHistory: new Array(epoch)
-      .fill(undefined)
-      .map(() => new Set()) as unknown as JamState["accumulationHistory"],
-    accumulationQueue: new Array(epoch)
-      .fill(undefined)
-      .map(() => []) as unknown as JamState["accumulationQueue"],
-    privServices: {
-      assigners: new Array(cores).fill(0) as PrivilegedServices["assigners"],
+export const dummyDisputesState = (): DisputesStateImpl => {
+  return new DisputesStateImpl({
+    bad: new Set(),
+    good: new Set(),
+    wonky: new Set(),
+    offenders: new Set(),
+  });
+};
+
+export const dummyEntropy = <T extends JamEntropyImpl>(): T => {
+  return <T>new JamEntropyImpl({
+    _0: toTagged(0n),
+    _1: toTagged(0n),
+    _2: toTagged(0n),
+    _3: toTagged(0n),
+  });
+};
+
+export const dummyState = (): JamStateImpl => {
+  return new JamStateImpl({
+    beta: dummyBeta(),
+    authPool: dummyAuthPool(),
+    safroleState: dummySafroleState(),
+    lambda: dummyValidators(),
+    kappa: dummyValidators(),
+    iota: dummyValidators(),
+    serviceAccounts: new DeltaImpl(new Map()),
+    entropy: dummyEntropy(),
+    authQueue: dummyAuthQueue(),
+    privServices: new PrivilegedServicesImpl({
+      manager: <ServiceIndex>0,
+      delegator: <ServiceIndex>0,
+      registrar: <ServiceIndex>0,
+      assigners: toTagged(new Array<ServiceIndex>(CORES).fill(<ServiceIndex>0)),
       alwaysAccers: new Map(),
-      manager: 0 as ServiceIndex,
-      delegator: 0 as ServiceIndex,
-    },
-    beta: {
-      recentHistory: new Array(80).fill(null).map(
-        () =>
-          ({
-            stateRoot: toTagged(0n),
-            headerHash: toTagged(0n),
-            reportedPackages: new Map(),
-            accumulationResultMMB: toTagged(0n),
-          }) as RecentHistoryItem,
-      ) as RecentHistory,
-      beefyBelt: [] as Beta["beefyBelt"],
-    },
-    statistics: {
-      validators: [null, null].map(() =>
-        new Array(validators).fill({
-          blocksProduced: 0,
-          ticketsIntroduced: 0,
-          preimagesIntroduced: 0,
-          totalOctetsIntroduced: 0,
-          guaranteedReports: 0,
-          availabilityAssurances: 0,
-        }),
-      ) as ValidatorStatistics,
-      cores: <JamStatistics["cores"]>new Array(cores).fill({
-        daLoad: <u32>0,
-        popularity: <u16>0,
-        imports: <u16>0,
-        extrinsicCount: <u16>0,
-        extrinsicSize: <u32>0,
-        exports: <u16>0,
-        bundleSize: <u32>0,
-        usedGas: <Gas>0n,
-      }),
-      services: new Map(),
-    },
-    authPool: new Array(cores).fill([]) as unknown as AuthorizerPool,
-    authQueue: new Array(cores).fill(
-      new Array(80).fill(0n as Hash),
-    ) as AuthorizerQueue,
-    headerLookupHistory: new Map(),
-    mostRecentAccumulationOutputs: [],
-  };
+    }),
+    disputes: dummyDisputesState(),
+    statistics: new JamStatisticsImpl({
+      validators: new ValidatorStatisticsImpl(),
+      cores: new CoreStatisticsImpl(),
+      services: new ServicesStatisticsImpl(),
+    }),
+    accumulationQueue: new AccumulationQueueImpl({
+      elements: toTagged(new Array<Array<AccumulationQueueItem>>(EPOCH_LENGTH)),
+    }),
+    accumulationHistory: new AccumulationHistoryImpl({
+      elements: toTagged(
+        new Array(EPOCH_LENGTH)
+          .fill(null)
+          .map(() => new Set<WorkPackageHash>()),
+      ),
+    }),
+    rho: new RHOImpl({ elements: toTagged(new Array(CORES).fill(undefined)) }),
+    tau: toTagged(0) as Tau,
+    mostRecentAccumulationOutputs: new LastAccOutsImpl(
+      new Array<SingleAccOutImpl>(),
+    ),
+    headerLookupHistory: new HeaderLookupHistoryImpl(),
+  });
 };

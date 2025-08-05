@@ -22,6 +22,7 @@ import {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import { ConditionalExcept } from "type-fest";
 const codec = createArrayLengthDiscriminator(HashCodec);
 /**
  * `α`
@@ -43,6 +44,12 @@ export class AuthorizerPoolImpl
     SINGLE_ELEMENT_CLASS,
   )
   elements!: SeqOfLength<UpToSeq<Hash, typeof AUTHPOOL_SIZE>, typeof CORES>;
+  constructor(config?: ConditionalExcept<AuthorizerPoolImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   elementAt(core: CoreIndex): UpToSeq<Hash, typeof AUTHPOOL_SIZE> {
     return this.elements[core];

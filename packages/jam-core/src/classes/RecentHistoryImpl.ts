@@ -21,6 +21,7 @@ import { JamHeaderImpl } from "./JamHeaderImpl";
 import { RecentHistoryItemImpl } from "./RecentHistoryItemImpl";
 import { MMRSuperPeak } from "@/merklization";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class RecentHistoryImpl
@@ -29,6 +30,13 @@ export class RecentHistoryImpl
 {
   @lengthDiscriminatedCodec(RecentHistoryItemImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<RecentHistoryItemImpl, typeof RECENT_HISTORY_LENGTH>;
+
+  constructor(config?: ConditionalExcept<RecentHistoryImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   findHeader(headerHash: HeaderHash) {
     return this.elements.find((el) => el.headerHash === headerHash);
