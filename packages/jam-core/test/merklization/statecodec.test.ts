@@ -12,12 +12,12 @@ import {
   JamState,
   ServiceIndex,
   Tagged,
-  Tau,
   u32,
   UpToSeq,
 } from "@tsjam/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../utils";
+import { SlotImpl } from "@/classes/SlotImpl";
 
 describe("state serialization/deserialization", () => {
   it("should deserializa to same object", () => {
@@ -44,8 +44,8 @@ describe("state serialization/deserialization", () => {
         minAccGas: <Gas>13n,
         minMemoGas: <Gas>14n,
         gratis: <Balance>15n,
-        created: <Tau>16,
-        lastAcc: <Tau>17,
+        created: new SlotImpl(<u32>16),
+        lastAcc: new SlotImpl(<u32>17),
         parent: <ServiceIndex>18,
         requests: new Map(),
         preimages: new Map(),
@@ -60,14 +60,21 @@ describe("state serialization/deserialization", () => {
         minAccGas: <Gas>23n,
         minMemoGas: <Gas>24n,
         gratis: <Balance>25n,
-        created: <Tau>26,
-        lastAcc: <Tau>27,
+        created: new SlotImpl(<u32>26),
+        lastAcc: new SlotImpl(<u32>27),
         parent: <ServiceIndex>28,
         requests: new Map([
           [
             preimageHash,
-            new Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>([
-              [<Tagged<u32, "length">>4, <UpToSeq<Tau, 3>>[1, 2, 3]],
+            new Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>([
+              [
+                <Tagged<u32, "length">>4,
+                <UpToSeq<SlotImpl, 3>>[
+                  new SlotImpl(<u32>1),
+                  new SlotImpl(<u32>2),
+                  new SlotImpl(<u32>3),
+                ],
+              ],
             ]),
           ],
         ]),

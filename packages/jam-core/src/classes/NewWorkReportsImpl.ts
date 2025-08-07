@@ -1,11 +1,11 @@
-import { Posterior, Tau, WorkPackageHash } from "@tsjam/types";
+import { Posterior, Validated, WorkPackageHash } from "@tsjam/types";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import {
   AccumulationQueueImpl,
   AccumulationQueueItem,
 } from "./AccumulationQueueImpl";
+import { TauImpl } from "./SlotImpl";
 import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 
 /**
  * `bold R`
@@ -54,13 +54,13 @@ export class NewWorkReportsImpl {
   accumulatableReports(deps: {
     accHistory: AccumulationHistoryImpl;
     accQueue: AccumulationQueueImpl;
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
   }) {
     const r_mark = this.immediatelyAccumulable();
     const r_q = this.queueable(deps.accHistory);
 
     // $(0.7.1 - 12.10)
-    const m = deps.p_tau % EPOCH_LENGTH;
+    const m = deps.p_tau.slotPhase();
 
     const accprio = computeAccumulationPriority(
       // $(0.7.1 - 12.12)

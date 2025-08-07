@@ -12,7 +12,6 @@ import {
   codec,
   E_sub_int,
   eitherOneOfCodec,
-  eSubIntCodec,
   hashCodec,
   JamCodec,
   JamCodecable,
@@ -20,18 +19,25 @@ import {
   optionalCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { OpaqueHash, Posterior, SeqOfLength, Tau, Ticket } from "@tsjam/types";
+import {
+  OpaqueHash,
+  Posterior,
+  SeqOfLength,
+  Ticket,
+  Validated,
+} from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { dummyState } from "./utils.js";
 import { KappaImpl } from "@/classes/KappaImpl.js";
 import { LambdaImpl } from "@/classes/LambdaImpl.js";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl.js";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
-  @eSubIntCodec(4)
-  tau!: Tau;
+  @codec(SlotImpl)
+  tau!: TauImpl;
 
   @codec(JamEntropyImpl)
   eta!: JamEntropyImpl;
@@ -63,8 +69,8 @@ class TestState extends BaseJamCodecable {
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
-  @eSubIntCodec(4, "slot")
-  slot!: Posterior<Tau>;
+  @codec(SlotImpl)
+  slot!: Validated<Posterior<TauImpl>>;
 
   @hashCodec()
   entropy!: OpaqueHash; // Y(Hv)
@@ -132,7 +138,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   });
 
   const curState = dummyState();
-  curState.tau = testCase.preState.tau;
+  curState.slot = testCase.preState.tau;
   curState.entropy = testCase.preState.eta;
   curState.lambda = testCase.preState.lambda;
   curState.kappa = testCase.preState.kappa;

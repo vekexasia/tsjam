@@ -1,4 +1,4 @@
-import { Tau } from "@/Tau";
+import { Slot } from "@/Slot";
 import {
   BeefyRootHash,
   HeaderHash,
@@ -31,7 +31,7 @@ export type WorkContext = {
   /**
    * `t`
    */
-  lookupAnchorTime: Tau;
+  lookupAnchorSlot: Slot;
   /**
    * `bold_p`
    */

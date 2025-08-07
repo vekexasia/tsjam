@@ -5,7 +5,7 @@ import {
   ValidatorIndex,
 } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
-import { Tau } from "@/Tau";
+import { Slot } from "@/Slot";
 import { CORES } from "@tsjam/constants";
 
 export type SingleWorkReportGuaranteeSignature = {
@@ -33,7 +33,7 @@ export type SingleWorkReportGuarantee = {
   /**
    * `t`
    */
-  slot: Tau;
+  slot: Slot;
 
   /**
    * `a`

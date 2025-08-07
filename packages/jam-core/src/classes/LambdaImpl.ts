@@ -1,8 +1,9 @@
-import { isNewEra, toPosterior } from "@tsjam/utils";
-import { JamStateImpl } from "./JamStateImpl";
-import { ValidatorsImpl } from "./ValidatorsImpl";
-import { Posterior, Tau } from "@tsjam/types";
 import { JamCodecable } from "@tsjam/codec";
+import { Posterior, Validated } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
+import { JamStateImpl } from "./JamStateImpl";
+import { TauImpl } from "./SlotImpl";
+import { ValidatorsImpl } from "./ValidatorsImpl";
 
 @JamCodecable()
 export class LambdaImpl extends ValidatorsImpl {
@@ -11,9 +12,9 @@ export class LambdaImpl extends ValidatorsImpl {
    */
   toPosterior(
     curState: JamStateImpl,
-    deps: { p_tau: Posterior<Tau> },
+    deps: { p_tau: Validated<Posterior<TauImpl>> },
   ): Posterior<JamStateImpl["lambda"]> {
-    if (isNewEra(deps.p_tau, curState.tau)) {
+    if (deps.p_tau.isNewerEra(curState.slot)) {
       return toPosterior(<any>structuredClone(curState.kappa));
     }
     return toPosterior(<any>this);

@@ -5,12 +5,13 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { GammaA, Posterior, Tau, UpToSeq } from "@tsjam/types";
-import { isNewEra, toPosterior } from "@tsjam/utils";
+import { GammaA, Posterior, UpToSeq, Validated } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { TicketImpl } from "./TicketImpl";
 import { JamStateImpl } from "./JamStateImpl";
+import { TauImpl } from "./SlotImpl";
+import { TicketImpl } from "./TicketImpl";
 
 export enum GammaAError {
   TICKET_NOT_IN_POSTERIOR_GAMMA_A = "Ticket not in posterior gamma_a",
@@ -35,7 +36,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
   toPosterior(
     curState: JamStateImpl,
     deps: {
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
       // bold_n in the paper
       newTickets: TicketImpl[];
     },
@@ -44,7 +45,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
       elements: <GammaAImpl["elements"]>[
         ...deps.newTickets,
         ...(() => {
-          if (isNewEra(deps.p_tau, curState.tau)) {
+          if (deps.p_tau.isNewerEra(curState.slot)) {
             return [];
           }
           return this.elements;

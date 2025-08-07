@@ -9,7 +9,7 @@ import {
   StateRootHash,
   ValidatorIndex,
 } from "@/genericTypes.js";
-import { Tau } from "@/Tau.js";
+import { Slot } from "@/Slot.js";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Ticket } from "./sets/Ticket.js";
 /**
@@ -55,7 +55,7 @@ export interface JamHeader {
   /**
    * **HT:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  slot: Tau;
+  slot: Slot;
 
   /**
    * **He:** The epoch marker of the block.

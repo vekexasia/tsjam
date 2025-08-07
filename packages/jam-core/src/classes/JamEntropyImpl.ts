@@ -6,9 +6,10 @@ import {
   JamCodecable,
 } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import { Blake2bHash, JamEntropy, Posterior, Tau } from "@tsjam/types";
-import { isNewEra, toPosterior } from "@tsjam/utils";
+import { Blake2bHash, JamEntropy, Posterior, Validated } from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
 import { JamStateImpl } from "./JamStateImpl";
+import { TauImpl } from "./SlotImpl";
 
 /**
  * `η`
@@ -39,7 +40,7 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   toPosterior(
     curState: JamStateImpl,
     deps: {
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
       // or eventually vrfOutputSignature of h_v
       vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
     },
@@ -56,7 +57,7 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
 
     let [p_1, p_2, p_3] = [this._1, this._2, this._3];
 
-    if (isNewEra(deps.p_tau, curState.tau)) {
+    if (deps.p_tau.isNewerEra(curState.slot)) {
       [p_1, p_2, p_3] = [this._0, this._1, this._2];
     }
     return toPosterior(

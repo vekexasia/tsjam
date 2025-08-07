@@ -1,5 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
+import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
+import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
+import {
+  GuaranteesExtrinsicImpl,
+  SingleWorkReportGuaranteeImpl,
+} from "@/classes/extrinsics/guarantees";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
   BaseJamCodecable,
   Blake2bHashCodec,
@@ -7,30 +15,12 @@ import {
   createArrayLengthDiscriminator,
   createCodec,
   E_sub_int,
-  eSubIntCodec,
   JamCodecable,
   mapCodec,
 } from "@tsjam/codec";
-import {
-  AuthorizerPool,
-  AuthorizerQueue,
-  Blake2bHash,
-  CoreIndex,
-  EG_Extrinsic,
-  Posterior,
-  Tau,
-  Validated,
-} from "@tsjam/types";
-import { bigintToBytes, toPosterior, toTagged } from "@tsjam/utils";
+import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
-import { beforeEach } from "vitest";
-import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
-import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
-import {
-  GuaranteesExtrinsicImpl,
-  SingleWorkReportGuaranteeImpl,
-} from "@/classes/extrinsics/guarantees";
-import { WorkReportImpl } from "@/classes/WorkReportImpl";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -55,8 +45,8 @@ class TestState extends BaseJamCodecable {
 }
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
-  @eSubIntCodec(4)
-  slot!: Posterior<Tau>;
+  @codec(SlotImpl)
+  slot!: Validated<Posterior<TauImpl>>;
   @codec(
     <any>mapCodec(
       createArrayLengthDiscriminator<

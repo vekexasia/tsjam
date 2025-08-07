@@ -21,19 +21,19 @@ import { Bandersnatch } from "@tsjam/crypto";
 import {
   Posterior,
   RingVRFProof,
-  Tau,
   TicketsExtrinsic,
   TicketsExtrinsicElement,
   UpToSeq,
   Validated,
 } from "@tsjam/types";
-import { slotIndex, toTagged } from "@tsjam/utils";
+import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { GammaAImpl } from "../GammaAImpl";
 import { JamEntropyImpl } from "../JamEntropyImpl";
 import { SafroleStateImpl } from "../SafroleStateImpl";
 import { TicketImpl } from "../TicketImpl";
 import { GammaZImpl } from "../GammaZImpl";
+import { TauImpl } from "../SlotImpl";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -100,7 +100,7 @@ export class TicketsExtrinsicImpl
   elements!: UpToSeq<TicketsExtrinsicElementImpl, typeof MAX_TICKETS_PER_BLOCK>;
 
   newTickets(deps: {
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_gamma_z: Posterior<SafroleStateImpl["gamma_z"]>;
     gamma_a: GammaAImpl;
     p_entropy: Posterior<JamEntropyImpl>;
@@ -111,7 +111,7 @@ export class TicketsExtrinsicImpl
 
     // $(0.7.1 - 6.30) | first case
     // NOTE: the length 0 is handled above
-    if (slotIndex(deps.p_tau) >= LOTTERY_MAX_SLOT) {
+    if (deps.p_tau.slotPhase() >= LOTTERY_MAX_SLOT) {
       return err(ETError.LOTTERY_ENDED);
     }
 

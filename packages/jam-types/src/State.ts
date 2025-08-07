@@ -1,7 +1,7 @@
 import { JamEntropy } from "./Entropy";
-import { Tau } from "./Tau";
+import { Slot } from "./Slot";
 import { Validators } from "./Validators";
-import { Hash, ServiceIndex, Tagged } from "./genericTypes";
+import { Tagged } from "./genericTypes";
 import { PrivilegedServices } from "./pvm/PrivilegedServices";
 import { AccumulationHistory } from "./states/AccumulationHistory";
 import { AccumulationQueue } from "./states/AccumulationQueue";
@@ -98,7 +98,7 @@ export type JamState = {
   /**
    * `τ` - the most recent block timeslot
    */
-  tau: Tau;
+  slot: Slot;
 
   /**
    * `θ` - `\lastaccout`

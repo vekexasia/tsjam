@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
 import { RHOImpl } from "@/classes/RHOImpl";
-import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
   BaseJamCodecable,
   JamCodecable,
   codec,
   createArrayLengthDiscriminator,
-  eSubIntCodec,
   hashCodec,
 } from "@tsjam/codec";
-import { Dagger, HeaderHash, Tagged, Tau } from "@tsjam/types";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { Dagger, HeaderHash, Posterior, Tagged, Validated } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { TestOutputCodec } from "./codec_utils";
 import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
+import { KappaImpl } from "@/classes/KappaImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -34,16 +34,16 @@ export const getCodecFixtureFile = (
 class TestState extends BaseJamCodecable {
   @codec(RHOImpl)
   d_rho!: Dagger<RHOImpl>;
-  @codec(ValidatorsImpl)
-  kappa!: Tagged<ValidatorsImpl, "kappa">;
+  @codec(KappaImpl)
+  kappa!: Tagged<KappaImpl, "kappa">;
 }
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
   @codec(AssurancesExtrinsicImpl)
   ea!: AssurancesExtrinsicImpl;
 
-  @eSubIntCodec(4)
-  slot!: Tau;
+  @codec(SlotImpl)
+  slot!: Validated<Posterior<TauImpl>>;
 
   @hashCodec()
   parentHash!: HeaderHash;
@@ -83,7 +83,7 @@ describe("assurances", () => {
     }
     const dd_rho = RHOImpl.toDoubleDagger(test.preState.d_rho, {
       rho: test.preState.d_rho,
-      p_tau: toPosterior(test.input.slot),
+      p_tau: test.input.slot,
       newReports: AssurancesExtrinsicImpl.newlyAvailableReports(
         toTagged(test.input.ea),
         test.preState.d_rho,

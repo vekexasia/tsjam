@@ -1,7 +1,13 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { Posterior, Tau, u32, ValidatorStatistics } from "@tsjam/types";
-import { isNewEra, toTagged } from "@tsjam/utils";
+import {
+  Posterior,
+  u32,
+  Validated,
+  ValidatorIndex,
+  ValidatorStatistics,
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { DisputesStateImpl } from "./DisputesStateImpl";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
 import { JamEntropyImpl } from "./JamEntropyImpl";
@@ -10,6 +16,7 @@ import { JamStateImpl } from "./JamStateImpl";
 import { SingleValidatorStatisticsImpl } from "./SingleValidatorStatisticsImpl";
 import { ValidatorStatisticsCollectionImpl } from "./ValidatorStatisticsCollectionImpl";
 import { ConditionalExcept } from "type-fest";
+import { TauImpl } from "./SlotImpl";
 
 /**
  * data types (u32) is given by the codec
@@ -41,8 +48,8 @@ export class ValidatorStatisticsImpl
   toPosterior(deps: {
     extrinsics: JamBlockExtrinsicsImpl;
     authorIndex: JamHeaderImpl["authorIndex"];
-    tau: Tau;
-    p_tau: Posterior<Tau>;
+    tau: TauImpl;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_disputes: Posterior<DisputesStateImpl>;
     p_entropy: Posterior<JamEntropyImpl>;
@@ -59,7 +66,7 @@ export class ValidatorStatisticsImpl
 
     // $(0.7.1 - 13.3 / 13.4)
     let bold_a = toRet.previous;
-    if (isNewEra(deps.p_tau, deps.tau)) {
+    if (deps.p_tau.isNewerEra(deps.tau)) {
       bold_a = new ValidatorStatisticsCollectionImpl({
         elements: toTagged(
           new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
@@ -76,7 +83,7 @@ export class ValidatorStatisticsImpl
       });
     }
 
-    for (let v = 0; v < NUMBER_OF_VALIDATORS; v++) {
+    for (let v = <ValidatorIndex>0; v < NUMBER_OF_VALIDATORS; v++) {
       const curV = v === deps.authorIndex;
       // $(0.7.1 - 13.5)
       toRet.previous.elements[v] = new SingleValidatorStatisticsImpl({

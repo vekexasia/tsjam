@@ -19,8 +19,9 @@ import {
   Posterior,
   SeqOfLength,
   SignedJamHeader,
+  ValidatorIndex,
 } from "@tsjam/types";
-import { isNewEra, isSameEra, slotIndex, toPosterior } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
@@ -59,7 +60,7 @@ export class JamSignedHeaderImpl
         ...encodeWithCodec(HashCodec, state.entropy._3),
       ]);
     } else {
-      const i = state.safroleState.gamma_s.tickets![this.slot % EPOCH_LENGTH];
+      const i = state.safroleState.gamma_s.tickets![this.slot.slotPhase()];
       return new Uint8Array([
         ...JAM_TICKET_SEAL,
         ...encodeWithCodec(HashCodec, state.entropy._3),
@@ -94,14 +95,14 @@ export class JamSignedHeaderImpl
 
     // $(0.7.1 - 6.16)
     if (p_state.safroleState.gamma_s.isFallback()) {
-      const i = p_state.safroleState.gamma_s.keys![this.slot % EPOCH_LENGTH];
+      const i = p_state.safroleState.gamma_s.keys![this.slot.slotPhase()];
       if (compareUint8Arrays(i, ha) !== 0) {
         return false;
       }
       return true;
     } else {
       // $(0.7.1 - 6.15)
-      const i = p_state.safroleState.gamma_s.tickets![this.slot % EPOCH_LENGTH];
+      const i = p_state.safroleState.gamma_s.tickets![this.slot.slotPhase()];
       // verify ticket identity. if it fails, it means validator is not allowed to produce block
       if (i.id !== Bandersnatch.vrfOutputSignature(this.seal)) {
         return false;
@@ -138,14 +139,18 @@ export class JamSignedHeaderImpl
     prevState: JamStateImpl,
     p_gamma_p: Posterior<SafroleStateImpl["gamma_p"]>,
   ): boolean => {
-    if (isNewEra(this.slot, prevState.tau)) {
+    if (toPosterior(this.slot).isNewerEra(prevState.slot)) {
       if (this.epochMarker?.entropy !== prevState.entropy._0) {
         return false;
       }
       if (this.epochMarker!.entropy2 !== prevState.entropy._1) {
         return false;
       }
-      for (let i = 0; i < this.epochMarker!.validators.length; i++) {
+      for (
+        let i = <ValidatorIndex>0;
+        i < this.epochMarker!.validators.length;
+        i++
+      ) {
         if (
           Buffer.compare(
             this.epochMarker!.validators[i].bandersnatch,
@@ -173,9 +178,9 @@ export class JamSignedHeaderImpl
    */
   verifyTicketsMark(prevState: JamStateImpl) {
     if (
-      isSameEra(this.slot, prevState.tau) &&
-      slotIndex(this.slot) < LOTTERY_MAX_SLOT &&
-      LOTTERY_MAX_SLOT <= slotIndex(this.slot) &&
+      this.slot.isSameEra(prevState.slot) &&
+      this.slot.slotPhase() < LOTTERY_MAX_SLOT &&
+      LOTTERY_MAX_SLOT <= this.slot.slotPhase() &&
       prevState.safroleState.gamma_a.length() === EPOCH_LENGTH
     ) {
       if (this.ticketsMark?.length !== EPOCH_LENGTH) {

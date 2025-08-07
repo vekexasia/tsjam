@@ -58,6 +58,6 @@ export * from "./pvm/PVMRegisters.js";
 export * from "./pvm/PVMResultContext.js";
 export * from "./pvm/RegisterIdentifier.js";
 
-export * from "./Tau.js";
+export * from "./Slot.js";
 export * from "./garantors.js";
 export * from "./Entropy.js";

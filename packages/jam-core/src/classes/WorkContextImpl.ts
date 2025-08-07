@@ -11,10 +11,10 @@ import {
   BeefyRootHash,
   HeaderHash,
   StateRootHash,
-  Tau,
   WorkContext,
   WorkPackageHash,
 } from "@tsjam/types";
+import { SlotImpl } from "./SlotImpl";
 
 /**
  * `C` set
@@ -50,7 +50,7 @@ export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
    * `t`
    */
   @eSubIntCodec(4, "lookup_anchor_slot")
-  lookupAnchorTime!: Tau;
+  lookupAnchorSlot!: SlotImpl;
 
   /**
    * `bold_p`

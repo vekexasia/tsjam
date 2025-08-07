@@ -7,7 +7,6 @@ import {
   PVMResultContext,
   ServiceIndex,
   Tagged,
-  Tau,
   u32,
   Validated,
 } from "@tsjam/types";
@@ -15,6 +14,7 @@ import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
 import { ServiceAccountImpl } from "./ServiceAccountImpl";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { TauImpl } from "./SlotImpl";
 
 /**
  * `δ` or delta in the graypaper
@@ -56,7 +56,7 @@ export class DeltaImpl implements Delta {
    */
   preimageIntegration(
     provisions: PVMResultContext["provisions"],
-    p_tau: Posterior<Tau>,
+    p_tau: Validated<Posterior<TauImpl>>,
   ) {
     const newD = structuredClone(this);
     for (const { serviceId, blob } of provisions) {
@@ -68,7 +68,7 @@ export class DeltaImpl implements Delta {
         newD
           .get(serviceId)!
           .requests.get(phash)!
-          .set(plength, toTagged(<Tau[]>[p_tau]));
+          .set(plength, toTagged(<TauImpl[]>[p_tau]));
         newD.get(serviceId)!.preimages.set(phash, blob);
       }
     }
@@ -85,7 +85,7 @@ export class DeltaImpl implements Delta {
        * `bold S`
        */
       accumulationStatistics: AccumulationStatisticsImpl;
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
     },
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = new DeltaImpl();
@@ -106,7 +106,7 @@ export class DeltaImpl implements Delta {
     dd_delta: DoubleDagger<DeltaImpl>,
     deps: {
       ep: Validated<PreimagesExtrinsicImpl>;
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<DeltaImpl> {
     const p = deps.ep.elements.filter((ep) =>

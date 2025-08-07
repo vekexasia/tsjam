@@ -17,7 +17,6 @@ import {
   Hash,
   PVMProgramCode,
   ServiceIndex,
-  Tau,
   u32,
   WorkError,
 } from "@tsjam/types";
@@ -28,6 +27,7 @@ import { applyMods } from "../functions/utils";
 import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
+import { TauImpl } from "@/classes/SlotImpl";
 
 const refine_a_Codec = createCodec<{
   c: CoreIndex; // `c`
@@ -61,7 +61,7 @@ export const refineInvocation = (
   exportSegmentOffset: number,
   deps: {
     delta: DeltaImpl;
-    tau: Tau;
+    tau: TauImpl;
   },
 ): {
   res: WorkOutputImpl<
@@ -75,7 +75,7 @@ export const refineInvocation = (
   const lookupRes = deps.delta
     .get(w.service)
     ?.historicalLookup(
-      toTagged(workPackage.context.lookupAnchorTime),
+      toTagged(workPackage.context.lookupAnchorSlot),
       w.codeHash,
     );
 
@@ -141,7 +141,7 @@ export const refineInvocation = (
 const F_fn: (
   service: ServiceIndex,
   delta: DeltaImpl,
-  tau: Tau,
+  tau: TauImpl,
   importSegments: ExportSegment[][],
   exportSegmentOffset: number,
   authorizerOutput: Uint8Array, // bold_r
@@ -151,7 +151,7 @@ const F_fn: (
   (
     service: ServiceIndex,
     delta: DeltaImpl,
-    tau: Tau,
+    tau: TauImpl,
     importSegments: ExportSegment[][],
     exportSegmentOffset: number,
     authorizerOutput: Uint8Array,

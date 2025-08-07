@@ -7,12 +7,18 @@ import {
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { BandersnatchRingRoot, GammaZ, Posterior, Tau } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
-import { JamStateImpl } from "./JamStateImpl";
-import { GammaPImpl } from "./GammaPImpl";
 import { Bandersnatch } from "@tsjam/crypto";
-import { isNewEra, toPosterior } from "@tsjam/utils";
+import {
+  BandersnatchRingRoot,
+  GammaZ,
+  Posterior,
+  Validated,
+} from "@tsjam/types";
+import { toPosterior } from "@tsjam/utils";
+import { ConditionalExcept } from "type-fest";
+import { GammaPImpl } from "./GammaPImpl";
+import { JamStateImpl } from "./JamStateImpl";
+import { TauImpl } from "./SlotImpl";
 
 @JamCodecable()
 export class GammaZImpl extends BaseJamCodecable implements GammaZ {
@@ -30,9 +36,12 @@ export class GammaZImpl extends BaseJamCodecable implements GammaZ {
    */
   toPosterior(
     curState: JamStateImpl,
-    deps: { p_tau: Posterior<Tau>; p_gamma_p: Posterior<GammaPImpl> },
+    deps: {
+      p_tau: Validated<Posterior<TauImpl>>;
+      p_gamma_p: Posterior<GammaPImpl>;
+    },
   ): Posterior<GammaZImpl> {
-    if (isNewEra(deps.p_tau, curState.tau)) {
+    if (deps.p_tau.isNewerEra(curState.slot)) {
       return toPosterior(
         new GammaZImpl({
           root: Bandersnatch.ringRoot(

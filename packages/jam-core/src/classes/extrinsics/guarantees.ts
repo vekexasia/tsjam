@@ -45,15 +45,16 @@ import {
   ValidatorIndex,
   WorkPackageHash,
 } from "@tsjam/types";
-import { epochIndex, toPosterior, toTagged } from "@tsjam/utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
+import { ConditionalExcept } from "type-fest";
 import { DisputesStateImpl } from "../DisputesStateImpl";
 import { JamEntropyImpl } from "../JamEntropyImpl";
 import { JamStateImpl } from "../JamStateImpl";
 import { RecentHistoryImpl } from "../RecentHistoryImpl";
 import { RHOImpl } from "../RHOImpl";
+import { SlotImpl, TauImpl } from "../SlotImpl";
 import { WorkReportImpl } from "../WorkReportImpl";
-import { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -122,8 +123,8 @@ export class SingleWorkReportGuaranteeImpl
   /**
    * `t`
    */
-  @eSubIntCodec(4)
-  slot!: Tau;
+  @codec(SlotImpl)
+  slot!: SlotImpl;
 
   /**
    * `a`
@@ -193,13 +194,13 @@ export class SingleWorkReportGuaranteeImpl
       }
     }
     // tau'/R
-    const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
+    const curRotation = Math.floor(deps.p_tau.value / VALIDATOR_CORE_ROTATION);
 
     // And of $(0.7.1 - 11.26)
-    if (VALIDATOR_CORE_ROTATION * (curRotation - 1) > this.slot) {
+    if (VALIDATOR_CORE_ROTATION * (curRotation - 1) > this.slot.value) {
       return err(EGError.TIMESLOT_BOUNDS_1);
     }
-    if (this.slot > deps.p_tau) {
+    if (this.slot.value > deps.p_tau.value) {
       return err(EGError.TIMESLOT_BOUNDS_2);
     }
 
@@ -207,7 +208,9 @@ export class SingleWorkReportGuaranteeImpl
     const messageToSign = this.messageToSign();
     for (const signature of this.signatures) {
       let guarantorAssignment = deps.M_STAR;
-      if (curRotation === Math.floor(this.slot / VALIDATOR_CORE_ROTATION)) {
+      if (
+        curRotation === Math.floor(this.slot.value / VALIDATOR_CORE_ROTATION)
+      ) {
         guarantorAssignment = deps.M;
       }
       const [sig_err, _] = signature
@@ -266,7 +269,7 @@ export class GuaranteesExtrinsicImpl
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     p_disputes: Posterior<DisputesStateImpl>;
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
   }): GuarantorsAssignment {
     return M_STAR_fn({
       p_eta2: toPosterior(deps.p_entropy._2),
@@ -283,7 +286,7 @@ export class GuaranteesExtrinsicImpl
    */
   M(deps: {
     p_entropy: Posterior<JamEntropyImpl>;
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_disputes: Posterior<DisputesStateImpl>;
   }): GuarantorsAssignment {
@@ -302,7 +305,7 @@ export class GuaranteesExtrinsicImpl
   reporters(deps: {
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_disputes: Posterior<DisputesStateImpl>;
     p_entropy: Posterior<JamStateImpl["entropy"]>;
   }) {
@@ -322,10 +325,10 @@ export class GuaranteesExtrinsicImpl
     });
 
     const reporters = new Set<ED25519PublicKey["bigint"]>();
-    const curRotation = Math.floor(deps.p_tau / VALIDATOR_CORE_ROTATION);
+    const curRotation = Math.floor(deps.p_tau.value / VALIDATOR_CORE_ROTATION);
     for (const { signatures, slot } of this.elements) {
       let usedG = M_star;
-      if (curRotation === Math.floor(slot / VALIDATOR_CORE_ROTATION)) {
+      if (curRotation === Math.floor(slot.value / VALIDATOR_CORE_ROTATION)) {
         usedG = M;
       }
       for (const { validatorIndex } of signatures) {
@@ -343,7 +346,7 @@ export class GuaranteesExtrinsicImpl
       p_entropy: Posterior<JamStateImpl["entropy"]>;
       p_kappa: Posterior<JamStateImpl["kappa"]>;
       p_lambda: Posterior<JamStateImpl["lambda"]>;
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
       p_disputes: Posterior<DisputesStateImpl>;
     },
   ): Result<Validated<GuaranteesExtrinsicImpl>, EGError> {
@@ -447,15 +450,15 @@ export class GuaranteesExtrinsicImpl
 
       // $(0.7.1 - 11.34) each lookup anchor block within `L` timeslot
       if (
-        workContext.lookupAnchorTime <
-        deps.p_tau - MAXIMUM_AGE_LOOKUP_ANCHOR
+        workContext.lookupAnchorSlot.value <
+        deps.p_tau.value - MAXIMUM_AGE_LOOKUP_ANCHOR
       ) {
         return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
       }
 
       // $(0.7.1 - 11.35)
       const lookupHeader = curState.headerLookupHistory.get(
-        workContext.lookupAnchorTime,
+        workContext.lookupAnchorSlot,
       );
       if (typeof lookupHeader === "undefined") {
         return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
@@ -577,14 +580,14 @@ export enum EGError {
 const M_fn = (input: {
   entropy: Hash;
   tauOffset: u32;
-  p_tau: Posterior<Tau>;
+  p_tau: Validated<Posterior<TauImpl>>;
   validatorKeys: Posterior<JamStateImpl["kappa"] | JamStateImpl["lambda"]>;
   p_offenders: Posterior<IDisputesState["offenders"]>;
 }) => {
   // R(c,n) = [(x + n) mod CORES | x E c]
   const R = (c: number[], n: number) => c.map((x) => (x + n) % CORES);
   // P(e,t) = R(F([floor(CORES * i / NUMBER_OF_VALIDATORS) | i E NUMBER_OF_VALIDATORS], e), floor(t mod EPOCH_LENGTH/ R))
-  const P = (e: Hash, t: Tau) => {
+  const P = (e: Hash, t: TauImpl) => {
     return R(
       FisherYatesH(
         Array.from({ length: NUMBER_OF_VALIDATORS }, (_, i) =>
@@ -592,14 +595,14 @@ const M_fn = (input: {
         ),
         e,
       ),
-      Math.floor((t % EPOCH_LENGTH) / VALIDATOR_CORE_ROTATION),
+      Math.floor((t.value % EPOCH_LENGTH) / VALIDATOR_CORE_ROTATION),
     );
   };
   return {
     // c
     validatorsAssignedCore: P(
       input.entropy,
-      (input.p_tau + input.tauOffset) as Tau,
+      toTagged(new SlotImpl(<u32>(input.p_tau.value + input.tauOffset))),
     ),
     // k
     validatorsED22519Key: input.validatorKeys
@@ -614,11 +617,12 @@ const M_STAR_fn = (input: {
   p_kappa: Posterior<JamStateImpl["kappa"]>;
   p_lambda: Posterior<JamStateImpl["lambda"]>;
   p_offenders: Posterior<IDisputesState["offenders"]>;
-  p_tau: Posterior<Tau>;
+  p_tau: Validated<Posterior<TauImpl>>;
 }) => {
   if (
-    epochIndex((input.p_tau - VALIDATOR_CORE_ROTATION) as Tau) ==
-    epochIndex(input.p_tau)
+    new SlotImpl(
+      <u32>(input.p_tau.value - VALIDATOR_CORE_ROTATION),
+    ).epochIndex() == input.p_tau.epochIndex()
   ) {
     return M_fn({
       entropy: input.p_eta2,

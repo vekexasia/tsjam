@@ -22,11 +22,11 @@ import {
   JamHeader,
   SeqOfLength,
   StateRootHash,
-  Tau,
   ValidatorIndex,
 } from "@tsjam/types";
 import { HeaderEpochMarkerImpl } from "./HeaderEpochMarkerImpl";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
+import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
 
 /**
@@ -59,7 +59,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * **HT:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
   @eSubIntCodec(4)
-  slot!: Tau;
+  slot!: TauImpl;
 
   /**
    * **He:** The epoch marker of the block.

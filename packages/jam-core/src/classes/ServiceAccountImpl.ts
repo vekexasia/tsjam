@@ -19,13 +19,13 @@ import {
   ServiceAccount,
   ServiceIndex,
   Tagged,
-  Tau,
   u32,
   u64,
   UpToSeq,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
+import { SlotImpl } from "./SlotImpl";
 
 export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;
@@ -41,14 +41,15 @@ export const serviceMetadataCodec = createCodec<{
  */
 export class ServiceAccountImpl implements ServiceAccount {
   preimages: ServiceAccount["preimages"] = new Map();
-  requests: ServiceAccount["requests"] = new Map();
+  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>> =
+    new Map();
   gratis!: Balance;
   codeHash!: CodeHash;
   balance!: Balance;
   minAccGas!: Gas;
   minMemoGas!: Gas;
-  created!: Tau;
-  lastAcc!: Tau;
+  created!: SlotImpl;
+  lastAcc!: SlotImpl;
   parent!: ServiceIndex;
   storage!: IServiceAccountStorage;
 
@@ -162,7 +163,7 @@ export class ServiceAccountImpl implements ServiceAccount {
    * @param hash - the hash to look up
    */
   historicalLookup(
-    tau: Tagged<Tau, "-D">, // $(0.7.1 - 9.5) states that TAU is no older than D
+    tau: Tagged<SlotImpl, "-D">, // $(0.7.1 - 9.5) states that TAU is no older than D
     hash: Hash,
   ): Uint8Array | undefined {
     const ap = this.preimages.get(hash);
@@ -177,7 +178,7 @@ export class ServiceAccountImpl implements ServiceAccount {
 /**
  * Checks based on the length of the preimage and tau if it is valid
  */
-const I_Fn = (l: UpToSeq<Tau, 3>, t: Tau) => {
+const I_Fn = (l: UpToSeq<SlotImpl, 3>, t: SlotImpl) => {
   switch (l.length) {
     case 0: // requested but not provided
       return false;

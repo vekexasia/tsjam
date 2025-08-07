@@ -1,15 +1,7 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
-import {
-  Dagger,
-  Gas,
-  JamStatistics,
-  Posterior,
-  ServiceIndex,
-  Tau,
-  u32,
-  Validated,
-} from "@tsjam/types";
+import { Dagger, JamStatistics, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
+import { ConditionalExcept } from "type-fest";
 import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
 import { CoreStatisticsImpl } from "./CoreStatisticsImpl";
 import { DisputesStateImpl } from "./DisputesStateImpl";
@@ -19,10 +11,10 @@ import { JamHeaderImpl } from "./JamHeaderImpl";
 import { JamStateImpl } from "./JamStateImpl";
 import { RHOImpl } from "./RHOImpl";
 import { ServicesStatisticsImpl } from "./ServicesStatisticsImpl";
+import { TauImpl } from "./SlotImpl";
 import { ValidatorStatisticsImpl } from "./ValidatorStatisticsImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
-import { ConditionalExcept } from "type-fest";
 
 /**
  * $(0.7.1 - 13.1)
@@ -55,8 +47,8 @@ export class JamStatisticsImpl
   }
 
   toPosterior(deps: {
-    tau: Tau;
-    p_tau: Posterior<Tau>;
+    tau: TauImpl;
+    p_tau: Validated<Posterior<TauImpl>>;
     extrinsics: JamBlockExtrinsicsImpl;
     ea: Validated<AssurancesExtrinsicImpl>;
     ep: Validated<PreimagesExtrinsicImpl>;

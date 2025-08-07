@@ -1,7 +1,7 @@
 import { SeqOfLength } from "@/genericTypes";
 import { WorkReport } from "@/sets/WorkReport";
+import { Slot } from "@/Slot";
 import { CORES } from "@tsjam/constants";
-import { Tau } from "@/Tau.js";
 
 /**
  * `ρ` - tracks WorkReports which have been reported but not
@@ -19,5 +19,5 @@ export type RHOElement = {
   /**
    * `t`
    */
-  reportTime: Tau;
+  reportSlot: Slot;
 };

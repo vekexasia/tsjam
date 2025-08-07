@@ -21,6 +21,7 @@ import {
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { WorkReportImpl } from "./WorkReportImpl";
+import { SlotImpl } from "./SlotImpl";
 
 @JamCodecable() // $(0.7.0 - C.16)
 export class JamBlockExtrinsicsImpl
@@ -103,7 +104,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<
         },
       },
     ],
-    ["slot", E_sub_int<Tau>(4)],
+    ["slot", <JamCodec<SlotImpl>>SlotImpl],
     [
       "signatures",
       createArrayLengthDiscriminator<

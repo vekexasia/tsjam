@@ -1,31 +1,20 @@
+import { JamBlockExtrinsicsImpl } from "@/classes/JamBlockExtrinsicsImpl";
+import { JamStateImpl } from "@/classes/JamStateImpl";
+import { KappaImpl } from "@/classes/KappaImpl";
+import { LambdaImpl } from "@/classes/LambdaImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
 import {
-  createCodec,
-  E_sub_int,
-  createSequenceCodec,
   BaseJamCodecable,
   JamCodecable,
   codec,
   eSubIntCodec,
-  eSubBigIntCodec,
 } from "@tsjam/codec";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import {
-  JamBlock,
-  JamState,
-  Posterior,
-  Tau,
-  ValidatorIndex,
-  ValidatorStatistics,
-} from "@tsjam/types";
-import fs, { constants } from "node:fs";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
+import { toPosterior, toTagged } from "@tsjam/utils";
+import fs from "node:fs";
+import { describe, expect, it } from "vitest";
 import { getCodecFixtureFile } from "./codec_utils";
-import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
-import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
-import { JamBlockExtrinsicsImpl } from "@/classes/JamBlockExtrinsicsImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { toTagged } from "@tsjam/utils";
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
 import { dummyDisputesState, dummyEntropy } from "./utils";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
@@ -43,16 +32,16 @@ export const getFixtureFile = (filename: string): Uint8Array => {
 class TestState extends BaseJamCodecable {
   @codec(ValidatorStatisticsImpl)
   validatorStatistics!: ValidatorStatisticsImpl;
-  @eSubIntCodec(4)
-  slot!: Tau;
-  @codec(ValidatorDataImpl)
+  @codec(SlotImpl)
+  slot!: TauImpl;
+  @codec(KappaImpl)
   p_kappa!: Posterior<JamStateImpl["kappa"]>;
 }
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
-  @eSubIntCodec(4)
-  p_tau!: Posterior<Tau>;
+  @codec(SlotImpl)
+  p_tau!: Validated<Posterior<TauImpl>>;
 
   @eSubIntCodec(2)
   authorIndex!: ValidatorIndex;
@@ -83,7 +72,11 @@ describe("statistics", () => {
       p_tau: test.input.p_tau,
       tau: test.preState.slot,
       p_kappa: test.preState.p_kappa,
-      p_lambda: toTagged(test.preState.p_kappa),
+      p_lambda: toPosterior(
+        <JamStateImpl["lambda"]>(
+          LambdaImpl.decode(test.preState.p_kappa.toBinary()).value
+        ),
+      ),
       p_disputes: toTagged(dummyDisputesState()),
       p_entropy: dummyEntropy(),
     });

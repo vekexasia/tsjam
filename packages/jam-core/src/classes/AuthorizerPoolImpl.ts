@@ -15,14 +15,14 @@ import {
   Hash,
   Posterior,
   SeqOfLength,
-  Tau,
   UpToSeq,
   Validated,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
+import { ConditionalExcept } from "type-fest";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { ConditionalExcept } from "type-fest";
+import { TauImpl } from "./SlotImpl";
 const codec = createArrayLengthDiscriminator(HashCodec);
 /**
  * `α`
@@ -59,14 +59,14 @@ export class AuthorizerPoolImpl
   toPosterior(deps: {
     eg: Validated<GuaranteesExtrinsicImpl>;
     p_queue: Posterior<AuthorizerQueueImpl>;
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
   }): Posterior<AuthorizerPoolImpl> {
     const newState = new AuthorizerPoolImpl();
     newState.elements = toTagged([]);
 
     for (let core = <CoreIndex>0; core < this.elements.length; core++) {
       const fromQueue =
-        deps.p_queue.queueAtCore(core)[deps.p_tau % AUTHQUEUE_MAX_SIZE];
+        deps.p_queue.queueAtCore(core)[deps.p_tau.value % AUTHQUEUE_MAX_SIZE];
       let hashes: Hash[];
       const firstWReport = deps.eg.elementForCore(core);
       // second bracket

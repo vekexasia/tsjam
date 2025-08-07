@@ -21,6 +21,7 @@ import {
   E_sub_int,
   encodeWithCodec,
   HashCodec,
+  JamCodec,
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
 import {
@@ -81,6 +82,7 @@ import {
   RegularPVMExitReason,
   ServiceAccount,
   ServiceIndex,
+  Slot,
   Tagged,
   Tau,
   u32,
@@ -95,6 +97,7 @@ import { PVMMemory } from "../pvmMemory";
 import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -545,7 +548,7 @@ export class HostFunctions {
   @HostFn(6)
   historical_lookup(
     context: PVMProgramExecutionContextImpl,
-    args: { s: ServiceIndex; bold_d: DeltaImpl; tau: Tau },
+    args: { s: ServiceIndex; bold_d: DeltaImpl; tau: TauImpl },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, h, o, w10, w11] = context.registers.slice(7);
     if (!h.fitsInU32() || !context.memory.canRead(h.checked_u32(), 32)) {
@@ -1078,14 +1081,17 @@ export class HostFunctions {
       preimages: new Map(),
       created: args.tau,
       gratis: f.value as u64 as Balance,
-      lastAcc: <Tau>0,
+      lastAcc: new SlotImpl(<u32>0),
       parent: args.x.id,
       storage,
     });
     a.requests.set(c, new Map());
     a.requests
       .get(c)!
-      .set(<Tagged<u32, "length">>Number(l), [] as unknown as UpToSeq<Tau, 3>);
+      .set(
+        <Tagged<u32, "length">>Number(l),
+        [] as unknown as UpToSeq<TauImpl, 3>,
+      );
     a.balance = <Balance>(<u64>a.gasThreshold());
 
     const x_bold_s = args.x.bold_s();
@@ -1246,7 +1252,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
     const [, y] = dlhl;
-    if (dlhl.length === 2 && y < args.tau - PREIMAGE_EXPIRATION) {
+    if (dlhl.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION) {
       const newX = structuredClone(args.x);
       newX.state.accounts.delete(d.checked_u32());
       const s_prime = newX.state.accounts.get(args.x.id)!;
@@ -1284,7 +1290,7 @@ export class HostFunctions {
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
     }
-    const [_x, y, _z] = bold_a.map((x) => BigInt(x));
+    const [_x, y, _z] = bold_a.map((x) => BigInt(x.value));
     switch (bold_a.length) {
       case 0:
         return [IxMod.w7(0), IxMod.w8(0)];
@@ -1304,7 +1310,7 @@ export class HostFunctions {
   @HostFn(23)
   solicit(
     context: PVMProgramExecutionContextImpl,
-    args: { x: PVMResultContextImpl; tau: Tau },
+    args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1341,7 +1347,7 @@ export class HostFunctions {
   @HostFn(24)
   forget(
     context: PVMProgramExecutionContextImpl,
-    args: { x: PVMResultContextImpl; tau: Tau },
+    args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
@@ -1374,7 +1380,10 @@ export class HostFunctions {
       x_bold_s.preimages.delete(h);
     } else {
       const [x, y, w] = xslhz;
-      if (xslhz.length === 2 && y < args.tau - PREIMAGE_EXPIRATION) {
+      if (
+        xslhz.length === 2 &&
+        y.value < args.tau.value - PREIMAGE_EXPIRATION
+      ) {
         x_bold_s.requests.get(h)!.delete(z.checked_u32());
         if (x_bold_s.requests.get(h)!.size === 0) {
           x_bold_s.requests.delete(h);
@@ -1382,7 +1391,10 @@ export class HostFunctions {
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
         x_bold_s.requests.get(h)!.set(z.checked_u32(), toTagged([x, args.tau]));
-      } else if (xslhz.length === 3 && y < args.tau - PREIMAGE_EXPIRATION) {
+      } else if (
+        xslhz.length === 3 &&
+        y.value < args.tau.value - PREIMAGE_EXPIRATION
+      ) {
         x_bold_s.requests.get(h)!.set(z.checked_u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
@@ -1518,8 +1530,8 @@ const serviceAccountCodec = createCodec<
   ["totalOctets", E_sub<u64>(8)], // o - virtual element
   ["itemInStorage", E_sub_int<u32>(4)], // i - virtual element
   ["gratis", E_sub<Balance>(8)], // f
-  ["created", E_sub_int<Tau>(4)], // r
-  ["lastAcc", E_sub_int<Tau>(4)], // a
+  ["created", <JamCodec<Slot>>SlotImpl], // r
+  ["lastAcc", <JamCodec<Slot>>SlotImpl], // a
   ["parent", E_sub_int<ServiceIndex>(4)], // p
 ]);
 

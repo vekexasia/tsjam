@@ -5,6 +5,7 @@ import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
 import {
   createCodec,
@@ -13,6 +14,7 @@ import {
   E_sub_int,
   encodeWithCodec,
   HashCodec,
+  JamCodec,
 } from "@tsjam/codec";
 import {
   MINIMUM_PUBLIC_SERVICE_INDEX,
@@ -26,8 +28,8 @@ import {
   JamEntropy,
   Posterior,
   ServiceIndex,
-  Tau,
   u32,
+  Validated,
   WorkError,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -39,11 +41,11 @@ import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
 
 const AccumulateArgsCodec = createCodec<{
-  t: Tau;
+  t: TauImpl;
   s: ServiceIndex;
   bold_i_length: number;
 }>([
-  ["t", E_int<Tau>()],
+  ["t", <JamCodec<TauImpl>>SlotImpl],
   ["s", E_int<ServiceIndex>()],
   ["bold_i_length", E_int()],
 ]);
@@ -56,12 +58,12 @@ const AccumulateArgsCodec = createCodec<{
  */
 export const accumulateInvocation = (
   pvmAccState: PVMAccumulationStateImpl, // bold_e
-  t: Tau, // t
+  t: TauImpl, // t
   s: ServiceIndex, // s
   gas: Gas, // g
   accumulateOps: AccumulationInputInpl[], // bold_i
   deps: {
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
 ): AccumulationOutImpl => {
@@ -113,17 +115,17 @@ const I_fn = (
   pvmAccState: PVMAccumulationStateImpl, // bold_e
   service: ServiceIndex, // s
   p_eta_0: Posterior<JamEntropy["_0"]>,
-  p_tau: Posterior<Tau>,
+  p_tau: Validated<Posterior<TauImpl>>,
 ): PVMResultContextImpl => {
   const d = pvmAccState.accounts.clone();
   d.delete(service);
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
     Hashing.blake2bBuf(
       encodeWithCodec(
-        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: Tau }>([
+        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: TauImpl }>([
           ["s", E_sub_int<ServiceIndex>(4)],
           ["p_eta_0", HashCodec],
-          ["tau", E_sub_int<Tau>(4)],
+          ["tau", <JamCodec<TauImpl>>SlotImpl],
         ]),
         { s: service, p_eta_0, tau: p_tau },
       ),
@@ -151,9 +153,9 @@ const I_fn = (
  * $(0.6.4 - B.11)
  */
 const F_fn: (
-  tau: Tau,
+  tau: TauImpl,
 ) => HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }> =
-  (tau: Tau) => (input) => {
+  (tau: TauImpl) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
     const bold_s = input.out.x.bold_s();
     const e_bold_d = input.out.x.state.accounts;

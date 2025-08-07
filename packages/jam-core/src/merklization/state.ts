@@ -19,10 +19,10 @@ import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import {
-  E_4,
   E_4_int,
   E_sub_int,
   HashCodec,
+  JamCodec,
   bit,
   createArrayLengthDiscriminator,
   encodeWithCodec,
@@ -46,6 +46,9 @@ import { MerkleServiceAccountStorageImpl } from "../classes/MerkleServiceAccount
 import { MerkleMap } from "./merkleMap";
 import { serviceAccountDataCodec } from "./stateCodecs";
 import { stateKey } from "./utils";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { KappaImpl } from "@/classes/KappaImpl";
+import { LambdaImpl } from "@/classes/LambdaImpl";
 
 /**
  * Merkelize state
@@ -165,7 +168,7 @@ export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
   toRet.set(stateKey(10), state.rho.toBinary());
 
   // 11
-  toRet.set(stateKey(11), encodeWithCodec(E_4, BigInt(state.tau)));
+  toRet.set(stateKey(11), state.slot.toBinary());
 
   // 12
   toRet.set(stateKey(12), state.privServices.toBinary());
@@ -208,7 +211,7 @@ export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
         const h_h = encodeWithCodec(HashCodec, h);
         toRet.set(
           stateKey(serviceIndex, new Uint8Array([...e_l, ...h_h])),
-          encodeWithCodec(createArrayLengthDiscriminator(E_4_int), t),
+          encodeWithCodec(createArrayLengthDiscriminator(SlotImpl), t),
         );
       }
     }
@@ -236,13 +239,13 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
 
   const iota = ValidatorsImpl.decode(merkleMap.get(stateKey(7))!).value;
 
-  const kappa = ValidatorsImpl.decode(merkleMap.get(stateKey(8))!).value;
+  const kappa = KappaImpl.decode(merkleMap.get(stateKey(8))!).value;
 
-  const lambda = ValidatorsImpl.decode(merkleMap.get(stateKey(9))!).value;
+  const lambda = LambdaImpl.decode(merkleMap.get(stateKey(9))!).value;
 
   const rho = RHOImpl.decode(merkleMap.get(stateKey(10))!).value;
 
-  const tau = E_sub_int<Tau>(4).decode(merkleMap.get(stateKey(11))!).value;
+  const slot = <TauImpl>SlotImpl.decode(merkleMap.get(stateKey(11))!).value;
 
   const privServices = PrivilegedServicesImpl.decode(
     merkleMap.get(stateKey(12))!,
@@ -343,8 +346,8 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
       const p_l_key = stateKey(serviceIndex, new Uint8Array([...e_l, ...hb]));
       const pl = merkleMap.get(p_l_key);
       assert(typeof pl !== "undefined", "Preimage l not found");
-      const pl_decoded = createArrayLengthDiscriminator<UpToSeq<Tau, 3>>(
-        E_sub_int<Tau>(4),
+      const pl_decoded = createArrayLengthDiscriminator<UpToSeq<SlotImpl, 3>>(
+        <JamCodec<SlotImpl>>SlotImpl,
       ).decode(pl).value;
       serviceAccount.requests.set(
         h,
@@ -394,7 +397,7 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
     rho,
     safroleState,
     serviceAccounts,
-    tau,
+    slot,
     statistics,
     headerLookupHistory: new HeaderLookupHistoryImpl(),
   });

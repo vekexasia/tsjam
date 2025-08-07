@@ -11,8 +11,8 @@ import {
   Posterior,
   ServiceIndex,
   Tagged,
-  Tau,
   u64,
+  Validated,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
@@ -32,6 +32,7 @@ import { PVMAccumulationStateImpl } from "./classes/pvm/PVMAccumulationStateImpl
 import { ValidatorsImpl } from "./classes/ValidatorsImpl";
 import { WorkReportImpl } from "./classes/WorkReportImpl";
 import { accumulateInvocation } from "./pvm";
+import { SlotImpl, TauImpl } from "./classes/SlotImpl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -44,8 +45,8 @@ export const accumulateReports = (
     accumulationQueue: AccumulationQueueImpl;
     authQueue: AuthorizerQueueImpl;
     serviceAccounts: DeltaImpl;
-    tau: Tau;
-    p_tau: Posterior<Tau>;
+    tau: SlotImpl;
+    p_tau: Validated<Posterior<TauImpl>>;
     privServices: PrivilegedServicesImpl;
     iota: Tagged<ValidatorsImpl, "iota">;
     p_eta_0: Posterior<JamEntropy["_0"]>;
@@ -158,7 +159,7 @@ export const outerAccumulation = (
   accState: PVMAccumulationStateImpl,
   freeAccServices: Map<ServiceIndex, Gas>,
   deps: {
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
 ): {
@@ -242,7 +243,7 @@ export const parallelizedAccumulation = (
   works: WorkReportImpl[],
   bold_f: Map<ServiceIndex, Gas>,
   deps: {
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
 ): {
@@ -429,7 +430,7 @@ export const singleServiceAccumulation = (
   gasPerService: Map<ServiceIndex, u64>,
   service: ServiceIndex,
   deps: {
-    p_tau: Posterior<Tau>;
+    p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
 ): AccumulationOutImpl => {

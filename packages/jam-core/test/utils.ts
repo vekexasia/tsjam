@@ -20,6 +20,7 @@ import { RecentHistoryItemImpl } from "@/classes/RecentHistoryItemImpl";
 import { RHOImpl } from "@/classes/RHOImpl";
 import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
 import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
@@ -39,6 +40,7 @@ import {
   Hash,
   ServiceIndex,
   Tau,
+  u32,
   WorkPackageHash,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -156,7 +158,7 @@ export const dummyState = (): JamStateImpl => {
       ),
     }),
     rho: new RHOImpl({ elements: toTagged(new Array(CORES).fill(undefined)) }),
-    tau: toTagged(0) as Tau,
+    slot: <TauImpl>new SlotImpl(<u32>0),
     mostRecentAccumulationOutputs: new LastAccOutsImpl(
       new Array<SingleAccOutImpl>(),
     ),

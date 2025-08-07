@@ -19,7 +19,6 @@ import {
   ExportSegment,
   Gas,
   Hash,
-  Tau,
   u16,
   u32,
   WorkError,
@@ -47,6 +46,7 @@ import {
   wellBalancedBinaryMerkleRoot,
 } from "./merklization";
 import { refineInvocation } from "./pvm";
+import { TauImpl } from "./classes/SlotImpl";
 
 export const computationWorkReportError = "t not in B:wr" as const;
 /**
@@ -63,7 +63,7 @@ export const computationWorkReportError = "t not in B:wr" as const;
 export const computeWorkReport = (
   pack: WorkPackageImpl,
   core: CoreIndex,
-  deps: { delta: DeltaImpl; tau: Tau },
+  deps: { delta: DeltaImpl; tau: TauImpl },
 ): Result<WorkReportImpl, typeof computationWorkReportError> => {
   const { res: bold_t, gasUsed } = pack.isAuthorized(core, {
     delta: deps.delta,
@@ -235,7 +235,7 @@ const I_fn = (
   deps: {
     delta: DeltaImpl;
     core: CoreIndex;
-    tau: Tau;
+    tau: TauImpl;
     /**
      * `bold_t`
      */

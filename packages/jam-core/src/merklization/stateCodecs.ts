@@ -1,9 +1,11 @@
+import { SlotImpl } from "@/classes/SlotImpl";
 import {
   create32BCodec,
   createCodec,
   E_sub,
   E_sub_int,
   genericBytesBigIntCodec,
+  JamCodec,
   JSONCodec,
   MapJSONCodec,
   Uint8ArrayJSONCodec,
@@ -15,8 +17,8 @@ import {
   Gas,
   ServiceAccount,
   ServiceIndex,
+  Slot,
   StateKey,
-  Tau,
   u32,
   u64,
 } from "@tsjam/types";
@@ -44,8 +46,8 @@ export const serviceAccountDataCodec = createCodec<
   ["totalOctets", E_sub<u64>(8)],
   ["gratis", E_sub<Balance>(8)],
   ["itemInStorage", E_sub_int<u32>(4)],
-  ["created", E_sub_int<Tau>(4)],
-  ["lastAcc", E_sub_int<Tau>(4)],
+  ["created", <JamCodec<Slot>>SlotImpl],
+  ["lastAcc", <JamCodec<Slot>>SlotImpl],
   ["parent", E_sub_int<ServiceIndex>(4)],
 ]);
 

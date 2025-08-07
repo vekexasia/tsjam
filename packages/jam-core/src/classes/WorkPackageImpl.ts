@@ -117,7 +117,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
     const encodedData = delta
       .get(this.authCodeHost)!
       .historicalLookup(
-        toTagged(this.context.lookupAnchorTime),
+        toTagged(this.context.lookupAnchorSlot),
         this.authCodeHash,
       )!;
 

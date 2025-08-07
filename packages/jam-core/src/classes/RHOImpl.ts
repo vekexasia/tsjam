@@ -29,6 +29,7 @@ import { DisputesStateImpl } from "./DisputesStateImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { WorkReportImpl } from "./WorkReportImpl";
 import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
+import { SlotImpl, TauImpl } from "./SlotImpl";
 
 @JamCodecable()
 export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
@@ -40,7 +41,7 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
    * `t`
    */
   @eSubIntCodec(4)
-  reportTime!: Tau;
+  reportSlot!: SlotImpl;
 
   constructor(config: ConditionalExcept<RHOElementImpl, Function>) {
     super();
@@ -108,7 +109,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     d_rho: Dagger<RHOImpl>,
     deps: {
       rho: RHOImpl;
-      p_tau: Posterior<Tau>; // Ht
+      p_tau: Validated<Posterior<TauImpl>>; // Ht
       newReports: NewWorkReportsImpl; // bold R
     },
   ): DoubleDagger<RHOImpl> {
@@ -130,7 +131,10 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
         newState.elements[c] = undefined;
       }
 
-      if (deps.p_tau >= d_rho.elements[c]!.reportTime + WORK_TIMEOUT) {
+      if (
+        deps.p_tau.value >=
+        d_rho.elements[c]!.reportSlot.value + WORK_TIMEOUT
+      ) {
         newState.elements[c] = undefined;
       }
     }
@@ -144,7 +148,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     dd_rho: DoubleDagger<RHOImpl>,
     deps: {
       EG_Extrinsic: Validated<GuaranteesExtrinsicImpl>;
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<RHOImpl> {
     const newState = structuredClone(dd_rho);
@@ -154,7 +158,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
         // extrinsic replace the current entry (if any)
         newState.elements[core] = new RHOElementImpl({
           workReport: ext.report,
-          reportTime: deps.p_tau,
+          reportSlot: deps.p_tau,
         });
       }
     }

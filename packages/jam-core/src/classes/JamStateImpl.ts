@@ -1,15 +1,8 @@
 import { accumulateReports } from "@/accumulate";
 import { bits, M_fn, merkleStateMap } from "@/merklization";
-import { BLOCK_TIME } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
-import { JamState, Posterior, StateRootHash, Tagged, Tau } from "@tsjam/types";
-import {
-  isNewEra,
-  Timekeeping,
-  toDagger,
-  toPosterior,
-  toTagged,
-} from "@tsjam/utils";
+import { JamState, Posterior, StateRootHash, Tagged } from "@tsjam/types";
+import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
@@ -33,13 +26,14 @@ import { HeaderLookupHistoryImpl } from "./HeaderLookupHistoryImpl";
 import { JamBlockImpl } from "./JamBlockImpl";
 import { JamEntropyImpl } from "./JamEntropyImpl";
 import { JamStatisticsImpl } from "./JamStatisticsImpl";
+import { KappaImpl } from "./KappaImpl";
+import { LambdaImpl } from "./LambdaImpl";
 import { LastAccOutsImpl } from "./LastAccOutsImpl";
 import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
+import { TauError, TauImpl } from "./SlotImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
-import { KappaImpl } from "./KappaImpl";
-import { LambdaImpl } from "./LambdaImpl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -125,7 +119,7 @@ export class JamStateImpl implements JamState {
   /**
    * `τ` - the most recent block timeslot
    */
-  tau!: Tau;
+  slot!: TauImpl;
 
   /**
    * `θ` - `\lastaccout`
@@ -163,6 +157,7 @@ export class JamStateImpl implements JamState {
     | ETError
     | EPError
     | EGError
+    | TauError
   > {
     assert(this.block, "Cannot apply block to a state without a block");
     if (!this.block.isParentOf(newBlock)) {
@@ -170,11 +165,11 @@ export class JamStateImpl implements JamState {
     }
 
     // $(0.7.1 - 6.1)
-    const p_tau = toPosterior(newBlock.header.slot);
+    const proposed_p_tau = toPosterior(newBlock.header.slot);
 
-    // $(0.7.1 - 5.7)
-    if (this.tau >= p_tau || p_tau * BLOCK_TIME > Timekeeping.bigT()) {
-      return err(ImportBlockError.InvalidSlot);
+    const [tauErr, p_tau] = proposed_p_tau.checkPTauValid(this.slot).safeRet();
+    if (typeof tauErr !== "undefined") {
+      return err(tauErr);
     }
 
     // $(0.7.1 - 5.8)
@@ -194,7 +189,7 @@ export class JamStateImpl implements JamState {
     });
     const [dispExErr, disputesExtrinsic] = newBlock.extrinsics.disputes
       .checkValidity({
-        tau: this.tau,
+        tau: this.slot,
         kappa: this.kappa,
         lambda: this.lambda,
       })
@@ -288,7 +283,7 @@ export class JamStateImpl implements JamState {
         accumulationStatistics,
       },
     ] = accumulateReports(bold_R, {
-      tau: this.tau,
+      tau: this.slot,
       p_tau,
       accumulationHistory: this.accumulationHistory,
       accumulationQueue: this.accumulationQueue,
@@ -353,7 +348,7 @@ export class JamStateImpl implements JamState {
     });
 
     const p_statistics = this.statistics.toPosterior({
-      tau: this.tau,
+      tau: this.slot,
       p_tau,
       extrinsics: newBlock.extrinsics,
       ea: newBlock.extrinsics.assurances,
@@ -381,7 +376,7 @@ export class JamStateImpl implements JamState {
       new JamStateImpl({
         block: newBlock,
         entropy: p_entropy,
-        tau: newBlock.header.slot,
+        slot: newBlock.header.slot,
         iota: toTagged(p_iota),
         authPool: p_authPool,
         authQueue: p_authQueue,
@@ -436,7 +431,6 @@ export enum ImportBlockError {
   InvalidEA = "Invalid extrinsic assurances",
 
   InvalidHx = "Invalid extrinsic hash",
-  InvalidSlot = "Invalid slot",
   InvalidSeal = "Invalid seal",
   InvalidEntropySignature = "Invalid entropy signature",
   InvalidEntropy = "Invalid entropy",

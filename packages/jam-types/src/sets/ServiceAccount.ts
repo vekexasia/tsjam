@@ -11,7 +11,7 @@ import {
   u64,
 } from "@/genericTypes";
 import { PVMProgramCode } from "@/pvm/PVMProgramCode";
-import { Tau } from "@/Tau";
+import { Slot } from "@/Slot";
 
 export interface IServiceAccountStorage {
   delete(key: Uint8Array): boolean;
@@ -60,7 +60,7 @@ export interface ServiceAccount {
    * if there are 3 items, then its available since [2] no but in the past was not available[1] after being available[0]<br>
    * once all three elements are valued. we remove the first 2 only after a certain period has passed (to be defined)
    */
-  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Tau, 3>>>;
+  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Slot, 3>>>;
 
   /**
    * `f`
@@ -88,14 +88,14 @@ export interface ServiceAccount {
   minMemoGas: Gas;
 
   /**
-   * `r`
+   * `r` - creation slot
    */
-  created: Tau;
+  created: Slot;
 
   /**
-   * `a`
+   * `a` - last accumulation slot
    */
-  lastAcc: Tau;
+  lastAcc: Slot;
 
   /**
    * `p`

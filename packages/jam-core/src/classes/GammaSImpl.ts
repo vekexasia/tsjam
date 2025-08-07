@@ -9,11 +9,7 @@ import {
   HashCodec,
   sequenceCodec,
 } from "@tsjam/codec";
-import {
-  EPOCH_LENGTH,
-  LOTTERY_MAX_SLOT,
-  NUMBER_OF_VALIDATORS,
-} from "@tsjam/constants";
+import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
@@ -22,11 +18,12 @@ import {
   JamEntropy,
   Posterior,
   SeqOfLength,
-  Tau,
+  Validated,
 } from "@tsjam/types";
-import { isNewNextEra, isSameEra, slotIndex, toPosterior } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { JamStateImpl } from "./JamStateImpl";
+import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {
@@ -62,15 +59,15 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
   toPosterior(
     curState: JamStateImpl,
     deps: {
-      p_tau: Posterior<Tau>;
+      p_tau: Validated<Posterior<TauImpl>>;
       p_kappa: Posterior<JamStateImpl["kappa"]>;
       p_eta2: Posterior<JamEntropy["_2"]>;
     },
   ): Posterior<GammaSImpl> {
     if (
-      isNewNextEra(deps.p_tau, curState.tau) && // e' = e + 1
+      deps.p_tau.isNextEra(curState.slot) && // e' = e + 1
       curState.safroleState.gamma_a.length() === EPOCH_LENGTH && // |ya| = E
-      slotIndex(curState.tau) >= LOTTERY_MAX_SLOT // m >= Y
+      curState.slot.slotPhase() >= LOTTERY_MAX_SLOT // m >= Y
     ) {
       // we've accumulated enough tickets
       // we can now compute the new posterior `gamma_s`
@@ -82,7 +79,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
           >,
         );
       return toPosterior(new GammaSImpl({ tickets: newGammaS }));
-    } else if (isSameEra(curState.tau, deps.p_tau)) {
+    } else if (deps.p_tau.isSameEra(curState.slot)) {
       return toPosterior(this);
     } else {
       // we're in fallback mode

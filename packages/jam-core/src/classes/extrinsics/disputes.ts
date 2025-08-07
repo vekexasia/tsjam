@@ -25,14 +25,14 @@ import {
   MinSeqLength,
   SeqOfLength,
   Tagged,
-  Tau,
   u32,
   Validated,
   ValidatorIndex,
 } from "@tsjam/types";
-import { epochIndex, toTagged } from "@tsjam/utils";
+import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { JamStateImpl } from "../JamStateImpl";
+import { TauImpl } from "../SlotImpl";
 
 @JamCodecable()
 export class DisputeVerdictJudgementImpl
@@ -222,7 +222,7 @@ export class DisputeExtrinsicImpl
   }
 
   checkValidity(deps: {
-    tau: Tau;
+    tau: TauImpl;
     kappa: JamStateImpl["kappa"];
     lambda: JamStateImpl["lambda"];
   }): Result<
@@ -232,8 +232,8 @@ export class DisputeExtrinsicImpl
     // $(0.7.1 - 10.2)
     for (const v of this.verdicts) {
       if (
-        v.age !== epochIndex(deps.tau) &&
-        v.age !== epochIndex(deps.tau) - 1
+        v.age !== deps.tau.epochIndex() &&
+        v.age !== deps.tau.epochIndex() - 1
       ) {
         return err(DisputesExtrinsicValidationError.EPOCH_INDEX_WRONG);
       }
@@ -261,7 +261,7 @@ export class DisputeExtrinsicImpl
       false ===
       this.verdicts.every((verdict) => {
         const validatorSet =
-          verdict.age === epochIndex(deps.tau) ? deps.kappa : deps.lambda;
+          verdict.age === deps.tau.epochIndex() ? deps.kappa : deps.lambda;
         return verdict.judgements.every((judgement) => {
           const validatorPubKey = validatorSet.at(judgement.index).ed25519;
           let message: Uint8Array;
