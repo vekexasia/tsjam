@@ -1,5 +1,6 @@
 import {
   BaseJamCodecable,
+  JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
@@ -15,6 +16,7 @@ export enum GammaAError {
   TICKET_NOT_IN_POSTERIOR_GAMMA_A = "Ticket not in posterior gamma_a",
 }
 
+@JamCodecable()
 export class GammaAImpl extends BaseJamCodecable implements GammaA {
   @lengthDiscriminatedCodec(TicketImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<TicketImpl, typeof EPOCH_LENGTH, "gamma_a">;

@@ -1,4 +1,3 @@
-import { BaseJamCodecable, JamCodecable } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import {
   Dagger,
@@ -23,11 +22,9 @@ import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
  * It's a dictionary of service accounts
  * $(0.7.1 - 9.2)
  */
-@JamCodecable()
-export class DeltaImpl extends BaseJamCodecable implements Delta {
+export class DeltaImpl implements Delta {
   elements!: Map<ServiceIndex, ServiceAccountImpl>;
   constructor(el?: Map<ServiceIndex, ServiceAccountImpl>) {
-    super();
     this.elements = el ?? new Map<ServiceIndex, ServiceAccountImpl>();
   }
   services(): Set<ServiceIndex> {

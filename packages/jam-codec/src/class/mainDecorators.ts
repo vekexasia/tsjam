@@ -62,7 +62,13 @@ export abstract class BaseJamCodecable {
       (a: any) => a.propertyKey === x,
     );
     assert(el, `Codec for property ${String(x)} not found`);
-    return { ...el.codec, ...el.json.codec };
+    return {
+      encode: el.codec.encode.bind(el.codec),
+      decode: el.codec.decode.bind(el.decode),
+      encodedSize: el.codec.encodedSize.bind(el.codec),
+      fromJSON: el.json.codec.fromJSON.bind(el.json.codec),
+      toJSON: el.json.codec.toJSON.bind(el.json.codec),
+    };
   }
 
   toBinary(): Uint8Array {
@@ -113,12 +119,24 @@ export function jsonCodec<T, K extends string | symbol>(
 }
 
 export function codec<T, K extends string | symbol>(
+  codec: JamCodec<T>,
+  json: JSONCodec<T>,
+  jsonKey?: string,
+): (target: any, propertyKey: K) => void;
+export function codec<T, K extends string | symbol>(
   codec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string,
+): (target: any, propertyKey: K) => void;
+export function codec<T, K extends string | symbol>(
+  codec: JamCodec<T> | (JamCodec<T> & JSONCodec<T>),
+  json?: JSONCodec<T> | string,
+  jsonKey?: string,
 ) {
+  const key = typeof json === "string" ? json : jsonKey;
+  const _jsonCodec = typeof json === "object" ? json : <JSONCodec<T>>codec;
   return function (target: any, propertyKey: K) {
     binaryCodec(codec)(target, propertyKey);
-    jsonCodec(codec, jsonKey)(target, propertyKey);
+    jsonCodec(_jsonCodec, key)(target, propertyKey);
   };
 }
 /**

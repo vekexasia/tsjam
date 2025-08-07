@@ -6,6 +6,7 @@ import {
   Posterior,
   SeqOfLength,
   ValidatorData,
+  ValidatorIndex,
   Validators,
 } from "@tsjam/types";
 import { ValidatorDataImpl } from "./ValidatorDataImpl";
@@ -28,7 +29,7 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
     }
   }
 
-  at(index: number): ValidatorDataImpl {
+  at(index: ValidatorIndex): ValidatorDataImpl {
     assert(index >= 0 && index < NUMBER_OF_VALIDATORS, "Index out of bounds");
     return this.elements[index];
   }

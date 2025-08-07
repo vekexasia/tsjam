@@ -1,5 +1,4 @@
 import { JamCodec } from "@/codec.js";
-import assert from "node:assert";
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
@@ -16,12 +15,17 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { bigintToExistingBytes, bytesToBigInt } from "@tsjam/utils";
+import assert from "node:assert";
 import {
   binaryCodec,
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
 } from "./class/mainDecorators";
-import { BigIntBytesJSONCodec, BufferJSONCodec } from "./json/codecs";
+import {
+  BigIntBytesJSONCodec,
+  BufferJSONCodec,
+  Ed25519PublicKeyJSONCodec,
+} from "./json/codecs";
 import { JSONCodec } from "./json/JsonCodec";
 
 // $(0.6.4 - C.2)
@@ -147,7 +151,14 @@ export const Ed25519PubkeyCodec: JamCodec<ED25519PublicKey> = {
     return 32;
   },
 };
-export const ed25519PubkeyCodec = createClassDecorator(Ed25519PubkeyCodec);
+export const ed25519PubkeyCodec = (
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
+) => {
+  return (target: any, propertyKey: string | symbol) => {
+    binaryCodec(Ed25519PubkeyCodec)(target, propertyKey);
+    jsonCodec(Ed25519PublicKeyJSONCodec, jsonKey)(target, propertyKey);
+  };
+};
 
 export const BandersnatchCodec = fixedSizeIdentityCodec<BandersnatchKey, 32>(
   32,

@@ -13,6 +13,7 @@ import { JamStateImpl } from "./JamStateImpl";
 /**
  * `η`
  * $(0.7.1 - 6.21)
+// FIXME: toJSON and fromJSON are wrong because of named params instead of array:
  */
 @JamCodecable()
 export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {

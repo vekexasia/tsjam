@@ -38,6 +38,8 @@ import { PrivilegedServicesImpl } from "./PrivilegedServicesImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
+import { KappaImpl } from "./KappaImpl";
+import { LambdaImpl } from "./LambdaImpl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -63,12 +65,12 @@ export class JamStateImpl implements JamState {
   /**
    * `λ` Validator keys and metadata which were active in the prior epoch.
    */
-  lambda!: Tagged<ValidatorsImpl, "lambda">;
+  lambda!: Tagged<LambdaImpl, "lambda">;
 
   /**
    * `κ` Validator keys and metadata which are active in the current epoch.
    */
-  kappa!: Tagged<ValidatorsImpl, "kappa">;
+  kappa!: Tagged<KappaImpl, "kappa">;
 
   /**
    * `ι` Validator keys and metadata which will be active in the next epoch.
@@ -181,12 +183,8 @@ export class JamStateImpl implements JamState {
     }
 
     // $(0.7.1 - 6.13)
-    let p_kappa = toPosterior(this.kappa);
-    let p_lambda = toPosterior(this.lambda);
-    if (isNewEra(p_tau, this.tau)) {
-      p_kappa = <any>structuredClone(this.safroleState.gamma_p);
-      p_lambda = <any>structuredClone(this.kappa);
-    }
+    const p_kappa = this.kappa.toPosterior(this, { p_tau });
+    const p_lambda = this.lambda.toPosterior(this, { p_tau });
 
     const p_entropy = this.entropy.toPosterior(this, {
       p_tau,

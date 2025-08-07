@@ -4,7 +4,9 @@ import { JamStateImpl } from "./JamStateImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
 import { isNewEra, toPosterior, toTagged } from "@tsjam/utils";
 import { PHI_FN } from "@/utils";
+import { JamCodecable } from "@tsjam/codec";
 
+@JamCodecable()
 export class GammaPImpl extends ValidatorsImpl {
   // $(0.7.1 - 6.13)
   toPosterior(

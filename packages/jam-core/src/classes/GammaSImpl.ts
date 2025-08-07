@@ -9,7 +9,11 @@ import {
   HashCodec,
   sequenceCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import {
+  EPOCH_LENGTH,
+  LOTTERY_MAX_SLOT,
+  NUMBER_OF_VALIDATORS,
+} from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
@@ -143,7 +147,10 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
         "gamma_s"
       >;
     }
-    return { value: toRet as unknown as InstanceType<T>, readBytes };
+    return {
+      value: toRet as unknown as InstanceType<T>,
+      readBytes: readBytes + 1,
+    };
   }
 
   static encodedSize<T extends typeof BaseJamCodecable>(
@@ -811,6 +818,10 @@ if (import.meta.vitest) {
         // try to encode and redecode to binary
         const encoded = GammaSImpl.decode(gamma.toBinary());
         expect(encoded.value.toJSON()).toEqual(origJSON);
+        expect(encoded.readBytes).toEqual(EPOCH_LENGTH * 32 + 1);
+
+        const b = encoded.value.toBinary();
+        expect(b.length).toEqual(EPOCH_LENGTH * 32 + 1);
       });
       it("should encode and decode ticket GammaS", () => {
         const origJSON = {
