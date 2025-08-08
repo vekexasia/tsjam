@@ -1,10 +1,9 @@
+import { HashCodec } from "@/codecs/miscCodecs";
+import { IdentityMap, IdentityMapCodec } from "@/data_structures/identityMap";
 import {
   BaseJamCodecable,
   binaryCodec,
-  buildKeyValueCodec,
-  HashCodec,
-  hashCodec,
-  HashJSONCodec,
+  codec,
   JamCodecable,
   jsonCodec,
   MapJSONCodec,
@@ -25,33 +24,31 @@ export class RecentHistoryItemImpl
   /**
    * `h`
    */
-  @hashCodec("header_hash")
+  @codec(HashCodec, "header_hash")
   headerHash!: HeaderHash;
   /**
    * `b`
    */
-  @hashCodec("mmb")
+  @codec(HashCodec, "mmb")
   accumulationResultMMB!: Hash;
   /**
    * `s`
    */
-  @hashCodec("state_root")
+  @codec(HashCodec, "state_root")
   stateRoot!: StateRootHash;
 
   /**
    * `p`
    *  dictionary from workpackagehash to erasureroot
    */
-  @jsonCodec(
-    MapJSONCodec(
-      { key: "hash", value: "exports_root" },
-      HashJSONCodec(),
-      HashJSONCodec(),
-    ),
+  @codec(
+    IdentityMapCodec(HashCodec, HashCodec, {
+      key: "hash",
+      value: "exports_root",
+    }),
     "reported",
   )
-  @binaryCodec(buildKeyValueCodec(HashCodec))
-  reportedPackages!: Map<WorkPackageHash, Hash>;
+  reportedPackages!: IdentityMap<WorkPackageHash, 32, Hash>;
 
   constructor(config: RecentHistoryItem) {
     super();

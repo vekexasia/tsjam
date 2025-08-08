@@ -7,7 +7,6 @@ import {
   JamCodecable,
   codec,
   createArrayLengthDiscriminator,
-  hashCodec,
 } from "@tsjam/codec";
 import { Dagger, HeaderHash, Posterior, Tagged, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -16,6 +15,7 @@ import { TestOutputCodec } from "./codec_utils";
 import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
 import { KappaImpl } from "@/classes/KappaImpl";
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -45,7 +45,7 @@ class TestInput extends BaseJamCodecable {
   @codec(SlotImpl)
   slot!: Validated<Posterior<TauImpl>>;
 
-  @hashCodec()
+  @codec(HashCodec)
   parentHash!: HeaderHash;
 }
 
@@ -58,7 +58,7 @@ class Test extends BaseJamCodecable {
   preState!: TestState;
 
   @codec(TestOutputCodec(createArrayLengthDiscriminator(WorkReportImpl)))
-  output!: { error?: 0 | 1 | 2 | 3 | 4 | 5; output?: WorkReportImpl[] };
+  output!: { err?: 0 | 1 | 2 | 3 | 4 | 5; ok?: WorkReportImpl[] };
 
   @codec(TestState)
   postState!: TestState;
@@ -75,7 +75,7 @@ describe("assurances", () => {
       kappa: test.preState.kappa,
       d_rho: test.preState.d_rho,
     });
-    const shouldBeVerified = typeof test.output.error === "undefined";
+    const shouldBeVerified = typeof test.output.err === "undefined";
 
     expect(eaVerified).eq(shouldBeVerified);
     if (!eaVerified) {
@@ -90,6 +90,7 @@ describe("assurances", () => {
       ),
     });
     expect(dd_rho, "dd_rho").deep.eq(test.postState.d_rho);
+    // TODO: check output.ok?
     return true;
   };
   const set = "full";

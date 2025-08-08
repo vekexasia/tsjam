@@ -3,23 +3,6 @@ import {
   LengthDiscSubCodec,
   LengthDiscriminator,
 } from "@/lengthdiscriminated/lengthDiscriminator.js";
-import { Hash } from "@tsjam/types";
-import { HashCodec } from "@/identity.js";
-import { encodeWithCodec } from "@/utils.js";
-
-/**
- * builds a dictionary codec when using map with Hash as key
- * $(0.6.4 - C.11)
- */
-export function buildKeyValueCodec<K extends Hash, V>(
-  valueCodec: JamCodec<V> | ((k: K) => JamCodec<V>),
-  keySorter: (a: Hash, b: Hash) => number = (a, b) =>
-    a - b < 0n ? -1 : a - b > 0n ? 1 : 0,
-): JamCodec<Map<K, V>> {
-  return new LengthDiscriminator(
-    new KeyValue(HashCodec as unknown as JamCodec<K>, valueCodec, keySorter),
-  );
-}
 
 /**
  * builds a generic dictionaty codec by providing all items
@@ -29,9 +12,15 @@ export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
   valueCodec: JamCodec<V> | ((key: K) => JamCodec<V>),
   keySorter: (a: K, b: K) => number,
 ): JamCodec<X> {
-  return new LengthDiscriminator(
+  const c = new LengthDiscriminator(
     new KeyValue(keyCodec, valueCodec, keySorter),
   ) as unknown as JamCodec<X>;
+
+  return {
+    encode: c.encode.bind(c),
+    decode: c.decode.bind(c),
+    encodedSize: c.encodedSize.bind(c),
+  };
 }
 
 /**
@@ -40,6 +29,7 @@ export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
  * it's out of spec as it is. The spec defines a Variable length discriminator is needed
  * when using a fn as valueCodec, the key for each given element is provided.
  * @see buildKeyValueCodec
+ * $(0.7.1 - C.10)
  */
 class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
   constructor(
@@ -113,20 +103,4 @@ class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
       );
     }, 0);
   }
-}
-
-if (import.meta.vitest) {
-  const { E } = await import("@/ints/e.js");
-  const { describe, expect, it } = import.meta.vitest;
-  describe("keyValue", () => {
-    it("should encode and decode a value", () => {
-      const b = new Map([
-        [1n, 2n],
-        [3n, 4n],
-      ]) as unknown as Map<Hash, bigint>;
-      const codec = buildKeyValueCodec(E);
-      const bytes = encodeWithCodec(codec, b);
-      expect(codec.decode(bytes).value).toEqual(b);
-    });
-  });
 }

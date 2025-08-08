@@ -52,7 +52,6 @@ export const createCodec = <T extends object>(
       const toRet = {} as T;
       for (const [key, codec] of itemsCodec) {
         if (typeof codec.decode === "undefined") {
-          console.log(codec);
           throw new Error(`codec.decode for ${String(key)} is undefined`);
         }
         const { value, readBytes } = codec.decode(bytes.subarray(offset));

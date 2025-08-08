@@ -1,10 +1,5 @@
 import { outsideInSequencer } from "@/utils";
-import {
-  bandersnatchSignatureCodec,
-  encodeWithCodec,
-  HashCodec,
-  JamCodecable,
-} from "@tsjam/codec";
+import { codec, encodeWithCodec, JamCodecable } from "@tsjam/codec";
 import {
   EPOCH_LENGTH,
   JAM_ENTROPY,
@@ -29,6 +24,8 @@ import { JamStateImpl } from "./JamStateImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { TicketImpl } from "./TicketImpl";
 import { JamHeaderImpl } from "./JamHeaderImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { IdentitySet } from "@/data_structures/identitySet";
 
 /**
  * $(0.7.1 - C.22) | codec
@@ -38,8 +35,9 @@ export class JamSignedHeaderImpl
   extends JamHeaderImpl
   implements SignedJamHeader
 {
-  @bandersnatchSignatureCodec()
+  @codec(xBytesCodec(96))
   seal!: BandersnatchSignature;
+
   constructor(
     config?: Partial<ConditionalExcept<JamSignedHeaderImpl, Function>>,
   ) {
@@ -152,13 +150,13 @@ export class JamSignedHeaderImpl
         i++
       ) {
         if (
-          Buffer.compare(
+          compareUint8Arrays(
             this.epochMarker!.validators[i].bandersnatch,
             p_gamma_p.at(i).banderSnatch,
           ) !== 0 ||
-          Buffer.compare(
-            this.epochMarker!.validators[i].ed25519.buf,
-            p_gamma_p.at(i).ed25519.buf,
+          compareUint8Arrays(
+            this.epochMarker!.validators[i].ed25519,
+            p_gamma_p.at(i).ed25519,
           ) !== 0
         ) {
           return false;
@@ -213,15 +211,15 @@ export class JamSignedHeaderImpl
    * $(0.7.1 - 10.20)
    */
   verifyOffenders(disputesExtrinsic: DisputeExtrinsicImpl) {
-    const allOffenders = new Set(this.offendersMark.map((p) => p.bigint));
-    for (const c of disputesExtrinsic.culprits) {
-      if (!allOffenders.has(c.key.bigint)) {
+    const allOffenders = new IdentitySet(this.offendersMark.map((p) => p));
+    for (const c of disputesExtrinsic.culprits.elements) {
+      if (!allOffenders.has(c.key)) {
         return false;
       }
     }
 
-    for (const f of disputesExtrinsic.faults) {
-      if (!allOffenders.has(f.key.bigint)) {
+    for (const f of disputesExtrinsic.faults.elements) {
+      if (!allOffenders.has(f.key)) {
         return false;
       }
     }

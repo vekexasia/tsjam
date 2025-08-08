@@ -1,6 +1,7 @@
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   BandersnatchKey,
+  ED25519PublicKey,
   Posterior,
   SeqOfLength,
   ValidatorData,
@@ -37,13 +38,10 @@ export const PHI_FN = <T extends ValidatorData[]>(
   p_offenders: Posterior<DisputesStateImpl["offenders"]>,
 ): T => {
   return validatorKeys.map((v) => {
-    if (p_offenders.has(v.ed25519.bigint)) {
+    if (p_offenders.has(v.ed25519)) {
       return {
         banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
-        ed25519: {
-          buf: new Uint8Array(32).fill(0) as ValidatorData["ed25519"]["buf"],
-          bigint: toTagged(0n),
-        },
+        ed25519: new Uint8Array(32).fill(0) as ED25519PublicKey,
         blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
         metadata: new Uint8Array(128).fill(0) as ValidatorData["metadata"],
       };

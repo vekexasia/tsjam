@@ -1,44 +1,27 @@
-import { describe, expect, it, test } from "vitest";
 import * as fs from "node:fs";
+import { describe, it } from "vitest";
 
-import {
-  EG_Extrinsic,
-  HeaderHash,
-  MerkleTreeRoot,
-  StateRootHash,
-  WorkPackageHash,
-} from "@tsjam/types";
+import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 import {
   BaseJamCodecable,
   codec,
   createCodec,
-  HashCodec,
-  hashCodec,
-  HashJSONCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
 } from "@tsjam/codec";
+import { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
 import { Hash } from "node:crypto";
-import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
-
-const getFixtureFile = (filename: string): Uint8Array => {
-  return fs.readFileSync(
-    new URL(
-      `../../../jamtestvectors/stf/history/full/${filename}.bin`,
-      import.meta.url,
-    ).pathname,
-  );
-};
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
-  @hashCodec()
+  @codec(HashCodec)
   headerHash!: HeaderHash;
 
-  @hashCodec()
+  @codec(HashCodec)
   parentStateRoot!: StateRootHash;
 
-  @hashCodec()
+  @codec(HashCodec)
   accumulateRoot!: Hash;
 
   @lengthDiscriminatedCodec({ ...(<any>createCodec([

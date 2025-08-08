@@ -43,15 +43,10 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
     return new ValidatorsImpl({
       elements: toTagged(
         this.elements.map((v) => {
-          if (p_offenders.has(v.ed25519.bigint)) {
+          if (p_offenders.has(v.ed25519)) {
             return new ValidatorDataImpl({
               banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
-              ed25519: <ED25519PublicKey>{
-                buf: new Uint8Array(32).fill(
-                  0,
-                ) as ValidatorData["ed25519"]["buf"],
-                bigint: toTagged(0n),
-              },
+              ed25519: <ED25519PublicKey>new Uint8Array(32).fill(0),
               blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
               metadata: new Uint8Array(128).fill(
                 0,

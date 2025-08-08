@@ -1,8 +1,7 @@
 import {
   BaseJamCodecable,
+  codec,
   encodeWithCodec,
-  HashCodec,
-  hashCodec,
   JamCodecable,
 } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
@@ -10,6 +9,7 @@ import { Blake2bHash, JamEntropy, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { JamStateImpl } from "./JamStateImpl";
 import { TauImpl } from "./SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * `η`
@@ -18,16 +18,16 @@ import { TauImpl } from "./SlotImpl";
  */
 @JamCodecable()
 export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
-  @hashCodec()
+  @codec(HashCodec)
   _0!: Blake2bHash;
 
-  @hashCodec()
+  @codec(HashCodec)
   _1!: Blake2bHash;
 
-  @hashCodec()
+  @codec(HashCodec)
   _2!: Blake2bHash;
 
-  @hashCodec()
+  @codec(HashCodec)
   _3!: Blake2bHash;
 
   constructor(config?: JamEntropy) {

@@ -2,11 +2,9 @@ import {
   BaseJamCodecable,
   BitSequenceCodec,
   bitSequenceCodec,
-  ed25519SignatureCodec,
+  codec,
   encodeWithCodec,
   eSubIntCodec,
-  HashCodec,
-  hashCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
@@ -29,6 +27,7 @@ import { JamStateImpl } from "../JamStateImpl";
 import { RHOImpl } from "../RHOImpl";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { NewWorkReportsImpl } from "../NewWorkReportsImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
 /**
  * Single extrinsic element
@@ -42,7 +41,7 @@ export class AssuranceExtrinsicImpl
   /**
    * `a` the hash of parent header
    **/
-  @hashCodec("anchor")
+  @codec(HashCodec, "anchor")
   anchorHash!: Hash;
 
   /**
@@ -60,7 +59,7 @@ export class AssuranceExtrinsicImpl
   /**
    * `s` the signature of the validator
    */
-  @ed25519SignatureCodec("signature")
+  @codec(xBytesCodec(64), "signature")
   signature!: ED25519Signature;
 
   /**
@@ -75,7 +74,7 @@ export class AssuranceExtrinsicImpl
       deps.kappa.at(this.validatorIndex).ed25519,
       new Uint8Array([
         ...JAM_AVAILABLE, // XA
-        ...Hashing.blake2bBuf(
+        ...Hashing.blake2b(
           new Uint8Array([
             ...encodeWithCodec(HashCodec, deps.header.parent),
             ...encodeWithCodec(BitSequenceCodec(CORES), this.bitstring),

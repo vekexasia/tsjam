@@ -12,6 +12,7 @@ import { ConditionalExcept } from "type-fest";
 import { JamStateImpl } from "./JamStateImpl";
 import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
+import { compareUint8Arrays } from "uint8array-extras";
 
 export enum GammaAError {
   TICKET_NOT_IN_POSTERIOR_GAMMA_A = "Ticket not in posterior gamma_a",
@@ -51,7 +52,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
           return this.elements;
         })(),
       ]
-        .sort((a, b) => (a.id - b.id < 0 ? -1 : 1))
+        .sort((a, b) => compareUint8Arrays(a.id, b.id))
         .slice(0, EPOCH_LENGTH),
     });
 

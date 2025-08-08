@@ -1,5 +1,4 @@
 import { JamCodec } from "@/codec.js";
-import { BigIntBytes } from "@tsjam/types";
 import {
   binaryCodec,
   jsonCodec,
@@ -54,13 +53,6 @@ export const optionalCodec = <T>(
     binaryCodec(new Optional(codec))(target, propertyKey);
     jsonCodec(NULLORCodec(codec), jsonKey)(target, propertyKey);
   };
-};
-
-// utility codecs
-export const OptBytesBigIntCodec = <K extends BigIntBytes<T>, T extends number>(
-  k: JamCodec<K>,
-): JamCodec<K | undefined> => {
-  return new Optional(k);
 };
 
 if (import.meta.vitest) {

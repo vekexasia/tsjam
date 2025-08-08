@@ -91,7 +91,6 @@ if (import.meta.vitest) {
         const a = BitSequenceCodec(8);
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1];
         const encodedLength = a.encode(value, bytes);
-        console.log(encodedLength);
         expect(a.decode(bytes.subarray(0, encodedLength)).value).toEqual(value);
       });
       it.fails("should encode and decode a value with 9 elements", () => {

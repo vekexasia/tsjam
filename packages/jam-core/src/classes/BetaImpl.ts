@@ -2,8 +2,6 @@ import { appendMMR, wellBalancedBinaryMerkleRoot } from "@/merklization";
 import {
   BaseJamCodecable,
   codec,
-  HashCodec,
-  HashJSONCodec,
   JamCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
@@ -23,9 +21,9 @@ import { toDagger, toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { JamHeaderImpl } from "./JamHeaderImpl";
-import { JamStateImpl } from "./JamStateImpl";
-import { RecentHistoryImpl } from "./RecentHistoryImpl";
 import { LastAccOutsImpl } from "./LastAccOutsImpl";
+import { RecentHistoryImpl } from "./RecentHistoryImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * $(0.7.1 - 7.1 / 7.3)
@@ -43,7 +41,7 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
    */
   @lengthDiscriminatedCodec({
     ...(<JamCodec<undefined | Hash>>new Optional<Hash>(HashCodec)),
-    ...NULLORCodec(HashJSONCodec()),
+    ...NULLORCodec(HashCodec),
   })
   beefyBelt!: Array<Hash | undefined>;
 

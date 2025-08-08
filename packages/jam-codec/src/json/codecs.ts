@@ -1,14 +1,4 @@
-import { JamEncodable, JamDecodable } from "@/codec";
-import { encodeWithCodec } from "@/utils";
-import {
-  BigIntBytes,
-  ByteArrayOfLength,
-  ED25519Signature,
-  ED25519PublicKey,
-  BandersnatchSignature,
-  BandersnatchKey,
-} from "@tsjam/types";
-import { bytesToBigInt, bigintToBytes } from "@tsjam/utils";
+import { BandersnatchKey, ByteArrayOfLength } from "@tsjam/types";
 import { JSONCodec } from "./JsonCodec";
 
 const bufToHex = (b: Uint8Array) => `0x${Buffer.from(b).toString("hex")}`;
@@ -24,21 +14,6 @@ export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
   };
 };
 
-export const BigIntBytesJSONCodec = <
-  T extends BigIntBytes<N>,
-  N extends number,
->(
-  codec: JamEncodable<T> & JamDecodable<T>,
-): JSONCodec<T, string> => {
-  return {
-    fromJSON(json) {
-      return codec.decode(Buffer.from(json.substring(2), "hex")).value;
-    },
-    toJSON(value) {
-      return `0x${Buffer.from(encodeWithCodec(codec, value)).toString("hex")}`;
-    },
-  };
-};
 /**
  * An array of `X` in json converted in Set of `X`
  */
@@ -90,45 +65,6 @@ export const BufferJSONCodec = <
     },
   };
 };
-
-export const Ed25519SignatureJSONCodec = BufferJSONCodec<
-  ED25519Signature,
-  64
->();
-
-export const Ed25519BufJSONCodec = BufferJSONCodec<
-  ED25519PublicKey["buf"],
-  32
->();
-export const Ed25519BigIntJSONCodec: JSONCodec<
-  ED25519PublicKey["bigint"],
-  string
-> = {
-  fromJSON(json) {
-    return bytesToBigInt(
-      new Uint8Array([...Buffer.from(json.slice(2), "hex")]),
-    );
-  },
-  toJSON(value) {
-    return Buffer.from(bigintToBytes(value, 32)).toString("hex");
-  },
-};
-
-export const Ed25519PublicKeyJSONCodec: JSONCodec<ED25519PublicKey, string> = {
-  fromJSON(json) {
-    return {
-      bigint: Ed25519BigIntJSONCodec.fromJSON(json),
-      buf: Ed25519BufJSONCodec.fromJSON(json),
-    };
-  },
-  toJSON(value) {
-    return Ed25519BufJSONCodec.toJSON(value.buf);
-  },
-};
-export const BandersnatchSignatureJSONCodec = BufferJSONCodec<
-  BandersnatchSignature,
-  96
->();
 
 export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   fromJSON(json) {

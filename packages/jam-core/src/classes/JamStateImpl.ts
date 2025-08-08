@@ -17,7 +17,6 @@ import {
   DisputesToPosteriorError,
 } from "./DisputesStateImpl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { DisputesExtrinsicValidationError } from "./extrinsics/disputes";
 import { EGError } from "./extrinsics/guarantees";
 import { EPError } from "./extrinsics/preimages";
 import { ETError } from "./extrinsics/tickets";
@@ -34,6 +33,9 @@ import { RHOImpl } from "./RHOImpl";
 import { SafroleStateImpl } from "./SafroleStateImpl";
 import { TauError, TauImpl } from "./SlotImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
+import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
+import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
+import { DisputesFaultError } from "./extrinsics/disputes/faults";
 
 export class JamStateImpl implements JamState {
   /**
@@ -152,8 +154,10 @@ export class JamStateImpl implements JamState {
     Posterior<JamStateImpl>,
     | ImportBlockError
     | DisputesToPosteriorError
+    | DisputesVerdictError
+    | DisputesCulpritError
+    | DisputesFaultError
     | GammaAError
-    | DisputesExtrinsicValidationError
     | ETError
     | EPError
     | EGError
@@ -189,6 +193,7 @@ export class JamStateImpl implements JamState {
     });
     const [dispExErr, disputesExtrinsic] = newBlock.extrinsics.disputes
       .checkValidity({
+        disputesState: this.disputes,
         tau: this.slot,
         kappa: this.kappa,
         lambda: this.lambda,
@@ -200,7 +205,9 @@ export class JamStateImpl implements JamState {
     }
 
     const [p_disputesError, p_disputes] = this.disputes
-      .toPosterior(this, {
+      .toPosterior({
+        kappa: this.kappa,
+        lambda: this.lambda,
         extrinsic: disputesExtrinsic,
       })
       .safeRet();

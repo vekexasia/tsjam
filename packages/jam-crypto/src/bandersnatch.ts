@@ -16,7 +16,6 @@ import {
   ietfVrfOutputHashFromSecret,
 } from "@tsjam/crypto-napi";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { bytesToBigInt } from "@tsjam/utils";
 
 export const Bandersnatch = {
   /**
@@ -61,14 +60,17 @@ export const Bandersnatch = {
    * $(0.6.4 - G.2)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
-    return bytesToBigInt(
-      ietfVrfOutputHash(signature) as Uint8Array as ByteArrayOfLength<32>,
-    );
+    return ietfVrfOutputHash(
+      signature,
+    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   /** generate output from secret and context */
   vrfOutputSeed(privKey: BandersnatchKey, context: Uint8Array): OpaqueHash {
-    return bytesToBigInt(ietfVrfOutputHashFromSecret(privKey, context));
+    return ietfVrfOutputHashFromSecret(
+      privKey,
+      context,
+    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   /**
@@ -76,9 +78,9 @@ export const Bandersnatch = {
    * $(0.6.4 - G.5)
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
-    return bytesToBigInt(
-      ringVrfOutputHash(ringProof) as Uint8Array as ByteArrayOfLength<32>,
-    );
+    return ringVrfOutputHash(
+      ringProof,
+    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   verifyVrfProof(

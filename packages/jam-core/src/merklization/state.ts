@@ -21,7 +21,6 @@ import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import {
   E_4_int,
   E_sub_int,
-  HashCodec,
   JamCodec,
   bit,
   createArrayLengthDiscriminator,
@@ -35,20 +34,19 @@ import {
   ServiceIndex,
   StateKey,
   StateRootHash,
-  Tau,
   UpToSeq,
   u32,
   u64,
 } from "@tsjam/types";
-import { bigintToBytes, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { MerkleServiceAccountStorageImpl } from "../classes/MerkleServiceAccountStorageImpl";
-import { MerkleMap } from "./merkleMap";
 import { serviceAccountDataCodec } from "./stateCodecs";
 import { stateKey } from "./utils";
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { KappaImpl } from "@/classes/KappaImpl";
 import { LambdaImpl } from "@/classes/LambdaImpl";
+import { toTagged } from "@tsjam/utils";
+import { IdentityMap } from "@/data_structures/identityMap";
 
 /**
  * Merkelize state
@@ -81,12 +79,10 @@ export const bits = (ar: Uint8Array): bit[] => {
 
 // $(0.6.5 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
-  const lb = encodeWithCodec(HashCodec, l);
-  const rb = encodeWithCodec(HashCodec, r);
   return new Uint8Array([
-    lb[0] & 0b01111111,
-    ...lb.subarray(1),
-    ...rb,
+    l[0] & 0b01111111,
+    ...l.subarray(1),
+    ...r,
   ]) as ByteArrayOfLength<64>;
 };
 
@@ -106,7 +102,7 @@ const L_fn = (
     return new Uint8Array([
       0b11000000,
       ...k,
-      ...Hashing.blake2bBuf(v),
+      ...Hashing.blake2b(v),
     ]) as ByteArrayOfLength<64>;
   }
 };
@@ -114,7 +110,7 @@ const L_fn = (
 // $(0.6.4 - D.6)
 export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   if (d.size === 0) {
-    return 0n as Hash;
+    return <Hash>new Uint8Array(32).fill(0);
   } else if (d.size === 1) {
     const [[k, v]] = d.values();
     return Hashing.blake2b(L_fn(k, v));
@@ -137,8 +133,8 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
  * `T(σ)`
  * $(0.6.7 - D.2)
  */
-export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
-  const toRet = new MerkleMap();
+export const merkleStateMap = (state: JamStateImpl) => {
+  const toRet: IdentityMap<StateKey, 31, Uint8Array> = new IdentityMap();
 
   toRet.set(stateKey(1), state.authPool.toBinary());
 
@@ -199,8 +195,7 @@ export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
       toRet.set(stateKey, v);
     }
 
-    for (const [_h, p] of serviceAccount.preimages) {
-      const h = encodeWithCodec(HashCodec, _h);
+    for (const [h, p] of serviceAccount.preimages) {
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
       toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...h])), p);
     }
@@ -208,9 +203,8 @@ export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
     for (const [h, lm] of serviceAccount.requests) {
       for (const [l, t] of lm) {
         const e_l = encodeWithCodec(E_4_int, l);
-        const h_h = encodeWithCodec(HashCodec, h);
         toRet.set(
-          stateKey(serviceIndex, new Uint8Array([...e_l, ...h_h])),
+          stateKey(serviceIndex, new Uint8Array([...e_l, ...h])),
           encodeWithCodec(createArrayLengthDiscriminator(SlotImpl), t),
         );
       }
@@ -220,7 +214,9 @@ export const merkleStateMap = (state: JamStateImpl): MerkleMap => {
   return toRet;
 };
 
-export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
+export const stateFromMerkleMap = (
+  merkleMap: IdentityMap<StateKey, 31, Uint8Array>,
+): JamState => {
   const authPool = AuthorizerPoolImpl.decode(merkleMap.get(stateKey(1))!).value;
 
   const authQueue = AuthorizerQueueImpl.decode(
@@ -318,13 +314,13 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
       lastAcc: serviceData.lastAcc,
       parent: serviceData.parent,
       storage,
-      requests: new Map(),
-      preimages: new Map(),
+      requests: new IdentityMap(),
+      preimages: new IdentityMap(),
     });
 
     const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
       const possiblePreimage = merkleMap.get(sk)!;
-      const h = Hashing.blake2bBuf(possiblePreimage);
+      const h = Hashing.blake2b(possiblePreimage);
 
       const p_p_key = stateKey(
         serviceIndex,
@@ -335,7 +331,6 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
     for (const preimagekey of preimage_p_keys) {
       const preimage = merkleMap.get(preimagekey)!;
       const h = Hashing.blake2b(preimage);
-      const hb = Hashing.blake2bBuf(preimage);
       serviceAccount.preimages.set(h, preimage);
 
       // get preimage l
@@ -343,7 +338,7 @@ export const stateFromMerkleMap = (merkleMap: MerkleMap): JamState => {
       const length = preimage.length;
 
       const e_l = encodeWithCodec(E_sub_int(4), length);
-      const p_l_key = stateKey(serviceIndex, new Uint8Array([...e_l, ...hb]));
+      const p_l_key = stateKey(serviceIndex, new Uint8Array([...e_l, ...h]));
       const pl = merkleMap.get(p_l_key);
       assert(typeof pl !== "undefined", "Preimage l not found");
       const pl_decoded = createArrayLengthDiscriminator<UpToSeq<SlotImpl, 3>>(
@@ -428,9 +423,7 @@ if (import.meta.vitest) {
           m.set(keyBits, [keyBuf, value]);
         }
         const res = M_fn(m);
-        expect(Buffer.from(bigintToBytes(res, 32)).toString("hex")).eq(
-          t.output,
-        );
+        expect(Buffer.from(res).toString("hex")).eq(t.output);
       }
     });
   });

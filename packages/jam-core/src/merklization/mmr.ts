@@ -1,6 +1,6 @@
-import { HashCodec, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { ByteArrayOfLength, Hash } from "@tsjam/types";
+import { concatUint8Arrays } from "uint8array-extras";
 
 /**
  * section E.2 `A`
@@ -28,9 +28,7 @@ const p = <T extends Hash>(
   } else if (pos < peeks.length && typeof peeks[pos] === "undefined") {
     return replace(peeks, pos, newEl);
   } else {
-    const a = new Uint8Array(32 * 2);
-    HashCodec.encode(peeks[pos]!, a.subarray(0, 32));
-    HashCodec.encode(newEl, a.subarray(32, 64));
+    const a = concatUint8Arrays([peeks[pos]!, newEl]);
     return p(replace(peeks, pos, undefined), hashFn(a), pos + 1, hashFn);
   }
 };
@@ -45,13 +43,11 @@ const replace = <T>(elements: T[], index: number, value: T) => {
  * `Mr` - $(0.7.0 - E.10)
  */
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
-  const peeks = _peeks
-    .filter((a) => typeof a !== "undefined")
-    .map((a) => <ByteArrayOfLength<32>>encodeWithCodec(HashCodec, a));
+  const peeks = _peeks.filter((a) => typeof a !== "undefined");
   if (peeks.length === 0) {
-    return <Hash>0n;
+    return <Hash>new Uint8Array(32).fill(0);
   }
-  return HashCodec.decode(innerMMRSuperPeak(peeks)).value;
+  return <Hash>innerMMRSuperPeak(peeks);
 };
 
 const PEAK = new TextEncoder().encode("peak");
@@ -59,12 +55,12 @@ const innerMMRSuperPeak = (
   peeks: ByteArrayOfLength<32>[],
 ): ByteArrayOfLength<32> => {
   if (peeks.length === 0) {
-    return <ByteArrayOfLength<32>>encodeWithCodec(HashCodec, <Hash>0n);
+    return <Hash>new Uint8Array(32).fill(0);
   }
   if (peeks.length === 1) {
     return peeks[0];
   }
-  return Hashing.keccak256Buf(
+  return Hashing.keccak256(
     new Uint8Array([
       ...PEAK,
       ...innerMMRSuperPeak(peeks.slice(0, peeks.length - 1)),

@@ -3,18 +3,13 @@ import {
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
-  buildKeyValueCodec,
   codec,
   createArrayLengthDiscriminator,
   E,
   E_int,
-  HashCodec,
-  hashCodec,
-  HashJSONCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
-  MapJSONCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
@@ -36,6 +31,8 @@ import { RHOImpl } from "./RHOImpl";
 import { Hashing } from "@tsjam/crypto";
 import { type NewWorkReportsImpl } from "./NewWorkReportsImpl";
 import { ConditionalExcept } from "type-fest";
+import { HashCodec } from "@/codecs/miscCodecs";
+import { IdentityMap, IdentityMapCodec } from "@/data_structures/identityMap";
 
 /**
  * Identified by `R` set
@@ -66,7 +63,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**
    * `a`
    */
-  @hashCodec("authorizer_hash")
+  @codec(HashCodec, "authorizer_hash")
   authorizerHash!: Blake2bHash;
 
   /**
@@ -86,16 +83,14 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**
    * `bold_l`
    */
-  @jsonCodec(
-    MapJSONCodec(
-      { key: "work_package_hash", value: "segment_tree_root" },
-      HashJSONCodec(),
-      HashJSONCodec(),
-    ),
+  @codec(
+    IdentityMapCodec(HashCodec, HashCodec, {
+      key: "work_package_hash",
+      value: "segment_tree_root",
+    }),
     "segment_root_lookup",
   )
-  @binaryCodec(buildKeyValueCodec(HashCodec))
-  srLookup!: Map<WorkPackageHash, Hash>;
+  srLookup!: IdentityMap<WorkPackageHash, 32, Hash>;
 
   /**
    * `bold_d`

@@ -1,6 +1,6 @@
-import { StateKeyBigInt, stateKeyCodec } from "@/merklization/stateCodecs";
+import { IdentityMap } from "@/data_structures/identityMap";
 import { stateKey } from "@/merklization/utils";
-import { E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { E_4_int } from "@tsjam/codec";
 import {
   IServiceAccountStorage,
   ServiceIndex,
@@ -17,7 +17,7 @@ const computeStateKey = (serviceIndex: ServiceIndex, key: Uint8Array) => {
 };
 
 export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
-  private storage: Map<StateKeyBigInt, Uint8Array> = new Map();
+  private storage: IdentityMap<StateKey, 31, Uint8Array> = new IdentityMap();
 
   /**
    * @param serviceIndex - the index of the service account
@@ -28,8 +28,8 @@ export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
     public octets: u64 = <u64>0n,
   ) {}
 
-  toInternalKey(key: Uint8Array): StateKeyBigInt {
-    return stateKeyCodec.decode(computeStateKey(this.serviceIndex, key)).value;
+  toInternalKey(key: Uint8Array): StateKey {
+    return computeStateKey(this.serviceIndex, key);
   }
 
   /**
@@ -67,29 +67,17 @@ export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
   }
 
   setFromStateKey(stateKey: StateKey, value: Uint8Array) {
-    this.storage.set(stateKeyCodec.decode(stateKey).value, value);
+    this.storage.set(stateKey, value);
   }
 
   entries(): IterableIterator<[StateKey, Uint8Array]> {
     return Array.from(this.storage.entries())
-      .map(([stateKey, value]): [StateKey, Uint8Array] => [
-        encodeWithCodec(stateKeyCodec, stateKey),
-        value,
-      ])
+      .map(([stateKey, value]): [StateKey, Uint8Array] => [stateKey, value])
       .values();
   }
 
   get size(): number {
     return this.storage.size;
-  }
-
-  clone() {
-    const clone = new MerkleServiceAccountStorageImpl(
-      this.serviceIndex,
-      this.octets,
-    );
-    clone.storage = new Map(this.storage);
-    return clone;
   }
 }
 

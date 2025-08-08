@@ -1,9 +1,9 @@
+import { xBytesCodec } from "@/codecs/miscCodecs";
 import {
-  bandersnatchCodec,
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
-  ed25519PubkeyCodec,
+  codec,
   fixedSizeIdentityCodec,
   JamCodecable,
   jsonCodec,
@@ -28,7 +28,7 @@ export class ValidatorDataImpl
    * ∀k ∈ K ∶ kb ∈ HB ≡ k0⋅⋅⋅+32
    * $(0.7.1 - 6.9)
    */
-  @bandersnatchCodec()
+  @codec(xBytesCodec(32))
   banderSnatch!: BandersnatchKey;
 
   /**
@@ -37,7 +37,7 @@ export class ValidatorDataImpl
    * ∀k ∈ K ∶ ke ∈ HE ≡ k32⋅⋅⋅+32
    * $(0.7.1 - 6.10)
    */
-  @ed25519PubkeyCodec()
+  @codec(xBytesCodec(32))
   ed25519!: ED25519PublicKey;
 
   /**
@@ -46,8 +46,7 @@ export class ValidatorDataImpl
    * $(0.7.1 - 6.11)
    */
 
-  @jsonCodec(BufferJSONCodec())
-  @binaryCodec(fixedSizeIdentityCodec(144))
+  @codec(xBytesCodec(144))
   blsKey!: BLSKey;
 
   /**
@@ -57,9 +56,7 @@ export class ValidatorDataImpl
    * next 2 bytes: LE encoded port
    * $(0.7.1 - 6.11)
    */
-
-  @jsonCodec(BufferJSONCodec())
-  @binaryCodec(fixedSizeIdentityCodec(128))
+  @codec(xBytesCodec(128))
   metadata!: ByteArrayOfLength<128>;
 
   constructor(config?: ConditionalExcept<ValidatorDataImpl, Function>) {

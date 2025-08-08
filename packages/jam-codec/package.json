@@ -32,7 +32,8 @@
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/types": "*",
-    "@tsjam/utils": "*"
+    "@tsjam/utils": "*",
+    "uint8array-extras": "^1.4.0"
   },
   "license": "MIT"
 }

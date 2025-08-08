@@ -27,5 +27,5 @@ export interface IDisputesState {
    * set of validator keys found to have misjudged a work report
    * aka: they voted for a work report to be valid when it was not (in psi_b) or vice versa
    */
-  offenders: Set<ED25519PublicKey["bigint"]>;
+  offenders: Set<ED25519PublicKey>;
 }

@@ -1,12 +1,10 @@
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import { outsideInSequencer } from "@/utils";
 import {
-  BandersnatchCodec,
   BaseJamCodecable,
-  BufferJSONCodec,
   E_1,
   E_4,
   encodeWithCodec,
-  HashCodec,
   sequenceCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
@@ -27,10 +25,7 @@ import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {
-  @sequenceCodec(EPOCH_LENGTH, {
-    ...BandersnatchCodec,
-    ...BufferJSONCodec<BandersnatchKey, 32>(),
-  })
+  @sequenceCodec(EPOCH_LENGTH, xBytesCodec(32))
   keys?: GammaSFallback;
 
   @sequenceCodec(EPOCH_LENGTH, TicketImpl)
@@ -94,7 +89,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
       for (let i = 0; i < EPOCH_LENGTH; i++) {
         const e4Buf = new Uint8Array(4);
         E_4.encode(BigInt(i), e4Buf);
-        const h_4 = Hashing.blake2bBuf(
+        const h_4 = Hashing.blake2b(
           new Uint8Array([...p_eta2, ...e4Buf]),
         ).subarray(0, 4);
         const index =

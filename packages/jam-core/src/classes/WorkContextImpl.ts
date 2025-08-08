@@ -1,9 +1,7 @@
 import {
   BaseJamCodecable,
+  codec,
   eSubIntCodec,
-  HashCodec,
-  hashCodec,
-  HashJSONCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
 } from "@tsjam/codec";
@@ -15,6 +13,7 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { SlotImpl } from "./SlotImpl";
+import { xBytesCodec } from "@/codecs/miscCodecs";
 
 /**
  * `C` set
@@ -25,25 +24,25 @@ export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
   /**
    * `a` header hash
    */
-  @hashCodec("anchor")
+  @codec(xBytesCodec(32), "anchor")
   anchorHash!: HeaderHash;
 
   /**
    * `s`
    */
-  @hashCodec("state_root")
+  @codec(xBytesCodec(32), "state_root")
   anchorPostState!: StateRootHash;
 
   /**
    * `b`
    */
-  @hashCodec("beefy_root")
+  @codec(xBytesCodec(32), "beefy_root")
   anchorAccOutLog!: BeefyRootHash;
 
   /**
    * `l`
    */
-  @hashCodec("lookup_anchor")
+  @codec(xBytesCodec(32), "lookup_anchor")
   lookupAnchorHash!: HeaderHash;
 
   /**
@@ -55,10 +54,7 @@ export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
   /**
    * `bold_p`
    */
-  @lengthDiscriminatedCodec({
-    ...HashCodec,
-    ...HashJSONCodec(),
-  })
+  @lengthDiscriminatedCodec(xBytesCodec(32))
   prerequisites!: WorkPackageHash[];
 }
 

@@ -13,7 +13,6 @@ import {
   E_int,
   E_sub_int,
   encodeWithCodec,
-  HashCodec,
   JamCodec,
 } from "@tsjam/codec";
 import {
@@ -39,6 +38,7 @@ import { applyMods } from "../functions/utils";
 import { check_fn } from "../utils/check_fn";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 const AccumulateArgsCodec = createCodec<{
   t: TauImpl;
@@ -120,7 +120,7 @@ const I_fn = (
   const d = pvmAccState.accounts.clone();
   d.delete(service);
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
-    Hashing.blake2bBuf(
+    Hashing.blake2b(
       encodeWithCodec(
         createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: TauImpl }>([
           ["s", E_sub_int<ServiceIndex>(4)],

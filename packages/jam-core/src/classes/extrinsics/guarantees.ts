@@ -2,10 +2,8 @@ import { FisherYatesH } from "@/fisherYates";
 import {
   BaseJamCodecable,
   codec,
-  ed25519SignatureCodec,
   encodeWithCodec,
   eSubIntCodec,
-  HashCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
@@ -32,7 +30,6 @@ import {
   EG_Extrinsic,
   GuarantorsAssignment,
   Hash,
-  IDisputesState,
   JamEntropy,
   Posterior,
   SingleWorkReportGuarantee,
@@ -55,6 +52,8 @@ import { RecentHistoryImpl } from "../RecentHistoryImpl";
 import { RHOImpl } from "../RHOImpl";
 import { SlotImpl, TauImpl } from "../SlotImpl";
 import { WorkReportImpl } from "../WorkReportImpl";
+import { IdentitySet } from "@/data_structures/identitySet";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -69,7 +68,7 @@ export class SingleWorkReportGuaranteeSignatureImpl
   /**
    * `s`
    */
-  @ed25519SignatureCodec()
+  @codec(xBytesCodec(64))
   signature!: ED25519Signature;
 
   checkValidity(deps: {
@@ -324,7 +323,7 @@ export class GuaranteesExtrinsicImpl
       p_kappa: deps.p_kappa,
     });
 
-    const reporters = new Set<ED25519PublicKey["bigint"]>();
+    const reporters = new IdentitySet<ED25519PublicKey>();
     const curRotation = Math.floor(deps.p_tau.value / VALIDATOR_CORE_ROTATION);
     for (const { signatures, slot } of this.elements) {
       let usedG = M_star;
@@ -332,7 +331,7 @@ export class GuaranteesExtrinsicImpl
         usedG = M;
       }
       for (const { validatorIndex } of signatures) {
-        reporters.add(usedG.validatorsED22519Key[validatorIndex].bigint);
+        reporters.add(usedG.validatorsED22519Key[validatorIndex]);
       }
     }
     return reporters;
@@ -582,7 +581,7 @@ const M_fn = (input: {
   tauOffset: u32;
   p_tau: Validated<Posterior<TauImpl>>;
   validatorKeys: Posterior<JamStateImpl["kappa"] | JamStateImpl["lambda"]>;
-  p_offenders: Posterior<IDisputesState["offenders"]>;
+  p_offenders: Posterior<DisputesStateImpl["offenders"]>;
 }) => {
   // R(c,n) = [(x + n) mod CORES | x E c]
   const R = (c: number[], n: number) => c.map((x) => (x + n) % CORES);
@@ -616,7 +615,7 @@ const M_STAR_fn = (input: {
   p_eta3: Posterior<JamEntropy["_3"]>;
   p_kappa: Posterior<JamStateImpl["kappa"]>;
   p_lambda: Posterior<JamStateImpl["lambda"]>;
-  p_offenders: Posterior<IDisputesState["offenders"]>;
+  p_offenders: Posterior<DisputesStateImpl["offenders"]>;
   p_tau: Validated<Posterior<TauImpl>>;
 }) => {
   if (

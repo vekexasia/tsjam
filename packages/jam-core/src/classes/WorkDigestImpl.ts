@@ -9,7 +9,6 @@ import {
   E_int,
   eSubBigIntCodec,
   eSubIntCodec,
-  hashCodec,
   JamCodecable,
   jsonCodec,
   NumberJSONCodec,
@@ -17,6 +16,7 @@ import {
 import { Gas, Hash, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "./WorkOutputImpl";
+import { xBytesCodec } from "@/codecs/miscCodecs";
 
 /**
  * Identified by `D` set
@@ -36,14 +36,14 @@ export class WorkDigestImpl extends BaseJamCodecable implements WorkDigest {
    * `c` - the hash of the code of the sevice at the time of being reported
    * it must be predicted within the work-report according to (153)
    */
-  @hashCodec("code_hash")
+  @codec(xBytesCodec(32), "code_hash")
   codeHash!: Hash;
 
   /**
    * `y` - The hash of the payload which produced this result
    * in the refine stage
    */
-  @hashCodec("payload_hash")
+  @codec(xBytesCodec(32), "payload_hash")
   payloadHash!: Hash;
 
   /**

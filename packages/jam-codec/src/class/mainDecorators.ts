@@ -61,10 +61,9 @@ export abstract class BaseJamCodecable {
     const el = (<any>this.prototype)[CODEC_METADATA]?.find(
       (a: any) => a.propertyKey === x,
     );
-    assert(el, `Codec for property ${String(x)} not found`);
     return {
       encode: el.codec.encode.bind(el.codec),
-      decode: el.codec.decode.bind(el.decode),
+      decode: el.codec.decode.bind(el.codec),
       encodedSize: el.codec.encodedSize.bind(el.codec),
       fromJSON: el.json.codec.fromJSON.bind(el.json.codec),
       toJSON: el.json.codec.toJSON.bind(el.json.codec),
@@ -121,16 +120,16 @@ export function jsonCodec<T, K extends string | symbol>(
 export function codec<T, K extends string | symbol>(
   codec: JamCodec<T>,
   json: JSONCodec<T>,
-  jsonKey?: string,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ): (target: any, propertyKey: K) => void;
 export function codec<T, K extends string | symbol>(
   codec: JamCodec<T> & JSONCodec<T>,
-  jsonKey?: string,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ): (target: any, propertyKey: K) => void;
 export function codec<T, K extends string | symbol>(
   codec: JamCodec<T> | (JamCodec<T> & JSONCodec<T>),
-  json?: JSONCodec<T> | string,
-  jsonKey?: string,
+  json?: JSONCodec<T> | string | typeof SINGLE_ELEMENT_CLASS,
+  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) {
   const key = typeof json === "string" ? json : jsonKey;
   const _jsonCodec = typeof json === "object" ? json : <JSONCodec<T>>codec;

@@ -1,13 +1,10 @@
 import {
   ArrayOfJSONCodec,
-  bandersnatchSignatureCodec,
   BaseJamCodecable,
+  codec,
   createSequenceCodec,
-  Ed25519PubkeyCodec,
-  Ed25519PublicKeyJSONCodec,
   encodeWithCodec,
   eSubIntCodec,
-  hashCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
   optionalCodec,
@@ -28,6 +25,7 @@ import { HeaderEpochMarkerImpl } from "./HeaderEpochMarkerImpl";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
 import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
 /**
  * $(0.7.1 - C.23) | `Eu`
@@ -38,7 +36,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * **HP:** The hash of the parent header.
    * note: the genesis block has no parent, so its parent hash is 0.
    */
-  @hashCodec()
+  @codec(HashCodec)
   parent!: HeaderHash;
 
   /**
@@ -46,13 +44,13 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * It's computed by applying the `Mσ` fn to the `σ`
    * @see JamState
    */
-  @hashCodec("parent_state_root")
+  @codec(HashCodec, "parent_state_root")
   parentStateRoot!: StateRootHash;
 
   /**
    * **HX:** The hash of the block's extrinsic data.
    */
-  @hashCodec("extrinsic_hash")
+  @codec(HashCodec, "extrinsic_hash")
   extrinsicHash!: Hash;
 
   /**
@@ -93,7 +91,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
   /**
    * `HV` -
    */
-  @bandersnatchSignatureCodec("entropy_source")
+  @codec(xBytesCodec(96), "entropy_source")
   entropySource!: BandersnatchSignature;
 
   /**
@@ -101,13 +99,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  @lengthDiscriminatedCodec(
-    {
-      ...Ed25519PubkeyCodec,
-      ...Ed25519PublicKeyJSONCodec,
-    },
-    "offenders_mark",
-  )
+  @lengthDiscriminatedCodec(xBytesCodec(32), "offenders_mark")
   offendersMark!: ED25519PublicKey[];
 
   unsignedHash(): HeaderHash {

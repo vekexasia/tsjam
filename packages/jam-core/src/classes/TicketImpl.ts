@@ -1,9 +1,5 @@
-import {
-  BaseJamCodecable,
-  eIntCodec,
-  hashCodec,
-  JamCodecable,
-} from "@tsjam/codec";
+import { HashCodec } from "@/codecs/miscCodecs";
+import { BaseJamCodecable, codec, eIntCodec, JamCodecable } from "@tsjam/codec";
 import { Hash, Ticket } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 
@@ -17,7 +13,7 @@ export class TicketImpl extends BaseJamCodecable implements Ticket {
   /**
    * `y`
    */
-  @hashCodec()
+  @codec(HashCodec)
   id!: Hash;
   /**
    * `e`

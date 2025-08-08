@@ -1,7 +1,6 @@
 import { E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Hash, u32 } from "@tsjam/types";
-import { bigintToBytes } from "@tsjam/utils";
 
 /**
  * $(0.6.4 - F.1)
@@ -31,14 +30,13 @@ export const FisherYatesH = <T>(arr: T[], entropy: Hash) => {
  * $(0.6.4 - F.2)
  */
 const Q = (l: number, entropy: Hash): u32[] => {
-  const entropyBin = bigintToBytes(entropy, 32);
   const toRet = <u32[]>[];
   for (let i = 0; i < l; i++) {
     toRet.push(
       E_4_int.decode(
-        Hashing.blake2bBuf(
+        Hashing.blake2b(
           new Uint8Array([
-            ...entropyBin,
+            ...entropy,
             ...encodeWithCodec(E_4_int, <u32>Math.floor(i / 8)),
           ]),
         ).subarray((4 * i) % 32, ((4 * i) % 32) + 4),
@@ -52,8 +50,7 @@ if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   describe("fisheryates", () => {
     it("test", () => {
-      const entropy =
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
+      const entropy = new Uint8Array(32).fill(255);
       const arr = [0, 1, 2, 3, 4, 5, 6, 7];
       expect(FisherYatesH(arr, entropy as Hash)).deep.eq([
         1, 2, 6, 0, 7, 4, 3, 5,

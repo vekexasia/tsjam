@@ -1,6 +1,6 @@
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
-declare const tags: unique symbol;
+export declare const tags: unique symbol;
 export type Tagged<
   BaseType,
   Tag extends PropertyKey,
@@ -47,16 +47,17 @@ export type Z_Gas = Tagged<i64, "gas">;
  */
 export type PVMRegisterRawValue = Tagged<u64, "registerValue">;
 
-/**
- * Define a bigint whose max value is 2^(8*T) - 1 (if unsigned)
- * it's used for all the keys (as they can literally be a number) and hashes
- **/
-export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
+// /**
+//  * Define a bigint whose max value is 2^(8*T) - 1 (if unsigned)
+//  * it's used for all the keys (as they can literally be a number) and hashes
+//  **/
+// export type BigIntBytes<T extends number> = Tagged<bigint, `BigIntBytes${T}`>;
 
 /**
  * Both public and private keys are 32 bytes long
  */
-export type Hash = Tagged<BigIntBytes<32>, "Hash">;
+
+export type Hash = Tagged<ByteArrayOfLength<32>, "hash">;
 export type AuthorizerHash = Tagged<Hash, "AuthorizerHash">;
 export type CodeHash = Tagged<Hash, "CodeHash">;
 export type Blake2bHash = Tagged<Hash, "Blake2bHash">;
@@ -70,10 +71,10 @@ export type WorkPackageHash = Tagged<Blake2bHash, "WorkPackageHash">;
  *  `H⊞`
  */
 export type ExportingWorkPackageHash = { value: WorkPackageHash };
-export type ED25519PublicKey = {
-  buf: Tagged<ByteArrayOfLength<32>, "ED25519PublicKey">;
-  bigint: Tagged<BigIntBytes<32>, "ED25519PublicKeyBigInt">;
-};
+export type ED25519PublicKey = Tagged<
+  ByteArrayOfLength<32>,
+  "ED25519PublicKey"
+>;
 export type ED25519PrivateKey = Tagged<
   ByteArrayOfLength<64>,
   "ED25519PrivateKey"

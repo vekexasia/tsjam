@@ -2,8 +2,6 @@ import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   createArrayLengthDiscriminator,
-  HashCodec,
-  HashJSONCodec,
   JamCodecable,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
@@ -23,6 +21,7 @@ import { ConditionalExcept } from "type-fest";
 import { AuthorizerQueueImpl } from "./AuthorizerQueueImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { TauImpl } from "./SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 const codec = createArrayLengthDiscriminator(HashCodec);
 /**
  * `α`
@@ -39,7 +38,7 @@ export class AuthorizerPoolImpl
       encode: codec.encode.bind(codec),
       decode: codec.decode.bind(codec),
       encodedSize: codec.encodedSize.bind(codec),
-      ...ArrayOfJSONCodec(HashJSONCodec()),
+      ...ArrayOfJSONCodec(HashCodec),
     },
     SINGLE_ELEMENT_CLASS,
   )

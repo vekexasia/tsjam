@@ -4,7 +4,6 @@ import {
   BufferJSONCodec,
   codec,
   eBigIntCodec,
-  hashCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
@@ -18,6 +17,7 @@ import {
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "../WorkOutputImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * `U` set in graypaper $\operandtuple$
@@ -32,25 +32,25 @@ export class PVMAccumulationOpImpl
   /**
    * `p`
    */
-  @hashCodec()
+  @codec(HashCodec)
   packageHash!: WorkPackageHash;
 
   /**
    * `e`
    */
-  @hashCodec()
+  @codec(HashCodec)
   segmentRoot!: Hash;
 
   /**
    * `a`
    */
-  @hashCodec()
+  @codec(HashCodec)
   authorizerHash!: Hash;
 
   /**
    * `y`
    */
-  @hashCodec()
+  @codec(HashCodec)
   payloadHash!: Hash;
 
   /**

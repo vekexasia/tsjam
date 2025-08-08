@@ -12,15 +12,12 @@ import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkItemImpl } from "@/classes/WorkItemImpl";
 import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
 import {
-  Blake2bHashCodec,
-  CodeHashCodec,
   createArrayLengthDiscriminator,
   createCodec,
   E_8,
   E_sub,
   E_sub_int,
   encodeWithCodec,
-  HashCodec,
   JamCodec,
   Uint8ArrayJSONCodec,
 } from "@tsjam/codec";
@@ -98,6 +95,9 @@ import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { IdentityMap } from "@/data_structures/identityMap";
+import { compareUint8Arrays } from "uint8array-extras";
 
 export class HostFunctions {
   @HostFn(0)
@@ -163,7 +163,7 @@ export class HostFunctions {
       }
       case 1n: {
         if (typeof args.n !== "undefined") {
-          v = encodeWithCodec(HashCodec, args.n);
+          v = args.n;
         }
         break;
       }
@@ -344,9 +344,9 @@ export class HostFunctions {
 
     let hash: Blake2bHash;
     if (context.memory.canRead(h.value, 32)) {
-      hash = Blake2bHashCodec.decode(
-        context.memory.getBytes(h.value, 32),
-      ).value;
+      hash = <Blake2bHash>(
+        HashCodec.decode(context.memory.getBytes(h.value, 32)).value
+      );
     } else {
       // v = ∇
       return [IxMod.panic()];
@@ -1044,7 +1044,7 @@ export class HostFunctions {
   @HostFn(18)
   new(
     context: PVMProgramExecutionContextImpl,
-    args: { x: PVMResultContextImpl; tau: Tau },
+    args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, l, g, m, f, i] = context.registers.slice(7);
 
@@ -1074,11 +1074,11 @@ export class HostFunctions {
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
     const a = new ServiceAccountImpl({
       codeHash: c,
-      requests: new Map(),
+      requests: new IdentityMap(),
       balance: <Balance>0n,
       minAccGas: g.value as u64 as Gas,
       minMemoGas: m.value as u64 as Gas,
-      preimages: new Map(),
+      preimages: new IdentityMap(),
       created: args.tau,
       gratis: f.value as u64 as Balance,
       lastAcc: new SlotImpl(<u32>0),
@@ -1239,8 +1239,12 @@ export class HostFunctions {
     }
     const bold_d = args.x.state.accounts.get(d.checked_u32())!;
 
-    // NOTE: check on codehash is probably wrong :) graypaper states E_32(x.s) but it does not make sense
-    if (bold_d.codeHash !== BigInt(args.x.id)) {
+    if (
+      compareUint8Arrays(
+        bold_d.codeHash,
+        encodeWithCodec(E_sub_int(32), args.x.id),
+      ) !== 0
+    ) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
@@ -1522,7 +1526,7 @@ const serviceAccountCodec = createCodec<
     itemInStorage: u32;
   }
 >([
-  ["codeHash", CodeHashCodec], // c
+  ["codeHash", xBytesCodec<CodeHash, 32>(32)], // c
   ["balance", E_sub<Balance>(8)], // b
   ["gasThreshold", E_sub<Gas>(8)], // t - virutal element
   ["minAccGas", E_sub<Gas>(8)], // g

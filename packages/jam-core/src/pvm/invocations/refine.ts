@@ -5,7 +5,6 @@ import {
   createCodec,
   E_int,
   encodeWithCodec,
-  HashCodec,
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
@@ -28,6 +27,7 @@ import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./hostCall";
 import { TauImpl } from "@/classes/SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 const refine_a_Codec = createCodec<{
   c: CoreIndex; // `c`
@@ -174,7 +174,7 @@ const F_fn: (
           input.out,
           hostFunctions.fetch(input.ctx, {
             p: workPackage,
-            n: <Hash>0n,
+            n: <Hash>new Uint8Array(32).fill(0),
             bold_r: authorizerOutput,
             i: workItemIndex,
             overline_i: importSegments,

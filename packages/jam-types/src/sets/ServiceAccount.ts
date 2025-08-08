@@ -24,8 +24,6 @@ export interface IServiceAccountStorage {
 
   entries(): IterableIterator<[StateKey, Uint8Array]>;
 
-  clone(): IServiceAccountStorage;
-
   readonly size: number;
 
   /**

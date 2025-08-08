@@ -2,7 +2,6 @@ import {
   ED25519PublicKey,
   ED25519Signature,
   Hash,
-  MinSeqLength,
   SeqOfLength,
   ValidatorIndex,
   u32,
@@ -17,7 +16,7 @@ export interface DisputeExtrinsic {
    * `V`
    * one ore more verdicts. They must be ordered by .hash
    */
-  verdicts: MinSeqLength<DisputeVerdict, 1>;
+  verdicts: { elements: Array<DisputeVerdict> };
 
   /**
    * `EC`
@@ -28,7 +27,7 @@ export interface DisputeExtrinsic {
    * There are 2x entried in the culprit array for each in verdicts
    * because when a verdict happen there are always 2 validators involved
    */
-  culprits: Array<DisputeCulprit>;
+  culprits: { elements: Array<DisputeCulprit> };
 
   /**
    * `EF`
@@ -39,7 +38,7 @@ export interface DisputeExtrinsic {
    * There is one entry in the faults array for each verdict containing only valid verdicts matching the workreport hash
    *
    */
-  faults: Array<DisputeFault>;
+  faults: { elements: Array<DisputeFault> };
 }
 
 export interface DisputeVerdictJudgement {

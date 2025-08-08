@@ -13,8 +13,6 @@ import {
   E_2_int,
   encodeWithCodec,
   eSubIntCodec,
-  HashCodec,
-  hashCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
@@ -47,6 +45,7 @@ import { DeltaImpl } from "./DeltaImpl";
 import { WorkContextImpl } from "./WorkContextImpl";
 import { WorkItemImpl } from "./WorkItemImpl";
 import { WorkOutputImpl } from "./WorkOutputImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * Identified by `P` set
@@ -64,7 +63,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
    * `u` - authorization code hash
    */
-  @hashCodec("auth_code_hash")
+  @codec(HashCodec, "auth_code_hash")
   authCodeHash!: CodeHash;
 
   /**

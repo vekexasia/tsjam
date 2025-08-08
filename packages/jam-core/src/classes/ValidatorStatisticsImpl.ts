@@ -107,7 +107,7 @@ export class ValidatorStatisticsImpl
         ),
         guarantees: <u32>(
           (bold_a.elements[v].guarantees +
-            (reporters.has(deps.p_kappa.at(v).ed25519.bigint) ? 1 : 0))
+            (reporters.has(deps.p_kappa.at(v).ed25519) ? 1 : 0))
         ),
         assurances: <u32>(
           (bold_a.elements[v].assurances +

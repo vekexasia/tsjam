@@ -9,6 +9,7 @@ import {
   Balance,
   CodeHash,
   Gas,
+  Hash,
   JamState,
   ServiceIndex,
   Tagged,
@@ -18,6 +19,7 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../utils";
 import { SlotImpl } from "@/classes/SlotImpl";
+import { IdentityMap } from "@/data_structures/identityMap";
 
 describe("state serialization/deserialization", () => {
   it("should deserializa to same object", () => {
@@ -40,15 +42,15 @@ describe("state serialization/deserialization", () => {
       acc = new ServiceAccountImpl({
         storage: new MerkleServiceAccountStorageImpl(serviceIndex1),
         balance: <Balance>11n,
-        codeHash: <CodeHash>12n,
+        codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
         minAccGas: <Gas>13n,
         minMemoGas: <Gas>14n,
         gratis: <Balance>15n,
         created: new SlotImpl(<u32>16),
         lastAcc: new SlotImpl(<u32>17),
         parent: <ServiceIndex>18,
-        requests: new Map(),
-        preimages: new Map(),
+        requests: new IdentityMap(),
+        preimages: new IdentityMap(),
       });
       const preimage = Buffer.from("veke", "utf8");
       const preimageHash = Hashing.blake2b(preimage);
@@ -56,14 +58,14 @@ describe("state serialization/deserialization", () => {
       acc2 = new ServiceAccountImpl({
         storage: new MerkleServiceAccountStorageImpl(serviceIndex2),
         balance: <Balance>21n,
-        codeHash: <CodeHash>22n,
+        codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
         minAccGas: <Gas>23n,
         minMemoGas: <Gas>24n,
         gratis: <Balance>25n,
         created: new SlotImpl(<u32>26),
         lastAcc: new SlotImpl(<u32>27),
         parent: <ServiceIndex>28,
-        requests: new Map([
+        requests: new IdentityMap([
           [
             preimageHash,
             new Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>([
@@ -78,7 +80,7 @@ describe("state serialization/deserialization", () => {
             ]),
           ],
         ]),
-        preimages: new Map([[preimageHash, preimage]]),
+        preimages: new IdentityMap([[preimageHash, preimage]]),
       });
 
       acc.storage.set(new Uint8Array([1, 2]), new Uint8Array([4, 5]));

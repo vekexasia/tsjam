@@ -1,9 +1,12 @@
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
+  binaryCodec,
   codec,
-  eSubIntCodec,
+  createSequenceCodec,
   JamCodec,
   JamCodecable,
+  jsonCodec,
   JSONCodec,
   NULLORCodec,
   Optional,
@@ -19,7 +22,6 @@ import {
   RHO,
   RHOElement,
   SeqOfLength,
-  Tau,
   Validated,
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior } from "@tsjam/utils";
@@ -27,9 +29,9 @@ import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import { DisputesStateImpl } from "./DisputesStateImpl";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { WorkReportImpl } from "./WorkReportImpl";
 import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 import { SlotImpl, TauImpl } from "./SlotImpl";
+import { WorkReportImpl } from "./WorkReportImpl";
 
 @JamCodecable()
 export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
@@ -40,7 +42,7 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
   /**
    * `t`
    */
-  @eSubIntCodec(4)
+  @codec(SlotImpl)
   reportSlot!: SlotImpl;
 
   constructor(config: ConditionalExcept<RHOElementImpl, Function>) {
@@ -51,14 +53,11 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
 
 @JamCodecable()
 export class RHOImpl extends BaseJamCodecable implements RHO {
-  @sequenceCodec(
-    CORES,
-    {
-      ...(<JamCodec<RHOElementImpl | undefined>>new Optional(RHOElementImpl)),
-      ...NULLORCodec(<JSONCodec<RHOElementImpl>>RHOElementImpl),
-    },
+  @jsonCodec(
+    ArrayOfJSONCodec(NULLORCodec(RHOElementImpl)),
     SINGLE_ELEMENT_CLASS,
   )
+  @binaryCodec(createSequenceCodec(CORES, new Optional(RHOElementImpl)))
   elements!: SeqOfLength<RHOElementImpl | undefined, typeof CORES>;
 
   constructor(config?: ConditionalExcept<RHOImpl, Function>) {

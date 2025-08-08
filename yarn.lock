@@ -1266,6 +1266,7 @@ __metadata:
     "@tsjam/crypto": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
+    uint8array-extras: "npm:^1.4.0"
   languageName: unknown
   linkType: soft
 
@@ -1285,6 +1286,8 @@ __metadata:
     "@tsjam/erasurecoding": "npm:*"
     "@tsjam/types": "npm:*"
     "@types/json-bigint": "npm:^1"
+    "@vekexasia/bigint-uint8array": "npm:^1.1.1"
+    bigint-buffer: "npm:^1.1.5"
     json-bigint: "npm:^1.0.0"
     neverthrow: "npm:^8.1.1"
     type-fest: "npm:^4.41.0"

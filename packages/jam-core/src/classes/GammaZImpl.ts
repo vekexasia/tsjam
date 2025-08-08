@@ -1,10 +1,8 @@
+import { xBytesCodec } from "@/codecs/miscCodecs";
 import {
-  BandersnatchRingRootCodec,
   BaseJamCodecable,
-  binaryCodec,
-  BufferJSONCodec,
+  codec,
   JamCodecable,
-  jsonCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
@@ -22,8 +20,7 @@ import { TauImpl } from "./SlotImpl";
 
 @JamCodecable()
 export class GammaZImpl extends BaseJamCodecable implements GammaZ {
-  @jsonCodec(BufferJSONCodec(), SINGLE_ELEMENT_CLASS)
-  @binaryCodec(BandersnatchRingRootCodec)
+  @codec(xBytesCodec(144), SINGLE_ELEMENT_CLASS)
   root!: BandersnatchRingRoot;
 
   constructor(config: ConditionalExcept<GammaZImpl, Function>) {

@@ -5,7 +5,6 @@ import {
   encodeWithCodec,
   eSubIntCodec,
   fixedSizeIdentityCodec,
-  HashCodec,
   JamCodecable,
   jsonCodec,
   lengthDiscriminatedCodec,
@@ -34,6 +33,7 @@ import { SafroleStateImpl } from "../SafroleStateImpl";
 import { TicketImpl } from "../TicketImpl";
 import { GammaZImpl } from "../GammaZImpl";
 import { TauImpl } from "../SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",

@@ -17,9 +17,9 @@ export const getCodecFixtureFile = (
 
 export const TestOutputCodec = <Error extends number, Output>(
   outputCodec: JamCodec<Output>,
-): JamCodec<{ error?: Error; output?: Output }> &
-  JSONCodec<{ error?: Error; output?: Output }> => {
-  const toRet: JamCodec<{ error?: Error; output?: Output }> = {
+): JamCodec<{ err?: Error; ok?: Output }> &
+  JSONCodec<{ err?: Error; ok?: Output }> => {
+  const toRet: JamCodec<{ err?: Error; ok?: Output }> = {
     encode() {
       throw new Error("Not implemented");
     },
@@ -27,13 +27,13 @@ export const TestOutputCodec = <Error extends number, Output>(
       if (bytes[0] === 0) {
         const output = outputCodec.decode(bytes.subarray(1));
         return {
-          value: { output: output.value },
+          value: { ok: output.value },
           readBytes: 1 + output.readBytes,
         };
       } else {
         //
         return {
-          value: { error: bytes[1] as Error },
+          value: { err: bytes[1] as Error },
           readBytes: 2,
         };
       }
@@ -41,9 +41,9 @@ export const TestOutputCodec = <Error extends number, Output>(
     encodedSize(value) {
       return (
         1 +
-        (typeof value.error !== "undefined"
+        (typeof value.err !== "undefined"
           ? 1
-          : outputCodec.encodedSize(value.output!))
+          : outputCodec.encodedSize(value.ok!))
       );
     },
   };

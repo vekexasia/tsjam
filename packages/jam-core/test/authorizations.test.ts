@@ -10,7 +10,6 @@ import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
   BaseJamCodecable,
-  Blake2bHashCodec,
   codec,
   createArrayLengthDiscriminator,
   createCodec,
@@ -21,6 +20,7 @@ import {
 import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
+import { xBytesCodec } from "@/codecs/miscCodecs";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -54,7 +54,7 @@ class TestInput extends BaseJamCodecable {
       >(
         createCodec([
           ["core", E_sub_int<CoreIndex>(2)],
-          ["authHash", Blake2bHashCodec],
+          ["authHash", xBytesCodec<Blake2bHash, 32>(32)],
         ]),
       ),
       (a): GuaranteesExtrinsicImpl => {

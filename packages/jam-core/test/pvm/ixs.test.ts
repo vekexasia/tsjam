@@ -1,4 +1,4 @@
-import "@/instructions/instructions.js";
+import "@/pvm/instructions/instructions.js";
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 import { toTagged } from "@tsjam/utils";
@@ -7,7 +7,6 @@ import {
   Page,
   PVMMemoryAccessKind,
   PVMProgramCode,
-  RegularPVMExitReason,
   u32,
 } from "@tsjam/types";
 import JSONBig from "json-bigint";

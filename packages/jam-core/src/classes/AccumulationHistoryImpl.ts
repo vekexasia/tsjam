@@ -1,8 +1,5 @@
 import {
   BaseJamCodecable,
-  createLengthDiscrimantedSetCodec,
-  HashCodec,
-  HashJSONCodec,
   JamCodecable,
   sequenceCodec,
   SetJSONCodec,
@@ -18,6 +15,8 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 import { ConditionalExcept } from "type-fest";
+import { IdentitySetCodec } from "@/data_structures/identitySet";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * `ξ` in the graypaper
@@ -31,11 +30,7 @@ export class AccumulationHistoryImpl
 {
   @sequenceCodec(
     EPOCH_LENGTH,
-    {
-      ...createLengthDiscrimantedSetCodec(HashCodec),
-
-      ...SetJSONCodec(HashJSONCodec()),
-    },
+    IdentitySetCodec(HashCodec),
     SINGLE_ELEMENT_CLASS,
   )
   elements!: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;

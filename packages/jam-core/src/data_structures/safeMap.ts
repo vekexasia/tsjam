@@ -1,27 +1,9 @@
-export type SafeKey = string | number | boolean | bigint | symbol;
+import { SafeKey, SafeKeyProvider, isSafeKey, isSafeKeyable } from "./safeKey";
 
-export interface SafeMapKeyable {
-  mapKey(): SafeKey;
-}
-
-const isSafeKey = <K extends SafeKey | SafeMapKeyable>(
-  key: K,
-  // @ts-ignore
-): key is SafeKey => {
-  return (
-    typeof key === "string" ||
-    typeof key === "number" ||
-    typeof key === "boolean" ||
-    typeof key === "bigint" ||
-    typeof key === "symbol"
-  );
-};
-
-export class SafeMap<K extends SafeKey | SafeMapKeyable, V>
-  implements Map<K, V>
-{
+export class SafeMap<K, V> implements Map<K, V> {
   private internalMap: Map<SafeKey, V> = new Map();
   private keyLookupMap: Map<SafeKey, K> = new Map();
+  private safeKeyProvider?: SafeKeyProvider<K>;
 
   readonly [Symbol.toStringTag]: string = "SafeMap";
 
@@ -33,11 +15,27 @@ export class SafeMap<K extends SafeKey | SafeMapKeyable, V>
     }
   }
 
+  public setSafeKeyProvider(prov: SafeKeyProvider<K>) {
+    this.safeKeyProvider = prov;
+  }
+
   private getInternalKey(key: K): SafeKey {
     if (isSafeKey(key)) {
       return key;
     }
-    return key.mapKey();
+
+    if (this.safeKeyProvider) {
+      return this.safeKeyProvider(key);
+    }
+
+    // key might be SafeKeyable
+    if (isSafeKeyable(key)) {
+      return key.safeKey();
+    }
+
+    throw new Error(
+      "cannot convert key to SafeKey did you set a provider or is key SafeKeyable?",
+    );
   }
 
   lookupKey(key: SafeKey): K {

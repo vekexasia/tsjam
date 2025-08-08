@@ -3,10 +3,7 @@ import {
   BaseJamCodecable,
   codec,
   createArrayLengthDiscriminator,
-  HashCodec,
-  HashJSONCodec,
   JamCodecable,
-  lengthDiscriminatedSetCodec,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
@@ -23,6 +20,8 @@ import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { E_Fn } from "./NewWorkReportsImpl";
 import { SlotImpl, TauImpl } from "./SlotImpl";
+import { identitySetCodec } from "@/data_structures/identitySet";
+import { HashCodec } from "@/codecs/miscCodecs";
 
 @JamCodecable()
 export class AccumulationQueueItem extends BaseJamCodecable {
@@ -35,7 +34,7 @@ export class AccumulationQueueItem extends BaseJamCodecable {
    * `bold_d`
    * the unaccumulated dependencies of the workreport
    */
-  @lengthDiscriminatedSetCodec({ ...HashCodec, ...HashJSONCodec() })
+  @identitySetCodec(HashCodec)
   dependencies!: Set<WorkPackageHash>;
 
   constructor(config: ConditionalExcept<AccumulationQueueItem, Function>) {

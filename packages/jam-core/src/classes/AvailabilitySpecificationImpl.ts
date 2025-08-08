@@ -1,7 +1,8 @@
+import { HashCodec } from "@/codecs/miscCodecs";
 import {
   BaseJamCodecable,
+  codec,
   eSubIntCodec,
-  hashCodec,
   JamCodecable,
 } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
@@ -28,7 +29,7 @@ export class AvailabilitySpecificationImpl
   /**
    * `p`
    */
-  @hashCodec("hash")
+  @codec(HashCodec, "hash")
   packageHash!: WorkPackageHash;
 
   /**
@@ -46,13 +47,13 @@ export class AvailabilitySpecificationImpl
   /**
    * `u` -
    */
-  @hashCodec("erasure_root")
+  @codec(HashCodec, "erasure_root")
   erasureRoot!: Hash;
 
   /**
    * `e`
    */
-  @hashCodec("exports_root")
+  @codec(HashCodec, "exports_root")
   segmentRoot!: Hash;
 
   /**

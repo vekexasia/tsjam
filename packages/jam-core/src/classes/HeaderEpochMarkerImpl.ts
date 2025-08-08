@@ -1,22 +1,19 @@
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import {
-  JamCodecable,
   BaseJamCodecable,
-  hashCodec,
-  sequenceCodec,
+  codec,
   createCodec,
-  BandersnatchCodec,
-  Ed25519PubkeyCodec,
   createJSONCodec,
-  BandersnatchKeyJSONCodec,
-  Ed25519PublicKeyJSONCodec,
+  JamCodecable,
+  sequenceCodec,
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  EpochMarker,
-  Blake2bHash,
-  SeqOfLength,
   BandersnatchKey,
+  Blake2bHash,
   ED25519PublicKey,
+  EpochMarker,
+  SeqOfLength,
 } from "@tsjam/types";
 
 /**
@@ -27,19 +24,19 @@ export class HeaderEpochMarkerImpl
   extends BaseJamCodecable
   implements EpochMarker
 {
-  @hashCodec()
+  @codec(HashCodec)
   entropy!: Blake2bHash;
 
-  @hashCodec("tickets_entropy")
+  @codec(HashCodec, "tickets_entropy")
   entropy2!: Blake2bHash;
   @sequenceCodec(NUMBER_OF_VALIDATORS, <any>{
     ...createCodec([
-      ["bandersnatch", BandersnatchCodec],
-      ["ed25519", Ed25519PubkeyCodec],
+      ["bandersnatch", xBytesCodec<any, 32>(32)],
+      ["ed25519", xBytesCodec<any, 32>(32)],
     ]),
     ...createJSONCodec<any>([
-      ["bandersnatch", "bandersnatch", BandersnatchKeyJSONCodec],
-      ["ed25519", "ed25519", Ed25519PublicKeyJSONCodec],
+      ["bandersnatch", "bandersnatch", xBytesCodec<any, 32>(32)],
+      ["ed25519", "ed25519", xBytesCodec<any, 32>(32)],
     ]),
   })
   validators!: SeqOfLength<

@@ -1,10 +1,8 @@
-import { E_4, encodeWithCodec, HashCodec } from "@tsjam/codec";
+import { encodeWithCodec, E_4 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Hash, ServiceIndex, StateKey } from "@tsjam/types";
 
 export type HashFn = (preimage: Uint8Array) => Hash;
-export const hashToBytes = (x: Uint8Array | Hash): Uint8Array =>
-  typeof x === "bigint" ? encodeWithCodec(HashCodec, x) : x;
 
 /**
  * `C` in graypaper
@@ -16,7 +14,7 @@ export const stateKey = (
 ): StateKey => {
   if (_s instanceof Uint8Array) {
     const h: Uint8Array = _s;
-    const a = Hashing.blake2bBuf(h);
+    const a = Hashing.blake2b(h);
     const s = i;
     const n = encodeWithCodec(E_4, BigInt(s));
     return new Uint8Array([

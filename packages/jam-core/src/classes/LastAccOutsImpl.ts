@@ -1,7 +1,8 @@
+import { HashCodec } from "@/codecs/miscCodecs";
 import {
   BaseJamCodecable,
+  codec,
   eSubIntCodec,
-  hashCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
@@ -13,7 +14,7 @@ import { ConditionalExcept } from "type-fest";
 export class SingleAccOutImpl extends BaseJamCodecable {
   @eSubIntCodec(4)
   serviceIndex!: ServiceIndex;
-  @hashCodec()
+  @codec(HashCodec)
   accumulationResult!: Hash;
 
   constructor(config: ConditionalExcept<SingleAccOutImpl, Function>) {

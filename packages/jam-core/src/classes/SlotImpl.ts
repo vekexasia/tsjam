@@ -1,4 +1,4 @@
-import { SafeKey, SafeMapKeyable } from "@/data_structures/safeMap";
+import { SafeKey, SafeKeyable } from "@/data_structures/safeKey";
 import {
   JamCodecable,
   BaseJamCodecable,
@@ -14,7 +14,7 @@ import { err, ok, Result } from "neverthrow";
  * A slot is a block slot. Which is derived using current time since epoch / blocktime
  */
 @JamCodecable()
-export class SlotImpl extends BaseJamCodecable implements Slot, SafeMapKeyable {
+export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
   @eSubIntCodec(4, SINGLE_ELEMENT_CLASS)
   value!: u32;
   constructor(value?: u32) {
@@ -23,7 +23,7 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeMapKeyable {
     this.value = value!;
   }
 
-  mapKey(): SafeKey {
+  safeKey(): SafeKey {
     return this.value;
   }
 

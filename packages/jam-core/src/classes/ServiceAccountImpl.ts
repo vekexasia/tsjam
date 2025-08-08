@@ -26,6 +26,8 @@ import {
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { SlotImpl } from "./SlotImpl";
+import { IdentityMap } from "@/data_structures/identityMap";
+import { ConditionalExcept } from "type-fest";
 
 export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;
@@ -40,9 +42,12 @@ export const serviceMetadataCodec = createCodec<{
  * $(0.7.1 - 9.3)
  */
 export class ServiceAccountImpl implements ServiceAccount {
-  preimages: ServiceAccount["preimages"] = new Map();
-  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>> =
-    new Map();
+  preimages: IdentityMap<Hash, 32, Uint8Array> = new IdentityMap();
+  requests: IdentityMap<
+    Hash,
+    32,
+    Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>
+  > = new IdentityMap();
   gratis!: Balance;
   codeHash!: CodeHash;
   balance!: Balance;
@@ -55,7 +60,7 @@ export class ServiceAccountImpl implements ServiceAccount {
 
   constructor(
     values: Omit<
-      ServiceAccount,
+      ConditionalExcept<ServiceAccountImpl, Function>,
       "itemInStorage" | "totalOctets" | "gasThreshold" | "metadata" | "code"
     >,
   ) {

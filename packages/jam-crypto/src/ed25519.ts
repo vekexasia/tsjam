@@ -17,7 +17,7 @@ export const Ed25519 = {
     return sodium.crypto_sign_verify_detached(
       Buffer.from(signature),
       Buffer.from(message),
-      Buffer.from(pubkey.buf),
+      Buffer.from(pubkey),
     );
   },
 

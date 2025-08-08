@@ -12,7 +12,6 @@ import {
   codec,
   E_sub_int,
   eitherOneOfCodec,
-  hashCodec,
   JamCodec,
   JamCodecable,
   jsonCodec,
@@ -33,6 +32,7 @@ import { dummyState } from "./utils.js";
 import { KappaImpl } from "@/classes/KappaImpl.js";
 import { LambdaImpl } from "@/classes/LambdaImpl.js";
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl.js";
+import { HashCodec } from "@/codecs/miscCodecs.js";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -72,7 +72,7 @@ class TestInput extends BaseJamCodecable {
   @codec(SlotImpl)
   slot!: Validated<Posterior<TauImpl>>;
 
-  @hashCodec()
+  @codec(HashCodec)
   entropy!: OpaqueHash; // Y(Hv)
 
   @codec(TicketsExtrinsicImpl)
@@ -128,7 +128,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
     `${__dirname}/../../../jamtestvectors/stf/safrole/${size}/${name}.bin`,
   );
   const { value: testCase } = TestCase.decode(testBin);
-  console.log(testCase.preState.gamma_z.toJSON());
 
   const safrole = new SafroleStateImpl({
     gamma_a: testCase.preState.gamma_a,
@@ -212,8 +211,6 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(p_kappa.toJSON()).deep.eq(testCase.postState.kappa.toJSON());
   expect(p_lambda.toJSON()).deep.eq(testCase.postState.lambda.toJSON());
   // expect(newState.tau).deep.eq(testCase.postState.tau);
-  console.log(p_entropy.toJSON());
-  console.log(testCase.postState.eta.toJSON());
   expect(p_entropy.toJSON()).deep.eq(testCase.postState.eta.toJSON());
 };
 

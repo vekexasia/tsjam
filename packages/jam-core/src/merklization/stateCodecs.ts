@@ -1,10 +1,10 @@
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { SlotImpl } from "@/classes/SlotImpl";
+import { xBytesCodec } from "@/codecs/miscCodecs";
 import {
-  create32BCodec,
   createCodec,
   E_sub,
   E_sub_int,
-  genericBytesBigIntCodec,
   JamCodec,
   JSONCodec,
   MapJSONCodec,
@@ -12,12 +12,9 @@ import {
 } from "@tsjam/codec";
 import {
   Balance,
-  BigIntBytes,
   CodeHash,
   Gas,
-  ServiceAccount,
   ServiceIndex,
-  Slot,
   StateKey,
   u32,
   u64,
@@ -25,7 +22,7 @@ import {
 
 export const serviceAccountDataCodec = createCodec<
   Pick<
-    ServiceAccount,
+    ServiceAccountImpl,
     | "codeHash"
     | "balance"
     | "minAccGas"
@@ -39,21 +36,17 @@ export const serviceAccountDataCodec = createCodec<
     itemInStorage: u32;
   }
 >([
-  ["codeHash", create32BCodec<CodeHash>()],
+  ["codeHash", xBytesCodec<CodeHash, 32>(32)],
   ["balance", E_sub<Balance>(8)],
   ["minAccGas", E_sub<Gas>(8)],
   ["minMemoGas", E_sub<Gas>(8)],
   ["totalOctets", E_sub<u64>(8)],
   ["gratis", E_sub<Balance>(8)],
   ["itemInStorage", E_sub_int<u32>(4)],
-  ["created", <JamCodec<Slot>>SlotImpl],
-  ["lastAcc", <JamCodec<Slot>>SlotImpl],
+  ["created", <JamCodec<SlotImpl>>SlotImpl],
+  ["lastAcc", <JamCodec<SlotImpl>>SlotImpl],
   ["parent", E_sub_int<ServiceIndex>(4)],
 ]);
-
-export const stateKeyCodec = genericBytesBigIntCodec<StateKeyBigInt, 31>(31);
-
-export type StateKeyBigInt = BigIntBytes<31>;
 
 export const traceJSONCodec = MapJSONCodec(
   { key: "key", value: "value" },

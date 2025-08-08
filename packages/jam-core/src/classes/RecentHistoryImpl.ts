@@ -89,7 +89,7 @@ export class RecentHistoryImpl
       new RecentHistoryItemImpl({
         reportedPackages: bold_p,
         headerHash: deps.headerHash,
-        stateRoot: <StateRootHash>0n,
+        stateRoot: <StateRootHash>new Uint8Array(32).fill(0),
         accumulationResultMMB: b,
       }),
     );

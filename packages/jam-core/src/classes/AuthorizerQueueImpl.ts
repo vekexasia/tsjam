@@ -1,9 +1,8 @@
+import { HashCodec } from "@/codecs/miscCodecs";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   createSequenceCodec,
-  HashCodec,
-  HashJSONCodec,
   JamCodecable,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
@@ -13,6 +12,7 @@ import {
   AuthorizerHash,
   AuthorizerQueue,
   CoreIndex,
+  Hash,
   SeqOfLength,
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
@@ -31,9 +31,9 @@ export class AuthorizerQueueImpl
     CORES,
     {
       ...createSequenceCodec(AUTHQUEUE_MAX_SIZE, HashCodec),
-      ...ArrayOfJSONCodec<
-        SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE>
-      >(HashJSONCodec()),
+      ...ArrayOfJSONCodec<SeqOfLength<Hash, typeof AUTHQUEUE_MAX_SIZE>>(
+        HashCodec,
+      ),
     },
     SINGLE_ELEMENT_CLASS,
   )

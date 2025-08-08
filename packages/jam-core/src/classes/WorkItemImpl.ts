@@ -1,16 +1,15 @@
+import { HashCodec } from "@/codecs/miscCodecs";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
+  codec,
   createArrayLengthDiscriminator,
   createJSONCodec,
   E_sub_int,
   eSubBigIntCodec,
   eSubIntCodec,
-  HashCodec,
-  hashCodec,
-  HashJSONCodec,
   JamCodec,
   JamCodecable,
   jsonCodec,
@@ -81,7 +80,7 @@ const importDataSegmentCodec: JamCodec<WorkItem["importSegments"][0]> = {
 
 @JamCodecable()
 export class WorkItemExportedSegment extends BaseJamCodecable {
-  @hashCodec("hash")
+  @codec(HashCodec, "hash")
   blobHash!: Hash;
   @eSubIntCodec(4, "len")
   length!: u32;
@@ -110,7 +109,7 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
   /**
    * `c` - the code hash of the service a time of the work item creation
    */
-  @hashCodec("code_hash")
+  @codec(HashCodec, "code_hash")
   codeHash!: CodeHash;
 
   /**
@@ -152,7 +151,7 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
   @jsonCodec(
     ArrayOfJSONCodec(
       createJSONCodec([
-        ["root", "tree_root", HashJSONCodec()],
+        ["root", "tree_root", HashCodec],
         ["index", "index", NumberJSONCodec()],
       ]),
     ),

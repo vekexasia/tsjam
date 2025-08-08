@@ -1,10 +1,8 @@
 import {
   createArrayLengthDiscriminator,
   createCodec,
-  dlArrayOfHashesCodec,
   dlArrayOfUint8ArrayCodec,
   encodeWithCodec,
-  HashCodec,
   IdentityCodec,
 } from "@tsjam/codec";
 import {
@@ -47,6 +45,8 @@ import {
 } from "./merklization";
 import { refineInvocation } from "./pvm";
 import { TauImpl } from "./classes/SlotImpl";
+import { HashCodec } from "./codecs/miscCodecs";
+import { IdentityMap } from "./data_structures/identityMap";
 
 export const computationWorkReportError = "t not in B:wr" as const;
 /**
@@ -93,7 +93,7 @@ export const computeWorkReport = (
     .slice(0, 8);
 
   //TODO: $(0.7.1 - 14.14)
-  const bold_l = new Map<WorkPackageHash, Hash>();
+  const bold_l = new IdentityMap<WorkPackageHash, 32, Hash>();
 
   const _deps = {
     ...deps,

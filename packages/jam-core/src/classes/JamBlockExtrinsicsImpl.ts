@@ -4,14 +4,17 @@ import {
   createArrayLengthDiscriminator,
   createCodec,
   E_sub_int,
-  Ed25519SignatureCodec,
   encodeWithCodec,
-  HashCodec,
   JamCodec,
   JamCodecable,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { Hash, JamBlockExtrinsics, Tau, ValidatorIndex } from "@tsjam/types";
+import {
+  ED25519Signature,
+  Hash,
+  JamBlockExtrinsics,
+  ValidatorIndex,
+} from "@tsjam/types";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import {
@@ -22,6 +25,7 @@ import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { WorkReportImpl } from "./WorkReportImpl";
 import { SlotImpl } from "./SlotImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
 @JamCodecable() // $(0.7.0 - C.16)
 export class JamBlockExtrinsicsImpl
@@ -70,13 +74,13 @@ export class JamBlockExtrinsicsImpl
    */
   extrinsicHash(): Hash {
     const items = [
-      ...Hashing.blake2bBuf(this.tickets.toBinary()),
-      ...Hashing.blake2bBuf(this.preimages.toBinary()),
-      ...Hashing.blake2bBuf(
+      ...Hashing.blake2b(this.tickets.toBinary()),
+      ...Hashing.blake2b(this.preimages.toBinary()),
+      ...Hashing.blake2b(
         encodeWithCodec(codec_Eg_4Hx, this.reportGuarantees.elements),
       ),
-      ...Hashing.blake2bBuf(this.assurances.toBinary()),
-      ...Hashing.blake2bBuf(this.disputes.toBinary()),
+      ...Hashing.blake2b(this.assurances.toBinary()),
+      ...Hashing.blake2b(this.disputes.toBinary()),
     ];
     const preimage = new Uint8Array(items);
     return Hashing.blake2b(preimage);
@@ -112,7 +116,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<
       >(
         createCodec([
           ["validatorIndex", E_sub_int<ValidatorIndex>(2)],
-          ["signature", Ed25519SignatureCodec],
+          ["signature", xBytesCodec<ED25519Signature, 64>(64)],
         ]),
       ),
     ],
