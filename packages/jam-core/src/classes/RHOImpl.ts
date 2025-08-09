@@ -1,16 +1,14 @@
+import { IdentitySet } from "@/data_structures/identitySet";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   codec,
   createSequenceCodec,
-  JamCodec,
   JamCodecable,
   jsonCodec,
-  JSONCodec,
   NULLORCodec,
   Optional,
-  sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { CORES, WORK_TIMEOUT } from "@tsjam/constants";
@@ -45,9 +43,11 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
   @codec(SlotImpl)
   reportSlot!: SlotImpl;
 
-  constructor(config: ConditionalExcept<RHOElementImpl, Function>) {
+  constructor(config?: ConditionalExcept<RHOElementImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 }
 
@@ -83,9 +83,12 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
     // it does change from gp but we assume that if it was already present then
     // rho would have it cleared for the core
     // so this is basically doing the t < 2/3V check
-    const sets = new Set([...deps.p_disputes.bad, ...deps.p_disputes.wonky]);
+    const sets = new IdentitySet([
+      ...deps.p_disputes.bad,
+      ...deps.p_disputes.wonky,
+    ]);
 
-    const rho_dagger = structuredClone(this);
+    const rho_dagger: RHOImpl = this.clone();
     this.elements.forEach((rho_c, core) => {
       if (typeof rho_c === "undefined") {
         return;
@@ -104,17 +107,17 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
    * converts Dagger<RHO> to DoubleDagger<RHO>
    * $(0.7.1 - 11.17)
    */
-  static toDoubleDagger(
-    d_rho: Dagger<RHOImpl>,
+  toDoubleDagger(
+    this: Dagger<RHOImpl>,
     deps: {
       rho: RHOImpl;
       p_tau: Validated<Posterior<TauImpl>>; // Ht
       newReports: NewWorkReportsImpl; // bold R
     },
   ): DoubleDagger<RHOImpl> {
-    const newState = structuredClone(d_rho);
+    const newState = this.clone();
     for (let c = <CoreIndex>0; c < CORES; c++) {
-      if (typeof d_rho.elements[c] === "undefined") {
+      if (typeof this.elements[c] === "undefined") {
         continue; // if no  workreport indagger then there is nothing to remove.
       }
       if (typeof deps.rho.elements[c] === "undefined") {
@@ -123,7 +126,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
 
       // check if workreport from rho has now become available
       // we use this by creating a set of report hashes and cheching if 'p[c]r' is in it
-      const newReportsSet = new Set(
+      const newReportsSet = new IdentitySet(
         deps.newReports.elements.map((r) => r.hash()),
       );
       if (newReportsSet.has(deps.rho.elementAt(c)!.workReport.hash())) {
@@ -132,7 +135,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
 
       if (
         deps.p_tau.value >=
-        d_rho.elements[c]!.reportSlot.value + WORK_TIMEOUT
+        this.elements[c]!.reportSlot.value + WORK_TIMEOUT
       ) {
         newState.elements[c] = undefined;
       }
@@ -143,14 +146,14 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
   /**
    * $(0.7.1 - 11.43)
    */
-  static toPosterior(
-    dd_rho: DoubleDagger<RHOImpl>,
+  toPosterior(
+    this: DoubleDagger<RHOImpl>,
     deps: {
       EG_Extrinsic: Validated<GuaranteesExtrinsicImpl>;
       p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<RHOImpl> {
-    const newState = structuredClone(dd_rho);
+    const newState = this.clone();
     for (let core = <CoreIndex>0; core < CORES; core++) {
       const ext = deps.EG_Extrinsic.elementForCore(core);
       if (typeof ext !== "undefined") {

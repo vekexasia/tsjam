@@ -60,7 +60,7 @@ export const zeroPad = <T extends number>(
  * Can be used to check about the workItem importedDataSegments[0].root
  */
 export const isHash = <X = unknown>(x: Hash | X): x is Hash => {
-  return typeof x === "bigint";
+  return x instanceof Uint8Array && x.length === 32;
 };
 
 export const isExportingWorkPackageHash = (

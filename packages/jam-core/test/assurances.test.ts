@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
-import { RHOImpl } from "@/classes/RHOImpl";
+import { RHOElementImpl, RHOImpl } from "@/classes/RHOImpl";
 import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
   BaseJamCodecable,
@@ -81,15 +81,27 @@ describe("assurances", () => {
     if (!eaVerified) {
       return;
     }
-    const dd_rho = RHOImpl.toDoubleDagger(test.preState.d_rho, {
+    const newReports = AssurancesExtrinsicImpl.newlyAvailableReports(
+      toTagged(test.input.ea),
+      test.preState.d_rho,
+    );
+    const dd_rho = test.preState.d_rho.toDoubleDagger({
       rho: test.preState.d_rho,
       p_tau: test.input.slot,
-      newReports: AssurancesExtrinsicImpl.newlyAvailableReports(
-        toTagged(test.input.ea),
-        test.preState.d_rho,
-      ),
+      newReports,
     });
-    expect(dd_rho, "dd_rho").deep.eq(test.postState.d_rho);
+    for (let i = 0; i < dd_rho.elements.length; i++) {
+      expect(dd_rho.elements[i]!, `element${i}`).deep.eq(
+        test.postState.d_rho.elements[i],
+      );
+    }
+
+    expect(RHOImpl.toJSON(dd_rho), "dd_rho").deep.eq(
+      test.postState.d_rho.toJSON(),
+    );
+    if (test.output.ok) {
+      expect(newReports.elements).deep.eq(test.output.ok, "newReports");
+    }
     // TODO: check output.ok?
     return true;
   };

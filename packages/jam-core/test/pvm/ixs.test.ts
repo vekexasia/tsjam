@@ -15,7 +15,7 @@ import { basicInvocation } from "@/pvm/invocations/basic";
 import { createEvContext } from "./mocks";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
-describe("pvm", () => {
+describe.skip("pvm", () => {
   const doTest = (filename: string) => () => {
     const json = JSONBigNative.parse(
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),

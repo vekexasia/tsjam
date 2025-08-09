@@ -28,6 +28,7 @@ import { RHOImpl } from "../RHOImpl";
 import { Ed25519, Hashing } from "@tsjam/crypto";
 import { NewWorkReportsImpl } from "../NewWorkReportsImpl";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { compareUint8Arrays } from "uint8array-extras";
 
 /**
  * Single extrinsic element
@@ -98,7 +99,7 @@ export class AssuranceExtrinsicImpl
     }
 
     // $(0.7.1 - 11.11)
-    if (this.anchorHash !== deps.header.parent) {
+    if (compareUint8Arrays(this.anchorHash, deps.header.parent) !== 0) {
       return false;
     }
 

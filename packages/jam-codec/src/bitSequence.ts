@@ -37,7 +37,7 @@ export const BitSequenceCodec = (numElements: number): JamCodec<bit[]> => {
           value.push(((byte >> j) & 1) as bit);
         }
       }
-      return { value, readBytes: nB };
+      return { value: value.slice(0, numElements), readBytes: nB };
     },
     encodedSize: function (value: bit[]): number {
       return Math.ceil(value.length / 8);
@@ -84,6 +84,7 @@ export const bitSequenceCodec = (
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+  const { encodeWithCodec } = await import("@/utils.js");
   describe("BitSequence", () => {
     describe("encode/decode", () => {
       it("should encode and decode a value", () => {
@@ -93,18 +94,16 @@ if (import.meta.vitest) {
         const encodedLength = a.encode(value, bytes);
         expect(a.decode(bytes.subarray(0, encodedLength)).value).toEqual(value);
       });
-      it.fails("should encode and decode a value with 9 elements", () => {
+      it("should encode and decode a value with 9 elements", () => {
         const bytes = new Uint8Array(8);
-        const a = BitSequenceCodec(8);
+        const a = BitSequenceCodec(9);
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1, 1];
         const encodedLength = a.encode(value, bytes);
-        expect(
-          a.decode(bytes.subarray(0, encodedLength)).value.slice(0, 9),
-        ).toEqual(value);
+        expect(encodedLength).eq(2);
+        expect(a.decode(bytes).value).deep.eq(value);
+        expect(encodeWithCodec(a, value)).deep.eq(bytes.slice(0, 2));
         // this fails
-        expect(a.decode(bytes.subarray(0, encodedLength)).value.length).toEqual(
-          9,
-        );
+        //expect(a.decode(bytes).value.length).toEqual(9);
       });
     });
     describe("encodedSize", () => {

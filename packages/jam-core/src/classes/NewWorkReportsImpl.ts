@@ -12,7 +12,7 @@ import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
  * $(0.7.1 - 11.16)
  */
 export class NewWorkReportsImpl {
-  elements!: WorkReportImpl[];
+  elements: WorkReportImpl[] = [];
 
   /**
    * `bold R!` in the paper

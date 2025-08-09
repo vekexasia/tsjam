@@ -61,6 +61,7 @@ export abstract class BaseJamCodecable {
     const el = (<any>this.prototype)[CODEC_METADATA]?.find(
       (a: any) => a.propertyKey === x,
     );
+    assert(el, `Codec for property ${String(x)} not found in ${this.name}`);
     return {
       encode: el.codec.encode.bind(el.codec),
       decode: el.codec.decode.bind(el.codec),
@@ -68,6 +69,10 @@ export abstract class BaseJamCodecable {
       fromJSON: el.json.codec.fromJSON.bind(el.json.codec),
       toJSON: el.json.codec.toJSON.bind(el.json.codec),
     };
+  }
+
+  clone(): this {
+    throw new Error("stub! clone");
   }
 
   toBinary(): Uint8Array {
@@ -206,6 +211,10 @@ export function JamCodecable<
       }
       toJSON(): object {
         return jsonCodec.toJSON(this as unknown as U);
+      }
+
+      clone(): U {
+        return codec.decode(this.toBinary()).value;
       }
 
       static encode(x: U, buf: Uint8Array): number {
