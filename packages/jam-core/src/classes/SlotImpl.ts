@@ -64,7 +64,7 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
    * @param other - the other slot to compare with
    */
   isNextEra(this: Posterior<SlotImpl>, other: SlotImpl): boolean {
-    return this.epochIndex() + 1 === other.epochIndex();
+    return this.epochIndex() === other.epochIndex() + 1;
   }
 
   /**
@@ -75,13 +75,13 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
     prevTau: TauImpl,
   ): Result<Validated<Posterior<TauImpl>>, TauError> {
     if (this.value <= prevTau.value) {
-      return err(TauError.POSTERIOR_LESS_OR_EQUAL_TAU);
+      return err(TauError.POSTERIOR_TAU_LESS_OR_EQUAL_TAU);
     }
     // Ht * P <= T
     //     Ht <= T/P
     //     inverted for error checking
     if (this.value > SlotImpl.posteriorTau().value) {
-      return err(TauError.POSTERIOR_IN_FUTURE);
+      return err(TauError.POSTERIOR_TAU_IN_FUTURE);
     }
     return ok(toTagged(this));
   }
@@ -100,8 +100,8 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
 }
 
 export enum TauError {
-  POSTERIOR_LESS_OR_EQUAL_TAU,
-  POSTERIOR_IN_FUTURE,
+  POSTERIOR_TAU_LESS_OR_EQUAL_TAU = "POSTERIOR_TAU_LESS_OR_EQUAL_TAU",
+  POSTERIOR_TAU_IN_FUTURE = "POSTERIOR_TAU_IN_FUTURE",
 }
 
 export type TauImpl = Tagged<SlotImpl, "tau">;

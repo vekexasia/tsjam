@@ -3,9 +3,14 @@ import { HeaderEpochMarkerImpl } from "@/classes/HeaderEpochMarkerImpl.js";
 import { JamEntropyImpl } from "@/classes/JamEntropyImpl.js";
 import { JamHeaderImpl } from "@/classes/JamHeaderImpl.js";
 import { JamStateImpl } from "@/classes/JamStateImpl.js";
+import { KappaImpl } from "@/classes/KappaImpl.js";
+import { LambdaImpl } from "@/classes/LambdaImpl.js";
 import { SafroleStateImpl } from "@/classes/SafroleStateImpl.js";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl.js";
+import { TicketImpl } from "@/classes/TicketImpl.js";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl.js";
 import { TicketsExtrinsicImpl } from "@/classes/extrinsics/tickets.js";
+import { HashCodec } from "@/codecs/miscCodecs.js";
 import {
   BaseJamCodecable,
   binaryCodec,
@@ -14,25 +19,16 @@ import {
   eitherOneOfCodec,
   JamCodec,
   JamCodecable,
+  JSONCodec,
   jsonCodec,
   optionalCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import {
-  OpaqueHash,
-  Posterior,
-  SeqOfLength,
-  Ticket,
-  Validated,
-} from "@tsjam/types";
+import { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { dummyState } from "./utils.js";
-import { KappaImpl } from "@/classes/KappaImpl.js";
-import { LambdaImpl } from "@/classes/LambdaImpl.js";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl.js";
-import { HashCodec } from "@/codecs/miscCodecs.js";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -70,7 +66,7 @@ class TestState extends BaseJamCodecable {
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
   @codec(SlotImpl)
-  slot!: Validated<Posterior<TauImpl>>;
+  slot!: Posterior<TauImpl>;
 
   @codec(HashCodec)
   entropy!: OpaqueHash; // Y(Hv)
@@ -82,9 +78,9 @@ class TestInput extends BaseJamCodecable {
 @JamCodecable()
 class TestOutputOk extends BaseJamCodecable {
   @optionalCodec(HeaderEpochMarkerImpl)
-  epochMark!: HeaderEpochMarkerImpl;
-  @optionalCodec(JamHeaderImpl.codecOf("ticketsMark"))
-  ticketsMark!: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
+  epochMark?: HeaderEpochMarkerImpl;
+  @codec(JamHeaderImpl.codecOf("ticketsMark"))
+  ticketsMark?: SeqOfLength<TicketImpl, typeof EPOCH_LENGTH>;
 }
 
 @JamCodecable()
@@ -144,24 +140,30 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   curState.iota = testCase.preState.iota;
   curState.safroleState = safrole;
 
+  const p_tau = testCase.input.slot.checkPTauValid(testCase.preState.tau);
+
+  if (p_tau.isErr()) {
+    throw new Error(p_tau.error);
+  }
+
   const p_entropy = curState.entropy.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
     vrfOutputHash: testCase.input.entropy,
   });
 
   const p_gamma_p = safrole.gamma_p.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
     p_offenders: testCase.preState.p_psi_o,
   });
 
   const p_gamma_z = safrole.gamma_z.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
     p_gamma_p,
   });
 
   const [newTicketsErr, newTickets] = testCase.input.extrinsic
     .newTickets({
-      p_tau: testCase.input.slot,
+      p_tau: p_tau.value,
       p_gamma_z,
       gamma_a: safrole.gamma_a,
       p_entropy,
@@ -174,7 +176,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
 
   const [gammaAErr, p_gamma_a] = safrole.gamma_a
     .toPosterior(curState, {
-      p_tau: testCase.input.slot,
+      p_tau: p_tau.value,
       newTickets,
     })
     .safeRet();
@@ -184,14 +186,14 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   }
 
   const p_kappa = curState.kappa.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
   });
   const p_lambda = curState.lambda.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
   });
 
   const p_gamma_s = safrole.gamma_s.toPosterior(curState, {
-    p_tau: testCase.input.slot,
+    p_tau: p_tau.value,
     p_eta2: toPosterior(p_entropy._2),
     p_kappa: toTagged(p_kappa),
   });
@@ -212,6 +214,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   expect(p_lambda.toJSON()).deep.eq(testCase.postState.lambda.toJSON());
   // expect(newState.tau).deep.eq(testCase.postState.tau);
   expect(p_entropy.toJSON()).deep.eq(testCase.postState.eta.toJSON());
+  // TODO: output
 };
 
 describe("safrole-test-vectors", () => {
@@ -221,7 +224,7 @@ describe("safrole-test-vectors", () => {
       test("enact-epoch-change-with-no-tickets-1"));
     it("enact-epoch-change-with-no-tickets-2", () =>
       expect(() => test("enact-epoch-change-with-no-tickets-2")).toThrow(
-        "Invalid slot",
+        "POSTERIOR_TAU_LESS_OR_EQUAL_TAU",
       ));
     it("enact-epoch-change-with-no-tickets-3", () =>
       test("enact-epoch-change-with-no-tickets-3"));

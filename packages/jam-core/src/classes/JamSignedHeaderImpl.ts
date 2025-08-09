@@ -132,6 +132,7 @@ export class JamSignedHeaderImpl
   /**
    * Verifies epoch marker `He` is valid
    * $(0.7.1 - 6.27)
+   * TODO: move to HeaderEpochMarkerImpl
    */
   verifyEpochMarker = (
     prevState: JamStateImpl,

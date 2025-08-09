@@ -73,8 +73,10 @@ export class PVMAccumulationOpImpl
   @binaryCodec(LengthDiscrimantedIdentity)
   authTrace!: Uint8Array;
 
-  constructor(config: ConditionalExcept<PVMAccumulationOpImpl, Function>) {
+  constructor(config?: ConditionalExcept<PVMAccumulationOpImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 }

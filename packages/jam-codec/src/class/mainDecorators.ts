@@ -214,7 +214,13 @@ export function JamCodecable<
       }
 
       clone(): U {
-        return codec.decode(this.toBinary()).value;
+        const toRet = codec.decode(this.toBinary()).value;
+        // FIXME: remove this check when in prod
+        assert(
+          Buffer.compare(toRet.toBinary(), this.toBinary()) === 0,
+          `clone of ${Object.getPrototypeOf(this).name} does not match original`,
+        );
+        return toRet;
       }
 
       static encode(x: U, buf: Uint8Array): number {

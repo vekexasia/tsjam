@@ -98,6 +98,9 @@ import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import { IdentityMap } from "@/data_structures/identityMap";
 import { compareUint8Arrays } from "uint8array-extras";
+import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
+import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
+import { trace } from "console";
 
 export class HostFunctions {
   @HostFn(0)
@@ -611,7 +614,7 @@ export class HostFunctions {
       ERASURECODE_SEGMENT_SIZE,
       context.memory.getBytes(p.checked_u32(), z),
     );
-    const newRefineCtx = structuredClone(args.refineCtx);
+    const newRefineCtx = args.refineCtx; // ok to structuredClone as of 0.7.1
     newRefineCtx.segments.push(bold_x);
 
     return [
@@ -649,7 +652,7 @@ export class HostFunctions {
       end: <u32>0,
       pointer: <u32>0,
     });
-    const newContext = structuredClone(refineCtx);
+    const newContext = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
     newContext.bold_m.set(n, {
       code: bold_p,
       ram: bold_u,
@@ -758,7 +761,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    const p_u = structuredClone(bold_u);
+    const p_u = bold_u.clone();
 
     for (let i = 0; i < c.value; i++) {
       if (r.value < 3) {
@@ -775,7 +778,7 @@ export class HostFunctions {
         p_u.changeAcl(Number(p) + i, PVMMemoryAccessKind.Null);
       }
     }
-    const newRefineCtx = structuredClone(refineCtx);
+    const newRefineCtx = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
     newRefineCtx.bold_m.get(Number(n))!.ram = p_u;
 
     return [IxMod.w7(HostCallResult.OK), IxMod.obj(newRefineCtx)];
@@ -808,7 +811,7 @@ export class HostFunctions {
       instructionPointer: refineCtx.bold_m.get(Number(n))!.instructionPointer,
       gas: g as Gas,
       registers: bold_w,
-      memory: structuredClone(refineCtx.bold_m.get(Number(n))!.ram),
+      memory: refineCtx.bold_m.get(Number(n))!.ram.clone(),
     });
     const res = basicInvocation(refineCtx.bold_m.get(Number(n))!.code, pvmCtx);
 
@@ -821,9 +824,15 @@ export class HostFunctions {
     PVMRegistersImpl.encode(res.context.registers, newMemory.data.subarray(8));
 
     // compute m*
-    const mStar = structuredClone(refineCtx.bold_m);
-    mStar.get(Number(n))!.ram = res.context.memory;
-    mStar.get(Number(n))!.instructionPointer = res.context.instructionPointer;
+    // NOTE: this might fail as structuredClone is pojo copying
+    const mStar = new Map(refineCtx.bold_m.entries());
+    const pvmGuest = new PVMGuest({
+      code: mStar.get(Number(n)!)!.code,
+      instructionPointer: res.context.instructionPointer,
+      ram: res.context.memory,
+    });
+    mStar.set(Number(n), pvmGuest);
+
     switch (res.exitReason.reason) {
       case IrregularPVMExitReason.HostCall: {
         mStar.get(Number(n))!.instructionPointer = toTagged(
@@ -877,7 +886,7 @@ export class HostFunctions {
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    const newRefineCtx = structuredClone(refineCtx);
+    const newRefineCtx = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
     newRefineCtx.bold_m.delete(Number(n));
     return [
       IxMod.w7(refineCtx.bold_m.get(Number(n))!.instructionPointer),
@@ -926,12 +935,24 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
-    const newX = structuredClone(x);
-    newX.state.manager = m.checked_u32();
-    newX.state.assigners = bold_a;
-    newX.state.delegator = v.checked_u32();
-    newX.state.alwaysAccers = bold_z;
-    newX.state.registrar = r.checked_u32();
+    const newX = new PVMResultContextImpl({
+      id: x.id,
+      nextFreeID: x.nextFreeID,
+      provisions: x.provisions,
+      transfers: x.transfers,
+      yield: x.yield,
+      state: new PVMAccumulationStateImpl({
+        accounts: x.state.accounts,
+        authQueue: x.state.authQueue,
+        stagingSet: x.state.stagingSet,
+        // modifications start here
+        assigners: bold_a,
+        manager: m.checked_u32(),
+        delegator: v.checked_u32(),
+        alwaysAccers: bold_z,
+        registrar: r.checked_u32(),
+      }),
+    });
 
     return [
       IxMod.w7(HostCallResult.OK),
@@ -979,9 +1000,25 @@ export class HostFunctions {
         ),
       );
     }
-    const newX = structuredClone(x);
-    newX.state.authQueue.elements[Number(c)] = toTagged(nl);
+    const newX = new PVMResultContextImpl({
+      id: x.id,
+      nextFreeID: x.nextFreeID,
+      provisions: x.provisions,
+      yield: x.yield,
+      transfers: x.transfers,
+      state: new PVMAccumulationStateImpl({
+        authQueue: x.state.authQueue.clone(),
+        assigners: toTagged(x.state.assigners.slice()),
 
+        accounts: x.state.accounts,
+        stagingSet: x.state.stagingSet,
+        manager: x.state.manager,
+        delegator: x.state.delegator,
+        alwaysAccers: x.state.alwaysAccers,
+        registrar: x.state.registrar,
+      }),
+    });
+    newX.state.authQueue.elements[Number(c)] = toTagged(nl);
     newX.state.assigners[Number(c)] = <ServiceIndex>Number(a);
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
@@ -1016,8 +1053,24 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    const newX = structuredClone(x);
-    newX.state.stagingSet = toTagged(bold_v);
+    const newX = new PVMResultContextImpl({
+      id: x.id,
+      nextFreeID: x.nextFreeID,
+      provisions: x.provisions,
+      yield: x.yield,
+      state: new PVMAccumulationStateImpl({
+        stagingSet: toTagged(bold_v),
+
+        accounts: x.state.accounts,
+        authQueue: x.state.authQueue,
+        assigners: x.state.assigners,
+        manager: x.state.manager,
+        delegator: x.state.delegator,
+        alwaysAccers: x.state.alwaysAccers,
+        registrar: x.state.registrar,
+      }),
+      transfers: x.transfers,
+    });
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
 
@@ -1032,7 +1085,7 @@ export class HostFunctions {
     x: PVMResultContextImpl,
   ): Array<W7 | YMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     // deep clone x
-    const p_y = structuredClone(x);
+    const p_y = x.clone();
     const gasAfter = context.gas - 10n; // gas cost of checkpoint = 10
     return [IxMod.w7(gasAfter), IxMod.obj({ y: p_y })];
   }
@@ -1113,7 +1166,23 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.FULL)];
     }
 
-    const newX = structuredClone(args.x);
+    const newX = new PVMResultContextImpl({
+      id: args.x.id,
+      nextFreeID: args.x.nextFreeID,
+      provisions: args.x.provisions,
+      yield: args.x.yield,
+      state: new PVMAccumulationStateImpl({
+        accounts: new DeltaImpl(args.x.state.accounts.elements),
+        authQueue: args.x.state.authQueue,
+        stagingSet: args.x.state.stagingSet,
+        assigners: args.x.state.assigners,
+        manager: args.x.state.manager,
+        delegator: args.x.state.delegator,
+        alwaysAccers: args.x.state.alwaysAccers,
+        registrar: args.x.state.registrar,
+      }),
+      transfers: args.x.transfers,
+    });
     if (
       args.x.id === args.x.state.registrar &&
       i.value < MINIMUM_PUBLIC_SERVICE_INDEX
@@ -1542,21 +1611,24 @@ const serviceAccountCodec = createCodec<
 /**
  * $(0.7.1 - B.4)
  */
-export type PVMGuest = {
+export class PVMGuest {
   /**
    * `p`
    */
-  code: Uint8Array;
+  code!: Uint8Array;
   /**
    * `u`
    */
-  ram: PVMMemory;
+  ram!: PVMMemory;
   /**
    * `i`
    * or `pc` in latex
    */
-  instructionPointer: u32;
-};
+  instructionPointer!: u32;
+  constructor(config: ConditionalExcept<PVMGuest, Function>) {
+    Object.assign(this, config);
+  }
+}
 
 export type RefineContext = {
   bold_m: Map<number, PVMGuest>;

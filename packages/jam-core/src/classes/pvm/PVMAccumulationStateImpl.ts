@@ -9,6 +9,7 @@ import { ConditionalExcept } from "type-fest";
 import { AuthorizerQueueImpl } from "../AuthorizerQueueImpl";
 import { DeltaImpl } from "../DeltaImpl";
 import { ValidatorsImpl } from "../ValidatorsImpl";
+import { toTagged } from "@tsjam/utils";
 
 /**
  * `S` in the graypaper
@@ -54,5 +55,18 @@ export class PVMAccumulationStateImpl implements PVMAccumulationState {
   alwaysAccers!: Map<ServiceIndex, Gas>;
   constructor(config: ConditionalExcept<PVMAccumulationStateImpl, Function>) {
     Object.assign(this, config);
+  }
+
+  clone(): PVMAccumulationStateImpl {
+    return new PVMAccumulationStateImpl({
+      accounts: this.accounts.clone(),
+      stagingSet: this.stagingSet.clone(),
+      authQueue: this.authQueue.clone(),
+      manager: this.manager,
+      assigners: toTagged([...this.assigners]),
+      delegator: this.delegator,
+      registrar: this.registrar,
+      alwaysAccers: new Map(this.alwaysAccers),
+    });
   }
 }

@@ -15,8 +15,8 @@ export class LambdaImpl extends ValidatorsImpl {
     deps: { p_tau: Validated<Posterior<TauImpl>> },
   ): Posterior<JamStateImpl["lambda"]> {
     if (deps.p_tau.isNewerEra(curState.slot)) {
-      return toPosterior(<any>structuredClone(curState.kappa));
+      return toPosterior(<any>curState.kappa.clone());
     }
-    return toPosterior(<any>this);
+    return toPosterior(<any>this.clone());
   }
 }

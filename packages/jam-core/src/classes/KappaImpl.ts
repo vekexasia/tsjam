@@ -15,8 +15,8 @@ export class KappaImpl extends ValidatorsImpl {
     deps: { p_tau: Validated<Posterior<TauImpl>> },
   ): Posterior<JamStateImpl["kappa"]> {
     if (deps.p_tau.isNewerEra(curState.slot)) {
-      return toPosterior(<any>structuredClone(curState.safroleState.gamma_p));
+      return toPosterior(<any>curState.safroleState.gamma_p.clone());
     }
-    return toPosterior(structuredClone(<any>this));
+    return toPosterior(<JamStateImpl["kappa"]>(<KappaImpl>this.clone()));
   }
 }

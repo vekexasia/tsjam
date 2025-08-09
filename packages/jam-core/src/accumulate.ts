@@ -293,7 +293,7 @@ export const parallelizedAccumulation = (
     accumulatedServices.push(acc);
   });
 
-  const delta: DeltaImpl = structuredClone(accState.accounts);
+  const delta: DeltaImpl = accState.accounts.clone();
 
   // should contain "removed" services
   const m: Set<ServiceIndex> = new Set();
@@ -333,6 +333,7 @@ export const parallelizedAccumulation = (
     deps,
   ).postState;
 
+  // NOTE:safe to structuredClone
   const a_prime = structuredClone(accState.assigners);
   for (let c = <CoreIndex>0; c < CORES; c++) {
     if (accState.assigners[c] !== eStar.assigners[c]) {

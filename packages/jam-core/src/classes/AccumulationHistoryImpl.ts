@@ -15,7 +15,7 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 import { ConditionalExcept } from "type-fest";
-import { IdentitySetCodec } from "@/data_structures/identitySet";
+import { IdentitySet, IdentitySetCodec } from "@/data_structures/identitySet";
 import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
@@ -33,7 +33,7 @@ export class AccumulationHistoryImpl
     IdentitySetCodec(HashCodec),
     SINGLE_ELEMENT_CLASS,
   )
-  elements!: SeqOfLength<Set<WorkPackageHash>, typeof EPOCH_LENGTH>;
+  elements!: SeqOfLength<IdentitySet<WorkPackageHash>, typeof EPOCH_LENGTH>;
   constructor(config?: ConditionalExcept<AccumulationHistoryImpl, Function>) {
     super();
     if (typeof config !== "undefined") {
@@ -56,8 +56,7 @@ export class AccumulationHistoryImpl
     r_star: AccumulatableWorkReports;
     nAccumulatedWork: number;
   }): Posterior<AccumulationHistoryImpl> {
-    const toRet = new AccumulationHistoryImpl();
-    toRet.elements = structuredClone(this.elements);
+    const toRet: AccumulationHistoryImpl = this.clone();
     const slicedR = deps.r_star.slice(0, deps.nAccumulatedWork);
 
     // $(0.7.1 - 12.30)

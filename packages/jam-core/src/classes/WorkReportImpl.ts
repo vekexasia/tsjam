@@ -33,6 +33,7 @@ import { type NewWorkReportsImpl } from "./NewWorkReportsImpl";
 import { ConditionalExcept } from "type-fest";
 import { HashCodec } from "@/codecs/miscCodecs";
 import { IdentityMap, IdentityMapCodec } from "@/data_structures/identityMap";
+import { IdentitySet } from "@/data_structures/identitySet";
 
 /**
  * Identified by `R` set
@@ -115,8 +116,10 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
    * $(0.7.1 - 12.9)
    * compute the package haches of the given work reports
    */
-  static extractWorkPackageHashes(r: WorkReportImpl[]): Set<WorkPackageHash> {
-    return new Set(r.map((wr) => wr.avSpec.packageHash));
+  static extractWorkPackageHashes(
+    r: WorkReportImpl[],
+  ): IdentitySet<WorkPackageHash> {
+    return new IdentitySet(r.map((wr) => wr.avSpec.packageHash));
   }
 
   /**

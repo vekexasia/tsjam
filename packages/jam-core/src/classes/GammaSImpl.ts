@@ -75,7 +75,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
         );
       return toPosterior(new GammaSImpl({ tickets: newGammaS }));
     } else if (deps.p_tau.isSameEra(curState.slot)) {
-      return toPosterior(this);
+      return toPosterior(<GammaSImpl>this);
     } else {
       // we're in fallback mode
       // F(eta'_2, kappa' )

@@ -66,7 +66,7 @@ export class CoreStatisticsImpl
     bold_I: Tagged<WorkReportImpl[], "bold I">;
     bold_R: NewWorkReportsImpl;
   }) {
-    const toRet = structuredClone(this);
+    const toRet = this.clone();
 
     for (let c = <CoreIndex>0; c < CORES; c++) {
       toRet.elements[c] = new SingleCoreStatisticsImpl({

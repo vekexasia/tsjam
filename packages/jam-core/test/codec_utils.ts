@@ -58,42 +58,40 @@ export const TestOutputCodec = <Error extends number, Output>(
   };
 };
 
-export const logCodec = <A, B>(
-  input: [name: A, codec: JamCodec<B>],
-  logger: (value: B) => string = (value) => `${value}`,
-): [A, JamCodec<B>] => {
-  const [name, codec] = input;
+export const logCodec = <B extends JamCodec<C>, C>(
+  name: string,
+  codec: B,
+  logger: (value: C) => string = (value) => `${value}`,
+): B => {
   const saneBufferLog = (bytes: Uint8Array, length: number) => {
     if (length > 64) {
       return `${Buffer.from(bytes.subarray(0, 16)).toString("hex")}...${Buffer.from(bytes.subarray(length - 16, length)).toString("hex")}`;
     }
     return Buffer.from(bytes.subarray(0, length)).toString("hex");
   };
-  const saneValLog: (value: B) => string = (value: B): string => {
+  const saneValLog: (value: C) => string = (value: C): string => {
     return `${logger(value)}`;
   };
-  return [
-    name,
-    {
-      encode(value, bytes) {
-        const toRet = codec.encode(value, bytes);
-        console.log(
-          `LogCodec[${name}][E] = length=${toRet} - value=${saneValLog(value)} - encoded=${saneBufferLog(bytes, toRet)}`,
-        );
-        return toRet;
-      },
-      decode(bytes) {
-        const toRet = codec.decode(bytes);
-        console.log(
-          `LogCodec[${name}][D] = read=${toRet.readBytes} - buf=${saneBufferLog(bytes, toRet.readBytes)} - value=${`${saneValLog(toRet.value)}`}`,
-        );
-        return toRet;
-      },
-      encodedSize(value) {
-        const toRet = codec.encodedSize(value);
-        console.log(`LogCodec[${name}][ES] = ${value} - ${toRet}`);
-        return toRet;
-      },
+  return <B>{
+    ...codec,
+    encode(value, bytes) {
+      const toRet = codec.encode(value, bytes);
+      console.log(
+        `LogCodec[${name}][E] = length=${toRet} - value=${saneValLog(value)} - encoded=${saneBufferLog(bytes, toRet)}`,
+      );
+      return toRet;
     },
-  ];
+    decode(bytes) {
+      const toRet = codec.decode(bytes);
+      console.log(
+        `LogCodec[${name}][D] = read=${toRet.readBytes} - buf=${saneBufferLog(bytes, toRet.readBytes)} - value=${`${saneValLog(toRet.value)}`}`,
+      );
+      return toRet;
+    },
+    encodedSize(value) {
+      const toRet = codec.encodedSize(value);
+      console.log(`LogCodec[${name}][ES] = ${value} - ${toRet}`);
+      return toRet;
+    },
+  };
 };

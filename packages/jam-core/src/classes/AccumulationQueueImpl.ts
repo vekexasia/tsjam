@@ -79,8 +79,7 @@ export class AccumulationQueueImpl
     r_q: AccumulationQueueItem[];
     p_accumulationHistory: Posterior<AccumulationHistoryImpl>;
   }): Posterior<AccumulationQueueImpl> {
-    const toRet: AccumulationQueueImpl = new AccumulationQueueImpl();
-    toRet.elements = structuredClone(this.elements);
+    const toRet: AccumulationQueueImpl = this.clone();
     const m = deps.p_tau.slotPhase(); // $(0.7.1 - 12.10)
 
     for (let i = 0; i < EPOCH_LENGTH; i++) {

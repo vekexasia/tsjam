@@ -25,7 +25,6 @@ import {
   UpToSeq,
   Validated,
 } from "@tsjam/types";
-import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { GammaAImpl } from "../GammaAImpl";
 import { JamEntropyImpl } from "../JamEntropyImpl";
@@ -34,6 +33,8 @@ import { TicketImpl } from "../TicketImpl";
 import { GammaZImpl } from "../GammaZImpl";
 import { TauImpl } from "../SlotImpl";
 import { HashCodec } from "@/codecs/miscCodecs";
+import { IdentitySet } from "@/data_structures/identitySet";
+import { compareUint8Arrays } from "uint8array-extras";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -83,7 +84,7 @@ export class TicketsExtrinsicElementImpl
     if (!sig) {
       return err(ETError.INVALID_VRF_PROOF);
     }
-    return ok(toTagged(this));
+    return ok(<any>this);
   }
 }
 
@@ -145,13 +146,13 @@ export class TicketsExtrinsicImpl
 
     // $(0.7.1 - 6.32) | tickets should be in order and unique
     for (let i = 1; i < n.length; i++) {
-      if (n[i - 1].id >= n[i].id) {
+      if (compareUint8Arrays(n[i - 1].id, n[i].id) >= 0) {
         return err(ETError.UNSORTED_VRF_PROOFS);
       }
     }
 
     // $(0.7.1 - 6.33) | make sure ticket were not submitted already
-    const gamma_a_ids = new Set(deps.gamma_a.elements.map((x) => x.id));
+    const gamma_a_ids = new IdentitySet(deps.gamma_a.elements.map((x) => x.id));
     for (const x of n) {
       if (gamma_a_ids.has(x.id)) {
         return err(ETError.TICKET_IN_GAMMA_A);
