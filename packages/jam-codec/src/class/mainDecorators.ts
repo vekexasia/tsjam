@@ -1,6 +1,11 @@
 import { JamCodec } from "@/codec";
 import { JSONCodec, createJSONCodec } from "@/json/JsonCodec";
-import { mapCodec, createCodec, encodeWithCodec } from "@/utils";
+import {
+  cloneWithCodec,
+  createCodec,
+  encodeWithCodec,
+  mapCodec,
+} from "@/utils";
 import assert from "assert";
 
 const CODEC_METADATA = Symbol.for("__jamcodecs__");
@@ -71,9 +76,9 @@ export abstract class BaseJamCodecable {
     };
   }
 
-  clone(): this {
-    throw new Error("stub! clone");
-  }
+  // clone(): this {
+  //   throw new Error("stub! clone");
+  // }
 
   toBinary(): Uint8Array {
     throw new Error("stub");
@@ -83,6 +88,22 @@ export abstract class BaseJamCodecable {
     throw new Error("stub!");
   }
 }
+
+export const asCodec = <T extends typeof BaseJamCodecable>(
+  a: T,
+): JamCodec<InstanceType<T>> & JSONCodec<InstanceType<T>> => {
+  return a;
+};
+
+export const cloneCodecable = <
+  X extends InstanceType<T>,
+  T extends typeof BaseJamCodecable,
+>(
+  instance: X,
+) => {
+  const proto = <T>Object.getPrototypeOf(instance).constructor;
+  return <X>cloneWithCodec(proto, instance);
+};
 
 /**
  * Decorator to mark properties in class as JamCodecable.
@@ -213,15 +234,15 @@ export function JamCodecable<
         return jsonCodec.toJSON(this as unknown as U);
       }
 
-      clone(): U {
-        const toRet = codec.decode(this.toBinary()).value;
-        // FIXME: remove this check when in prod
-        assert(
-          Buffer.compare(toRet.toBinary(), this.toBinary()) === 0,
-          `clone of ${Object.getPrototypeOf(this).name} does not match original`,
-        );
-        return toRet;
-      }
+      // clone(): U {
+      //   const toRet = codec.decode(this.toBinary()).value;
+      //   // FIXME: remove this check when in prod
+      //   assert(
+      //     Buffer.compare(toRet.toBinary(), this.toBinary()) === 0,
+      //     `clone of ${Object.getPrototypeOf(this).name} does not match original`,
+      //   );
+      //   return toRet;
+      // }
 
       static encode(x: U, buf: Uint8Array): number {
         return codec.encode(x, buf);
@@ -373,6 +394,26 @@ if (import.meta.vitest) {
 
         expect(() => S.codecOf("a")).to.throw("Codec for property a not found");
       });
+    });
+    it("cloneCodecable", () => {
+      @JamCodecable()
+      class S extends BaseJamCodecable {
+        @eSubIntCodec(1)
+        a!: number;
+        @eSubIntCodec(2)
+        b!: number;
+      }
+
+      const s = new S();
+      s.a = 2;
+      s.b = 6;
+
+      const s2 = cloneCodecable(s);
+      expect(s).deep.eq(s2);
+      expect(s2 instanceof S).toBe(true);
+      s2.a = 3;
+      expect(s.a).toBe(2);
+      console.log(Object.getPrototypeOf(s).toJSON);
     });
   });
 }

@@ -202,6 +202,7 @@ const A_fn = (
   });
 };
 
+const pagedProofCodec = createArrayLengthDiscriminator(HashCodec);
 /**
  * Paged Proof
  * $(0.7.1 - 14.11)
@@ -213,8 +214,8 @@ const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
     const j6 = J_fn(6, segments, i);
     const l6 = Leaf_fn(6, segments, i);
     const encoded = new Uint8Array([
-      ...encodeWithCodec(dlArrayOfHashesCodec, j6),
-      ...encodeWithCodec(dlArrayOfHashesCodec, l6),
+      ...encodeWithCodec(pagedProofCodec, j6),
+      ...encodeWithCodec(pagedProofCodec, l6),
     ]);
     toRet.push(
       zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),

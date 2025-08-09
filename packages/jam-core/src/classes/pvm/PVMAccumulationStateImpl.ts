@@ -10,6 +10,7 @@ import { AuthorizerQueueImpl } from "../AuthorizerQueueImpl";
 import { DeltaImpl } from "../DeltaImpl";
 import { ValidatorsImpl } from "../ValidatorsImpl";
 import { toTagged } from "@tsjam/utils";
+import { cloneCodecable } from "@tsjam/codec";
 
 /**
  * `S` in the graypaper
@@ -60,8 +61,8 @@ export class PVMAccumulationStateImpl implements PVMAccumulationState {
   clone(): PVMAccumulationStateImpl {
     return new PVMAccumulationStateImpl({
       accounts: this.accounts.clone(),
-      stagingSet: this.stagingSet.clone(),
-      authQueue: this.authQueue.clone(),
+      stagingSet: cloneCodecable(this.stagingSet),
+      authQueue: cloneCodecable(this.authQueue),
       manager: this.manager,
       assigners: toTagged([...this.assigners]),
       delegator: this.delegator,

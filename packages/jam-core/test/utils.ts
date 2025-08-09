@@ -24,6 +24,8 @@ import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
+import { IdentityMap } from "@/data_structures/identityMap";
+import { IdentitySet } from "@/data_structures/identitySet";
 import {
   AUTHPOOL_SIZE,
   AUTHQUEUE_MAX_SIZE,
@@ -33,13 +35,16 @@ import {
   RECENT_HISTORY_LENGTH,
 } from "@tsjam/constants";
 import {
+  AuthorizerHash,
   BandersnatchKey,
+  Blake2bHash,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
   Hash,
+  HeaderHash,
   ServiceIndex,
-  Tau,
+  StateRootHash,
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
@@ -48,10 +53,7 @@ import { toTagged } from "@tsjam/utils";
 export const dummyValidator = (): ValidatorDataImpl => {
   return new ValidatorDataImpl({
     banderSnatch: Buffer.alloc(32).fill(0) as Uint8Array as BandersnatchKey,
-    ed25519: {
-      buf: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey["buf"],
-      bigint: toTagged(0n) as ED25519PublicKey["bigint"],
-    },
+    ed25519: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey,
     blsKey: new Uint8Array(144).fill(0) as BLSKey,
     metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
   });
@@ -80,10 +82,10 @@ export const dummyBeta = (): BetaImpl => {
         new Array(RECENT_HISTORY_LENGTH).fill(null).map(
           () =>
             new RecentHistoryItemImpl({
-              stateRoot: toTagged(0n),
-              reportedPackages: new Map(),
-              headerHash: toTagged(0n),
-              accumulationResultMMB: toTagged(0n),
+              stateRoot: <StateRootHash>new Uint8Array(32).fill(0),
+              reportedPackages: new IdentityMap(),
+              headerHash: <HeaderHash>new Uint8Array(32).fill(0),
+              accumulationResultMMB: <Hash>new Uint8Array(32).fill(0),
             }),
         ),
       ),
@@ -95,10 +97,12 @@ export const dummyAuthQueue = (): AuthorizerQueueImpl => {
   return new AuthorizerQueueImpl({
     elements: toTagged(
       new Array(CORES)
-        .fill(toTagged(0n))
+        .fill(0)
         .map(() =>
           toTagged(
-            new Array(AUTHQUEUE_MAX_SIZE).fill(null).map(() => toTagged(0n)),
+            new Array(AUTHQUEUE_MAX_SIZE)
+              .fill(null)
+              .map(() => <AuthorizerHash>new Uint8Array(32).fill(0)),
           ),
         ),
     ),
@@ -107,19 +111,19 @@ export const dummyAuthQueue = (): AuthorizerQueueImpl => {
 
 export const dummyDisputesState = (): DisputesStateImpl => {
   return new DisputesStateImpl({
-    bad: new Set(),
-    good: new Set(),
-    wonky: new Set(),
-    offenders: new Set(),
+    bad: new IdentitySet(),
+    good: new IdentitySet(),
+    wonky: new IdentitySet(),
+    offenders: new IdentitySet(),
   });
 };
 
 export const dummyEntropy = <T extends JamEntropyImpl>(): T => {
   return <T>new JamEntropyImpl({
-    _0: toTagged(0n),
-    _1: toTagged(0n),
-    _2: toTagged(0n),
-    _3: toTagged(0n),
+    _0: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
+    _1: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
+    _2: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
+    _3: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
   });
 };
 
@@ -154,7 +158,7 @@ export const dummyState = (): JamStateImpl => {
       elements: toTagged(
         new Array(EPOCH_LENGTH)
           .fill(null)
-          .map(() => new Set<WorkPackageHash>()),
+          .map(() => new IdentitySet<WorkPackageHash>()),
       ),
     }),
     rho: new RHOImpl({ elements: toTagged(new Array(CORES).fill(undefined)) }),

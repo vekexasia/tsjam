@@ -1,8 +1,10 @@
+import { HashCodec } from "@/codecs/miscCodecs";
+import { IdentitySet, IdentitySetCodec } from "@/data_structures/identitySet";
 import {
   BaseJamCodecable,
+  cloneCodecable,
   JamCodecable,
   sequenceCodec,
-  SetJSONCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
@@ -13,10 +15,8 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 import { ConditionalExcept } from "type-fest";
-import { IdentitySet, IdentitySetCodec } from "@/data_structures/identitySet";
-import { HashCodec } from "@/codecs/miscCodecs";
+import { AccumulatableWorkReports, WorkReportImpl } from "./WorkReportImpl";
 
 /**
  * `ξ` in the graypaper
@@ -56,7 +56,7 @@ export class AccumulationHistoryImpl
     r_star: AccumulatableWorkReports;
     nAccumulatedWork: number;
   }): Posterior<AccumulationHistoryImpl> {
-    const toRet: AccumulationHistoryImpl = this.clone();
+    const toRet: AccumulationHistoryImpl = cloneCodecable(this);
     const slicedR = deps.r_star.slice(0, deps.nAccumulatedWork);
 
     // $(0.7.1 - 12.30)

@@ -26,6 +26,6 @@ export class GammaPImpl extends ValidatorsImpl {
         ),
       );
     }
-    return toPosterior(toTagged(this));
+    return toPosterior(toTagged(<GammaPImpl>this));
   }
 }

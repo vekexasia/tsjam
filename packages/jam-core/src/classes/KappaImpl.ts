@@ -1,6 +1,6 @@
-import { JamCodecable } from "@tsjam/codec";
+import { cloneCodecable, JamCodecable } from "@tsjam/codec";
 import { Posterior, Validated } from "@tsjam/types";
-import { toPosterior } from "@tsjam/utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import { JamStateImpl } from "./JamStateImpl";
 import { TauImpl } from "./SlotImpl";
 import { ValidatorsImpl } from "./ValidatorsImpl";
@@ -15,8 +15,10 @@ export class KappaImpl extends ValidatorsImpl {
     deps: { p_tau: Validated<Posterior<TauImpl>> },
   ): Posterior<JamStateImpl["kappa"]> {
     if (deps.p_tau.isNewerEra(curState.slot)) {
-      return toPosterior(<any>curState.safroleState.gamma_p.clone());
+      const cloned = cloneCodecable(curState.safroleState.gamma_p);
+      const newK = new KappaImpl({ elements: cloned.elements });
+      return toPosterior(toTagged(newK));
     }
-    return toPosterior(<JamStateImpl["kappa"]>(<KappaImpl>this.clone()));
+    return toPosterior(toTagged(cloneCodecable(this)));
   }
 }

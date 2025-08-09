@@ -320,7 +320,7 @@ export class JamStateImpl implements JamState {
       ep: validatedEP,
     });
 
-    const dd_rho = RHOImpl.toDoubleDagger(d_rho, {
+    const dd_rho = d_rho.toDoubleDagger({
       p_tau,
       newReports: bold_R,
       rho: this.rho,
@@ -341,7 +341,7 @@ export class JamStateImpl implements JamState {
       return err(egError);
     }
 
-    const p_rho = RHOImpl.toPosterior(dd_rho, {
+    const p_rho = dd_rho.toPosterior({
       p_tau,
       EG_Extrinsic: validatedEG,
     });

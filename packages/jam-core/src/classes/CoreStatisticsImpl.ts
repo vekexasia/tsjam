@@ -2,6 +2,7 @@ import {
   BaseJamCodecable,
   binaryCodec,
   buildGenericKeyValueCodec,
+  cloneCodecable,
   E_int,
   jsonCodec,
   MapJSONCodec,
@@ -15,20 +16,20 @@ import {
   Gas,
   SeqOfLength,
   SingleCoreStatistics,
+  Tagged,
   u16,
   u32,
   Validated,
   WorkReport,
-  Tagged,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SingleCoreStatisticsImpl } from "./SingleCoreStatisticsImpl";
 import { SingleServiceStatisticsImpl } from "./SingleServiceStatisticsImpl";
 import { WorkReportImpl } from "./WorkReportImpl";
-import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 
 export class CoreStatisticsImpl
   extends BaseJamCodecable
@@ -66,7 +67,7 @@ export class CoreStatisticsImpl
     bold_I: Tagged<WorkReportImpl[], "bold I">;
     bold_R: NewWorkReportsImpl;
   }) {
-    const toRet = this.clone();
+    const toRet = cloneCodecable(this);
 
     for (let c = <CoreIndex>0; c < CORES; c++) {
       toRet.elements[c] = new SingleCoreStatisticsImpl({

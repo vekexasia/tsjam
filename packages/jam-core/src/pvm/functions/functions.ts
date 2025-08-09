@@ -12,6 +12,7 @@ import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkItemImpl } from "@/classes/WorkItemImpl";
 import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
 import {
+  cloneCodecable,
   createArrayLengthDiscriminator,
   createCodec,
   E_8,
@@ -1007,7 +1008,7 @@ export class HostFunctions {
       yield: x.yield,
       transfers: x.transfers,
       state: new PVMAccumulationStateImpl({
-        authQueue: x.state.authQueue.clone(),
+        authQueue: cloneCodecable(x.state.authQueue),
         assigners: toTagged(x.state.assigners.slice()),
 
         accounts: x.state.accounts,

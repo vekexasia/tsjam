@@ -1,14 +1,26 @@
 import { Balance, Gas } from "@tsjam/types";
 import { DeferredTransferImpl } from "./DeferredTransferImpl";
+import {
+  BaseJamCodecable,
+  JamCodecable,
+  lengthDiscriminatedCodec,
+} from "@tsjam/codec";
 
 /**
  * $(0.7.1 - 12.14)
  */
-export class DeferredTransfersImpl {
+@JamCodecable()
+export class DeferredTransfersImpl extends BaseJamCodecable {
+  @lengthDiscriminatedCodec(DeferredTransferImpl)
   elements: DeferredTransferImpl[];
 
-  constructor(elements: DeferredTransferImpl[]) {
-    this.elements = elements;
+  constructor(elements?: DeferredTransferImpl[]) {
+    super();
+    if (typeof elements === "undefined") {
+      this.elements = [];
+    } else {
+      this.elements = elements;
+    }
   }
 
   totalAmount(): Balance {

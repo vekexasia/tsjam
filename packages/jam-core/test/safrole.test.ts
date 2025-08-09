@@ -215,6 +215,7 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   // expect(newState.tau).deep.eq(testCase.postState.tau);
   expect(p_entropy.toJSON()).deep.eq(testCase.postState.eta.toJSON());
   // TODO: output
+  HeaderEpochMarkerImpl;
 };
 
 describe("safrole-test-vectors", () => {

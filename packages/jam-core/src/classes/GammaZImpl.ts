@@ -47,6 +47,6 @@ export class GammaZImpl extends BaseJamCodecable implements GammaZ {
         }),
       );
     }
-    return toPosterior(this);
+    return toPosterior(<GammaZImpl>this);
   }
 }

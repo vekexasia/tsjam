@@ -3,6 +3,7 @@ import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
+  cloneCodecable,
   codec,
   createSequenceCodec,
   JamCodecable,
@@ -88,7 +89,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
       ...deps.p_disputes.wonky,
     ]);
 
-    const rho_dagger: RHOImpl = this.clone();
+    const rho_dagger: RHOImpl = cloneCodecable(this);
     this.elements.forEach((rho_c, core) => {
       if (typeof rho_c === "undefined") {
         return;
@@ -115,7 +116,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
       newReports: NewWorkReportsImpl; // bold R
     },
   ): DoubleDagger<RHOImpl> {
-    const newState = this.clone();
+    const newState = cloneCodecable(this);
     for (let c = <CoreIndex>0; c < CORES; c++) {
       if (typeof this.elements[c] === "undefined") {
         continue; // if no  workreport indagger then there is nothing to remove.
@@ -153,7 +154,7 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
       p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<RHOImpl> {
-    const newState = this.clone();
+    const newState = cloneCodecable(this);
     for (let core = <CoreIndex>0; core < CORES; core++) {
       const ext = deps.EG_Extrinsic.elementForCore(core);
       if (typeof ext !== "undefined") {

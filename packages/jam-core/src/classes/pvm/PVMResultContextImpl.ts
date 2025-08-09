@@ -2,6 +2,7 @@ import { Hash, PVMResultContext, ServiceIndex } from "@tsjam/types";
 import { PVMAccumulationStateImpl } from "./PVMAccumulationStateImpl";
 import { ConditionalExcept } from "type-fest";
 import { DeferredTransfersImpl } from "../DeferredTransfersImpl";
+import { cloneCodecable } from "@tsjam/codec";
 
 /**
  * `L` in the graypaper
@@ -52,5 +53,19 @@ export class PVMResultContextImpl implements PVMResultContext {
    */
   bold_s() {
     return this.state.accounts.get(this.id)!;
+  }
+
+  clone() {
+    return new PVMResultContextImpl({
+      id: this.id,
+      state: this.state.clone(),
+      nextFreeID: this.nextFreeID,
+      transfers: cloneCodecable(this.transfers),
+      yield: this.yield,
+      provisions: this.provisions.map((p) => ({
+        serviceId: p.serviceId,
+        blob: p.blob.slice(), // Clone the Uint8Array
+      })),
+    });
   }
 }

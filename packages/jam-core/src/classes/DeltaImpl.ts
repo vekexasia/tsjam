@@ -40,11 +40,13 @@ export class DeltaImpl implements Delta {
     this.elements.set(key, value);
     return this;
   }
+
   clone(): DeltaImpl {
     const clone = new DeltaImpl();
     clone.elements = new Map(this.elements);
     return clone;
   }
+
   delete(key: ServiceIndex): boolean {
     return this.elements.delete(key);
   }
