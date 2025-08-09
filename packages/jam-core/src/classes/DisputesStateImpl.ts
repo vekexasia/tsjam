@@ -158,7 +158,7 @@ export enum DisputesToPosteriorError {
   VERDICT_SIGNATURE_INVALID = "verdict signature is invalid",
   VALID_REPORT_NOT_IN_PSIB_OR_IN_PSIO = "with fault validity 1, the report must be in psi_b' and not in psi_o'",
   INVALID_REPORT_IN_PSIB_OR_NOT_IN_PSIO = "with fault validity 0, the report must NOT be in psi_b' and in psi_o'",
-  CULPRIT_NOT_IN_PSIB = "culprit must be in psi_b'",
+  CULPRIT_NOT_IN_PSIB = "CULPRIT_NOT_IN_PSIB",
   CULPRITKEYNOTINK = "one or more culprit key is not in bold_k",
   FAULTKEYNOTINK = "one or more fault key is not in bold_k",
 }

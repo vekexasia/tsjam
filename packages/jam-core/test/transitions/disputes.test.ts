@@ -10,7 +10,6 @@ import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec_utils";
-import { Err } from "neverthrow";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -79,7 +78,7 @@ const buildTest = (name: string) => {
     .safeRet();
 
   if (ppsiErr) {
-    throw new Error(`Invalid ppsi: ${ppsiErr}`);
+    throw new Error(ppsiErr);
   }
 
   expect(p_psi.toJSON()).toEqual(testCase.post_state.psi.toJSON());
@@ -125,11 +124,11 @@ describe("disputes-test-vectors", () => {
     expect(() => test("progress_with_culprits-6")).toThrow("CULPRITKEYNOTINK"));
   it("progress_with_culprits-7", () =>
     expect(() => test("progress_with_culprits-7")).toThrow(
-      "culprit.hash must reference a verdict",
+      "CULPRIT_NOT_IN_PSIB",
     ));
   it("progress_with_faults-1", () =>
     expect(() => test("progress_with_faults-1")).toThrow(
-      "positive verdicts must be in faults",
+      "POSITIVE_VERDICTS_NOT_IN_FAULTS",
     ));
   it("progress_with_faults-2", () => test("progress_with_faults-2"));
   it("progress_with_faults-3", () =>

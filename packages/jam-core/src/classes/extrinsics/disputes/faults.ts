@@ -82,10 +82,6 @@ export class DisputesFaults extends BaseJamCodecable {
     kappa: KappaImpl;
     disputesState: DisputesStateImpl;
   }): Result<Validated<DisputesFaults>, DisputesFaultError> {
-    if (this.elements.length === 0) {
-      return ok(toTagged(this));
-    }
-
     const positiveVerdicts = deps.bold_v.filter(
       (v) => v.votes === VerdictVoteKind.TWO_THIRD_PLUS_ONE,
     );
