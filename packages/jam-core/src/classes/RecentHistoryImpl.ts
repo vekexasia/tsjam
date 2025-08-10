@@ -1,5 +1,6 @@
 import {
   BaseJamCodecable,
+  cloneCodecable,
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
@@ -49,7 +50,7 @@ export class RecentHistoryImpl
       return toDagger(this);
     }
 
-    const toRet = structuredClone(this);
+    const toRet = cloneCodecable(this);
 
     toRet.elements[toRet.elements.length - 1].stateRoot =
       header.parentStateRoot;
@@ -68,15 +69,15 @@ export class RecentHistoryImpl
   /**
    * $(0.7.1 - 7.8 / 4.17)
    */
-  static toPosterior(
-    d_recentHistory: Dagger<RecentHistoryImpl>,
+  toPosterior(
+    this: Dagger<RecentHistoryImpl>,
     deps: {
       headerHash: HeaderHash;
       p_beefyBelt: Posterior<Beta["beefyBelt"]>;
       eg: Validated<GuaranteesExtrinsicImpl>;
     },
   ) {
-    const toRet = structuredClone(d_recentHistory);
+    const toRet = cloneCodecable(this);
     const b = MMRSuperPeak(deps.p_beefyBelt);
     const bold_p = new Map(
       deps.eg

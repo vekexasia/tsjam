@@ -327,7 +327,15 @@ export class JamStateImpl implements JamState {
     });
 
     const [egError, validatedEG] = newBlock.extrinsics.reportGuarantees
-      .checkValidity(this, {
+      .checkValidity({
+        beta: this.beta,
+        rho: this.rho,
+        accumulationHistory: this.accumulationHistory,
+        accumulationQueue: this.accumulationQueue,
+        authPool: this.authPool,
+        headerLookupHistory: this.headerLookupHistory,
+        serviceAccounts: this.serviceAccounts,
+
         dd_rho,
         d_recentHistory: toDagger(d_beta.recentHistory),
         p_entropy,

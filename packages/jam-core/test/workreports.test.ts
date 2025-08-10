@@ -1,17 +1,21 @@
 import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
 import "@/classes/BetaImpl";
+import { BetaImpl } from "@/classes/BetaImpl";
 import { CoreStatisticsImpl } from "@/classes/CoreStatisticsImpl";
 import {
   EGError,
   GuaranteesExtrinsicImpl,
 } from "@/classes/extrinsics/guarantees";
 import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
+import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
+import { JamStateImpl } from "@/classes/JamStateImpl";
 import { KappaImpl } from "@/classes/KappaImpl";
 import { LambdaImpl } from "@/classes/LambdaImpl";
 import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
 import { RHOImpl } from "@/classes/RHOImpl";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
-import { SlotImpl } from "@/classes/SlotImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import {
   BaseJamCodecable,
@@ -30,27 +34,32 @@ import {
 } from "@tsjam/codec";
 import {
   Balance,
+  CodeHash,
   DoubleDagger,
   ED25519PublicKey,
   Gas,
-  Hash,
-  JamState,
   OpaqueHash,
   Posterior,
   ServiceIndex,
-  Tau,
   u32,
   u64,
+  Validated,
   WorkPackageHash,
 } from "@tsjam/types";
+import { toDagger, toPosterior } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "./codec_utils";
+import { dummyState } from "./utils";
+import { IdentityMap } from "@/data_structures/identityMap";
+import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
+import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
+import { IdentitySet } from "@/data_structures/identitySet";
 
 @JamCodecable()
 class ServiceInfo extends BaseJamCodecable {
   @codec(HashCodec, "code_hash")
-  codeHash!: Hash; // a_c
+  codeHash!: CodeHash; // a_c
 
   @eSubBigIntCodec(8, "balance")
   balance!: Balance; //a_b
@@ -77,16 +86,16 @@ class TestState extends BaseJamCodecable {
   dd_rho!: DoubleDagger<RHOImpl>;
 
   @codec(KappaImpl, "curr_validators")
-  p_kappa!: Posterior<JamState["kappa"]>;
+  p_kappa!: Posterior<JamStateImpl["kappa"]>;
 
   @codec(LambdaImpl, "prev_validators")
-  p_lambda!: Posterior<JamState["lambda"]>;
+  p_lambda!: Posterior<JamStateImpl["lambda"]>;
 
   @codec(JamEntropyImpl, "entropy")
-  p_entropy!: Posterior<JamState["entropy"]>;
+  p_entropy!: Posterior<JamStateImpl["entropy"]>;
 
-  @lengthDiscriminatedCodec(xBytesCodec(32), "offenders")
-  p_psi_o!: ED25519PublicKey[];
+  @codec(DisputesStateImpl.codecOf("offenders"), "offenders")
+  p_psi_o!: IdentitySet<ED25519PublicKey>;
 
   @jsonCodec(WrapJSONCodec("history", RecentHistoryImpl), "recent_blocks")
   @binaryCodec(RecentHistoryImpl)
@@ -117,8 +126,8 @@ class TestState extends BaseJamCodecable {
 class TestInput extends BaseJamCodecable {
   @codec(GuaranteesExtrinsicImpl)
   guarantees!: GuaranteesExtrinsicImpl;
-  @eSubIntCodec(4)
-  slot!: Posterior<Tau>;
+  @codec(SlotImpl)
+  slot!: Validated<Posterior<TauImpl>>;
 
   /**
    * This is a derived sequence of all known packages
@@ -162,23 +171,81 @@ export class TestCase extends BaseJamCodecable {
 }
 const buildTest = (filename: string) => {
   const testBin = fs.readFileSync(
-    `${__dirname}/../../../jamtestvectors/stf/reports/tiny/${filename}.json`,
+    `${__dirname}/../../../jamtestvectors/stf/reports/full/${filename}.json`,
     "utf8",
   );
 
   const decoded = TestCase.fromJSON(JSON.parse(testBin));
+  const sampleState = dummyState();
+  sampleState.disputes.offenders = decoded.preState.p_psi_o;
+
+  // we need to mock in $(0.7.1 - 11.35)
+  decoded.input.guarantees.elements.forEach((e) => {
+    const header = new JamSignedHeaderImpl();
+    header.signedHash = () => e.report.context.lookupAnchorHash;
+    sampleState.headerLookupHistory.elements.set(
+      e.report.context.lookupAnchorSlot,
+      header,
+    );
+  });
+
+  [...decoded.preState.accounts.entries()].map(
+    ([serviceIndex, serviceInfo]) => {
+      const account = new ServiceAccountImpl({
+        balance: serviceInfo.balance,
+        codeHash: serviceInfo.codeHash,
+        minAccGas: serviceInfo.minItemGas,
+        minMemoGas: serviceInfo.minMemoGas,
+        parent: serviceInfo.parentServiceId,
+        created: serviceInfo.creationSlot,
+        lastAcc: serviceInfo.lastAccumulationSlot,
+        preimages: new IdentityMap(),
+        requests: new IdentityMap(),
+        storage: new MerkleServiceAccountStorageImpl(serviceIndex),
+        gratis: <Balance>0n,
+      });
+      account.itemInStorage = () => serviceInfo.items;
+      account.totalOctets = () => serviceInfo.bytes;
+      sampleState.serviceAccounts.set(serviceIndex, account);
+    },
+  );
+
+  const res = decoded.input.guarantees.checkValidity({
+    beta: new BetaImpl({
+      recentHistory: decoded.preState.recentBlocks,
+      beefyBelt: [],
+    }),
+    serviceAccounts: sampleState.serviceAccounts,
+    headerLookupHistory: sampleState.headerLookupHistory,
+    d_recentHistory: toDagger(decoded.preState.recentBlocks),
+    rho: decoded.preState.dd_rho,
+    dd_rho: decoded.preState.dd_rho,
+    authPool: decoded.preState.authPool,
+    accumulationQueue: sampleState.accumulationQueue,
+    accumulationHistory: sampleState.accumulationHistory,
+    p_kappa: decoded.preState.p_kappa,
+    p_lambda: decoded.preState.p_lambda,
+    p_entropy: decoded.preState.p_entropy,
+    p_tau: decoded.input.slot,
+    p_disputes: toPosterior(sampleState.disputes),
+  });
+
+  if (res.isErr()) {
+    throw new Error(res.error);
+  }
+
   // console.log(decoded.preState.toJSON());
 };
 describe("workreports", () => {
   it("report_curr_rotation-1", () => {
-    expect(() => buildTest("report_curr_rotation-1")).to.not.throw();
+    buildTest("report_curr_rotation-1"); //.to.not.throw();
   });
 
-  it.skip("report_prev_rotation-1", () => {
+  it("report_prev_rotation-1", () => {
     expect(() => buildTest("report_prev_rotation-1")).to.not.throw();
   });
 
-  it.skip("multiple_reports-1", () => {
+  it("multiple_reports-1", () => {
     expect(() => buildTest("multiple_reports-1")).to.not.throw();
   });
 

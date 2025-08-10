@@ -54,6 +54,12 @@ import { SlotImpl, TauImpl } from "../SlotImpl";
 import { WorkReportImpl } from "../WorkReportImpl";
 import { IdentitySet } from "@/data_structures/identitySet";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { AuthorizerPoolImpl } from "../AuthorizerPoolImpl";
+import { DeltaImpl } from "../DeltaImpl";
+import { HeaderLookupHistoryImpl } from "../HeaderLookupHistoryImpl";
+import { AccumulationQueueImpl } from "../AccumulationQueueImpl";
+import { BetaImpl } from "../BetaImpl";
+import { AccumulationHistoryImpl } from "../AccumulationHistoryImpl";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -337,18 +343,23 @@ export class GuaranteesExtrinsicImpl
     return reporters;
   }
 
-  checkValidity(
-    curState: JamStateImpl,
-    deps: {
-      d_recentHistory: Dagger<RecentHistoryImpl>;
-      dd_rho: DoubleDagger<RHOImpl>;
-      p_entropy: Posterior<JamStateImpl["entropy"]>;
-      p_kappa: Posterior<JamStateImpl["kappa"]>;
-      p_lambda: Posterior<JamStateImpl["lambda"]>;
-      p_tau: Validated<Posterior<TauImpl>>;
-      p_disputes: Posterior<DisputesStateImpl>;
-    },
-  ): Result<Validated<GuaranteesExtrinsicImpl>, EGError> {
+  checkValidity(deps: {
+    authPool: AuthorizerPoolImpl;
+    serviceAccounts: DeltaImpl;
+    headerLookupHistory: HeaderLookupHistoryImpl;
+    accumulationHistory: AccumulationHistoryImpl;
+    accumulationQueue: AccumulationQueueImpl;
+    rho: RHOImpl;
+    beta: BetaImpl;
+
+    d_recentHistory: Dagger<RecentHistoryImpl>;
+    dd_rho: DoubleDagger<RHOImpl>;
+    p_entropy: Posterior<JamStateImpl["entropy"]>;
+    p_kappa: Posterior<JamStateImpl["kappa"]>;
+    p_lambda: Posterior<JamStateImpl["lambda"]>;
+    p_tau: Validated<Posterior<TauImpl>>;
+    p_disputes: Posterior<DisputesStateImpl>;
+  }): Result<Validated<GuaranteesExtrinsicImpl>, EGError> {
     if (this.elements.length === 0) {
       return ok(toTagged(this)); // optimization
     }
@@ -401,7 +412,7 @@ export class GuaranteesExtrinsicImpl
       if (typeof deps.dd_rho.elementAt(core) !== "undefined") {
         return err(EGError.REPORT_PENDING_AVAILABILITY);
       }
-      const poolHashes = new Set(curState.authPool.elementAt(core));
+      const poolHashes = new IdentitySet(deps.authPool.elementAt(core));
       if (!poolHashes.has(authorizerHash)) {
         return err(EGError.MISSING_AUTH);
       }
@@ -419,7 +430,7 @@ export class GuaranteesExtrinsicImpl
       for (const bold_d of report.digests) {
         if (
           bold_d.gasLimit <
-          curState.serviceAccounts.get(bold_d.serviceIndex)!.minAccGas
+          deps.serviceAccounts.get(bold_d.serviceIndex)!.minAccGas
         ) {
           return err(EGError.GAS_TOO_LOW);
         }
@@ -431,7 +442,7 @@ export class GuaranteesExtrinsicImpl
     const bold_p = bold_I.map(({ avSpec }) => avSpec.packageHash);
 
     // $(0.7.1 - 11.32)
-    if (bold_p.length !== new Set(bold_p).size) {
+    if (bold_p.length !== new IdentitySet(bold_p).size) {
       return err(EGError.WORK_PACKAGE_HASH_NOT_UNIQUE);
     }
 
@@ -439,9 +450,12 @@ export class GuaranteesExtrinsicImpl
       // $(0.7.1 - 11.33)
       const y = deps.d_recentHistory.elements.find(
         (_y) =>
-          _y.headerHash === workContext.anchorHash &&
-          _y.stateRoot === workContext.anchorPostState &&
-          _y.accumulationResultMMB === workContext.anchorAccOutLog,
+          Buffer.compare(_y.headerHash, workContext.anchorHash) === 0 &&
+          Buffer.compare(_y.stateRoot, workContext.anchorPostState) === 0 &&
+          Buffer.compare(
+            _y.accumulationResultMMB,
+            workContext.anchorAccOutLog,
+          ) === 0,
       );
       if (typeof y === "undefined") {
         return err(EGError.ANCHOR_NOT_IN_RECENTHISTORY);
@@ -456,10 +470,12 @@ export class GuaranteesExtrinsicImpl
       }
 
       // $(0.7.1 - 11.35)
-      const lookupHeader = curState.headerLookupHistory.get(
+      const lookupHeader = deps.headerLookupHistory.get(
         workContext.lookupAnchorSlot,
       );
       if (typeof lookupHeader === "undefined") {
+        console.log(workContext);
+        console.log(deps.headerLookupHistory);
         return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
       }
       if (lookupHeader.signedHash() !== workContext.lookupAnchorHash) {
@@ -469,7 +485,7 @@ export class GuaranteesExtrinsicImpl
 
     // $(0.7.1 - 11.36)
     const bold_q = new Set<WorkPackageHash>(
-      curState.accumulationQueue.elements
+      deps.accumulationQueue.elements
         .flat()
         .map((a) => a.workReport.avSpec.packageHash)
         .flat(),
@@ -477,16 +493,16 @@ export class GuaranteesExtrinsicImpl
 
     // $(0.7.1 - 11.37)
     const bold_a = new Set<WorkPackageHash>(
-      curState.rho.elements
+      deps.rho.elements
         .map((a) => a?.workReport.avSpec.packageHash)
         .flat()
         .filter((a) => typeof a !== "undefined"),
     );
 
-    const kxp = curState.beta.recentHistory.allPackageHashes();
+    const kxp = deps.beta.recentHistory.allPackageHashes();
 
     const _x = new Set(
-      curState.accumulationHistory.elements.map((a) => [...a.values()]).flat(),
+      deps.accumulationHistory.elements.map((a) => [...a.values()]).flat(),
     );
     // $(0.7.1 - 11.38)
     for (const p of bold_p) {
@@ -519,7 +535,7 @@ export class GuaranteesExtrinsicImpl
 
       // $(0.7.1 - 11.41)
       const recentAndCurrentWP = new Map(
-        curState.beta.recentHistory.elements
+        deps.beta.recentHistory.elements
           .map((rh) => [...rh.reportedPackages.entries()])
           .flat()
           .concat([...bold_p.entries()]),
@@ -538,8 +554,11 @@ export class GuaranteesExtrinsicImpl
     for (const bold_r of bold_I) {
       for (const bold_d of bold_r.digests) {
         if (
-          bold_d.codeHash !==
-          curState.serviceAccounts.get(bold_d.serviceIndex)?.codeHash
+          Buffer.compare(
+            bold_d.codeHash,
+            deps.serviceAccounts.get(bold_d.serviceIndex)?.codeHash ??
+              new Uint8Array(),
+          ) !== 0
         ) {
           return err(EGError.WRONG_CODEHASH);
         }
@@ -554,9 +573,9 @@ export enum EGError {
   GAS_TOO_LOW = "Work result gasPrioritization is too low",
   GAS_EXCEEDED_ACCUMULATION_LIMITS = "Gas exceeded maximum accumulation limit GA",
   WORKREPORT_SIZE_EXCEEDED = "Workreport max size exceeded",
-  MISSING_AUTH = "Missing authorization in pool",
+  MISSING_AUTH = "MISSING_AUTH",
   TOO_MANY_PREREQUISITES = "Too many work prerequisites in report",
-  ANCHOR_NOT_IN_RECENTHISTORY = "Anchor not in recent history",
+  ANCHOR_NOT_IN_RECENTHISTORY = "ANCHOR_NOT_IN_RECENTHISTORY",
   EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES = "Extrinsic length must be less than CORES",
   CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "core index must be unique and ordered",
   CORE_INDEX_NOT_IN_BOUNDS = "core index not in bounds",
@@ -572,8 +591,8 @@ export enum EGError {
   SRLWP_NOTKNOWN = "Reported Segment Root lookup not known",
   LOOKUP_ANCHOR_NOT_WITHIN_L = "Lookup anchor block must be within L timeslots",
   REPORT_PENDING_AVAILABILITY = "Bit may be set if the corresponding core has a report pending availability",
-  LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "Lookup anchor timeslot mismatch",
-  WRONG_CODEHASH = "Wrong codehash",
+  LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "LOOKUP_ANCHOR_TIMESLOT_MISMATCH",
+  WRONG_CODEHASH = "WRONG_CODEHASH",
 }
 
 const M_fn = (input: {

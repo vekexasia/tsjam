@@ -90,14 +90,13 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
     return toPosterior(
       new BetaImpl({
         beefyBelt: p_beefyBelt,
-        recentHistory: RecentHistoryImpl.toPosterior(
-          toDagger(this.recentHistory),
-          {
-            p_beefyBelt,
-            eg: deps.eg,
-            headerHash: deps.headerHash,
-          },
-        ),
+        recentHistory: (<Dagger<RecentHistoryImpl>>(
+          this.recentHistory
+        )).toPosterior({
+          p_beefyBelt,
+          eg: deps.eg,
+          headerHash: deps.headerHash,
+        }),
       }),
     );
   }

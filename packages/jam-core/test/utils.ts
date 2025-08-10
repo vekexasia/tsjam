@@ -33,6 +33,7 @@ import { ValidatorStatisticsCollectionImpl } from "@/classes/ValidatorStatistics
 import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
 import { IdentityMap } from "@/data_structures/identityMap";
 import { IdentitySet } from "@/data_structures/identitySet";
+import { SafeMap } from "@/data_structures/safeMap";
 import {
   AUTHPOOL_SIZE,
   AUTHQUEUE_MAX_SIZE,
@@ -240,6 +241,6 @@ export const dummyState = (): JamStateImpl => {
     mostRecentAccumulationOutputs: new LastAccOutsImpl(
       new Array<SingleAccOutImpl>(),
     ),
-    headerLookupHistory: new HeaderLookupHistoryImpl(),
+    headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
   });
 };
