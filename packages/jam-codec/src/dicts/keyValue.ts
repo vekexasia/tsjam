@@ -9,7 +9,7 @@ import {
  */
 export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
   keyCodec: JamCodec<K>,
-  valueCodec: JamCodec<V> | ((key: K) => JamCodec<V>),
+  valueCodec: JamCodec<V>,
   keySorter: (a: K, b: K) => number,
 ): JamCodec<X> {
   const c = new LengthDiscriminator(
@@ -34,7 +34,7 @@ export function buildGenericKeyValueCodec<K, V, X extends Map<K, V>>(
 class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
   constructor(
     private keyCodec: JamCodec<K>,
-    private valueCodec: JamCodec<V> | ((key: K) => JamCodec<V>),
+    private valueCodec: JamCodec<V>,
     private keySorter: (a: K, b: K) => number,
   ) {}
 
@@ -43,17 +43,7 @@ class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
     const orderedKeys = [...value.keys()].sort(this.keySorter);
     for (const key of orderedKeys) {
       offset += this.keyCodec.encode(key, bytes.subarray(offset));
-      if (typeof this.valueCodec === "function") {
-        offset += this.valueCodec(key).encode(
-          value.get(key)!,
-          bytes.subarray(offset),
-        );
-      } else {
-        offset += this.valueCodec.encode(
-          value.get(key)!,
-          bytes.subarray(offset),
-        );
-      }
+      offset += this.valueCodec.encode(value.get(key)!, bytes.subarray(offset));
     }
     return offset;
   }
@@ -72,10 +62,7 @@ class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
     while (orderedKeys.length < length) {
       const key = this.keyCodec.decode(bytes.subarray(offset));
       offset += key.readBytes;
-      let valueCodec = this.valueCodec;
-      if (typeof valueCodec === "function") {
-        valueCodec = valueCodec(key.value);
-      }
+      const valueCodec = this.valueCodec;
       const value = valueCodec.decode(bytes.subarray(offset));
       offset += value.readBytes;
       orderedKeys.push(key.value);
@@ -92,10 +79,7 @@ class KeyValue<K, V> implements LengthDiscSubCodec<Map<K, V>> {
 
   encodedSize(value: Map<K, V>): number {
     return [...value.keys()].reduce((acc, key) => {
-      let valueCodec = this.valueCodec;
-      if (typeof valueCodec === "function") {
-        valueCodec = valueCodec(key);
-      }
+      const valueCodec = this.valueCodec;
       return (
         acc +
         this.keyCodec.encodedSize(key) +

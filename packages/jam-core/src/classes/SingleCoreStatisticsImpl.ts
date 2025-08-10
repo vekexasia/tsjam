@@ -18,7 +18,7 @@ export class SingleCoreStatisticsImpl
    * This includes the work-bundle (including all extrinsics and imports) as well as all
    * (exported) segments.
    */
-  @eIntCodec()
+  @eIntCodec("da_load")
   daLoad!: u32;
 
   /**
@@ -32,42 +32,42 @@ export class SingleCoreStatisticsImpl
    * `i`
    * Number of segments imported from DA made by core for reported work..
    */
-  @eIntCodec()
+  @eIntCodec("imports")
   importCount!: u16;
 
   /**
    * `e`
    * Number of segments exported into DA made by core for reported work.
    */
-  @eIntCodec()
+  @eIntCodec("exports")
   exportCount!: u16;
 
   /**
    * `z`
    * Total size of extrinsic used by core for reported work.
    */
-  @eIntCodec()
+  @eIntCodec("extrinsic_size")
   extrinsicSize!: u32;
 
   /**
    * `x`
    * Total number of extrinsic used by core for reported work.
    */
-  @eIntCodec()
+  @eIntCodec("extrinsic_count")
   extrinsicCount!: u16;
 
   /**
    * `l`
    * Thw work-bundle size. This is the size of data being placed into audits DA by the core.
    */
-  @eIntCodec()
+  @eIntCodec("bundle_size")
   bundleSize!: u32;
 
   /**
    * `u`
    * Total gas consumed by core for reported work. includes all refinement and authorizations.
    */
-  @eBigIntCodec()
+  @eBigIntCodec("gas_used")
   gasUsed!: Gas;
 
   constructor(config: ConditionalExcept<SingleCoreStatisticsImpl, Function>) {

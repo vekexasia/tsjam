@@ -348,7 +348,7 @@ export class JamStateImpl implements JamState {
 
     const headerHash = newBlock.header.signedHash();
 
-    const p_beta = BetaImpl.toPosterior(d_beta, {
+    const p_beta = d_beta.toPosterior({
       headerHash,
       eg: validatedEG,
       p_theta: p_mostRecentAccumulationOutputs,

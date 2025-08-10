@@ -1,4 +1,9 @@
-import { BaseJamCodecable, JamCodecable, sequenceCodec } from "@tsjam/codec";
+import {
+  BaseJamCodecable,
+  JamCodecable,
+  sequenceCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   BandersnatchKey,
@@ -17,7 +22,7 @@ import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class ValidatorsImpl extends BaseJamCodecable implements Validators {
-  @sequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataImpl)
+  @sequenceCodec(NUMBER_OF_VALIDATORS, ValidatorDataImpl, SINGLE_ELEMENT_CLASS)
   elements!: SeqOfLength<ValidatorDataImpl, typeof NUMBER_OF_VALIDATORS>;
 
   constructor(config?: ConditionalExcept<ValidatorsImpl, Function>) {

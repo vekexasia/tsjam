@@ -3,11 +3,13 @@ import { identitySetCodec } from "@/data_structures/identitySet";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
+  binaryCodec,
   cloneCodecable,
   codec,
   createArrayLengthDiscriminator,
+  createSequenceCodec,
   JamCodecable,
-  sequenceCodec,
+  jsonCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
@@ -54,13 +56,15 @@ export class AccumulationQueueImpl
   extends BaseJamCodecable
   implements AccumulationQueue
 {
-  @sequenceCodec(
-    EPOCH_LENGTH,
-    {
-      ...createArrayLengthDiscriminator(AccumulationQueueItem),
-      ...ArrayOfJSONCodec(AccumulationQueueItem),
-    },
+  @jsonCodec(
+    ArrayOfJSONCodec(ArrayOfJSONCodec(AccumulationQueueItem)),
     SINGLE_ELEMENT_CLASS,
+  )
+  @binaryCodec(
+    createSequenceCodec(
+      EPOCH_LENGTH,
+      createArrayLengthDiscriminator(AccumulationQueueItem),
+    ),
   )
   elements!: SeqOfLength<Array<AccumulationQueueItem>, typeof EPOCH_LENGTH>;
 

@@ -36,12 +36,12 @@ import { WorkReportImpl } from "./WorkReportImpl";
 export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
   /** `bold_r`
    */
-  @codec(WorkReportImpl)
+  @codec(WorkReportImpl, "report")
   workReport!: WorkReportImpl;
   /**
    * `t`
    */
-  @codec(SlotImpl)
+  @codec(SlotImpl, "timeout")
   reportSlot!: SlotImpl;
 
   constructor(config?: ConditionalExcept<RHOElementImpl, Function>) {

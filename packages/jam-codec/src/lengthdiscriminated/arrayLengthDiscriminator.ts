@@ -16,7 +16,7 @@ import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.j
 export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(
   singleItemCodec: JamCodec<X>,
 ): JamCodec<T> => {
-  return new LengthDiscriminator<T>({
+  const codec = new LengthDiscriminator<T>({
     encode: (value, bytes) => {
       return value.reduce(
         (acc, item) => acc + singleItemCodec.encode(item, bytes.subarray(acc)),
@@ -43,6 +43,12 @@ export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(
       );
     },
   });
+  return codec;
+  // return {
+  //   encode: codec.encode.bind(codec),
+  //   decode: codec.decode.bind(codec),
+  //   encodedSize: codec.encodedSize.bind(codec),
+  // };
 };
 
 // class property decorator

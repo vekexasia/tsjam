@@ -1,12 +1,9 @@
 import {
   BaseJamCodecable,
-  binaryCodec,
-  buildGenericKeyValueCodec,
   cloneCodecable,
-  E_int,
-  jsonCodec,
-  MapJSONCodec,
-  NumberJSONCodec,
+  JamCodecable,
+  sequenceCodec,
+  SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { CORES, ERASURECODE_SEGMENT_SIZE } from "@tsjam/constants";
 import {
@@ -28,27 +25,14 @@ import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { NewWorkReportsImpl } from "./NewWorkReportsImpl";
 import { RHOImpl } from "./RHOImpl";
 import { SingleCoreStatisticsImpl } from "./SingleCoreStatisticsImpl";
-import { SingleServiceStatisticsImpl } from "./SingleServiceStatisticsImpl";
 import { WorkReportImpl } from "./WorkReportImpl";
 
+@JamCodecable()
 export class CoreStatisticsImpl
   extends BaseJamCodecable
   implements CoreStatistics
 {
-  @jsonCodec(
-    MapJSONCodec(
-      { key: "id", value: "record" },
-      NumberJSONCodec(),
-      SingleServiceStatisticsImpl,
-    ),
-  )
-  @binaryCodec(
-    buildGenericKeyValueCodec(
-      E_int(),
-      SingleServiceStatisticsImpl,
-      (a, b) => a - b,
-    ),
-  )
+  @sequenceCodec(CORES, SingleCoreStatisticsImpl, SINGLE_ELEMENT_CLASS)
   elements!: SeqOfLength<SingleCoreStatisticsImpl, typeof CORES>;
 
   constructor(config?: ConditionalExcept<CoreStatisticsImpl, Function>) {

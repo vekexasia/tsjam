@@ -1,6 +1,3 @@
-/*
- * Appendix D
- */
 import { AccumulationHistoryImpl } from "@/classes/AccumulationHistoryImpl";
 import { AccumulationQueueImpl } from "@/classes/AccumulationQueueImpl";
 import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
@@ -406,7 +403,7 @@ if (import.meta.vitest) {
       const r: Array<{ input: Record<string, string>; output: string }> =
         JSON.parse(
           fs.readFileSync(
-            new URL(`../test/fixtures/trie.json`, import.meta.url).pathname,
+            new URL(`../../test/fixtures/trie.json`, import.meta.url).pathname,
             "utf8",
           ),
         );

@@ -22,7 +22,7 @@ import { SlotImpl } from "@/classes/SlotImpl";
 import { IdentityMap } from "@/data_structures/identityMap";
 
 describe("state serialization/deserialization", () => {
-  it("should deserializa to same object", () => {
+  it("should deserialize to same object", () => {
     const state: JamStateImpl = dummyState();
 
     const map = merkleStateMap(state);

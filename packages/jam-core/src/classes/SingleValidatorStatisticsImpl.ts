@@ -1,7 +1,8 @@
-import { BaseJamCodecable, eSubIntCodec } from "@tsjam/codec";
+import { BaseJamCodecable, eSubIntCodec, JamCodecable } from "@tsjam/codec";
 import { SingleValidatorStatistics, u32 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 
+@JamCodecable()
 export class SingleValidatorStatisticsImpl
   extends BaseJamCodecable
   implements SingleValidatorStatistics

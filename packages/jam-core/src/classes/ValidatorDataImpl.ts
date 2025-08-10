@@ -20,7 +20,7 @@ export class ValidatorDataImpl
    * ∀k ∈ K ∶ kb ∈ HB ≡ k0⋅⋅⋅+32
    * $(0.7.1 - 6.9)
    */
-  @codec(xBytesCodec(32))
+  @codec(xBytesCodec(32), "bandersnatch")
   banderSnatch!: BandersnatchKey;
 
   /**
@@ -38,7 +38,7 @@ export class ValidatorDataImpl
    * $(0.7.1 - 6.11)
    */
 
-  @codec(xBytesCodec(144))
+  @codec(xBytesCodec(144), "bls")
   blsKey!: BLSKey;
 
   /**

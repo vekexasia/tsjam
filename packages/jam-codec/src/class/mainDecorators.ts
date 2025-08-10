@@ -174,7 +174,7 @@ export function codec<T, K extends string | symbol>(
 export function JamCodecable<
   U extends BaseJamCodecable,
   T extends { new (...args: any[]): U },
->() {
+>(jsonCodecInConstructor?: boolean) {
   return function (constructor: T) {
     const d: Array<{
       propertyKey: string;
@@ -184,6 +184,15 @@ export function JamCodecable<
         key?: string | typeof SINGLE_ELEMENT_CLASS;
       };
     }> = constructor.prototype[CODEC_METADATA];
+
+    // check codec at runtime
+    d.forEach(({ propertyKey, codec }) => {
+      if (typeof codec === "undefined" || typeof codec.encode !== "function") {
+        console.log(constructor.name, codec);
+        throw new Error(`codec for ${propertyKey} is not defined properly`);
+      }
+    });
+
     const codec = <JamCodec<any>>mapCodec(
       createCodec(
         // @ts-gnore
@@ -191,7 +200,7 @@ export function JamCodecable<
       ),
       (pojo) => {
         const x = new newConstr();
-        Object.assign(pojo, x);
+        Object.assign(x, pojo);
         return <U>x;
       },
       (c: any) => c,
@@ -221,6 +230,9 @@ export function JamCodecable<
         },
       };
     }
+    if (jsonCodecInConstructor) {
+      jsonCodec = <JSONCodec<InstanceType<T>>>(<any>constructor);
+    }
 
     // newConstr is needed for the instanceof Check and to make sure that the method
     // @ts-expect-error i know what I'm doing
@@ -232,16 +244,6 @@ export function JamCodecable<
         return jsonCodec.toJSON(this as unknown as U);
       }
 
-      // clone(): U {
-      //   const toRet = codec.decode(this.toBinary()).value;
-      //   // FIXME: remove this check when in prod
-      //   assert(
-      //     Buffer.compare(toRet.toBinary(), this.toBinary()) === 0,
-      //     `clone of ${Object.getPrototypeOf(this).name} does not match original`,
-      //   );
-      //   return toRet;
-      // }
-
       static encode(x: U, buf: Uint8Array): number {
         return codec.encode(x, buf);
       }
@@ -249,7 +251,8 @@ export function JamCodecable<
         return codec.decode(bytes);
       }
       static encodedSize(value: U): number {
-        return codec.encodedSize(value);
+        const size = codec.encodedSize(value);
+        return size;
       }
       static fromJSON(json: any): U {
         const pojo = jsonCodec.fromJSON(json);
@@ -390,6 +393,60 @@ if (import.meta.vitest) {
         expect(() => S.codecOf("a")).to.throw("Codec for property a not found");
       });
     });
+    describe("jsonFlag", () => {
+      it("should allow from and toJSON specified if flag is set", () => {
+        @JamCodecable(true)
+        // @ts-expect-error yo i know what I'm doing
+        class S extends BaseJamCodecable {
+          @eSubIntCodec(1)
+          a!: number;
+          @eSubIntCodec(2)
+          b!: number;
+          static fromJSON(json: any): S {
+            // we invert
+            const a = new S();
+            a.a = json.b;
+            a.b = json.a;
+            return a;
+          }
+          static toJSON(this: S, value: any): object {
+            return { x: "ciao", a: value.a, b: value.b };
+          }
+        }
+
+        const s = new S();
+        s.a = 2;
+        s.b = 6;
+        expect(s.toJSON()).deep.eq({ x: "ciao", a: 2, b: 6 });
+        expect(S.fromJSON({ a: 2, b: 6 })).deep.eq({ a: 6, b: 2 });
+      });
+      it("should ignore from and toJSON specified if flag is set", () => {
+        @JamCodecable(false)
+        // @ts-expect-error yo i know what I'm doing
+        class S extends BaseJamCodecable {
+          @eSubIntCodec(1)
+          a!: number;
+          @eSubIntCodec(2)
+          b!: number;
+          static fromJSON(json: any): S {
+            // we invert
+            const a = new S();
+            a.a = json.b;
+            a.b = json.a;
+            return a;
+          }
+          static toJSON(this: S, value: any): object {
+            return { x: "ciao", a: value.a, b: value.b };
+          }
+        }
+
+        const s = new S();
+        s.a = 2;
+        s.b = 6;
+        expect(s.toJSON()).deep.eq({ a: 2, b: 6 });
+        expect(S.fromJSON({ a: 2, b: 6 })).deep.eq({ a: 2, b: 6 });
+      });
+    });
     it("cloneCodecable", () => {
       @JamCodecable()
       class S extends BaseJamCodecable {
@@ -408,7 +465,6 @@ if (import.meta.vitest) {
       expect(s2 instanceof S).toBe(true);
       s2.a = 3;
       expect(s.a).toBe(2);
-      console.log(Object.getPrototypeOf(s).toJSON);
     });
   });
 }

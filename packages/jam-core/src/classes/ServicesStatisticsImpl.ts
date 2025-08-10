@@ -3,6 +3,7 @@ import {
   binaryCodec,
   buildGenericKeyValueCodec,
   E_sub_int,
+  JamCodecable,
   jsonCodec,
   MapJSONCodec,
   NumberJSONCodec,
@@ -26,6 +27,7 @@ import { SingleServiceStatisticsImpl } from "./SingleServiceStatisticsImpl";
 import { WorkReportImpl } from "./WorkReportImpl";
 import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
 
+@JamCodecable()
 export class ServicesStatisticsImpl
   extends BaseJamCodecable
   implements ServicesStatistics

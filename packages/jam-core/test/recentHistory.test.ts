@@ -1,6 +1,5 @@
-import * as fs from "node:fs";
 import { describe, it } from "vitest";
-
+import "@/classes/BetaImpl";
 import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
 import { HashCodec } from "@/codecs/miscCodecs";
 import {
@@ -12,6 +11,8 @@ import {
 } from "@tsjam/codec";
 import { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
 import { Hash } from "node:crypto";
+import fs from "node:fs";
+import { BetaImpl } from "@/classes/BetaImpl";
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
@@ -24,10 +25,11 @@ class TestInput extends BaseJamCodecable {
   @codec(HashCodec)
   accumulateRoot!: Hash;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @lengthDiscriminatedCodec({ ...(<any>createCodec([
       ["hash", HashCodec],
       ["exportsRoot", HashCodec],
-    ])), fromJSON(json) {}, toJSON(value) {} })
+    ])), fromJSON() {}, toJSON() {} })
   workPackages!: Array<{
     hash: WorkPackageHash;
     exportsRoot: Hash;
@@ -36,8 +38,8 @@ class TestInput extends BaseJamCodecable {
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
-  @codec(RecentHistoryImpl)
-  beta!: RecentHistoryImpl;
+  @codec(BetaImpl)
+  beta!: BetaImpl;
 }
 
 @JamCodecable()
@@ -51,12 +53,15 @@ class TestCase extends BaseJamCodecable {
 }
 
 const buildTest = (name: string) => {
-  // TODO:
+  const bin = fs.readFileSync(
+    `${__dirname}/../../../jamtestvectors/stf/history/full/${name}.bin`,
+  );
+  const { value: testCase } = TestCase.decode(bin);
 };
 describe("recenthistory-test-vectors", () => {
   const test = (name: string) => buildTest(name);
   it("progress_blocks_history-1", () => test("progress_blocks_history-1"));
-  it("progress_blocks_history-2", () => test("progress_blocks_history-2"));
   it("progress_blocks_history-3", () => test("progress_blocks_history-3"));
+  it("progress_blocks_history-2", () => test("progress_blocks_history-2"));
   it("progress_blocks_history-4", () => test("progress_blocks_history-4"));
 });

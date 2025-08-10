@@ -1,12 +1,16 @@
+import { HashCodec } from "@/codecs/miscCodecs";
 import { appendMMR, wellBalancedBinaryMerkleRoot } from "@/merklization";
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
+  binaryCodec,
   codec,
-  JamCodec,
+  createArrayLengthDiscriminator,
   JamCodecable,
-  lengthDiscriminatedCodec,
+  jsonCodec,
   NULLORCodec,
   Optional,
+  WrapJSONCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import {
@@ -23,7 +27,6 @@ import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { JamHeaderImpl } from "./JamHeaderImpl";
 import { LastAccOutsImpl } from "./LastAccOutsImpl";
 import { RecentHistoryImpl } from "./RecentHistoryImpl";
-import { HashCodec } from "@/codecs/miscCodecs";
 
 /**
  * $(0.7.1 - 7.1 / 7.3)
@@ -33,16 +36,17 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
   /**
    * `h`
    */
-  @codec(RecentHistoryImpl)
+  @codec(RecentHistoryImpl, "history")
   recentHistory!: RecentHistoryImpl;
   /**
    * `b`
    * encoded via $(0.7.0 - E.9) - `EM`
    */
-  @lengthDiscriminatedCodec({
-    ...(<JamCodec<undefined | Hash>>new Optional<Hash>(HashCodec)),
-    ...NULLORCodec(HashCodec),
-  })
+  @jsonCodec(
+    WrapJSONCodec("peeks", ArrayOfJSONCodec(NULLORCodec(HashCodec))),
+    "mmr",
+  )
+  @binaryCodec(createArrayLengthDiscriminator(new Optional(HashCodec)))
   beefyBelt!: Array<Hash | undefined>;
 
   constructor(config?: ConditionalExcept<BetaImpl, Function>) {
@@ -64,8 +68,8 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
     );
   }
 
-  static toPosterior(
-    d_beta: Dagger<BetaImpl>,
+  toPosterior(
+    this: Dagger<BetaImpl>,
     deps: {
       p_theta: Posterior<LastAccOutsImpl>;
       headerHash: HeaderHash; // h
@@ -77,7 +81,7 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
     // $(0.7.1 - 7.7) - calculate beefyBelt
     const p_beefyBelt = toPosterior(
       appendMMR(
-        d_beta.beefyBelt,
+        this.beefyBelt,
         wellBalancedBinaryMerkleRoot(bold_s, Hashing.keccak256),
         Hashing.keccak256,
       ),
@@ -87,7 +91,7 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
       new BetaImpl({
         beefyBelt: p_beefyBelt,
         recentHistory: RecentHistoryImpl.toPosterior(
-          toDagger(d_beta.recentHistory),
+          toDagger(this.recentHistory),
           {
             p_beefyBelt,
             eg: deps.eg,

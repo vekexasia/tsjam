@@ -9,6 +9,7 @@ import {
   jsonCodec,
   MapJSONCodec,
   NumberJSONCodec,
+  sequenceCodec,
 } from "@tsjam/codec";
 import { CORES } from "@tsjam/constants";
 import {
@@ -37,8 +38,7 @@ export class PrivilegedServicesImpl
    * `A`
    * services which can alter φ one for each CORE
    */
-
-  @eSubIntCodec(4)
+  @sequenceCodec(CORES, { ...NumberJSONCodec(), ...E_sub_int(4) })
   assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
   /**
    * `V`

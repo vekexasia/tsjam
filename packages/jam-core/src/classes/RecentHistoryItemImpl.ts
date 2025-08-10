@@ -22,7 +22,7 @@ export class RecentHistoryItemImpl
   /**
    * `b`
    */
-  @codec(HashCodec, "mmb")
+  @codec(HashCodec, "beefy_root")
   accumulationResultMMB!: Hash;
   /**
    * `s`

@@ -14,9 +14,8 @@ import { HashCodec } from "@/codecs/miscCodecs";
 /**
  * `η`
  * $(0.7.1 - 6.21)
-// FIXME: toJSON and fromJSON are wrong because of named params instead of array:
  */
-@JamCodecable()
+@JamCodecable(true)
 export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   @codec(HashCodec)
   _0!: Blake2bHash;
@@ -68,5 +67,26 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
         _3: p_3,
       }),
     );
+  }
+
+  static fromJSON<T extends typeof BaseJamCodecable>(
+    this: T,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    json: any,
+  ): InstanceType<T> {
+    return <InstanceType<T>>new JamEntropyImpl({
+      _0: <Blake2bHash>HashCodec.fromJSON(json[0]),
+      _1: <Blake2bHash>HashCodec.fromJSON(json[1]),
+      _2: <Blake2bHash>HashCodec.fromJSON(json[2]),
+      _3: <Blake2bHash>HashCodec.fromJSON(json[3]),
+    });
+  }
+
+  static toJSON<T extends typeof BaseJamCodecable>(
+    this: T,
+    value: InstanceType<T>,
+  ): object {
+    const v = <JamEntropyImpl>value;
+    return [v._0, v._1, v._2, v._3].map((h) => HashCodec.toJSON(h));
   }
 }

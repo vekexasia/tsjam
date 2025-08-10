@@ -15,55 +15,57 @@ export class SingleServiceStatisticsImpl
   /**
    * `p`
    */
-  @eIntCodec()
+  @eIntCodec("provided_count")
   providedCount!: u16;
-  @eIntCodec()
+  @eIntCodec("provided_size")
   providedSize!: u32;
 
   /**
    * `r`
    */
-  @eIntCodec()
+  @eIntCodec("refinement_count")
   refinementCount!: u32;
-  @eSubBigIntCodec(8)
+  @eSubBigIntCodec(8, "refinement_gas_used")
   refinementGasUsed!: Gas;
 
   /**
    * `i`
    */
-  @eIntCodec()
+  @eIntCodec("imports")
   importCount!: u32;
 
   /**
    * `x`
    */
-  @eIntCodec()
+  @eIntCodec("exports")
   extrinsicCount!: u32;
 
   /**
    * `z`
    */
-  @eIntCodec()
+  @eIntCodec("extrinsic_size")
   extrinsicSize!: u32;
 
   /**
    * `e`
    */
-  @eIntCodec()
+  @eIntCodec("extrinsic_count")
   exportCount!: u32;
 
   /**
    * `a`
    */
-  @eIntCodec()
+  @eIntCodec("accumulate_count")
   accumulateCount!: u32;
-  @eSubBigIntCodec(8)
+  @eSubBigIntCodec(8, "accumulate_gas_used")
   accumulateGasUsed!: Gas;
 
   constructor(
-    config: ConditionalExcept<SingleServiceStatisticsImpl, Function>,
+    config?: ConditionalExcept<SingleServiceStatisticsImpl, Function>,
   ) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
 }

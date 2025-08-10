@@ -9,6 +9,10 @@ import { BetaImpl } from "@/classes/BetaImpl";
 import { CoreStatisticsImpl } from "@/classes/CoreStatisticsImpl";
 import { DeltaImpl } from "@/classes/DeltaImpl";
 import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
+import { GammaAImpl } from "@/classes/GammaAImpl";
+import { GammaPImpl } from "@/classes/GammaPImpl";
+import { GammaSImpl } from "@/classes/GammaSImpl";
+import { GammaZImpl } from "@/classes/GammaZImpl";
 import { HeaderLookupHistoryImpl } from "@/classes/HeaderLookupHistoryImpl";
 import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
 import { JamStateImpl } from "@/classes/JamStateImpl";
@@ -20,9 +24,12 @@ import { RecentHistoryItemImpl } from "@/classes/RecentHistoryItemImpl";
 import { RHOImpl } from "@/classes/RHOImpl";
 import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
 import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
+import { SingleCoreStatisticsImpl } from "@/classes/SingleCoreStatisticsImpl";
+import { SingleValidatorStatisticsImpl } from "@/classes/SingleValidatorStatisticsImpl";
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
+import { ValidatorStatisticsCollectionImpl } from "@/classes/ValidatorStatisticsCollectionImpl";
 import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
 import { IdentityMap } from "@/data_structures/identityMap";
 import { IdentitySet } from "@/data_structures/identitySet";
@@ -37,14 +44,17 @@ import {
 import {
   AuthorizerHash,
   BandersnatchKey,
+  BandersnatchRingRoot,
   Blake2bHash,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
+  Gas,
   Hash,
   HeaderHash,
   ServiceIndex,
   StateRootHash,
+  u16,
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
@@ -66,12 +76,27 @@ export const dummyValidators = <T extends ValidatorsImpl>(): T => {
   }) as T;
 };
 export const dummySafroleState = (): SafroleStateImpl => {
-  return new SafroleStateImpl();
+  return new SafroleStateImpl({
+    gamma_a: new GammaAImpl({ elements: toTagged([]) }),
+    gamma_p: toTagged(new GammaPImpl({ elements: dummyValidators().elements })),
+    gamma_s: new GammaSImpl({
+      keys: toTagged(
+        new Array(EPOCH_LENGTH).fill(
+          new Uint8Array(32).fill(0) as BandersnatchKey,
+        ),
+      ),
+    }),
+    gamma_z: new GammaZImpl({
+      root: new Uint8Array(144).fill(0) as BandersnatchRingRoot,
+    }),
+  });
 };
 export const dummyAuthPool = (): AuthorizerPoolImpl => {
   return new AuthorizerPoolImpl({
     elements: toTagged(
-      new Array(CORES).fill(new Array(AUTHPOOL_SIZE).fill(toTagged(0n))),
+      new Array(CORES).fill(
+        new Array(AUTHPOOL_SIZE).fill(toTagged(new Uint8Array(32).fill(0))),
+      ),
     ),
   });
 };
@@ -147,12 +172,61 @@ export const dummyState = (): JamStateImpl => {
     }),
     disputes: dummyDisputesState(),
     statistics: new JamStatisticsImpl({
-      validators: new ValidatorStatisticsImpl(),
-      cores: new CoreStatisticsImpl(),
-      services: new ServicesStatisticsImpl(),
+      validators: new ValidatorStatisticsImpl({
+        accumulator: new ValidatorStatisticsCollectionImpl({
+          elements: toTagged(
+            new Array(NUMBER_OF_VALIDATORS).fill(
+              new SingleValidatorStatisticsImpl({
+                assurances: <u32>0,
+                blocks: <u32>0,
+                guarantees: <u32>0,
+                preimageCount: <u32>0,
+                preimageSize: <u32>0,
+                tickets: <u32>0,
+              }),
+            ),
+          ),
+        }),
+        previous: new ValidatorStatisticsCollectionImpl({
+          elements: toTagged(
+            new Array(NUMBER_OF_VALIDATORS).fill(
+              new SingleValidatorStatisticsImpl({
+                assurances: <u32>0,
+                blocks: <u32>0,
+                guarantees: <u32>0,
+                preimageCount: <u32>0,
+                preimageSize: <u32>0,
+                tickets: <u32>0,
+              }),
+            ),
+          ),
+        }),
+      }),
+      cores: new CoreStatisticsImpl({
+        elements: toTagged(
+          new Array(CORES).fill(null).map(
+            () =>
+              new SingleCoreStatisticsImpl({
+                daLoad: <u32>0,
+                bundleSize: <u32>0,
+                exportCount: <u16>0,
+                extrinsicCount: <u16>0,
+                extrinsicSize: <u32>0,
+                gasUsed: <Gas>0n,
+                importCount: <u16>0,
+                popularity: <u16>0,
+              }),
+          ),
+        ),
+      }),
+      services: new ServicesStatisticsImpl({
+        elements: new Map(),
+      }),
     }),
     accumulationQueue: new AccumulationQueueImpl({
-      elements: toTagged(new Array<Array<AccumulationQueueItem>>(EPOCH_LENGTH)),
+      elements: toTagged(
+        new Array<Array<AccumulationQueueItem>>(EPOCH_LENGTH).fill([]),
+      ),
     }),
     accumulationHistory: new AccumulationHistoryImpl({
       elements: toTagged(

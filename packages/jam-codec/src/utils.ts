@@ -35,10 +35,14 @@ export const createCodec = <T extends object>(
         try {
           offset += codec.encode(value[key], bytes.subarray(offset));
           if (isNaN(offset)) {
-            console.error("diocan", key);
+            console.error("diocan5", key, Object.getPrototypeOf(value));
           }
         } catch (e) {
-          console.error(`Error encoding key: ${key as string}`, e);
+          console.error(
+            `Error encoding key: ${key as string}`,
+            e,
+            Object.getPrototypeOf(value),
+          );
           throw e;
         }
       }
