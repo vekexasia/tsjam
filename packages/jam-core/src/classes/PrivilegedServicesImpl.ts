@@ -1,7 +1,9 @@
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   buildGenericKeyValueCodec,
+  createSequenceCodec,
   E_sub,
   E_sub_int,
   eSubIntCodec,
@@ -9,7 +11,6 @@ import {
   jsonCodec,
   MapJSONCodec,
   NumberJSONCodec,
-  sequenceCodec,
 } from "@tsjam/codec";
 import { CORES } from "@tsjam/constants";
 import {
@@ -38,7 +39,8 @@ export class PrivilegedServicesImpl
    * `A`
    * services which can alter φ one for each CORE
    */
-  @sequenceCodec(CORES, { ...NumberJSONCodec(), ...E_sub_int(4) })
+  @jsonCodec(ArrayOfJSONCodec(NumberJSONCodec()))
+  @binaryCodec(createSequenceCodec(CORES, E_sub_int(4)))
   assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
   /**
    * `V`
