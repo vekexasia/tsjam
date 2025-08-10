@@ -1,27 +1,23 @@
-import {
-  DisputesStateImpl,
-  DisputesToPosteriorError,
-} from "@/classes/DisputesStateImpl";
+import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
 import { KappaImpl } from "@/classes/KappaImpl";
 import { LambdaImpl } from "@/classes/LambdaImpl";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import { IdentitySet } from "@/data_structures/identitySet";
 import {
-  JamCodecable,
   BaseJamCodecable,
-  codec,
   booleanCodec,
-  createSequenceCodec,
+  codec,
+  JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { JAM_VALID, JAM_INVALID } from "@tsjam/constants";
+import { JAM_INVALID, JAM_VALID } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
 import {
-  Hash,
   DisputeFault,
   ED25519PublicKey,
   ED25519Signature,
+  Hash,
   Validated,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";

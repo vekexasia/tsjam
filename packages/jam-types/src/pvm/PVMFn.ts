@@ -5,7 +5,7 @@ import { PVMProgramExecutionContextBase } from "@/pvm/PVMProgramExecutionContext
  * A single instruction needs to implement this interface
  */
 export type PVMFn<
-  Args extends unknown,
+  Args,
   Out,
   CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContextBase,
 > = (context: CTX, args: Args) => Out;

@@ -1,8 +1,4 @@
-import { ByteArrayOfLength } from "@tsjam/types";
-import { SafeKey } from "./safeKey";
-import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
 import {
-  ArrayOfJSONCodec,
   buildGenericKeyValueCodec,
   codec,
   JamCodec,
@@ -12,9 +8,11 @@ import {
   SINGLE_ELEMENT_CLASS,
   ZipJSONCodecs,
 } from "@tsjam/codec";
+import { ByteArrayOfLength } from "@tsjam/types";
+import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
 import { compareUint8Arrays } from "uint8array-extras";
-import { T } from "vitest/dist/chunks/environment.LoooBwUu.js";
-import { IdentitySet, IdentitySetCodec } from "./identitySet";
+import { IdentitySetCodec } from "./identitySet";
+import { SafeKey } from "./safeKey";
 
 export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>
   implements Map<K, V>
@@ -92,7 +90,7 @@ export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>
 
   forEach(
     callbackfn: (value: V, key: K, map: Map<K, V>) => void,
-    thisArg?: any,
+    thisArg?: unknown,
   ): void {
     this.internalMap.forEach((value, key) => {
       callbackfn.call(thisArg, value, this.lookupKey(key), this);
@@ -138,7 +136,7 @@ export const identitySetCodec = <
   itemCodec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string) {
+  return function (target: unknown, propertyKey: string) {
     codec(IdentitySetCodec(itemCodec), jsonKey)(target, propertyKey);
   };
 };

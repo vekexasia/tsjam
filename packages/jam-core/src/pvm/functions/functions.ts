@@ -3,14 +3,18 @@ import { DeltaImpl } from "@/classes/DeltaImpl";
 import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
 import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
 import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
+import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
 import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
 import { WorkItemImpl } from "@/classes/WorkItemImpl";
 import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { IdentityMap } from "@/data_structures/identityMap";
 import {
   cloneCodecable,
   createArrayLengthDiscriminator,
@@ -89,22 +93,17 @@ import {
 } from "@tsjam/types";
 import { toTagged, zeroPad } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
+import { compareUint8Arrays } from "uint8array-extras";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation } from "../invocations/basic";
 import { PVMMemory } from "../pvmMemory";
 import { check_fn } from "../utils/check_fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { IdentityMap } from "@/data_structures/identityMap";
-import { compareUint8Arrays } from "uint8array-extras";
-import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
-import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
-import { trace } from "console";
 
 export class HostFunctions {
   @HostFn(0)
+  // @eslint-disable-next-line @typescript-eslint/no-unused-vars
   gas(context: PVMProgramExecutionContextImpl, _: undefined): Array<W7> {
     const p_gas = context.gas - 10n;
     return [IxMod.w7(p_gas)];
@@ -394,13 +393,19 @@ export class HostFunctions {
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
   ): Array<PVMExitReasonMod<PVMExitReasonImpl> | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
-    let bold_a: ServiceAccountImpl | undefined = args.bold_s;
+    let bold_a: ServiceAccountImpl | undefined;
     let s_star = args.s;
     if (w7.value !== 2n ** 64n - 1n) {
-      if (w7.fitsInU32() && args.bold_d.has(w7.checked_u32())) {
-        bold_a = args.bold_d.get(w7.checked_u32());
-      }
       s_star = <ServiceIndex>Number(w7);
+    }
+    if (s_star === args.s) {
+      bold_a = args.bold_s;
+    } else if (
+      s_star !== args.s &&
+      w7.fitsInU32() &&
+      args.bold_d.has(w7.checked_u32())
+    ) {
+      bold_a = args.bold_d.get(w7.checked_u32());
     }
 
     const [ko, kz, o, w11, w12] = context.registers.slice(8);
@@ -414,7 +419,7 @@ export class HostFunctions {
 
     const bold_v = bold_a?.storage.get(bold_k);
     if (typeof bold_v === "undefined") {
-      // either a is undefined or no key in storage
+      // either bold_a is undefined or no key in storage
       return [IxMod.w7(HostCallResult.NONE)];
     }
 
@@ -1562,7 +1567,7 @@ export class HostFunctions {
   }
 
   @HostFn(100, <Gas>10n)
-  log(context: PVMProgramExecutionContextImpl, _: undefined): Array<any> {
+  log(_context: PVMProgramExecutionContextImpl, _: undefined): Array<never> {
     console.log("log host call");
     return [];
   }

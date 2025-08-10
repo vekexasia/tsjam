@@ -10,7 +10,6 @@ import {
   ZipJSONCodecs,
 } from "@tsjam/codec";
 import { isSafeKey, isSafeKeyable, SafeKey, SafeKeyProvider } from "./safeKey";
-import { T } from "vitest/dist/chunks/environment.LoooBwUu.js";
 
 export class SafeSet<T> implements Set<T> {
   private internalSet: Set<SafeKey> = new Set();
@@ -116,7 +115,7 @@ export class SafeSet<T> implements Set<T> {
 
   forEach(
     callbackfn: (value: T, value2: T, set: Set<T>) => void,
-    thisArg?: any,
+    thisArg?: unknown,
   ): void {
     this.internalSet.forEach((key) => {
       const value = this.lookupValue(key);
@@ -134,7 +133,7 @@ export const safeSetCodec = <T>(
   safeKeyProvider: SafeKeyProvider<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string) {
+  return function (target: unknown, propertyKey: string) {
     binaryCodec(
       mapCodec(
         createArrayLengthDiscriminator(itemCodec),

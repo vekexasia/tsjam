@@ -95,7 +95,8 @@ export const refineInvocation = (
     card_w_y: w.payload.length,
     h_p: Hashing.blake2b(workPackage.toBinary()),
   });
-  const { value: bold_z, readBytes: skip } =
+  // @eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { value: _bold_z, readBytes: skip } =
     LengthDiscrimantedIdentity.decode(lookupRes);
 
   const bold_c = <PVMProgramCode>lookupRes.subarray(skip);

@@ -1,9 +1,9 @@
+import { HashCodec } from "@/codecs/miscCodecs";
+import { identitySetCodec } from "@/data_structures/identitySet";
 import {
   ArrayOfJSONCodec,
-  asCodec,
   BaseJamCodecable,
   cloneCodecable,
-  cloneWithCodec,
   codec,
   createArrayLengthDiscriminator,
   JamCodecable,
@@ -17,14 +17,12 @@ import {
   SeqOfLength,
   WorkPackageHash,
 } from "@tsjam/types";
-import { WorkReportImpl } from "./WorkReportImpl";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { E_Fn } from "./NewWorkReportsImpl";
 import { SlotImpl, TauImpl } from "./SlotImpl";
-import { identitySetCodec } from "@/data_structures/identitySet";
-import { HashCodec } from "@/codecs/miscCodecs";
+import { WorkReportImpl } from "./WorkReportImpl";
 
 @JamCodecable()
 export class AccumulationQueueItem extends BaseJamCodecable {

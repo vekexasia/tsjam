@@ -1,21 +1,17 @@
 import {
   ArrayOfJSONCodec,
-  binaryCodec,
-  BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
   JamCodec,
   JSONCodec,
-  jsonCodec,
   mapCodec,
   SINGLE_ELEMENT_CLASS,
   ZipJSONCodecs,
 } from "@tsjam/codec";
-import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
-import { isSafeKey, SafeKey } from "./safeKey";
 import { ByteArrayOfLength } from "@tsjam/types";
-import { xBytesCodec } from "@/codecs/miscCodecs";
+import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
 import { compareUint8Arrays } from "uint8array-extras";
+import { isSafeKey, SafeKey } from "./safeKey";
 
 export class IdentitySet<T extends Uint8Array> implements Set<T> {
   private internalSet: Set<SafeKey> = new Set();
@@ -94,7 +90,7 @@ export class IdentitySet<T extends Uint8Array> implements Set<T> {
 
   forEach(
     callbackfn: (value: T, value2: T, set: Set<T>) => void,
-    thisArg?: any,
+    thisArg?: unknown,
   ): void {
     this.internalSet.forEach((key) => {
       const value = this.lookupValue(key);
@@ -136,7 +132,7 @@ export const identitySetCodec = <
   itemCodec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string) {
+  return function (target: unknown, propertyKey: string) {
     codec(IdentitySetCodec(itemCodec), jsonKey)(target, propertyKey);
   };
 };

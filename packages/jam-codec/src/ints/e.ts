@@ -103,14 +103,14 @@ export const E_int = <T extends number>() =>
   );
 
 export const eBigIntCodec = (jsonKey?: string) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(E_bigint())(target, propertyKey);
     jsonCodec(BigIntJSONCodec(), jsonKey)(target, propertyKey);
   };
 };
 
 export const eIntCodec = (jsonKey?: string) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(E_int())(target, propertyKey);
     jsonCodec(NumberJSONCodec(), jsonKey)(target, propertyKey);
   };

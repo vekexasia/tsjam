@@ -83,7 +83,7 @@ export const computeWorkReport = (
     throw new Error("type guard for typescript");
   }
 
-  const keys_in_bold_l = pack.workItems
+  const _keys_in_bold_l = pack.workItems
     .map((p) =>
       p.importSegments
         .map((i) => i.root)

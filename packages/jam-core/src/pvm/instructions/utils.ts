@@ -1,7 +1,6 @@
 import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import {
   Gas,
-  IrregularPVMExitReason,
   PVMExitReasonMod,
   PVMProgramExecutionContext,
   PVMRegisterRawValue,

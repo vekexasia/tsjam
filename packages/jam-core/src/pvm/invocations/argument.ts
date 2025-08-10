@@ -78,7 +78,7 @@ const R_fn = <X>(
     if (readable) {
       return {
         gasUsed: gas_prime,
-        res: new WorkOutputImpl<any>(
+        res: new WorkOutputImpl<WorkError.OutOfGas>(
           hostCall.context.memory.getBytes(
             hostCall.context.registers.w7().value,
             Number(hostCall.context.registers.w8()),
@@ -89,7 +89,7 @@ const R_fn = <X>(
     } else {
       return {
         gasUsed: gas_prime,
-        res: new WorkOutputImpl<any>(new Uint8Array()),
+        res: new WorkOutputImpl<WorkError.OutOfGas>(new Uint8Array()),
         out: hostCall.out,
       };
     }

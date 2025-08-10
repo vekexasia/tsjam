@@ -19,7 +19,7 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
     return this.header.signedHash() === block.header.parent;
   }
 
-  static create(curState: JamStateImpl) {
+  static create(_curState: JamStateImpl) {
     // const offenders: ED25519PublicKey[] = [];
     // const extrinsics = {
     //   disputes: {

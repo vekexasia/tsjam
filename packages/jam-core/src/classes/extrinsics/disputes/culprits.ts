@@ -2,11 +2,11 @@ import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
 import { KappaImpl } from "@/classes/KappaImpl";
 import { LambdaImpl } from "@/classes/LambdaImpl";
 import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { IdentitySet, IdentitySetCodec } from "@/data_structures/identitySet";
+import { IdentitySet } from "@/data_structures/identitySet";
 import {
-  JamCodecable,
   BaseJamCodecable,
   codec,
+  JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
@@ -19,11 +19,10 @@ import {
   Hash,
   Validated,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";
-import { toTagged } from "@tsjam/utils";
 import { VerdictVoteKind } from "./verdicts";
-import assert from "node:assert";
 
 @JamCodecable()
 export class DisputeCulpritImpl

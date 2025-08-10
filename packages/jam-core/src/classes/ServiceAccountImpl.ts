@@ -64,10 +64,7 @@ export class ServiceAccountImpl implements ServiceAccount {
       "itemInStorage" | "totalOctets" | "gasThreshold" | "metadata" | "code"
     >,
   ) {
-    for (const key of Object.keys(values)) {
-      // @ts-ignore
-      this[key] = values[key];
-    }
+    Object.assign(this, values);
   }
 
   /**

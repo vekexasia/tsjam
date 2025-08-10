@@ -11,7 +11,7 @@ import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { JamStateImpl } from "./JamStateImpl";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import { ED25519PublicKeyCodec, HashCodec } from "@/codecs/miscCodecs";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import { IdentitySet, identitySetCodec } from "@/data_structures/identitySet";
 import {
   DisputesVerdicts as DisputesVerdicts,
@@ -51,7 +51,7 @@ export class DisputesStateImpl
    * set of validator keys found to have misjudged a work report
    * aka: they voted for a work report to be valid when it was not (in psi_b) or vice versa
    */
-  @identitySetCodec(ED25519PublicKeyCodec)
+  @identitySetCodec(xBytesCodec(32))
   offenders!: IdentitySet<ED25519PublicKey>;
 
   constructor(config?: ConditionalExcept<DisputesStateImpl, Function>) {

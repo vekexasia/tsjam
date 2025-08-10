@@ -99,7 +99,7 @@ export class SafeMap<K, V> implements Map<K, V> {
 
   forEach(
     callbackfn: (value: V, key: K, map: Map<K, V>) => void,
-    thisArg?: any,
+    thisArg?: unknown,
   ): void {
     this.internalMap.forEach((value, key) => {
       callbackfn.call(thisArg, value, this.lookupKey(key), this);

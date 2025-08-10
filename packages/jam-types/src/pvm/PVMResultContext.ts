@@ -1,5 +1,5 @@
 import { Hash, ServiceIndex } from "@/genericTypes.js";
-import { DeferredTransfer, DeferredTransfers } from "@/pvm/DeferredTransfer.js";
+import { DeferredTransfers } from "@/pvm/DeferredTransfer.js";
 import { PVMAccumulationState } from "./PVMAccumulationState";
 
 /**

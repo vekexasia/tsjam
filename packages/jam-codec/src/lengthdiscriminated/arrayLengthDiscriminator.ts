@@ -50,7 +50,7 @@ export const lengthDiscriminatedCodec = <T>(
   codec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(createArrayLengthDiscriminator(codec))(target, propertyKey);
     jsonCodec(ArrayOfJSONCodec(codec), jsonKey)(target, propertyKey);
   };

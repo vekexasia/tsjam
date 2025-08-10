@@ -6,7 +6,7 @@ import { u8 } from "@tsjam/types";
 export const booleanCodec = (
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return (target: any, propertyKey: string | symbol) => {
+  return (target: unknown, propertyKey: string | symbol) => {
     binaryCodec(
       mapCodec(
         E_1_int,

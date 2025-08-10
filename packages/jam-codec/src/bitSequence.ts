@@ -49,7 +49,7 @@ export const bitSequenceCodec = (
   numElements: number,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(BitSequenceCodec(numElements))(target, propertyKey);
     jsonCodec(
       ZipJSONCodecs(BufferJSONCodec(), {

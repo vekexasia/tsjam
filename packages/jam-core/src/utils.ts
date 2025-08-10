@@ -8,7 +8,6 @@ import {
 } from "@tsjam/types";
 import { TicketImpl } from "./classes/TicketImpl";
 import { DisputesStateImpl } from "./classes/DisputesStateImpl";
-import { toTagged } from "@tsjam/utils";
 
 /**
  * Z fn

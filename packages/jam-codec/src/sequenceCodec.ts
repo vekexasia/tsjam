@@ -51,7 +51,7 @@ export const sequenceCodec = <T>(
   codec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string) {
+  return function (target: unknown, propertyKey: string) {
     binaryCodec(createSequenceCodec(length, codec))(target, propertyKey);
     jsonCodec(ArrayOfJSONCodec(codec), jsonKey)(target, propertyKey);
   };

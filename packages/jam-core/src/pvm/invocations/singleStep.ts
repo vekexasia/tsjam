@@ -1,11 +1,6 @@
 import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
-import {
-  IParsedProgram,
-  PVMProgram,
-  Posterior,
-  RegularPVMExitReason,
-} from "@tsjam/types";
+import { IParsedProgram, PVMProgram, Posterior } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { applyMods } from "../functions/utils";
 import { IxMod, TRAP_COST } from "../instructions/utils";

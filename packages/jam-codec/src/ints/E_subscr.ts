@@ -84,7 +84,7 @@ export const eSubBigIntCodec = (
   bytes: number,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(E_sub(bytes))(target, propertyKey);
     jsonCodec(BigIntJSONCodec(), jsonKey)(target, propertyKey);
   };
@@ -94,7 +94,7 @@ export const eSubIntCodec = (
   bytes: number,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return (target: any, propertyKey: string) => {
+  return (target: unknown, propertyKey: string) => {
     binaryCodec(E_sub_int(bytes))(target, propertyKey);
     jsonCodec(NumberJSONCodec(), jsonKey)(target, propertyKey);
   };

@@ -1,4 +1,4 @@
-import { BandersnatchKey, ByteArrayOfLength } from "@tsjam/types";
+import { ByteArrayOfLength } from "@tsjam/types";
 import { JSONCodec } from "./JsonCodec";
 
 const bufToHex = (b: Uint8Array) => `0x${Buffer.from(b).toString("hex")}`;
@@ -75,6 +75,7 @@ export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ArrayOfJSONCodec = <K extends T[], T = K[0], X = any>(
   singleCodec: JSONCodec<T, X>,
 ): JSONCodec<K, X[]> => {
@@ -95,6 +96,7 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
   },
   keyCodec: JSONCodec<K>,
   valueCodec: JSONCodec<V>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): JSONCodec<Map<K, V>, Array<{ [key in KN | VN]: any }>> => {
   return {
     fromJSON(json) {
@@ -106,6 +108,7 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
       );
     },
     toJSON(value) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <any>[...value.entries()].map(([key, value]) => ({
         [jsonKeys.key]: keyCodec.toJSON(key),
         [jsonKeys.value]: valueCodec.toJSON(value),
@@ -114,6 +117,7 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const WrapJSONCodec = <T, K extends string, X = any>(
   key: K,
   codec: JSONCodec<T, X>,
@@ -123,6 +127,7 @@ export const WrapJSONCodec = <T, K extends string, X = any>(
       return codec.fromJSON(json[key]);
     },
     toJSON(value) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <{ [key in K]: any }>{
         [key]: codec.toJSON(value),
       };
@@ -136,6 +141,7 @@ export const EitherOneOfJSONCodec = <Case1, Case2>(
   case1Key: string,
   case2Key: string,
   valueDiscriminator: (v: Case1 | Case2) => v is Case1,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): JSONCodec<Case1 | Case2, any> => {
   return {
     fromJSON(json) {
@@ -190,13 +196,3 @@ export const ZipJSONCodecs = <A, B, C>(
     },
   };
 };
-
-export const BandersnatchKeyJSONCodec = BufferJSONCodec<BandersnatchKey, 32>();
-
-// Get the V type (first generic parameter)
-export type JC_V<T extends JSONCodec<any, any>> =
-  T extends JSONCodec<infer V, any> ? V : never;
-
-// Get the J type (second generic parameter)
-export type JC_J<T extends JSONCodec<any, any>> =
-  T extends JSONCodec<any, infer J> ? J : never;

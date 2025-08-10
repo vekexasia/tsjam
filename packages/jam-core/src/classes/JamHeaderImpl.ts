@@ -1,3 +1,4 @@
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -25,7 +26,6 @@ import { HeaderEpochMarkerImpl } from "./HeaderEpochMarkerImpl";
 import { JamBlockExtrinsicsImpl } from "./JamBlockExtrinsicsImpl";
 import { TauImpl } from "./SlotImpl";
 import { TicketImpl } from "./TicketImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
 /**
  * $(0.7.1 - C.23) | `Eu`
@@ -74,6 +74,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * and we're not changing epoch
    */
   @optionalCodec(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <any>{
       ...createSequenceCodec(EPOCH_LENGTH, TicketImpl),
       ...ArrayOfJSONCodec(TicketImpl),

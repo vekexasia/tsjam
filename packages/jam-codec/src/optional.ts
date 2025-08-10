@@ -49,7 +49,7 @@ export const optionalCodec = <T>(
   codec: JamCodec<T> & JSONCodec<T>,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) => {
-  return function (target: any, propertyKey: string) {
+  return function (target: unknown, propertyKey: string) {
     binaryCodec(new Optional(codec))(target, propertyKey);
     jsonCodec(NULLORCodec(codec), jsonKey)(target, propertyKey);
   };

@@ -38,10 +38,7 @@ export const createCodec = <T extends object>(
             console.error("diocan", key);
           }
         } catch (e) {
-          console.error(
-            `Error encoding key: ${key as string}`,
-            e as unknown as any,
-          );
+          console.error(`Error encoding key: ${key as string}`, e);
           throw e;
         }
       }

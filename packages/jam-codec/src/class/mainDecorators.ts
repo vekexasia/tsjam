@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { JamCodec } from "@/codec";
 import { JSONCodec, createJSONCodec } from "@/json/JsonCodec";
 import {
@@ -184,16 +186,12 @@ export function JamCodecable<
     }> = constructor.prototype[CODEC_METADATA];
     const codec = <JamCodec<any>>mapCodec(
       createCodec(
-        // @ts-ignore
-        d.map(({ propertyKey, codec }) => [propertyKey, codec]),
+        // @ts-gnore
+        d.map(({ propertyKey, codec }) => [propertyKey, codec] as const),
       ),
       (pojo) => {
         const x = new newConstr();
-
-        for (const key of Object.keys(pojo)) {
-          // @ts-ignore
-          x[key] = pojo[key];
-        }
+        Object.assign(pojo, x);
         return <U>x;
       },
       (c: any) => c,
@@ -225,7 +223,7 @@ export function JamCodecable<
     }
 
     // newConstr is needed for the instanceof Check and to make sure that the method
-    // @ts-ignore
+    // @ts-expect-error i know what I'm doing
     const newConstr = class extends constructor {
       toBinary(): Uint8Array {
         return encodeWithCodec(codec, this);
@@ -256,10 +254,7 @@ export function JamCodecable<
       static fromJSON(json: any): U {
         const pojo = jsonCodec.fromJSON(json);
         const x = new newConstr();
-        for (const key of Object.keys(pojo)) {
-          // @ts-ignore
-          x[key] = pojo[key];
-        }
+        Object.assign(x, pojo);
         return <U>x;
       }
       static toJSON(value: U): object {

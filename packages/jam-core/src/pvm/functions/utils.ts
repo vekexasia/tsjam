@@ -1,10 +1,9 @@
+import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
 import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
 import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
 import {
   Gas,
-  PVMExitReason,
-  PVMExitReasonMod,
   PVMSingleMod,
   PVMSingleModGas,
   PVMSingleModMemory,
@@ -14,7 +13,6 @@ import {
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
 import { PVMMemory } from "../pvmMemory";
-import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;

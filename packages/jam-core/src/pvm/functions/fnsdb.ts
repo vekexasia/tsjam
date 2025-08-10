@@ -24,7 +24,7 @@ export const FnsDb = {
  * A single instruction needs to implement this interface
  */
 export interface DetailedPVMFn<
-  Args extends unknown,
+  Args,
   Out,
   CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContext,
 > {
@@ -38,7 +38,7 @@ export interface DetailedPVMFn<
  * register an instruction in the instruction database
  * @param conf - the configuration object
  */
-export const regFn = <Args extends unknown, Out>(conf: {
+export const regFn = <Args, Out>(conf: {
   fn: DetailedPVMFn<Args, Out[], PVMProgramExecutionContextImpl>;
 }): PVMFn<
   Args,
@@ -73,7 +73,7 @@ export const regFn = <Args extends unknown, Out>(conf: {
   return newfn;
 };
 
-export const HostFn = <Args extends unknown, Out>(
+export const HostFn = <Args, Out>(
   opCode: number,
   gasCost: Gas | ((ctx: PVMProgramExecutionContextImpl, args: Args) => Gas) = <
     Gas

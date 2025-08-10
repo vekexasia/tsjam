@@ -15,6 +15,7 @@ export type PVMIxReturnMods = Array<
   | PVMSingleModGas
   | PVMSingleModMemory
   | PVMSingleModRegister<RegisterIdentifier>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | PVMExitReasonMod<any>
 >;
 

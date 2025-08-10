@@ -35,6 +35,7 @@ import { TauImpl } from "../SlotImpl";
 import { HashCodec } from "@/codecs/miscCodecs";
 import { IdentitySet } from "@/data_structures/identitySet";
 import { compareUint8Arrays } from "uint8array-extras";
+import { toTagged } from "@tsjam/utils";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -84,7 +85,7 @@ export class TicketsExtrinsicElementImpl
     if (!sig) {
       return err(ETError.INVALID_VRF_PROOF);
     }
-    return ok(<any>this);
+    return ok(toTagged(this));
   }
 }
 

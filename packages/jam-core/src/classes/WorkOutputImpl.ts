@@ -6,6 +6,7 @@ import {
   LengthDiscrimantedIdentity,
 } from "@tsjam/codec";
 import { WorkError, WorkOutput } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 
 export interface WorkOutputError<E extends WorkError>
   extends WorkOutputImpl<E> {
@@ -179,7 +180,7 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
 
   toJSON(): object {
     if (this.isSuccess()) {
-      return { ok: BufferJSONCodec().toJSON(<any>this.success!) };
+      return { ok: BufferJSONCodec().toJSON(toTagged(this.success!)) };
     }
     switch (<WorkError>this.error!) {
       case WorkError.OutOfGas:
@@ -197,10 +198,10 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
     }
   }
 
-  static fromJSON<T>(json: any): T {
+  static fromJSON<T>(json: object): T {
     const toRet = new WorkOutputImpl();
     if ("ok" in json) {
-      toRet.success = BufferJSONCodec().fromJSON(json.ok);
+      toRet.success = BufferJSONCodec().fromJSON(<string>json.ok);
     } else if ("out-of-gas" in json) {
       toRet.error = WorkError.OutOfGas;
     } else if ("panic" in json) {

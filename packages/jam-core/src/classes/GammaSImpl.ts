@@ -163,6 +163,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
 
   static fromJSON<T extends typeof BaseJamCodecable>(
     this: T,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     json: any,
   ): InstanceType<T> {
     const toRet = new GammaSImpl();
