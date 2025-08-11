@@ -1,5 +1,6 @@
 import { HashCodec } from "@/codecs/miscCodecs";
 import { IdentityMap, IdentityMapCodec } from "@/data_structures/identityMap";
+import { IdentitySet } from "@/data_structures/identitySet";
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import {
   Hash,
@@ -48,7 +49,7 @@ export class RecentHistoryItemImpl
     Object.assign(this, config);
   }
 
-  packageHashes(): Set<WorkPackageHash> {
-    return new Set(this.reportedPackages.keys());
+  packageHashes(): IdentitySet<WorkPackageHash> {
+    return new IdentitySet([...this.reportedPackages.keys()]);
   }
 }

@@ -60,6 +60,7 @@ import { HeaderLookupHistoryImpl } from "../HeaderLookupHistoryImpl";
 import { AccumulationQueueImpl } from "../AccumulationQueueImpl";
 import { BetaImpl } from "../BetaImpl";
 import { AccumulationHistoryImpl } from "../AccumulationHistoryImpl";
+import { IdentityMap } from "@/data_structures/identityMap";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -428,10 +429,11 @@ export class GuaranteesExtrinsicImpl
       }
 
       for (const bold_d of report.digests) {
-        if (
-          bold_d.gasLimit <
-          deps.serviceAccounts.get(bold_d.serviceIndex)!.minAccGas
-        ) {
+        const acc = deps.serviceAccounts.get(bold_d.serviceIndex);
+        if (typeof acc === "undefined") {
+          return err(EGError.REPORT_NOT_IN_ACCOUNTS);
+        }
+        if (bold_d.gasLimit < acc.minAccGas) {
           return err(EGError.GAS_TOO_LOW);
         }
       }
@@ -474,17 +476,20 @@ export class GuaranteesExtrinsicImpl
         workContext.lookupAnchorSlot,
       );
       if (typeof lookupHeader === "undefined") {
-        console.log(workContext);
-        console.log(deps.headerLookupHistory);
         return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
       }
-      if (lookupHeader.signedHash() !== workContext.lookupAnchorHash) {
-        return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
+      if (
+        Buffer.compare(
+          lookupHeader.signedHash(),
+          workContext.lookupAnchorHash,
+        ) !== 0
+      ) {
+        return err(EGError.LOOKUP_HASH_MISMATCH);
       }
     }
 
     // $(0.7.1 - 11.36)
-    const bold_q = new Set<WorkPackageHash>(
+    const bold_q = new IdentitySet<WorkPackageHash>(
       deps.accumulationQueue.elements
         .flat()
         .map((a) => a.workReport.avSpec.packageHash)
@@ -492,7 +497,7 @@ export class GuaranteesExtrinsicImpl
     );
 
     // $(0.7.1 - 11.37)
-    const bold_a = new Set<WorkPackageHash>(
+    const bold_a = new IdentitySet<WorkPackageHash>(
       deps.rho.elements
         .map((a) => a?.workReport.avSpec.packageHash)
         .flat()
@@ -512,7 +517,7 @@ export class GuaranteesExtrinsicImpl
     }
 
     // $(0.7.1 - 11.39)
-    const pSet = new Set(bold_p);
+    const pSet = new IdentitySet(bold_p);
     kxp.forEach((reportedHash) => pSet.add(reportedHash));
 
     for (const r of bold_I) {
@@ -527,14 +532,14 @@ export class GuaranteesExtrinsicImpl
 
     {
       // $(0.7.1 - 11.40)
-      const bold_p = new Map(
+      const bold_p = new IdentityMap(
         this.elements
           .map((e) => e.report.avSpec)
           .map((wPSpec) => [wPSpec.packageHash, wPSpec.segmentRoot]),
       );
 
       // $(0.7.1 - 11.41)
-      const recentAndCurrentWP = new Map(
+      const recentAndCurrentWP = new IdentityMap(
         deps.beta.recentHistory.elements
           .map((rh) => [...rh.reportedPackages.entries()])
           .flat()
@@ -543,7 +548,7 @@ export class GuaranteesExtrinsicImpl
       for (const bold_r of bold_I) {
         for (const [wph, h] of bold_r.srLookup) {
           const entry = recentAndCurrentWP.get(wph);
-          if (typeof entry === "undefined" || entry !== h) {
+          if (typeof entry === "undefined" || Buffer.compare(entry, h) !== 0) {
             return err(EGError.SRLWP_NOTKNOWN);
           }
         }
@@ -583,16 +588,18 @@ export enum EGError {
   VALIDATOR_INDEX_MUST_BE_IN_BOUNDS = "validator index must be 0 <= x < V",
   VALIDATOR_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "validator index must be unique and ordered",
   SIGNATURE_INVALID = "EG signature is invalid",
-  CORE_INDEX_MISMATCH = "Core index mismatch",
+  CORE_INDEX_MISMATCH = "CORE_INDEX_MISMATCH",
   TIMESLOT_BOUNDS_1 = "Time slot must be within bounds, R * floor(tau'/R) - 1 <= t",
   TIMESLOT_BOUNDS_2 = "Time slot must be within bounds, t <= tau'",
-  WORK_PACKAGE_HASH_NOT_UNIQUE = "Work package hash must be unique",
+  WORK_PACKAGE_HASH_NOT_UNIQUE = "WORK_PACKAGE_HASH_NOT_UNIQUE",
   WORKPACKAGE_IN_PIPELINE = "Work Package alredy known",
   SRLWP_NOTKNOWN = "Reported Segment Root lookup not known",
-  LOOKUP_ANCHOR_NOT_WITHIN_L = "Lookup anchor block must be within L timeslots",
+  LOOKUP_ANCHOR_NOT_WITHIN_L = "LOOKUP_ANCHOR_NOT_WITHIN_L",
   REPORT_PENDING_AVAILABILITY = "Bit may be set if the corresponding core has a report pending availability",
   LOOKUP_ANCHOR_TIMESLOT_MISMATCH = "LOOKUP_ANCHOR_TIMESLOT_MISMATCH",
   WRONG_CODEHASH = "WRONG_CODEHASH",
+  LOOKUP_HASH_MISMATCH = "LOOKUP_HASH_MISMATCH",
+  REPORT_NOT_IN_ACCOUNTS = "REPORT_NOT_IN_ACCOUNTS",
 }
 
 const M_fn = (input: {

@@ -1,6 +1,5 @@
 import { describe, it } from "vitest";
 import "@/classes/BetaImpl";
-import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
 import { HashCodec } from "@/codecs/miscCodecs";
 import {
   BaseJamCodecable,

@@ -23,6 +23,7 @@ import { RecentHistoryItemImpl } from "./RecentHistoryItemImpl";
 import { MMRSuperPeak } from "@/merklization";
 import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { ConditionalExcept } from "type-fest";
+import { IdentitySet } from "@/data_structures/identitySet";
 
 @JamCodecable()
 export class RecentHistoryImpl
@@ -57,7 +58,7 @@ export class RecentHistoryImpl
     return toDagger(toRet);
   }
 
-  allPackageHashes(): Set<WorkPackageHash> {
+  allPackageHashes(): IdentitySet<WorkPackageHash> {
     return this.elements
       .map((el) => el.packageHashes())
       .reduce((a, b) => {

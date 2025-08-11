@@ -16,7 +16,7 @@ export const getCodecFixtureFile = (
 };
 
 export const TestOutputCodec = <Error extends number, Output>(
-  outputCodec: JamCodec<Output>,
+  outputCodec: JamCodec<Output> & JSONCodec<Output>,
 ): JamCodec<{ err?: Error; ok?: Output }> &
   JSONCodec<{ err?: Error; ok?: Output }> => {
   const toRet: JamCodec<{ err?: Error; ok?: Output }> = {
@@ -50,10 +50,17 @@ export const TestOutputCodec = <Error extends number, Output>(
   return {
     ...toRet,
     fromJSON(json) {
-      return json;
+      if (typeof json.err !== "undefined") {
+        return { err: json.err as Error };
+      } else {
+        return { ok: outputCodec.fromJSON(json.ok) };
+      }
     },
     toJSON(value) {
-      return value;
+      if (typeof value.err !== "undefined") {
+        return { err: value.err };
+      }
+      return { ok: outputCodec.toJSON(value.ok!) };
     },
   };
 };

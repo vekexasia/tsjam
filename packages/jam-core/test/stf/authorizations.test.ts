@@ -48,6 +48,7 @@ class TestInput extends BaseJamCodecable {
   @codec(SlotImpl)
   slot!: Validated<Posterior<TauImpl>>;
   @codec(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <any>mapCodec(
       createArrayLengthDiscriminator<
         Array<{ core: CoreIndex; authHash: Blake2bHash }>
@@ -71,7 +72,8 @@ class TestInput extends BaseJamCodecable {
           ),
         );
       },
-      (x) => {
+      (_x) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return null as unknown as any;
       },
     ),

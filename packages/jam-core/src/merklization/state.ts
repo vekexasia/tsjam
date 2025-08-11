@@ -44,6 +44,7 @@ import { KappaImpl } from "@/classes/KappaImpl";
 import { LambdaImpl } from "@/classes/LambdaImpl";
 import { toTagged } from "@tsjam/utils";
 import { IdentityMap } from "@/data_structures/identityMap";
+import { SafeMap } from "@/data_structures/safeMap";
 
 /**
  * Merkelize state
@@ -391,7 +392,7 @@ export const stateFromMerkleMap = (
     serviceAccounts,
     slot,
     statistics,
-    headerLookupHistory: new HeaderLookupHistoryImpl(),
+    headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
   });
 };
 

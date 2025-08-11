@@ -15,7 +15,7 @@ import { Dagger, HeaderHash, Posterior, Tagged, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { TestOutputCodec } from "./codec_utils";
+import { TestOutputCodec } from "../codec_utils";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -57,6 +57,7 @@ class Test extends BaseJamCodecable {
   @codec(TestState)
   preState!: TestState;
 
+  // @ts-expect-error we dont use JSON
   @codec(TestOutputCodec(createArrayLengthDiscriminator(WorkReportImpl)))
   output!: { err?: 0 | 1 | 2 | 3 | 4 | 5; ok?: WorkReportImpl[] };
 

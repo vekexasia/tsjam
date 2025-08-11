@@ -19,7 +19,6 @@ import {
   eitherOneOfCodec,
   JamCodec,
   JamCodecable,
-  JSONCodec,
   jsonCodec,
   optionalCodec,
 } from "@tsjam/codec";
@@ -28,7 +27,7 @@ import { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { dummyState } from "./utils.js";
+import { dummyState } from "../utils";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {

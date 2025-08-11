@@ -19,7 +19,7 @@ import {
   SeqOfLength,
   WorkPackageHash,
 } from "@tsjam/types";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./AccumulationHistoryImpl";
 import { E_Fn } from "./NewWorkReportsImpl";

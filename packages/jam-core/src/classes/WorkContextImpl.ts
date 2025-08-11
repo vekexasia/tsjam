@@ -48,7 +48,7 @@ export class WorkContextImpl extends BaseJamCodecable implements WorkContext {
   /**
    * `t`
    */
-  @eSubIntCodec(4, "lookup_anchor_slot")
+  @codec(SlotImpl, "lookup_anchor_slot")
   lookupAnchorSlot!: SlotImpl;
 
   /**
