@@ -75,7 +75,9 @@ export class AuthorizerPoolImpl
       } else {
         // F(c) says we need to remove the leftmost workReport.hash from the curState
         const h = firstWReport.report.authorizerHash;
-        const index = this.elements[core].findIndex((hash) => hash === h);
+        const index = this.elements[core].findIndex(
+          (hash) => Buffer.compare(hash, h) === 0,
+        );
         hashes = [
           ...this.elements[core].slice(0, index),
           ...this.elements[core].slice(index + 1),

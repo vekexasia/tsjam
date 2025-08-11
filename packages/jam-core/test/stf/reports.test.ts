@@ -178,7 +178,7 @@ export class TestCase extends BaseJamCodecable {
 }
 const buildTest = (filename: string) => {
   const testBin = fs.readFileSync(
-    `${__dirname}/../../../jamtestvectors/stf/reports/full/${filename}.json`,
+    `${__dirname}/../../../../jamtestvectors/stf/reports/full/${filename}.json`,
     "utf8",
   );
 

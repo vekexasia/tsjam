@@ -24,7 +24,7 @@ export const getCodecFixtureFile = (
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/stf/assurances/${kind}/${filename}`,
+        `../../../../jamtestvectors/stf/assurances/${kind}/${filename}`,
         import.meta.url,
       ).pathname,
     ),

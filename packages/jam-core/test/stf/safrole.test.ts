@@ -120,7 +120,7 @@ class TestCase extends BaseJamCodecable {
 
 const buildTest = (name: string, size: "tiny" | "full") => {
   const testBin = fs.readFileSync(
-    `${__dirname}/../../../jamtestvectors/stf/safrole/${size}/${name}.bin`,
+    `${__dirname}/../../../../jamtestvectors/stf/safrole/${size}/${name}.bin`,
   );
   const { value: testCase } = TestCase.decode(testBin);
 

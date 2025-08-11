@@ -9,6 +9,7 @@ import {
 import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
 import { WorkReportImpl } from "@/classes/WorkReportImpl";
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
   codec,
   createArrayLengthDiscriminator,
@@ -20,7 +21,8 @@ import {
 import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
-import { xBytesCodec } from "@/codecs/miscCodecs";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { CORES } from "@tsjam/constants";
 
 export const getCodecFixtureFile = (
   filename: string,
@@ -93,7 +95,7 @@ class Test extends BaseJamCodecable {
 describe("authorizations", () => {
   const doTest = (filename: string, kind: "full") => {
     const testBin = fs.readFileSync(
-      `${__dirname}/../../../jamtestvectors/stf/authorizations/${kind}/${filename}.bin`,
+      `${__dirname}/../../../../jamtestvectors/stf/authorizations/${kind}/${filename}.bin`,
     );
 
     const { value } = Test.decode(testBin);
@@ -105,16 +107,21 @@ describe("authorizations", () => {
     expect(value.preState.authQueue, "authQueue is invariant").deep.eq(
       value.postState.authQueue,
     );
-    expect(p_pool.toJSON()).deep.eq(value.postState.authPool.toJSON());
+    const JC = ArrayOfJSONCodec(HashCodec);
+    for (let c = <CoreIndex>0; c < CORES; c++) {
+      expect(JC.toJSON(p_pool.elementAt(c)), `pool[${c}]`).deep.eq(
+        JC.toJSON(value.postState.authPool.elementAt(c)),
+      );
+    }
   };
   const set = "full";
   it("progress_authorizations-1", () => {
     doTest("progress_authorizations-1", set);
   });
-  // it("progress_authorizations-2", () => {
-  //   doTest("progress_authorizations-2", set);
-  // });
-  // it("progress_authorizations-3", () => {
-  //   doTest("progress_authorizations-3", set);
-  // });
+  it("progress_authorizations-2", () => {
+    doTest("progress_authorizations-2", set);
+  });
+  it("progress_authorizations-3", () => {
+    doTest("progress_authorizations-3", set);
+  });
 });

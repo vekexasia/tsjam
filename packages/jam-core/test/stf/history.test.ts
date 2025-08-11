@@ -53,7 +53,7 @@ class TestCase extends BaseJamCodecable {
 
 const buildTest = (name: string) => {
   const bin = fs.readFileSync(
-    `${__dirname}/../../../jamtestvectors/stf/history/full/${name}.bin`,
+    `${__dirname}/../../../../jamtestvectors/stf/history/full/${name}.bin`,
   );
   const { value: testCase } = TestCase.decode(bin);
 };
