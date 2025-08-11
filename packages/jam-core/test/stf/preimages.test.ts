@@ -1,91 +1,136 @@
+import { DeltaImpl } from "@/classes/DeltaImpl";
+import { PreimagesExtrinsicImpl } from "@/classes/extrinsics/preimages";
+import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
+import { SlotImpl } from "@/classes/SlotImpl";
 import {
-  Delta,
-  DoubleDagger,
-  EP_Extrinsic,
-  Posterior,
-  ServiceIndex,
-  SingleServiceStatistics,
-  Tau,
-} from "@tsjam/types";
+  BaseJamCodecable,
+  binaryCodec,
+  BufferJSONCodec,
+  buildGenericKeyValueCodec,
+  codec,
+  E_sub_int,
+  JamCodecable,
+  jsonCodec,
+  LengthDiscrimantedIdentity,
+  MapJSONCodec,
+  NumberJSONCodec,
+  WrapJSONCodec,
+} from "@tsjam/codec";
+import { DoubleDagger, Hash, Posterior, ServiceIndex, Tau, u32 } from "@tsjam/types";
 import { describe, it } from "vitest";
+import { ServiceInfo, TestOutputCodec } from "../codec_utils";
+import { dummyState } from "../utils";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { IdentityMap, IdentityMapCodec, identitySetCodec } from "@/data_structures/identityMap";
+import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
 
-type TestState = {
-  accounts: DoubleDagger<Delta>;
-  statistics: Map<ServiceIndex, SingleServiceStatistics>;
-};
+class LookupMetaMapKey extends BaseJamCodecable {
+  hash!: Hash;
+  length!: u32
+}
+class TestAccount extends BaseJamCodecable {
+  @codec(IdentityMapCodec(HashCodec, {...LengthDiscrimantedIdentity, ...BufferJSONCodec()}, {
+    key: "hash",
+    value: "blob",
+  }))
+  preimages!: ServiceAccountImpl["preimages"];
 
-type Input = {
-  ep: EP_Extrinsic;
-  p_tau: Posterior<Tau>;
-};
+  
+  lookup: Map<LookupMetaMapKey, SlotImpl[]>
+}
+ 
+@JamCodecable()
+class TestState extends BaseJamCodecable {
+  @jsonCodec(
+    MapJSONCodec(
+      { key: "id", value: "data" },
+      NumberJSONCodec(),
+      WrapJSONCodec("service", ServiceInfo),
+    ),
+  )
+  @binaryCodec(
+    buildGenericKeyValueCodec(E_sub_int(4), ServiceInfo, (a, b) => a - b),
+  )
+  accounts!: Map<ServiceIndex, TestAccount>;
+  @codec(ServicesStatisticsImpl)
+  statistics!: ServicesStatisticsImpl;
+}
 
-type TestCase = {
-  input: Input;
-  preState: TestState;
-  output: { ok?: {}; err?: number };
-  postState: TestState;
-};
+@JamCodecable()
+class Input extends BaseJamCodecable {
+  @codec(PreimagesExtrinsicImpl)
+  preimages!: PreimagesExtrinsicImpl;
+
+  @codec(SlotImpl, "slot")
+  p_tau!: Posterior<Tau>;
+}
+
+@JamCodecable()
+class TestCase extends BaseJamCodecable {
+  @codec(Input)
+  input!: Input;
+
+  @codec(TestState, "pre_state")
+  preState!: TestState;
+
+  @codec(
+    TestOutputCodec({
+      decode() {
+        return { value: null, readBytes: 0 };
+      },
+      encode() {
+        return 0;
+      },
+      encodedSize() {
+        return 0;
+      },
+      fromJSON(json) {
+        return json;
+      },
+      toJSON(value) {
+        return value;
+      },
+    }),
+  )
+  output!: { ok?: null; err?: number };
+
+  @codec(TestState, "post_state")
+  postState!: TestState;
+}
 const buildTest = (filename: string) => {
-  // const stateCodec = createCodec<TestState>([
-  //   [
-  //     "accounts",
-  //     buildTestDeltaCodec<DoubleDagger<Delta>>((serviceIndex: ServiceIndex) =>
-  //       mapCodec(
-  //         createCodec<{
-  //           preimages: ServiceAccount["preimages"];
-  //           requests: Array<{ hash: Hash; length: u32; tau: Tau[] }>;
-  //         }>([
-  //           ["preimages", buildKeyValueCodec(LengthDiscrimantedIdentity)],
-  //           [
-  //             "requests",
-  //             createArrayLengthDiscriminator(
-  //               createCodec<{ hash: Hash; length: u32; tau: Tau[] }>([
-  //                 ["hash", HashCodec],
-  //                 ["length", E_4_int],
-  //                 [
-  //                   "tau",
-  //                   createArrayLengthDiscriminator<Tau[], Tau>(
-  //                     E_sub_int<Tau>(4),
-  //                   ),
-  //                 ],
-  //               ]),
-  //             ),
-  //           ],
-  //         ]),
-  //         (info) => {
-  //           const preimage_l: ServiceAccount["requests"] = new Map();
-  //           info.requests.forEach((entry) => {
-  //             preimage_l.set(
-  //               entry.hash,
-  //               preimage_l.get(entry.hash) || new Map(),
-  //             );
-  //             const map = preimage_l.get(entry.hash)!;
-  //             map.set(
-  //               entry.length as unknown as any,
-  //               entry.tau as unknown as any,
-  //             );
-  //           });
-  //           const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
-  //           // FIXME: 0.6.7 any should disappear
-  //           const toRet = new ServiceAccountImpl(<any>{
-  //             requests: preimage_l,
-  //             preimages: info.preimages,
-  //             storage,
-  //           });
-  //           return toRet as ServiceAccount;
-  //         },
-  //         (_) => {
-  //           // we dont really care
-  //           return {} as unknown as any;
-  //         },
-  //       ),
-  //     ),
-  //   ],
-  //   ["statistics", ServiceStatisticsCodec],
-  // ]);
-  // const testBin = fs.readFileSync(
-  //   `${__dirname}/../../../jamtestvectors/preimages/data/${filename}.bin`,
-  // );
+  const testJSON = fs.readFileSync(
+    `${__dirname}/../../../../jamtestvectors/preimages/data/${filename}.json`,
+    "utf-8",
+  );
+  const testCase = TestCase.fromJSON(JSON.parse(testJSON));
+  const serviceAccounts = dummyState().serviceAccounts;
+
+  [...testCase.preState.accounts.entries()].map(
+    ([serviceIndex, serviceInfo]) => {
+      serviceAccounts.set(
+        serviceIndex,
+        serviceInfo.toServiceAccount(serviceIndex),
+      );
+    },
+  );
+  const r = testCase.input.preimages.checkValidity({
+    serviceAccounts: serviceAccounts,
+  });
+  if (typeof testCase.output.err !== "undefined" && r.isOk()) {
+    throw new Error(
+      `Expected error ${testCase.output.err} but got ok: ${r.value}`,
+    );
+  } else if (typeof testCase.output.ok !== "undefined" && r.isErr()) {
+    throw new Error(`Expected ok but got error: ${r.error}`);
+  }
+
+  if (r.isErr()) {
+    return;
+  }
+  // we check the outputs
+  //
+  testCase.preState.statistics.
+
   // const decoded = createCodec<TestCase>([
   //   [
   //     "input",
