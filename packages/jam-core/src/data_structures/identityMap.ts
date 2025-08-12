@@ -100,6 +100,14 @@ export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>
   [Symbol.iterator](): IterableIterator<[K, V]> {
     return this.entries();
   }
+
+  clone(): IdentityMap<K, N, V> {
+    const clone = new IdentityMap<K, N, V>();
+    for (const [key, value] of this.entries()) {
+      clone.set(key, value);
+    }
+    return clone;
+  }
 }
 
 export const IdentityMapCodec = <

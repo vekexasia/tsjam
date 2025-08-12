@@ -1,7 +1,6 @@
 import {
   BaseJamCodecable,
   codec,
-  eSubIntCodec,
   JamCodecable,
   lengthDiscriminatedCodec,
 } from "@tsjam/codec";

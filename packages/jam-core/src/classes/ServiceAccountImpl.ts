@@ -153,7 +153,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   isPreimageSolicitedButNotYetProvided(hash: Hash, length: number): boolean {
     return (
       !this.preimages.has(hash) &&
-      (this.requests.get(hash)?.get(toTagged(<u32>length))?.length ?? 0) !== 0
+      (this.requests.get(hash)?.get(toTagged(<u32>length))?.length ?? -1) === 0
     );
   }
 

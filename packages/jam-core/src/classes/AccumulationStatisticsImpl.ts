@@ -6,6 +6,7 @@ import {
   u32,
 } from "@tsjam/types";
 import { AccumulatableWorkReports } from "./WorkReportImpl";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * $(0.7.1 - 12.26) | S
@@ -18,6 +19,15 @@ export class AccumulationStatisticsImpl implements AccumulationStatistics {
       count: u32;
     }
   >;
+  constructor(
+    config?: ConditionalExcept<AccumulationStatisticsImpl, Function>,
+  ) {
+    if (config) {
+      Object.assign(this, config);
+    } else {
+      this.elements = new Map();
+    }
+  }
 
   has(serviceIndex: ServiceIndex): boolean {
     return this.elements.has(serviceIndex);

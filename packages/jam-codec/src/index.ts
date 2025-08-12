@@ -17,5 +17,4 @@ export * from "@/sequenceCodec.js";
 export * from "@/identity.js";
 
 export * from "./dicts/keyValue.js";
-export * from "./set.js";
 export * from "./eitherOneOf.js";

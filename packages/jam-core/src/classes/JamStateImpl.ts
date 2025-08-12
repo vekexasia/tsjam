@@ -302,7 +302,7 @@ export class JamStateImpl implements JamState {
     }).safeRet();
     const d_beta = this.beta.toDagger(newBlock.header);
 
-    const dd_delta = DeltaImpl.toDoubleDagger(d_delta, {
+    const dd_delta = d_delta.toDoubleDagger({
       p_tau,
       accumulationStatistics,
     });
@@ -315,7 +315,7 @@ export class JamStateImpl implements JamState {
       return err(epError);
     }
 
-    const p_delta = DeltaImpl.toPosterior(dd_delta, {
+    const p_delta = dd_delta.toPosterior({
       p_tau,
       ep: validatedEP,
     });

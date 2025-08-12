@@ -12,8 +12,8 @@ import {
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { AccumulationStatisticsImpl } from "./AccumulationStatisticsImpl";
-import { ServiceAccountImpl } from "./ServiceAccountImpl";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { ServiceAccountImpl } from "./ServiceAccountImpl";
 import { TauImpl } from "./SlotImpl";
 
 /**
@@ -80,8 +80,8 @@ export class DeltaImpl implements Delta {
   /**
    * $(0.7.1 - 12.28 / 12.29)
    */
-  static toDoubleDagger(
-    d_delta: Dagger<DeltaImpl>,
+  toDoubleDagger(
+    this: Dagger<DeltaImpl>,
     deps: {
       /**
        * `bold S`
@@ -104,25 +104,25 @@ export class DeltaImpl implements Delta {
   /**
    * $(0.7.1 - 12.36)
    */
-  static toPosterior(
-    dd_delta: DoubleDagger<DeltaImpl>,
+  toPosterior(
+    this: DoubleDagger<DeltaImpl>,
     deps: {
       ep: Validated<PreimagesExtrinsicImpl>;
       p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<DeltaImpl> {
     const p = deps.ep.elements.filter((ep) =>
-      dd_delta
-        .get(ep.requester)!
-        .isPreimageSolicitedButNotYetProvided(
-          Hashing.blake2b(ep.blob),
-          ep.blob.length,
-        ),
+      this.get(ep.requester)!.isPreimageSolicitedButNotYetProvided(
+        Hashing.blake2b(ep.blob),
+        ep.blob.length,
+      ),
     );
 
-    const result = structuredClone(dd_delta);
+    const result = this.clone();
     for (const { requester, blob } of p) {
       const x = result.get(requester)!;
+      x.preimages = x.preimages.clone();
+      x.requests = x.requests.clone();
 
       const hash = Hashing.blake2b(blob);
       x.preimages.set(hash, blob);

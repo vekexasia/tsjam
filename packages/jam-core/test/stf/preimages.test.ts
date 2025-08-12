@@ -1,55 +1,88 @@
 import { DeltaImpl } from "@/classes/DeltaImpl";
 import { PreimagesExtrinsicImpl } from "@/classes/extrinsics/preimages";
+import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
 import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
-import { SlotImpl } from "@/classes/SlotImpl";
+import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { HashCodec } from "@/codecs/miscCodecs";
+import { IdentityMap, IdentityMapCodec } from "@/data_structures/identityMap";
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
   buildGenericKeyValueCodec,
   codec,
+  createArrayLengthDiscriminator,
   E_sub_int,
+  eSubIntCodec,
   JamCodecable,
   jsonCodec,
   LengthDiscrimantedIdentity,
   MapJSONCodec,
   NumberJSONCodec,
-  WrapJSONCodec,
 } from "@tsjam/codec";
-import { DoubleDagger, Hash, Posterior, ServiceIndex, Tau, u32 } from "@tsjam/types";
-import { describe, it } from "vitest";
-import { ServiceInfo, TestOutputCodec } from "../codec_utils";
+import {
+  DoubleDagger,
+  Hash,
+  Posterior,
+  ServiceIndex,
+  Tagged,
+  u32,
+  Validated,
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
+import fs from "fs";
+import { describe, expect, it } from "vitest";
+import { TestOutputCodec } from "../codec_utils";
 import { dummyState } from "../utils";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
-import { IdentityMap, IdentityMapCodec, identitySetCodec } from "@/data_structures/identityMap";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { AccumulationStatisticsImpl } from "@/classes/AccumulationStatisticsImpl";
 
+@JamCodecable()
 class LookupMetaMapKey extends BaseJamCodecable {
+  @codec(HashCodec)
   hash!: Hash;
-  length!: u32
+  @eSubIntCodec(4)
+  length!: Tagged<u32, "length">;
 }
+@JamCodecable()
 class TestAccount extends BaseJamCodecable {
-  @codec(IdentityMapCodec(HashCodec, {...LengthDiscrimantedIdentity, ...BufferJSONCodec()}, {
-    key: "hash",
-    value: "blob",
-  }))
+  @codec(
+    IdentityMapCodec(
+      HashCodec,
+      { ...LengthDiscrimantedIdentity, ...BufferJSONCodec() },
+      {
+        key: "hash",
+        value: "blob",
+      },
+    ),
+  )
   preimages!: ServiceAccountImpl["preimages"];
 
-  
-  lookup: Map<LookupMetaMapKey, SlotImpl[]>
+  @jsonCodec(
+    MapJSONCodec(
+      { key: "key", value: "value" },
+      LookupMetaMapKey,
+      ArrayOfJSONCodec(SlotImpl),
+    ),
+    "lookup_meta",
+  )
+  @binaryCodec(
+    buildGenericKeyValueCodec(
+      LookupMetaMapKey,
+      createArrayLengthDiscriminator(SlotImpl),
+      () => 0,
+    ),
+  )
+  lookup!: Map<LookupMetaMapKey, SlotImpl[]>;
 }
- 
+
 @JamCodecable()
 class TestState extends BaseJamCodecable {
   @jsonCodec(
-    MapJSONCodec(
-      { key: "id", value: "data" },
-      NumberJSONCodec(),
-      WrapJSONCodec("service", ServiceInfo),
-    ),
+    MapJSONCodec({ key: "id", value: "data" }, NumberJSONCodec(), TestAccount),
   )
   @binaryCodec(
-    buildGenericKeyValueCodec(E_sub_int(4), ServiceInfo, (a, b) => a - b),
+    buildGenericKeyValueCodec(E_sub_int(4), TestAccount, (a, b) => a - b),
   )
   accounts!: Map<ServiceIndex, TestAccount>;
   @codec(ServicesStatisticsImpl)
@@ -62,7 +95,7 @@ class Input extends BaseJamCodecable {
   preimages!: PreimagesExtrinsicImpl;
 
   @codec(SlotImpl, "slot")
-  p_tau!: Posterior<Tau>;
+  p_tau!: Validated<Posterior<TauImpl>>;
 }
 
 @JamCodecable()
@@ -99,103 +132,97 @@ class TestCase extends BaseJamCodecable {
 }
 const buildTest = (filename: string) => {
   const testJSON = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/preimages/data/${filename}.json`,
+    `${__dirname}/../../../../jamtestvectors/stf/preimages/full/${filename}.json`,
     "utf-8",
   );
   const testCase = TestCase.fromJSON(JSON.parse(testJSON));
   const serviceAccounts = dummyState().serviceAccounts;
 
   [...testCase.preState.accounts.entries()].map(
-    ([serviceIndex, serviceInfo]) => {
+    ([serviceIndex, testAccount]) => {
+      const buildRequests: ServiceAccountImpl["requests"] = new IdentityMap();
+      [...testAccount.lookup.entries()].map(([key, value]) => {
+        if (!buildRequests.has(key.hash)) {
+          buildRequests.set(key.hash, new Map());
+        }
+        const br = buildRequests.get(key.hash)!;
+        br.set(toTagged(key.length), toTagged(value));
+      });
+
       serviceAccounts.set(
         serviceIndex,
-        serviceInfo.toServiceAccount(serviceIndex),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        new ServiceAccountImpl(<any>{
+          preimages: testAccount.preimages,
+          requests: buildRequests,
+        }),
       );
     },
   );
+
   const r = testCase.input.preimages.checkValidity({
     serviceAccounts: serviceAccounts,
   });
-  if (typeof testCase.output.err !== "undefined" && r.isOk()) {
+
+  if (r.isErr()) {
+    if (typeof testCase.output.err !== "undefined") {
+      return;
+    }
+    throw new Error(r.error);
+  } else if (r.isOk() && typeof testCase.output.err !== "undefined") {
     throw new Error(
       `Expected error ${testCase.output.err} but got ok: ${r.value}`,
     );
-  } else if (typeof testCase.output.ok !== "undefined" && r.isErr()) {
-    throw new Error(`Expected ok but got error: ${r.error}`);
   }
 
-  if (r.isErr()) {
-    return;
-  }
-  // we check the outputs
-  //
-  testCase.preState.statistics.
-
-  // const decoded = createCodec<TestCase>([
-  //   [
-  //     "input",
-  //     createCodec<Input>([
-  //       ["ep", codec_Ep],
-  //       ["p_tau", posteriorCodec(E_sub_int<Tau>(4))],
-  //     ]),
-  //   ],
-  //   ["preState", stateCodec],
-  //   [
-  //     "output",
-  //     eitherOneOfCodec<TestCase["output"]>([
-  //       ["ok", createCodec<{}>([])],
-  //       ["err", E_sub_int<number>(1)],
-  //     ]),
-  //   ],
-  //   ["postState", stateCodec],
-  // ]).decode(testBin).value;
-  // const { input, preState, output, postState } = decoded;
-  // throw new Error("bring me in core");
-  // //  const [err, p_delta] = deltaToPosterior(
-  // //    {
-  // //      p_tau: input.p_tau,
-  // //      EP_Extrinsic: toTagged(input.ep),
-  // //      delta: preState.accounts,
-  // //    },
-  // //    preState.accounts,
-  // //  ).safeRet();
-  // //  if (typeof err !== "undefined") {
-  // //    const ourErr = [
-  // //      DeltaToPosteriorError.PREIMAGE_PROVIDED_OR_UNSOLICITED,
-  // //      DeltaToPosteriorError.PREIMAGES_NOT_SORTED,
-  // //    ][output.err!];
-  // //
-  // //    expect(err).toEqual(ourErr);
-  // //    return;
-  // //  }
-  // //
-  // //  expect([...p_delta.entries()]).deep.eq([...postState.accounts]);
-  // //
-  // //  const [, p_serviseStats] = serviceStatisticsSTF(
-  // //    {
-  // //      guaranteedReports: [],
-  // //      preimages: input.ep,
-  // //      accumulationStatistics: new Map(),
-  // //      transferStatistics: new Map(),
-  // //    },
-  // //    preState.statistics,
-  // //  ).safeRet();
-  // //
-  // //  expect([...p_serviseStats.entries()]).deep.eq([
-  // //    ...postState.statistics.entries(),
-  // //  ]);
-};
-describe.skip("preimages-test-vectors", () => {
-  describe("tiny", () => {
-    const test = (name: string) => buildTest(name);
-
-    it("preimage_needed-1", () => test("preimage_needed-1"));
-    it("preimage_needed-2", () => test("preimage_needed-2"));
-    it("preimage_not_needed-1", () => test("preimage_not_needed-1"));
-    it("preimage_not_needed-2", () => test("preimage_not_needed-2"));
-    it("preimages_order_check-1", () => test("preimages_order_check-1"));
-    it("preimages_order_check-2", () => test("preimages_order_check-2"));
-    it("preimages_order_check-3", () => test("preimages_order_check-3"));
-    it("preimages_order_check-4", () => test("preimages_order_check-4"));
+  const posterior_delta = (<DoubleDagger<DeltaImpl>>(
+    serviceAccounts
+  )).toPosterior({
+    ep: r.value,
+    p_tau: testCase.input.p_tau,
   });
+
+  // check preimages and requests
+  for (const [serviceIndex, testAccount] of testCase.postState.accounts) {
+    const serviceAccount = posterior_delta.get(serviceIndex)!;
+    for (const preimageKey of testAccount.preimages.keys()) {
+      const blob = serviceAccount.preimages.get(preimageKey);
+      expect(blob).deep.eq(testAccount.preimages.get(preimageKey)!);
+    }
+
+    for (const [lookupMetaKey, slots] of testAccount.lookup.entries()) {
+      const lookupMeta = serviceAccount.requests.get(lookupMetaKey.hash)!;
+      expect(lookupMeta).toBeDefined();
+      expect(lookupMeta.get(lookupMetaKey.length)).toBeDefined();
+
+      const computedSlots = lookupMeta.get(lookupMetaKey.length)!;
+
+      expect(computedSlots!.length).toBe(slots.length);
+      for (let i = 0; i < slots.length; i++) {
+        expect(computedSlots![i]).toEqual(slots[i]);
+      }
+    }
+  }
+
+  // checks statistics
+  const p_stats = testCase.preState.statistics.toPosterior({
+    ep: r.value,
+    accumulationStatistics: new AccumulationStatisticsImpl(),
+    guaranteedReports: toTagged([]),
+  });
+  expect(p_stats !== testCase.postState.statistics).toBeTruthy();
+
+  expect(testCase.postState.statistics).deep.eq(p_stats);
+};
+describe("preimages-test-vectors", () => {
+  const test = (name: string) => buildTest(name);
+
+  it("preimage_needed-1", () => test("preimage_needed-1"));
+  it("preimage_needed-2", () => test("preimage_needed-2"));
+  it("preimage_not_needed-1", () => test("preimage_not_needed-1"));
+  it("preimage_not_needed-2", () => test("preimage_not_needed-2"));
+  it("preimages_order_check-1", () => test("preimages_order_check-1"));
+  it("preimages_order_check-2", () => test("preimages_order_check-2"));
+  it("preimages_order_check-3", () => test("preimages_order_check-3"));
+  it("preimages_order_check-4", () => test("preimages_order_check-4"));
 });

@@ -80,9 +80,9 @@ export class PreimagesExtrinsicImpl
 }
 
 export enum EPError {
-  VALIDATION_ERROR = "EP Validation Error",
-  PREIMAGE_PROVIDED_OR_UNSOLICITED = "Preimage Provided or unsolicied",
-  PREIMAGES_NOT_SORTED = "preimages should be sorted",
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+  PREIMAGE_PROVIDED_OR_UNSOLICITED = "PREIMAGE_PROVIDED_OR_UNSOLICITED",
+  PREIMAGES_NOT_SORTED = "PREIMAGES_NOT_SORTED",
 }
 
 if (import.meta.vitest) {
