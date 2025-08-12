@@ -8,20 +8,9 @@ export const buildAliases = (import_meta_url: string) => {
     "@tsjam/codec": new URL("../jam-codec/", import_meta_url).pathname,
     "@tsjam/types": new URL("../jam-types/", import_meta_url).pathname,
     "@tsjam/utils": new URL("../jam-utils/", import_meta_url).pathname,
-    "@tsjam/transitions": new URL(
-      "../jam-transitions/",
-      import_meta_url,
-    ).pathname,
-    "@tsjam/crypto": new URL("../jam-crypto/", import_meta_url)
+    "@tsjam/crypto": new URL("../jam-crypto/", import_meta_url).pathname,
+    "@tsjam/crypto-napi": new URL("../jam-crypto-napi/", import_meta_url)
       .pathname,
-    "@tsjam/crypto-napi": new URL(
-      "../jam-crypto-napi/",
-      import_meta_url,
-    ).pathname,
-    "@tsjam/merklization": new URL(
-      "../jam-merklization/",
-      import_meta_url,
-    ).pathname,
   };
 };
 

@@ -33,6 +33,7 @@
     "@tsjam/crypto": "*",
     "@tsjam/erasurecoding": "*",
     "@tsjam/types": "*",
+    "@tsjam/utils": "*",
     "@vekexasia/bigint-uint8array": "^1.1.1",
     "bigint-buffer": "^1.1.5",
     "neverthrow": "^8.1.1",
