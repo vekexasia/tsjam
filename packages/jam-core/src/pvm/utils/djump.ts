@@ -5,7 +5,7 @@ import {
   PVMExitReasonMod,
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
-import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 
 const ZA = 2;
 /**

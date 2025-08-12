@@ -1,12 +1,12 @@
-import { AccumulationOutImpl } from "@/classes/accumulation-out-impl";
-import { DeferredTransfersImpl } from "@/classes/deferred-transfers-impl";
-import { AccumulationInputInpl } from "@/classes/pvm/accumulation-input-impl";
-import { PVMAccumulationStateImpl } from "@/classes/pvm/pvm-accumulation-state-impl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
-import { PVMResultContextImpl } from "@/classes/pvm/pvm-result-context-impl";
-import { ServiceAccountImpl } from "@/classes/service-account-impl";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
-import { WorkOutputImpl } from "@/classes/work-output-impl";
+import { AccumulationOutImpl } from "@/impls/accumulation-out-impl";
+import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
+import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
+import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { WorkOutputImpl } from "@/impls/work-output-impl";
 import {
   createCodec,
   E_4_int,

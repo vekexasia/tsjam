@@ -1,7 +1,7 @@
-import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
-import { PVMRegisterImpl } from "@/classes/pvm/pvm-register-impl";
-import { PVMResultContextImpl } from "@/classes/pvm/pvm-result-context-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
+import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
 import {
   Gas,
   PVMSingleMod,

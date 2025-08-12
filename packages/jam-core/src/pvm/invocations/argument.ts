@@ -1,4 +1,4 @@
-import { WorkOutputImpl } from "@/classes/work-output-impl";
+import { WorkOutputImpl } from "@/impls/work-output-impl";
 import {
   Gas,
   PVMProgramCode,

@@ -31,12 +31,12 @@ import {
 } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
-import { AvailabilitySpecificationImpl } from "./classes/availability-specification-impl";
-import { DeltaImpl } from "./classes/delta-impl";
-import { WorkDigestImpl } from "./classes/work-digest-impl";
-import { WorkOutputImpl } from "./classes/work-output-impl";
-import { WorkPackageImpl } from "./classes/work-package-impl";
-import { WorkReportImpl } from "./classes/work-report-impl";
+import { AvailabilitySpecificationImpl } from "./impls/availability-specification-impl";
+import { DeltaImpl } from "./impls/delta-impl";
+import { WorkDigestImpl } from "./impls/work-digest-impl";
+import { WorkOutputImpl } from "./impls/work-output-impl";
+import { WorkPackageImpl } from "./impls/work-package-impl";
+import { WorkReportImpl } from "./impls/work-report-impl";
 import {
   constantDepthBinaryTree,
   J_fn,
@@ -44,7 +44,7 @@ import {
   wellBalancedBinaryMerkleRoot,
 } from "./merklization";
 import { refineInvocation } from "./pvm";
-import { TauImpl } from "./classes/slot-impl";
+import { TauImpl } from "./impls/slot-impl";
 import { HashCodec } from "./codecs/misc-codecs";
 import { IdentityMap } from "./data-structures/identity-map";
 

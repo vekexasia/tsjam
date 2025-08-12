@@ -1,4 +1,4 @@
-import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/pvm-ix-evaluate-fn-context-impl";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { PVMIxReturnMods, PVMProgramExecutionContext, u32 } from "@tsjam/types";

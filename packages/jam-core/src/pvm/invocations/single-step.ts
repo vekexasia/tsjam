@@ -1,5 +1,5 @@
-import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { IParsedProgram, PVMProgram, Posterior } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { applyMods } from "../functions/utils";

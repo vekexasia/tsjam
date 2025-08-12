@@ -1,4 +1,4 @@
-import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import {
   Gas,
   PVMExitReasonMod,

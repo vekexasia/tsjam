@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
-import { AuthorizerQueueImpl } from "@/classes/authorizer-queue-impl";
+import { AuthorizerPoolImpl } from "@/impls/authorizer-pool-impl";
+import { AuthorizerQueueImpl } from "@/impls/authorizer-queue-impl";
 import {
   GuaranteesExtrinsicImpl,
   SingleWorkReportGuaranteeImpl,
-} from "@/classes/extrinsics/guarantees";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
-import { WorkReportImpl } from "@/classes/work-report-impl";
+} from "@/impls/extrinsics/guarantees";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { WorkReportImpl } from "@/impls/work-report-impl";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,

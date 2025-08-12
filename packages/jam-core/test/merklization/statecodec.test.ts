@@ -1,7 +1,7 @@
-import { DeltaImpl } from "@/classes/delta-impl";
-import { JamStateImpl } from "@/classes/jam-state-impl";
-import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
-import { ServiceAccountImpl } from "@/classes/service-account-impl";
+import { DeltaImpl } from "@/impls/delta-impl";
+import { JamStateImpl } from "@/impls/jam-state-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { merkleStateMap, stateFromMerkleMap } from "@/merklization";
 import { traceJSONCodec } from "@/merklization/state-codecs";
 import { Hashing } from "@tsjam/crypto";
@@ -18,7 +18,7 @@ import {
 } from "@tsjam/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../utils";
-import { SlotImpl } from "@/classes/slot-impl";
+import { SlotImpl } from "@/impls/slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
 
 describe("state serialization/deserialization", () => {

@@ -6,8 +6,8 @@ import {
   SeqOfLength,
   ValidatorData,
 } from "@tsjam/types";
-import { TicketImpl } from "./classes/ticket-impl";
-import { DisputesStateImpl } from "./classes/disputes-state-impl";
+import { TicketImpl } from "./impls/ticket-impl";
+import { DisputesStateImpl } from "./impls/disputes-state-impl";
 
 /**
  * Z fn

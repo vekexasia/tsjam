@@ -1,9 +1,9 @@
-import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
-import { JamSignedHeaderImpl } from "@/classes/jam-signed-header-impl";
-import { KappaImpl } from "@/classes/kappa-impl";
-import { RHOImpl } from "@/classes/rho-impl";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
-import { WorkReportImpl } from "@/classes/work-report-impl";
+import { AssurancesExtrinsicImpl } from "@/impls/extrinsics/assurances";
+import { JamSignedHeaderImpl } from "@/impls/jam-signed-header-impl";
+import { KappaImpl } from "@/impls/kappa-impl";
+import { RHOImpl } from "@/impls/rho-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { WorkReportImpl } from "@/impls/work-report-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,

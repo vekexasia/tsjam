@@ -1,6 +1,6 @@
-import { DeltaImpl } from "@/classes/delta-impl";
-import { WorkOutputImpl } from "@/classes/work-output-impl";
-import { WorkPackageImpl } from "@/classes/work-package-impl";
+import { DeltaImpl } from "@/impls/delta-impl";
+import { WorkOutputImpl } from "@/impls/work-output-impl";
+import { WorkPackageImpl } from "@/impls/work-package-impl";
 import {
   createCodec,
   E_int,
@@ -26,7 +26,7 @@ import { applyMods } from "../functions/utils";
 import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
-import { TauImpl } from "@/classes/slot-impl";
+import { TauImpl } from "@/impls/slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 
 const refine_a_Codec = createCodec<{

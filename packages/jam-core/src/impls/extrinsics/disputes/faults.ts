@@ -1,6 +1,6 @@
-import { DisputesStateImpl } from "@/classes/disputes-state-impl";
-import { KappaImpl } from "@/classes/kappa-impl";
-import { LambdaImpl } from "@/classes/lambda-impl";
+import { DisputesStateImpl } from "@/impls/disputes-state-impl";
+import { KappaImpl } from "@/impls/kappa-impl";
+import { LambdaImpl } from "@/impls/lambda-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet } from "@/data-structures/identity-set";
 import {

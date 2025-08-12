@@ -1,23 +1,23 @@
-import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
-import "@/classes/beta-impl";
-import { BetaImpl } from "@/classes/beta-impl";
-import { CoreStatisticsImpl } from "@/classes/core-statistics-impl";
-import { DisputesStateImpl } from "@/classes/disputes-state-impl";
+import { AuthorizerPoolImpl } from "@/impls/authorizer-pool-impl";
+import "@/impls/beta-impl";
+import { BetaImpl } from "@/impls/beta-impl";
+import { CoreStatisticsImpl } from "@/impls/core-statistics-impl";
+import { DisputesStateImpl } from "@/impls/disputes-state-impl";
 import {
   EGError,
   GuaranteesExtrinsicImpl,
-} from "@/classes/extrinsics/guarantees";
-import { JamEntropyImpl } from "@/classes/jam-entropy-impl";
-import { JamSignedHeaderImpl } from "@/classes/jam-signed-header-impl";
-import { JamStateImpl } from "@/classes/jam-state-impl";
-import { KappaImpl } from "@/classes/kappa-impl";
-import { LambdaImpl } from "@/classes/lambda-impl";
-import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
-import { RecentHistoryImpl } from "@/classes/recent-history-impl";
-import { RHOImpl } from "@/classes/rho-impl";
-import { ServiceAccountImpl } from "@/classes/service-account-impl";
-import { ServicesStatisticsImpl } from "@/classes/services-statistics-impl";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+} from "@/impls/extrinsics/guarantees";
+import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
+import { JamSignedHeaderImpl } from "@/impls/jam-signed-header-impl";
+import { JamStateImpl } from "@/impls/jam-state-impl";
+import { KappaImpl } from "@/impls/kappa-impl";
+import { LambdaImpl } from "@/impls/lambda-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
+import { RecentHistoryImpl } from "@/impls/recent-history-impl";
+import { RHOImpl } from "@/impls/rho-impl";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";

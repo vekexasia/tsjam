@@ -16,23 +16,23 @@ import {
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
-import { AccumulationHistoryImpl } from "./classes/accumulation-history-impl";
-import { AccumulationOutImpl } from "./classes/accumulation-out-impl";
-import { AccumulationQueueImpl } from "./classes/accumulation-queue-impl";
-import { AccumulationStatisticsImpl } from "./classes/accumulation-statistics-impl";
-import { AuthorizerQueueImpl } from "./classes/authorizer-queue-impl";
-import { DeferredTransfersImpl } from "./classes/deferred-transfers-impl";
-import { DeltaImpl } from "./classes/delta-impl";
-import { LastAccOutsImpl } from "./classes/last-acc-outs-impl";
-import { NewWorkReportsImpl } from "./classes/new-work-reports-impl";
-import { PrivilegedServicesImpl } from "./classes/privileged-services-impl";
-import { AccumulationInputInpl } from "./classes/pvm/accumulation-input-impl";
-import { PVMAccumulationOpImpl } from "./classes/pvm/pvm-accumulation-op-impl";
-import { PVMAccumulationStateImpl } from "./classes/pvm/pvm-accumulation-state-impl";
-import { ValidatorsImpl } from "./classes/validators-impl";
-import { WorkReportImpl } from "./classes/work-report-impl";
+import { AccumulationHistoryImpl } from "./impls/accumulation-history-impl";
+import { AccumulationOutImpl } from "./impls/accumulation-out-impl";
+import { AccumulationQueueImpl } from "./impls/accumulation-queue-impl";
+import { AccumulationStatisticsImpl } from "./impls/accumulation-statistics-impl";
+import { AuthorizerQueueImpl } from "./impls/authorizer-queue-impl";
+import { DeferredTransfersImpl } from "./impls/deferred-transfers-impl";
+import { DeltaImpl } from "./impls/delta-impl";
+import { LastAccOutsImpl } from "./impls/last-acc-outs-impl";
+import { NewWorkReportsImpl } from "./impls/new-work-reports-impl";
+import { PrivilegedServicesImpl } from "./impls/privileged-services-impl";
+import { AccumulationInputInpl } from "./impls/pvm/accumulation-input-impl";
+import { PVMAccumulationOpImpl } from "./impls/pvm/pvm-accumulation-op-impl";
+import { PVMAccumulationStateImpl } from "./impls/pvm/pvm-accumulation-state-impl";
+import { ValidatorsImpl } from "./impls/validators-impl";
+import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm";
-import { SlotImpl, TauImpl } from "./classes/slot-impl";
+import { SlotImpl, TauImpl } from "./impls/slot-impl";
 
 /**
  * Decides which reports to accumulate and accumulates them

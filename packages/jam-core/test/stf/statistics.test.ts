@@ -1,9 +1,9 @@
-import { JamBlockExtrinsicsImpl } from "@/classes/jam-block-extrinsics-impl";
-import { JamStateImpl } from "@/classes/jam-state-impl";
-import { KappaImpl } from "@/classes/kappa-impl";
-import { LambdaImpl } from "@/classes/lambda-impl";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
-import { ValidatorStatisticsImpl } from "@/classes/validator-statistics-impl";
+import { JamBlockExtrinsicsImpl } from "@/impls/jam-block-extrinsics-impl";
+import { JamStateImpl } from "@/impls/jam-state-impl";
+import { KappaImpl } from "@/impls/kappa-impl";
+import { LambdaImpl } from "@/impls/lambda-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { ValidatorStatisticsImpl } from "@/impls/validator-statistics-impl";
 import {
   BaseJamCodecable,
   JamCodecable,

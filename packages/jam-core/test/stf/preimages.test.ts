@@ -1,8 +1,8 @@
-import { DeltaImpl } from "@/classes/delta-impl";
-import { PreimagesExtrinsicImpl } from "@/classes/extrinsics/preimages";
-import { ServiceAccountImpl } from "@/classes/service-account-impl";
-import { ServicesStatisticsImpl } from "@/classes/services-statistics-impl";
-import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { DeltaImpl } from "@/impls/delta-impl";
+import { PreimagesExtrinsicImpl } from "@/impls/extrinsics/preimages";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import {
@@ -35,7 +35,7 @@ import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
-import { AccumulationStatisticsImpl } from "@/classes/accumulation-statistics-impl";
+import { AccumulationStatisticsImpl } from "@/impls/accumulation-statistics-impl";
 
 @JamCodecable()
 class LookupMetaMapKey extends BaseJamCodecable {
