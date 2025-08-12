@@ -1,15 +1,15 @@
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl";
 import { DisputeExtrinsicImpl } from "@/classes/extrinsics/disputes";
-import { JamHeaderImpl } from "@/classes/JamHeaderImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { LambdaImpl } from "@/classes/LambdaImpl";
-import { RHOImpl } from "@/classes/RHOImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
+import { JamHeaderImpl } from "@/classes/jam-header-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { LambdaImpl } from "@/classes/lambda-impl";
+import { RHOImpl } from "@/classes/rho-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { TestOutputCodec } from "../codec_utils";
+import { TestOutputCodec } from "../codec-utils";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {

@@ -1,9 +1,9 @@
-import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
-import { PVMProgramCodec } from "@/codecs/PVMProgramCodec";
+import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
+import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { PVMProgram } from "@tsjam/types";
-import { ParsedProgram } from "../parseProgram";
-import { pvmSingleStep } from "./singleStep";
+import { ParsedProgram } from "../parse-program";
+import { pvmSingleStep } from "./single-step";
 
 /**
  * Basic invocation

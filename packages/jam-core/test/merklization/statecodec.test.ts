@@ -1,9 +1,9 @@
-import { DeltaImpl } from "@/classes/DeltaImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
+import { DeltaImpl } from "@/classes/delta-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
+import { ServiceAccountImpl } from "@/classes/service-account-impl";
 import { merkleStateMap, stateFromMerkleMap } from "@/merklization";
-import { traceJSONCodec } from "@/merklization/stateCodecs";
+import { traceJSONCodec } from "@/merklization/state-codecs";
 import { Hashing } from "@tsjam/crypto";
 import {
   Balance,
@@ -18,8 +18,8 @@ import {
 } from "@tsjam/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../utils";
-import { SlotImpl } from "@/classes/SlotImpl";
-import { IdentityMap } from "@/data_structures/identityMap";
+import { SlotImpl } from "@/classes/slot-impl";
+import { IdentityMap } from "@/data-structures/identity-map";
 
 describe("state serialization/deserialization", () => {
   it("should deserialize to same object", () => {

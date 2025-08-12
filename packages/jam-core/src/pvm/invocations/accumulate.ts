@@ -1,12 +1,12 @@
-import { AccumulationOutImpl } from "@/classes/AccumulationOutImpl";
-import { DeferredTransfersImpl } from "@/classes/DeferredTransfersImpl";
-import { AccumulationInputInpl } from "@/classes/pvm/AccumulationInputImpl";
-import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
-import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
+import { AccumulationOutImpl } from "@/classes/accumulation-out-impl";
+import { DeferredTransfersImpl } from "@/classes/deferred-transfers-impl";
+import { AccumulationInputInpl } from "@/classes/pvm/accumulation-input-impl";
+import { PVMAccumulationStateImpl } from "@/classes/pvm/pvm-accumulation-state-impl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
+import { PVMResultContextImpl } from "@/classes/pvm/pvm-result-context-impl";
+import { ServiceAccountImpl } from "@/classes/service-account-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { WorkOutputImpl } from "@/classes/work-output-impl";
 import {
   createCodec,
   E_4_int,
@@ -35,10 +35,10 @@ import { toTagged } from "@tsjam/utils";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
-import { check_fn } from "../utils/check_fn";
+import { check_fn } from "../utils/check-fn";
 import { argumentInvocation } from "./argument";
-import { HostCallExecutor } from "./hostCall";
-import { HashCodec } from "@/codecs/miscCodecs";
+import { HostCallExecutor } from "./host-call";
+import { HashCodec } from "@/codecs/misc-codecs";
 
 const AccumulateArgsCodec = createCodec<{
   t: TauImpl;

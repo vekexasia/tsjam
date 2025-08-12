@@ -1,26 +1,26 @@
-import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
-import "@/classes/BetaImpl";
-import { BetaImpl } from "@/classes/BetaImpl";
-import { CoreStatisticsImpl } from "@/classes/CoreStatisticsImpl";
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
+import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
+import "@/classes/beta-impl";
+import { BetaImpl } from "@/classes/beta-impl";
+import { CoreStatisticsImpl } from "@/classes/core-statistics-impl";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl";
 import {
   EGError,
   GuaranteesExtrinsicImpl,
 } from "@/classes/extrinsics/guarantees";
-import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
-import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { LambdaImpl } from "@/classes/LambdaImpl";
-import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
-import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
-import { RHOImpl } from "@/classes/RHOImpl";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
-import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { IdentityMap } from "@/data_structures/identityMap";
-import { IdentitySet, identitySetCodec } from "@/data_structures/identitySet";
+import { JamEntropyImpl } from "@/classes/jam-entropy-impl";
+import { JamSignedHeaderImpl } from "@/classes/jam-signed-header-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { LambdaImpl } from "@/classes/lambda-impl";
+import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
+import { RecentHistoryImpl } from "@/classes/recent-history-impl";
+import { RHOImpl } from "@/classes/rho-impl";
+import { ServiceAccountImpl } from "@/classes/service-account-impl";
+import { ServicesStatisticsImpl } from "@/classes/services-statistics-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
   binaryCodec,
@@ -53,7 +53,7 @@ import {
 import { toDagger, toPosterior } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
-import { TestOutputCodec } from "../codec_utils";
+import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
 import { ConditionalExcept } from "type-fest";
 

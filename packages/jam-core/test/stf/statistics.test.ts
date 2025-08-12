@@ -1,9 +1,9 @@
-import { JamBlockExtrinsicsImpl } from "@/classes/JamBlockExtrinsicsImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { LambdaImpl } from "@/classes/LambdaImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
+import { JamBlockExtrinsicsImpl } from "@/classes/jam-block-extrinsics-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { LambdaImpl } from "@/classes/lambda-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { ValidatorStatisticsImpl } from "@/classes/validator-statistics-impl";
 import {
   BaseJamCodecable,
   JamCodecable,
@@ -14,7 +14,7 @@ import { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getCodecFixtureFile } from "../codec_utils";
+import { getCodecFixtureFile } from "../codec-utils";
 import { dummyDisputesState, dummyEntropy } from "../utils";
 
 export const getFixtureFile = (filename: string): Uint8Array => {

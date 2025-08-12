@@ -26,14 +26,14 @@ import {
   Validated,
 } from "@tsjam/types";
 import { err, ok, Result } from "neverthrow";
-import { GammaAImpl } from "../GammaAImpl";
-import { JamEntropyImpl } from "../JamEntropyImpl";
-import { SafroleStateImpl } from "../SafroleStateImpl";
-import { TicketImpl } from "../TicketImpl";
-import { GammaZImpl } from "../GammaZImpl";
-import { TauImpl } from "../SlotImpl";
-import { HashCodec } from "@/codecs/miscCodecs";
-import { IdentitySet } from "@/data_structures/identitySet";
+import { GammaAImpl } from "../gamma-a-impl";
+import { JamEntropyImpl } from "../jam-entropy-impl";
+import { SafroleStateImpl } from "../safrole-state-impl";
+import { TicketImpl } from "../ticket-impl";
+import { GammaZImpl } from "../gamma-z-impl";
+import { TauImpl } from "../slot-impl";
+import { HashCodec } from "@/codecs/misc-codecs";
+import { IdentitySet } from "@/data-structures/identity-set";
 import { compareUint8Arrays } from "uint8array-extras";
 import { toTagged } from "@tsjam/utils";
 
@@ -166,7 +166,7 @@ export class TicketsExtrinsicImpl
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("TicketsExtrinsicImpl", () => {
     it("tickets_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("tickets_extrinsic.bin");

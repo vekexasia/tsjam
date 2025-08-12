@@ -22,12 +22,12 @@ import {
   Validated,
   ValidatorIndex,
 } from "@tsjam/types";
-import { JamHeaderImpl } from "../JamHeaderImpl";
-import { JamStateImpl } from "../JamStateImpl";
-import { RHOImpl } from "../RHOImpl";
+import { JamHeaderImpl } from "../jam-header-impl";
+import { JamStateImpl } from "../jam-state-impl";
+import { RHOImpl } from "../rho-impl";
 import { Ed25519, Hashing } from "@tsjam/crypto";
-import { NewWorkReportsImpl } from "../NewWorkReportsImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { NewWorkReportsImpl } from "../new-work-reports-impl";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
 import { compareUint8Arrays } from "uint8array-extras";
 
 /**
@@ -190,7 +190,7 @@ export class AssurancesExtrinsicImpl
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("codecEa", () => {
     it("assurances_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("assurances_extrinsic.bin");

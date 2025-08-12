@@ -1,20 +1,20 @@
-import { DeferredTransferImpl } from "@/classes/DeferredTransferImpl";
-import { DeltaImpl } from "@/classes/DeltaImpl";
-import { MerkleServiceAccountStorageImpl } from "@/classes/MerkleServiceAccountStorageImpl";
-import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
-import { PVMAccumulationOpImpl } from "@/classes/pvm/PVMAccumulationOPImpl";
-import { PVMAccumulationStateImpl } from "@/classes/pvm/PVMAccumulationStateImpl";
-import { PVMExitReasonImpl } from "@/classes/pvm/PVMExitReasonImpl";
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
-import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
-import { PVMResultContextImpl } from "@/classes/pvm/PVMResultContextImpl";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
-import { WorkItemImpl } from "@/classes/WorkItemImpl";
-import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { IdentityMap } from "@/data_structures/identityMap";
+import { DeferredTransferImpl } from "@/classes/deferred-transfer-impl";
+import { DeltaImpl } from "@/classes/delta-impl";
+import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
+import { PrivilegedServicesImpl } from "@/classes/privileged-services-impl";
+import { PVMAccumulationOpImpl } from "@/classes/pvm/pvm-accumulation-op-impl";
+import { PVMAccumulationStateImpl } from "@/classes/pvm/pvm-accumulation-state-impl";
+import { PVMExitReasonImpl } from "@/classes/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
+import { PVMRegistersImpl } from "@/classes/pvm/pvm-registers-impl";
+import { PVMResultContextImpl } from "@/classes/pvm/pvm-result-context-impl";
+import { ServiceAccountImpl } from "@/classes/service-account-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { ValidatorsImpl } from "@/classes/validators-impl";
+import { WorkItemImpl } from "@/classes/work-item-impl";
+import { WorkPackageImpl } from "@/classes/work-package-impl";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { IdentityMap } from "@/data-structures/identity-map";
 import {
   cloneCodecable,
   createArrayLengthDiscriminator,
@@ -96,8 +96,8 @@ import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation } from "../invocations/basic";
-import { PVMMemory } from "../pvmMemory";
-import { check_fn } from "../utils/check_fn";
+import { PVMMemory } from "../pvm-memory";
+import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
 

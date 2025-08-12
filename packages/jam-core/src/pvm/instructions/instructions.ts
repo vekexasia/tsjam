@@ -1,4 +1,4 @@
-import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/PVMIxEvaluateFNContextImpl";
+import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/pvm-ix-evaluate-fn-context-impl";
 import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { PVMIxReturnMods, PVMProgramExecutionContext, u32 } from "@tsjam/types";
@@ -35,7 +35,7 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { IxMod, smod, X_4, X_8, X_fn } from "./utils";
-import { toSafeMemoryAddress } from "../pvmMemory";
+import { toSafeMemoryAddress } from "../pvm-memory";
 
 /**
  * This class holds the ixs implementations.

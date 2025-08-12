@@ -2,8 +2,8 @@ import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { DisputeExtrinsic, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { JamStateImpl } from "../JamStateImpl";
-import { TauImpl } from "../SlotImpl";
+import { JamStateImpl } from "../jam-state-impl";
+import { TauImpl } from "../slot-impl";
 import { DisputesCulpritError, DisputesCulprits } from "./disputes/culprits";
 import { DisputesFaultError, DisputesFaults } from "./disputes/faults";
 
@@ -94,7 +94,7 @@ export class DisputeExtrinsicImpl
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("codecEd", () => {
     it("disputes_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("disputes_extrinsic.bin");

@@ -1,10 +1,10 @@
 import { AssurancesExtrinsicImpl } from "@/classes/extrinsics/assurances";
-import { JamSignedHeaderImpl } from "@/classes/JamSignedHeaderImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { RHOImpl } from "@/classes/RHOImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { WorkReportImpl } from "@/classes/WorkReportImpl";
-import { HashCodec } from "@/codecs/miscCodecs";
+import { JamSignedHeaderImpl } from "@/classes/jam-signed-header-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { RHOImpl } from "@/classes/rho-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { WorkReportImpl } from "@/classes/work-report-impl";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   JamCodecable,
@@ -15,7 +15,7 @@ import { Dagger, HeaderHash, Posterior, Tagged, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { TestOutputCodec } from "../codec_utils";
+import { TestOutputCodec } from "../codec-utils";
 
 export const getCodecFixtureFile = (
   filename: string,

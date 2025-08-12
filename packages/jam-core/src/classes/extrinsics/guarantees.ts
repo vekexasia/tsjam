@@ -1,4 +1,4 @@
-import { FisherYatesH } from "@/fisherYates";
+import { FisherYatesH } from "@/fisher-yates";
 import {
   BaseJamCodecable,
   codec,
@@ -45,22 +45,22 @@ import {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { DisputesStateImpl } from "../DisputesStateImpl";
-import { JamEntropyImpl } from "../JamEntropyImpl";
-import { JamStateImpl } from "../JamStateImpl";
-import { RecentHistoryImpl } from "../RecentHistoryImpl";
-import { RHOImpl } from "../RHOImpl";
-import { SlotImpl, TauImpl } from "../SlotImpl";
-import { WorkReportImpl } from "../WorkReportImpl";
-import { IdentitySet } from "@/data_structures/identitySet";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { AuthorizerPoolImpl } from "../AuthorizerPoolImpl";
-import { DeltaImpl } from "../DeltaImpl";
-import { HeaderLookupHistoryImpl } from "../HeaderLookupHistoryImpl";
-import { AccumulationQueueImpl } from "../AccumulationQueueImpl";
-import { BetaImpl } from "../BetaImpl";
-import { AccumulationHistoryImpl } from "../AccumulationHistoryImpl";
-import { IdentityMap } from "@/data_structures/identityMap";
+import { DisputesStateImpl } from "../disputes-state-impl";
+import { JamEntropyImpl } from "../jam-entropy-impl";
+import { JamStateImpl } from "../jam-state-impl";
+import { RecentHistoryImpl } from "../recent-history-impl";
+import { RHOImpl } from "../rho-impl";
+import { SlotImpl, TauImpl } from "../slot-impl";
+import { WorkReportImpl } from "../work-report-impl";
+import { IdentitySet } from "@/data-structures/identity-set";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { AuthorizerPoolImpl } from "../authorizer-pool-impl";
+import { DeltaImpl } from "../delta-impl";
+import { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
+import { AccumulationQueueImpl } from "../accumulation-queue-impl";
+import { BetaImpl } from "../beta-impl";
+import { AccumulationHistoryImpl } from "../accumulation-history-impl";
+import { IdentityMap } from "@/data-structures/identity-map";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -668,7 +668,7 @@ const M_STAR_fn = (input: {
 };
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("codecEG", () => {
     it("guarantees_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("guarantees_extrinsic.bin");

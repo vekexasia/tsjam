@@ -1,6 +1,6 @@
 import { describe, it } from "vitest";
-import "@/classes/BetaImpl";
-import { HashCodec } from "@/codecs/miscCodecs";
+import "@/classes/beta-impl";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   codec,
@@ -11,7 +11,7 @@ import {
 import { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
 import { Hash } from "node:crypto";
 import fs from "node:fs";
-import { BetaImpl } from "@/classes/BetaImpl";
+import { BetaImpl } from "@/classes/beta-impl";
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {

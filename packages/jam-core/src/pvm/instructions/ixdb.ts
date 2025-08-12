@@ -1,4 +1,4 @@
-import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/PVMIxEvaluateFNContextImpl";
+import { PVMIxEvaluateFNContextImpl } from "@/classes/pvm/pvm-ix-evaluate-fn-context-impl";
 import { Gas, PVMIx, PVMIxDecodeFN, PVMIxReturnMods, u8 } from "@tsjam/types";
 
 export const Ixdb = {

@@ -1,6 +1,6 @@
-import { PVMProgramExecutionContextImpl } from "@/classes/pvm/PVMProgramExecutionContextImpl";
-import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
-import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
+import { PVMProgramExecutionContextImpl } from "@/classes/pvm/pvm-program-execution-context-impl";
+import { PVMRegisterImpl } from "@/classes/pvm/pvm-register-impl";
+import { PVMRegistersImpl } from "@/classes/pvm/pvm-registers-impl";
 import { PVMMemory } from "@/pvm";
 import { applyMods } from "@/pvm/functions/utils";
 import { Gas, IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";

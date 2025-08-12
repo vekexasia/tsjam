@@ -1,20 +1,20 @@
-import { AccumulationHistoryImpl } from "@/classes/AccumulationHistoryImpl";
-import { AccumulationQueueImpl } from "@/classes/AccumulationQueueImpl";
-import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
-import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
-import { BetaImpl } from "@/classes/BetaImpl";
-import { DeltaImpl } from "@/classes/DeltaImpl";
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
-import { HeaderLookupHistoryImpl } from "@/classes/HeaderLookupHistoryImpl";
-import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { JamStatisticsImpl } from "@/classes/JamStatisticsImpl";
-import { LastAccOutsImpl } from "@/classes/LastAccOutsImpl";
-import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
-import { RHOImpl } from "@/classes/RHOImpl";
-import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
-import { ServiceAccountImpl } from "@/classes/ServiceAccountImpl";
-import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
+import { AccumulationHistoryImpl } from "@/classes/accumulation-history-impl";
+import { AccumulationQueueImpl } from "@/classes/accumulation-queue-impl";
+import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
+import { AuthorizerQueueImpl } from "@/classes/authorizer-queue-impl";
+import { BetaImpl } from "@/classes/beta-impl";
+import { DeltaImpl } from "@/classes/delta-impl";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl";
+import { HeaderLookupHistoryImpl } from "@/classes/header-lookup-history-impl";
+import { JamEntropyImpl } from "@/classes/jam-entropy-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { JamStatisticsImpl } from "@/classes/jam-statistics-impl";
+import { LastAccOutsImpl } from "@/classes/last-acc-outs-impl";
+import { PrivilegedServicesImpl } from "@/classes/privileged-services-impl";
+import { RHOImpl } from "@/classes/rho-impl";
+import { SafroleStateImpl } from "@/classes/safrole-state-impl";
+import { ServiceAccountImpl } from "@/classes/service-account-impl";
+import { ValidatorsImpl } from "@/classes/validators-impl";
 import {
   E_4_int,
   E_sub_int,
@@ -36,15 +36,15 @@ import {
   u64,
 } from "@tsjam/types";
 import assert from "assert";
-import { MerkleServiceAccountStorageImpl } from "../classes/MerkleServiceAccountStorageImpl";
-import { serviceAccountDataCodec } from "./stateCodecs";
+import { MerkleServiceAccountStorageImpl } from "../classes/merkle-service-account-storage-impl";
+import { serviceAccountDataCodec } from "./state-codecs";
 import { stateKey } from "./utils";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { LambdaImpl } from "@/classes/LambdaImpl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { LambdaImpl } from "@/classes/lambda-impl";
 import { toTagged } from "@tsjam/utils";
-import { IdentityMap } from "@/data_structures/identityMap";
-import { SafeMap } from "@/data_structures/safeMap";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { SafeMap } from "@/data-structures/safe-map";
 
 /**
  * Merkelize state

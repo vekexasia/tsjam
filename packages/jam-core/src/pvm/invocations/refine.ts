@@ -1,6 +1,6 @@
-import { DeltaImpl } from "@/classes/DeltaImpl";
-import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
-import { WorkPackageImpl } from "@/classes/WorkPackageImpl";
+import { DeltaImpl } from "@/classes/delta-impl";
+import { WorkOutputImpl } from "@/classes/work-output-impl";
+import { WorkPackageImpl } from "@/classes/work-package-impl";
 import {
   createCodec,
   E_int,
@@ -25,9 +25,9 @@ import { hostFunctions, RefineContext } from "../functions/functions";
 import { applyMods } from "../functions/utils";
 import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
-import { HostCallExecutor } from "./hostCall";
-import { TauImpl } from "@/classes/SlotImpl";
-import { HashCodec } from "@/codecs/miscCodecs";
+import { HostCallExecutor } from "./host-call";
+import { TauImpl } from "@/classes/slot-impl";
+import { HashCodec } from "@/codecs/misc-codecs";
 
 const refine_a_Codec = createCodec<{
   c: CoreIndex; // `c`

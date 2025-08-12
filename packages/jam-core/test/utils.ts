@@ -1,39 +1,39 @@
-import { AccumulationHistoryImpl } from "@/classes/AccumulationHistoryImpl";
+import { AccumulationHistoryImpl } from "@/classes/accumulation-history-impl";
 import {
   AccumulationQueueImpl,
   AccumulationQueueItem,
-} from "@/classes/AccumulationQueueImpl";
-import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
-import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
-import { BetaImpl } from "@/classes/BetaImpl";
-import { CoreStatisticsImpl } from "@/classes/CoreStatisticsImpl";
-import { DeltaImpl } from "@/classes/DeltaImpl";
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
-import { GammaAImpl } from "@/classes/GammaAImpl";
-import { GammaPImpl } from "@/classes/GammaPImpl";
-import { GammaSImpl } from "@/classes/GammaSImpl";
-import { GammaZImpl } from "@/classes/GammaZImpl";
-import { HeaderLookupHistoryImpl } from "@/classes/HeaderLookupHistoryImpl";
-import { JamEntropyImpl } from "@/classes/JamEntropyImpl";
-import { JamStateImpl } from "@/classes/JamStateImpl";
-import { JamStatisticsImpl } from "@/classes/JamStatisticsImpl";
-import { LastAccOutsImpl, SingleAccOutImpl } from "@/classes/LastAccOutsImpl";
-import { PrivilegedServicesImpl } from "@/classes/PrivilegedServicesImpl";
-import { RecentHistoryImpl } from "@/classes/RecentHistoryImpl";
-import { RecentHistoryItemImpl } from "@/classes/RecentHistoryItemImpl";
-import { RHOImpl } from "@/classes/RHOImpl";
-import { SafroleStateImpl } from "@/classes/SafroleStateImpl";
-import { ServicesStatisticsImpl } from "@/classes/ServicesStatisticsImpl";
-import { SingleCoreStatisticsImpl } from "@/classes/SingleCoreStatisticsImpl";
-import { SingleValidatorStatisticsImpl } from "@/classes/SingleValidatorStatisticsImpl";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { ValidatorDataImpl } from "@/classes/ValidatorDataImpl";
-import { ValidatorsImpl } from "@/classes/ValidatorsImpl";
-import { ValidatorStatisticsCollectionImpl } from "@/classes/ValidatorStatisticsCollectionImpl";
-import { ValidatorStatisticsImpl } from "@/classes/ValidatorStatisticsImpl";
-import { IdentityMap } from "@/data_structures/identityMap";
-import { IdentitySet } from "@/data_structures/identitySet";
-import { SafeMap } from "@/data_structures/safeMap";
+} from "@/classes/accumulation-queue-impl";
+import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
+import { AuthorizerQueueImpl } from "@/classes/authorizer-queue-impl";
+import { BetaImpl } from "@/classes/beta-impl";
+import { CoreStatisticsImpl } from "@/classes/core-statistics-impl";
+import { DeltaImpl } from "@/classes/delta-impl";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl";
+import { GammaAImpl } from "@/classes/gamma-a-impl";
+import { GammaPImpl } from "@/classes/gamma-p-impl";
+import { GammaSImpl } from "@/classes/gamma-s-impl";
+import { GammaZImpl } from "@/classes/gamma-z-impl";
+import { HeaderLookupHistoryImpl } from "@/classes/header-lookup-history-impl";
+import { JamEntropyImpl } from "@/classes/jam-entropy-impl";
+import { JamStateImpl } from "@/classes/jam-state-impl";
+import { JamStatisticsImpl } from "@/classes/jam-statistics-impl";
+import { LastAccOutsImpl, SingleAccOutImpl } from "@/classes/last-acc-outs-impl";
+import { PrivilegedServicesImpl } from "@/classes/privileged-services-impl";
+import { RecentHistoryImpl } from "@/classes/recent-history-impl";
+import { RecentHistoryItemImpl } from "@/classes/recent-history-item-impl";
+import { RHOImpl } from "@/classes/rho-impl";
+import { SafroleStateImpl } from "@/classes/safrole-state-impl";
+import { ServicesStatisticsImpl } from "@/classes/services-statistics-impl";
+import { SingleCoreStatisticsImpl } from "@/classes/single-core-statistics-impl";
+import { SingleValidatorStatisticsImpl } from "@/classes/single-validator-statistics-impl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { ValidatorDataImpl } from "@/classes/validator-data-impl";
+import { ValidatorsImpl } from "@/classes/validators-impl";
+import { ValidatorStatisticsCollectionImpl } from "@/classes/validator-statistics-collection-impl";
+import { ValidatorStatisticsImpl } from "@/classes/validator-statistics-impl";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentitySet } from "@/data-structures/identity-set";
+import { SafeMap } from "@/data-structures/safe-map";
 import {
   AUTHPOOL_SIZE,
   AUTHQUEUE_MAX_SIZE,

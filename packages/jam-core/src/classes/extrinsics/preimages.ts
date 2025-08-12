@@ -13,7 +13,7 @@ import { Hashing } from "@tsjam/crypto";
 import { EP_Extrinsic, EP_Tuple, ServiceIndex, Validated } from "@tsjam/types";
 import { Result, err, ok } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";
-import { DeltaImpl } from "../DeltaImpl";
+import { DeltaImpl } from "../delta-impl";
 import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
@@ -87,7 +87,7 @@ export enum EPError {
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
-  const { getCodecFixtureFile } = await import("@/test/codec_utils.js");
+  const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("PreimagesExtrinsicImpl", () => {
     it("preimages_extrinsic.bin", () => {
       const bin = getCodecFixtureFile("preimages_extrinsic.bin");

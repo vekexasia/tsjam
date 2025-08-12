@@ -1,8 +1,8 @@
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl";
-import { KappaImpl } from "@/classes/KappaImpl";
-import { LambdaImpl } from "@/classes/LambdaImpl";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
-import { IdentitySet } from "@/data_structures/identitySet";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl";
+import { KappaImpl } from "@/classes/kappa-impl";
+import { LambdaImpl } from "@/classes/lambda-impl";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { IdentitySet } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
   codec,

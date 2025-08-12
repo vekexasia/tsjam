@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { AuthorizerPoolImpl } from "@/classes/AuthorizerPoolImpl";
-import { AuthorizerQueueImpl } from "@/classes/AuthorizerQueueImpl";
+import { AuthorizerPoolImpl } from "@/classes/authorizer-pool-impl";
+import { AuthorizerQueueImpl } from "@/classes/authorizer-queue-impl";
 import {
   GuaranteesExtrinsicImpl,
   SingleWorkReportGuaranteeImpl,
 } from "@/classes/extrinsics/guarantees";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl";
-import { WorkReportImpl } from "@/classes/WorkReportImpl";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl";
+import { WorkReportImpl } from "@/classes/work-report-impl";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -21,7 +21,7 @@ import {
 import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
-import { HashCodec, xBytesCodec } from "@/codecs/miscCodecs";
+import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
 import { CORES } from "@tsjam/constants";
 
 export const getCodecFixtureFile = (

@@ -1,0 +1,53 @@
+import { HashCodec } from "@/codecs/misc-codecs";
+import {
+  ArrayOfJSONCodec,
+  BaseJamCodecable,
+  createSequenceCodec,
+  JamCodecable,
+  sequenceCodec,
+  SINGLE_ELEMENT_CLASS,
+} from "@tsjam/codec";
+import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
+import {
+  AuthorizerHash,
+  AuthorizerQueue,
+  CoreIndex,
+  Hash,
+  SeqOfLength,
+} from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
+
+/**
+ * `ω`
+ * Defines the ready but not yet accumulated work reports
+ * $(0.7.1 - 12.3)
+ */
+@JamCodecable()
+export class AuthorizerQueueImpl
+  extends BaseJamCodecable
+  implements AuthorizerQueue
+{
+  @sequenceCodec(
+    CORES,
+    {
+      ...createSequenceCodec(AUTHQUEUE_MAX_SIZE, HashCodec),
+      ...ArrayOfJSONCodec<SeqOfLength<Hash, typeof AUTHQUEUE_MAX_SIZE>>(
+        HashCodec,
+      ),
+    },
+    SINGLE_ELEMENT_CLASS,
+  )
+  elements!: SeqOfLength<
+    SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE>,
+    typeof CORES
+  >;
+
+  constructor(config?: ConditionalExcept<AuthorizerQueueImpl, Function>) {
+    super();
+    Object.assign(this, config);
+  }
+
+  queueAtCore(core: CoreIndex) {
+    return this.elements[core];
+  }
+}

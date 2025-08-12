@@ -1,16 +1,16 @@
-import { DisputesStateImpl } from "@/classes/DisputesStateImpl.js";
-import { HeaderEpochMarkerImpl } from "@/classes/HeaderEpochMarkerImpl.js";
-import { JamEntropyImpl } from "@/classes/JamEntropyImpl.js";
-import { JamHeaderImpl } from "@/classes/JamHeaderImpl.js";
-import { JamStateImpl } from "@/classes/JamStateImpl.js";
-import { KappaImpl } from "@/classes/KappaImpl.js";
-import { LambdaImpl } from "@/classes/LambdaImpl.js";
-import { SafroleStateImpl } from "@/classes/SafroleStateImpl.js";
-import { SlotImpl, TauImpl } from "@/classes/SlotImpl.js";
-import { TicketImpl } from "@/classes/TicketImpl.js";
-import { ValidatorsImpl } from "@/classes/ValidatorsImpl.js";
+import { DisputesStateImpl } from "@/classes/disputes-state-impl.js";
+import { HeaderEpochMarkerImpl } from "@/classes/header-epoch-marker-impl.js";
+import { JamEntropyImpl } from "@/classes/jam-entropy-impl.js";
+import { JamHeaderImpl } from "@/classes/jam-header-impl.js";
+import { JamStateImpl } from "@/classes/jam-state-impl.js";
+import { KappaImpl } from "@/classes/kappa-impl.js";
+import { LambdaImpl } from "@/classes/lambda-impl.js";
+import { SafroleStateImpl } from "@/classes/safrole-state-impl.js";
+import { SlotImpl, TauImpl } from "@/classes/slot-impl.js";
+import { TicketImpl } from "@/classes/ticket-impl.js";
+import { ValidatorsImpl } from "@/classes/validators-impl.js";
 import { TicketsExtrinsicImpl } from "@/classes/extrinsics/tickets.js";
-import { HashCodec } from "@/codecs/miscCodecs.js";
+import { HashCodec } from "@/codecs/misc-codecs.js";
 import {
   BaseJamCodecable,
   binaryCodec,

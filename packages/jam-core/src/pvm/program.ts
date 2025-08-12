@@ -1,5 +1,5 @@
-import { PVMRegisterImpl } from "@/classes/pvm/PVMRegisterImpl";
-import { PVMRegistersImpl } from "@/classes/pvm/PVMRegistersImpl";
+import { PVMRegisterImpl } from "@/classes/pvm/pvm-register-impl";
+import { PVMRegistersImpl } from "@/classes/pvm/pvm-registers-impl";
 import { createCodec, E_4_int, E_sub_int } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import {
@@ -11,7 +11,7 @@ import {
   u32,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { MemoryContent, PVMHeap, PVMMemory } from "./pvmMemory";
+import { MemoryContent, PVMHeap, PVMMemory } from "./pvm-memory";
 
 // constants defined in $(0.6.4 - A.38)
 const Zz = 2 ** 16;

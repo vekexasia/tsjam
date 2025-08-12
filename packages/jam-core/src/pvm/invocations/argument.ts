@@ -1,4 +1,4 @@
-import { WorkOutputImpl } from "@/classes/WorkOutputImpl";
+import { WorkOutputImpl } from "@/classes/work-output-impl";
 import {
   Gas,
   PVMProgramCode,
@@ -7,7 +7,7 @@ import {
   WorkError,
 } from "@tsjam/types";
 import { programInitialization } from "../program";
-import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./hostCall";
+import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./host-call";
 
 /**
  * `ΨM` in the paper
