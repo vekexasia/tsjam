@@ -1,11 +1,12 @@
 import { Posterior, Validated, WorkPackageHash } from "@tsjam/types";
-import { AccumulationHistoryImpl } from "./accumulation-history-impl";
+import type { AccumulationHistoryImpl } from "./accumulation-history-impl";
+import type { AccumulationQueueImpl } from "./accumulation-queue-impl";
+import type { TauImpl } from "./slot-impl";
 import {
-  AccumulationQueueImpl,
-  AccumulationQueueItem,
-} from "./accumulation-queue-impl";
-import { TauImpl } from "./slot-impl";
-import { AccumulatableWorkReports, WorkReportImpl } from "./work-report-impl";
+  type AccumulatableWorkReports,
+  WorkReportImpl,
+} from "./work-report-impl";
+import { AccumulationQueueItem } from "./accumulation-queue-item";
 
 /**
  * `bold R`

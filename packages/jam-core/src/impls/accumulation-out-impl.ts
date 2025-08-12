@@ -1,7 +1,7 @@
 import { AccumulationOut, Gas, Hash, ServiceIndex } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
-import { DeferredTransfersImpl } from "./deferred-transfers-impl";
-import { PVMAccumulationStateImpl } from "./pvm/pvm-accumulation-state-impl";
+import type { DeferredTransfersImpl } from "./deferred-transfers-impl";
+import type { PVMAccumulationStateImpl } from "./pvm/pvm-accumulation-state-impl";
 
 /**
  * `O`

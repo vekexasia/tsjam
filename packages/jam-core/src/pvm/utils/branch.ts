@@ -1,11 +1,11 @@
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import {
-  PVMIxEvaluateFNContext,
-  u32,
-  PVMSingleModPointer,
   PVMExitReasonMod,
+  PVMIxEvaluateFNContext,
+  PVMSingleModPointer,
+  u32,
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
-import type { PVMExitReasonImpl } from "@/impls";
 
 /**
  * Branch to the given address if the condition is true.

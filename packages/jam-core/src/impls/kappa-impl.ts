@@ -1,8 +1,8 @@
 import { cloneCodecable, JamCodecable } from "@tsjam/codec";
 import { Posterior, Validated } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
-import { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
 
 @JamCodecable()

@@ -49,18 +49,18 @@ import {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { AccumulationHistoryImpl } from "../accumulation-history-impl";
-import { AccumulationQueueImpl } from "../accumulation-queue-impl";
-import { AuthorizerPoolImpl } from "../authorizer-pool-impl";
-import { BetaImpl } from "../beta-impl";
-import { DeltaImpl } from "../delta-impl";
-import { DisputesStateImpl } from "../disputes-state-impl";
-import { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
-import { JamEntropyImpl } from "../jam-entropy-impl";
-import { JamStateImpl } from "../jam-state-impl";
-import { RecentHistoryImpl } from "../recent-history-impl";
-import { RHOImpl } from "../rho-impl";
-import { SlotImpl, TauImpl } from "../slot-impl";
+import type { AccumulationHistoryImpl } from "../accumulation-history-impl";
+import type { AccumulationQueueImpl } from "../accumulation-queue-impl";
+import type { AuthorizerPoolImpl } from "../authorizer-pool-impl";
+import type { BetaImpl } from "../beta-impl";
+import type { DeltaImpl } from "../delta-impl";
+import type { DisputesStateImpl } from "../disputes-state-impl";
+import type { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
+import type { JamEntropyImpl } from "../jam-entropy-impl";
+import type { JamStateImpl } from "../jam-state-impl";
+import type { RecentHistoryImpl } from "../recent-history-impl";
+import type { RHOImpl } from "../rho-impl";
+import { SlotImpl, type TauImpl } from "../slot-impl";
 import { WorkReportImpl } from "../work-report-impl";
 
 @JamCodecable()

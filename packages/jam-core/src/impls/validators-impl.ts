@@ -17,7 +17,7 @@ import {
 import { ValidatorDataImpl } from "./validator-data-impl";
 import assert from "assert";
 import { ConditionalExcept } from "type-fest";
-import { DisputesStateImpl } from "./disputes-state-impl";
+import type { DisputesStateImpl } from "./disputes-state-impl";
 import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()

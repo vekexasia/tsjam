@@ -1,41 +1,41 @@
 import { accumulateReports } from "@/accumulate";
-import { bits, M_fn, merkleStateMap } from "@/merklization";
 import { Bandersnatch } from "@tsjam/crypto";
 import { JamState, Posterior, StateRootHash, Tagged } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { AccumulationHistoryImpl } from "./accumulation-history-impl";
-import { AccumulationQueueImpl } from "./accumulation-queue-impl";
-import { AuthorizerPoolImpl } from "./authorizer-pool-impl";
-import { AuthorizerQueueImpl } from "./authorizer-queue-impl";
-import { BetaImpl } from "./beta-impl";
-import { DeltaImpl } from "./delta-impl";
+import type { AccumulationHistoryImpl } from "./accumulation-history-impl";
+import type { AccumulationQueueImpl } from "./accumulation-queue-impl";
+import type { AuthorizerPoolImpl } from "./authorizer-pool-impl";
+import type { AuthorizerQueueImpl } from "./authorizer-queue-impl";
+import type { BetaImpl } from "./beta-impl";
+import type { DeltaImpl } from "./delta-impl";
 import {
   DisputesStateImpl,
   DisputesToPosteriorError,
 } from "./disputes-state-impl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { EGError } from "./extrinsics/guarantees";
-import { EPError } from "./extrinsics/preimages";
-import { ETError } from "./extrinsics/tickets";
-import { GammaAError } from "./gamma-a-impl";
-import { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
-import { JamBlockImpl } from "./jam-block-impl";
-import { JamEntropyImpl } from "./jam-entropy-impl";
-import { JamStatisticsImpl } from "./jam-statistics-impl";
-import { KappaImpl } from "./kappa-impl";
-import { LambdaImpl } from "./lambda-impl";
-import { LastAccOutsImpl } from "./last-acc-outs-impl";
-import { PrivilegedServicesImpl } from "./privileged-services-impl";
-import { RHOImpl } from "./rho-impl";
-import { SafroleStateImpl } from "./safrole-state-impl";
-import { TauError, TauImpl } from "./slot-impl";
-import { ValidatorsImpl } from "./validators-impl";
-import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
-import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
-import { DisputesFaultError } from "./extrinsics/disputes/faults";
+import type { EGError } from "./extrinsics/guarantees";
+import type { EPError } from "./extrinsics/preimages";
+import type { ETError } from "./extrinsics/tickets";
+import type { GammaAError } from "./gamma-a-impl";
+import type { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
+import type { JamBlockImpl } from "./jam-block-impl";
+import type { JamEntropyImpl } from "./jam-entropy-impl";
+import type { JamStatisticsImpl } from "./jam-statistics-impl";
+import type { KappaImpl } from "./kappa-impl";
+import type { LambdaImpl } from "./lambda-impl";
+import type { LastAccOutsImpl } from "./last-acc-outs-impl";
+import type { PrivilegedServicesImpl } from "./privileged-services-impl";
+import type { RHOImpl } from "./rho-impl";
+import type { SafroleStateImpl } from "./safrole-state-impl";
+import type { TauError, TauImpl } from "./slot-impl";
+import type { ValidatorsImpl } from "./validators-impl";
+import type { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
+import type { DisputesCulpritError } from "./extrinsics/disputes/culprits";
+import type { DisputesFaultError } from "./extrinsics/disputes/faults";
+import { merkleStateMap, M_fn, bits } from "@/merklization/state";
 
 export class JamStateImpl implements JamState {
   /**

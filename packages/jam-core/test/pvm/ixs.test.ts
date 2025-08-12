@@ -10,9 +10,9 @@ import {
   u32,
 } from "@tsjam/types";
 import JSONBig from "json-bigint";
-import { PVMMemory } from "@/pvm";
 import { basicInvocation } from "@/pvm/invocations/basic";
 import { createEvContext } from "./mocks";
+import { PVMMemory } from "@/pvm/pvm-memory";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
 describe.skip("pvm", () => {

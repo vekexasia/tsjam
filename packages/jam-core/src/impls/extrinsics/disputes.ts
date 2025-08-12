@@ -2,12 +2,12 @@ import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { DisputeExtrinsic, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { JamStateImpl } from "../jam-state-impl";
-import { TauImpl } from "../slot-impl";
-import { DisputesCulpritError, DisputesCulprits } from "./disputes/culprits";
-import { DisputesFaultError, DisputesFaults } from "./disputes/faults";
+import type { JamStateImpl } from "../jam-state-impl";
+import type { TauImpl } from "../slot-impl";
+import { type DisputesCulpritError, DisputesCulprits } from "./disputes/culprits";
+import { type DisputesFaultError, DisputesFaults } from "./disputes/faults";
 
-import { DisputesVerdictError, DisputesVerdicts } from "./disputes/verdicts";
+import { type DisputesVerdictError, DisputesVerdicts } from "./disputes/verdicts";
 
 /**
  * codec order defined in $(0.7.1 - C.21)

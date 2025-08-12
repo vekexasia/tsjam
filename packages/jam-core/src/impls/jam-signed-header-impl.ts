@@ -24,10 +24,10 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
-import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import { JamStateImpl } from "./jam-state-impl";
-import { SafroleStateImpl } from "./safrole-state-impl";
-import { TicketImpl } from "./ticket-impl";
+import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { SafroleStateImpl } from "./safrole-state-impl";
+import type { TicketImpl } from "./ticket-impl";
 import { JamHeaderImpl } from "./jam-header-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet } from "@/data-structures/identity-set";

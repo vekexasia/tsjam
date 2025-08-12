@@ -2,7 +2,6 @@ import { DeltaImpl } from "@/impls/delta-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
-import { merkleStateMap, stateFromMerkleMap } from "@/merklization";
 import { traceJSONCodec } from "@/merklization/state-codecs";
 import { Hashing } from "@tsjam/crypto";
 import {
@@ -20,6 +19,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../utils";
 import { SlotImpl } from "@/impls/slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
+import { merkleStateMap } from "@/merklization/state";
+import { stateFromMerkleMap } from "@/merklization/reverse";
 
 describe("state serialization/deserialization", () => {
   it("should deserialize to same object", () => {

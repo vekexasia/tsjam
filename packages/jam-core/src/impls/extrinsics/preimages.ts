@@ -13,7 +13,7 @@ import { Hashing } from "@tsjam/crypto";
 import { EP_Extrinsic, EP_Tuple, ServiceIndex, Validated } from "@tsjam/types";
 import { Result, err, ok } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";
-import { DeltaImpl } from "../delta-impl";
+import type { DeltaImpl } from "../delta-impl";
 import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()

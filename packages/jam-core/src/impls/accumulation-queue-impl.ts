@@ -1,11 +1,8 @@
-import { HashCodec } from "@/codecs/misc-codecs";
-import { identitySetCodec } from "@/data-structures/identity-set";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   cloneCodecable,
-  codec,
   createArrayLengthDiscriminator,
   createSequenceCodec,
   JamCodecable,
@@ -13,38 +10,13 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import {
-  AccumulationQueue,
-  Posterior,
-  SeqOfLength,
-  WorkPackageHash,
-} from "@tsjam/types";
+import { AccumulationQueue, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { AccumulationHistoryImpl } from "./accumulation-history-impl";
+import type { AccumulationHistoryImpl } from "./accumulation-history-impl";
 import { E_Fn } from "./new-work-reports-impl";
-import { SlotImpl, TauImpl } from "./slot-impl";
-import { WorkReportImpl } from "./work-report-impl";
-
-@JamCodecable()
-export class AccumulationQueueItem extends BaseJamCodecable {
-  /**
-   * `bold_r`
-   */
-  @codec(WorkReportImpl)
-  workReport!: WorkReportImpl;
-  /**
-   * `bold_d`
-   * the unaccumulated dependencies of the workreport
-   */
-  @identitySetCodec(HashCodec)
-  dependencies!: Set<WorkPackageHash>;
-
-  constructor(config: ConditionalExcept<AccumulationQueueItem, Function>) {
-    super();
-    Object.assign(this, config);
-  }
-}
+import type { SlotImpl, TauImpl } from "./slot-impl";
+import { AccumulationQueueItem } from "./accumulation-queue-item";
 
 /**
  * `ω`

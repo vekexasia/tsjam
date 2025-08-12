@@ -1,7 +1,7 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { JamBlock } from "@tsjam/types";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
-import { JamStateImpl } from "./jam-state-impl";
+import type { JamStateImpl } from "./jam-state-impl";
 import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
 
 /**

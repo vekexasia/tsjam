@@ -41,7 +41,7 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { DeltaImpl } from "./delta-impl";
+import type { DeltaImpl } from "./delta-impl";
 import { WorkContextImpl } from "./work-context-impl";
 import { WorkItemImpl } from "./work-item-impl";
 import { WorkOutputImpl } from "./work-output-impl";

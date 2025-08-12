@@ -2,19 +2,19 @@ import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { Dagger, JamStatistics, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
+import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 import { CoreStatisticsImpl } from "./core-statistics-impl";
-import { DisputesStateImpl } from "./disputes-state-impl";
-import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
-import { JamEntropyImpl } from "./jam-entropy-impl";
-import { JamHeaderImpl } from "./jam-header-impl";
-import { JamStateImpl } from "./jam-state-impl";
-import { RHOImpl } from "./rho-impl";
+import type { DisputesStateImpl } from "./disputes-state-impl";
+import type { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
+import type { JamEntropyImpl } from "./jam-entropy-impl";
+import type { JamHeaderImpl } from "./jam-header-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { RHOImpl } from "./rho-impl";
 import { ServicesStatisticsImpl } from "./services-statistics-impl";
-import { TauImpl } from "./slot-impl";
+import type { TauImpl } from "./slot-impl";
 import { ValidatorStatisticsImpl } from "./validator-statistics-impl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 
 /**
  * $(0.7.1 - 13.1)

@@ -9,8 +9,8 @@ import { GammaA, Posterior, UpToSeq, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
 import { compareUint8Arrays } from "uint8array-extras";
 

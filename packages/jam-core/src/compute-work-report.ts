@@ -12,8 +12,6 @@ import {
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import { erasureCoding, transpose } from "@tsjam/erasurecoding";
-import { AvailabilitySpecificationImpl, WorkDigestImpl, WorkOutputImpl, WorkReportImpl } from "@/impls";
-import type { DeltaImpl, TauImpl, WorkPackageImpl } from "@/impls";
 import {
   CoreIndex,
   ExportSegment,
@@ -33,17 +31,22 @@ import {
 } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
-
+import { WorkReportImpl } from ".";
+import { HashCodec } from "./codecs/misc-codecs";
+import { IdentityMap } from "./data-structures/identity-map";
+import { AvailabilitySpecificationImpl } from "./impls/availability-specification-impl";
+import { DeltaImpl } from "./impls/delta-impl";
+import { TauImpl } from "./impls/slot-impl";
+import { WorkDigestImpl } from "./impls/work-digest-impl";
+import { WorkOutputImpl } from "./impls/work-output-impl";
+import { WorkPackageImpl } from "./impls/work-package-impl";
+import { wellBalancedBinaryMerkleRoot } from "./merklization/binary";
 import {
   constantDepthBinaryTree,
   J_fn,
   L_fn as Leaf_fn,
-  wellBalancedBinaryMerkleRoot,
-} from "./merklization";
-import { refineInvocation } from "./pvm";
-
-import { HashCodec } from "./codecs/misc-codecs";
-import { IdentityMap } from "./data-structures/identity-map";
+} from "./merklization/constant-depth";
+import { refineInvocation } from "./pvm/invocations/refine";
 
 export const computationWorkReportError = "t not in B:wr" as const;
 /**

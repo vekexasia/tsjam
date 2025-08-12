@@ -1,5 +1,5 @@
 import { HashCodec } from "@/codecs/misc-codecs";
-import { appendMMR, wellBalancedBinaryMerkleRoot } from "@/merklization";
+import { wellBalancedBinaryMerkleRoot } from "@/merklization/binary";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -23,10 +23,11 @@ import {
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { JamHeaderImpl } from "./jam-header-impl";
-import { LastAccOutsImpl } from "./last-acc-outs-impl";
+import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import type { JamHeaderImpl } from "./jam-header-impl";
+import type { LastAccOutsImpl } from "./last-acc-outs-impl";
 import { RecentHistoryImpl } from "./recent-history-impl";
+import { appendMMR } from "@/merklization/mmr";
 
 /**
  * $(0.7.1 - 7.1 / 7.3)

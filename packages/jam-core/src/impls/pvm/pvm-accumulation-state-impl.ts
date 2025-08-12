@@ -6,9 +6,9 @@ import {
   ServiceIndex,
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
-import { AuthorizerQueueImpl } from "../authorizer-queue-impl";
-import { DeltaImpl } from "../delta-impl";
-import { ValidatorsImpl } from "../validators-impl";
+import type { AuthorizerQueueImpl } from "../authorizer-queue-impl";
+import type { DeltaImpl } from "../delta-impl";
+import type { ValidatorsImpl } from "../validators-impl";
 import { toTagged } from "@tsjam/utils";
 import { cloneCodecable } from "@tsjam/codec";
 

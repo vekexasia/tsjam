@@ -26,12 +26,12 @@ import {
   Validated,
 } from "@tsjam/types";
 import { err, ok, Result } from "neverthrow";
-import { GammaAImpl } from "../gamma-a-impl";
-import { JamEntropyImpl } from "../jam-entropy-impl";
-import { SafroleStateImpl } from "../safrole-state-impl";
+import type { GammaAImpl } from "../gamma-a-impl";
+import type { JamEntropyImpl } from "../jam-entropy-impl";
+import type { SafroleStateImpl } from "../safrole-state-impl";
 import { TicketImpl } from "../ticket-impl";
-import { GammaZImpl } from "../gamma-z-impl";
-import { TauImpl } from "../slot-impl";
+import type { GammaZImpl } from "../gamma-z-impl";
+import type { TauImpl } from "../slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet } from "@/data-structures/identity-set";
 import { compareUint8Arrays } from "uint8array-extras";

@@ -26,10 +26,10 @@ import {
   ValidatorIndex,
 } from "@tsjam/types";
 import { compareUint8Arrays } from "uint8array-extras";
-import { JamHeaderImpl } from "../jam-header-impl";
-import { JamStateImpl } from "../jam-state-impl";
+import type { JamHeaderImpl } from "../jam-header-impl";
+import type { JamStateImpl } from "../jam-state-impl";
 import { NewWorkReportsImpl } from "../new-work-reports-impl";
-import { RHOImpl } from "../rho-impl";
+import type { RHOImpl } from "../rho-impl";
 
 /**
  * Single extrinsic element

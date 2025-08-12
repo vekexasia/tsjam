@@ -1,6 +1,5 @@
-import type { ServiceAccountImpl } from "@/impls";
-import { SlotImpl } from "@/impls";
-
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { SlotImpl } from "@/impls/slot-impl";
 import {
   createCodec,
   E_sub,

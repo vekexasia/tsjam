@@ -1,7 +1,7 @@
-import assert from "node:assert";
-import { u8 } from "@tsjam/types";
-import { E_sub } from "@tsjam/codec";
 import { X_fn } from "@/pvm/instructions/utils";
+import { E_sub } from "@tsjam/codec";
+import { u8 } from "@tsjam/types";
+import assert from "node:assert";
 /**
  * Reads a varint from a buffer. it follows the X formula from the graypaper appendix A.
  * @param buf - buffer to read from

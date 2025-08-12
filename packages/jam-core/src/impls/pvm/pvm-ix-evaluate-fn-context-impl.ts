@@ -1,7 +1,7 @@
 import { PVMIxEvaluateFNContext, PVMProgram } from "@tsjam/types";
-import { PVMProgramExecutionContextImpl } from "./pvm-program-execution-context-impl";
-import { ParsedProgram } from "@/pvm";
+import type { PVMProgramExecutionContextImpl } from "./pvm-program-execution-context-impl";
 import { ConditionalExcept } from "type-fest";
+import { ParsedProgram } from "@/pvm/parse-program";
 
 export class PVMIxEvaluateFNContextImpl implements PVMIxEvaluateFNContext {
   execution!: PVMProgramExecutionContextImpl;

@@ -2,8 +2,8 @@ import { SafeMap } from "@/data-structures/safe-map";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import { HeaderLookupHistory } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
-import { SlotImpl } from "./slot-impl";
+import type { JamSignedHeaderImpl } from "./jam-signed-header-impl";
+import type { SlotImpl } from "./slot-impl";
 
 /**
  * This is not really defined in graypaper

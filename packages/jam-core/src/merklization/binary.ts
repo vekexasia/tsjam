@@ -1,7 +1,7 @@
+import { Hashing } from "@tsjam/crypto";
 import { Hash, MerkleTreeRoot } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
-import { Hashing } from "@tsjam/crypto";
 import { HashFn } from "./utils";
 
 const $node: Uint8Array = new TextEncoder().encode("node");

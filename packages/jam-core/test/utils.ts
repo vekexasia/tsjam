@@ -1,8 +1,5 @@
 import { AccumulationHistoryImpl } from "@/impls/accumulation-history-impl";
-import {
-  AccumulationQueueImpl,
-  AccumulationQueueItem,
-} from "@/impls/accumulation-queue-impl";
+import { AccumulationQueueImpl } from "@/impls/accumulation-queue-impl";
 import { AuthorizerPoolImpl } from "@/impls/authorizer-pool-impl";
 import { AuthorizerQueueImpl } from "@/impls/authorizer-queue-impl";
 import { BetaImpl } from "@/impls/beta-impl";
@@ -60,6 +57,7 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
+import { AccumulationQueueItem } from "@/impls/accumulation-queue-item";
 
 export const dummyValidator = (): ValidatorDataImpl => {
   return new ValidatorDataImpl({

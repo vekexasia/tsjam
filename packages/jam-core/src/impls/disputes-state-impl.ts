@@ -9,8 +9,8 @@ import {
 import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { JamStateImpl } from "./jam-state-impl";
-import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import {

@@ -2,9 +2,9 @@ import { PHI_FN } from "@/utils";
 import { JamCodecable } from "@tsjam/codec";
 import { Posterior, Tagged, Validated } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
-import { DisputesStateImpl } from "./disputes-state-impl";
-import { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
+import type { DisputesStateImpl } from "./disputes-state-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
 
 @JamCodecable()

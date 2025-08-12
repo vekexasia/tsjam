@@ -1,4 +1,4 @@
-import { encodeWithCodec, E_4 } from "@tsjam/codec";
+import { E_4, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Hash, ServiceIndex, StateKey } from "@tsjam/types";
 

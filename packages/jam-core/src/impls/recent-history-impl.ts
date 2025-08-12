@@ -18,12 +18,12 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
-import { JamHeaderImpl } from "./jam-header-impl";
+import type { JamHeaderImpl } from "./jam-header-impl";
 import { RecentHistoryItemImpl } from "./recent-history-item-impl";
-import { MMRSuperPeak } from "@/merklization";
-import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { ConditionalExcept } from "type-fest";
 import { IdentitySet } from "@/data-structures/identity-set";
+import { MMRSuperPeak } from "@/merklization/mmr";
 
 @JamCodecable()
 export class RecentHistoryImpl

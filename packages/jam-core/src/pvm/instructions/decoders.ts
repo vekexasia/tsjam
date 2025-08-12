@@ -1,5 +1,4 @@
 import { E_8, E_sub } from "@tsjam/codec";
-import type { PVMIxEvaluateFNContextImpl } from "@/impls";
 import {
   u8,
   RegisterIdentifier,
@@ -10,6 +9,7 @@ import {
 import assert from "node:assert";
 import { readVarIntFromBuffer } from "../utils/varint";
 import { Z } from "../utils/zed";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 export const NoArgIxDecoder = () => null;
 export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;

@@ -1,11 +1,11 @@
-import { toSafeMemoryAddress } from "@/pvm";
+import { toSafeMemoryAddress } from "@/pvm/pvm-memory";
 import {
   BaseJamCodecable,
   eSubBigIntCodec,
   JamCodecable,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { PVMRegisterValue, PVMRegisterRawValue, u32, u64 } from "@tsjam/types";
+import { PVMRegisterRawValue, PVMRegisterValue, u32, u64 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 

@@ -9,8 +9,10 @@ import {
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
 import { PVMMemory } from "../pvm-memory";
-import { PVMRegisterImpl } from "@/impls";
-import type { PVMExitReasonImpl, PVMProgramExecutionContextImpl, PVMResultContextImpl } from "@/impls";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
+import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;

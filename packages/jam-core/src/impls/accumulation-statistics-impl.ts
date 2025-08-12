@@ -5,7 +5,7 @@ import {
   ServiceIndex,
   u32,
 } from "@tsjam/types";
-import { AccumulatableWorkReports } from "./work-report-impl";
+import type { AccumulatableWorkReports } from "./work-report-impl";
 import { ConditionalExcept } from "type-fest";
 
 /**

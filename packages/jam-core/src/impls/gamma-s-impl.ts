@@ -21,8 +21,8 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {

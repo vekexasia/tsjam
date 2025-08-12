@@ -25,7 +25,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
-import { SlotImpl } from "./slot-impl";
+import type { SlotImpl } from "./slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { ConditionalExcept } from "type-fest";
 

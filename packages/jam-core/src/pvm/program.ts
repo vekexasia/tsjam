@@ -1,6 +1,7 @@
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
+import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
 import { createCodec, E_4_int, E_sub_int } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
-import { PVMRegisterImpl, PVMRegistersImpl } from "@/impls";
 import {
   Page,
   PVMMemoryAccessKind,

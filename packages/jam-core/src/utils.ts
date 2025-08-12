@@ -1,5 +1,4 @@
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import type { DisputesStateImpl, TicketImpl } from "@/impls";
 import {
   BandersnatchKey,
   ED25519PublicKey,
@@ -7,6 +6,8 @@ import {
   SeqOfLength,
   ValidatorData,
 } from "@tsjam/types";
+import { DisputesStateImpl } from "./impls/disputes-state-impl";
+import { TicketImpl } from "./impls/ticket-impl";
 
 /**
  * Z fn

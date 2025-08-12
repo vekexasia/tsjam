@@ -27,9 +27,9 @@ import {
 import { AvailabilitySpecificationImpl } from "./availability-specification-impl";
 import { WorkContextImpl } from "./work-context-impl";
 import { WorkDigestImpl } from "./work-digest-impl";
-import { RHOImpl } from "./rho-impl";
+import type { RHOImpl } from "./rho-impl";
 import { Hashing } from "@tsjam/crypto";
-import { type NewWorkReportsImpl } from "./new-work-reports-impl";
+import type { NewWorkReportsImpl } from "./new-work-reports-impl";
 import { ConditionalExcept } from "type-fest";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";

@@ -21,11 +21,11 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import { NewWorkReportsImpl } from "./new-work-reports-impl";
-import { RHOImpl } from "./rho-impl";
+import type { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import type { NewWorkReportsImpl } from "./new-work-reports-impl";
+import type { RHOImpl } from "./rho-impl";
 import { SingleCoreStatisticsImpl } from "./single-core-statistics-impl";
-import { WorkReportImpl } from "./work-report-impl";
+import type { WorkReportImpl } from "./work-report-impl";
 
 @JamCodecable()
 export class CoreStatisticsImpl

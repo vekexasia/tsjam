@@ -22,10 +22,10 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { SingleServiceStatisticsImpl } from "./single-service-statistics-impl";
-import { WorkReportImpl } from "./work-report-impl";
-import { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
+import type { WorkReportImpl } from "./work-report-impl";
+import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 
 @JamCodecable()
 export class ServicesStatisticsImpl

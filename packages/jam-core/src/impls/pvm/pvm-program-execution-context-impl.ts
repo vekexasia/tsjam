@@ -1,7 +1,7 @@
-import { PVMMemory } from "@/pvm";
 import { Gas, PVMProgramExecutionContext, u32 } from "@tsjam/types";
-import { PVMRegistersImpl } from "./pvm-registers-impl";
+import type { PVMRegistersImpl } from "./pvm-registers-impl";
 import { ConditionalExcept } from "type-fest";
+import { PVMMemory } from "@/pvm/pvm-memory";
 
 export class PVMProgramExecutionContextImpl
   implements PVMProgramExecutionContext

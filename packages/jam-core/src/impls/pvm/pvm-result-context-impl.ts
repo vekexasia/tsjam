@@ -1,7 +1,7 @@
 import { Hash, PVMResultContext, ServiceIndex } from "@tsjam/types";
-import { PVMAccumulationStateImpl } from "./pvm-accumulation-state-impl";
+import type { PVMAccumulationStateImpl } from "./pvm-accumulation-state-impl";
 import { ConditionalExcept } from "type-fest";
-import { DeferredTransfersImpl } from "../deferred-transfers-impl";
+import type { DeferredTransfersImpl } from "../deferred-transfers-impl";
 import { cloneCodecable } from "@tsjam/codec";
 
 /**

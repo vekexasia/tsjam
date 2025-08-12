@@ -26,7 +26,7 @@ import {
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { SlotImpl } from "./slot-impl";
-import { WorkReportImpl } from "./work-report-impl";
+import type { WorkReportImpl } from "./work-report-impl";
 
 @JamCodecable() // $(0.7.0 - C.16)
 export class JamBlockExtrinsicsImpl

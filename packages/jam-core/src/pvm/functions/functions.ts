@@ -1,8 +1,4 @@
-import { xBytesCodec } from "@tsjam/codec";
-import { DeferredTransferImpl, DeltaImpl, MerkleServiceAccountStorageImpl, PVMAccumulationStateImpl, PVMProgramExecutionContextImpl, PVMRegistersImpl, PVMResultContextImpl, PrivilegedServicesImpl, ServiceAccountImpl, SlotImpl, ValidatorsImpl, WorkItemImpl, WorkPackageImpl } from "@/impls";
-import type { PVMExitReasonImpl, TauImpl } from "@/impls";
-import { PVMAccumulationOpImpl } from "@/impls";
-
+import { LengthDiscrimantedIdentity, xBytesCodec } from "@tsjam/codec";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import {
@@ -90,6 +86,22 @@ import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
+import { DeltaImpl } from "@/impls/delta-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
+import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
+import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
+import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
+import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { TauImpl, SlotImpl } from "@/impls/slot-impl";
+import { ValidatorsImpl } from "@/impls/validators-impl";
+import { WorkItemImpl } from "@/impls/work-item-impl";
+import { type WorkPackageImpl } from "@/impls/work-package-impl";
+import { WorkContextImpl } from "@/impls/work-context-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -215,14 +227,8 @@ export class HostFunctions {
       case 8n: {
         if (typeof args.p !== "undefined") {
           v = new Uint8Array([
-            ...encodeWithCodec(
-              WorkPackageImpl.codecOf("authCodeHash"),
-              args.p.authCodeHash,
-            ),
-            ...encodeWithCodec(
-              WorkPackageImpl.codecOf("authConfig"),
-              args.p.authConfig,
-            ),
+            ...encodeWithCodec(HashCodec, args.p.authCodeHash),
+            ...encodeWithCodec(LengthDiscrimantedIdentity, args.p.authConfig),
           ]);
         }
         break;
@@ -235,10 +241,7 @@ export class HostFunctions {
       }
       case 10n: {
         if (typeof args.p !== "undefined") {
-          v = encodeWithCodec(
-            WorkPackageImpl.codecOf("context"),
-            args.p.context,
-          );
+          v = encodeWithCodec(WorkContextImpl, args.p.context);
         }
         break;
       }
@@ -1212,6 +1215,7 @@ export class HostFunctions {
     if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
       return [IxMod.panic()];
     } else {
+      // FIXME: structuredclone
       const x_bold_s_prime = structuredClone(x.bold_s());
 
       x_bold_s_prime.codeHash = <CodeHash>(

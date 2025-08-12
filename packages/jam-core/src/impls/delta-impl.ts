@@ -11,10 +11,10 @@ import {
   Validated,
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
-import { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
-import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
-import { ServiceAccountImpl } from "./service-account-impl";
-import { TauImpl } from "./slot-impl";
+import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
+import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import type { ServiceAccountImpl } from "./service-account-impl";
+import type { TauImpl } from "./slot-impl";
 
 /**
  * `δ` or delta in the graypaper

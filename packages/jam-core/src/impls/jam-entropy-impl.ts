@@ -7,8 +7,8 @@ import {
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { Blake2bHash, JamEntropy, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
+import type { JamStateImpl } from "./jam-state-impl";
+import type { TauImpl } from "./slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 
 /**

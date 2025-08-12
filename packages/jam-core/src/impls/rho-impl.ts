@@ -26,10 +26,10 @@ import {
 import { toDagger, toDoubleDagger, toPosterior } from "@tsjam/utils";
 import assert from "assert";
 import { ConditionalExcept } from "type-fest";
-import { DisputesStateImpl } from "./disputes-state-impl";
-import { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import { NewWorkReportsImpl } from "./new-work-reports-impl";
-import { SlotImpl, TauImpl } from "./slot-impl";
+import type { DisputesStateImpl } from "./disputes-state-impl";
+import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import type { NewWorkReportsImpl } from "./new-work-reports-impl";
+import { SlotImpl, type TauImpl } from "./slot-impl";
 import { WorkReportImpl } from "./work-report-impl";
 
 @JamCodecable()
