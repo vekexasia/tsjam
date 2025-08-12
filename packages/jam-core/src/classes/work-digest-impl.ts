@@ -12,11 +12,11 @@ import {
   JamCodecable,
   jsonCodec,
   NumberJSONCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { Gas, Hash, ServiceIndex, u16, u32, WorkDigest } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "./work-output-impl";
-import { xBytesCodec } from "@/codecs/misc-codecs";
 
 /**
  * Identified by `D` set

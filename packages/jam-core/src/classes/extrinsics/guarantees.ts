@@ -1,3 +1,6 @@
+import { HashCodec } from "@/codecs/misc-codecs";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentitySet } from "@/data-structures/identity-set";
 import { FisherYatesH } from "@/fisher-yates";
 import {
   BaseJamCodecable,
@@ -7,6 +10,7 @@ import {
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   CORES,
@@ -45,22 +49,19 @@ import {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
+import { AccumulationHistoryImpl } from "../accumulation-history-impl";
+import { AccumulationQueueImpl } from "../accumulation-queue-impl";
+import { AuthorizerPoolImpl } from "../authorizer-pool-impl";
+import { BetaImpl } from "../beta-impl";
+import { DeltaImpl } from "../delta-impl";
 import { DisputesStateImpl } from "../disputes-state-impl";
+import { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
 import { JamEntropyImpl } from "../jam-entropy-impl";
 import { JamStateImpl } from "../jam-state-impl";
 import { RecentHistoryImpl } from "../recent-history-impl";
 import { RHOImpl } from "../rho-impl";
 import { SlotImpl, TauImpl } from "../slot-impl";
 import { WorkReportImpl } from "../work-report-impl";
-import { IdentitySet } from "@/data-structures/identity-set";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
-import { AuthorizerPoolImpl } from "../authorizer-pool-impl";
-import { DeltaImpl } from "../delta-impl";
-import { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
-import { AccumulationQueueImpl } from "../accumulation-queue-impl";
-import { BetaImpl } from "../beta-impl";
-import { AccumulationHistoryImpl } from "../accumulation-history-impl";
-import { IdentityMap } from "@/data-structures/identity-map";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl

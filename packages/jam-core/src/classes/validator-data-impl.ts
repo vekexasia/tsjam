@@ -1,5 +1,9 @@
-import { xBytesCodec } from "@/codecs/misc-codecs";
-import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
+import {
+  BaseJamCodecable,
+  codec,
+  JamCodecable,
+  xBytesCodec,
+} from "@tsjam/codec";
 import {
   BandersnatchKey,
   BLSKey,

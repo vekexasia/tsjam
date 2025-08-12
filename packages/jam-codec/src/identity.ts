@@ -1,5 +1,7 @@
 import { JamCodec } from "@/codec.js";
 import { ByteArrayOfLength } from "@tsjam/types";
+import { BufferJSONCodec } from "./json/codecs";
+import { JSONCodec } from "./json/json-codec";
 
 // $(0.6.4 - C.2)
 export const IdentityCodec: JamCodec<Uint8Array> = {
@@ -33,4 +35,14 @@ export const fixedSizeIdentityCodec = <
       return size;
     },
   };
+};
+
+export const xBytesCodec = <T extends ByteArrayOfLength<K>, K extends number>(
+  k: K,
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <JamCodec<T> & JSONCodec<T>>(<any>{
+    ...fixedSizeIdentityCodec(k),
+    ...BufferJSONCodec(),
+  });
 };

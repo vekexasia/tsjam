@@ -1,9 +1,10 @@
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   codec,
   JamCodecable,
   sequenceCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {

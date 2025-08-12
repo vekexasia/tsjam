@@ -1,4 +1,5 @@
 import { DeferredTransferImpl } from "@/classes/deferred-transfer-impl";
+import { xBytesCodec } from "@tsjam/codec";
 import { DeltaImpl } from "@/classes/delta-impl";
 import { MerkleServiceAccountStorageImpl } from "@/classes/merkle-service-account-storage-impl";
 import { PrivilegedServicesImpl } from "@/classes/privileged-services-impl";
@@ -13,7 +14,7 @@ import { SlotImpl, TauImpl } from "@/classes/slot-impl";
 import { ValidatorsImpl } from "@/classes/validators-impl";
 import { WorkItemImpl } from "@/classes/work-item-impl";
 import { WorkPackageImpl } from "@/classes/work-package-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import {
   cloneCodecable,

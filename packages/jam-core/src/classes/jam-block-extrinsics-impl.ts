@@ -1,3 +1,4 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   codec,
@@ -7,6 +8,7 @@ import {
   encodeWithCodec,
   JamCodec,
   JamCodecable,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import {
@@ -23,9 +25,8 @@ import {
 } from "./extrinsics/guarantees";
 import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
-import { WorkReportImpl } from "./work-report-impl";
 import { SlotImpl } from "./slot-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { WorkReportImpl } from "./work-report-impl";
 
 @JamCodecable() // $(0.7.0 - C.16)
 export class JamBlockExtrinsicsImpl

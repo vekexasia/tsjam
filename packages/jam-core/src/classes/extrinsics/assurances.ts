@@ -1,3 +1,4 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   BitSequenceCodec,
@@ -8,8 +9,10 @@ import {
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { CORES, JAM_AVAILABLE, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { Ed25519, Hashing } from "@tsjam/crypto";
 import {
   AssuranceExtrinsic,
   CoreIndex,
@@ -22,13 +25,11 @@ import {
   Validated,
   ValidatorIndex,
 } from "@tsjam/types";
+import { compareUint8Arrays } from "uint8array-extras";
 import { JamHeaderImpl } from "../jam-header-impl";
 import { JamStateImpl } from "../jam-state-impl";
-import { RHOImpl } from "../rho-impl";
-import { Ed25519, Hashing } from "@tsjam/crypto";
 import { NewWorkReportsImpl } from "../new-work-reports-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
-import { compareUint8Arrays } from "uint8array-extras";
+import { RHOImpl } from "../rho-impl";
 
 /**
  * Single extrinsic element

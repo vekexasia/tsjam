@@ -18,7 +18,7 @@ import { RHOImpl } from "@/classes/rho-impl";
 import { ServiceAccountImpl } from "@/classes/service-account-impl";
 import { ServicesStatisticsImpl } from "@/classes/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/classes/slot-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import {
@@ -35,6 +35,7 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
   WrapJSONCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   Balance,

@@ -2,7 +2,7 @@ import { DisputesStateImpl } from "@/classes/disputes-state-impl";
 import { KappaImpl } from "@/classes/kappa-impl";
 import { LambdaImpl } from "@/classes/lambda-impl";
 import { TauImpl } from "@/classes/slot-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   booleanCodec,
@@ -12,6 +12,7 @@ import {
   lengthDiscriminatedCodec,
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   JAM_INVALID,

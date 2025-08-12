@@ -1,6 +1,5 @@
 import { ServiceAccountImpl } from "@/classes/service-account-impl";
 import { SlotImpl } from "@/classes/slot-impl";
-import { xBytesCodec } from "@/codecs/misc-codecs";
 import {
   createCodec,
   E_sub,
@@ -9,6 +8,7 @@ import {
   JSONCodec,
   MapJSONCodec,
   Uint8ArrayJSONCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   Balance,

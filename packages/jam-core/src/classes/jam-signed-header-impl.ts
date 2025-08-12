@@ -1,5 +1,10 @@
 import { outsideInSequencer } from "@/utils";
-import { codec, encodeWithCodec, JamCodecable } from "@tsjam/codec";
+import {
+  codec,
+  encodeWithCodec,
+  JamCodecable,
+  xBytesCodec,
+} from "@tsjam/codec";
 import {
   EPOCH_LENGTH,
   JAM_ENTROPY,
@@ -24,7 +29,7 @@ import { JamStateImpl } from "./jam-state-impl";
 import { SafroleStateImpl } from "./safrole-state-impl";
 import { TicketImpl } from "./ticket-impl";
 import { JamHeaderImpl } from "./jam-header-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet } from "@/data-structures/identity-set";
 
 /**

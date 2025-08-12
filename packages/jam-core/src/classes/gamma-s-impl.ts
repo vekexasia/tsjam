@@ -1,4 +1,4 @@
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { outsideInSequencer } from "@/utils";
 import {
   BaseJamCodecable,
@@ -6,6 +6,7 @@ import {
   E_4,
   encodeWithCodec,
   sequenceCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";

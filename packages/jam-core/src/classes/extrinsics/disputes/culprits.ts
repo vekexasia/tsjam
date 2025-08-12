@@ -1,7 +1,7 @@
 import { DisputesStateImpl } from "@/classes/disputes-state-impl";
 import { KappaImpl } from "@/classes/kappa-impl";
 import { LambdaImpl } from "@/classes/lambda-impl";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
@@ -9,6 +9,7 @@ import {
   JamCodecable,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { JAM_GUARANTEE } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";

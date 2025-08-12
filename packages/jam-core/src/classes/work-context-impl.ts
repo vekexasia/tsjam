@@ -3,6 +3,7 @@ import {
   codec,
   JamCodecable,
   lengthDiscriminatedCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   BeefyRootHash,
@@ -12,7 +13,6 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { SlotImpl } from "./slot-impl";
-import { xBytesCodec } from "@/codecs/misc-codecs";
 
 /**
  * `C` set

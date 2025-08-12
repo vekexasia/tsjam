@@ -1,4 +1,4 @@
-import { BaseJamCodecable, JamCodecable } from "@tsjam/codec";
+import { BaseJamCodecable, JamCodecable, xBytesCodec } from "@tsjam/codec";
 import {
   ED25519PublicKey,
   Hash,
@@ -11,7 +11,7 @@ import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { JamStateImpl } from "./jam-state-impl";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import {
   DisputesVerdicts as DisputesVerdicts,

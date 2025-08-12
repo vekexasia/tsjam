@@ -1,9 +1,9 @@
-import { xBytesCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   codec,
   JamCodecable,
   SINGLE_ELEMENT_CLASS,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
 import {

@@ -1,4 +1,4 @@
-import { HashCodec, xBytesCodec } from "@/codecs/misc-codecs";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -9,6 +9,7 @@ import {
   JamCodecable,
   lengthDiscriminatedCodec,
   optionalCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
