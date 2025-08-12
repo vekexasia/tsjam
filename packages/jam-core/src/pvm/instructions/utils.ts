@@ -1,4 +1,3 @@
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import {
   Gas,
   PVMExitReasonMod,
@@ -14,6 +13,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
+import { PVMExitReasonImpl } from "@/impls";
 
 export const X_fn = (n: bigint) => (x: bigint) =>
   x + (x / 2n ** (8n * n - 1n)) * (2n ** 64n - 2n ** (8n * n));

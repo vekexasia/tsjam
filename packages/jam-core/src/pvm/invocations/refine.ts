@@ -1,6 +1,3 @@
-import { DeltaImpl } from "@/impls/delta-impl";
-import { WorkOutputImpl } from "@/impls/work-output-impl";
-import { WorkPackageImpl } from "@/impls/work-package-impl";
 import {
   createCodec,
   E_int,
@@ -9,6 +6,7 @@ import {
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
+import { DeltaImpl, TauImpl, WorkOutputImpl, WorkPackageImpl } from "@/impls";
 import {
   CoreIndex,
   ExportSegment,
@@ -26,7 +24,7 @@ import { applyMods } from "../functions/utils";
 import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
-import { TauImpl } from "@/impls/slot-impl";
+
 import { HashCodec } from "@/codecs/misc-codecs";
 
 const refine_a_Codec = createCodec<{

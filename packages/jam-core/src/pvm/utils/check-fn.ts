@@ -1,6 +1,6 @@
-import { DeltaImpl } from "@/impls/delta-impl";
 import { MINIMUM_PUBLIC_SERVICE_INDEX } from "@tsjam/constants";
 import { ServiceIndex } from "@tsjam/types";
+import { DeltaImpl } from "@/impls";
 
 /**
  * $(0.7.1 - B.14)

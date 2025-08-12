@@ -1,5 +1,5 @@
-import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { E_8, E_sub } from "@tsjam/codec";
+import { PVMIxEvaluateFNContextImpl } from "@/impls";
 import {
   u8,
   RegisterIdentifier,

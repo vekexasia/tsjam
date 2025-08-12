@@ -5,7 +5,7 @@ import {
   PVMExitReasonMod,
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMExitReasonImpl } from "@/impls";
 
 /**
  * Branch to the given address if the condition is true.

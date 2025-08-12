@@ -13,6 +13,15 @@ import {
 import { Hashing } from "@tsjam/crypto";
 import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 import {
+  AvailabilitySpecificationImpl,
+  DeltaImpl,
+  TauImpl,
+  WorkDigestImpl,
+  WorkOutputImpl,
+  WorkPackageImpl,
+  WorkReportImpl,
+} from "@/impls";
+import {
   CoreIndex,
   ExportSegment,
   Gas,
@@ -31,12 +40,7 @@ import {
 } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
-import { AvailabilitySpecificationImpl } from "./impls/availability-specification-impl";
-import { DeltaImpl } from "./impls/delta-impl";
-import { WorkDigestImpl } from "./impls/work-digest-impl";
-import { WorkOutputImpl } from "./impls/work-output-impl";
-import { WorkPackageImpl } from "./impls/work-package-impl";
-import { WorkReportImpl } from "./impls/work-report-impl";
+
 import {
   constantDepthBinaryTree,
   J_fn,
@@ -44,7 +48,7 @@ import {
   wellBalancedBinaryMerkleRoot,
 } from "./merklization";
 import { refineInvocation } from "./pvm";
-import { TauImpl } from "./impls/slot-impl";
+
 import { HashCodec } from "./codecs/misc-codecs";
 import { IdentityMap } from "./data-structures/identity-map";
 

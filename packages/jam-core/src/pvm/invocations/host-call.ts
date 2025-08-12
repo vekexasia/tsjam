@@ -1,7 +1,6 @@
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { u8 } from "@tsjam/types";
 import { basicInvocation } from "./basic";
+import { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
 
 /**
  * Host call invocation
