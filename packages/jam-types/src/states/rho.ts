@@ -1,6 +1,6 @@
-import { SeqOfLength } from "@/genericTypes";
-import { WorkReport } from "@/sets/WorkReport";
-import { Slot } from "@/Slot";
+import { SeqOfLength } from "@/generic-types";
+import { WorkReport } from "@/sets/work-report";
+import { Slot } from "@/slot";
 import { CORES } from "@tsjam/constants";
 
 /**

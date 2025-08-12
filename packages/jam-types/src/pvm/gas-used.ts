@@ -1,0 +1,15 @@
+import { ServiceIndex, Gas } from "@/generic-types";
+
+/*
+ * `gasused` gas used by each service
+ * also known as `U`
+ * $(0.7.1 - 12.17)
+ */
+export type GasUsed = {
+  elements: Array<{
+    // `s`
+    serviceIndex: ServiceIndex;
+    // `u`
+    gasUsed: Gas;
+  }>;
+};

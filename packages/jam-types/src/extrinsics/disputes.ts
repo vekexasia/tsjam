@@ -5,7 +5,7 @@ import {
   SeqOfLength,
   ValidatorIndex,
   u32,
-} from "@/genericTypes";
+} from "@/generic-types";
 import { MINIMUM_VALIDATORS } from "@tsjam/constants";
 
 /**

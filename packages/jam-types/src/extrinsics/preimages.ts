@@ -1,4 +1,4 @@
-import { ServiceIndex } from "@/genericTypes";
+import { ServiceIndex } from "@/generic-types";
 
 /**
  *

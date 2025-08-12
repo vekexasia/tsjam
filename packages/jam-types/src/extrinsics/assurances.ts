@@ -4,7 +4,7 @@ import {
   SeqOfLength,
   UpToSeq,
   ValidatorIndex,
-} from "@/genericTypes";
+} from "@/generic-types";
 import { CORES, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 /**

@@ -1,4 +1,4 @@
-import { RingVRFProof, UpToSeq } from "@/genericTypes.js";
+import { RingVRFProof, UpToSeq } from "@/generic-types";
 
 export type TicketsExtrinsicElement = {
   /**

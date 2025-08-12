@@ -1,9 +1,5 @@
 import { JamCodec } from "@/codec.js";
-import {
-  binaryCodec,
-  jsonCodec,
-  SINGLE_ELEMENT_CLASS,
-} from "@/decorators";
+import { binaryCodec, jsonCodec, SINGLE_ELEMENT_CLASS } from "@/decorators";
 import { NULLORCodec } from "./json/codecs";
 import { JSONCodec } from "./json/json-codec";
 

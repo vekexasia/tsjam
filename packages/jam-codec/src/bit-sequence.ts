@@ -1,10 +1,6 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
-import {
-  binaryCodec,
-  jsonCodec,
-  SINGLE_ELEMENT_CLASS,
-} from "@/decorators";
+import { binaryCodec, jsonCodec, SINGLE_ELEMENT_CLASS } from "@/decorators";
 import { CORES } from "@tsjam/constants";
 import { AssuranceExtrinsic, ByteArrayOfLength } from "@tsjam/types";
 import { ZipJSONCodecs, BufferJSONCodec } from "./json/codecs.js";

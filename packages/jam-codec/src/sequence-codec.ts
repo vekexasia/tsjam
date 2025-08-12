@@ -1,11 +1,7 @@
 import { JamCodec } from "@/codec.js";
 import assert from "node:assert";
 import { SeqOfLength } from "@tsjam/types";
-import {
-  binaryCodec,
-  jsonCodec,
-  SINGLE_ELEMENT_CLASS,
-} from "@/decorators";
+import { binaryCodec, jsonCodec, SINGLE_ELEMENT_CLASS } from "@/decorators";
 import { ArrayOfJSONCodec } from "./json/codecs";
 import { JSONCodec } from "./json/json-codec";
 type ExtractLength<T> = T extends SeqOfLength<unknown, infer B> ? B : never;

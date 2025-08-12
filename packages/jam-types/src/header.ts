@@ -8,10 +8,10 @@ import {
   SeqOfLength,
   StateRootHash,
   ValidatorIndex,
-} from "@/genericTypes.js";
-import { Slot } from "@/Slot.js";
+} from "@/generic-types";
+import { Slot } from "@/slot";
 import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { Ticket } from "./sets/Ticket.js";
+import { Ticket } from "./sets/ticket";
 /**
  * $(0.7.1 - 5.10)
  */

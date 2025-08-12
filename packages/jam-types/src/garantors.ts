@@ -4,7 +4,7 @@ import {
   ED25519PublicKey,
   SeqOfLength,
   Tagged,
-} from "@/genericTypes.js";
+} from "@/generic-types";
 
 /**
  * Guarantors assignments. Every block each core has 3 validators assigned to guarantee work reports for it
