@@ -1,6 +1,6 @@
-import { binaryCodec, jsonCodec } from "@/class/mainDecorators";
+import { binaryCodec, jsonCodec } from "@/decorators";
 import { JamCodec } from "@/codec";
-import { E_8, E_sub } from "@/ints/E_subscr.js";
+import { E_8, E_sub } from "@/ints/e-subscr.js";
 import { BigIntJSONCodec, NumberJSONCodec } from "@/json/codecs";
 import { mapCodec } from "@/utils";
 import assert from "node:assert";

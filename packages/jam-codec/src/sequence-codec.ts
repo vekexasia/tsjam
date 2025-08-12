@@ -5,9 +5,9 @@ import {
   binaryCodec,
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
-} from "./class/mainDecorators";
+} from "@/decorators";
 import { ArrayOfJSONCodec } from "./json/codecs";
-import { JSONCodec } from "./json/JsonCodec";
+import { JSONCodec } from "./json/json-codec";
 type ExtractLength<T> = T extends SeqOfLength<unknown, infer B> ? B : never;
 
 export const createSequenceCodec = <

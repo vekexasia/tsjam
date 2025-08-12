@@ -1,6 +1,6 @@
 import { JamCodec } from "@/codec";
 import assert from "node:assert";
-import { LittleEndian } from "@/ints/littleEndian";
+import { LittleEndian } from "@/ints/little-endian";
 import { E } from "@/ints/e";
 
 /**

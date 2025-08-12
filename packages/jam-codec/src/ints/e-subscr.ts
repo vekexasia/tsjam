@@ -1,10 +1,7 @@
-import {
-  binaryCodec,
-  jsonCodec,
-  SINGLE_ELEMENT_CLASS,
-} from "@/class/mainDecorators";
 import { JamCodec } from "@/codec";
-import { LittleEndian } from "@/ints/littleEndian";
+import { SINGLE_ELEMENT_CLASS } from "@/decorators/base";
+import { binaryCodec, jsonCodec } from "@/decorators/decorators";
+import { LittleEndian } from "@/ints/little-endian";
 import { BigIntJSONCodec, NumberJSONCodec } from "@/json/codecs";
 import { u16, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";

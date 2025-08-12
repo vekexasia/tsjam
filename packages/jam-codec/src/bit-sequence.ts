@@ -4,7 +4,7 @@ import {
   binaryCodec,
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
-} from "./class/mainDecorators";
+} from "@/decorators";
 import { CORES } from "@tsjam/constants";
 import { AssuranceExtrinsic, ByteArrayOfLength } from "@tsjam/types";
 import { ZipJSONCodecs, BufferJSONCodec } from "./json/codecs.js";

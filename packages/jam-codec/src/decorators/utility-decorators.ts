@@ -1,7 +1,8 @@
 import { mapCodec } from "@/utils";
-import { binaryCodec, jsonCodec, SINGLE_ELEMENT_CLASS } from "./mainDecorators";
-import { E_1_int } from "@/ints/E_subscr";
+import { E_1_int } from "@/ints/e-subscr";
 import { u8 } from "@tsjam/types";
+import { SINGLE_ELEMENT_CLASS } from "./base";
+import { binaryCodec, jsonCodec } from "./decorators";
 
 export const booleanCodec = (
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,

@@ -1,4 +1,4 @@
-import { createArrayLengthDiscriminator } from "@/lengthdiscriminated/arrayLengthDiscriminator.js";
+import { createArrayLengthDiscriminator } from "@/length-discriminated/array-length-discriminator.js";
 import { IdentityCodec } from "@/identity";
 
 /**

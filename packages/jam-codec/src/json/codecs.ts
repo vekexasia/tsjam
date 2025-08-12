@@ -1,5 +1,5 @@
 import { ByteArrayOfLength } from "@tsjam/types";
-import { JSONCodec } from "./JsonCodec";
+import { JSONCodec } from "./json-codec";
 
 const bufToHex = (b: Uint8Array) => `0x${Buffer.from(b).toString("hex")}`;
 

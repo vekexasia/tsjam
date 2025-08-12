@@ -2,11 +2,11 @@ import {
   binaryCodec,
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
-} from "@/class/mainDecorators";
+} from "@/decorators";
 import { JamCodec } from "@/codec.js";
 import { ArrayOfJSONCodec } from "@/json/codecs";
-import { JSONCodec } from "@/json/JsonCodec";
-import { LengthDiscriminator } from "@/lengthdiscriminated/lengthDiscriminator.js";
+import { JSONCodec } from "@/json/json-codec";
+import { LengthDiscriminator } from "@/length-discriminated/length-discriminator.js";
 
 /**
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements

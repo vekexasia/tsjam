@@ -3,9 +3,9 @@ import {
   binaryCodec,
   jsonCodec,
   SINGLE_ELEMENT_CLASS,
-} from "./class/mainDecorators";
+} from "@/decorators";
 import { NULLORCodec } from "./json/codecs";
-import { JSONCodec } from "./json/JsonCodec";
+import { JSONCodec } from "./json/json-codec";
 
 /**
  * OptCodec is a codec that allows for optional values

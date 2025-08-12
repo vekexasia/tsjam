@@ -2,7 +2,7 @@ import { JamCodec } from "@/codec.js";
 import {
   LengthDiscSubCodec,
   LengthDiscriminator,
-} from "@/lengthdiscriminated/lengthDiscriminator.js";
+} from "@/length-discriminated/length-discriminator.js";
 
 /**
  * builds a generic dictionaty codec by providing all items
