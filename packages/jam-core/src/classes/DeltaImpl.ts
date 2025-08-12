@@ -91,8 +91,8 @@ export class DeltaImpl implements Delta {
     },
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = new DeltaImpl();
-    for (const serviceIndex of d_delta.services()) {
-      const a = structuredClone(d_delta.get(serviceIndex)!);
+    for (const serviceIndex of this.services()) {
+      const a = structuredClone(this.get(serviceIndex)!);
       if (deps.accumulationStatistics.has(serviceIndex)) {
         a.lastAcc = deps.p_tau;
       }
