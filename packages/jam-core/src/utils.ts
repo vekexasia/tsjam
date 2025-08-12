@@ -1,5 +1,5 @@
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { DisputesStateImpl, TicketImpl } from "@/impls";
+import type { DisputesStateImpl, TicketImpl } from "@/impls";
 import {
   BandersnatchKey,
   ED25519PublicKey,

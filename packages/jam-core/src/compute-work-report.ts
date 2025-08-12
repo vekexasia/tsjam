@@ -12,15 +12,8 @@ import {
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import { erasureCoding, transpose } from "@tsjam/erasurecoding";
-import {
-  AvailabilitySpecificationImpl,
-  DeltaImpl,
-  TauImpl,
-  WorkDigestImpl,
-  WorkOutputImpl,
-  WorkPackageImpl,
-  WorkReportImpl,
-} from "@/impls";
+import { AvailabilitySpecificationImpl, WorkDigestImpl, WorkOutputImpl, WorkReportImpl } from "@/impls";
+import type { DeltaImpl, TauImpl, WorkPackageImpl } from "@/impls";
 import {
   CoreIndex,
   ExportSegment,

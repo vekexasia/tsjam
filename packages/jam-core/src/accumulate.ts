@@ -16,25 +16,8 @@ import {
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import { ok } from "neverthrow";
-import {
-  AccumulationHistoryImpl,
-  AccumulationInputInpl,
-  AccumulationOutImpl,
-  AccumulationQueueImpl,
-  AccumulationStatisticsImpl,
-  AuthorizerQueueImpl,
-  DeferredTransfersImpl,
-  DeltaImpl,
-  LastAccOutsImpl,
-  NewWorkReportsImpl,
-  PVMAccumulationOpImpl,
-  PVMAccumulationStateImpl,
-  PrivilegedServicesImpl,
-  SlotImpl,
-  TauImpl,
-  ValidatorsImpl,
-  WorkReportImpl,
-} from "@/impls";
+import { AccumulationInputInpl, AccumulationStatisticsImpl, AuthorizerQueueImpl, DeferredTransfersImpl, DeltaImpl, LastAccOutsImpl, PVMAccumulationOpImpl, PVMAccumulationStateImpl, PrivilegedServicesImpl } from "@/impls";
+import type { AccumulationHistoryImpl, AccumulationOutImpl, AccumulationQueueImpl, NewWorkReportsImpl, SlotImpl, TauImpl, ValidatorsImpl, WorkReportImpl } from "@/impls";
 
 import { accumulateInvocation } from "./pvm";
 

@@ -10,7 +10,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { IxMod } from "../instructions/utils";
-import { PVMProgramExecutionContextImpl } from "@/impls";
+import type { PVMProgramExecutionContextImpl } from "@/impls";
 
 export const FnsDb = {
   byCode: new Map<u8, string>(),

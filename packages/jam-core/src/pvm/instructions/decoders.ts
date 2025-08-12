@@ -1,5 +1,5 @@
 import { E_8, E_sub } from "@tsjam/codec";
-import { PVMIxEvaluateFNContextImpl } from "@/impls";
+import type { PVMIxEvaluateFNContextImpl } from "@/impls";
 import {
   u8,
   RegisterIdentifier,

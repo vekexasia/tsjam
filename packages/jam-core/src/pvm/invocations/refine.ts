@@ -6,7 +6,8 @@ import {
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import { DeltaImpl, TauImpl, WorkOutputImpl, WorkPackageImpl } from "@/impls";
+import { WorkOutputImpl } from "@/impls";
+import type { DeltaImpl, TauImpl, WorkPackageImpl } from "@/impls";
 import {
   CoreIndex,
   ExportSegment,

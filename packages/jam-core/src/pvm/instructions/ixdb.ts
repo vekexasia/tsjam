@@ -1,5 +1,5 @@
 import { Gas, PVMIx, PVMIxDecodeFN, PVMIxReturnMods, u8 } from "@tsjam/types";
-import { PVMIxEvaluateFNContextImpl } from "@/impls";
+import type { PVMIxEvaluateFNContextImpl } from "@/impls";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown>>(),

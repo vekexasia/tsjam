@@ -9,12 +9,8 @@ import {
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
 import { PVMMemory } from "../pvm-memory";
-import {
-  PVMExitReasonImpl,
-  PVMProgramExecutionContextImpl,
-  PVMRegisterImpl,
-  PVMResultContextImpl,
-} from "@/impls";
+import { PVMRegisterImpl } from "@/impls";
+import type { PVMExitReasonImpl, PVMProgramExecutionContextImpl, PVMResultContextImpl } from "@/impls";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;

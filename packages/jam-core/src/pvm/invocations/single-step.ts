@@ -2,7 +2,7 @@ import { IParsedProgram, PVMProgram, Posterior } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { applyMods } from "../functions/utils";
 import { IxMod, TRAP_COST } from "../instructions/utils";
-import { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
+import type { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
 
 type Output = {
   p_context: Posterior<PVMProgramExecutionContextImpl>;

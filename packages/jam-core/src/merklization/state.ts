@@ -7,30 +7,8 @@ import {
   encodeWithCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import {
-  AccumulationHistoryImpl,
-  AccumulationQueueImpl,
-  AuthorizerPoolImpl,
-  AuthorizerQueueImpl,
-  BetaImpl,
-  DeltaImpl,
-  DisputesStateImpl,
-  HeaderLookupHistoryImpl,
-  JamEntropyImpl,
-  JamStateImpl,
-  JamStatisticsImpl,
-  KappaImpl,
-  LambdaImpl,
-  LastAccOutsImpl,
-  MerkleServiceAccountStorageImpl,
-  PrivilegedServicesImpl,
-  RHOImpl,
-  SafroleStateImpl,
-  ServiceAccountImpl,
-  SlotImpl,
-  TauImpl,
-  ValidatorsImpl,
-} from "@/impls";
+import { AccumulationHistoryImpl, AccumulationQueueImpl, AuthorizerPoolImpl, AuthorizerQueueImpl, BetaImpl, DeltaImpl, DisputesStateImpl, HeaderLookupHistoryImpl, JamEntropyImpl, JamStateImpl, JamStatisticsImpl, KappaImpl, LambdaImpl, LastAccOutsImpl, MerkleServiceAccountStorageImpl, PrivilegedServicesImpl, RHOImpl, SafroleStateImpl, ServiceAccountImpl, SlotImpl, ValidatorsImpl } from "@/impls";
+import type { TauImpl } from "@/impls";
 import {
   ByteArrayOfLength,
   Hash,

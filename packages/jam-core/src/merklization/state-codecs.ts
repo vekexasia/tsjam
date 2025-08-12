@@ -1,4 +1,5 @@
-import { ServiceAccountImpl, SlotImpl } from "@/impls";
+import type { ServiceAccountImpl } from "@/impls";
+import { SlotImpl } from "@/impls";
 
 import {
   createCodec,

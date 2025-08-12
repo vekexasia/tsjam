@@ -11,18 +11,9 @@ import {
   SERVICECODE_MAX_SIZE,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import {
-  AccumulationInputInpl,
-  AccumulationOutImpl,
-  DeferredTransfersImpl,
-  PVMAccumulationStateImpl,
-  PVMProgramExecutionContextImpl,
-  PVMResultContextImpl,
-  ServiceAccountImpl,
-  SlotImpl,
-  TauImpl,
-  WorkOutputImpl,
-} from "@/impls";
+import { AccumulationOutImpl, DeferredTransfersImpl, PVMResultContextImpl } from "@/impls";
+import type { AccumulationInputInpl, PVMAccumulationStateImpl, PVMProgramExecutionContextImpl, ServiceAccountImpl, TauImpl, WorkOutputImpl } from "@/impls";
+import { SlotImpl } from "@/impls";
 import {
   Balance,
   Gas,

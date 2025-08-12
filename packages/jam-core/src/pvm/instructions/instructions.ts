@@ -4,7 +4,7 @@ import { PVMIxReturnMods, PVMProgramExecutionContext, u32 } from "@tsjam/types";
 import { branch } from "../utils/branch";
 import { djump } from "../utils/djump";
 import { Z, Z4, Z8, Z8_inv } from "../utils/zed";
-import { PVMIxEvaluateFNContextImpl } from "@/impls";
+import type { PVMIxEvaluateFNContextImpl } from "@/impls";
 import {
   NoArgIxArgs,
   NoArgIxDecoder,

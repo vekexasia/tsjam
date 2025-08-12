@@ -2,7 +2,8 @@ import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { PVMProgram } from "@tsjam/types";
 import { ParsedProgram } from "../parse-program";
 import { pvmSingleStep } from "./single-step";
-import { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
+import { PVMExitReasonImpl } from "@/impls";
+import type { PVMProgramExecutionContextImpl } from "@/impls";
 
 /**
  * Basic invocation

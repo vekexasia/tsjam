@@ -1,22 +1,7 @@
 import { xBytesCodec } from "@tsjam/codec";
-import {
-  DeferredTransferImpl,
-  DeltaImpl,
-  MerkleServiceAccountStorageImpl,
-  PVMAccumulationOpImpl,
-  PVMAccumulationStateImpl,
-  PVMExitReasonImpl,
-  PVMProgramExecutionContextImpl,
-  PVMRegistersImpl,
-  PVMResultContextImpl,
-  PrivilegedServicesImpl,
-  ServiceAccountImpl,
-  SlotImpl,
-  TauImpl,
-  ValidatorsImpl,
-  WorkItemImpl,
-  WorkPackageImpl,
-} from "@/impls";
+import { DeferredTransferImpl, DeltaImpl, MerkleServiceAccountStorageImpl, PVMAccumulationStateImpl, PVMProgramExecutionContextImpl, PVMRegistersImpl, PVMResultContextImpl, PrivilegedServicesImpl, ServiceAccountImpl, SlotImpl, ValidatorsImpl, WorkItemImpl, WorkPackageImpl } from "@/impls";
+import type { PVMExitReasonImpl, TauImpl } from "@/impls";
+import { PVMAccumulationOpImpl } from "@/impls";
 
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";

@@ -1,6 +1,6 @@
 import { u8 } from "@tsjam/types";
 import { basicInvocation } from "./basic";
-import { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
+import type { PVMExitReasonImpl, PVMProgramExecutionContextImpl } from "@/impls";
 
 /**
  * Host call invocation
