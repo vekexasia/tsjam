@@ -1,19 +1,18 @@
-import {defineConfig} from "vitest/config";
+import { defineConfig } from "vitest/config";
 export default defineConfig({
   optimizeDeps: {
-    include: ["vitest > @vitest/expect > chai"]
+    include: ["vitest > @vitest/expect > chai"],
   },
   test: {
     globals: true,
-    includeSource: ['src/**/*.{js,ts}'],
+    includeSource: ["src/**/*.{js,ts}"],
     benchmark: {
-      include: ['test/benchmark/**/*.test.ts'],
+      include: ["test/benchmark/**/*.test.ts"],
     },
     coverage: {
-      provider: 'istanbul',
-      reporter: ['html', 'lcov', 'text-summary'],
-      include: ['src/**/*.ts'],
+      provider: "istanbul",
+      reporter: ["html", "lcov", "text-summary"],
+      include: ["src/**/*.ts"],
     },
-
-  }
-})
+  },
+});

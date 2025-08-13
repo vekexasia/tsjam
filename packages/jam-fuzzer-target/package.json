@@ -1,0 +1,36 @@
+{
+  "name": "@tsjam/fuzzer-target",
+  "version": "1.0.0",
+  "description": "Fuzzer Target for conformance Test for JAM",
+  "dependencies": {
+    "@tsjam/codec": "*",
+    "@tsjam/core": "*",
+    "neverthrow": "^8.1.1",
+    "type-fest": "^4.41.0"
+  },
+  "scripts": {
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "lint": "npx eslint --ext .ts src test",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && vitest run"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "import": "./dist/node.esm.mjs",
+        "default": "./dist/node.cjs.js"
+      },
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "license": "MIT"
+}

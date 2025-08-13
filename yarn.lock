@@ -1276,7 +1276,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tsjam/core@workspace:packages/jam-core":
+"@tsjam/core@npm:*, @tsjam/core@workspace:packages/jam-core":
   version: 0.0.0-use.local
   resolution: "@tsjam/core@workspace:packages/jam-core"
   dependencies:
@@ -1285,6 +1285,7 @@ __metadata:
     "@tsjam/crypto": "npm:*"
     "@tsjam/erasurecoding": "npm:*"
     "@tsjam/types": "npm:*"
+    "@tsjam/utils": "npm:*"
     "@types/json-bigint": "npm:^1"
     "@vekexasia/bigint-uint8array": "npm:^1.1.1"
     bigint-buffer: "npm:^1.1.5"
@@ -1326,6 +1327,17 @@ __metadata:
   dependencies:
     "@tsjam/constants": "npm:*"
     "@tsjam/types": "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/core": "npm:*"
+    neverthrow: "npm:^8.1.1"
+    type-fest: "npm:^4.41.0"
   languageName: unknown
   linkType: soft
 

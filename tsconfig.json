@@ -48,13 +48,10 @@
       "@tsjam/constants": ["../jam-constants/dist/types/index.d.ts"],
       "@tsjam/crypto": ["../jam-crypto/dist/types/index.d.ts"],
       "@tsjam/crypto-napi": ["../jam-crypto-napi/index.d.ts"],
-      "@tsjam/erasurecoding": ["../jam-erasurecoding/dist/types/index.d.ts"],
-      "@tsjam/merklization": ["../jam-merklization/dist/types/index.d.ts"],
       "@tsjam/pvm": ["../jam-pvm/dist/types/index.d.ts"],
-      "@tsjam/transitions": ["../jam-transitions/dist/types/index.d.ts"],
       "@tsjam/types": ["../jam-types/dist/types/index.d.ts"],
       "@tsjam/utils": ["../jam-utils/dist/types/index.d.ts"],
-      "@tsjam/serviceaccounts": ["../jam-serviceaccounts/dist/types/index.d.ts"],
+      "@tsjam/fuzzertarget": ["../jam-fuzzertarget/dist/types/index.d.ts"],
     }
 
   },
