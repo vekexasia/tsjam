@@ -1,6 +1,9 @@
 import { JamCodec } from "@/codec.js";
 import { IdentityCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
+import { BufferJSONCodec } from "@/json/codecs";
+import { JSONCodec } from "@/json/json-codec";
+import { encode } from "node:punycode";
 export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
   /**
    * Returns the length to store in the length discriminator
@@ -74,13 +77,17 @@ export const createLengthDiscriminatedIdentity = <
     },
   });
 };
-
+const x = createLengthDiscriminatedIdentity<Uint8Array>();
 /**
  * Utility to encode/decode a byteArray with a length discriminator
- * TODO: rename to ....Codec
  */
-export const LengthDiscrimantedIdentity =
-  createLengthDiscriminatedIdentity<Uint8Array>();
+export const LengthDiscrimantedIdentityCodec: JamCodec<Uint8Array> &
+  JSONCodec<Uint8Array> = {
+  encode: x.encode.bind(x),
+  decode: x.decode.bind(x),
+  encodedSize: x.encodedSize.bind(x),
+  ...BufferJSONCodec(),
+};
 
 if (import.meta.vitest) {
   const { E } = await import("@/ints/e.js");

@@ -53,7 +53,8 @@ export function codec<T, K extends string | symbol>(
   json?: JSONCodec<T> | string | typeof SINGLE_ELEMENT_CLASS,
   jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
 ) {
-  const key = typeof json === "string" ? json : jsonKey;
+  const key =
+    typeof json === "string" || json === SINGLE_ELEMENT_CLASS ? json : jsonKey;
   const _jsonCodec = typeof json === "object" ? json : <JSONCodec<T>>codec;
   return function (target: any, propertyKey: K) {
     binaryCodec(codec)(target, propertyKey);

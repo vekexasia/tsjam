@@ -135,32 +135,6 @@ export const WrapJSONCodec = <T, K extends string, X = any>(
   };
 };
 
-export const EitherOneOfJSONCodec = <Case1, Case2>(
-  case1Codec: JSONCodec<Case1>,
-  case2Codec: JSONCodec<Case2>,
-  case1Key: string,
-  case2Key: string,
-  valueDiscriminator: (v: Case1 | Case2) => v is Case1,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): JSONCodec<Case1 | Case2, any> => {
-  return {
-    fromJSON(json) {
-      if (case1Key in json) {
-        return case1Codec.fromJSON(json[case1Key]);
-      } else {
-        return case2Codec.fromJSON(json[case2Key]);
-      }
-    },
-    toJSON(value) {
-      if (valueDiscriminator(value)) {
-        return { [case1Key]: case1Codec.toJSON(value) };
-      } else {
-        return { [case2Key]: case2Codec.toJSON(value) };
-      }
-    },
-  };
-};
-
 export const NULLORCodec = <T, X>(
   tCodec: JSONCodec<T, X>,
 ): JSONCodec<T | undefined, X | null> => {
