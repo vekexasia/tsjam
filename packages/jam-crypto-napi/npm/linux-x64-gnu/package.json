@@ -1,6 +1,6 @@
 {
   "name": "jam-crypto-napi-linux-x64-gnu",
-  "version": "0.0.0",
+  "version": "0.7.1",
   "os": [
     "linux"
   ],
@@ -17,5 +17,6 @@
   },
   "libc": [
     "glibc"
-  ]
+  ],
+  "jam:protocolVersion": "0.7.1"
 }

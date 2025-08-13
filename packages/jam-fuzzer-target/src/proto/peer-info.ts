@@ -8,13 +8,15 @@ import {
   mapCodec,
 } from "@tsjam/codec";
 import { Version } from "./version";
+import { u8 } from "@tsjam/types";
+import packageJSON from "../../package.json";
 
 const Utf8JSONCodec = {
   fromJSON(json: string) {
-    return new Uint8Array(Buffer.from(json, "utf8"));
+    return json;
   },
-  toJSON(value: Uint8Array) {
-    return Buffer.from(value).toString("utf8");
+  toJSON(value: string) {
+    return value;
   },
 };
 
@@ -35,4 +37,24 @@ export class PeerInfo extends BaseJamCodecable {
 
   @codec(Version, "jam_version")
   jamVersion!: Version;
+
+  static build() {
+    const toRet = new PeerInfo();
+    toRet.name = "tsjam";
+    toRet.jamVersion = new Version();
+    toRet.jamVersion.major = <u8>(
+      parseInt(packageJSON["jam:protocolVersion"].split(".")[0])
+    );
+    toRet.jamVersion.minor = <u8>(
+      parseInt(packageJSON["jam:protocolVersion"].split(".")[1])
+    );
+    toRet.jamVersion.patch = <u8>(
+      parseInt(packageJSON["jam:protocolVersion"].split(".")[2])
+    );
+    toRet.appVersion = new Version();
+    toRet.appVersion.major = <u8>parseInt(packageJSON["version"].split(".")[0]);
+    toRet.appVersion.minor = <u8>parseInt(packageJSON["version"].split(".")[1]);
+    toRet.appVersion.patch = <u8>parseInt(packageJSON["version"].split(".")[2]);
+    return toRet;
+  }
 }

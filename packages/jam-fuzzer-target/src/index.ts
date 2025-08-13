@@ -13,6 +13,7 @@ import {
 } from "@tsjam/core";
 import assert from "node:assert";
 import { State } from "./proto/state";
+import { getConstantsMode } from "@tsjam/constants";
 
 const SOCKET_PATH = "/tmp/jam_target.sock";
 if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
@@ -24,17 +25,7 @@ const server = net.createServer((socket) => {
     const message = MessageCodec.decode(data).value;
     switch (message.type()) {
       case MessageType.PEER_INFO:
-        const pi = new PeerInfo();
-        pi.name = "tsjam";
-        pi.jamVersion = new Version();
-        pi.jamVersion.major = <u8>0;
-        pi.jamVersion.minor = <u8>7;
-        pi.jamVersion.patch = <u8>1;
-
-        pi.appVersion = new Version();
-        pi.appVersion.major = <u8>0;
-        pi.appVersion.minor = <u8>7;
-        pi.appVersion.patch = <u8>1;
+        const pi = PeerInfo.build();
 
         socket.write(
           encodeWithCodec(MessageCodec, new Message({ peerInfo: pi })),
@@ -94,7 +85,10 @@ const server = net.createServer((socket) => {
   });
   socket.on("error", (err) => console.error("Socket error:", err));
 });
+
 server.listen(SOCKET_PATH, () => {
   console.log("Listening on", SOCKET_PATH);
+  console.log("constant mode", getConstantsMode());
+  console.log(PeerInfo.build().toJSON());
 });
 server.on("error", (err) => console.error("Server error:", err));

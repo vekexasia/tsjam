@@ -15,9 +15,11 @@ export const RECENT_HISTORY_LENGTH = 8;
 /**
  * `V` in the paper
  */
-export const NUMBER_OF_VALIDATORS = 1023;
-export const MINIMUM_VALIDATORS = 683;
-export const CORES = 341;
+// These values can be switched at runtime via `initConstants`.
+// They are initialized to the "full" variant by default.
+export let NUMBER_OF_VALIDATORS = 1023 as const;
+export let MINIMUM_VALIDATORS = 683 as const;
+export let CORES = 341 as const;
 
 /**
  * referred as constant `Y` in the paper
@@ -27,17 +29,17 @@ export const LOTTERY_MAX_SLOT = 500;
 /**
  * referred as constant `E` in the paper
  */
-export const EPOCH_LENGTH = 600;
+export let EPOCH_LENGTH = 600 as const;
 
 /**
  * referred as constant `K` in the paper
  */
-export const MAX_TICKETS_PER_BLOCK = 16;
+export let MAX_TICKETS_PER_BLOCK = 16 as const;
 
 /**
  * `N` in the graypaper
  */
-export const MAX_TICKETS_PER_VALIDATOR = 2;
+export let MAX_TICKETS_PER_VALIDATOR = 2 as const;
 
 /**
  * `U` in the paper
@@ -248,3 +250,38 @@ export const Zp = 2 ** 12;
 
 // `S`
 export const MINIMUM_PUBLIC_SERVICE_INDEX = 2 ** 16;
+
+/**
+ * Runtime initialization helpers
+ *
+ * Call `initConstants()` early in your application bootstrap (before importing modules
+ * that rely on these variant-controlled values). If no `mode` is provided, the
+ * function reads `process.env.JAM_CONSTANTS` and falls back to `'full'`.
+ */
+let CURRENT_MODE: "full" | "tiny" = "full";
+
+// Synchronous initialization: import both variants statically and pick one
+import * as _full from "./variants/full";
+import * as _tiny from "./variants/tiny";
+
+export function initConstants(mode?: "full" | "tiny") {
+  const m = mode ?? (process.env.JAM_CONSTANTS === "tiny" ? "tiny" : "full");
+  if (m === CURRENT_MODE) return;
+  const v = m === "tiny" ? _tiny : _full;
+
+  NUMBER_OF_VALIDATORS = <1023>v.NUMBER_OF_VALIDATORS;
+  MINIMUM_VALIDATORS = <683>v.MINIMUM_VALIDATORS;
+  CORES = <341>v.CORES;
+  EPOCH_LENGTH = <600>v.EPOCH_LENGTH;
+  MAX_TICKETS_PER_BLOCK = <16>v.MAX_TICKETS_PER_BLOCK;
+  MAX_TICKETS_PER_VALIDATOR = <2>v.MAX_TICKETS_PER_VALIDATOR;
+
+  CURRENT_MODE = m;
+}
+
+export function getConstantsMode() {
+  return CURRENT_MODE;
+}
+
+// initialize once synchronously from ENV at module load (fallback to 'full')
+initConstants();

@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/erasurecoding",
-  "version": "1.0.0",
+  "version": "0.7.1",
   "description": "Erasure Coding in JAM",
   "dependencies": {
     "@tsjam/constants": "*",
@@ -30,5 +30,6 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "jam:protocolVersion": "0.7.1"
 }

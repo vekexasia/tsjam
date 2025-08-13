@@ -1,9 +1,10 @@
 {
   "name": "@tsjam/fuzzer-target",
-  "version": "1.0.0",
+  "version": "0.7.1",
   "description": "Fuzzer Target for conformance Test for JAM",
   "dependencies": {
     "@tsjam/codec": "*",
+    "@tsjam/constants": "*",
     "@tsjam/core": "*",
     "neverthrow": "^8.1.1",
     "type-fest": "^4.41.0"
@@ -32,5 +33,6 @@
     "email": "vekexasia@gmail.com",
     "name": "Andrea Baccega"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "jam:protocolVersion": "0.7.1"
 }

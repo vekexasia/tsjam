@@ -1,6 +1,6 @@
 {
   "name": "jam-crypto-napi-darwin-x64",
-  "version": "0.0.0",
+  "version": "0.7.1",
   "os": [
     "darwin"
   ],
@@ -14,5 +14,6 @@
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  }
+  },
+  "jam:protocolVersion": "0.7.1"
 }

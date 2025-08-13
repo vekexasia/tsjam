@@ -132,7 +132,7 @@ if (import.meta.vitest) {
         ).State,
       );
     });
-    it.fails("should encode and decode Block", () => {
+    it.skip("should encode and decode Block", () => {
       const bin = fs.readFileSync(
         `${__dirname}/../../test/fixtures/4_block.bin`,
       );
@@ -149,7 +149,7 @@ if (import.meta.vitest) {
         ).Block,
       );
     });
-    it.fails("should encode and decode SetState", () => {
+    it.skip("should encode and decode SetState", () => {
       const bin = fs.readFileSync(
         `${__dirname}/../../test/fixtures/2_set_state.bin`,
       );

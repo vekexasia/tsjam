@@ -1335,6 +1335,7 @@ __metadata:
   resolution: "@tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target"
   dependencies:
     "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
     "@tsjam/core": "npm:*"
     neverthrow: "npm:^8.1.1"
     type-fest: "npm:^4.41.0"
