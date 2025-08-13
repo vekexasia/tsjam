@@ -2,7 +2,7 @@ import {
   createCodec,
   IdentityCodec,
   JamCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import {
   SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
@@ -33,7 +33,7 @@ export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;
   metadata: Uint8Array;
 }>([
-  ["metadata", LengthDiscrimantedIdentity],
+  ["metadata", LengthDiscrimantedIdentityCodec],
   ["code", IdentityCodec as unknown as JamCodec<PVMProgramCode>],
 ]);
 

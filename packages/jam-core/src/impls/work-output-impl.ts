@@ -3,7 +3,7 @@ import {
   BufferJSONCodec,
   E,
   encodeWithCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import { WorkError, WorkOutput } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -85,7 +85,7 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
 
     if (value.isSuccess()) {
       offset = E.encode(0n, bytes);
-      offset += LengthDiscrimantedIdentity.encode(
+      offset += LengthDiscrimantedIdentityCodec.encode(
         value.success!,
         bytes.subarray(offset),
       );
@@ -122,7 +122,7 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
     if (value.isSuccess()) {
       return (
         E.encodedSize(0n) +
-        LengthDiscrimantedIdentity.encodedSize(value.success!)
+        LengthDiscrimantedIdentityCodec.encodedSize(value.success!)
       );
     }
     return E.encodedSize(1n);
@@ -136,7 +136,7 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
     readBytes: number;
   } {
     if (bytes[0] === 0) {
-      const r = LengthDiscrimantedIdentity.decode(bytes.subarray(1));
+      const r = LengthDiscrimantedIdentityCodec.decode(bytes.subarray(1));
       return {
         value: new WorkOutputImpl(r.value) as InstanceType<T>,
         readBytes: r.readBytes + 1,

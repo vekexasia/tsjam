@@ -6,7 +6,7 @@ import {
   eBigIntCodec,
   JamCodecable,
   jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import {
   Gas,
@@ -69,8 +69,7 @@ export class PVMAccumulationOpImpl
   /**
    * `bold_t` - comes from Workreport
    */
-  @jsonCodec(BufferJSONCodec())
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec)
   authTrace!: Uint8Array;
 
   constructor(config?: ConditionalExcept<PVMAccumulationOpImpl, Function>) {

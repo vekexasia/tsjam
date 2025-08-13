@@ -137,14 +137,3 @@ export const IdentityMapCodec = <
     }),
   };
 };
-export const identitySetCodec = <
-  T extends ByteArrayOfLength<K>,
-  K extends number,
->(
-  itemCodec: JamCodec<T> & JSONCodec<T>,
-  jsonKey?: string | typeof SINGLE_ELEMENT_CLASS,
-) => {
-  return function (target: unknown, propertyKey: string) {
-    codec(IdentitySetCodec(itemCodec), jsonKey)(target, propertyKey);
-  };
-};

@@ -13,7 +13,7 @@ import {
   JamCodec,
   JamCodecable,
   jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
   lengthDiscriminatedCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
@@ -139,8 +139,7 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
    * Obfuscated/Opaque data fed in the refine logic that should contain info about the work that
    * needs to be done
    */
-  @jsonCodec(BufferJSONCodec())
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec)
   payload!: WorkPayload;
 
   /**

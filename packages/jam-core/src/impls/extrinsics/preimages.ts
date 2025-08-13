@@ -1,28 +1,25 @@
 import {
   BaseJamCodecable,
-  binaryCodec,
-  BufferJSONCodec,
+  codec,
   eSubIntCodec,
   JamCodecable,
-  jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { EP_Extrinsic, EP_Tuple, ServiceIndex, Validated } from "@tsjam/types";
-import { Result, err, ok } from "neverthrow";
+import { toTagged } from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";
 import type { DeltaImpl } from "../delta-impl";
-import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
   @eSubIntCodec(4)
   requester!: ServiceIndex;
 
-  @jsonCodec(BufferJSONCodec())
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec)
   blob!: Uint8Array;
 }
 

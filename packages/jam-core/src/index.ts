@@ -73,3 +73,11 @@ export * from "./impls/extrinsics/disputes/culprits";
 export * from "./impls/extrinsics/disputes/faults";
 export * from "./impls/extrinsics/disputes/verdicts";
 export * from "./impls/extrinsics/guarantees";
+
+// data structures
+export * from "./data-structures/identity-map";
+export * from "./data-structures/identity-set";
+
+// merklization
+export * from "./merklization/state";
+export * from "./merklization/reverse";

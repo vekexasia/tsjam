@@ -7,7 +7,6 @@ import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
-  BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
   E_2_int,
@@ -15,7 +14,7 @@ import {
   eSubIntCodec,
   JamCodecable,
   jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import {
   HostCallResult,
@@ -75,15 +74,13 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   /**
    * `j`
    */
-  @jsonCodec(BufferJSONCodec(), "authorization")
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec, "authorization")
   authToken!: Authorization;
 
   /**
    * `bold f` - configuration blob
    */
-  @jsonCodec(BufferJSONCodec(), "authorizer_config")
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec, "authorizer_config")
   authConfig!: AuthorizationParams;
 
   /**
@@ -121,7 +118,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
       )!;
 
     const { value: metadata, readBytes: skip } =
-      LengthDiscrimantedIdentity.decode(encodedData);
+      LengthDiscrimantedIdentityCodec.decode(encodedData);
 
     const code = encodedData.slice(skip);
     return { metadata, code };

@@ -19,24 +19,17 @@ import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { RHOImpl } from "@/impls/rho-impl";
 import { SafroleStateImpl } from "@/impls/safrole-state-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
-import { TauImpl, SlotImpl } from "@/impls/slot-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { ValidatorsImpl } from "@/impls/validators-impl";
 import {
+  createArrayLengthDiscriminator,
+  E_4_int,
   E_sub_int,
   encodeWithCodec,
-  E_4_int,
-  createArrayLengthDiscriminator,
   JamCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import {
-  StateKey,
-  JamState,
-  ServiceIndex,
-  u64,
-  u32,
-  UpToSeq,
-} from "@tsjam/types";
+import { ServiceIndex, StateKey, u32, u64, UpToSeq } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { serviceAccountDataCodec } from "./state-codecs";
@@ -44,7 +37,7 @@ import { stateKey } from "./utils";
 
 export const stateFromMerkleMap = (
   merkleMap: IdentityMap<StateKey, 31, Uint8Array>,
-): JamState => {
+): JamStateImpl => {
   const authPool = AuthorizerPoolImpl.decode(merkleMap.get(stateKey(1))!).value;
 
   const authQueue = AuthorizerQueueImpl.decode(

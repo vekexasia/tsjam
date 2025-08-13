@@ -17,7 +17,7 @@ import {
   eSubIntCodec,
   JamCodecable,
   jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
   MapJSONCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
@@ -47,14 +47,10 @@ class LookupMetaMapKey extends BaseJamCodecable {
 @JamCodecable()
 class TestAccount extends BaseJamCodecable {
   @codec(
-    IdentityMapCodec(
-      HashCodec,
-      { ...LengthDiscrimantedIdentity, ...BufferJSONCodec() },
-      {
-        key: "hash",
-        value: "blob",
-      },
-    ),
+    IdentityMapCodec(HashCodec, LengthDiscrimantedIdentityCodec, {
+      key: "hash",
+      value: "blob",
+    }),
   )
   preimages!: ServiceAccountImpl["preimages"];
 

@@ -1,4 +1,4 @@
-import { LengthDiscrimantedIdentity, xBytesCodec } from "@tsjam/codec";
+import { LengthDiscrimantedIdentityCodec, xBytesCodec } from "@tsjam/codec";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import {
@@ -228,7 +228,10 @@ export class HostFunctions {
         if (typeof args.p !== "undefined") {
           v = new Uint8Array([
             ...encodeWithCodec(HashCodec, args.p.authCodeHash),
-            ...encodeWithCodec(LengthDiscrimantedIdentity, args.p.authConfig),
+            ...encodeWithCodec(
+              LengthDiscrimantedIdentityCodec,
+              args.p.authConfig,
+            ),
           ]);
         }
         break;

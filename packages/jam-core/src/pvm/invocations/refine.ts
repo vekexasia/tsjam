@@ -7,7 +7,7 @@ import {
   createCodec,
   E_int,
   encodeWithCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
@@ -97,7 +97,7 @@ export const refineInvocation = (
   });
   // @eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { value: _bold_z, readBytes: skip } =
-    LengthDiscrimantedIdentity.decode(lookupRes);
+    LengthDiscrimantedIdentityCodec.decode(lookupRes);
 
   const bold_c = <PVMProgramCode>lookupRes.subarray(skip);
 

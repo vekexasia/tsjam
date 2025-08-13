@@ -2,14 +2,13 @@ import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
-  BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
   E,
   E_int,
   JamCodecable,
   jsonCodec,
-  LengthDiscrimantedIdentity,
+  LengthDiscrimantedIdentityCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
@@ -77,8 +76,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**
    * `bold_t`
    */
-  @jsonCodec(BufferJSONCodec(), "auth_output")
-  @binaryCodec(LengthDiscrimantedIdentity)
+  @codec(LengthDiscrimantedIdentityCodec, "auth_output")
   authTrace!: Uint8Array;
 
   /**
