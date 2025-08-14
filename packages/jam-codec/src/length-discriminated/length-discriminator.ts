@@ -3,7 +3,6 @@ import { IdentityCodec } from "@/identity.js";
 import { E } from "@/ints/e.js";
 import { BufferJSONCodec } from "@/json/codecs";
 import { JSONCodec } from "@/json/json-codec";
-import { encode } from "node:punycode";
 export type LengthDiscSubCodec<T> = Omit<JamCodec<T>, "decode"> & {
   /**
    * Returns the length to store in the length discriminator

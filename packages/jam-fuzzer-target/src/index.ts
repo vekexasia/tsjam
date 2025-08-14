@@ -2,8 +2,7 @@ import net from "node:net";
 import fs from "node:fs";
 import { Message, MessageCodec, MessageType } from "./proto/message";
 import { PeerInfo } from "./proto/peer-info";
-import { Version } from "./proto/version";
-import { HeaderHash, u8 } from "@tsjam/types";
+import { HeaderHash } from "@tsjam/types";
 import { encodeWithCodec, xBytesCodec } from "@tsjam/codec";
 import {
   IdentityMap,

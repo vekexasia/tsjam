@@ -1,11 +1,9 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
-  binaryCodec,
-  BufferJSONCodec,
   codec,
   eBigIntCodec,
   JamCodecable,
-  jsonCodec,
   LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
 import {
@@ -17,7 +15,6 @@ import {
 } from "@tsjam/types";
 import { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "../work-output-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
 
 /**
  * `U` set in graypaper $\operandtuple$

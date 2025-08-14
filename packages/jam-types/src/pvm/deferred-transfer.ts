@@ -1,9 +1,4 @@
-import {
-  Balance,
-  ByteArrayOfLength,
-  Gas,
-  ServiceIndex,
-} from "@/generic-types";
+import { Balance, ByteArrayOfLength, Gas, ServiceIndex } from "@/generic-types";
 import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
 
 /**

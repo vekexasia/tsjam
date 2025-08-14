@@ -4,10 +4,16 @@ import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import type { JamStateImpl } from "../jam-state-impl";
 import type { TauImpl } from "../slot-impl";
-import { type DisputesCulpritError, DisputesCulprits } from "./disputes/culprits";
+import {
+  type DisputesCulpritError,
+  DisputesCulprits,
+} from "./disputes/culprits";
 import { type DisputesFaultError, DisputesFaults } from "./disputes/faults";
 
-import { type DisputesVerdictError, DisputesVerdicts } from "./disputes/verdicts";
+import {
+  type DisputesVerdictError,
+  DisputesVerdicts,
+} from "./disputes/verdicts";
 
 /**
  * codec order defined in $(0.7.1 - C.21)

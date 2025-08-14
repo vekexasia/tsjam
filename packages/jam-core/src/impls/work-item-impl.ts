@@ -3,7 +3,6 @@ import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
-  BufferJSONCodec,
   codec,
   createArrayLengthDiscriminator,
   createJSONCodec,

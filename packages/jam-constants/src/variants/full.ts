@@ -7,4 +7,3 @@ export const MAX_TICKETS_PER_BLOCK = 16;
 export const MAX_TICKETS_PER_VALIDATOR = 2;
 
 // derived constants (if consumers need them they can compute as needed)
-

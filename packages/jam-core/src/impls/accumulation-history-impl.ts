@@ -16,7 +16,10 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { type AccumulatableWorkReports, WorkReportImpl } from "./work-report-impl";
+import {
+  type AccumulatableWorkReports,
+  WorkReportImpl,
+} from "./work-report-impl";
 
 /**
  * `ξ` in the graypaper

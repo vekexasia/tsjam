@@ -1,17 +1,14 @@
 import {
   buildGenericKeyValueCodec,
-  codec,
   JamCodec,
   JSONCodec,
   mapCodec,
   MapJSONCodec,
-  SINGLE_ELEMENT_CLASS,
   ZipJSONCodecs,
 } from "@tsjam/codec";
 import { ByteArrayOfLength } from "@tsjam/types";
 import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
 import { compareUint8Arrays } from "uint8array-extras";
-import { IdentitySetCodec } from "./identity-set";
 import { SafeKey } from "./safe-key";
 
 export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>

@@ -1,10 +1,4 @@
-import {
-  BaseJamCodecable,
-  JSONCodec,
-  JamCodec,
-  JamCodecable,
-  codec,
-} from "@tsjam/codec";
+import { BaseJamCodecable, JamCodecable, codec } from "@tsjam/codec";
 import { JamSignedHeaderImpl } from "@tsjam/core";
 import { State } from "./state";
 
