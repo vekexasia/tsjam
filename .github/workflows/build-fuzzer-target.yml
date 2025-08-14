@@ -1,5 +1,4 @@
 name: Build fuzzer target executable
-runs-on: self-hosted
 on:
   push:
     branches: [ main ]
@@ -11,7 +10,7 @@ jobs:
   build:
     name: Build and compile fuzzer target
     timeout-minutes: 120
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout
