@@ -1,4 +1,5 @@
 import {
+  asCodec,
   E_4_int,
   eitherOneOfCodec,
   JamCodec,
@@ -43,11 +44,11 @@ export class Message {
 }
 export const oneOfMessageCodec = mapCodec(
   eitherOneOfCodec<Message>([
-    ["peerInfo", <JamCodec<PeerInfo>>PeerInfo],
-    ["importBlock", <JamCodec<JamBlockImpl>>JamBlockImpl],
-    ["setState", <JamCodec<SetState>>SetState],
-    ["getState", <JamCodec<GetState>>GetState],
-    ["state", <JamCodec<State>>State],
+    ["peerInfo", asCodec(PeerInfo)],
+    ["importBlock", asCodec(JamBlockImpl)],
+    ["setState", asCodec(SetState)],
+    ["getState", asCodec(GetState)],
+    ["state", asCodec(State)],
     ["stateRoot", xBytesCodec<StateRootHash, 32>(32)],
   ]),
   (pojo: Message) => new Message(pojo),

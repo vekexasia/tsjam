@@ -1,7 +1,23 @@
-import { LengthDiscrimantedIdentityCodec, xBytesCodec } from "@tsjam/codec";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
+import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
+import { DeltaImpl } from "@/impls/delta-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
+import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
+import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
+import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
+import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
+import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { ValidatorsImpl } from "@/impls/validators-impl";
+import { WorkContextImpl } from "@/impls/work-context-impl";
+import { WorkItemImpl } from "@/impls/work-item-impl";
+import { type WorkPackageImpl } from "@/impls/work-package-impl";
 import {
+  asCodec,
   cloneCodecable,
   createArrayLengthDiscriminator,
   createCodec,
@@ -9,8 +25,9 @@ import {
   E_sub,
   E_sub_int,
   encodeWithCodec,
-  JamCodec,
+  LengthDiscrimantedIdentityCodec,
   Uint8ArrayJSONCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   AUTHPOOL_SIZE,
@@ -68,9 +85,7 @@ import {
   PVMSingleModMemory,
   PVMSingleModObject,
   RegularPVMExitReason,
-  ServiceAccount,
   ServiceIndex,
-  Slot,
   Tagged,
   Tau,
   u32,
@@ -86,22 +101,6 @@ import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
-import { DeltaImpl } from "@/impls/delta-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
-import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
-import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
-import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
-import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
-import { ServiceAccountImpl } from "@/impls/service-account-impl";
-import { TauImpl, SlotImpl } from "@/impls/slot-impl";
-import { ValidatorsImpl } from "@/impls/validators-impl";
-import { WorkItemImpl } from "@/impls/work-item-impl";
-import { type WorkPackageImpl } from "@/impls/work-package-impl";
-import { WorkContextImpl } from "@/impls/work-context-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -518,10 +517,17 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.NONE)];
     }
     const v = encodeWithCodec(serviceAccountCodec, {
-      ...(<ServiceAccount>bold_a),
+      codeHash: bold_a.codeHash,
+      balance: bold_a.balance,
       gasThreshold: bold_a.gasThreshold(),
+      minAccGas: bold_a.minAccGas,
+      minMemoGas: bold_a.minMemoGas,
       totalOctets: bold_a.totalOctets(),
       itemInStorage: bold_a.itemInStorage(),
+      gratis: bold_a.gratis,
+      created: bold_a.created,
+      lastAcc: bold_a.lastAcc,
+      parent: bold_a.parent,
     });
 
     let f = Number(context.registers.w11());
@@ -1592,7 +1598,18 @@ const SCodec = createCodec<
 ]);
 
 const serviceAccountCodec = createCodec<
-  Omit<ServiceAccount, "itemInStorage" | "totalOctets" | "gasThreshold"> & {
+  ConditionalExcept<
+    Omit<
+      ServiceAccountImpl,
+      | "preimages"
+      | "requests"
+      | "storage"
+      | "itemInStorage"
+      | "totalOctets"
+      | "gasThreshold"
+    >,
+    Function
+  > & {
     gasThreshold: Gas;
     totalOctets: u64;
     itemInStorage: u32;
@@ -1606,8 +1623,8 @@ const serviceAccountCodec = createCodec<
   ["totalOctets", E_sub<u64>(8)], // o - virtual element
   ["itemInStorage", E_sub_int<u32>(4)], // i - virtual element
   ["gratis", E_sub<Balance>(8)], // f
-  ["created", <JamCodec<Slot>>SlotImpl], // r
-  ["lastAcc", <JamCodec<Slot>>SlotImpl], // a
+  ["created", asCodec(SlotImpl)], // r
+  ["lastAcc", asCodec(SlotImpl)], // a
   ["parent", E_sub_int<ServiceIndex>(4)], // p
 ]);
 

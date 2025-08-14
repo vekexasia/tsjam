@@ -10,11 +10,11 @@ import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { WorkOutputImpl } from "@/impls/work-output-impl";
 import {
   createCodec,
+  asCodec,
   E_4_int,
   E_int,
   E_sub_int,
   encodeWithCodec,
-  JamCodec,
 } from "@tsjam/codec";
 import {
   MINIMUM_PUBLIC_SERVICE_INDEX,
@@ -41,11 +41,11 @@ import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
 
 const AccumulateArgsCodec = createCodec<{
-  t: TauImpl;
+  t: SlotImpl;
   s: ServiceIndex;
   bold_i_length: number;
 }>([
-  ["t", <JamCodec<TauImpl>>SlotImpl],
+  ["t", asCodec(SlotImpl)],
   ["s", E_int<ServiceIndex>()],
   ["bold_i_length", E_int()],
 ]);
@@ -122,10 +122,10 @@ const I_fn = (
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
     Hashing.blake2b(
       encodeWithCodec(
-        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: TauImpl }>([
+        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: SlotImpl }>([
           ["s", E_sub_int<ServiceIndex>(4)],
           ["p_eta_0", HashCodec],
-          ["tau", <JamCodec<TauImpl>>SlotImpl],
+          ["tau", asCodec(SlotImpl)],
         ]),
         { s: service, p_eta_0, tau: p_tau },
       ),

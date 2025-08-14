@@ -2,7 +2,7 @@ import { AccumulationInput } from "@tsjam/types";
 import { PVMAccumulationOpImpl } from "./pvm-accumulation-op-impl";
 import { DeferredTransferImpl } from "../deferred-transfer-impl";
 import { ConditionalExcept } from "type-fest";
-import { eitherOneOfCodec, JamCodec } from "@tsjam/codec";
+import { eitherOneOfCodec, JamCodec, asCodec } from "@tsjam/codec";
 
 /**
  * `I` = U u X
@@ -48,6 +48,6 @@ export class AccumulationInputInpl implements AccumulationInput {
 const _codec = eitherOneOfCodec<
   ConditionalExcept<AccumulationInputInpl, Function>
 >([
-  ["transfer", <JamCodec<DeferredTransferImpl>>DeferredTransferImpl],
-  ["operand", <JamCodec<PVMAccumulationOpImpl>>PVMAccumulationOpImpl],
+  ["transfer", asCodec(DeferredTransferImpl)],
+  ["operand", asCodec(PVMAccumulationOpImpl)],
 ]);

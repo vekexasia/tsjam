@@ -2,7 +2,6 @@ export * from "./jam-block";
 export * from "./header";
 export * from "./generic-types";
 export * from "./validator-data";
-export * from "./stf";
 export * from "./state";
 export * from "./validators";
 

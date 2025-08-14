@@ -2,6 +2,7 @@ import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { SlotImpl } from "@/impls/slot-impl";
 import {
   createCodec,
+  asCodec,
   E_sub,
   E_sub_int,
   JamCodec,
@@ -43,8 +44,8 @@ export const serviceAccountDataCodec = createCodec<
   ["totalOctets", E_sub<u64>(8)],
   ["gratis", E_sub<Balance>(8)],
   ["itemInStorage", E_sub_int<u32>(4)],
-  ["created", <JamCodec<SlotImpl>>SlotImpl],
-  ["lastAcc", <JamCodec<SlotImpl>>SlotImpl],
+  ["created", asCodec(SlotImpl)],
+  ["lastAcc", asCodec(SlotImpl)],
   ["parent", E_sub_int<ServiceIndex>(4)],
 ]);
 

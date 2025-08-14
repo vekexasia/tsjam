@@ -27,6 +27,7 @@ import {
   E_sub_int,
   encodeWithCodec,
   JamCodec,
+  asCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { ServiceIndex, StateKey, u32, u64, UpToSeq } from "@tsjam/types";
@@ -163,7 +164,7 @@ export const stateFromMerkleMap = (
       const pl = merkleMap.get(p_l_key);
       assert(typeof pl !== "undefined", "Preimage l not found");
       const pl_decoded = createArrayLengthDiscriminator<UpToSeq<SlotImpl, 3>>(
-        <JamCodec<SlotImpl>>SlotImpl,
+        asCodec(SlotImpl),
       ).decode(pl).value;
       serviceAccount.requests.set(
         h,

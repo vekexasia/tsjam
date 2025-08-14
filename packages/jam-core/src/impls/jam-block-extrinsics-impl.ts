@@ -4,6 +4,7 @@ import {
   codec,
   createArrayLengthDiscriminator,
   createCodec,
+  asCodec,
   E_sub_int,
   encodeWithCodec,
   JamCodec,
@@ -109,7 +110,7 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<
         },
       },
     ],
-    ["slot", <JamCodec<SlotImpl>>SlotImpl],
+    ["slot", asCodec(SlotImpl)],
     [
       "signatures",
       createArrayLengthDiscriminator<
