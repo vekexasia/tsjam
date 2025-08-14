@@ -6,10 +6,14 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["CI checks"]
+    types: [completed]
 
 jobs:
   build:
     name: Build and compile fuzzer target
+    timeout-minutes: 120
     runs-on: ubuntu-latest
 
     steps:
