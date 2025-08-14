@@ -28,7 +28,7 @@ export class SingleAccOutImpl extends BaseJamCodecable {
  * $(0.7.1 - 12.17)
  * $(0.7.1 - 7.4)
  *
- * Codec is C(16) in $(0.7.0 - D.2)
+ * Codec is C(16) in $(0.7.1 - D.2)
  */
 @JamCodecable()
 export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {

@@ -13,7 +13,7 @@ import {
 import { toTagged } from "@tsjam/utils";
 import { MemoryContent, PVMHeap, PVMMemory } from "./pvm-memory";
 
-// constants defined in $(0.6.4 - A.38)
+// constants defined in $(0.7.1 - A.39)
 const Zz = 2 ** 16;
 const Zi = 2 ** 24;
 
@@ -31,7 +31,7 @@ const owzsCodec = createCodec<{
 
 /**
  * `Y` fn in the graypaper
- * $(0.6.5 - A.36)
+ * $(0.7.1 - A.37)
  * @param encodedProgram - the encoded program and memory + register data
  * @param argument - the argument to the program
  */
@@ -45,7 +45,7 @@ export const programInitialization = (
       memory: PVMMemory;
       registers: PVMRegistersImpl;
     } => {
-  // $(0.6.4 - A.35) | start
+  // $(0.7.1 - A.35) | start
   const {
     readBytes: initOffset,
     value: {
@@ -78,9 +78,9 @@ export const programInitialization = (
   );
   offset += programCodeLength.value;
 
-  // $(0.6.4 - A.35) | end
+  // $(0.7.1 - A.35) | end
 
-  // $(0.6.4 - A.40)
+  // $(0.7.1 - A.40)
   if (
     5 * Zz +
       Z_Fn(roDataLength) +
@@ -92,7 +92,7 @@ export const programInitialization = (
     return undefined;
   }
 
-  // registers $(0.6.4 - A.39)
+  // registers $(0.7.1 - A.39)
   const registers = new PVMRegistersImpl(
     toTagged(
       [
@@ -118,7 +118,7 @@ export const programInitialization = (
     end: <u32>0,
     start: <u32>0,
   };
-  // memory $(0.6.4 - A.39)
+  // memory $(0.7.1 - A.39)
   const acl: Map<Page, PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write> =
     new Map();
   const mem: MemoryContent[] = [];
@@ -178,15 +178,10 @@ export const programInitialization = (
     to: 2 ** 32 - 2 * Zz - Zi,
     kind: PVMMemoryAccessKind.Write,
   });
-  console.log("stack", (2 ** 32 - 2 * Zz - Zi - P_Fn(stackSize)).toString(16));
 
   {
     const offset = 2 ** 32 - Zz - Zi;
-    console.log(
-      "argument",
-      offset.toString(16),
-      Buffer.from(argument).toString("hex"),
-    );
+
     // sixth case
     mem.push({
       at: <u32>offset,
@@ -211,12 +206,12 @@ export const programInitialization = (
   };
 };
 
-// $(0.6.4 - A.39)
+// $(0.7.1 - A.40)
 const P_Fn = (x: number | bigint) => {
   return Zp * Math.ceil(Number(x) / Zp);
 };
 
-// $(0.6.4 - A.39)
+// $(0.7.1 - A.40)
 const Z_Fn = (x: number | bigint) => {
   return Zz * Math.ceil(Number(x) / Zz);
 };

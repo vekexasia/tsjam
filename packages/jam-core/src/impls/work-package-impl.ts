@@ -49,7 +49,7 @@ import { HashCodec } from "@/codecs/misc-codecs";
 /**
  * Identified by `P` set
  * $(0.7.1 - 14.2)
- * codec order defined in $(0.7.0 - C.28)
+ * codec order defined in $(0.7.1 - C.28)
  */
 @JamCodecable()
 export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {

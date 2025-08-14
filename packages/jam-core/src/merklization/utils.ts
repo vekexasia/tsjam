@@ -6,7 +6,7 @@ export type HashFn = (preimage: Uint8Array) => Hash;
 
 /**
  * `C` in graypaper
- * $(0.6.7 - D.1)
+ * $(0.7.1 - D.1)
  */
 export const stateKey = (
   i: number,

@@ -3,7 +3,7 @@ import { Hashing } from "@tsjam/crypto";
 import { Hash, u32 } from "@tsjam/types";
 
 /**
- * $(0.6.4 - F.1)
+ * $(0.7.1 - F.1)
  */
 export const FisherYates = <T>(arr: T[], entropies: number[]) => {
   const sliced = arr.slice();
@@ -20,14 +20,14 @@ export const FisherYates = <T>(arr: T[], entropies: number[]) => {
 };
 
 /**
- * $(0.6.4 - F.3)
+ * $(0.7.1 - F.3)
  */
 export const FisherYatesH = <T>(arr: T[], entropy: Hash) => {
   return FisherYates(arr, Q(arr.length, entropy));
 };
 
 /**
- * $(0.6.4 - F.2)
+ * $(0.7.1 - F.2)
  */
 const Q = (l: number, entropy: Hash): u32[] => {
   const toRet = <u32[]>[];

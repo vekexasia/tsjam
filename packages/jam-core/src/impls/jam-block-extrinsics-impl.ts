@@ -29,7 +29,7 @@ import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { SlotImpl } from "./slot-impl";
 import type { WorkReportImpl } from "./work-report-impl";
 
-@JamCodecable() // $(0.7.0 - C.16)
+@JamCodecable() // $(0.7.1 - C.16)
 export class JamBlockExtrinsicsImpl
   extends BaseJamCodecable
   implements JamBlockExtrinsics

@@ -6,7 +6,7 @@ import { basicInvocation } from "./basic";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * $(0.6.4 - A.34)
+ * $(0.7.1 - A.35)
  */
 export const hostCallInvocation = <X>(
   program: Uint8Array,
@@ -77,7 +77,7 @@ export type HostCallOut<X> = {
 
 /**
  * `Ω(X)` in the paper
- * $(0.6.4 - A.35)
+ * $(0.7.1 - A.36)
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;

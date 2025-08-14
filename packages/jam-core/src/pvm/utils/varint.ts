@@ -6,7 +6,7 @@ import assert from "node:assert";
  * Reads a varint from a buffer. it follows the X formula from the graypaper appendix A.
  * @param buf - buffer to read from
  * @param length - length of the varint
- * $(0.6.4 - A.16)
+ * $(0.7.1 - A.16)
  */
 export const readVarIntFromBuffer = (buf: Uint8Array, length: u8) => {
   assert(length <= 8 && length >= 0, "length must be <= 8 and >= 0");

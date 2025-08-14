@@ -37,7 +37,7 @@ import { IdentitySet } from "@/data-structures/identity-set";
 /**
  * Identified by `R` set
  * @see $(0.7.1 - 11.2)
- * codec order defined in $(0.7.0 - C.27)
+ * codec order defined in $(0.7.1 - C.27)
  */
 @JamCodecable()
 export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
@@ -121,11 +121,10 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   }
 
   /**
-   * Comutes `bold Q` in thye paper which is the sequence of work reports which may be required
+   * Comutes `bold q` in thye paper which is the sequence of work reports which may be required
    * to be audited by the validator
-   * $(0.6.4 - 17.2)
+   * $(0.7.1 - 17.2)
    */
-
   static computeRequiredWorkReports(
     rho: RHOImpl,
     bold_w: NewWorkReportsImpl,
@@ -152,8 +151,8 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
  */
 export type AccumulatableWorkReports = Tagged<WorkReportImpl[], "R*">;
 /**
- * `bold Q`
- * $(0.6.4 - 17.1)
+ * `bold q`
+ * $(0.7.1 - 17.1)
  */
 export type AuditRequiredWorkReports = SeqOfLength<
   WorkReportImpl | undefined,

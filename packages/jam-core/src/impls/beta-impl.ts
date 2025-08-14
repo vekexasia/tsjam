@@ -41,7 +41,7 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
   recentHistory!: RecentHistoryImpl;
   /**
    * `b`
-   * encoded via $(0.7.0 - E.9) - `EM`
+   * encoded via $(0.7.1 - E.9) - `EM`
    */
   @jsonCodec(
     WrapJSONCodec("peeks", ArrayOfJSONCodec(NULLORCodec(HashCodec))),

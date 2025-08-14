@@ -19,7 +19,7 @@ import { RHO } from "./states/rho";
 /**
  * `σ`
  * Defines the state of JAM by combining all substate components
- * $(0.6.4 - 4.4)
+ * $(0.7.1 - 4.4)
  */
 export type JamState = {
   /**

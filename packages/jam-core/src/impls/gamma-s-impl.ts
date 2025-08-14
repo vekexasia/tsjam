@@ -50,7 +50,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
   }
 
   /**
-   * $(0.6.4 - 6.24)
+   * $(0.7.1 - 6.24)
    */
   toPosterior(
     curState: JamStateImpl,

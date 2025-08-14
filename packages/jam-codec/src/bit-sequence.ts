@@ -7,7 +7,7 @@ import { ZipJSONCodecs, BufferJSONCodec } from "./json/codecs.js";
 export type bit = 0 | 1;
 
 /**
- * $(0.7.0 - C.9)
+ * $(0.7.1 - C.9)
  */
 export const BitSequenceCodec = (numElements: number): JamCodec<bit[]> => {
   return {

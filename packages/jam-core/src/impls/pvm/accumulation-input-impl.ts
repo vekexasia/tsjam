@@ -1,8 +1,8 @@
+import { asCodec, eitherOneOfCodec } from "@tsjam/codec";
 import { AccumulationInput } from "@tsjam/types";
-import { PVMAccumulationOpImpl } from "./pvm-accumulation-op-impl";
-import { DeferredTransferImpl } from "../deferred-transfer-impl";
 import { ConditionalExcept } from "type-fest";
-import { eitherOneOfCodec, JamCodec, asCodec } from "@tsjam/codec";
+import { DeferredTransferImpl } from "../deferred-transfer-impl";
+import { PVMAccumulationOpImpl } from "./pvm-accumulation-op-impl";
 
 /**
  * `I` = U u X

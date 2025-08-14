@@ -54,7 +54,7 @@ export interface IPVMMemory {
   /**
    * Change ACL of specified region
    * being used in void, and zero refine fns
-   * $(0.6.4 - 4.24) - acl is defined there
+   * $(0.7.1 - 4.24) - acl is defined there
    */
   changeAcl(page: Page, newKind: PVMMemoryAccessKind): this;
 

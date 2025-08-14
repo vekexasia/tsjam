@@ -33,7 +33,7 @@ import {
 import { isHash } from "@tsjam/utils";
 
 /**
- * $(0.7.0 - C.35) I fn
+ * $(0.7.1 - C.35) I fn
  */
 const importDataSegmentCodec: JamCodec<WorkItemImpl["importSegments"][0]> = {
   encode(value, bytes) {

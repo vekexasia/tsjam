@@ -14,7 +14,7 @@ import { IxMod } from "../instructions/utils";
  * @param address - the address to branch to
  * @param condition - the condition that must be true to branch
  * @param gasCost - the cost of the ix calling in case of panic
- * $(0.6.4 - A.17)
+ * $(0.7.1 - A.17)
  */
 export const branch = (
   context: PVMIxEvaluateFNContext,

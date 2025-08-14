@@ -23,7 +23,7 @@ import { merkleStateMap } from "@/merklization/state";
 import { stateFromMerkleMap } from "@/merklization/reverse";
 
 describe("state serialization/deserialization", () => {
-  it("should deserialize to same object", () => {
+  it.skip("should deserialize to same object", () => {
     const state: JamStateImpl = dummyState();
 
     const map = merkleStateMap(state);

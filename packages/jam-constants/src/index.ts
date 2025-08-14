@@ -190,7 +190,7 @@ export const TRANSFER_MEMO_SIZE = 128;
 
 /**
  * `D` in the paper
- * $(0.6.4 - B.3)
+ * $(0.7.1 - B.3)
  */
 export const PREIMAGE_EXPIRATION = 19_200;
 
@@ -245,7 +245,7 @@ export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
  * `GT`
  */
 export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
-// $(0.6.4 - 4.25)
+// $(0.7.1 - 4.25)
 export const Zp = 2 ** 12;
 
 // `S`

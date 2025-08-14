@@ -3,7 +3,7 @@ import { ByteArrayOfLength } from "@tsjam/types";
 import { BufferJSONCodec } from "./json/codecs";
 import { JSONCodec } from "./json/json-codec";
 
-// $(0.6.4 - C.2)
+// $(0.7.1 - C.2)
 export const IdentityCodec: JamCodec<Uint8Array> = {
   decode(bytes: Uint8Array): { value: Uint8Array; readBytes: number } {
     return { value: bytes, readBytes: bytes.length };

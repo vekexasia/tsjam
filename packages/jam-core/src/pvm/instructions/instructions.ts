@@ -1254,8 +1254,8 @@ export class Instructions {
 }
 
 /**
- * $(0.6.4 - A.9)
- * $(0.6.4 - A.8) | is handled by caller
+ * $(0.7.1 - A.9)
+ * $(0.7.1 - A.8) | is handled by caller
  */
 const handleMemoryFault = (
   location: u32,

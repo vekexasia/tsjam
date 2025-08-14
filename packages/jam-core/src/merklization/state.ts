@@ -21,7 +21,7 @@ import { stateKey } from "./utils";
 /**
  * Merkelize state
  * `Mσ`
- * $(0.6.4 - D.5)
+ * $(0.7.1 - D.5)
  */
 export const merkelizeState = (state: JamStateImpl): StateRootHash => {
   const stateMap = merkleStateMap(state);
@@ -47,7 +47,7 @@ export const bits = (ar: Uint8Array): bit[] => {
   return a as bit[];
 };
 
-// $(0.6.5 - D.3)
+// $(0.7.1 - D.3)
 const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   return new Uint8Array([
     l[0] & 0b01111111,
@@ -56,7 +56,7 @@ const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
   ]) as ByteArrayOfLength<64>;
 };
 
-// $(0.6.4 - D.4) | implementation avoids using bits()
+// $(0.7.1 - D.4) | implementation avoids using bits()
 const L_fn = (
   k: ByteArrayOfLength<31>,
   v: Uint8Array,
@@ -77,7 +77,7 @@ const L_fn = (
   }
 };
 
-// $(0.6.4 - D.6)
+// $(0.7.1 - D.6)
 export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
   if (d.size === 0) {
     return <Hash>new Uint8Array(32).fill(0);
@@ -101,7 +101,7 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
 
 /*
  * `T(σ)`
- * $(0.6.7 - D.2)
+ * $(0.7.1 - D.2)
  */
 export const merkleStateMap = (state: JamStateImpl) => {
   const toRet: IdentityMap<StateKey, 31, Uint8Array> = new IdentityMap();
@@ -155,6 +155,7 @@ export const merkleStateMap = (state: JamStateImpl) => {
     toRet.set(
       stateKey(255, serviceIndex),
       encodeWithCodec(serviceAccountDataCodec, {
+        zeroPrefix: 0n,
         ...serviceAccount,
         itemInStorage: serviceAccount.itemInStorage(),
         totalOctets: serviceAccount.totalOctets(),

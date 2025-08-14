@@ -6,7 +6,7 @@ import { LengthDiscriminator } from "@/length-discriminated/length-discriminator
 
 /**
  * ArrayLengthDiscriminator provides a way to encode variable length array of single encodable elements
- * $(0.7.0 - C.7)
+ * $(0.7.1 - C.7)
  *
  */
 export const createArrayLengthDiscriminator = <T extends Array<X>, X = T[0]>(

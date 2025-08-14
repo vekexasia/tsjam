@@ -8,7 +8,7 @@ import { pvmSingleStep } from "./single-step";
 /**
  * Basic invocation
  * `Ψ` in the graypaper
- * $(0.6.4 - 4.22 / A.1)
+ * $(0.7.1 - 4.22 / A.1)
  */
 export const basicInvocation = (
   bold_p: Uint8Array,

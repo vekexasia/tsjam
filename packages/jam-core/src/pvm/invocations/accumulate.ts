@@ -150,7 +150,7 @@ const I_fn = (
 };
 
 /**
- * $(0.6.4 - B.11)
+ * $(0.7.1 - B.11)
  */
 const F_fn: (
   tau: TauImpl,

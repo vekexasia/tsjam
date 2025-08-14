@@ -20,7 +20,7 @@ import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 export const Bandersnatch = {
   /**
    * `F_{pubkey}^{message}(context) `
-   * $(0.6.4 - G.1)
+   * $(0.7.1 - G.1)
    * @param signature - the signature to verify
    * @param pubkey - the public key to verify the signature with
    * @param message - the message that was signed
@@ -37,7 +37,7 @@ export const Bandersnatch = {
 
   /**
    * `F_{privkey}^{message}(context) `
-   * $(0.6.4 - G.1)
+   * $(0.7.1 - G.1)
    * @param context - the context of the signature
    * @param message - the message to sign
    * @param privkey - the private key to sign with
@@ -57,7 +57,7 @@ export const Bandersnatch = {
   /**
    * `Y` function in the graypaper
    * The alias/output/entropy function of a Bandersnatch vrf signature/proof. See section 3.8 and appendix
-   * $(0.6.4 - G.2)
+   * $(0.7.1 - G.2)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
     return ietfVrfOutputHash(
@@ -75,7 +75,7 @@ export const Bandersnatch = {
 
   /**
    * `Y` function in the graypaper
-   * $(0.6.4 - G.5)
+   * $(0.7.1 - G.5)
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
     return ringVrfOutputHash(
@@ -99,7 +99,7 @@ export const Bandersnatch = {
 
   /**
    * `O` function in the graypaper
-   * $(0.6.4 - G.3)
+   * $(0.7.1 - G.3)
    */
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
     const inputBuf = Buffer.alloc(input.length * 32);
