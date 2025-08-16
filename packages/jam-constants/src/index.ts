@@ -24,7 +24,7 @@ export let CORES = 341 as const;
 /**
  * referred as constant `Y` in the paper
  */
-export const LOTTERY_MAX_SLOT = 500;
+export let LOTTERY_MAX_SLOT = 500;
 
 /**
  * referred as constant `E` in the paper
@@ -49,7 +49,7 @@ export const WORK_TIMEOUT = 5;
 /**
  * `R` in the paper
  */
-export const VALIDATOR_CORE_ROTATION = 10;
+export let VALIDATOR_CORE_ROTATION = 10;
 
 /**
  * `I` | the maximum amount of work items in a package.
@@ -275,7 +275,8 @@ export function initConstants(mode?: "full" | "tiny") {
   EPOCH_LENGTH = <600>v.EPOCH_LENGTH;
   MAX_TICKETS_PER_BLOCK = <16>v.MAX_TICKETS_PER_BLOCK;
   MAX_TICKETS_PER_VALIDATOR = <2>v.MAX_TICKETS_PER_VALIDATOR;
-
+  LOTTERY_MAX_SLOT = <500>v.LOTTERY_MAX_SLOT;
+  VALIDATOR_CORE_ROTATION = <10>v.VALIDATOR_CORE_ROTATION;
   CURRENT_MODE = m;
 }
 

@@ -8,6 +8,7 @@ import { RHOImpl } from "@/impls/rho-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import * as fs from "node:fs";
+import { getConstantsMode } from "@tsjam/constants";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 
@@ -52,7 +53,7 @@ class TestCase extends BaseJamCodecable {
 }
 const buildTest = (name: string) => {
   const test = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/stf/disputes/full/${name}.bin`,
+    `${__dirname}/../../../../jamtestvectors/stf/disputes/${getConstantsMode()}/${name}.bin`,
   );
 
   const { value: testCase } = TestCase.decode(test);

@@ -1,9 +1,10 @@
 import { JamCodec, JSONCodec } from "@tsjam/codec";
+import { getConstantsMode } from "@tsjam/constants";
 import * as fs from "node:fs";
 
 export const getCodecFixtureFile = (
   filename: string,
-  size: string = "full",
+  size: "tiny" | "full" = getConstantsMode(),
 ): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(

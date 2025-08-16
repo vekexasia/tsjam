@@ -16,15 +16,13 @@ import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
+import { getConstantsMode } from "@tsjam/constants";
 
-export const getCodecFixtureFile = (
-  filename: string,
-  kind: "full",
-): Uint8Array => {
+export const getCodecFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../../jamtestvectors/stf/assurances/${kind}/${filename}`,
+        `../../../../jamtestvectors/stf/assurances/${getConstantsMode()}/${filename}`,
         import.meta.url,
       ).pathname,
     ),
@@ -66,10 +64,8 @@ class Test extends BaseJamCodecable {
 }
 
 describe("assurances", () => {
-  const doTest = (filename: string, kind: "full") => {
-    const { value: test } = Test.decode(
-      getCodecFixtureFile(`${filename}.bin`, kind),
-    );
+  const doTest = (filename: string) => {
+    const { value: test } = Test.decode(getCodecFixtureFile(`${filename}.bin`));
     expect(test.preState.kappa).deep.eq(test.postState.kappa);
     const eaVerified = test.input.ea.isValid({
       header: new JamSignedHeaderImpl({ parent: test.input.parentHash }),
@@ -106,45 +102,44 @@ describe("assurances", () => {
     // TODO: check output.ok?
     return true;
   };
-  const set = "full";
 
   it("no_assurances-1", () => {
-    doTest("no_assurances-1", set);
+    doTest("no_assurances-1");
   });
 
   it("some_assurances-1", () => {
-    doTest("some_assurances-1", set);
+    doTest("some_assurances-1");
   });
 
   it("no_assurances_with_stale_report-1", () => {
-    doTest("no_assurances_with_stale_report-1", set);
+    doTest("no_assurances_with_stale_report-1");
   });
 
   it("assurances_with_bad_signature-1", () => {
-    doTest("assurances_with_bad_signature-1", set);
+    doTest("assurances_with_bad_signature-1");
   });
 
   it("assurances_with_bad_validator_index-1", () => {
-    doTest("assurances_with_bad_validator_index-1", set);
+    doTest("assurances_with_bad_validator_index-1");
   });
 
   it("assurance_for_not_engaged_core-1", () => {
-    doTest("assurance_for_not_engaged_core-1", set);
+    doTest("assurance_for_not_engaged_core-1");
   });
 
   it("assurance_with_bad_attestation_parent-1", () => {
-    doTest("assurance_with_bad_attestation_parent-1", set);
+    doTest("assurance_with_bad_attestation_parent-1");
   });
 
   it("assurances_for_stale_report-1", () => {
-    doTest("assurances_for_stale_report-1", set);
+    doTest("assurances_for_stale_report-1");
   });
 
   it("assurers_not_sorted_or_unique-1", () => {
-    doTest("assurers_not_sorted_or_unique-1", set);
+    doTest("assurers_not_sorted_or_unique-1");
   });
 
   it("assurers_not_sorted_or_unique-2", () => {
-    doTest("assurers_not_sorted_or_unique-2", set);
+    doTest("assurers_not_sorted_or_unique-2");
   });
 });

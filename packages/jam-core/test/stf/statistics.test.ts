@@ -21,7 +21,7 @@ export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/stf/statistics/full/${filename}`,
+        `../../../jamtestvectors/stf/statistics/${getConstantsMode()}/${filename}`,
         import.meta.url,
       ).pathname,
     ),

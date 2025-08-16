@@ -25,8 +25,13 @@ jobs:
         run: |
           yarn lint
   build:
-    name: "Compile and Test"
+    name: "Compile and Test (${{ matrix.constants }})"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        constants: [tiny, full]
+    env:
+      JAM_CONSTANTS: ${{ matrix.constants }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3

@@ -8,7 +8,11 @@ import {
   sequenceCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
+import {
+  EPOCH_LENGTH,
+  getConstantsMode,
+  LOTTERY_MAX_SLOT,
+} from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
@@ -197,7 +201,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   describe("GammaSImpl", () => {
-    describe("codec", () => {
+    describe.skipIf(getConstantsMode() == "tiny")("codec", () => {
       it("should encode and decode fallback GammaS", () => {
         const origJSON = {
           keys: [

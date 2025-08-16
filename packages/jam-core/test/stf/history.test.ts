@@ -12,6 +12,7 @@ import { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
 import { Hash } from "node:crypto";
 import fs from "node:fs";
 import { BetaImpl } from "@/impls/beta-impl";
+import { getConstantsMode } from "@tsjam/constants";
 
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
@@ -53,7 +54,7 @@ class TestCase extends BaseJamCodecable {
 
 const buildTest = (name: string) => {
   const bin = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/stf/history/full/${name}.bin`,
+    `${__dirname}/../../../../jamtestvectors/stf/history/${getConstantsMode()}/${name}.bin`,
   );
   const { value: testCase } = TestCase.decode(bin);
 };

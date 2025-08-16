@@ -32,6 +32,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
+import { getConstantsMode } from "@tsjam/constants";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
@@ -128,7 +129,7 @@ class TestCase extends BaseJamCodecable {
 }
 const buildTest = (filename: string) => {
   const testJSON = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/stf/preimages/full/${filename}.json`,
+    `${__dirname}/../../../../jamtestvectors/stf/preimages/${getConstantsMode()}/${filename}.json`,
     "utf-8",
   );
   const testCase = TestCase.fromJSON(JSON.parse(testJSON));

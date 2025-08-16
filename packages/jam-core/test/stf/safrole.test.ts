@@ -22,7 +22,7 @@ import {
   jsonCodec,
   optionalCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH } from "@tsjam/constants";
+import { EPOCH_LENGTH, getConstantsMode } from "@tsjam/constants";
 import { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
@@ -118,9 +118,9 @@ class TestCase extends BaseJamCodecable {
   postState!: TestState;
 }
 
-const buildTest = (name: string, size: "tiny" | "full") => {
+const buildTest = (name: string) => {
   const testBin = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/stf/safrole/${size}/${name}.bin`,
+    `${__dirname}/../../../../jamtestvectors/stf/safrole/${getConstantsMode()}/${name}.bin`,
   );
   const { value: testCase } = TestCase.decode(testBin);
 
@@ -214,12 +214,11 @@ const buildTest = (name: string, size: "tiny" | "full") => {
   // expect(newState.tau).deep.eq(testCase.postState.tau);
   expect(p_entropy.toJSON()).deep.eq(testCase.postState.eta.toJSON());
   // TODO: output
-  HeaderEpochMarkerImpl;
 };
 
 describe("safrole-test-vectors", () => {
   describe("full", () => {
-    const test = (name: string) => buildTest(name, "full");
+    const test = (name: string) => buildTest(name);
     it("enact-epoch-change-with-no-tickets-1", () =>
       test("enact-epoch-change-with-no-tickets-1"));
     it("enact-epoch-change-with-no-tickets-2", () =>

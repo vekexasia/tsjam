@@ -23,11 +23,11 @@ import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { HashCodec } from "@/codecs/misc-codecs";
-import { CORES } from "@tsjam/constants";
+import { CORES, getConstantsMode } from "@tsjam/constants";
 
 export const getCodecFixtureFile = (
   filename: string,
-  kind: "full",
+  kind: "tiny" | "full" = getConstantsMode(),
 ): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
@@ -94,7 +94,7 @@ class Test extends BaseJamCodecable {
 }
 
 describe("authorizations", () => {
-  const doTest = (filename: string, kind: "full") => {
+  const doTest = (filename: string, kind: "tiny" | "full") => {
     const testBin = fs.readFileSync(
       `${__dirname}/../../../../jamtestvectors/stf/authorizations/${kind}/${filename}.bin`,
     );
@@ -115,7 +115,7 @@ describe("authorizations", () => {
       );
     }
   };
-  const set = "full";
+  const set = getConstantsMode();
   it("progress_authorizations-1", () => {
     doTest("progress_authorizations-1", set);
   });
