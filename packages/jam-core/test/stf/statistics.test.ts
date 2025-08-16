@@ -16,6 +16,7 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { getCodecFixtureFile } from "../codec-utils";
 import { dummyDisputesState, dummyEntropy } from "../utils";
+import { getConstantsMode } from "@tsjam/constants";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
