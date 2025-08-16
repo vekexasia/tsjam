@@ -4,6 +4,8 @@
   "scripts": {
     "lint": "eslint --fix packages/*/src/**/*.ts",
     "test": "vitest",
+    "test:tiny": "cross-env JAM_CONSTANTS=tiny yarn vitest",
+    "test:full": "cross-env JAM_CONSTANTS=full yarn vitest",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "build:one": "yarn workspace @tsjam/$0 build",
@@ -43,6 +45,7 @@
     "typedoc": "^0.27.1",
     "typescript": "5.7.2",
     "vitest": "^2.1.6",
+    "cross-env": "^7.0.3",
     "webdriverio": "^9.4.1"
   },
   "dependencies": {
