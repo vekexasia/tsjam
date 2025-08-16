@@ -76,6 +76,7 @@ import {
   Blake2bHash,
   ByteArrayOfLength,
   CodeHash,
+  CoreIndex,
   ExportSegment,
   Gas,
   Hash,
@@ -1569,9 +1570,40 @@ export class HostFunctions {
     ];
   }
 
-  @HostFn(100, <Gas>10n)
-  log(_context: PVMProgramExecutionContextImpl, _: undefined): Array<never> {
-    console.log("log host call");
+  @HostFn(100, <Gas>0n)
+  log(
+    context: PVMProgramExecutionContextImpl,
+    deps: {
+      core: CoreIndex;
+      serviceIndex?: ServiceIndex;
+    },
+  ): Array<never> {
+    const level = context.registers.w7().checked_u32();
+    const w8 = context.registers.w8().u64();
+    const w9 = context.registers.w9().checked_u32();
+    let target = undefined;
+    if (w8 !== 0n && w9 !== 0) {
+      target = context.memory.getBytes(w8, w9);
+    }
+
+    const w10 = context.registers.w10().u64();
+    const w11 = context.registers.w11().checked_u32();
+
+    const message = context.memory.getBytes(w10, w11);
+    const lvlString = ["FATAL", "WARN", "INFO", "DEBUG", "TRACE"][level];
+    // const lvlIdentifier = ["⛔️", "⚠️", "ℹ️", "💁", "🪡"][level];
+    let formattedMessage = `${new Date().toISOString()} ${lvlString}@${deps.core}`;
+    if (typeof deps.serviceIndex !== "undefined") {
+      formattedMessage += `#${deps.serviceIndex}`;
+    }
+
+    if (typeof target !== "undefined") {
+      formattedMessage += ` ${Buffer.from(target).toString("utf8")}`;
+    }
+
+    formattedMessage += ` ${Buffer.from(message).toString("utf8")}`;
+
+    console.log(formattedMessage);
     return [];
   }
 }

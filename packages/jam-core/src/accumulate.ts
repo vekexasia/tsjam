@@ -457,10 +457,12 @@ export const singleServiceAccumulation = (
       );
     }
   }
+  let core = <CoreIndex>0;
 
   for (const r of reports) {
     for (const d of r.digests) {
       if (d.serviceIndex === service) {
+        core = r.core;
         bold_i.push(
           new AccumulationInputInpl({
             operand: new PVMAccumulationOpImpl({
@@ -479,6 +481,7 @@ export const singleServiceAccumulation = (
   }
 
   return accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
+    core,
     p_tau: deps.p_tau,
     p_eta_0: deps.p_eta_0,
   });

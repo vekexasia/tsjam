@@ -49,12 +49,12 @@ export const hostCallInvocation = <X>(
       // all good we skip and hostcall
       return hostCallInvocation(
         program,
-        {
+        new PVMProgramExecutionContextImpl({
           instructionPointer: out.context.instructionPointer,
           gas: hostCallRes.ctx.gas,
           registers: hostCallRes.ctx.registers,
           memory: hostCallRes.ctx.memory,
-        },
+        }),
         f,
         hostCallRes.out,
       );

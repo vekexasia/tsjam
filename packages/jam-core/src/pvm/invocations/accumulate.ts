@@ -23,6 +23,7 @@ import {
 import { Hashing } from "@tsjam/crypto";
 import {
   Balance,
+  CoreIndex,
   Gas,
   Hash,
   JamEntropy,
@@ -63,6 +64,7 @@ export const accumulateInvocation = (
   gas: Gas, // g
   accumulateOps: AccumulationInputInpl[], // bold_i
   deps: {
+    core: CoreIndex;
     p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
@@ -101,7 +103,7 @@ export const accumulateInvocation = (
       s,
       bold_i_length: accumulateOps.length,
     }),
-    F_fn(t),
+    F_fn(t, deps.core, s),
     { x: iRes, y: yRes },
   );
 
@@ -154,8 +156,10 @@ const I_fn = (
  */
 const F_fn: (
   tau: TauImpl,
+  core: CoreIndex,
+  serviceIndex: ServiceIndex,
 ) => HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }> =
-  (tau: TauImpl) => (input) => {
+  (tau: TauImpl, core: CoreIndex, serviceIndex: ServiceIndex) => (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
     const bold_s = input.out.x.bold_s();
     const e_bold_d = input.out.x.state.accounts;
@@ -295,13 +299,12 @@ const F_fn: (
           input.out,
           hostFunctions.provide(input.ctx, input.out.x),
         );
-
-      //case "log":
-      //  return applyMods(
-      //    input.ctx,
-      //    input.out,
-      //    hostFunctions.log(input.ctx, undefined),
-      //  );
+      case "log":
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.log(input.ctx, { core, serviceIndex }),
+        );
     }
     throw new Error("not implemented" + input.hostCallOpcode);
   };

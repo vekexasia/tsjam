@@ -163,7 +163,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
       0 as u32, // instruction pointer
       TOTAL_GAS_IS_AUTHORIZED as Gas,
       encodeWithCodec(E_2_int, c),
-      F_Fn(this),
+      F_Fn(this, c),
       undefined as unknown as PVMResultContext, // something is missing from the paper
     );
 
@@ -182,7 +182,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
 
 // $(0.7.1 - B.2)
 const F_Fn =
-  (bold_p: WorkPackageImpl): HostCallExecutor<unknown> =>
+  (bold_p: WorkPackageImpl, coreIndex: CoreIndex): HostCallExecutor<unknown> =>
   (input) => {
     if (input.hostCallOpcode === 0 /** ΩG */) {
       return applyMods(
@@ -196,6 +196,14 @@ const F_Fn =
         input.out as never,
         hostFunctions.fetch(input.ctx, {
           p: bold_p,
+        }),
+      );
+    } else if (input.hostCallOpcode === 100 /** log */) {
+      return applyMods(
+        input.ctx,
+        input.out as never,
+        hostFunctions.log(input.ctx, {
+          core: coreIndex,
         }),
       );
     }

@@ -107,6 +107,7 @@ export const refineInvocation = (
     w.refineGasLimit,
     bold_a,
     F_fn(
+      core,
       w.service,
       deps.delta,
       deps.tau,
@@ -140,6 +141,7 @@ export const refineInvocation = (
  * $(0.7.1 - B.6)
  */
 const F_fn: (
+  core: CoreIndex,
   service: ServiceIndex,
   delta: DeltaImpl,
   tau: TauImpl,
@@ -150,6 +152,7 @@ const F_fn: (
   workItemIndex: number, // i
 ) => HostCallExecutor<RefineContext> =
   (
+    core: CoreIndex,
     service: ServiceIndex,
     delta: DeltaImpl,
     tau: TauImpl,
@@ -239,6 +242,12 @@ const F_fn: (
           input.ctx,
           input.out,
           hostFunctions.expunge(input.ctx, input.out),
+        );
+      case "log":
+        return applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.log(input.ctx, { core: core, serviceIndex: service }),
         );
       default:
         return applyMods(input.ctx, input.out, [

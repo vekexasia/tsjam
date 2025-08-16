@@ -8,10 +8,12 @@ import {
 } from "@tsjam/types";
 import { programInitialization } from "../program";
 import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./host-call";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 
 /**
  * `ΨM` in the paper
  * $(0.7.1 - A.44)
+ * @param core - CoreIndex added for context but not in gp
  * @param encodedProgram - bold_p
  * @param instructionPointer - ı
  * @param gas - ϱ
@@ -39,7 +41,12 @@ export const argumentInvocation = <X>(
   const { programCode, memory, registers } = res;
   const hRes = hostCallInvocation(
     programCode,
-    { instructionPointer, gas, registers, memory },
+    new PVMProgramExecutionContextImpl({
+      instructionPointer,
+      gas,
+      registers,
+      memory,
+    }),
     f,
     x,
   );

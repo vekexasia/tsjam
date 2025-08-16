@@ -3,7 +3,15 @@ import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
 import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
 import { applyMods } from "@/pvm/functions/utils";
 import { PVMMemory } from "@/pvm/pvm-memory";
-import { Gas, IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import {
+  CoreIndex,
+  Gas,
+  IParsedProgram,
+  PVMIx,
+  PVMProgram,
+  u32,
+  u8,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { vi } from "vitest";
 
