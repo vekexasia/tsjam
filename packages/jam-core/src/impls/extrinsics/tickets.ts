@@ -101,6 +101,11 @@ export class TicketsExtrinsicImpl
   @lengthDiscriminatedCodec(TicketsExtrinsicElementImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<TicketsExtrinsicElementImpl, typeof MAX_TICKETS_PER_BLOCK>;
 
+  constructor(elements: TicketsExtrinsicElementImpl[] = []) {
+    super();
+    this.elements = toTagged(elements);
+  }
+
   newTickets(deps: {
     p_tau: Validated<Posterior<TauImpl>>;
     p_gamma_z: Posterior<SafroleStateImpl["gamma_z"]>;

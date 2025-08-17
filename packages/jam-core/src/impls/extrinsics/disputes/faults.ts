@@ -73,6 +73,11 @@ export class DisputesFaults extends BaseJamCodecable {
   @lengthDiscriminatedCodec(DisputeFaultImpl, SINGLE_ELEMENT_CLASS)
   elements!: DisputeFaultImpl[];
 
+  constructor(elements: DisputeFaultImpl[] = []) {
+    super();
+    this.elements = elements;
+  }
+
   checkValidity(deps: {
     bold_v: { reportHash: Hash; votes: VerdictVoteKind }[];
     lambda: LambdaImpl;

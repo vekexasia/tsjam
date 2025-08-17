@@ -145,17 +145,21 @@ const buildTest = (name: string) => {
     throw new Error(p_tau.error);
   }
 
-  const p_entropy = curState.entropy.toPosterior(curState, {
+  const p_entropy = curState.entropy.toPosterior({
+    slot: testCase.preState.tau,
     p_tau: p_tau.value,
     vrfOutputHash: testCase.input.entropy,
   });
 
-  const p_gamma_p = safrole.gamma_p.toPosterior(curState, {
+  const p_gamma_p = safrole.gamma_p.toPosterior({
+    iota: curState.iota,
+    slot: curState.slot,
     p_tau: p_tau.value,
     p_offenders: testCase.preState.p_psi_o,
   });
 
-  const p_gamma_z = safrole.gamma_z.toPosterior(curState, {
+  const p_gamma_z = safrole.gamma_z.toPosterior({
+    slot: curState.slot,
     p_tau: p_tau.value,
     p_gamma_p,
   });
@@ -174,7 +178,8 @@ const buildTest = (name: string) => {
   }
 
   const [gammaAErr, p_gamma_a] = safrole.gamma_a
-    .toPosterior(curState, {
+    .toPosterior({
+      slot: curState.slot,
       p_tau: p_tau.value,
       newTickets,
     })
@@ -191,7 +196,9 @@ const buildTest = (name: string) => {
     p_tau: p_tau.value,
   });
 
-  const p_gamma_s = safrole.gamma_s.toPosterior(curState, {
+  const p_gamma_s = safrole.gamma_s.toPosterior({
+    slot: curState.slot,
+    safroleState: curState.safroleState,
     p_tau: p_tau.value,
     p_eta2: toPosterior(p_entropy._2),
     p_kappa: toTagged(p_kappa),

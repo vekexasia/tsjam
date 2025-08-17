@@ -185,7 +185,8 @@ export class JamStateImpl implements JamState {
     const p_kappa = this.kappa.toPosterior(this, { p_tau });
     const p_lambda = this.lambda.toPosterior(this, { p_tau });
 
-    const p_entropy = this.entropy.toPosterior(this, {
+    const p_entropy = this.entropy.toPosterior({
+      slot: this.slot,
       p_tau,
       vrfOutputHash: Bandersnatch.vrfOutputSignature(
         newBlock.header.entropySource,
@@ -215,11 +216,14 @@ export class JamStateImpl implements JamState {
       return err(p_disputesError);
     }
 
-    const p_gamma_p = this.safroleState.gamma_p.toPosterior(this, {
+    const p_gamma_p = this.safroleState.gamma_p.toPosterior({
+      slot: this.slot,
+      iota: this.iota,
       p_tau,
       p_offenders: toPosterior(p_disputes.offenders),
     });
-    const p_gamma_z = this.safroleState.gamma_z.toPosterior(this, {
+    const p_gamma_z = this.safroleState.gamma_z.toPosterior({
+      slot: this.slot,
       p_tau,
       p_gamma_p,
     });
@@ -237,14 +241,17 @@ export class JamStateImpl implements JamState {
       return err(newTicketsErr);
     }
 
-    const p_gamma_s = this.safroleState.gamma_s.toPosterior(this, {
+    const p_gamma_s = this.safroleState.gamma_s.toPosterior({
+      slot: this.slot,
+      safroleState: this.safroleState,
       p_tau,
       p_kappa,
       p_eta2: toPosterior(p_entropy._2),
     });
 
     const [p_gamma_aErr, p_gamma_a] = this.safroleState.gamma_a
-      .toPosterior(this, {
+      .toPosterior({
+        slot: this.slot,
         p_tau,
         newTickets,
       })
@@ -264,7 +271,7 @@ export class JamStateImpl implements JamState {
 
     if (
       !newBlock.extrinsics.assurances.isValid({
-        header: newBlock.header,
+        headerParent: newBlock.header.signedHash(),
         kappa: this.kappa,
         d_rho,
       })
@@ -300,7 +307,7 @@ export class JamStateImpl implements JamState {
       iota: this.iota,
       p_eta_0: toPosterior(p_entropy._0),
     }).safeRet();
-    const d_beta = this.beta.toDagger(newBlock.header);
+    const d_beta = this.beta.toDagger(newBlock.header.parentStateRoot);
 
     const dd_delta = d_delta.toDoubleDagger({
       p_tau,
@@ -418,7 +425,7 @@ export class JamStateImpl implements JamState {
       return err(ImportBlockError.InvalidEntropySignature);
     }
 
-    if (false === newBlock.header.verifyEpochMarker(this, p_gamma_p)) {
+    if (false === newBlock.header.verifyEpochMarker(this, { p_gamma_p })) {
       return err(ImportBlockError.InvalidEpochMarker);
     }
 
@@ -430,9 +437,7 @@ export class JamStateImpl implements JamState {
       return err(ImportBlockError.InvalidHx);
     }
 
-    if (
-      false === newBlock.header.verifyOffenders(newBlock.extrinsics.disputes)
-    ) {
+    if (false === newBlock.header.verifyOffenders(disputesExtrinsic)) {
       return err(ImportBlockError.InvalidOffenders);
     }
     return ok(p_state);

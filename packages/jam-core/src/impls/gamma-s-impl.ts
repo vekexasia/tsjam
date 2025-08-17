@@ -28,6 +28,7 @@ import { ConditionalExcept } from "type-fest";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
+import { SafroleStateImpl } from "./safrole-state-impl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {
   @sequenceCodec(EPOCH_LENGTH, xBytesCodec(32))
@@ -56,30 +57,29 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
   /**
    * $(0.7.1 - 6.24)
    */
-  toPosterior(
-    curState: JamStateImpl,
-    deps: {
-      p_tau: Validated<Posterior<TauImpl>>;
-      p_kappa: Posterior<JamStateImpl["kappa"]>;
-      p_eta2: Posterior<JamEntropy["_2"]>;
-    },
-  ): Posterior<GammaSImpl> {
+  toPosterior(deps: {
+    slot: JamStateImpl["slot"];
+    safroleState: SafroleStateImpl;
+    p_tau: Validated<Posterior<TauImpl>>;
+    p_kappa: Posterior<JamStateImpl["kappa"]>;
+    p_eta2: Posterior<JamEntropy["_2"]>;
+  }): Posterior<GammaSImpl> {
     if (
-      deps.p_tau.isNextEra(curState.slot) && // e' = e + 1
-      curState.safroleState.gamma_a.length() === EPOCH_LENGTH && // |ya| = E
-      curState.slot.slotPhase() >= LOTTERY_MAX_SLOT // m >= Y
+      deps.p_tau.isNextEra(deps.slot) && // e' = e + 1
+      deps.safroleState.gamma_a.length() === EPOCH_LENGTH && // |ya| = E
+      deps.slot.slotPhase() >= LOTTERY_MAX_SLOT // m >= Y
     ) {
       // we've accumulated enough tickets
       // we can now compute the new posterior `gamma_s`
       const newGammaS: SeqOfLength<TicketImpl, typeof EPOCH_LENGTH, "gamma_s"> =
         outsideInSequencer(
-          curState.safroleState.gamma_a.elements as unknown as SeqOfLength<
+          deps.safroleState.gamma_a.elements as unknown as SeqOfLength<
             TicketImpl,
             typeof EPOCH_LENGTH
           >,
         );
       return toPosterior(new GammaSImpl({ tickets: newGammaS }));
-    } else if (deps.p_tau.isSameEra(curState.slot)) {
+    } else if (deps.p_tau.isSameEra(deps.slot)) {
       return toPosterior(<GammaSImpl>this);
     } else {
       // we're in fallback mode

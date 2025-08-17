@@ -14,6 +14,7 @@ import {
   type DisputesVerdictError,
   DisputesVerdicts,
 } from "./disputes/verdicts";
+import { ConditionalExcept } from "type-fest";
 
 /**
  * codec order defined in $(0.7.1 - C.21)
@@ -52,6 +53,13 @@ export class DisputeExtrinsicImpl
    */
   @codec(DisputesFaults)
   faults!: DisputesFaults;
+
+  constructor(config?: ConditionalExcept<DisputeExtrinsicImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 
   checkValidity(deps: {
     tau: TauImpl;

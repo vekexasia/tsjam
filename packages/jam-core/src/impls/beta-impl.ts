@@ -19,6 +19,7 @@ import {
   Hash,
   HeaderHash,
   Posterior,
+  StateRootHash,
   Validated,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
@@ -60,10 +61,10 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
   /**
    * Basically a wrapper for `toDagger` on `recentHistory`
    */
-  toDagger(header: JamHeaderImpl): Dagger<BetaImpl> {
+  toDagger(parentStateRoot: StateRootHash): Dagger<BetaImpl> {
     return toDagger(
       new BetaImpl({
-        recentHistory: this.recentHistory.toDagger(header),
+        recentHistory: this.recentHistory.toDagger(parentStateRoot),
         beefyBelt: this.beefyBelt,
       }),
     );

@@ -12,8 +12,17 @@ import {
   Blake2bHash,
   ED25519PublicKey,
   EpochMarker,
+  Posterior,
   SeqOfLength,
+  Validated,
+  ValidatorIndex,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
+import { compareUint8Arrays } from "uint8array-extras";
+import { GammaPImpl } from "./gamma-p-impl";
+import { JamEntropyImpl } from "./jam-entropy-impl";
+import { TauImpl } from "./slot-impl";
+import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class EpochMarkerValidatorImpl extends BaseJamCodecable {
@@ -21,6 +30,13 @@ export class EpochMarkerValidatorImpl extends BaseJamCodecable {
   bandersnatch!: BandersnatchKey;
   @codec(xBytesCodec(32))
   ed25519!: ED25519PublicKey;
+
+  constructor(config?: ConditionalExcept<EpochMarkerValidatorImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
 }
 
 /**
@@ -43,4 +59,75 @@ export class HeaderEpochMarkerImpl
     typeof NUMBER_OF_VALIDATORS,
     "validators"
   >;
+
+  static build(deps: {
+    p_tau: Validated<Posterior<TauImpl>>;
+    tau: TauImpl;
+    entropy: JamEntropyImpl;
+    p_gamma_p: Posterior<GammaPImpl>;
+  }): HeaderEpochMarkerImpl | undefined {
+    if (deps.p_tau.isNewerEra(deps.tau)) {
+      const toRet = new HeaderEpochMarkerImpl();
+      toRet.entropy = deps.entropy._0;
+      toRet.entropy2 = deps.entropy._1;
+
+      toRet.validators = toTagged([]);
+      for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
+        toRet.validators.push(
+          new EpochMarkerValidatorImpl({
+            bandersnatch: deps.p_gamma_p.at(i).banderSnatch,
+            ed25519: deps.p_gamma_p.at(i).ed25519,
+          }),
+        );
+      }
+      return toRet;
+    } else {
+      return undefined;
+    }
+  }
+
+  /**
+   * Verifies epoch marker `He`
+   * $(0.7.1 - 6.27)
+   */
+  static validate(
+    epochMarker: HeaderEpochMarkerImpl | undefined,
+    deps: {
+      p_tau: Validated<Posterior<TauImpl>>;
+      tau: TauImpl;
+      entropy: JamEntropyImpl;
+      p_gamma_p: Posterior<GammaPImpl>;
+    },
+  ) {
+    if (deps.p_tau.isNewerEra(deps.tau)) {
+      if (epochMarker?.entropy !== deps.entropy._0) {
+        return false;
+      }
+      if (epochMarker!.entropy2 !== deps.entropy._1) {
+        return false;
+      }
+      if (epochMarker.validators.length !== NUMBER_OF_VALIDATORS) {
+        return false;
+      }
+      for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
+        if (
+          compareUint8Arrays(
+            epochMarker!.validators[i].bandersnatch,
+            deps.p_gamma_p.at(i).banderSnatch,
+          ) !== 0 ||
+          compareUint8Arrays(
+            epochMarker!.validators[i].ed25519,
+            deps.p_gamma_p.at(i).ed25519,
+          ) !== 0
+        ) {
+          return false;
+        }
+      }
+    } else {
+      if (typeof epochMarker !== "undefined") {
+        return false;
+      }
+    }
+    return true;
+  }
 }

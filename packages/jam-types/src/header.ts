@@ -26,6 +26,14 @@ export interface EpochMarker {
     "validators"
   >;
 }
+
+export interface TicketMarker {
+  elements: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
+}
+
+export interface OffendersMarker {
+  elements: ED25519PublicKey[];
+}
 /**
  * Represents a header of a block in the Jam chain.
  * H ≡ (Hp,Hr,Hx,Ht,He,Hw,Hj,Hk,Hv,Hs)
@@ -71,14 +79,14 @@ export interface JamHeader {
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
    */
-  ticketsMark?: SeqOfLength<Ticket, typeof EPOCH_LENGTH>;
+  ticketsMark?: TicketMarker;
 
   /**
    * `HO`
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  offendersMark: ED25519PublicKey[];
+  offendersMark: OffendersMarker;
 
   /**
    * `HI`

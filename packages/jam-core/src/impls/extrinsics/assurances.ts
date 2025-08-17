@@ -20,13 +20,14 @@ import {
   EA_Extrinsic,
   ED25519Signature,
   Hash,
+  HeaderHash,
   SeqOfLength,
   UpToSeq,
   Validated,
   ValidatorIndex,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { compareUint8Arrays } from "uint8array-extras";
-import type { JamHeaderImpl } from "../jam-header-impl";
 import type { JamStateImpl } from "../jam-state-impl";
 import { NewWorkReportsImpl } from "../new-work-reports-impl";
 import type { RHOImpl } from "../rho-impl";
@@ -69,7 +70,7 @@ export class AssuranceExtrinsicImpl
    */
   isSignatureValid(deps: {
     kappa: JamStateImpl["kappa"];
-    header: JamHeaderImpl;
+    headerParent: HeaderHash;
   }) {
     return Ed25519.verifySignature(
       this.signature,
@@ -78,7 +79,7 @@ export class AssuranceExtrinsicImpl
         ...JAM_AVAILABLE, // XA
         ...Hashing.blake2b(
           new Uint8Array([
-            ...encodeWithCodec(HashCodec, deps.header.parent),
+            ...encodeWithCodec(HashCodec, deps.headerParent),
             ...encodeWithCodec(BitSequenceCodec(CORES), this.bitstring),
           ]),
         ),
@@ -87,7 +88,7 @@ export class AssuranceExtrinsicImpl
   }
 
   isValid(deps: {
-    header: JamHeaderImpl;
+    headerParent: HeaderHash;
     kappa: JamStateImpl["kappa"];
     d_rho: Dagger<RHOImpl>;
   }): this is Validated<AssuranceExtrinsicImpl> {
@@ -100,7 +101,7 @@ export class AssuranceExtrinsicImpl
     }
 
     // $(0.7.1 - 11.11)
-    if (compareUint8Arrays(this.anchorHash, deps.header.parent) !== 0) {
+    if (compareUint8Arrays(this.anchorHash, deps.headerParent) !== 0) {
       return false;
     }
 
@@ -116,7 +117,10 @@ export class AssuranceExtrinsicImpl
     }
 
     // $(0.7.1 - 11.13)
-    return this.isSignatureValid({ kappa: deps.kappa, header: deps.header });
+    return this.isSignatureValid({
+      kappa: deps.kappa,
+      headerParent: deps.headerParent,
+    });
   }
 }
 
@@ -132,12 +136,17 @@ export class AssurancesExtrinsicImpl
   @lengthDiscriminatedCodec(AssuranceExtrinsicImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<AssuranceExtrinsicImpl, typeof NUMBER_OF_VALIDATORS>;
 
+  constructor(elements: AssuranceExtrinsicImpl[] = []) {
+    super();
+    this.elements = toTagged(elements);
+  }
+
   nPositiveVotes(core: CoreIndex) {
     return this.elements.reduce((a, b) => a + b.bitstring[core], 0);
   }
 
   isValid(deps: {
-    header: JamHeaderImpl;
+    headerParent: HeaderHash;
     kappa: JamStateImpl["kappa"];
     d_rho: Dagger<RHOImpl>;
   }): this is Validated<AssuranceExtrinsicImpl> {
@@ -158,7 +167,7 @@ export class AssurancesExtrinsicImpl
     for (let i = 0; i < this.elements.length; i++) {
       if (
         !this.elements[i].isValid({
-          header: deps.header,
+          headerParent: deps.headerParent,
           kappa: deps.kappa,
           d_rho: deps.d_rho,
         })

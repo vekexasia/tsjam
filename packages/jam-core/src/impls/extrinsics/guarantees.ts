@@ -246,13 +246,9 @@ export class GuaranteesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(SingleWorkReportGuaranteeImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>;
-  constructor(elements?: UpToSeq<SingleWorkReportGuaranteeImpl, typeof CORES>) {
+  constructor(elements: SingleWorkReportGuaranteeImpl[] = []) {
     super();
-    if (typeof elements !== "undefined") {
-      this.elements = elements;
-    } else {
-      this.elements = toTagged([]);
-    }
+    this.elements = toTagged(elements);
   }
 
   elementForCore(core: CoreIndex) {

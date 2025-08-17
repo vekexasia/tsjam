@@ -67,6 +67,11 @@ export class DisputesCulprits extends BaseJamCodecable {
   @lengthDiscriminatedCodec(DisputeCulpritImpl, SINGLE_ELEMENT_CLASS)
   elements!: DisputeCulpritImpl[];
 
+  constructor(elements: DisputeCulpritImpl[] = []) {
+    super();
+    this.elements = elements;
+  }
+
   checkValidity(deps: {
     lambda: LambdaImpl;
     kappa: KappaImpl;

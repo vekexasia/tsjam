@@ -1,9 +1,7 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import {
-  ArrayOfJSONCodec,
   BaseJamCodecable,
   codec,
-  createSequenceCodec,
   encodeWithCodec,
   eSubIntCodec,
   JamCodecable,
@@ -11,7 +9,6 @@ import {
   optionalCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { EPOCH_LENGTH } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchSignature,
@@ -19,14 +16,14 @@ import {
   Hash,
   HeaderHash,
   JamHeader,
-  SeqOfLength,
   StateRootHash,
   ValidatorIndex,
 } from "@tsjam/types";
 import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
+import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import { TauImpl } from "./slot-impl";
-import { TicketImpl } from "./ticket-impl";
+import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 
 /**
  * $(0.7.1 - C.23) | `Eu`
@@ -74,15 +71,8 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * and the lottery accumulator (gamma_a) is saturated (epoch-length)
    * and we're not changing epoch
    */
-  @optionalCodec(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <any>{
-      ...createSequenceCodec(EPOCH_LENGTH, TicketImpl),
-      ...ArrayOfJSONCodec(TicketImpl),
-    },
-    "tickets_mark",
-  )
-  ticketsMark?: SeqOfLength<TicketImpl, typeof EPOCH_LENGTH>;
+  @optionalCodec(HeaderTicketMarkerImpl, "tickets_mark")
+  ticketsMark?: HeaderTicketMarkerImpl;
 
   /**
    * `HI`
@@ -101,8 +91,8 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
    * @see DisputesState.psi_w
    * @see DisputesState.psi_b
    */
-  @lengthDiscriminatedCodec(xBytesCodec(32), "offenders_mark")
-  offendersMark!: ED25519PublicKey[];
+  @codec(HeaderOffenderMarkerImpl, "offenders_mark")
+  offendersMark!: HeaderOffenderMarkerImpl;
 
   unsignedHash(): HeaderHash {
     return Hashing.blake2b(encodeWithCodec(JamHeaderImpl, this));

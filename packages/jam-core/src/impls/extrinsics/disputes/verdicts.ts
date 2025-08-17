@@ -207,6 +207,11 @@ export class DisputeVerdictImpl
 export class DisputesVerdicts extends BaseJamCodecable {
   @lengthDiscriminatedCodec(DisputeVerdictImpl, SINGLE_ELEMENT_CLASS)
   elements!: DisputeVerdictImpl[];
+
+  constructor(elements: DisputeVerdictImpl[] = []) {
+    super();
+    this.elements = elements;
+  }
   /**
    * computes bold_v as $(0.7.1 - 10.11 / 10.12)
    * @returns undefined if votes are

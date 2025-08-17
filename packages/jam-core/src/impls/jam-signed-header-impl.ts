@@ -1,4 +1,4 @@
-import { outsideInSequencer } from "@/utils";
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   codec,
   encodeWithCodec,
@@ -6,31 +6,34 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import {
-  EPOCH_LENGTH,
   JAM_ENTROPY,
   JAM_FALLBACK_SEAL,
   JAM_TICKET_SEAL,
-  LOTTERY_MAX_SLOT,
 } from "@tsjam/constants";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import {
+  BandersnatchKey,
   BandersnatchSignature,
   HeaderHash,
   Posterior,
-  SeqOfLength,
   SignedJamHeader,
+  Validated,
   ValidatorIndex,
 } from "@tsjam/types";
-import { toPosterior } from "@tsjam/utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import type { JamStateImpl } from "./jam-state-impl";
-import type { SafroleStateImpl } from "./safrole-state-impl";
-import type { TicketImpl } from "./ticket-impl";
+import { GammaPImpl } from "./gamma-p-impl";
+import { GammaSImpl } from "./gamma-s-impl";
+import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
+import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
+import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
+import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
+import { JamEntropyImpl } from "./jam-entropy-impl";
 import { JamHeaderImpl } from "./jam-header-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentitySet } from "@/data-structures/identity-set";
+import type { JamStateImpl } from "./jam-state-impl";
+import { TauImpl } from "./slot-impl";
 
 /**
  * $(0.7.1 - C.22) | codec
@@ -56,17 +59,21 @@ export class JamSignedHeaderImpl
     return Hashing.blake2b(this.toBinary());
   }
 
-  public sealSignContext(state: Posterior<JamStateImpl>): Uint8Array {
-    if (state.safroleState.gamma_s.isFallback()) {
+  public static sealSignContext(
+    p_entropy: Posterior<JamEntropyImpl>,
+    p_gamma_s: Posterior<GammaSImpl>,
+    p_tau: Validated<Posterior<TauImpl>>,
+  ): Uint8Array {
+    if (p_gamma_s.isFallback()) {
       return new Uint8Array([
         ...JAM_FALLBACK_SEAL,
-        ...encodeWithCodec(HashCodec, state.entropy._3),
+        ...encodeWithCodec(HashCodec, p_entropy._3),
       ]);
     } else {
-      const i = state.safroleState.gamma_s.tickets![this.slot.slotPhase()];
+      const i = p_gamma_s.tickets![p_tau.slotPhase()];
       return new Uint8Array([
         ...JAM_TICKET_SEAL,
-        ...encodeWithCodec(HashCodec, state.entropy._3),
+        ...encodeWithCodec(HashCodec, p_entropy._3),
         i.attempt,
       ]);
     }
@@ -89,8 +96,12 @@ export class JamSignedHeaderImpl
     const verified = Bandersnatch.verifySignature(
       this.seal,
       ha,
-      this.toBinary(), // message
-      this.sealSignContext(p_state),
+      encodeWithCodec(JamHeaderImpl, this), // message
+      JamSignedHeaderImpl.sealSignContext(
+        toPosterior(p_state.entropy),
+        toPosterior(p_state.safroleState.gamma_s),
+        toTagged(toPosterior(<TauImpl>this.slot)),
+      ),
     );
     if (!verified) {
       return false;
@@ -134,102 +145,92 @@ export class JamSignedHeaderImpl
     );
   }
 
-  /**
-   * Verifies epoch marker `He` is valid
-   * $(0.7.1 - 6.27)
-   * TODO: move to HeaderEpochMarkerImpl
-   */
-  verifyEpochMarker = (
+  verifyEpochMarker(
     prevState: JamStateImpl,
-    p_gamma_p: Posterior<SafroleStateImpl["gamma_p"]>,
-  ): boolean => {
-    if (toPosterior(this.slot).isNewerEra(prevState.slot)) {
-      if (this.epochMarker?.entropy !== prevState.entropy._0) {
-        return false;
-      }
-      if (this.epochMarker!.entropy2 !== prevState.entropy._1) {
-        return false;
-      }
-      for (
-        let i = <ValidatorIndex>0;
-        i < this.epochMarker!.validators.length;
-        i++
-      ) {
-        if (
-          compareUint8Arrays(
-            this.epochMarker!.validators[i].bandersnatch,
-            p_gamma_p.at(i).banderSnatch,
-          ) !== 0 ||
-          compareUint8Arrays(
-            this.epochMarker!.validators[i].ed25519,
-            p_gamma_p.at(i).ed25519,
-          ) !== 0
-        ) {
-          return false;
-        }
-      }
-    } else {
-      if (typeof this.epochMarker !== "undefined") {
-        return false;
-      }
-    }
-    return true;
-  };
+    deps: { p_gamma_p: Posterior<GammaPImpl> },
+  ) {
+    return HeaderEpochMarkerImpl.validate(this.epochMarker, {
+      p_tau: toTagged(this.slot),
+      tau: prevState.slot,
+      entropy: prevState.entropy,
+      p_gamma_p: deps.p_gamma_p,
+    });
+  }
 
-  /**
-   * check winning tickets Hw
-   * $(0.7.1 - 6.28)
-   */
   verifyTicketsMark(prevState: JamStateImpl) {
-    if (
-      this.slot.isSameEra(prevState.slot) &&
-      this.slot.slotPhase() < LOTTERY_MAX_SLOT &&
-      LOTTERY_MAX_SLOT <= this.slot.slotPhase() &&
-      prevState.safroleState.gamma_a.length() === EPOCH_LENGTH
-    ) {
-      if (this.ticketsMark?.length !== EPOCH_LENGTH) {
-        return false;
-      }
-      const expectedHw = outsideInSequencer(
-        prevState.safroleState.gamma_a.elements as unknown as SeqOfLength<
-          TicketImpl,
-          typeof EPOCH_LENGTH
-        >,
-      );
-      for (let i = 0; i < EPOCH_LENGTH; i++) {
-        if (
-          this.ticketsMark[i].id !== expectedHw[i].id ||
-          this.ticketsMark[i].attempt !== expectedHw[i].attempt
-        ) {
-          return false;
-        }
-      }
-    } else {
-      if (typeof this.ticketsMark !== "undefined") {
-        return false;
-      }
-    }
-    return true;
+    return HeaderTicketMarkerImpl.validate(this.ticketsMark, {
+      p_tau: toTagged(this.slot),
+      tau: prevState.slot,
+      gamma_a: prevState.safroleState.gamma_a,
+    });
   }
 
   /**
    * Verify `Ho`
    * $(0.7.1 - 10.20)
    */
-  verifyOffenders(disputesExtrinsic: DisputeExtrinsicImpl) {
-    const allOffenders = new IdentitySet(this.offendersMark.map((p) => p));
-    for (const c of disputesExtrinsic.culprits.elements) {
-      if (!allOffenders.has(c.key)) {
-        return false;
-      }
-    }
+  verifyOffenders(disputesExtrinsic: Validated<DisputeExtrinsicImpl>) {
+    return this.offendersMark.checkValidity(disputesExtrinsic);
+  }
 
-    for (const f of disputesExtrinsic.faults.elements) {
-      if (!allOffenders.has(f.key)) {
-        return false;
-      }
-    }
-    return true;
+  buildNext(
+    curState: JamStateImpl,
+    extrinsics: JamBlockExtrinsicsImpl,
+    p_tau: Validated<Posterior<TauImpl>>,
+    privKey: BandersnatchKey,
+  ) {
+    const authorIndex = <ValidatorIndex>0;
+    const p_entropy = toPosterior(new JamEntropyImpl());
+    const p_gamma_s = toPosterior(new GammaSImpl());
+    const p_gamma_p = toPosterior(new GammaPImpl());
+
+    // FIXME: all of the above ^^
+    const sealSignContext = JamSignedHeaderImpl.sealSignContext(
+      p_entropy,
+      p_gamma_s,
+      p_tau,
+    );
+
+    const toRet = new JamSignedHeaderImpl({
+      parent: this.signedHash(),
+      parentStateRoot: curState.merkleRoot(),
+      slot: p_tau,
+      authorIndex: authorIndex,
+      ticketsMark: HeaderTicketMarkerImpl.build({
+        p_tau,
+        tau: curState.slot,
+        gamma_a: curState.safroleState.gamma_a,
+      }),
+      extrinsicHash: extrinsics.extrinsicHash(),
+      epochMarker: HeaderEpochMarkerImpl.build({
+        p_tau,
+        tau: curState.slot,
+        entropy: p_entropy,
+        p_gamma_p,
+      }),
+      entropySource: Bandersnatch.sign(
+        privKey,
+        new Uint8Array([]), // message - empty to not bias the entropy
+        new Uint8Array([
+          ...JAM_ENTROPY,
+          ...encodeWithCodec(
+            HashCodec,
+            Bandersnatch.vrfOutputSeed(privKey, sealSignContext),
+          ),
+        ]),
+      ),
+      offendersMark: HeaderOffenderMarkerImpl.build(
+        toTagged(extrinsics.disputes),
+      ),
+    });
+
+    toRet.seal = Bandersnatch.sign(
+      privKey,
+      encodeWithCodec(JamHeaderImpl, this), // EU(H)
+      sealSignContext,
+    );
+
+    return toRet;
   }
 }
 

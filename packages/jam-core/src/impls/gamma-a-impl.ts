@@ -34,19 +34,17 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
   /**
    * $(0.7.1 - 6.34)
    */
-  toPosterior(
-    curState: JamStateImpl,
-    deps: {
-      p_tau: Validated<Posterior<TauImpl>>;
-      // bold_n in the paper
-      newTickets: TicketImpl[];
-    },
-  ): Result<Posterior<GammaAImpl>, GammaAError> {
+  toPosterior(deps: {
+    slot: JamStateImpl["slot"];
+    p_tau: Validated<Posterior<TauImpl>>;
+    // bold_n in the paper
+    newTickets: TicketImpl[];
+  }): Result<Posterior<GammaAImpl>, GammaAError> {
     const toRet = new GammaAImpl({
       elements: <GammaAImpl["elements"]>[
         ...deps.newTickets,
         ...(() => {
-          if (deps.p_tau.isNewerEra(curState.slot)) {
+          if (deps.p_tau.isNewerEra(deps.slot)) {
             return [];
           }
           return this.elements;

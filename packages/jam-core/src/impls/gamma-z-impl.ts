@@ -31,14 +31,12 @@ export class GammaZImpl extends BaseJamCodecable implements GammaZ {
   /**
    * $(0.7.1 - 6.13)
    */
-  toPosterior(
-    curState: JamStateImpl,
-    deps: {
-      p_tau: Validated<Posterior<TauImpl>>;
-      p_gamma_p: Posterior<GammaPImpl>;
-    },
-  ): Posterior<GammaZImpl> {
-    if (deps.p_tau.isNewerEra(curState.slot)) {
+  toPosterior(deps: {
+    slot: JamStateImpl["slot"];
+    p_tau: Validated<Posterior<TauImpl>>;
+    p_gamma_p: Posterior<GammaPImpl>;
+  }): Posterior<GammaZImpl> {
+    if (deps.p_tau.isNewerEra(deps.slot)) {
       return toPosterior(
         new GammaZImpl({
           root: Bandersnatch.ringRoot(

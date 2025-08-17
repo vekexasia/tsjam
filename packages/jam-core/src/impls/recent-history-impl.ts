@@ -10,6 +10,7 @@ import {
   Beta,
   Dagger,
   HeaderHash,
+  MerkleTreeRoot,
   Posterior,
   RecentHistory,
   StateRootHash,
@@ -45,16 +46,17 @@ export class RecentHistoryImpl
   }
   /**
    * $(0.7.1 - 4.6 / 7.5)
+   * it needs the current merkle root ( or parent stateroot of incoming block)
    */
-  toDagger(header: JamHeaderImpl): Dagger<RecentHistoryImpl> {
+  toDagger(parentStateRoot: StateRootHash): Dagger<RecentHistoryImpl> {
     if (this.elements.length === 0) {
       return toDagger(this);
     }
 
     const toRet = cloneCodecable(this);
 
-    toRet.elements[toRet.elements.length - 1].stateRoot =
-      header.parentStateRoot;
+    toRet.elements[toRet.elements.length - 1].stateRoot = parentStateRoot;
+
     return toDagger(toRet);
   }
 

@@ -10,18 +10,17 @@ import { ValidatorsImpl } from "./validators-impl";
 @JamCodecable()
 export class GammaPImpl extends ValidatorsImpl {
   // $(0.7.1 - 6.13)
-  toPosterior(
-    curState: JamStateImpl,
-    deps: {
-      p_tau: Validated<Posterior<TauImpl>>;
-      p_offenders: Posterior<DisputesStateImpl["offenders"]>;
-    },
-  ): Posterior<Tagged<GammaPImpl, "gamma_p">> {
-    if (deps.p_tau.isNewerEra(curState.slot)) {
+  toPosterior(deps: {
+    iota: JamStateImpl["iota"];
+    slot: JamStateImpl["slot"];
+    p_tau: Validated<Posterior<TauImpl>>;
+    p_offenders: Posterior<DisputesStateImpl["offenders"]>;
+  }): Posterior<Tagged<GammaPImpl, "gamma_p">> {
+    if (deps.p_tau.isNewerEra(deps.slot)) {
       return toPosterior(
         toTagged(
           new GammaPImpl({
-            elements: PHI_FN(curState.iota.elements, deps.p_offenders),
+            elements: PHI_FN(deps.iota.elements, deps.p_offenders),
           }),
         ),
       );

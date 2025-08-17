@@ -8,7 +8,7 @@ import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import { Blake2bHash, JamEntropy, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import type { JamStateImpl } from "./jam-state-impl";
-import type { TauImpl } from "./slot-impl";
+import type { SlotImpl, TauImpl } from "./slot-impl";
 import { HashCodec } from "@/codecs/misc-codecs";
 
 /**
@@ -36,14 +36,12 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     }
   }
 
-  toPosterior(
-    curState: JamStateImpl,
-    deps: {
-      p_tau: Validated<Posterior<TauImpl>>;
-      // or eventually vrfOutputSignature of h_v
-      vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
-    },
-  ): Posterior<JamEntropyImpl> {
+  toPosterior(deps: {
+    slot: SlotImpl;
+    p_tau: Validated<Posterior<TauImpl>>;
+    // or eventually vrfOutputSignature of h_v
+    vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
+  }): Posterior<JamEntropyImpl> {
     // $(0.7.1 - 6.22) | rotate `η_0`
     const p_0 = Hashing.blake2b(
       new Uint8Array([
@@ -53,10 +51,9 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     );
 
     // $(0.7.1 - 6.23) | rotate `η_1`, `η_2`, `η_3`
-
     let [p_1, p_2, p_3] = [this._1, this._2, this._3];
 
-    if (deps.p_tau.isNewerEra(curState.slot)) {
+    if (deps.p_tau.isNewerEra(deps.slot)) {
       [p_1, p_2, p_3] = [this._0, this._1, this._2];
     }
     return toPosterior(

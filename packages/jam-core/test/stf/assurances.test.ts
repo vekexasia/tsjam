@@ -1,5 +1,4 @@
 import { AssurancesExtrinsicImpl } from "@/impls/extrinsics/assurances";
-import { JamSignedHeaderImpl } from "@/impls/jam-signed-header-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { RHOImpl } from "@/impls/rho-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
@@ -68,7 +67,7 @@ describe("assurances", () => {
     const { value: test } = Test.decode(getCodecFixtureFile(`${filename}.bin`));
     expect(test.preState.kappa).deep.eq(test.postState.kappa);
     const eaVerified = test.input.ea.isValid({
-      header: new JamSignedHeaderImpl({ parent: test.input.parentHash }),
+      headerParent: test.input.parentHash,
       kappa: test.preState.kappa,
       d_rho: test.preState.d_rho,
     });

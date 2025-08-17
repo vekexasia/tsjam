@@ -33,6 +33,10 @@ export class PreimagesExtrinsicImpl
 {
   @lengthDiscriminatedCodec(PreimageElement, SINGLE_ELEMENT_CLASS)
   elements!: PreimageElement[];
+  constructor(elements: PreimageElement[] = []) {
+    super();
+    this.elements = elements;
+  }
 
   checkValidity(deps: {
     serviceAccounts: DeltaImpl;
