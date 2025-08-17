@@ -1,3 +1,5 @@
+import { IdentitySet } from "@/data-structures/identity-set";
+import { MMRSuperPeak } from "@/merklization/mmr";
 import {
   BaseJamCodecable,
   cloneCodecable,
@@ -10,7 +12,6 @@ import {
   Beta,
   Dagger,
   HeaderHash,
-  MerkleTreeRoot,
   Posterior,
   RecentHistory,
   StateRootHash,
@@ -19,12 +20,9 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
-import type { JamHeaderImpl } from "./jam-header-impl";
-import { RecentHistoryItemImpl } from "./recent-history-item-impl";
-import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { ConditionalExcept } from "type-fest";
-import { IdentitySet } from "@/data-structures/identity-set";
-import { MMRSuperPeak } from "@/merklization/mmr";
+import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
+import { RecentHistoryItemImpl } from "./recent-history-item-impl";
 
 @JamCodecable()
 export class RecentHistoryImpl

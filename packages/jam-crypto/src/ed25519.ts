@@ -1,4 +1,5 @@
 import {
+  ByteArrayOfLength,
   ED25519PrivateKey,
   ED25519PublicKey,
   ED25519Signature,
@@ -32,5 +33,16 @@ export const Ed25519 = {
       Buffer.from(privkey),
     );
     return signatureBuf as Uint8Array as ED25519Signature;
+  },
+
+  keypair(seed: ByteArrayOfLength<32>) {
+    const publicKey = Buffer.alloc(32);
+    const privateKey = Buffer.alloc(64);
+    sodium.crypto_sign_seed_keypair(publicKey, privateKey, Buffer.from(seed));
+
+    return {
+      public: <ED25519PublicKey>(<Uint8Array>publicKey),
+      privateKey: <ED25519PrivateKey>(<Uint8Array>privateKey),
+    };
   },
 };

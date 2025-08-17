@@ -1363,6 +1363,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tsjam/fuzzer@workspace:packages/jam-fuzzer":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/fuzzer@workspace:packages/jam-fuzzer"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
+    "@tsjam/core": "npm:*"
+    "@tsjam/crypto": "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@tsjam/types@npm:*, @tsjam/types@workspace:*, @tsjam/types@workspace:packages/jam-types":
   version: 0.0.0-use.local
   resolution: "@tsjam/types@workspace:packages/jam-types"

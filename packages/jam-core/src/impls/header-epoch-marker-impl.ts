@@ -60,6 +60,13 @@ export class HeaderEpochMarkerImpl
     "validators"
   >;
 
+  constructor(config?: ConditionalExcept<HeaderEpochMarkerImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
+
   static build(deps: {
     p_tau: Validated<Posterior<TauImpl>>;
     tau: TauImpl;

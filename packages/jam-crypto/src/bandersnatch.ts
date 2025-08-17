@@ -1,3 +1,15 @@
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import {
+  ietfVrfOutputHash,
+  ietfVrfOutputHashFromSecret,
+  ietfVrfSign,
+  ietfVrfVerify,
+  publicKey,
+  ringRoot,
+  ringVrfOutputHash,
+  ringVrfVerify,
+  secretKey,
+} from "@tsjam/crypto-napi";
 import {
   BandersnatchKey,
   BandersnatchRingRoot,
@@ -6,16 +18,6 @@ import {
   OpaqueHash,
   RingVRFProof,
 } from "@tsjam/types";
-import {
-  ringRoot,
-  ringVrfOutputHash,
-  ietfVrfOutputHash,
-  ietfVrfSign,
-  ietfVrfVerify,
-  ringVrfVerify,
-  ietfVrfOutputHashFromSecret,
-} from "@tsjam/crypto-napi";
-import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 
 export const Bandersnatch = {
   /**
@@ -108,5 +110,13 @@ export const Bandersnatch = {
     });
 
     return ringRoot(inputBuf) as Uint8Array as T;
+  },
+
+  publicKey(secretSeed: ByteArrayOfLength<32>): BandersnatchKey {
+    return publicKey(secretSeed) as Uint8Array as BandersnatchKey;
+  },
+
+  privKey(seed: ByteArrayOfLength<32>): BandersnatchKey {
+    return secretKey(seed) as Uint8Array as BandersnatchKey;
   },
 };

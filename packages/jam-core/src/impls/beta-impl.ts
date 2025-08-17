@@ -25,7 +25,6 @@ import {
 import { toDagger, toPosterior } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
-import type { JamHeaderImpl } from "./jam-header-impl";
 import type { LastAccOutsImpl } from "./last-acc-outs-impl";
 import { RecentHistoryImpl } from "./recent-history-impl";
 import { appendMMR } from "@/merklization/mmr";

@@ -22,6 +22,7 @@ import {
   ValidatorIndex,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
@@ -34,10 +35,8 @@ import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import { JamEntropyImpl } from "./jam-entropy-impl";
 import { JamHeaderImpl } from "./jam-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
-import { TauImpl } from "./slot-impl";
-import { err, ok, Result } from "neverthrow";
-import { SafroleStateImpl } from "./safrole-state-impl";
 import { KappaImpl } from "./kappa-impl";
+import { TauImpl } from "./slot-impl";
 
 /**
  * $(0.7.1 - C.22) | codec
@@ -334,7 +333,6 @@ if (import.meta.vitest) {
 
   const { getCodecFixtureFile } = await import("@/test/codec-utils.js");
   describe("JamSignedHeaderImpl", () => {
-    describe("generate", () => {});
     describe("codec", () => {
       it("header_0.bin", () => {
         const bin = getCodecFixtureFile("header_0.bin");

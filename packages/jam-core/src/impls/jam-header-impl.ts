@@ -5,14 +5,12 @@ import {
   encodeWithCodec,
   eSubIntCodec,
   JamCodecable,
-  lengthDiscriminatedCodec,
   optionalCodec,
   xBytesCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import {
   BandersnatchSignature,
-  ED25519PublicKey,
   Hash,
   HeaderHash,
   JamHeader,
@@ -20,10 +18,10 @@ import {
   ValidatorIndex,
 } from "@tsjam/types";
 import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
+import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import { TauImpl } from "./slot-impl";
-import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 
 /**
  * $(0.7.1 - C.23) | `Eu`
@@ -98,9 +96,6 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
     return Hashing.blake2b(encodeWithCodec(JamHeaderImpl, this));
   }
 
-  /**
-   * $(0.7.1 - 5.4)
-   */
   verifyExtrinsicHash(extrinsics: JamBlockExtrinsicsImpl) {
     return this.extrinsicHash === extrinsics.extrinsicHash();
   }

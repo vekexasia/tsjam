@@ -5,4 +5,5 @@ export default defineWorkspace([
   ...buildVitest("jam-codec"),
   ...buildVitest("jam-core"),
   ...buildVitest("jam-fuzzer-target"),
+  ...buildVitest("jam-fuzzer"),
 ]);
