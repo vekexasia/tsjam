@@ -15,7 +15,10 @@ import {
   DisputesStateImpl,
   DisputesToPosteriorError,
 } from "./disputes-state-impl";
-import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import {
+  AssurancesExtrinsicImpl,
+  EAValidationError,
+} from "./extrinsics/assurances";
 import type { EGError } from "./extrinsics/guarantees";
 import type { EPError } from "./extrinsics/preimages";
 import type { ETError } from "./extrinsics/tickets";
@@ -36,6 +39,7 @@ import type { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
 import type { DisputesCulpritError } from "./extrinsics/disputes/culprits";
 import type { DisputesFaultError } from "./extrinsics/disputes/faults";
 import { merkleStateMap, M_fn, bits } from "@/merklization/state";
+import { HeaderValidationError } from "./jam-signed-header-impl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -152,21 +156,19 @@ export class JamStateImpl implements JamState {
     newBlock: JamBlockImpl,
   ): Result<
     Posterior<JamStateImpl>,
-    | ImportBlockError
     | DisputesToPosteriorError
     | DisputesVerdictError
     | DisputesCulpritError
     | DisputesFaultError
     | GammaAError
+    | EAValidationError
     | ETError
     | EPError
     | EGError
     | TauError
+    | HeaderValidationError
   > {
     assert(this.block, "Cannot apply block to a state without a block");
-    if (!this.block.isParentOf(newBlock)) {
-      return err(ImportBlockError.InvalidParentHeader);
-    }
 
     // $(0.7.1 - 6.1)
     const proposed_p_tau = toPosterior(newBlock.header.slot);
@@ -176,22 +178,20 @@ export class JamStateImpl implements JamState {
       return err(tauErr);
     }
 
-    // $(0.7.1 - 5.8)
-    if (this.merkleRoot() !== newBlock.header.parentStateRoot) {
-      return err(ImportBlockError.InvalidParentStateRoot);
-    }
-
     // $(0.7.1 - 6.13)
     const p_kappa = this.kappa.toPosterior(this, { p_tau });
     const p_lambda = this.lambda.toPosterior(this, { p_tau });
 
-    const p_entropy = this.entropy.toPosterior({
-      slot: this.slot,
-      p_tau,
-      vrfOutputHash: Bandersnatch.vrfOutputSignature(
-        newBlock.header.entropySource,
-      ),
-    });
+    const p_entropy = this.entropy
+      .rotate1_3({
+        slot: this.slot,
+        p_tau,
+      })
+      .toPosterior({
+        vrfOutputHash: Bandersnatch.vrfOutputSignature(
+          newBlock.header.entropySource,
+        ),
+      });
     const [dispExErr, disputesExtrinsic] = newBlock.extrinsics.disputes
       .checkValidity({
         disputesState: this.disputes,
@@ -267,20 +267,38 @@ export class JamStateImpl implements JamState {
       p_gamma_s,
     });
 
-    const d_rho = this.rho.toDagger({ p_disputes });
+    //now we can check the header
+    const [headerErr] = newBlock.header
+      .checkValidity({
+        disputesExtrinsic,
+        p_kappa,
+        extrinsicHash: newBlock.extrinsics.extrinsicHash(),
+        curState: this,
+        prevHeader: this.block.header,
+        p_entropy_3: toPosterior(p_entropy._3),
+        p_gamma_s,
+        p_gamma_p,
+      })
+      .safeRet();
 
-    if (
-      !newBlock.extrinsics.assurances.isValid({
+    if (typeof headerErr !== "undefined") {
+      return err(headerErr);
+    }
+
+    const d_rho = this.rho.toDagger({ p_disputes });
+    const [eaError, validatedEA] = newBlock.extrinsics.assurances
+      .checkValidity({
         headerParent: newBlock.header.signedHash(),
         kappa: this.kappa,
         d_rho,
       })
-    ) {
-      return err(ImportBlockError.InvalidEA);
+      .safeRet();
+    if (typeof eaError !== "undefined") {
+      return err(eaError);
     }
 
     const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
-      newBlock.extrinsics.assurances,
+      validatedEA,
       d_rho,
     );
 
@@ -373,7 +391,7 @@ export class JamStateImpl implements JamState {
       tau: this.slot,
       p_tau,
       extrinsics: newBlock.extrinsics,
-      ea: newBlock.extrinsics.assurances,
+      ea: validatedEA,
       ep: validatedEP,
       d_rho,
       p_disputes,
@@ -418,49 +436,6 @@ export class JamStateImpl implements JamState {
       }),
     );
 
-    if (false === newBlock.header.verifySeal(p_state)) {
-      return err(ImportBlockError.InvalidSeal);
-    }
-    if (false === newBlock.header.verifyEntropy(p_state)) {
-      return err(ImportBlockError.InvalidEntropySignature);
-    }
-
-    if (false === newBlock.header.verifyEpochMarker(this, { p_gamma_p })) {
-      return err(ImportBlockError.InvalidEpochMarker);
-    }
-
-    if (false === newBlock.header.verifyTicketsMark(this)) {
-      return err(ImportBlockError.InvalidTicketsMark);
-    }
-
-    if (false === newBlock.header.verifyExtrinsicHash(newBlock.extrinsics)) {
-      return err(ImportBlockError.InvalidHx);
-    }
-
-    if (false === newBlock.header.verifyOffenders(disputesExtrinsic)) {
-      return err(ImportBlockError.InvalidOffenders);
-    }
     return ok(p_state);
   }
-
-  static createNewBlock() {}
-}
-
-export enum ImportBlockError {
-  InvalidParent = "Invalid parent",
-  InvalidEA = "Invalid extrinsic assurances",
-
-  InvalidHx = "Invalid extrinsic hash",
-  InvalidSeal = "Invalid seal",
-  InvalidEntropySignature = "Invalid entropy signature",
-  InvalidEntropy = "Invalid entropy",
-  InvalidEpochMarker = "Epoch marker set but not in new epoch",
-  InvalidEpochMarkerValidator = "Epoch marker validator key mismatch",
-  InvalidOffenders = "Invalid offenders",
-  InvalidParentStateRoot = "Invalid parent state root",
-  WinningTicketsNotEnoughLong = "Winning tickets not EPOCH long",
-  WinningTicketsNotExpected = "Winning tickets set but not expected",
-  WinningTicketMismatch = "WInning ticket mismatch",
-  InvalidTicketsMark = "InvalidTicketsMark",
-  InvalidParentHeader = "InvalidParentHeader",
 }

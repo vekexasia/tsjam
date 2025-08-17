@@ -1,3 +1,4 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   BaseJamCodecable,
   codec,
@@ -5,11 +6,15 @@ import {
   JamCodecable,
 } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import { Blake2bHash, JamEntropy, Posterior, Validated } from "@tsjam/types";
-import { toPosterior } from "@tsjam/utils";
-import type { JamStateImpl } from "./jam-state-impl";
+import {
+  Blake2bHash,
+  JamEntropy,
+  Posterior,
+  Tagged,
+  Validated,
+} from "@tsjam/types";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import type { SlotImpl, TauImpl } from "./slot-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
 
 /**
  * `η`
@@ -36,12 +41,33 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     }
   }
 
-  toPosterior(deps: {
+  rotate1_3(deps: {
     slot: SlotImpl;
     p_tau: Validated<Posterior<TauImpl>>;
-    // or eventually vrfOutputSignature of h_v
-    vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
-  }): Posterior<JamEntropyImpl> {
+  }): Tagged<JamEntropyImpl, "rotated_1_3"> {
+    // $(0.7.1 - 6.23) | rotate `η_1`, `η_2`, `η_3`
+    let [p_1, p_2, p_3] = [this._1, this._2, this._3];
+
+    if (deps.p_tau.isNewerEra(deps.slot)) {
+      [p_1, p_2, p_3] = [this._0, this._1, this._2];
+    }
+    return toTagged(
+      new JamEntropyImpl({
+        _0: this._0,
+        _1: p_1,
+        _2: p_2,
+        _3: p_3,
+      }),
+    );
+  }
+
+  toPosterior(
+    this: Tagged<JamEntropyImpl, "rotated_1_3">,
+    deps: {
+      // or eventually vrfOutputSignature of h_v
+      vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
+    },
+  ): Posterior<JamEntropyImpl> {
     // $(0.7.1 - 6.22) | rotate `η_0`
     const p_0 = Hashing.blake2b(
       new Uint8Array([
@@ -49,19 +75,12 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
         ...encodeWithCodec(HashCodec, deps.vrfOutputHash),
       ]),
     );
-
-    // $(0.7.1 - 6.23) | rotate `η_1`, `η_2`, `η_3`
-    let [p_1, p_2, p_3] = [this._1, this._2, this._3];
-
-    if (deps.p_tau.isNewerEra(deps.slot)) {
-      [p_1, p_2, p_3] = [this._0, this._1, this._2];
-    }
     return toPosterior(
       new JamEntropyImpl({
         _0: p_0,
-        _1: p_1,
-        _2: p_2,
-        _3: p_3,
+        _1: this._1,
+        _2: this._2,
+        _3: this._3,
       }),
     );
   }

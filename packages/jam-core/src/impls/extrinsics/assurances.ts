@@ -31,6 +31,7 @@ import { compareUint8Arrays } from "uint8array-extras";
 import type { JamStateImpl } from "../jam-state-impl";
 import { NewWorkReportsImpl } from "../new-work-reports-impl";
 import type { RHOImpl } from "../rho-impl";
+import { Result, err, ok } from "neverthrow";
 
 /**
  * Single extrinsic element
@@ -145,14 +146,14 @@ export class AssurancesExtrinsicImpl
     return this.elements.reduce((a, b) => a + b.bitstring[core], 0);
   }
 
-  isValid(deps: {
+  checkValidity(deps: {
     headerParent: HeaderHash;
     kappa: JamStateImpl["kappa"];
     d_rho: Dagger<RHOImpl>;
-  }): this is Validated<AssuranceExtrinsicImpl> {
+  }): Result<Validated<AssurancesExtrinsicImpl>, EAValidationError> {
     // $(0.7.1 - 11.10)
     if (this.elements.length > NUMBER_OF_VALIDATORS) {
-      return false;
+      return err(EAValidationError.EA_TOO_MANY_VALIDATORS);
     }
 
     // $(0.7.1 - 11.12)
@@ -160,7 +161,7 @@ export class AssurancesExtrinsicImpl
       if (
         this.elements[i - 1].validatorIndex >= this.elements[i].validatorIndex
       ) {
-        return false;
+        return err(EAValidationError.EA_VALIDATORS_NOT_ORDERED_OR_UNIQUE);
       }
     }
 
@@ -172,10 +173,11 @@ export class AssurancesExtrinsicImpl
           d_rho: deps.d_rho,
         })
       ) {
-        return false;
+        return err(EAValidationError.EA_SINGLE_ELEMENT_INVALID);
       }
     }
-    return true;
+
+    return ok(toTagged(this));
   }
 
   /**
@@ -196,6 +198,12 @@ export class AssurancesExtrinsicImpl
     }
     return bold_R;
   }
+}
+
+export enum EAValidationError {
+  EA_TOO_MANY_VALIDATORS = "EA_TOO_MANY_VALIDATORS",
+  EA_VALIDATORS_NOT_ORDERED_OR_UNIQUE = "EA_VALIDATORS_NOT_ORDERED_OR_UNIQUE",
+  EA_SINGLE_ELEMENT_INVALID = "EA_SINGLE_ELEMENT_INVALID",
 }
 
 if (import.meta.vitest) {

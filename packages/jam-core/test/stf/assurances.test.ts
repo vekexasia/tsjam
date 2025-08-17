@@ -66,14 +66,17 @@ describe("assurances", () => {
   const doTest = (filename: string) => {
     const { value: test } = Test.decode(getCodecFixtureFile(`${filename}.bin`));
     expect(test.preState.kappa).deep.eq(test.postState.kappa);
-    const eaVerified = test.input.ea.isValid({
-      headerParent: test.input.parentHash,
-      kappa: test.preState.kappa,
-      d_rho: test.preState.d_rho,
-    });
+    const [eaError, eaVerified] = test.input.ea
+      .checkValidity({
+        headerParent: test.input.parentHash,
+        kappa: test.preState.kappa,
+        d_rho: test.preState.d_rho,
+      })
+      .safeRet();
+
     const shouldBeVerified = typeof test.output.err === "undefined";
 
-    expect(eaVerified).eq(shouldBeVerified);
+    expect(typeof eaError === "undefined").eq(shouldBeVerified);
     if (!eaVerified) {
       return;
     }

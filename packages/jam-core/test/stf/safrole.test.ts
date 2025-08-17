@@ -145,11 +145,14 @@ const buildTest = (name: string) => {
     throw new Error(p_tau.error);
   }
 
-  const p_entropy = curState.entropy.toPosterior({
-    slot: testCase.preState.tau,
-    p_tau: p_tau.value,
-    vrfOutputHash: testCase.input.entropy,
-  });
+  const p_entropy = curState.entropy
+    .rotate1_3({
+      slot: testCase.preState.tau,
+      p_tau: p_tau.value,
+    })
+    .toPosterior({
+      vrfOutputHash: testCase.input.entropy,
+    });
 
   const p_gamma_p = safrole.gamma_p.toPosterior({
     iota: curState.iota,
