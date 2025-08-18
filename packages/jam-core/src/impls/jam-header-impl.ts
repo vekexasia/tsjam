@@ -21,7 +21,7 @@ import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
-import { TauImpl } from "./slot-impl";
+import { SlotImpl, TauImpl } from "./slot-impl";
 
 /**
  * $(0.7.1 - C.23) | `Eu`
@@ -52,7 +52,7 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
   /**
    * **HT:** The block's time slot index since jam epoch (time slot is 6 secs long).
    */
-  @eSubIntCodec(4)
+  @codec(SlotImpl)
   slot!: TauImpl;
 
   /**

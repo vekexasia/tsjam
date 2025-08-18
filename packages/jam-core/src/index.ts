@@ -18,6 +18,7 @@ export * from "./impls/gamma-s-impl";
 export * from "./impls/gamma-z-impl";
 export * from "./impls/header-epoch-marker-impl";
 export * from "./impls/header-lookup-history-impl";
+export * from "./impls/header-offender-marker-impl";
 export * from "./impls/jam-block-impl";
 export * from "./impls/jam-block-extrinsics-impl";
 export * from "./impls/jam-entropy-impl";

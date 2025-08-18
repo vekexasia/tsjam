@@ -29,7 +29,6 @@ export const generateDebugKeys = (index: number) => {
   );
 
   const bandersnatch_public = Bandersnatch.publicKey(bandersnatch_secret_seed);
-  console.log(bandersnatch_public);
   return {
     ed25519: {
       ...Ed25519.keypair(ed25519_secret_seed),
