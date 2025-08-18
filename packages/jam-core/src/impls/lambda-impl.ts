@@ -4,6 +4,8 @@ import { toPosterior, toTagged } from "@tsjam/utils";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { ValidatorDataImpl } from "./validator-data-impl";
 
 @JamCodecable()
 export class LambdaImpl extends ValidatorsImpl {
@@ -24,5 +26,15 @@ export class LambdaImpl extends ValidatorsImpl {
       );
     }
     return toPosterior(toTagged(cloneCodecable(this)));
+  }
+
+  static create(): LambdaImpl {
+    return new LambdaImpl({
+      elements: <LambdaImpl["elements"]>(
+        Array.from({ length: NUMBER_OF_VALIDATORS }, () =>
+          ValidatorDataImpl.create(),
+        )
+      ),
+    });
   }
 }

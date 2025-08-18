@@ -78,4 +78,15 @@ export class AccumulationQueueImpl
     }
     return toPosterior(toRet);
   }
+
+  static create() {
+    return new AccumulationQueueImpl({
+      elements: <AccumulationQueueImpl["elements"]>(
+        Array.from(
+          { length: EPOCH_LENGTH },
+          () => new Array<AccumulationQueueItem>(),
+        )
+      ),
+    });
+  }
 }

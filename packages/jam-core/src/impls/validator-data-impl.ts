@@ -61,4 +61,13 @@ export class ValidatorDataImpl
       Object.assign(this, config);
     }
   }
+
+  static create() {
+    return new ValidatorDataImpl({
+      banderSnatch: <BandersnatchKey>new Uint8Array(32).fill(0),
+      ed25519: <ED25519PublicKey>new Uint8Array(32).fill(0),
+      blsKey: <BLSKey>new Uint8Array(144).fill(0),
+      metadata: <ByteArrayOfLength<128>>new Uint8Array(128).fill(0),
+    });
+  }
 }

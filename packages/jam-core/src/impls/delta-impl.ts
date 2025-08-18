@@ -138,4 +138,8 @@ export class DeltaImpl implements Delta {
   static union(a: DeltaImpl, b: DeltaImpl): DeltaImpl {
     return new DeltaImpl(new Map([...a.elements, ...b.elements]));
   }
+
+  static create() {
+    return new DeltaImpl();
+  }
 }

@@ -6,7 +6,12 @@ import {
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
+import {
+  AUTHPOOL_SIZE,
+  AUTHQUEUE_MAX_SIZE,
+  CORES,
+  EPOCH_LENGTH,
+} from "@tsjam/constants";
 import {
   AuthorizerPool,
   CoreIndex,
@@ -89,5 +94,13 @@ export class AuthorizerPoolImpl
       );
     }
     return toPosterior(newState);
+  }
+
+  static create() {
+    return new AuthorizerPoolImpl({
+      elements: <AuthorizerPoolImpl["elements"]>(
+        Array.from({ length: CORES }, () => new Array<Hash>())
+      ),
+    });
   }
 }

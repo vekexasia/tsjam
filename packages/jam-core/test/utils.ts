@@ -90,33 +90,7 @@ export const dummySafroleState = (): SafroleStateImpl => {
     }),
   });
 };
-export const dummyAuthPool = (): AuthorizerPoolImpl => {
-  return new AuthorizerPoolImpl({
-    elements: toTagged(
-      new Array(CORES).fill(
-        new Array(AUTHPOOL_SIZE).fill(toTagged(new Uint8Array(32).fill(0))),
-      ),
-    ),
-  });
-};
-export const dummyBeta = (): BetaImpl => {
-  return new BetaImpl({
-    recentHistory: new RecentHistoryImpl({
-      elements: toTagged(
-        new Array(RECENT_HISTORY_LENGTH).fill(null).map(
-          () =>
-            new RecentHistoryItemImpl({
-              stateRoot: <StateRootHash>new Uint8Array(32).fill(0),
-              reportedPackages: new IdentityMap(),
-              headerHash: <HeaderHash>new Uint8Array(32).fill(0),
-              accumulationResultMMB: <Hash>new Uint8Array(32).fill(0),
-            }),
-        ),
-      ),
-    }),
-    beefyBelt: new Array<Hash | undefined>(),
-  });
-};
+
 export const dummyAuthQueue = (): AuthorizerQueueImpl => {
   return new AuthorizerQueueImpl({
     elements: toTagged(
@@ -153,8 +127,8 @@ export const dummyEntropy = <T extends JamEntropyImpl>(): T => {
 
 export const dummyState = (): JamStateImpl => {
   return new JamStateImpl({
-    beta: dummyBeta(),
-    authPool: dummyAuthPool(),
+    beta: BetaImpl.create(),
+    authPool: AuthorizerPoolImpl.create(),
     safroleState: dummySafroleState(),
     lambda: dummyValidators(),
     kappa: dummyValidators(),

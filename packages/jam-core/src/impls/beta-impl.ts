@@ -28,6 +28,7 @@ import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { LastAccOutsImpl } from "./last-acc-outs-impl";
 import { RecentHistoryImpl } from "./recent-history-impl";
 import { appendMMR } from "@/merklization/mmr";
+import { RecentHistoryItemImpl } from "./recent-history-item-impl";
 
 /**
  * $(0.7.1 - 7.1 / 7.3)
@@ -100,5 +101,12 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
         }),
       }),
     );
+  }
+
+  static create() {
+    return new BetaImpl({
+      recentHistory: RecentHistoryImpl.create(),
+      beefyBelt: [],
+    });
   }
 }

@@ -20,7 +20,6 @@ import {
   WorkPackageHash,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import { RecentHistoryItemImpl } from "./recent-history-item-impl";
 
@@ -32,11 +31,11 @@ export class RecentHistoryImpl
   @lengthDiscriminatedCodec(RecentHistoryItemImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<RecentHistoryItemImpl, typeof RECENT_HISTORY_LENGTH>;
 
-  constructor(config?: ConditionalExcept<RecentHistoryImpl, Function>) {
+  constructor(elements: RecentHistoryItemImpl[] = []) {
     super();
-    if (typeof config !== "undefined") {
-      Object.assign(this, config);
-    }
+    this.elements = <
+      UpToSeq<RecentHistoryItemImpl, typeof RECENT_HISTORY_LENGTH>
+    >elements;
   }
 
   findHeader(headerHash: HeaderHash) {
@@ -103,5 +102,9 @@ export class RecentHistoryImpl
     }
 
     return toPosterior(toRet);
+  }
+
+  static create(): RecentHistoryImpl {
+    return new RecentHistoryImpl([]);
   }
 }

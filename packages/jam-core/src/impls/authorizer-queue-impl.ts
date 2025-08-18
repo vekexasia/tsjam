@@ -18,9 +18,9 @@ import {
 import { ConditionalExcept } from "type-fest";
 
 /**
- * `ω`
- * Defines the ready but not yet accumulated work reports
- * $(0.7.1 - 12.3)
+ * `ϕ`
+ * $(0.7.1 - 8.1)
+ * A queue of AuthorizerHash-es, each of which will be rotated in the AuthorizerPool
  */
 @JamCodecable()
 export class AuthorizerQueueImpl
@@ -49,5 +49,18 @@ export class AuthorizerQueueImpl
 
   queueAtCore(core: CoreIndex) {
     return this.elements[core];
+  }
+
+  static create() {
+    return new AuthorizerQueueImpl({
+      elements: <AuthorizerQueueImpl["elements"]>(
+        Array.from({ length: CORES }, () =>
+          Array.from(
+            { length: AUTHQUEUE_MAX_SIZE },
+            () => <Hash>new Uint8Array(32).fill(0),
+          ),
+        )
+      ),
+    });
   }
 }
