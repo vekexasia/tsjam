@@ -13,7 +13,6 @@ import {
   Tagged,
   Validated,
 } from "@tsjam/types";
-import { toPosterior } from "@tsjam/utils";
 import type { SlotImpl, TauImpl } from "./slot-impl";
 
 /**

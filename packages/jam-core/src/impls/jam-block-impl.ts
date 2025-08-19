@@ -10,7 +10,6 @@ import {
 } from "./jam-signed-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import { TauImpl } from "./slot-impl";
-import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 
 /**
  * codec: $(0.7.1 - C.16)
@@ -33,7 +32,7 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
   /**
    * Creates a new block given the computed extrinsics
    */
-  static newEmpty(
+  static create(
     curState: JamStateImpl,
     p_tau: Validated<Posterior<TauImpl>>,
     extrinsics: JamBlockExtrinsicsImpl,

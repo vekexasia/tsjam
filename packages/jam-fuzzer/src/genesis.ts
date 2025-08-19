@@ -94,7 +94,7 @@ export const GENESIS_STATE = new JamStateImpl({
 
   block: new JamBlockImpl({
     header: GENESIS,
-    extrinsics: JamBlockExtrinsicsImpl.empty(),
+    extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
   }),
 });
 

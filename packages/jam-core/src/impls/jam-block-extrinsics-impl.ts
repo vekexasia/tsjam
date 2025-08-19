@@ -1,10 +1,10 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import {
+  asCodec,
   BaseJamCodecable,
   codec,
   createArrayLengthDiscriminator,
   createCodec,
-  asCodec,
   E_sub_int,
   encodeWithCodec,
   JamCodec,
@@ -18,6 +18,7 @@ import {
   JamBlockExtrinsics,
   ValidatorIndex,
 } from "@tsjam/types";
+import { ConditionalExcept } from "type-fest";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import {
@@ -28,8 +29,6 @@ import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { SlotImpl } from "./slot-impl";
 import type { WorkReportImpl } from "./work-report-impl";
-import { J } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
-import { ConditionalExcept } from "type-fest";
 
 @JamCodecable() // $(0.7.1 - C.16)
 export class JamBlockExtrinsicsImpl

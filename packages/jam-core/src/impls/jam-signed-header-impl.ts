@@ -1,6 +1,5 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import {
-  BufferJSONCodec,
   codec,
   encodeWithCodec,
   JamCodecable,
@@ -20,12 +19,12 @@ import {
   Posterior,
   SignedJamHeader,
   Validated,
-  ValidatorIndex,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
+import { DisputesToPosteriorError } from "./disputes-state-impl";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { GammaPImpl } from "./gamma-p-impl";
 import type { GammaSImpl } from "./gamma-s-impl";
@@ -38,7 +37,6 @@ import { JamHeaderImpl } from "./jam-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import { KappaImpl } from "./kappa-impl";
 import { TauImpl } from "./slot-impl";
-import { DisputesToPosteriorError } from "./disputes-state-impl";
 
 /**
  * $(0.7.1 - C.22) | codec

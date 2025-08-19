@@ -7,16 +7,15 @@ import {
   ValidatorIndex,
   ValidatorStatistics,
 } from "@tsjam/types";
-import { toTagged } from "@tsjam/utils";
+import { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import type { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import type { JamEntropyImpl } from "./jam-entropy-impl";
 import type { JamHeaderImpl } from "./jam-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import { SingleValidatorStatisticsImpl } from "./single-validator-statistics-impl";
-import { ValidatorStatisticsCollectionImpl } from "./validator-statistics-collection-impl";
-import { ConditionalExcept } from "type-fest";
 import type { TauImpl } from "./slot-impl";
+import { ValidatorStatisticsCollectionImpl } from "./validator-statistics-collection-impl";
 
 /**
  * data types (u32) is given by the codec

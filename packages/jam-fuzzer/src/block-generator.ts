@@ -14,7 +14,7 @@ export const produceBlock = (
   state: JamStateImpl,
   p_tau: Validated<Posterior<TauImpl>>,
 ) => {
-  const extrinsics = JamBlockExtrinsicsImpl.empty();
+  const extrinsics = JamBlockExtrinsicsImpl.newEmpty();
   const p_entropy13 = state.entropy.rotate1_3({ slot: state.slot, p_tau });
   const p_kappa = state.kappa.toPosterior(state, { p_tau });
   const p_gamma_s = state.safroleState.gamma_s.toPosterior({
