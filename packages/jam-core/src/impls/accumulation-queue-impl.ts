@@ -79,7 +79,7 @@ export class AccumulationQueueImpl
     return toPosterior(toRet);
   }
 
-  static create() {
+  static newEmpty() {
     return new AccumulationQueueImpl({
       elements: <AccumulationQueueImpl["elements"]>(
         Array.from(

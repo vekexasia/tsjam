@@ -52,6 +52,11 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
   }
 }
 
+/**
+ * `ρ` - tracks WorkReports which have been reported but not
+ *       yet available indexed by core index
+ * $(0.7.1 - 11.1)
+ */
 @JamCodecable()
 export class RHOImpl extends BaseJamCodecable implements RHO {
   @jsonCodec(
@@ -166,5 +171,13 @@ export class RHOImpl extends BaseJamCodecable implements RHO {
       }
     }
     return toPosterior(newState);
+  }
+
+  static newEmpty() {
+    return new RHOImpl({
+      elements: <RHOImpl["elements"]>(
+        Array.from({ length: CORES }, () => undefined)
+      ),
+    });
   }
 }

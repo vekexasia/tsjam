@@ -68,6 +68,25 @@ export class CoreStatisticsImpl
 
     return toPosterior(toRet);
   }
+
+  static newEmpty(): CoreStatisticsImpl {
+    return new CoreStatisticsImpl({
+      elements: <CoreStatisticsImpl["elements"]>Array.from(
+        { length: CORES },
+        () =>
+          new SingleCoreStatisticsImpl({
+            daLoad: <u32>0,
+            popularity: <u16>0,
+            importCount: <u16>0,
+            exportCount: <u16>0,
+            extrinsicSize: <u32>0,
+            extrinsicCount: <u16>0,
+            bundleSize: <u32>0,
+            gasUsed: <Gas>0n,
+          }),
+      ),
+    });
+  }
 }
 
 /**

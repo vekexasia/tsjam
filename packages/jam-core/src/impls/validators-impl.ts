@@ -14,11 +14,11 @@ import {
   ValidatorIndex,
   Validators,
 } from "@tsjam/types";
-import { ValidatorDataImpl } from "./validator-data-impl";
+import { toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
-import { toTagged } from "@tsjam/utils";
+import { ValidatorDataImpl } from "./validator-data-impl";
 
 @JamCodecable()
 export class ValidatorsImpl extends BaseJamCodecable implements Validators {
@@ -60,6 +60,16 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
           }
           return v;
         }),
+      ),
+    });
+  }
+
+  static newEmpty() {
+    return new ValidatorsImpl({
+      elements: <ValidatorsImpl["elements"]>(
+        Array.from({ length: NUMBER_OF_VALIDATORS }, () =>
+          ValidatorDataImpl.newEmpty(),
+        )
       ),
     });
   }

@@ -80,5 +80,6 @@ export * from "./data-structures/identity-map";
 export * from "./data-structures/identity-set";
 
 // merklization
+export * from "./merklization/state-codecs";
 export * from "./merklization/state";
 export * from "./merklization/reverse";

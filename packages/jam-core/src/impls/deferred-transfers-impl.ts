@@ -33,4 +33,8 @@ export class DeferredTransfersImpl extends BaseJamCodecable {
   length(): number {
     return this.elements.length;
   }
+
+  static newEmpty(): DeferredTransfersImpl {
+    return new DeferredTransfersImpl([]);
+  }
 }

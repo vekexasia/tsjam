@@ -74,4 +74,16 @@ export class PrivilegedServicesImpl
       Object.assign(this, config);
     }
   }
+
+  static newEmpty() {
+    return new PrivilegedServicesImpl({
+      manager: <ServiceIndex>0,
+      assigners: <PrivilegedServicesImpl["assigners"]>(
+        Array.from({ length: CORES }, () => <ServiceIndex>0)
+      ),
+      delegator: <ServiceIndex>0,
+      registrar: <ServiceIndex>0,
+      alwaysAccers: new Map(),
+    });
+  }
 }

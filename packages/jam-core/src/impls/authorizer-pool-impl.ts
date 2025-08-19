@@ -1,3 +1,4 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -6,12 +7,7 @@ import {
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import {
-  AUTHPOOL_SIZE,
-  AUTHQUEUE_MAX_SIZE,
-  CORES,
-  EPOCH_LENGTH,
-} from "@tsjam/constants";
+import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
 import {
   AuthorizerPool,
   CoreIndex,
@@ -26,7 +22,6 @@ import { ConditionalExcept } from "type-fest";
 import type { AuthorizerQueueImpl } from "./authorizer-queue-impl";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { TauImpl } from "./slot-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
 const codec = createArrayLengthDiscriminator(HashCodec);
 /**
  * `α`
@@ -96,7 +91,7 @@ export class AuthorizerPoolImpl
     return toPosterior(newState);
   }
 
-  static create() {
+  static newEmpty() {
     return new AuthorizerPoolImpl({
       elements: <AuthorizerPoolImpl["elements"]>(
         Array.from({ length: CORES }, () => new Array<Hash>())

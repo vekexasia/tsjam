@@ -70,4 +70,12 @@ export class AccumulationHistoryImpl
     }
     return toPosterior(toRet);
   }
+
+  static newEmpty(): AccumulationHistoryImpl {
+    return new AccumulationHistoryImpl({
+      elements: <AccumulationHistoryImpl["elements"]>(
+        Array.from({ length: EPOCH_LENGTH }, () => new IdentitySet())
+      ),
+    });
+  }
 }

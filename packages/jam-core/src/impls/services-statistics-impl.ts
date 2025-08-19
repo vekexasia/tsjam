@@ -119,6 +119,10 @@ export class ServicesStatisticsImpl
 
     return toPosterior(toRet);
   }
+
+  static newEmpty(): ServicesStatisticsImpl {
+    return new ServicesStatisticsImpl({ elements: new Map() });
+  }
 }
 
 /**

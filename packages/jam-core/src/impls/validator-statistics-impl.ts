@@ -67,20 +67,7 @@ export class ValidatorStatisticsImpl
     // $(0.7.1 - 13.3 / 13.4)
     let bold_a = toRet.previous;
     if (deps.p_tau.isNewerEra(deps.tau)) {
-      bold_a = new ValidatorStatisticsCollectionImpl({
-        elements: toTagged(
-          new Array(NUMBER_OF_VALIDATORS).fill(0).map(() => {
-            return new SingleValidatorStatisticsImpl({
-              blocks: <u32>0,
-              tickets: <u32>0,
-              preimageCount: <u32>0,
-              preimageSize: <u32>0,
-              guarantees: <u32>0,
-              assurances: <u32>0,
-            });
-          }),
-        ),
-      });
+      bold_a = ValidatorStatisticsCollectionImpl.newEmpty();
     }
 
     for (let v = <ValidatorIndex>0; v < NUMBER_OF_VALIDATORS; v++) {
@@ -119,5 +106,12 @@ export class ValidatorStatisticsImpl
     }
 
     return toRet;
+  }
+
+  static newEmpty() {
+    return new ValidatorStatisticsImpl({
+      accumulator: ValidatorStatisticsCollectionImpl.newEmpty(),
+      previous: ValidatorStatisticsCollectionImpl.newEmpty(),
+    });
   }
 }

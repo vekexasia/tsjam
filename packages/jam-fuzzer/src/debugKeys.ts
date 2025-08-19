@@ -1,4 +1,5 @@
 import { encodeWithCodec, E_sub_int } from "@tsjam/codec";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Hashing, Bandersnatch, Ed25519 } from "@tsjam/crypto";
 
 export const generateDebugKeys = (index: number) => {
@@ -41,6 +42,10 @@ export const generateDebugKeys = (index: number) => {
     },
   };
 };
+
+export const VALIDATORS = Array.from({ length: NUMBER_OF_VALIDATORS }, (_, i) =>
+  generateDebugKeys(i),
+);
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;

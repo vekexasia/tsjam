@@ -1,5 +1,6 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import { wellBalancedBinaryMerkleRoot } from "@/merklization/binary";
+import { appendMMR } from "@/merklization/mmr";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -27,8 +28,6 @@ import { ConditionalExcept } from "type-fest";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { LastAccOutsImpl } from "./last-acc-outs-impl";
 import { RecentHistoryImpl } from "./recent-history-impl";
-import { appendMMR } from "@/merklization/mmr";
-import { RecentHistoryItemImpl } from "./recent-history-item-impl";
 
 /**
  * $(0.7.1 - 7.1 / 7.3)
@@ -103,9 +102,9 @@ export class BetaImpl extends BaseJamCodecable implements Beta {
     );
   }
 
-  static create() {
+  static newEmpty() {
     return new BetaImpl({
-      recentHistory: RecentHistoryImpl.create(),
+      recentHistory: RecentHistoryImpl.newEmpty(),
       beefyBelt: [],
     });
   }

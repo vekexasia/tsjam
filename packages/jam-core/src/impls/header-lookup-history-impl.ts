@@ -22,7 +22,7 @@ export class HeaderLookupHistoryImpl implements HeaderLookupHistory {
   }
 
   toPosterior(deps: { header: JamSignedHeaderImpl }): HeaderLookupHistoryImpl {
-    const toRet = structuredClone(this);
+    const toRet = new HeaderLookupHistoryImpl(new SafeMap([...this.elements]));
 
     toRet.elements.set(deps.header.slot, deps.header);
     const k = [...this.elements.keys()];
@@ -32,5 +32,9 @@ export class HeaderLookupHistoryImpl implements HeaderLookupHistory {
       toRet.elements.delete(k[0]);
     }
     return toPosterior(toRet);
+  }
+
+  static newEmpty() {
+    return new HeaderLookupHistoryImpl(new SafeMap());
   }
 }

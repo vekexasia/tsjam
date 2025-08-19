@@ -136,6 +136,10 @@ export class DisputesFaults extends BaseJamCodecable {
 
     return ok(toTagged(this));
   }
+
+  static empty(): DisputesFaults {
+    return new DisputesFaults([]);
+  }
 }
 
 export enum DisputesFaultError {

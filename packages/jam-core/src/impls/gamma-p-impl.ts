@@ -1,5 +1,6 @@
 import { PHI_FN } from "@/utils";
 import { JamCodecable } from "@tsjam/codec";
+import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   BLSKey,
   ByteArrayOfLength,
@@ -54,5 +55,15 @@ export class GammaPImpl extends ValidatorsImpl {
       }),
     );
     return toRet;
+  }
+
+  static newEmpty(): GammaPImpl {
+    return new GammaPImpl({
+      elements: <GammaPImpl["elements"]>(
+        Array.from({ length: NUMBER_OF_VALIDATORS }, () =>
+          ValidatorDataImpl.newEmpty(),
+        )
+      ),
+    });
   }
 }

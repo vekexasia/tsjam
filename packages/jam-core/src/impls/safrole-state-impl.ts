@@ -69,4 +69,13 @@ export class SafroleStateImpl extends BaseJamCodecable implements SafroleState {
     });
     return toPosterior(toRet);
   }
+
+  static newEmpty(): SafroleStateImpl {
+    return new SafroleStateImpl({
+      gamma_s: GammaSImpl.newEmpty(),
+      gamma_a: GammaAImpl.newEmpty(),
+      gamma_z: GammaZImpl.newEmpty(),
+      gamma_p: <Tagged<GammaPImpl, "gamma_p">>GammaPImpl.newEmpty(),
+    });
+  }
 }

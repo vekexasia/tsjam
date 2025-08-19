@@ -13,7 +13,7 @@ import {
   getConstantsMode,
   LOTTERY_MAX_SLOT,
 } from "@tsjam/constants";
-import { Hashing } from "@tsjam/crypto";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import {
   BandersnatchKey,
   GammaS,
@@ -23,12 +23,14 @@ import {
   SeqOfLength,
   Validated,
 } from "@tsjam/types";
-import { toPosterior } from "@tsjam/utils";
+import { toPosterior, toTagged } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
 import { SafroleStateImpl } from "./safrole-state-impl";
+import { compareUint8Arrays } from "uint8array-extras";
+import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {
   @sequenceCodec(EPOCH_LENGTH, xBytesCodec(32))
@@ -42,7 +44,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
     Object.assign(this, config);
   }
 
-  isFallback(): boolean {
+  isFallback(): this is GammaSImpl & { keys: GammaSFallback } {
     return this.keys !== undefined;
   }
 
@@ -52,6 +54,35 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
 
   toBinary(): Uint8Array {
     return encodeWithCodec(GammaSImpl, this);
+  }
+
+  /**
+   * Checks if the provided public/private key is allowed to produce a block
+   * used when producing blocks
+   */
+  isKeyAllowedToProduce(
+    this: Posterior<GammaSImpl>,
+    keyPair: { public: BandersnatchKey; private: BandersnatchKey },
+    deps: {
+      p_tau: Validated<Posterior<TauImpl>>;
+      p_entropy_3: Posterior<JamEntropy["_3"]>;
+    },
+  ): boolean {
+    if (this.isFallback()) {
+      return (
+        compareUint8Arrays(
+          this.keys[deps.p_tau.slotPhase()],
+          keyPair.public,
+        ) === 0
+      );
+    } else {
+      const real_i_y = this.tickets![deps.p_tau.slotPhase()].id;
+      const i_y = Bandersnatch.vrfOutputSeed(
+        keyPair.private,
+        JamSignedHeaderImpl.sealSignContext(deps.p_entropy_3, this, deps.p_tau),
+      );
+      return compareUint8Arrays(real_i_y, i_y) === 0;
+    }
   }
 
   /**
@@ -195,6 +226,17 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
     } else {
       return { tickets: GammaSImpl.codecOf("tickets").toJSON(value.tickets!) };
     }
+  }
+
+  static newEmpty(): GammaSImpl {
+    return new GammaSImpl({
+      keys: toTagged(
+        Array.from(
+          { length: EPOCH_LENGTH },
+          () => <BandersnatchKey>new Uint8Array(32).fill(0),
+        ),
+      ),
+    });
   }
 }
 

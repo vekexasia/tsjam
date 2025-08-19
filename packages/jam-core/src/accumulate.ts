@@ -76,7 +76,7 @@ export const accumulateReports = (
   const preState = new PVMAccumulationStateImpl({
     accounts: deps.serviceAccounts,
     stagingSet: deps.iota,
-    authQueue: new AuthorizerQueueImpl(),
+    authQueue: deps.authQueue,
     manager: deps.privServices.manager,
     assigners: deps.privServices.assigners,
     delegator: deps.privServices.delegator,

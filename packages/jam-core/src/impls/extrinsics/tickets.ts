@@ -167,6 +167,10 @@ export class TicketsExtrinsicImpl
 
     return ok(n);
   }
+
+  static newEmpty(): TicketsExtrinsicImpl {
+    return new TicketsExtrinsicImpl([]);
+  }
 }
 
 if (import.meta.vitest) {

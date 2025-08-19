@@ -92,4 +92,12 @@ export class JamStatisticsImpl
 
     return toPosterior(toRet);
   }
+
+  static newEmpty(): JamStatisticsImpl {
+    return new JamStatisticsImpl({
+      cores: CoreStatisticsImpl.newEmpty(),
+      services: ServicesStatisticsImpl.newEmpty(),
+      validators: ValidatorStatisticsImpl.newEmpty(),
+    });
+  }
 }

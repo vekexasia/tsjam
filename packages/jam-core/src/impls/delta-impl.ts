@@ -139,7 +139,7 @@ export class DeltaImpl implements Delta {
     return new DeltaImpl(new Map([...a.elements, ...b.elements]));
   }
 
-  static create() {
-    return new DeltaImpl();
+  static newEmpty() {
+    return new DeltaImpl(new Map());
   }
 }

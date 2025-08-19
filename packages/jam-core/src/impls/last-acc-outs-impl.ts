@@ -61,4 +61,8 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
       ...new Set([...a.elements, ...b.elements]).values(),
     ]);
   }
+
+  static newEmpty(): LastAccOutsImpl {
+    return new LastAccOutsImpl([]);
+  }
 }

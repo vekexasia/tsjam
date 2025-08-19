@@ -569,6 +569,10 @@ export class GuaranteesExtrinsicImpl
 
     return ok(toTagged(this));
   }
+
+  static newEmpty(): GuaranteesExtrinsicImpl {
+    return new GuaranteesExtrinsicImpl([]);
+  }
 }
 
 export enum EGError {

@@ -62,7 +62,7 @@ export class ValidatorDataImpl
     }
   }
 
-  static create() {
+  static newEmpty() {
     return new ValidatorDataImpl({
       banderSnatch: <BandersnatchKey>new Uint8Array(32).fill(0),
       ed25519: <ED25519PublicKey>new Uint8Array(32).fill(0),

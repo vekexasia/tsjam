@@ -275,6 +275,10 @@ export class DisputesVerdicts extends BaseJamCodecable {
 
     return ok(toTagged(this));
   }
+
+  static empty(): DisputesVerdicts {
+    return new DisputesVerdicts([]);
+  }
 }
 
 export enum VerdictVoteKind {

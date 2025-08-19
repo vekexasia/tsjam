@@ -78,6 +78,10 @@ export class PreimagesExtrinsicImpl
 
     return ok(toTagged(this));
   }
+
+  static newEmpty(): PreimagesExtrinsicImpl {
+    return new PreimagesExtrinsicImpl([]);
+  }
 }
 
 export enum EPError {

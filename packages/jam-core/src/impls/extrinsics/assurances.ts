@@ -198,6 +198,10 @@ export class AssurancesExtrinsicImpl
     }
     return bold_R;
   }
+
+  static newEmpty(): AssurancesExtrinsicImpl {
+    return new AssurancesExtrinsicImpl([]);
+  }
 }
 
 export enum EAValidationError {

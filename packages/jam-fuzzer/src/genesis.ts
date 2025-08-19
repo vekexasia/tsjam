@@ -1,23 +1,36 @@
-import { getConstantsMode, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
+import { getConstantsMode } from "@tsjam/constants";
 import {
+  AccumulationHistoryImpl,
   AccumulationQueueImpl,
   AuthorizerPoolImpl,
   AuthorizerQueueImpl,
   BetaImpl,
   DeltaImpl,
+  DisputesStateImpl,
   EpochMarkerValidatorImpl,
+  GammaPImpl,
   HeaderEpochMarkerImpl,
+  HeaderLookupHistoryImpl,
   HeaderOffenderMarkerImpl,
+  JamBlockExtrinsicsImpl,
+  JamBlockImpl,
+  JamEntropyImpl,
   JamSignedHeaderImpl,
   JamStateImpl,
+  JamStatisticsImpl,
   KappaImpl,
   LambdaImpl,
+  LastAccOutsImpl,
+  PrivilegedServicesImpl,
+  RHOImpl,
+  SafroleStateImpl,
   SlotImpl,
   TauImpl,
+  ValidatorsImpl,
 } from "@tsjam/core";
-import { Blake2bHash, u32, ValidatorIndex } from "@tsjam/types";
+import { Blake2bHash, Tagged, u32, ValidatorIndex } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { generateDebugKeys } from "./debugKeys";
+import { VALIDATORS } from "./debugKeys";
 
 export const GENESIS = new JamSignedHeaderImpl({
   parent: toTagged(new Uint8Array(32).fill(0)),
@@ -28,8 +41,7 @@ export const GENESIS = new JamSignedHeaderImpl({
     entropy: <Blake2bHash>new Uint8Array(32).fill(0),
     entropy2: <Blake2bHash>new Uint8Array(32).fill(0),
     validators: toTagged(
-      new Array(NUMBER_OF_VALIDATORS).fill(0).map((_, index) => {
-        const keys = generateDebugKeys(index);
+      VALIDATORS.map((keys) => {
         return new EpochMarkerValidatorImpl({
           ed25519: keys.ed25519.public,
           bandersnatch: keys.bandersnatch.public,
@@ -44,91 +56,52 @@ export const GENESIS = new JamSignedHeaderImpl({
 });
 
 export const GENESIS_STATE = new JamStateImpl({
-  authPool: AuthorizerPoolImpl.create(),
-  beta: BetaImpl.create(),
-  /**
-   * `γ`
-   */
-  safroleState: SafroleState;
+  authPool: AuthorizerPoolImpl.newEmpty(),
 
-  /**
-   * `λ` Validator keys and metadata which were active in the prior epoch.
-   */
-  lambda: LambdaImpl.create(),
+  beta: BetaImpl.newEmpty(),
 
-  /**
-   * `κ` Validator keys and metadata which are active in the current epoch.
-   */
-  kappa: KappaImpl.create(),
+  safroleState: SafroleStateImpl.newEmpty(),
 
-  /**
-   * `ι` Validator keys and metadata which will be active in the next epoch.
-   */
-  iota: Tagged<Validators, "iota">;
+  lambda: <JamStateImpl["lambda"]>LambdaImpl.newEmpty(),
 
-  /**
-   * `δ`
-   */
-  serviceAccounts: DeltaImpl.create();
+  kappa: <JamStateImpl["kappa"]>KappaImpl.newEmpty(),
 
-  /**
-   * `η`
-   */
-  entropy: JamEntropy;
+  iota: <Tagged<ValidatorsImpl, "iota">>ValidatorsImpl.newEmpty(),
 
-  /**
-   * `φ`
-   */
-  authQueue: AuthorizerQueueImpl.create();
+  serviceAccounts: DeltaImpl.newEmpty(),
 
-  /**
-   * `χ`
-   */
-  privServices: PrivilegedServices;
+  entropy: JamEntropyImpl.newEmpty(),
 
-  /**
-   * `ψ`
-   */
-  disputes: IDisputesState;
+  authQueue: AuthorizerQueueImpl.newEmpty(),
 
-  /**
-   * `π`
-   */
-  statistics: JamStatistics;
+  privServices: PrivilegedServicesImpl.newEmpty(),
 
-  /**
-   * `θ`
-   */
-  accumulationQueue: AccumulationQueueImpl.create();
+  disputes: DisputesStateImpl.newEmpty(),
 
-  /**
-   * `ξ`
-   */
-  accumulationHistory: AccumulationHistory;
+  statistics: JamStatisticsImpl.newEmpty(),
 
-  /**
-   * `ρ`
-   */
-  rho: RHO;
+  accumulationQueue: AccumulationQueueImpl.newEmpty(),
 
-  /**
-   * `τ` - the most recent block timeslot
-   */
-  slot: Slot;
+  accumulationHistory: AccumulationHistoryImpl.newEmpty(),
 
-  /**
-   * `θ` - `\lastaccout`
-   */
-  mostRecentAccumulationOutputs: LastAccOuts;
+  rho: RHOImpl.newEmpty(),
 
-  /**
-   * NOTE: this is not included in gp but used as per type doc
-   */
-  headerLookupHistory: HeaderLookupHistory;
+  slot: <TauImpl>new SlotImpl(<u32>0),
 
-  
+  mostRecentAccumulationOutputs: LastAccOutsImpl.newEmpty(),
 
-})
+  headerLookupHistory: HeaderLookupHistoryImpl.newEmpty(),
+
+  block: new JamBlockImpl({
+    header: GENESIS,
+    extrinsics: JamBlockExtrinsicsImpl.empty(),
+  }),
+});
+
+// set the state according to the genesis header
+GENESIS_STATE.safroleState.gamma_p = <Tagged<GammaPImpl, "gamma_p">>(
+  GammaPImpl.fromEpochMarker(GENESIS.epochMarker!)
+);
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;

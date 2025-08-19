@@ -104,6 +104,14 @@ export class DisputeExtrinsicImpl
     // NOTE: all posterior checks are done in disputes state
     return ok(toTagged(this));
   }
+
+  static newEmpty(): Validated<DisputeExtrinsicImpl> {
+    return <Validated<DisputeExtrinsicImpl>>new DisputeExtrinsicImpl({
+      culprits: DisputesCulprits.empty(),
+      faults: DisputesFaults.empty(),
+      verdicts: DisputesVerdicts.empty(),
+    });
+  }
 }
 
 if (import.meta.vitest) {

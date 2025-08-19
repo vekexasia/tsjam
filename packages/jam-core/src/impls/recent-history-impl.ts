@@ -104,7 +104,7 @@ export class RecentHistoryImpl
     return toPosterior(toRet);
   }
 
-  static create(): RecentHistoryImpl {
+  static newEmpty(): RecentHistoryImpl {
     return new RecentHistoryImpl([]);
   }
 }

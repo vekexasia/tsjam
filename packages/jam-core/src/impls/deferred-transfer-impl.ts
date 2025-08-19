@@ -65,4 +65,16 @@ export class DeferredTransferImpl
       Object.assign(this, config);
     }
   }
+
+  static newEmpty(): DeferredTransferImpl {
+    return new DeferredTransferImpl({
+      source: <ServiceIndex>0,
+      destination: <ServiceIndex>0,
+      amount: <Balance>0n,
+      memo: <ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>>(
+        new Uint8Array(TRANSFER_MEMO_SIZE).fill(0)
+      ),
+      gas: <Gas>0n,
+    });
+  }
 }

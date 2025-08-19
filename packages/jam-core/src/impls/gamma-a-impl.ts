@@ -23,10 +23,13 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
   @lengthDiscriminatedCodec(TicketImpl, SINGLE_ELEMENT_CLASS)
   elements!: UpToSeq<TicketImpl, typeof EPOCH_LENGTH, "gamma_a">;
 
-  constructor(config: ConditionalExcept<GammaAImpl, Function>) {
+  constructor(config?: ConditionalExcept<GammaAImpl, Function>) {
     super();
-    Object.assign(this, config);
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
   }
+
   length() {
     return this.elements.length;
   }
@@ -63,5 +66,11 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
       }
     }
     return ok(toPosterior(toRet));
+  }
+
+  static newEmpty(): GammaAImpl {
+    return new GammaAImpl({
+      elements: <GammaAImpl["elements"]>new Array<TicketImpl>(),
+    });
   }
 }

@@ -13,7 +13,7 @@ import {
   Tagged,
   Validated,
 } from "@tsjam/types";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { toPosterior } from "@tsjam/utils";
 import type { SlotImpl, TauImpl } from "./slot-impl";
 
 /**
@@ -44,21 +44,27 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   rotate1_3(deps: {
     slot: SlotImpl;
     p_tau: Validated<Posterior<TauImpl>>;
-  }): Tagged<JamEntropyImpl, "rotated_1_3"> {
+  }): Tagged<
+    JamEntropyImpl & {
+      _1: Posterior<Blake2bHash>;
+      _2: Posterior<Blake2bHash>;
+      _3: Posterior<Blake2bHash>;
+    },
+    "rotated_1_3"
+  > {
     // $(0.7.1 - 6.23) | rotate `η_1`, `η_2`, `η_3`
     let [p_1, p_2, p_3] = [this._1, this._2, this._3];
 
     if (deps.p_tau.isNewerEra(deps.slot)) {
       [p_1, p_2, p_3] = [this._0, this._1, this._2];
     }
-    return toTagged(
-      new JamEntropyImpl({
-        _0: this._0,
-        _1: p_1,
-        _2: p_2,
-        _3: p_3,
-      }),
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <any>new JamEntropyImpl({
+      _0: this._0,
+      _1: p_1,
+      _2: p_2,
+      _3: p_3,
+    });
   }
 
   toPosterior(
@@ -67,7 +73,14 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
       // or eventually vrfOutputSignature of h_v
       vrfOutputHash: ReturnType<typeof Bandersnatch.vrfOutputSeed>;
     },
-  ): Posterior<JamEntropyImpl> {
+  ): Posterior<
+    JamEntropyImpl & {
+      _0: Posterior<Blake2bHash>;
+      _1: Posterior<Blake2bHash>;
+      _2: Posterior<Blake2bHash>;
+      _3: Posterior<Blake2bHash>;
+    }
+  > {
     // $(0.7.1 - 6.22) | rotate `η_0`
     const p_0 = Hashing.blake2b(
       new Uint8Array([
@@ -75,14 +88,14 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
         ...encodeWithCodec(HashCodec, deps.vrfOutputHash),
       ]),
     );
-    return toPosterior(
-      new JamEntropyImpl({
-        _0: p_0,
-        _1: this._1,
-        _2: this._2,
-        _3: this._3,
-      }),
-    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <any>new JamEntropyImpl({
+      _0: p_0,
+      _1: this._1,
+      _2: this._2,
+      _3: this._3,
+    });
   }
 
   static fromJSON<T extends typeof BaseJamCodecable>(
@@ -104,5 +117,14 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   ): object {
     const v = <JamEntropyImpl>value;
     return [v._0, v._1, v._2, v._3].map((h) => HashCodec.toJSON(h));
+  }
+
+  static newEmpty(): JamEntropyImpl {
+    return new JamEntropyImpl({
+      _0: <Blake2bHash>new Uint8Array(32).fill(0),
+      _1: <Blake2bHash>new Uint8Array(32).fill(0),
+      _2: <Blake2bHash>new Uint8Array(32).fill(0),
+      _3: <Blake2bHash>new Uint8Array(32).fill(0),
+    });
   }
 }

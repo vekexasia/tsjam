@@ -28,6 +28,8 @@ import { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { TicketsExtrinsicImpl } from "./extrinsics/tickets";
 import { SlotImpl } from "./slot-impl";
 import type { WorkReportImpl } from "./work-report-impl";
+import { J } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
+import { ConditionalExcept } from "type-fest";
 
 @JamCodecable() // $(0.7.1 - C.16)
 export class JamBlockExtrinsicsImpl
@@ -70,6 +72,12 @@ export class JamBlockExtrinsicsImpl
   @codec(DisputeExtrinsicImpl)
   disputes!: DisputeExtrinsicImpl;
 
+  constructor(config?: ConditionalExcept<JamBlockExtrinsicsImpl, Function>) {
+    super();
+    if (typeof config !== "undefined") {
+      Object.assign(this, config);
+    }
+  }
   /**
    * computes the Extrinsic hash as defined in
    * $(0.7.1 - 5.4 / 5.5 / 5.6)
@@ -86,6 +94,16 @@ export class JamBlockExtrinsicsImpl
     ];
     const preimage = new Uint8Array(items);
     return Hashing.blake2b(preimage);
+  }
+
+  static newEmpty() {
+    return new JamBlockExtrinsicsImpl({
+      tickets: TicketsExtrinsicImpl.newEmpty(),
+      preimages: PreimagesExtrinsicImpl.newEmpty(),
+      reportGuarantees: GuaranteesExtrinsicImpl.newEmpty(),
+      assurances: AssurancesExtrinsicImpl.newEmpty(),
+      disputes: DisputeExtrinsicImpl.newEmpty(),
+    });
   }
 }
 

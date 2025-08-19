@@ -99,4 +99,5 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
   verifyExtrinsicHash(extrinsics: JamBlockExtrinsicsImpl) {
     return this.extrinsicHash === extrinsics.extrinsicHash();
   }
+
 }

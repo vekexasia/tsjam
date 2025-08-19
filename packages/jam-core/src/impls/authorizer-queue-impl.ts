@@ -51,7 +51,7 @@ export class AuthorizerQueueImpl
     return this.elements[core];
   }
 
-  static create() {
+  static newEmpty() {
     return new AuthorizerQueueImpl({
       elements: <AuthorizerQueueImpl["elements"]>(
         Array.from({ length: CORES }, () =>

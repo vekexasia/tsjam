@@ -138,6 +138,15 @@ export class DisputesStateImpl
 
     return ok(toPosterior(p_state));
   }
+
+  static newEmpty(): DisputesStateImpl {
+    return new DisputesStateImpl({
+      good: new IdentitySet(),
+      bad: new IdentitySet(),
+      wonky: new IdentitySet(),
+      offenders: new IdentitySet(),
+    });
+  }
 }
 
 export enum DisputesToPosteriorError {

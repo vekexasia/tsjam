@@ -44,4 +44,15 @@ export class SingleValidatorStatisticsImpl
     super();
     Object.assign(this, config);
   }
+
+  static newEmpty() {
+    return new SingleValidatorStatisticsImpl({
+      blocks: <u32>0,
+      tickets: <u32>0,
+      preimageCount: <u32>0,
+      preimageSize: <u32>0,
+      guarantees: <u32>0,
+      assurances: <u32>0,
+    });
+  }
 }

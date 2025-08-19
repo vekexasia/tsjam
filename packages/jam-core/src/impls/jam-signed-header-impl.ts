@@ -1,5 +1,6 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import {
+  BufferJSONCodec,
   codec,
   encodeWithCodec,
   JamCodecable,
@@ -27,7 +28,7 @@ import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { GammaPImpl } from "./gamma-p-impl";
-import { GammaSImpl } from "./gamma-s-impl";
+import type { GammaSImpl } from "./gamma-s-impl";
 import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
@@ -37,6 +38,7 @@ import { JamHeaderImpl } from "./jam-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import { KappaImpl } from "./kappa-impl";
 import { TauImpl } from "./slot-impl";
+import { DisputesToPosteriorError } from "./disputes-state-impl";
 
 /**
  * $(0.7.1 - C.22) | codec
@@ -164,9 +166,11 @@ export class JamSignedHeaderImpl
     curState: JamStateImpl,
     extrinsics: JamBlockExtrinsicsImpl,
     p_tau: Validated<Posterior<TauImpl>>,
-    privKey: BandersnatchKey,
-  ) {
-    const authorIndex = <ValidatorIndex>0;
+    keyPair: { public: BandersnatchKey; private: BandersnatchKey },
+  ): Result<
+    JamSignedHeaderImpl,
+    DisputesToPosteriorError | HeaderCreationError
+  > {
     const p_kappa = curState.kappa.toPosterior(curState, { p_tau });
     const p_entropy_1_3 = curState.entropy.rotate1_3({
       slot: curState.slot,
@@ -177,15 +181,32 @@ export class JamSignedHeaderImpl
       safroleState: curState.safroleState,
       p_tau: p_tau,
       p_kappa,
-      p_eta2: toPosterior(p_entropy_1_3._2),
+      p_eta2: p_entropy_1_3._2,
     });
-    const p_disputes = curState.disputes
+    // we need to check if the given priv/public is the one authorized
+    if (
+      !p_gamma_s.isKeyAllowedToProduce(keyPair, {
+        p_tau,
+        p_entropy_3: p_entropy_1_3._3,
+      })
+    ) {
+      return err(HeaderCreationError.KEY_NOT_ALLOWED);
+    }
+    const authorIndex = p_kappa.bandersnatchIndex(keyPair.public);
+    if (authorIndex === -1) {
+      // should never happen but it's pleasing the compiler
+      return err(HeaderCreationError.KEY_INDEX_NOT_FOUND);
+    }
+    const [dispErr, p_disputes] = curState.disputes
       .toPosterior({
         kappa: curState.kappa,
         extrinsic: toTagged(extrinsics.disputes),
         lambda: curState.lambda,
       })
-      ._unsafeUnwrap();
+      .safeRet();
+    if (dispErr) {
+      return err(dispErr);
+    }
 
     const p_gamma_p = curState.safroleState.gamma_p.toPosterior({
       slot: curState.slot,
@@ -218,13 +239,13 @@ export class JamSignedHeaderImpl
         p_gamma_p,
       }),
       entropySource: Bandersnatch.sign(
-        privKey,
+        keyPair.private,
         new Uint8Array([]), // message - empty to not bias the entropy
         new Uint8Array([
           ...JAM_ENTROPY,
           ...encodeWithCodec(
             HashCodec,
-            Bandersnatch.vrfOutputSeed(privKey, sealSignContext),
+            Bandersnatch.vrfOutputSeed(keyPair.private, sealSignContext),
           ),
         ]),
       ),
@@ -234,12 +255,12 @@ export class JamSignedHeaderImpl
     });
 
     toRet.seal = Bandersnatch.sign(
-      privKey,
-      encodeWithCodec(JamHeaderImpl, this), // EU(H)
+      keyPair.private,
+      encodeWithCodec(JamHeaderImpl, toRet), // EU(H)
       sealSignContext,
     );
 
-    return toRet;
+    return ok(toRet);
   }
 
   checkValidity(deps: {
@@ -317,6 +338,12 @@ export class JamSignedHeaderImpl
     return ok(toTagged(this));
   }
 }
+
+export enum HeaderCreationError {
+  KEY_NOT_ALLOWED = "KEY_NOT_ALLOWED",
+  KEY_INDEX_NOT_FOUND = "KEY_INDEX_NOT_FOUND",
+}
+
 export enum HeaderValidationError {
   INVALID_PARENT = "INVALID_PARENT",
   INVALID_PARENT_STATE_ROOT = "INVALID_PARENT_STATE_ROOT",

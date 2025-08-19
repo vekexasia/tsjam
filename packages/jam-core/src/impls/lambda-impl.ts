@@ -28,11 +28,11 @@ export class LambdaImpl extends ValidatorsImpl {
     return toPosterior(toTagged(cloneCodecable(this)));
   }
 
-  static create(): LambdaImpl {
+  static newEmpty(): LambdaImpl {
     return new LambdaImpl({
       elements: <LambdaImpl["elements"]>(
         Array.from({ length: NUMBER_OF_VALIDATORS }, () =>
-          ValidatorDataImpl.create(),
+          ValidatorDataImpl.newEmpty(),
         )
       ),
     });
