@@ -1371,6 +1371,7 @@ __metadata:
     "@tsjam/constants": "npm:*"
     "@tsjam/core": "npm:*"
     "@tsjam/crypto": "npm:*"
+    "@tsjam/utils": "npm:*"
   languageName: unknown
   linkType: soft
 
