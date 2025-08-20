@@ -3,7 +3,7 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
     "moduleResolution": "Bundler",
     /* Projects */
-    "incremental": false,
+    "incremental": true,
     /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
     "target": "es2020",
     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
@@ -22,8 +22,8 @@
     "declarationMap": true,
     "removeComments": false,
     /* Create sourcemaps for d.ts files. */
-    "inlineSourceMap": false,
-    "sourceMap": false,
+    //"inlineSourceMap": true,
+    "sourceMap": true,
     "experimentalDecorators": true,
     /* Include sourcemap files inside the emitted JavaScript. */
 //    "sourceRoot": "./src",

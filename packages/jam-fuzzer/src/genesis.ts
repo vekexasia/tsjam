@@ -103,6 +103,10 @@ GENESIS_STATE.safroleState.gamma_p = <Tagged<GammaPImpl, "gamma_p">>(
   GammaPImpl.fromEpochMarker(GENESIS.header.epochMarker!)
 );
 
+// needs to be manually set as well otherwise it will be a list of empty validators
+// and next epoch (after first) will set the active validators to empty validators
+GENESIS_STATE.iota = toTagged(GENESIS_STATE.safroleState.gamma_p);
+
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   const { xBytesCodec } = await import("@tsjam/codec");

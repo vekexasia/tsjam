@@ -24,6 +24,7 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
           outputFile ??
           `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`,
         inlineDynamicImports: false,
+        sourcemap: true,
       },
     ],
     plugins: [

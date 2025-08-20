@@ -69,11 +69,11 @@ const server = net.createServer((socket) => {
       case MessageType.IMPORT_BLOCK:
         const block = message.importBlock!;
         assert(state, "State must be initialized before applying a block");
-        console.dir(block.toJSON(), { depth: null });
         const res = state.applyBlock(block);
         if (res.isErr()) {
           console.log("Block application error:");
           console.log(res.error);
+          send(new Message({ stateRoot: state.merkleRoot() }));
           return;
         }
         state = res.value;
