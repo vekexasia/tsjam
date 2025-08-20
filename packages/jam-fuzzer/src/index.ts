@@ -10,26 +10,19 @@ import {
 } from "@tsjam/fuzzer-target";
 import net from "net";
 
+import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
-  BufferJSONCodec,
-  E_4_int,
-  encodeWithCodec,
-  LengthDiscrimantedIdentityCodec,
-  xBytesCodec,
-} from "@tsjam/codec";
-import {
-  IdentityMapCodec,
   JamBlockImpl,
   JamStateImpl,
   merkleStateMap,
   SlotImpl,
   TauImpl,
 } from "@tsjam/core";
-import { Posterior, StateRootHash, u32, u8, Validated } from "@tsjam/types";
+import { Posterior, u32, u8, Validated } from "@tsjam/types";
 import packageJSON from "../package.json";
-import { GENESIS, GENESIS_STATE } from "./genesis";
-import { EPOCH_LENGTH, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { produceBlock } from "./block-generator";
+import { GENESIS, GENESIS_STATE } from "./genesis";
 const SOCKET_PATH = "/tmp/jam_target.sock";
 
 let state: JamStateImpl = GENESIS_STATE;
