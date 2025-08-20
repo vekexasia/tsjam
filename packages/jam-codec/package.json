@@ -3,7 +3,9 @@
   "version": "0.7.1",
   "description": "A library to convert back and forth according appendix C of graypaper. Also called SCALE",
   "scripts": {
-    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "build:old": "rm -rf dist; npx rollup --config ../../build/rollup.config.mjs",
+    "build:new": "rm -rf dist; npx tsgo; npx tsc-alias",
+    "build": "yarn run build:old",
     "dev": "$npm_execpath run build -w",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
@@ -13,8 +15,7 @@
   "exports": {
     ".": {
       "node": {
-        "import": "./dist/node.esm.mjs",
-        "default": "./dist/node.cjs.js"
+        "default": "./dist/index.js"
       },
       "types": "./dist/types/index.d.ts"
     },

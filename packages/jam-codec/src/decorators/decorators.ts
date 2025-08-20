@@ -126,7 +126,7 @@ export function JamCodecable<
     }
 
     // newConstr is needed for the instanceof Check and to make sure that the method
-    const newConstr = preserveNameClass(
+    const newConstr = preserveClassName(
       constructor.name,
       // @ts-expect-error i know what I'm doing
       class extends constructor {
@@ -163,6 +163,6 @@ export function JamCodecable<
   };
 }
 
-const preserveNameClass = <T>(name: string, constr: T): T => {
+const preserveClassName = <T>(name: string, constr: T): T => {
   return new Function("Base", `return class ${name} extends Base {}`)(constr);
 };

@@ -2,14 +2,18 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "..",
+    "rootDir": "src",
+    "outDir": "dist",
+    "declarationDir": "dist",
     "preserveSymlinks": false,
     "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "include": [
-    "src/**/*", "../jam-core/src/codecs/validatorDataCodec.ts", "../jam-core/src/codecs/PVMProgramCodec.ts", "../jam-core/src/codecs/statisticsCodec.ts", "../jam-core/src/codecs/privilegedServices.ts",
+    "src/**/*", 
   ],
   "exclude": [
     "dist/**/*"

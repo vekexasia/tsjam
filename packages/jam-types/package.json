@@ -7,7 +7,8 @@
     "neverthrow": "^8.1.1"
   },
   "scripts": {
-    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "build:old": "rm -rf dist; npx rollup --config ../../build/rollup.config.mjs",
+    "build": "rm -rf dist; npx tsgo; npx tsc-alias",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -16,10 +17,9 @@
   "exports": {
     ".": {
       "node": {
-        "import": "./dist/node.esm.mjs",
-        "default": "./dist/node.cjs.js"
+        "default": "./dist/index.js"
       },
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "engines": {
