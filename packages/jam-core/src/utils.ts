@@ -1,12 +1,5 @@
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import {
-  BandersnatchKey,
-  ED25519PublicKey,
-  Posterior,
-  SeqOfLength,
-  ValidatorData,
-} from "@tsjam/types";
-import { DisputesStateImpl } from "./impls/disputes-state-impl";
+import { SeqOfLength } from "@tsjam/types";
 import { TicketImpl } from "./impls/ticket-impl";
 
 /**
@@ -25,26 +18,4 @@ export const outsideInSequencer = <
     toRet.push(t[EPOCH_LENGTH - i - 1]);
   }
   return toRet;
-};
-
-/**
- * Phi function
- * returns the validator keys which are not in ψo. nullify the validator keys which are in ψ'o
- * @see $(0.7.1 - 6.14)
- */
-export const PHI_FN = <T extends ValidatorData[]>(
-  validatorKeys: ValidatorData[], // `k` in the graypaper
-  p_offenders: Posterior<DisputesStateImpl["offenders"]>,
-): T => {
-  return validatorKeys.map((v) => {
-    if (p_offenders.has(v.ed25519)) {
-      return {
-        banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
-        ed25519: new Uint8Array(32).fill(0) as ED25519PublicKey,
-        blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
-        metadata: new Uint8Array(128).fill(0) as ValidatorData["metadata"],
-      };
-    }
-    return v;
-  }) as T;
 };

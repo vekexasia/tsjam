@@ -1,4 +1,3 @@
-import { PHI_FN } from "@/utils";
 import { JamCodecable } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
@@ -10,11 +9,11 @@ import {
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import type { DisputesStateImpl } from "./disputes-state-impl";
+import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
-import { ValidatorsImpl } from "./validators-impl";
-import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
+import { ValidatorsImpl } from "./validators-impl";
 
 @JamCodecable()
 export class GammaPImpl extends ValidatorsImpl {
@@ -29,7 +28,7 @@ export class GammaPImpl extends ValidatorsImpl {
       return toPosterior(
         toTagged(
           new GammaPImpl({
-            elements: PHI_FN(deps.iota.elements, deps.p_offenders),
+            elements: deps.iota.phi(deps.p_offenders).elements,
           }),
         ),
       );

@@ -126,36 +126,43 @@ export function JamCodecable<
     }
 
     // newConstr is needed for the instanceof Check and to make sure that the method
-    // @ts-expect-error i know what I'm doing
-    const newConstr = class extends constructor {
-      toBinary(): Uint8Array {
-        return encodeWithCodec(codec, this);
-      }
-      toJSON(): object {
-        return jsonCodec.toJSON(this as unknown as U);
-      }
+    const newConstr = preserveNameClass(
+      constructor.name,
+      // @ts-expect-error i know what I'm doing
+      class extends constructor {
+        toBinary(): Uint8Array {
+          return encodeWithCodec(codec, this);
+        }
+        toJSON(): object {
+          return jsonCodec.toJSON(this as unknown as U);
+        }
 
-      static encode(x: U, buf: Uint8Array): number {
-        return codec.encode(x, buf);
-      }
-      static decode(bytes: Uint8Array): { value: U; readBytes: number } {
-        return codec.decode(bytes);
-      }
-      static encodedSize(value: U): number {
-        const size = codec.encodedSize(value);
-        return size;
-      }
-      static fromJSON(json: any): U {
-        const pojo = jsonCodec.fromJSON(json);
-        const x = new newConstr();
-        Object.assign(x, pojo);
-        return <U>x;
-      }
-      static toJSON(value: U): object {
-        return jsonCodec.toJSON(value);
-      }
-    };
-    Object.defineProperty(newConstr, "name", { value: constructor.name });
+        static encode(x: U, buf: Uint8Array): number {
+          return codec.encode(x, buf);
+        }
+        static decode(bytes: Uint8Array): { value: U; readBytes: number } {
+          return codec.decode(bytes);
+        }
+        static encodedSize(value: U): number {
+          const size = codec.encodedSize(value);
+          return size;
+        }
+        static fromJSON(json: any): U {
+          const pojo = jsonCodec.fromJSON(json);
+          const x = new newConstr();
+          Object.assign(x, pojo);
+          return <U>x;
+        }
+        static toJSON(value: U): object {
+          return jsonCodec.toJSON(value);
+        }
+      },
+    );
+
     return newConstr;
   };
 }
+
+const preserveNameClass = <T>(name: string, constr: T): T => {
+  return new Function("Base", `return class ${name} extends Base {}`)(constr);
+};

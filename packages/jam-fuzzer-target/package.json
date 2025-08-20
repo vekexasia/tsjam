@@ -10,7 +10,7 @@
     "type-fest": "^4.41.0"
   },
   "scripts": {
-    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "build": "npx rollup --config ./rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",

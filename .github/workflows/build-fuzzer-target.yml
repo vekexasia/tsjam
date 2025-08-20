@@ -47,7 +47,7 @@ jobs:
         env:
           NODE_VERSION: 22.18.0
         run: |
-          INPUT=packages/jam-fuzzer-target/dist/node.esm.mjs
+          INPUT=packages/jam-fuzzer-target/dist/cli.mjs
           OUT=jam-fuzzer-target
           # ensure a stable cache location for nexe build artifacts
           export XDG_CACHE_HOME="$HOME/.cache"

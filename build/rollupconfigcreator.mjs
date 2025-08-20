@@ -13,15 +13,16 @@ import { replaceTscAliasPaths } from "tsc-alias";
  * @returns {import('rollup').RollupOptions}
  */
 export const rollupCreate = (conf, typescriptOptions = null) => {
-  const { isBrowser, isEsm } = conf;
+  const { isBrowser, isEsm, input, outputFile } = conf;
   return {
-    input: "src/index.ts",
+    input: input ?? "src/index.ts",
     output: [
       {
         format: `${isEsm ? "esm" : "cjs"}`,
         file: typescriptOptions?.compilerOptions?.emitDeclarationOnly
           ? undefined
-          : `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`,
+          : (outputFile ??
+            `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`),
         dir: typescriptOptions?.compilerOptions?.emitDeclarationOnly
           ? "dist/types_tmp"
           : undefined,

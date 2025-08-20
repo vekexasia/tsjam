@@ -32,27 +32,30 @@ import { Blake2bHash, Tagged, u32, ValidatorIndex } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { VALIDATORS } from "./debugKeys";
 
-export const GENESIS = new JamSignedHeaderImpl({
-  parent: toTagged(new Uint8Array(32).fill(0)),
-  parentStateRoot: toTagged(new Uint8Array(32).fill(0)),
-  extrinsicHash: toTagged(new Uint8Array(32).fill(0)),
-  slot: <TauImpl>new SlotImpl(<u32>0),
-  epochMarker: new HeaderEpochMarkerImpl({
-    entropy: <Blake2bHash>new Uint8Array(32).fill(0),
-    entropy2: <Blake2bHash>new Uint8Array(32).fill(0),
-    validators: toTagged(
-      VALIDATORS.map((keys) => {
-        return new EpochMarkerValidatorImpl({
-          ed25519: keys.ed25519.public,
-          bandersnatch: keys.bandersnatch.public,
-        });
-      }),
-    ),
+export const GENESIS = new JamBlockImpl({
+  header: new JamSignedHeaderImpl({
+    parent: toTagged(new Uint8Array(32).fill(0)),
+    parentStateRoot: toTagged(new Uint8Array(32).fill(0)),
+    extrinsicHash: toTagged(new Uint8Array(32).fill(0)),
+    slot: <TauImpl>new SlotImpl(<u32>0),
+    epochMarker: new HeaderEpochMarkerImpl({
+      entropy: <Blake2bHash>new Uint8Array(32).fill(0),
+      entropy2: <Blake2bHash>new Uint8Array(32).fill(0),
+      validators: toTagged(
+        VALIDATORS.map((keys) => {
+          return new EpochMarkerValidatorImpl({
+            ed25519: keys.ed25519.public,
+            bandersnatch: keys.bandersnatch.public,
+          });
+        }),
+      ),
+    }),
+    offendersMark: new HeaderOffenderMarkerImpl([]),
+    authorIndex: <ValidatorIndex>0,
+    entropySource: toTagged(new Uint8Array(96).fill(0)),
+    seal: toTagged(new Uint8Array(96).fill(0)),
   }),
-  offendersMark: new HeaderOffenderMarkerImpl([]),
-  authorIndex: <ValidatorIndex>0,
-  entropySource: toTagged(new Uint8Array(96).fill(0)),
-  seal: toTagged(new Uint8Array(96).fill(0)),
+  extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
 });
 
 export const GENESIS_STATE = new JamStateImpl({
@@ -92,15 +95,12 @@ export const GENESIS_STATE = new JamStateImpl({
 
   headerLookupHistory: HeaderLookupHistoryImpl.newEmpty(),
 
-  block: new JamBlockImpl({
-    header: GENESIS,
-    extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
-  }),
+  block: GENESIS,
 });
 
 // set the state according to the genesis header
 GENESIS_STATE.safroleState.gamma_p = <Tagged<GammaPImpl, "gamma_p">>(
-  GammaPImpl.fromEpochMarker(GENESIS.epochMarker!)
+  GammaPImpl.fromEpochMarker(GENESIS.header.epochMarker!)
 );
 
 if (import.meta.vitest) {
@@ -112,7 +112,7 @@ if (import.meta.vitest) {
         tiny: "0xe864d485113737c28c2fef3b2aed39cb2f289a369b15c54e9c44720bcfdc0ca0",
         full: "0x57f075e6bb0b8778b59261fa7ec32626464e4d2f444fca4312dfbf94f3584032",
       };
-      expect(xBytesCodec(32).toJSON(GENESIS.signedHash())).eq(
+      expect(xBytesCodec(32).toJSON(GENESIS.header.signedHash())).eq(
         hashes[getConstantsMode()],
       );
     });

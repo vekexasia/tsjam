@@ -49,6 +49,7 @@ export const produceBlock = (
   if (sateErr) {
     throw new Error(sateErr);
   }
+  console.log(block.toJSON());
   return newState;
 };
 
@@ -58,6 +59,10 @@ if (import.meta.vitest) {
   describe("BlockGenerator", () => {
     it("should produce a valid block from the genesis state", () => {
       produceBlock(GENESIS_STATE, toTagged(new SlotImpl(<u32>420420)));
+    });
+
+    it("should produce a valid block skipping epoch", () => {
+      produceBlock(GENESIS_STATE, toTagged(new SlotImpl(<u32>601)));
     });
   });
 }

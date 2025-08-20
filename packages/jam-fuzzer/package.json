@@ -7,6 +7,7 @@
     "@tsjam/constants": "*",
     "@tsjam/core": "*",
     "@tsjam/crypto": "*",
+    "@tsjam/fuzzer-target": "*",
     "@tsjam/utils": "*"
   },
   "scripts": {

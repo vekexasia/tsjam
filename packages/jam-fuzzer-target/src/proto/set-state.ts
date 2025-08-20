@@ -17,4 +17,11 @@ export class SetState extends BaseJamCodecable {
 
   @codec(State)
   state!: State;
+
+  constructor(config?: Partial<SetState>) {
+    super();
+    if (config) {
+      Object.assign(this, config);
+    }
+  }
 }

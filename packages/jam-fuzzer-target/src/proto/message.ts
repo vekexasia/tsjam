@@ -14,12 +14,12 @@ import { SetState } from "./set-state";
 import { State } from "./state";
 
 export enum MessageType {
-  PEER_INFO = 0,
-  IMPORT_BLOCK = 1,
-  SET_STATE = 2,
-  GET_STATE = 3,
-  STATE = 4,
-  STATE_ROOT = 5,
+  PEER_INFO = "PEER_INFO",
+  IMPORT_BLOCK = "IMPORT_BLOCK",
+  SET_STATE = "SET_STATE",
+  GET_STATE = "GET_STATE",
+  STATE = "STATE",
+  STATE_ROOT = "STATE_ROOT",
 }
 export class Message {
   peerInfo?: PeerInfo;

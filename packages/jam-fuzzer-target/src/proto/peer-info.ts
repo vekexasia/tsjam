@@ -38,7 +38,7 @@ export class PeerInfo extends BaseJamCodecable {
   @codec(Version, "jam_version")
   jamVersion!: Version;
 
-  static build() {
+  static build(): PeerInfo {
     const toRet = new PeerInfo();
     toRet.name = "tsjam";
     toRet.jamVersion = new Version();

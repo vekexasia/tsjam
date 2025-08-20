@@ -107,10 +107,13 @@ export class HeaderEpochMarkerImpl
     },
   ) {
     if (deps.p_tau.isNewerEra(deps.tau)) {
-      if (epochMarker?.entropy !== deps.entropy._0) {
+      if (typeof epochMarker === "undefined") {
         return false;
       }
-      if (epochMarker!.entropy2 !== deps.entropy._1) {
+      if (compareUint8Arrays(epochMarker.entropy, deps.entropy._0) !== 0) {
+        return false;
+      }
+      if (compareUint8Arrays(epochMarker.entropy2, deps.entropy._1) !== 0) {
         return false;
       }
       if (epochMarker.validators.length !== NUMBER_OF_VALIDATORS) {

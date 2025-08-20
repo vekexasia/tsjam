@@ -6,11 +6,8 @@ import {
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
-  BandersnatchKey,
-  ED25519PublicKey,
   Posterior,
   SeqOfLength,
-  ValidatorData,
   ValidatorIndex,
   Validators,
 } from "@tsjam/types";
@@ -49,14 +46,7 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
       elements: toTagged(
         this.elements.map((v) => {
           if (p_offenders.has(v.ed25519)) {
-            return new ValidatorDataImpl({
-              banderSnatch: new Uint8Array(32).fill(0) as BandersnatchKey,
-              ed25519: <ED25519PublicKey>new Uint8Array(32).fill(0),
-              blsKey: new Uint8Array(144).fill(0) as ValidatorData["blsKey"],
-              metadata: new Uint8Array(128).fill(
-                0,
-              ) as ValidatorData["metadata"],
-            });
+            return ValidatorDataImpl.newEmpty();
           }
           return v;
         }),
