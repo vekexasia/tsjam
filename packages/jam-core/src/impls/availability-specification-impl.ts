@@ -6,7 +6,7 @@ import {
   JamCodecable,
 } from "@tsjam/codec";
 import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
-import {
+import type {
   AvailabilitySpecification,
   Hash,
   Tagged,
@@ -14,7 +14,7 @@ import {
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * identified by `Y` set

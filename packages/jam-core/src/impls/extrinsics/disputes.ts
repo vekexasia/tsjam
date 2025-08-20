@@ -14,7 +14,7 @@ import {
   type DisputesVerdictError,
   DisputesVerdicts,
 } from "./disputes/verdicts";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * codec order defined in $(0.7.1 - C.21)

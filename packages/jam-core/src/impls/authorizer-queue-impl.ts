@@ -8,14 +8,14 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
-import {
+import type {
   AuthorizerHash,
   AuthorizerQueue,
   CoreIndex,
   Hash,
   SeqOfLength,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * `ϕ`

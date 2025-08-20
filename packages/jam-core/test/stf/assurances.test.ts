@@ -10,7 +10,13 @@ import {
   codec,
   createArrayLengthDiscriminator,
 } from "@tsjam/codec";
-import { Dagger, HeaderHash, Posterior, Tagged, Validated } from "@tsjam/types";
+import type {
+  Dagger,
+  HeaderHash,
+  Posterior,
+  Tagged,
+  Validated,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";

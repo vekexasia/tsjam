@@ -7,8 +7,8 @@ import {
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { Hash, LastAccOuts, ServiceIndex } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { Hash, LastAccOuts, ServiceIndex } from "@tsjam/types";
+import type { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleAccOutImpl extends BaseJamCodecable {

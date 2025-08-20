@@ -1,15 +1,15 @@
+import { HashCodec } from "@/codecs/misc-codecs";
+import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
+import { AccumulationStatisticsImpl } from "@/impls/accumulation-statistics-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { PreimagesExtrinsicImpl } from "@/impls/extrinsics/preimages";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
-  BufferJSONCodec,
   buildGenericKeyValueCodec,
   codec,
   createArrayLengthDiscriminator,
@@ -21,7 +21,8 @@ import {
   MapJSONCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
-import {
+import { getConstantsMode } from "@tsjam/constants";
+import type {
   DoubleDagger,
   Hash,
   Posterior,
@@ -32,11 +33,9 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
-import { getConstantsMode } from "@tsjam/constants";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
-import { AccumulationStatisticsImpl } from "@/impls/accumulation-statistics-impl";
 
 @JamCodecable()
 class LookupMetaMapKey extends BaseJamCodecable {

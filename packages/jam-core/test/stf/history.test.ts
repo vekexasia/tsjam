@@ -8,7 +8,7 @@ import {
   JamCodecable,
   lengthDiscriminatedCodec,
 } from "@tsjam/codec";
-import { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
+import type { HeaderHash, StateRootHash, WorkPackageHash } from "@tsjam/types";
 import { Hash } from "node:crypto";
 import fs from "node:fs";
 import { BetaImpl } from "@/impls/beta-impl";

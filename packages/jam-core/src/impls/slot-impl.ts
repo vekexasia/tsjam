@@ -6,7 +6,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { BLOCK_TIME, EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
-import { Posterior, Slot, Tagged, u32, Validated } from "@tsjam/types";
+import type { Posterior, Slot, Tagged, u32, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 

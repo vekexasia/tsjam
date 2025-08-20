@@ -8,7 +8,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { AUTHPOOL_SIZE, AUTHQUEUE_MAX_SIZE, CORES } from "@tsjam/constants";
-import {
+import type {
   AuthorizerPool,
   CoreIndex,
   Hash,
@@ -18,7 +18,7 @@ import {
   Validated,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { AuthorizerQueueImpl } from "./authorizer-queue-impl";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { TauImpl } from "./slot-impl";

@@ -8,7 +8,7 @@ import {
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { HashCodec } from "@/codecs/misc-codecs";

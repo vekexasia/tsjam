@@ -14,7 +14,7 @@ import {
 } from "@tsjam/codec";
 import { JAM_INVALID, JAM_VALID } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
-import {
+import type {
   DisputeFault,
   ED25519PublicKey,
   ED25519Signature,

@@ -17,7 +17,7 @@ import {
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
-import {
+import type {
   CodeHash,
   ExportingWorkPackageHash,
   Gas,

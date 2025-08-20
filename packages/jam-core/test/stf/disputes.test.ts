@@ -5,7 +5,7 @@ import { JamStateImpl } from "@/impls/jam-state-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
 import { RHOImpl } from "@/impls/rho-impl";
-import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { SlotImpl, type TauImpl } from "@/impls/slot-impl";
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import * as fs from "node:fs";
 import { getConstantsMode } from "@tsjam/constants";

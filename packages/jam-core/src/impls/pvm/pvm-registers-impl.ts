@@ -4,7 +4,11 @@ import {
   sequenceCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
-import { PVMRegisterRawValue, PVMRegisters, SeqOfLength } from "@tsjam/types";
+import type {
+  PVMRegisterRawValue,
+  PVMRegisters,
+  SeqOfLength,
+} from "@tsjam/types";
 import { PVMRegisterImpl } from "./pvm-register-impl";
 import { toTagged } from "@tsjam/utils";
 

@@ -10,9 +10,9 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { AccumulationQueue, Posterior, SeqOfLength } from "@tsjam/types";
+import type { AccumulationQueue, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { AccumulationHistoryImpl } from "./accumulation-history-impl";
 import { E_Fn } from "./new-work-reports-impl";
 import type { SlotImpl, TauImpl } from "./slot-impl";

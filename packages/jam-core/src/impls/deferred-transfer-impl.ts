@@ -9,14 +9,14 @@ import {
   eSubBigIntCodec,
 } from "@tsjam/codec";
 import { TRANSFER_MEMO_SIZE } from "@tsjam/constants";
-import {
+import type {
   Balance,
   ByteArrayOfLength,
   DeferredTransfer,
   Gas,
   ServiceIndex,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * `X`

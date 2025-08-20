@@ -6,7 +6,12 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, LOTTERY_MAX_SLOT } from "@tsjam/constants";
-import { Posterior, SeqOfLength, TicketMarker, Validated } from "@tsjam/types";
+import type {
+  Posterior,
+  SeqOfLength,
+  TicketMarker,
+  Validated,
+} from "@tsjam/types";
 import { GammaAImpl } from "./gamma-a-impl";
 import { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";

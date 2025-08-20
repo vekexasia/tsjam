@@ -8,7 +8,7 @@ import {
 } from "@tsjam/codec";
 import { IdentityMap, IdentityMapCodec } from "@tsjam/core";
 import { StateKey } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class State extends BaseJamCodecable {

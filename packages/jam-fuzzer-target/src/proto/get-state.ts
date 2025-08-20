@@ -5,7 +5,7 @@ import {
   codec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { HeaderHash } from "@tsjam/types";
+import type { HeaderHash } from "@tsjam/types";
 
 @JamCodecable()
 export class GetState extends BaseJamCodecable {

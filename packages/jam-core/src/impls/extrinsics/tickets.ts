@@ -17,7 +17,7 @@ import {
   MAX_TICKETS_PER_VALIDATOR,
 } from "@tsjam/constants";
 import { Bandersnatch } from "@tsjam/crypto";
-import {
+import type {
   Posterior,
   RingVRFProof,
   TicketsExtrinsic,

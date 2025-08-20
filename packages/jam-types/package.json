@@ -7,8 +7,7 @@
     "neverthrow": "^8.1.1"
   },
   "scripts": {
-    "build:old": "rm -rf dist; npx rollup --config ../../build/rollup.config.mjs",
-    "build": "rm -rf dist; npx tsgo; npx tsc-alias",
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",

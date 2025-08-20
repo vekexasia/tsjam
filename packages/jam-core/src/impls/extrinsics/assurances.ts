@@ -13,7 +13,7 @@ import {
 } from "@tsjam/codec";
 import { CORES, JAM_AVAILABLE, NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import { Ed25519, Hashing } from "@tsjam/crypto";
-import {
+import type {
   AssuranceExtrinsic,
   CoreIndex,
   Dagger,

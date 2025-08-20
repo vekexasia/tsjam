@@ -1,7 +1,7 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { BandersnatchKey, JamBlock, Posterior, Validated } from "@tsjam/types";
 import { err, ok, Result } from "neverthrow";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import { DisputesToPosteriorError } from "./disputes-state-impl";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import {

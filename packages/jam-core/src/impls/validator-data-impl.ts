@@ -4,14 +4,14 @@ import {
   JamCodecable,
   xBytesCodec,
 } from "@tsjam/codec";
-import {
+import type {
   BandersnatchKey,
   BLSKey,
   ByteArrayOfLength,
   ED25519PublicKey,
   ValidatorData,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class ValidatorDataImpl

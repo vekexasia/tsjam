@@ -23,7 +23,7 @@ import {
   TOTAL_GAS_IS_AUTHORIZED,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import {
+import type {
   Authorization,
   AuthorizationParams,
   Blake2bHash,

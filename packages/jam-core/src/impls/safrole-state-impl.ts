@@ -1,7 +1,7 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
-import { Posterior, SafroleState, Tagged } from "@tsjam/types";
+import type { Posterior, SafroleState, Tagged } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import { GammaAImpl } from "./gamma-a-impl";
 import { GammaPImpl } from "./gamma-p-impl";
 import { GammaSImpl } from "./gamma-s-impl";

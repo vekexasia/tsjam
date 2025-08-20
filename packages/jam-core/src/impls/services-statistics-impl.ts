@@ -21,7 +21,7 @@ import {
   Validated,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { SingleServiceStatisticsImpl } from "./single-service-statistics-impl";
 import type { WorkReportImpl } from "./work-report-impl";

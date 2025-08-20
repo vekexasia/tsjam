@@ -8,7 +8,12 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { EP_Extrinsic, EP_Tuple, ServiceIndex, Validated } from "@tsjam/types";
+import type {
+  EP_Extrinsic,
+  EP_Tuple,
+  ServiceIndex,
+  Validated,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { compareUint8Arrays } from "uint8array-extras";

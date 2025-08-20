@@ -12,7 +12,7 @@ import {
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
-import {
+import type {
   Blake2bHash,
   BoundedSeq,
   CoreIndex,

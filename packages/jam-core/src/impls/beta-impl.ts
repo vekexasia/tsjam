@@ -24,7 +24,7 @@ import {
   Validated,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { LastAccOutsImpl } from "./last-acc-outs-impl";
 import { RecentHistoryImpl } from "./recent-history-impl";

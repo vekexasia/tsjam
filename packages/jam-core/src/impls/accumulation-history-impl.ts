@@ -8,14 +8,14 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import {
+import type {
   AccumulationHistory,
   Posterior,
   SeqOfLength,
   WorkPackageHash,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import {
   type AccumulatableWorkReports,
   WorkReportImpl,

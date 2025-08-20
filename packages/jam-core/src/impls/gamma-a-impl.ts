@@ -5,10 +5,10 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
-import { GammaA, Posterior, UpToSeq, Validated } from "@tsjam/types";
+import type { GammaA, Posterior, UpToSeq, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";

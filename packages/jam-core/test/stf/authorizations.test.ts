@@ -19,7 +19,12 @@ import {
   mapCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { Blake2bHash, CoreIndex, Posterior, Validated } from "@tsjam/types";
+import type {
+  Blake2bHash,
+  CoreIndex,
+  Posterior,
+  Validated,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { HashCodec } from "@/codecs/misc-codecs";

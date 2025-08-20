@@ -37,7 +37,7 @@ import {
   WrapJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import {
+import type {
   Balance,
   CodeHash,
   DoubleDagger,
@@ -57,7 +57,7 @@ import { getConstantsMode } from "@tsjam/constants";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 class ServiceInfo extends BaseJamCodecable {

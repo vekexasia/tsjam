@@ -13,13 +13,13 @@ import {
   NumberJSONCodec,
 } from "@tsjam/codec";
 import { CORES } from "@tsjam/constants";
-import {
+import type {
   Gas,
   PrivilegedServices,
   SeqOfLength,
   ServiceIndex,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * Priv services impl

@@ -1,6 +1,6 @@
 import { BaseJamCodecable, JamCodecable, sequenceCodec } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import { SeqOfLength, ValidatorStatisticsCollection } from "@tsjam/types";
+import type { SeqOfLength, ValidatorStatisticsCollection } from "@tsjam/types";
 import { SingleValidatorStatisticsImpl } from "./single-validator-statistics-impl";
 
 @JamCodecable()

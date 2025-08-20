@@ -8,7 +8,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { RECENT_HISTORY_LENGTH } from "@tsjam/constants";
-import {
+import type {
   Beta,
   Dagger,
   HeaderHash,

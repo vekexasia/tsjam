@@ -14,7 +14,7 @@ import {
   LOTTERY_MAX_SLOT,
 } from "@tsjam/constants";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import {
+import type {
   BandersnatchKey,
   GammaS,
   GammaSFallback,

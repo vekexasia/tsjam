@@ -5,7 +5,7 @@ import {
   lengthDiscriminatedCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import {
+import type {
   BeefyRootHash,
   HeaderHash,
   StateRootHash,

@@ -5,6 +5,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import { move, remove } from "fs-extra";
 import { replaceTscAliasPaths } from "tsc-alias";
+import fs from "fs";
 
 /**
  *
@@ -85,8 +86,11 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
         name: "mv-and-delete",
         async writeBundle(options, bundle) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          await move("dist/src", "dist/types", { overwrite: true });
-          await remove("dist/src");
+          if (fs.existsSync("dist/src")) {
+            console.log("Moving dist/src to dist/types");
+            await move("dist/src", "dist/types", { overwrite: true });
+            await remove("dist/src");
+          }
         },
       },
     ],

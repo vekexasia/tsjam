@@ -21,7 +21,7 @@ import {
   NUMBER_OF_VALIDATORS,
 } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
-import {
+import type {
   DisputeVerdict,
   DisputeVerdictJudgement,
   ED25519Signature,

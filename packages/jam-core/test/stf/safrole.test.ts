@@ -6,7 +6,7 @@ import { JamStateImpl } from "@/impls/jam-state-impl.js";
 import { KappaImpl } from "@/impls/kappa-impl.js";
 import { LambdaImpl } from "@/impls/lambda-impl.js";
 import { SafroleStateImpl } from "@/impls/safrole-state-impl.js";
-import { SlotImpl, TauImpl } from "@/impls/slot-impl.js";
+import { SlotImpl, type TauImpl } from "@/impls/slot-impl.js";
 import { TicketImpl } from "@/impls/ticket-impl.js";
 import { ValidatorsImpl } from "@/impls/validators-impl.js";
 import { TicketsExtrinsicImpl } from "@/impls/extrinsics/tickets.js";
@@ -23,7 +23,7 @@ import {
   optionalCodec,
 } from "@tsjam/codec";
 import { EPOCH_LENGTH, getConstantsMode } from "@tsjam/constants";
-import { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
+import type { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";

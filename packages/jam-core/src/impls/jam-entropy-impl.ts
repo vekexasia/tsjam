@@ -6,7 +6,7 @@ import {
   JamCodecable,
 } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import {
+import type {
   Blake2bHash,
   JamEntropy,
   Posterior,

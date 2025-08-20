@@ -6,14 +6,14 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import { Bandersnatch } from "@tsjam/crypto";
-import {
+import type {
   BandersnatchRingRoot,
   GammaZ,
   Posterior,
   Validated,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { GammaPImpl } from "./gamma-p-impl";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";

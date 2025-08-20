@@ -15,7 +15,7 @@
   "exports": {
     ".": {
       "node": {
-        "default": "./dist/index.js"
+        "default": "./dist/node.esm.mjs"
       },
       "types": "./dist/types/index.d.ts"
     },

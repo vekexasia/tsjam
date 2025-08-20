@@ -13,7 +13,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { CORES, WORK_TIMEOUT } from "@tsjam/constants";
-import {
+import type {
   CoreIndex,
   Dagger,
   DoubleDagger,
@@ -25,7 +25,7 @@ import {
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior } from "@tsjam/utils";
 import assert from "assert";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import type { GuaranteesExtrinsicImpl } from "./extrinsics/guarantees";
 import type { NewWorkReportsImpl } from "./new-work-reports-impl";

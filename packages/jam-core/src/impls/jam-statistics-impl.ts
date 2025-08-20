@@ -1,7 +1,7 @@
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { Dagger, JamStatistics, Posterior, Validated } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 import { CoreStatisticsImpl } from "./core-statistics-impl";
 import type { DisputesStateImpl } from "./disputes-state-impl";

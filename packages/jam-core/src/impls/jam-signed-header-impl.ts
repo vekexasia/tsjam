@@ -11,7 +11,7 @@ import {
   JAM_TICKET_SEAL,
 } from "@tsjam/constants";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
-import {
+import type {
   BandersnatchKey,
   BandersnatchSignature,
   Hash,

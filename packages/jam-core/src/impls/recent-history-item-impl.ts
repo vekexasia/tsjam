@@ -2,7 +2,7 @@ import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import { IdentitySet } from "@/data-structures/identity-set";
 import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
-import {
+import type {
   Hash,
   HeaderHash,
   RecentHistoryItem,

@@ -1,5 +1,5 @@
 import { BaseJamCodecable, eSubIntCodec, JamCodecable } from "@tsjam/codec";
-import { u8 } from "@tsjam/types";
+import type { u8 } from "@tsjam/types";
 
 @JamCodecable()
 export class Version extends BaseJamCodecable {

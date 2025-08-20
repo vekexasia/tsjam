@@ -4,8 +4,8 @@ import {
   eIntCodec,
   JamCodecable,
 } from "@tsjam/codec";
-import { Gas, SingleCoreStatistics, u16, u32 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { Gas, SingleCoreStatistics, u16, u32 } from "@tsjam/types";
+import type { ConditionalExcept } from "type-fest";
 
 @JamCodecable()
 export class SingleCoreStatisticsImpl

@@ -13,7 +13,7 @@ import {
 } from "@tsjam/codec";
 import { JAM_GUARANTEE } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
-import {
+import type {
   DisputeCulprit,
   ED25519PublicKey,
   ED25519Signature,

@@ -2,10 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "..",
-    "preserveSymlinks": false,
-    "moduleResolution": "bundler",
-
+    "rootDir": ".",
+    "outDir": "dist",
   },
   "include": [
     "src/**/*",

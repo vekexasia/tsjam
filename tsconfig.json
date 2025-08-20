@@ -8,10 +8,7 @@
     "target": "es2020",
     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
     "module": "esnext",
-    /* Specify what module code is generated. */
-    "rootDir": "./",
-    /* Specify the root folder within your source files. */
-    "baseUrl": "./",
+
     /* Specify the base directory to resolve non-relative module names. */
     "types": [
       "node",
@@ -19,11 +16,11 @@
     ],
     "lib": ["es2020"],
 
-    "removeComments": true,
-    /* Specify type package names to be included without being referenced in a source file. */
-    "declaration": false,
-    /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
-    "declarationMap": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationMap": true,
+    "removeComments": false,
     /* Create sourcemaps for d.ts files. */
     "inlineSourceMap": false,
     "sourceMap": false,
@@ -55,5 +52,13 @@
     }
 
   },
+
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "dist/**/*",
+  ]
 
 }

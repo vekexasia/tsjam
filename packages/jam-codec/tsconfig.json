@@ -4,13 +4,6 @@
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",
-    "declarationDir": "dist",
-    "preserveSymlinks": false,
-    "moduleResolution": "bundler",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "declaration": true,
-    "declarationMap": true
   },
   "include": [
     "src/**/*", 

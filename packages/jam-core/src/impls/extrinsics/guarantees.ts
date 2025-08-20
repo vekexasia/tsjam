@@ -24,7 +24,7 @@ import {
   VALIDATOR_CORE_ROTATION,
 } from "@tsjam/constants";
 import { Ed25519 } from "@tsjam/crypto";
-import {
+import type {
   BoundedSeq,
   CoreIndex,
   Dagger,

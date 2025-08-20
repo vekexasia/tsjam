@@ -1,7 +1,7 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import { BaseJamCodecable, codec, eIntCodec, JamCodecable } from "@tsjam/codec";
-import { Hash, Ticket } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { Hash, Ticket } from "@tsjam/types";
+import type { ConditionalExcept } from "type-fest";
 
 /**
  * identified by `T` set

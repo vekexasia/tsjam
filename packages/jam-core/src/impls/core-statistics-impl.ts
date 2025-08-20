@@ -6,7 +6,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { CORES, ERASURECODE_SEGMENT_SIZE } from "@tsjam/constants";
-import {
+import type {
   CoreIndex,
   CoreStatistics,
   Dagger,
@@ -20,7 +20,7 @@ import {
   WorkReport,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import type { NewWorkReportsImpl } from "./new-work-reports-impl";
 import type { RHOImpl } from "./rho-impl";

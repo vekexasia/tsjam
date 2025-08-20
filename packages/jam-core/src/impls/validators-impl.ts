@@ -5,7 +5,7 @@ import {
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import {
+import type {
   Posterior,
   SeqOfLength,
   ValidatorIndex,
@@ -13,7 +13,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "assert";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
 

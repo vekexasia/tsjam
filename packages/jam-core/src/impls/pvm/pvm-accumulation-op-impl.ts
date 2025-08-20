@@ -6,14 +6,14 @@ import {
   JamCodecable,
   LengthDiscrimantedIdentityCodec,
 } from "@tsjam/codec";
-import {
+import type {
   Gas,
   Hash,
   PVMAccumulationOp,
   WorkError,
   WorkPackageHash,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import { WorkOutputImpl } from "../work-output-impl";
 
 /**

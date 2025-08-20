@@ -12,7 +12,7 @@ import {
   ValidatorIndex,
   ValidatorStatistics,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import type { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import type { JamEntropyImpl } from "./jam-entropy-impl";

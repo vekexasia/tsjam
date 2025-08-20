@@ -9,7 +9,7 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import {
+import type {
   BandersnatchSignature,
   Hash,
   HeaderHash,
@@ -21,7 +21,7 @@ import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
 import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
-import { SlotImpl, TauImpl } from "./slot-impl";
+import { SlotImpl, type TauImpl } from "./slot-impl";
 
 /**
  * $(0.7.1 - C.23) | `Eu`

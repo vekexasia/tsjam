@@ -7,7 +7,7 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
-import {
+import type {
   BandersnatchKey,
   Blake2bHash,
   ED25519PublicKey,
@@ -17,7 +17,7 @@ import {
   Validated,
   ValidatorIndex,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import { GammaPImpl } from "./gamma-p-impl";
 import { JamEntropyImpl } from "./jam-entropy-impl";

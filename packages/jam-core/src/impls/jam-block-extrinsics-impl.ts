@@ -18,7 +18,7 @@ import {
   JamBlockExtrinsics,
   ValidatorIndex,
 } from "@tsjam/types";
-import { ConditionalExcept } from "type-fest";
+import type { ConditionalExcept } from "type-fest";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import {

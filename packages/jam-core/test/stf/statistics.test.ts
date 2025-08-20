@@ -2,7 +2,7 @@ import { JamBlockExtrinsicsImpl } from "@/impls/jam-block-extrinsics-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
-import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { SlotImpl, type TauImpl } from "@/impls/slot-impl";
 import { ValidatorStatisticsImpl } from "@/impls/validator-statistics-impl";
 import {
   BaseJamCodecable,
@@ -10,7 +10,7 @@ import {
   codec,
   eSubIntCodec,
 } from "@tsjam/codec";
-import { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
+import type { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
