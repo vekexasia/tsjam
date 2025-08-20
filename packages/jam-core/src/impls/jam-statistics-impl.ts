@@ -66,7 +66,6 @@ export class JamStatisticsImpl
       deps.d_rho,
     );
     const toRet = new JamStatisticsImpl();
-    console.log(this.validators);
     toRet.validators = this.validators.toPosterior({
       tau: deps.tau,
       p_tau: deps.p_tau,

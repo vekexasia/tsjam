@@ -1,4 +1,9 @@
-import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
+import {
+  BaseJamCodecable,
+  cloneCodecable,
+  codec,
+  JamCodecable,
+} from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import {
   Posterior,
@@ -53,7 +58,7 @@ export class ValidatorStatisticsImpl
     p_disputes: Posterior<DisputesStateImpl>;
     p_entropy: Posterior<JamEntropyImpl>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
-  }) {
+  }): Posterior<ValidatorStatisticsImpl> {
     const reporters = deps.extrinsics.reportGuarantees.reporters({
       p_tau: deps.p_tau,
       p_lambda: deps.p_lambda,
@@ -61,7 +66,7 @@ export class ValidatorStatisticsImpl
       p_disputes: deps.p_disputes,
       p_entropy: deps.p_entropy,
     });
-    const toRet = structuredClone(this);
+    const toRet = cloneCodecable(<ValidatorStatisticsImpl>this);
 
     // $(0.7.1 - 13.3 / 13.4)
     let bold_a = toRet.previous;
@@ -104,7 +109,7 @@ export class ValidatorStatisticsImpl
       });
     }
 
-    return toRet;
+    return <Posterior<ValidatorStatisticsImpl>>toRet;
   }
 
   static newEmpty() {

@@ -1351,7 +1351,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target":
+"@tsjam/fuzzer-target@npm:*, @tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target":
   version: 0.0.0-use.local
   resolution: "@tsjam/fuzzer-target@workspace:packages/jam-fuzzer-target"
   dependencies:
@@ -1371,6 +1371,7 @@ __metadata:
     "@tsjam/constants": "npm:*"
     "@tsjam/core": "npm:*"
     "@tsjam/crypto": "npm:*"
+    "@tsjam/fuzzer-target": "npm:*"
     "@tsjam/utils": "npm:*"
   languageName: unknown
   linkType: soft
@@ -1697,6 +1698,87 @@ __metadata:
     "@typescript-eslint/types": "npm:8.16.0"
     eslint-visitor-keys: "npm:^4.2.0"
   checksum: 10c0/537df37801831aa8d91082b2adbffafd40305ed4518f0e7d3cbb17cc466d8b9ac95ac91fa232e7fe585d7c522d1564489ec80052ebb2a6ab9bbf89ef9dd9b7bc
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20250819.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20250819.1"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20250819.1"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-linux-arm@npm:7.0.0-dev.20250819.1"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-x64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-linux-x64@npm:7.0.0-dev.20250819.1"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20250819.1"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-x64@npm:7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview-win32-x64@npm:7.0.0-dev.20250819.1"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview@npm:^7.0.0-dev.20250819.1":
+  version: 7.0.0-dev.20250819.1
+  resolution: "@typescript/native-preview@npm:7.0.0-dev.20250819.1"
+  dependencies:
+    "@typescript/native-preview-darwin-arm64": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-darwin-x64": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-linux-arm": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-linux-arm64": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-linux-x64": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-win32-arm64": "npm:7.0.0-dev.20250819.1"
+    "@typescript/native-preview-win32-x64": "npm:7.0.0-dev.20250819.1"
+  dependenciesMeta:
+    "@typescript/native-preview-darwin-arm64":
+      optional: true
+    "@typescript/native-preview-darwin-x64":
+      optional: true
+    "@typescript/native-preview-linux-arm":
+      optional: true
+    "@typescript/native-preview-linux-arm64":
+      optional: true
+    "@typescript/native-preview-linux-x64":
+      optional: true
+    "@typescript/native-preview-win32-arm64":
+      optional: true
+    "@typescript/native-preview-win32-x64":
+      optional: true
+  bin:
+    tsgo: bin/tsgo.js
+  checksum: 10c0/57ce1298e488939361e95e39d97918d0a062828aa8580183c9934592185a464bddade513e5b2956a6030896613dc734694ce1db258665cc294b62799d91795fe
   languageName: node
   linkType: hard
 
@@ -7717,6 +7799,7 @@ __metadata:
     "@types/node": "npm:^22.10.1"
     "@typescript-eslint/eslint-plugin": "npm:^8.16.0"
     "@typescript-eslint/parser": "npm:^8.16.0"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250819.1"
     "@vekexasia/bigint-math": "npm:^1.0.0"
     "@vekexasia/bigint-uint8array": "npm:^1.1.1"
     "@vitest/browser": "npm:^2.1.6"
@@ -7740,7 +7823,7 @@ __metadata:
     rollup-plugin-typescript-paths: "npm:^1.5.0"
     ts-node: "npm:^10.9.2"
     tsc-alias: "npm:^1.8.10"
-    turbo: "npm:^2.3.3"
+    turbo: "npm:^2.5.6"
     typedoc: "npm:^0.27.1"
     typescript: "npm:5.7.2"
     vitest: "npm:^2.1.6"
@@ -7762,58 +7845,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo-darwin-64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-darwin-64@npm:2.3.3"
+"turbo-darwin-64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-darwin-64@npm:2.5.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-darwin-arm64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-darwin-arm64@npm:2.3.3"
+"turbo-darwin-arm64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-darwin-arm64@npm:2.5.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-linux-64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-linux-64@npm:2.3.3"
+"turbo-linux-64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-linux-64@npm:2.5.6"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-linux-arm64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-linux-arm64@npm:2.3.3"
+"turbo-linux-arm64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-linux-arm64@npm:2.5.6"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-windows-64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-windows-64@npm:2.3.3"
+"turbo-windows-64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-windows-64@npm:2.5.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-windows-arm64@npm:2.3.3":
-  version: 2.3.3
-  resolution: "turbo-windows-arm64@npm:2.3.3"
+"turbo-windows-arm64@npm:2.5.6":
+  version: 2.5.6
+  resolution: "turbo-windows-arm64@npm:2.5.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo@npm:^2.3.3":
-  version: 2.3.3
-  resolution: "turbo@npm:2.3.3"
+"turbo@npm:^2.5.6":
+  version: 2.5.6
+  resolution: "turbo@npm:2.5.6"
   dependencies:
-    turbo-darwin-64: "npm:2.3.3"
-    turbo-darwin-arm64: "npm:2.3.3"
-    turbo-linux-64: "npm:2.3.3"
-    turbo-linux-arm64: "npm:2.3.3"
-    turbo-windows-64: "npm:2.3.3"
-    turbo-windows-arm64: "npm:2.3.3"
+    turbo-darwin-64: "npm:2.5.6"
+    turbo-darwin-arm64: "npm:2.5.6"
+    turbo-linux-64: "npm:2.5.6"
+    turbo-linux-arm64: "npm:2.5.6"
+    turbo-windows-64: "npm:2.5.6"
+    turbo-windows-arm64: "npm:2.5.6"
   dependenciesMeta:
     turbo-darwin-64:
       optional: true
@@ -7829,7 +7912,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: 10c0/9aab52fb868a2b6246f41fe2343dec56c70252a9cb7729a3ea183458cfa728c1445d1b98882dd43542f0ffd46524e8ba7776fe0925e31a86904b113222778fa5
+  checksum: 10c0/b9657bf211bbcfe3911496e4fee6c9a24526bc37e9cadf7f0c76d0376e9c9dfafaacec27f5a61bb621dfe330600ce68c1b21e4cdc19bdccd3ebfe66766fcf62f
   languageName: node
   linkType: hard
 
