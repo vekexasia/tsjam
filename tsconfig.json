@@ -3,7 +3,7 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
     "moduleResolution": "Bundler",
     /* Projects */
-    "incremental": true,
+    "incremental": false,
     /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
     "target": "es2020",
     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */

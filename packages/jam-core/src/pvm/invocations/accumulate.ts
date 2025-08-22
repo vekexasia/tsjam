@@ -323,7 +323,7 @@ const G_fn = (
   x_star.state.accounts.set(x.x.id, serviceAccount);
   return {
     out: { x: x_star, y: x.y },
-    ctx: { ...context },
+    ctx: context.clone(),
   };
 };
 

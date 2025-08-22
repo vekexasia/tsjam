@@ -36,12 +36,10 @@ export const hostCallInvocation = <X>(
         };
       } else {
         // otherwise only use the instructionpointer from basic (out)
+        hostCallRes.ctx.instructionPointer = out.context.instructionPointer;
         return {
           exitReason,
-          context: {
-            ...hostCallRes.ctx,
-            instructionPointer: out.context.instructionPointer,
-          },
+          context: hostCallRes.ctx,
           out: hostCallRes.out,
         };
       }
