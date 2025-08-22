@@ -49,7 +49,6 @@ export const produceBlock = (
   if (sateErr) {
     throw new Error(sateErr);
   }
-  console.log(block.toJSON());
   return newState;
 };
 

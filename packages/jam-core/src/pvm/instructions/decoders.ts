@@ -95,7 +95,7 @@ export const OneRegOneImmIxDecoder = (
   const vX = <PVMRegisterRawValue>(
     readVarIntFromBuffer(bytes.subarray(1), lx as u8)
   );
-  return { rA, vX, wA: context.execution.registers.elements[rA] };
+  return { rA, vX, wA: context.execution.registers.elements[rA].value };
 };
 
 export type OneRegOneImmArgs = ReturnType<typeof OneRegOneImmIxDecoder>;
@@ -112,7 +112,7 @@ export const OneRegTwoImmIxDecoder = (
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
   const vX = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
   const vY = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
-  return { wA: context.execution.registers.elements[ra], vX, vY };
+  return { wA: context.execution.registers.elements[ra].value, vX, vY };
 };
 
 export type OneRegTwoImmArgs = ReturnType<typeof OneRegTwoImmIxDecoder>;
@@ -154,7 +154,7 @@ export const OneRegOneIMMOneOffsetIxDecoder = (
   //   Buffer.from(encodeWithCodec(E_2, Z_inv(2, -2275n))).toString("hex"),
   // );
   const vY = <u32>(context.execution.instructionPointer + offset);
-  const wA = context.execution.registers.elements[rA];
+  const wA = context.execution.registers.elements[rA].value;
   // console.log({ rA, lx, ly, vX, vY, offset });
   return { rA, wA, vX, vY };
 };
@@ -171,7 +171,7 @@ export const TwoRegIxDecoder = (
   assert(bytes.length > 0, "no input bytes");
   const rD = <RegisterIdentifier>Math.min(12, bytes[0] % 16);
   const rA = <RegisterIdentifier>Math.min(12, Math.floor(bytes[0] / 16));
-  return { rD, wA: context.execution.registers.elements[rA] };
+  return { rD, wA: context.execution.registers.elements[rA].value };
 };
 
 export type TwoRegArgs = ReturnType<typeof TwoRegIxDecoder>;
@@ -190,8 +190,8 @@ export const TwoRegOneImmIxDecoder = (
     rA,
     rB,
     vX,
-    wA: context.execution.registers.elements[rA],
-    wB: context.execution.registers.elements[rB],
+    wA: context.execution.registers.elements[rA].value,
+    wB: context.execution.registers.elements[rB].value,
   };
 };
 
@@ -209,8 +209,8 @@ export const TwoRegOneOffsetIxDecoder = (
     Z(lX, E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
   ) as i32;
   return {
-    wA: context.execution.registers.elements[rA],
-    wB: context.execution.registers.elements[rB],
+    wA: context.execution.registers.elements[rA].value,
+    wB: context.execution.registers.elements[rB].value,
     offset,
   };
 };
@@ -240,8 +240,8 @@ export const TwoRegTwoImmIxDecoder = (
     vX,
     vY,
     rA,
-    wA: context.execution.registers.elements[rA],
-    wB: context.execution.registers.elements[rB],
+    wA: context.execution.registers.elements[rA].value,
+    wB: context.execution.registers.elements[rB].value,
   };
 };
 
@@ -258,8 +258,8 @@ export const ThreeRegIxDecoder = (
   const rD = Math.min(12, bytes[1]) as RegisterIdentifier;
   return {
     rD,
-    wA: context.execution.registers.elements[rA],
-    wB: context.execution.registers.elements[rB],
+    wA: context.execution.registers.elements[rA].value,
+    wB: context.execution.registers.elements[rB].value,
   };
 };
 

@@ -4,6 +4,7 @@ import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-executio
 import { PVMProgram } from "@tsjam/types";
 import { ParsedProgram } from "../parse-program";
 import { pvmSingleStep } from "./single-step";
+import { cloneCodecable } from "@tsjam/codec";
 
 /**
  * Basic invocation
@@ -35,14 +36,18 @@ export const basicInvocation = (
     const out = pvmSingleStep(p, intermediateState);
     if (typeof out.exitReason !== "undefined") {
       return {
-        context: structuredClone(out.p_context),
+        context: out.p_context.clone(),
         exitReason: out.exitReason,
       };
     }
     intermediateState = out.p_context;
   }
+
+  const resContext = new PVMProgramExecutionContextImpl(intermediateState);
+  resContext.memory = resContext.memory.clone();
+  resContext.registers = cloneCodecable(resContext.registers);
   return {
-    context: structuredClone(intermediateState),
+    context: resContext,
     exitReason: PVMExitReasonImpl.outOfGas(),
   };
 };

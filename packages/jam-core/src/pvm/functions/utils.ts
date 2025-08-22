@@ -13,6 +13,7 @@ import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
+import { cloneCodecable } from "@tsjam/codec";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -47,10 +48,10 @@ export const applyMods = <T extends object>(
   out: T;
   exitReason?: PVMExitReasonImpl;
 } => {
-  const newCtx = {
+  const newCtx = new PVMProgramExecutionContextImpl({
     ...ctx,
-    registers: structuredClone(ctx.registers),
-  };
+    registers: cloneCodecable(ctx.registers),
+  });
   let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)
