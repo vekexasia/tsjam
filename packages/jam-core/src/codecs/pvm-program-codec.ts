@@ -62,9 +62,9 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
 
     // E(k)
     const elements = Math.ceil(Number(cCard.value) / 8);
-    obj.k = BitSequenceCodec(elements)
-      .decode(bytes.subarray(offset, offset + elements))
-      .value.slice(0, Number(cCard.value));
+    obj.k = BitSequenceCodec(Number(cCard.value)).decode(
+      bytes.subarray(offset, offset + elements),
+    ).value;
 
     offset += elements;
     return { value: obj, readBytes: offset };
