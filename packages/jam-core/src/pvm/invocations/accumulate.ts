@@ -70,12 +70,12 @@ export const accumulateInvocation = (
   },
 ): AccumulationOutImpl => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
-  const yRes = structuredClone(iRes);
+  const yRes = iRes.clone();
   const bold_c = pvmAccState.accounts.get(s)?.code();
 
   // first case
   if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
-    const bold_s = structuredClone(pvmAccState);
+    const bold_s = pvmAccState.clone();
     bold_s.accounts.get(s)!.balance = <Balance>(pvmAccState.accounts.get(s)!
       .balance +
       BigInt(
@@ -143,7 +143,7 @@ const I_fn = (
 
   return new PVMResultContextImpl({
     id: service,
-    state: structuredClone(pvmAccState),
+    state: pvmAccState.clone(),
     nextFreeID: i,
     transfers: new DeferredTransfersImpl([]),
     yield: undefined,
@@ -319,7 +319,7 @@ const G_fn = (
 ): ReturnType<
   HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }>
 > => {
-  const x_star = structuredClone(x.x);
+  const x_star = x.x.clone();
   x_star.state.accounts.set(x.x.id, serviceAccount);
   return {
     out: { x: x_star, y: x.y },

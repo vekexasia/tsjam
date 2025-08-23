@@ -79,6 +79,16 @@ export class MerkleServiceAccountStorageImpl implements IServiceAccountStorage {
   get size(): number {
     return this.storage.size;
   }
+
+  clone() {
+    const toRet = new MerkleServiceAccountStorageImpl(
+      this.serviceIndex,
+      this.octets,
+    );
+
+    toRet.storage = this.storage.clone();
+    return toRet;
+  }
 }
 
 if (import.meta.vitest) {

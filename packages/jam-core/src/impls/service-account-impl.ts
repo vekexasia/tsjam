@@ -14,7 +14,6 @@ import {
   CodeHash,
   Gas,
   Hash,
-  IServiceAccountStorage,
   PVMProgramCode,
   ServiceAccount,
   ServiceIndex,
@@ -28,6 +27,7 @@ import assert from "node:assert";
 import type { SlotImpl } from "./slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { ConditionalExcept } from "type-fest";
+import { MerkleServiceAccountStorageImpl } from "./merkle-service-account-storage-impl";
 
 export const serviceMetadataCodec = createCodec<{
   code: PVMProgramCode;
@@ -56,7 +56,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   created!: SlotImpl;
   lastAcc!: SlotImpl;
   parent!: ServiceIndex;
-  storage!: IServiceAccountStorage;
+  storage!: MerkleServiceAccountStorageImpl;
 
   constructor(
     values: Omit<
@@ -175,6 +175,14 @@ export class ServiceAccountImpl implements ServiceAccount {
     ) {
       return this.preimages.get(hash)!;
     }
+  }
+
+  clone() {
+    const toRet = new ServiceAccountImpl(this);
+    toRet.preimages = this.preimages.clone();
+    toRet.requests = this.requests.clone();
+    toRet.storage = this.storage.clone();
+    return toRet;
   }
 }
 /**

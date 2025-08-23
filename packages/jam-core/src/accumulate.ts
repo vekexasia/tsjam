@@ -333,8 +333,7 @@ export const parallelizedAccumulation = (
     deps,
   ).postState;
 
-  // NOTE:safe to structuredClone
-  const a_prime = structuredClone(accState.assigners);
+  const a_prime = structuredClone(accState.assigners); // safe as of 0.7.1
   for (let c = <CoreIndex>0; c < CORES; c++) {
     if (accState.assigners[c] !== eStar.assigners[c]) {
       // if the assigner has changed, we need to accumulate it
@@ -350,7 +349,7 @@ export const parallelizedAccumulation = (
     }
   }
 
-  let v_prime = structuredClone(accState.delegator);
+  let v_prime = structuredClone(accState.delegator); // safe as of 0.7.1
   if (accState.delegator !== eStar.delegator) {
     v_prime = singleServiceAccumulation(
       accState,
@@ -362,7 +361,7 @@ export const parallelizedAccumulation = (
     ).postState.delegator;
   }
 
-  let r_prime = structuredClone(accState.registrar);
+  let r_prime = structuredClone(accState.registrar); // safe as of 0.7.1
   if (accState.registrar !== eStar.registrar) {
     r_prime = singleServiceAccumulation(
       accState,

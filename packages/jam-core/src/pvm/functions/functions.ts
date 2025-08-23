@@ -456,7 +456,7 @@ export class HostFunctions {
       bold_k = context.memory.getBytes(ko.checked_u32(), kz.checked_u32());
     }
 
-    const bold_a = structuredClone(args.bold_s);
+    const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
       console.log(
@@ -623,7 +623,7 @@ export class HostFunctions {
       ERASURECODE_SEGMENT_SIZE,
       context.memory.getBytes(p.checked_u32(), z),
     );
-    const newRefineCtx = args.refineCtx; // ok to structuredClone as of 0.7.1
+    const newRefineCtx = structuredClone(args.refineCtx); // ok to structuredClone as of 0.7.1
     newRefineCtx.segments.push(bold_x);
 
     return [
@@ -833,7 +833,6 @@ export class HostFunctions {
     PVMRegistersImpl.encode(res.context.registers, newMemory.data.subarray(8));
 
     // compute m*
-    // NOTE: this might fail as structuredClone is pojo copying
     const mStar = new Map(refineCtx.bold_m.entries());
     const pvmGuest = new PVMGuest({
       code: mStar.get(Number(n)!)!.code,
@@ -1226,7 +1225,7 @@ export class HostFunctions {
       return [IxMod.panic()];
     } else {
       // FIXME: structuredclone
-      const x_bold_s_prime = structuredClone(x.bold_s());
+      const x_bold_s_prime = x.bold_s().clone();
 
       x_bold_s_prime.codeHash = <CodeHash>(
         HashCodec.decode(context.memory.getBytes(o.toSafeMemoryAddress(), 32))
@@ -1236,7 +1235,7 @@ export class HostFunctions {
       x_bold_s_prime.minMemoGas = m.u64();
 
       // NOTE: this is necessary as x.bold_s() is basically a lookup on state accounts
-      const newX = structuredClone(x);
+      const newX = x.clone();
       newX.state.accounts.set(newX.id, x_bold_s_prime);
       return [
         IxMod.w7(HostCallResult.OK),
@@ -1258,7 +1257,7 @@ export class HostFunctions {
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [d, a, l, o] = context.registers.slice(7);
 
-    const bold_d = structuredClone(x.state.accounts);
+    const bold_d = x.state.accounts.clone();
 
     if (!context.memory.canRead(o.toSafeMemoryAddress(), TRANSFER_MEMO_SIZE)) {
       return [IxMod.panic()];
@@ -1286,7 +1285,7 @@ export class HostFunctions {
       ),
     });
 
-    const newX = structuredClone(x);
+    const newX = x.clone();
     newX.transfers.elements.push(t);
     newX.state.accounts.get(x.id)!.balance = <Balance>b;
 
@@ -1336,7 +1335,7 @@ export class HostFunctions {
     }
     const [, y] = dlhl;
     if (dlhl.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION) {
-      const newX = structuredClone(args.x);
+      const newX = args.x.clone();
       newX.state.accounts.delete(d.checked_u32());
       const s_prime = newX.state.accounts.get(args.x.id)!;
       s_prime.balance = toTagged(s_prime.balance + bold_d.balance);
@@ -1403,7 +1402,7 @@ export class HostFunctions {
       context.memory.getBytes(o.toSafeMemoryAddress(), 32),
     ).value;
 
-    const newX = structuredClone(args.x);
+    const newX = args.x.clone();
     const bold_a = newX.bold_s();
 
     const _z = Number(z) as Tagged<u32, "length">;
@@ -1446,7 +1445,7 @@ export class HostFunctions {
       context.memory.getBytes(o.toSafeMemoryAddress(), 32),
     ).value;
 
-    const newX = structuredClone(args.x);
+    const newX = args.x.clone();
     const x_bold_s = newX.bold_s();
 
     if (typeof x_bold_s.requests.get(h) === "undefined") {
@@ -1510,7 +1509,7 @@ export class HostFunctions {
     const h = HashCodec.decode(
       context.memory.getBytes(o.toSafeMemoryAddress(), 32),
     ).value;
-    const newX = structuredClone(x);
+    const newX = x.clone();
     newX.yield = h;
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
@@ -1556,7 +1555,7 @@ export class HostFunctions {
       // already there
       return [IxMod.w7(HostCallResult.HUH)];
     }
-    const newX = structuredClone(x);
+    const newX = x.clone();
     newX.provisions.push({
       serviceId: s,
       blob: bold_i,

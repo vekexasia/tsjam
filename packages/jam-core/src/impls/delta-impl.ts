@@ -60,7 +60,7 @@ export class DeltaImpl implements Delta {
     provisions: PVMResultContext["provisions"],
     p_tau: Validated<Posterior<TauImpl>>,
   ) {
-    const newD = structuredClone(this);
+    const newD = this.clone();
     for (const { serviceId, blob } of provisions) {
       const phash = Hashing.blake2b(blob);
       const plength: Tagged<u32, "length"> = toTagged(<u32>blob.length);
@@ -92,7 +92,7 @@ export class DeltaImpl implements Delta {
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = new DeltaImpl();
     for (const serviceIndex of this.services()) {
-      const a = structuredClone(this.get(serviceIndex)!);
+      const a = this.get(serviceIndex)!.clone();
       if (deps.accumulationStatistics.has(serviceIndex)) {
         a.lastAcc = deps.p_tau;
       }
