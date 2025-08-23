@@ -33,20 +33,20 @@ export class PrivilegedServicesImpl
   /**
    * `M` - the index of the blessed service
    */
-  @eSubIntCodec(4)
+  @eSubIntCodec(4, "bless")
   manager!: ServiceIndex;
   /**
    * `A`
    * services which can alter φ one for each CORE
    */
-  @jsonCodec(ArrayOfJSONCodec(NumberJSONCodec()))
+  @jsonCodec(ArrayOfJSONCodec(NumberJSONCodec()), "assign")
   @binaryCodec(createSequenceCodec(CORES, E_sub_int(4)))
   assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
   /**
    * `V`
    * service which can alter ι
    */
-  @eSubIntCodec(4)
+  @eSubIntCodec(4, "designate")
   delegator!: ServiceIndex;
 
   @eSubIntCodec(4)
@@ -62,6 +62,7 @@ export class PrivilegedServicesImpl
       NumberJSONCodec(),
       NumberJSONCodec(),
     ),
+    "always_acc",
   )
   @binaryCodec(
     buildGenericKeyValueCodec(E_sub_int(4), E_sub(8), (a, b) => a - b),

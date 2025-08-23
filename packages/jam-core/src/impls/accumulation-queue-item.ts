@@ -10,7 +10,7 @@ export class AccumulationQueueItem extends BaseJamCodecable {
   /**
    * `bold_r`
    */
-  @codec(WorkReportImpl)
+  @codec(WorkReportImpl, "report")
   workReport!: WorkReportImpl;
   /**
    * `bold_d`

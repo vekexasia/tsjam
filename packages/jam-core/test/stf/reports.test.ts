@@ -1,3 +1,6 @@
+import { HashCodec } from "@/codecs/misc-codecs";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import { AuthorizerPoolImpl } from "@/impls/authorizer-pool-impl";
 import "@/impls/beta-impl";
 import { BetaImpl } from "@/impls/beta-impl";
@@ -18,17 +21,12 @@ import { RHOImpl } from "@/impls/rho-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentityMap } from "@/data-structures/identity-map";
-import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
   binaryCodec,
   buildGenericKeyValueCodec,
   codec,
   E_sub_int,
-  eSubBigIntCodec,
-  eSubIntCodec,
   JamCodecable,
   jsonCodec,
   lengthDiscriminatedCodec,
@@ -37,51 +35,24 @@ import {
   WrapJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
+import { getConstantsMode } from "@tsjam/constants";
 import type {
   Balance,
-  CodeHash,
   DoubleDagger,
   ED25519PublicKey,
-  Gas,
   OpaqueHash,
   Posterior,
   ServiceIndex,
-  u32,
-  u64,
   Validated,
   WorkPackageHash,
 } from "@tsjam/types";
 import { toDagger, toPosterior } from "@tsjam/utils";
 import fs from "fs";
-import { getConstantsMode } from "@tsjam/constants";
+import type { ConditionalExcept } from "type-fest";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
+import { TestServiceInfo } from "../common";
 import { dummyState } from "../utils";
-import type { ConditionalExcept } from "type-fest";
-
-@JamCodecable()
-class ServiceInfo extends BaseJamCodecable {
-  @codec(HashCodec, "code_hash")
-  codeHash!: CodeHash; // a_c
-
-  @eSubBigIntCodec(8, "balance")
-  balance!: Balance; //a_b
-
-  @eSubBigIntCodec(8, "min_item_gas")
-  minItemGas!: Gas; //a_g
-  @eSubBigIntCodec(8, "min_memo_gas")
-  minMemoGas!: Gas; //a_m
-  @eSubBigIntCodec(8, "bytes")
-  bytes!: u64; //a_o (virtual)
-  @eSubIntCodec(4, "items")
-  items!: u32; //a_i (virtual)
-  @codec(SlotImpl, "creation_slot")
-  creationSlot!: SlotImpl;
-  @codec(SlotImpl, "last_accumulation_slot")
-  lastAccumulationSlot!: SlotImpl; // a_l
-  @eSubIntCodec(4, "parent_service")
-  parentServiceId!: ServiceIndex; // a_p
-}
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -111,13 +82,13 @@ class TestState extends BaseJamCodecable {
     MapJSONCodec(
       { key: "id", value: "data" },
       NumberJSONCodec(),
-      WrapJSONCodec("service", ServiceInfo),
+      WrapJSONCodec("service", TestServiceInfo),
     ),
   )
   @binaryCodec(
-    buildGenericKeyValueCodec(E_sub_int(4), ServiceInfo, (a, b) => a - b),
+    buildGenericKeyValueCodec(E_sub_int(4), TestServiceInfo, (a, b) => a - b),
   )
-  accounts!: Map<ServiceIndex, ServiceInfo>;
+  accounts!: Map<ServiceIndex, TestServiceInfo>;
 
   @codec(CoreStatisticsImpl, "cores_statistics")
   coreStatistics!: CoreStatisticsImpl;
