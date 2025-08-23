@@ -346,6 +346,10 @@ describe("workreports", () => {
     );
   });
 
+  it("different_core_same_guarantors-1", () => {
+    expect(() => buildTest("different_core_same_guarantors-1")).to.not.throw();
+  });
+
   it("duplicate_package_in_recent_history-1", () => {
     expect(() => buildTest("duplicate_package_in_recent_history-1")).toThrow(
       EGError.WORKPACKAGE_IN_PIPELINE,
