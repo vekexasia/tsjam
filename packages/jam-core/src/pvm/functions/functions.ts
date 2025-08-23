@@ -103,6 +103,7 @@ import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -116,13 +117,13 @@ export class HostFunctions {
   fetch(
     context: PVMProgramExecutionContextImpl,
     args: {
-      p: WorkPackageImpl;
+      p?: WorkPackageImpl;
       n?: Hash; // TODO: discover what this is
       bold_r?: Uint8Array;
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
       overline_x?: Uint8Array[][];
-      bold_i?: PVMAccumulationOpImpl[];
+      bold_i?: AccumulationInputInpl[];
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
@@ -293,7 +294,7 @@ export class HostFunctions {
       case 14n: {
         if (typeof args.bold_i !== "undefined") {
           v = encodeWithCodec(
-            createArrayLengthDiscriminator(PVMAccumulationOpImpl),
+            createArrayLengthDiscriminator(AccumulationInputInpl),
             args.bold_i,
           );
         }
@@ -304,7 +305,7 @@ export class HostFunctions {
           typeof args.bold_i !== "undefined" &&
           w11.value < args.bold_i.length
         ) {
-          v = args.bold_i[Number(w11)].toBinary();
+          v = encodeWithCodec(AccumulationInputInpl, args.bold_i[Number(w11)]);
         }
         break;
       }

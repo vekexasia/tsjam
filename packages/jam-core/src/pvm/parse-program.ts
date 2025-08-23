@@ -1,5 +1,6 @@
 import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
+import "./instructions/instructions";
 import { Ixdb } from "./instructions/ixdb";
 
 export class ParsedProgram implements IParsedProgram {

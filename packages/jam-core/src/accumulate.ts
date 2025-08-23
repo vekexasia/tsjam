@@ -123,7 +123,7 @@ export const accumulateReports = (
   });
   // end of calculation of posterior accumulation queue
 
-  return ok({
+  return {
     p_accumulationHistory,
     p_accumulationQueue,
     p_mostRecentAccumulationOutputs: toPosterior(lastAccOutputs),
@@ -140,7 +140,7 @@ export const accumulateReports = (
     p_iota: toPosterior(postAccState.stagingSet),
     p_authQueue: toPosterior(postAccState.authQueue),
     accumulationStatistics,
-  });
+  };
 };
 
 /**

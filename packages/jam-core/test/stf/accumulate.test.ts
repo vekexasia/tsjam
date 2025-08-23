@@ -1,13 +1,17 @@
-import packageJSON from "../../package.json";
+import { accumulateReports } from "@/accumulate";
 import {
   AccumulationHistoryImpl,
   AccumulationQueueImpl,
   AuthorizerQueueImpl,
   DeltaImpl,
+  GuaranteesExtrinsicImpl,
   IdentityMap,
   IdentityMapCodec,
+  MerkleServiceAccountStorageImpl,
   NewWorkReportsImpl,
+  PreimagesExtrinsicImpl,
   PrivilegedServicesImpl,
+  ServiceAccountImpl,
   ServicesStatisticsImpl,
   SlotImpl,
   TauImpl,
@@ -37,12 +41,12 @@ import type {
   ServiceIndex,
   Validated,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
+import packageJSON from "../../package.json";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
-import { accumulateReports } from "@/accumulate";
-import { toTagged } from "@tsjam/utils";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
@@ -87,6 +91,23 @@ class TestAccount extends BaseJamCodecable {
     }),
   )
   preimages!: IdentityMap<Hash, 32, Uint8Array>;
+
+  toServiceAccount(serviceIndex: ServiceIndex) {
+    const sa = this.service.toServiceAccount(serviceIndex);
+
+    const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
+    for (const [key, blob] of this.storage) {
+      storage.set(key, blob);
+    }
+
+    sa.storage = storage;
+    sa.preimages = this.preimages;
+
+    // this is needed since the testServiceInfo replaces the original
+    sa.totalOctets = ServiceAccountImpl.prototype.totalOctets.bind(sa);
+    sa.itemInStorage = ServiceAccountImpl.prototype.itemInStorage.bind(sa);
+    return sa;
+  }
 }
 
 @JamCodecable()
@@ -122,7 +143,7 @@ class TestInput extends BaseJamCodecable {
   p_tau!: Validated<Posterior<TauImpl>>;
 
   @lengthDiscriminatedCodec(WorkReportImpl)
-  reports!: WorkReportImpl;
+  reports!: WorkReportImpl[];
 }
 
 @JamCodecable()
@@ -150,10 +171,12 @@ const buildTest = (testname: string) => {
 
   const newWR = new NewWorkReportsImpl(testCase.input.reports);
 
-  
   const delta = DeltaImpl.newEmpty();
-  [...testCase.preState.accounts.entries()].forEach(([serviceIndex, testAccount]) => delta.set(serviceIndex, testAccount))
-  accumulateReports(newWR, {
+  [...testCase.preState.accounts.entries()].forEach(
+    ([serviceIndex, testAccount]) =>
+      delta.set(serviceIndex, testAccount.toServiceAccount(serviceIndex)),
+  );
+  const res = accumulateReports(newWR, {
     accumulationHistory: testCase.preState.history,
     accumulationQueue: testCase.preState.readyQueue,
     p_eta_0: testCase.preState.p_eta_0,
@@ -162,9 +185,21 @@ const buildTest = (testname: string) => {
     p_tau: testCase.input.p_tau,
     privServices: testCase.preState.privileges,
     tau: testCase.preState.tau,
-    serviceAccounts:
-
+    serviceAccounts: delta,
   });
+
+  const posteriorStatistics = testCase.preState.statistics.toPosterior({
+    accumulationStatistics: res.accumulationStatistics,
+    // transferStatistics: new Map(),
+    ep: toTagged(PreimagesExtrinsicImpl.newEmpty()),
+    guaranteedReports: GuaranteesExtrinsicImpl.newEmpty().workReports(),
+  });
+
+  expect(posteriorStatistics.toJSON()).deep.eq(
+    testCase.postState.statistics.toJSON(),
+  );
+
+  const accMerkleRoot = res.p_mostRecentAccumulationOutputs.merkleRoot();
 
   /*
   const { input, preState, output, postState } = decoded;

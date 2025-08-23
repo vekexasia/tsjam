@@ -40,6 +40,7 @@ import { applyMods } from "../functions/utils";
 import { check_fn } from "../utils/check-fn";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
+import assert from "assert";
 
 const AccumulateArgsCodec = createCodec<{
   t: SlotImpl;
@@ -103,7 +104,7 @@ export const accumulateInvocation = (
       s,
       bold_i_length: accumulateOps.length,
     }),
-    F_fn(t, deps.core, s),
+    F_fn(t, deps.core, accumulateOps, deps.p_eta_0, s),
     { x: iRes, y: yRes },
   );
 
@@ -157,10 +158,23 @@ const I_fn = (
 const F_fn: (
   tau: TauImpl,
   core: CoreIndex,
+  accumulateOps: AccumulationInputInpl[], // bold_i
+  p_eta_0: Posterior<JamEntropy["_0"]>,
   serviceIndex: ServiceIndex,
 ) => HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }> =
-  (tau: TauImpl, core: CoreIndex, serviceIndex: ServiceIndex) => (input) => {
+  (
+    tau: TauImpl,
+    core: CoreIndex,
+    accumulateOps: AccumulationInputInpl[], // bold_i
+    p_eta_0: Posterior<JamEntropy["_0"]>,
+    serviceIndex: ServiceIndex,
+  ) =>
+  (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
+    assert(
+      typeof fnIdentifier === "string",
+      `Unknown identifier for ${input.hostCallOpcode}`,
+    );
     const bold_s = input.out.x.bold_s();
     const e_bold_d = input.out.x.state.accounts;
     switch (fnIdentifier) {
@@ -175,6 +189,16 @@ const F_fn: (
           }),
         );
         return G_fn(ctx, bold_s, out);
+      }
+      case "fetch": {
+        applyMods(
+          input.ctx,
+          input.out,
+          hostFunctions.fetch(input.ctx, {
+            n: p_eta_0,
+            bold_i: accumulateOps,
+          }),
+        );
       }
       case "write": {
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(

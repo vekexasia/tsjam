@@ -1,4 +1,5 @@
 import { HashCodec } from "@/codecs/misc-codecs";
+import { wellBalancedBinaryMerkleRoot } from "@/merklization/binary";
 import {
   BaseJamCodecable,
   codec,
@@ -7,6 +8,7 @@ import {
   lengthDiscriminatedCodec,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
+import { Hashing } from "@tsjam/crypto";
 import type { Hash, LastAccOuts, ServiceIndex } from "@tsjam/types";
 import type { ConditionalExcept } from "type-fest";
 
@@ -64,5 +66,18 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
 
   static newEmpty(): LastAccOutsImpl {
     return new LastAccOutsImpl([]);
+  }
+
+  /**
+   * the Root of the accumulation outputs is currently unused.
+   * here to check against test and in possible future usage
+   */
+  merkleRoot() {
+    return wellBalancedBinaryMerkleRoot(
+      [...this.elements]
+        .sort((a, b) => a.serviceIndex - b.serviceIndex)
+        .map((entry) => entry.toBinary()),
+      Hashing.keccak256,
+    );
   }
 }

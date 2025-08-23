@@ -1,6 +1,7 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { u8 } from "@tsjam/types";
+import "@/pvm/functions/functions";
 import { basicInvocation } from "./basic";
 
 /**

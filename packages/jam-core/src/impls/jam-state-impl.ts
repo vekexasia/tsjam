@@ -302,19 +302,16 @@ export class JamStateImpl implements JamState {
       d_rho,
     );
 
-    const [
-      ,
-      {
-        p_accumulationHistory,
-        p_accumulationQueue,
-        p_mostRecentAccumulationOutputs,
-        p_privServices,
-        d_delta,
-        p_iota,
-        p_authQueue,
-        accumulationStatistics,
-      },
-    ] = accumulateReports(bold_R, {
+    const {
+      p_accumulationHistory,
+      p_accumulationQueue,
+      p_mostRecentAccumulationOutputs,
+      p_privServices,
+      d_delta,
+      p_iota,
+      p_authQueue,
+      accumulationStatistics,
+    } = accumulateReports(bold_R, {
       tau: this.slot,
       p_tau,
       accumulationHistory: this.accumulationHistory,
@@ -324,7 +321,7 @@ export class JamStateImpl implements JamState {
       privServices: this.privServices,
       iota: this.iota,
       p_eta_0: toPosterior(p_entropy._0),
-    }).safeRet();
+    });
     const d_beta = this.beta.toDagger(newBlock.header.parentStateRoot);
 
     const dd_delta = d_delta.toDoubleDagger({
