@@ -48,7 +48,12 @@ jobs:
           NODE_VERSION: 22.18.0
         run: |
           INPUT=packages/jam-fuzzer-target/dist/cli.mjs
-          OUT=jam-fuzzer-target
+          # derive artifact name from package.json version and jam:protocolVersion
+          VERSION=$(node -p "require('./packages/jam-fuzzer-target/package.json').version")
+          PROTO=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
+          OUT=jam-fuzzer-target-v${VERSION}-proto${PROTO}
+          # expose the computed name to later steps
+          echo "ARTIFACT_NAME=$OUT" >> $GITHUB_ENV
           # ensure a stable cache location for nexe build artifacts
           export XDG_CACHE_HOME="$HOME/.cache"
           export NEXE_CACHE_DIR="$HOME/.cache/nexe"
@@ -68,5 +73,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: jam-fuzzer-target
-          path: ./jam-fuzzer-target
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./${{ env.ARTIFACT_NAME }}
