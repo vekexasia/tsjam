@@ -651,6 +651,7 @@ export class HostFunctions {
     const bold_p = context.memory.getBytes(po.checked_u32(), pz.checked_u32());
     try {
       PVMProgramCodec.decode(bold_p);
+      // eslint-disable-next-line
     } catch (_e) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
