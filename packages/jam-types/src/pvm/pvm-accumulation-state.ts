@@ -42,11 +42,6 @@ export interface PVMAccumulationState {
   delegator: ServiceIndex;
 
   /**
-   * `r`
-   */
-  registrar: ServiceIndex;
-
-  /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits
    * `z`

@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/core",
-  "version": "0.7.1",
+  "version": "0.7.0",
   "description": "Block production and chain growth. Aka Safrole",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
@@ -42,5 +42,5 @@
     "@types/json-bigint": "^1.0.4",
     "json-bigint": "^1.0.0"
   },
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.0"
 }

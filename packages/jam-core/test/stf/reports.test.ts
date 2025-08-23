@@ -211,6 +211,7 @@ const buildTest = (filename: string) => {
     p_lambda: decoded.preState.p_lambda,
   });
 
+  debugger;
   expect(TestOuputOk.codecOf("reporters").toJSON(reporters)).deep.eq(
     TestOuputOk.codecOf("reporters").toJSON(decoded.output.ok!.reporters),
   );

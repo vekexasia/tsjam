@@ -12,8 +12,9 @@ import {
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
+import { InvokedTransfers } from "./deferred-transfers-impl";
 import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
-import type { ServiceAccountImpl } from "./service-account-impl";
+import { ServiceAccountImpl } from "./service-account-impl";
 import type { TauImpl } from "./slot-impl";
 
 /**
@@ -77,7 +78,7 @@ export class DeltaImpl implements Delta {
   }
 
   /**
-   * $(0.7.1 - 12.28 / 12.29)
+   * $(0.7.0 - 12.30)
    */
   toDoubleDagger(
     this: Dagger<DeltaImpl>,
@@ -87,11 +88,15 @@ export class DeltaImpl implements Delta {
        */
       accumulationStatistics: AccumulationStatisticsImpl;
       p_tau: Validated<Posterior<TauImpl>>;
+      /**
+       * `bold_x`
+       */
+      invokedTransfers: InvokedTransfers;
     },
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = new DeltaImpl();
-    for (const serviceIndex of this.services()) {
-      const a = this.get(serviceIndex)!.clone();
+    for (const [serviceIndex, tRes] of deps.invokedTransfers) {
+      const a = tRes.serviceAccount.clone();
       if (deps.accumulationStatistics.has(serviceIndex)) {
         a.lastAcc = deps.p_tau;
       }

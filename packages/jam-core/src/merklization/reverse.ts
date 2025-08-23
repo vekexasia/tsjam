@@ -85,7 +85,7 @@ export const stateFromMerkleMap = (
       k[6] === 0 &&
       k[8] === 0 &&
       k[9] === 0 &&
-      32 + 5 * 8 + 4 * 4 + 1 === merkleMap.get(k)!.length
+      32 + 5 * 8 + 4 * 4 === merkleMap.get(k)!.length
     );
   });
 
@@ -240,8 +240,8 @@ if (import.meta.vitest) {
           exportCount: <u32>8,
           accumulateCount: <u32>9,
           accumulateGasUsed: <Gas>10n,
-          // transfersCount: <u32>11,
-          // transfersGasUsed: <Gas>12n,
+          transfersCount: <u32>11,
+          transfersGasUsed: <Gas>12n,
         });
         state.statistics.services.elements.set(<ServiceIndex>0, stat);
         const newState = stateFromMerkleMap(merkleStateMap(state));

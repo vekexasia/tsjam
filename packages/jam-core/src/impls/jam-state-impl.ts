@@ -306,6 +306,7 @@ export class JamStateImpl implements JamState {
       p_accumulationHistory,
       p_accumulationQueue,
       p_mostRecentAccumulationOutputs,
+      deferredTransfers,
       p_privServices,
       d_delta,
       p_iota,
@@ -323,9 +324,15 @@ export class JamStateImpl implements JamState {
       p_eta_0: toPosterior(p_entropy._0),
     });
     const d_beta = this.beta.toDagger(newBlock.header.parentStateRoot);
+    const invokedTransfers = deferredTransfers.invokedTransfers({
+      d_delta,
+      p_tau,
+      p_eta_0: p_entropy._0,
+    });
 
     const dd_delta = d_delta.toDoubleDagger({
       p_tau,
+      invokedTransfers,
       accumulationStatistics,
     });
 
@@ -397,6 +404,7 @@ export class JamStateImpl implements JamState {
       p_kappa,
       p_lambda,
       accumulationStatistics,
+      transferStatistics: deferredTransfers.statistics(invokedTransfers),
     });
 
     const p_authPool = this.authPool.toPosterior({

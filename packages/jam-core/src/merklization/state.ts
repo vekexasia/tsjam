@@ -95,7 +95,7 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
 
 /*
  * `T(σ)`
- * $(0.7.1 - D.2)
+ * $(0.7.0 - D.2)
  */
 export const merkleStateMap = (state: JamStateImpl) => {
   const toRet: IdentityMap<StateKey, 31, Uint8Array> = new IdentityMap();
@@ -149,7 +149,6 @@ export const merkleStateMap = (state: JamStateImpl) => {
     toRet.set(
       stateKey(255, serviceIndex),
       encodeWithCodec(serviceAccountDataCodec, {
-        zeroPrefix: 0n,
         ...serviceAccount,
         itemInStorage: serviceAccount.itemInStorage(),
         totalOctets: serviceAccount.totalOctets(),

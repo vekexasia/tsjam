@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/crypto",
-  "version": "0.7.1",
+  "version": "0.7.0",
   "description": "Crypto utils for JAM",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
@@ -39,5 +39,5 @@
     "@types/blake2b-wasm": "^2.4.3",
     "@types/sodium-native": "^2.3.9"
   },
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.0"
 }

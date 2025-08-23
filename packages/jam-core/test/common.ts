@@ -70,6 +70,8 @@ export class TestServiceInfo extends BaseJamCodecable {
     );
     account.itemInStorage = () => this.items;
     account.totalOctets = () => this.bytes;
+    account.itemInStorage = () => this.items;
+    account.totalOctets = () => this.bytes;
     return account;
   }
 }

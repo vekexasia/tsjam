@@ -15,6 +15,7 @@ import type { TauImpl } from "./slot-impl";
 import { ValidatorStatisticsImpl } from "./validator-statistics-impl";
 import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
 import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { TransferStatistics } from "./deferred-transfers-impl";
 
 /**
  * $(0.7.1 - 13.1)
@@ -59,6 +60,7 @@ export class JamStatisticsImpl
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     accumulationStatistics: AccumulationStatisticsImpl;
+    transferStatistics: TransferStatistics;
   }): Posterior<JamStatisticsImpl> {
     const bold_I = deps.extrinsics.reportGuarantees.workReports();
     const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
@@ -86,6 +88,7 @@ export class JamStatisticsImpl
 
     toRet.services = this.services.toPosterior({
       ep: deps.ep,
+      transferStatistics: deps.transferStatistics,
       guaranteedReports: bold_I,
       accumulationStatistics: deps.accumulationStatistics,
     });

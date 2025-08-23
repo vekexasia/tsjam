@@ -30,13 +30,13 @@ import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
 
 const refine_a_Codec = createCodec<{
-  c: CoreIndex; // `c`
+  //  c: CoreIndex; // `c`
   i: number;
   w_s: ServiceIndex;
   card_w_y: number;
   h_p: Hash;
 }>([
-  ["c", E_int<CoreIndex>()],
+  //  ["c", E_int<CoreIndex>()],
   ["i", E_int()],
   ["w_s", E_int<ServiceIndex>()],
   ["card_w_y", E_int()], // `|w_y|`
@@ -89,7 +89,7 @@ export const refineInvocation = (
   }
 
   const bold_a = encodeWithCodec(refine_a_Codec, {
-    c: core,
+    //c: core,
     i: index,
     w_s: w.service,
     card_w_y: w.payload.length,
@@ -185,7 +185,7 @@ const F_fn: (
             overline_x: workPackage.workItems.map((wi) =>
               wi.exportedDataSegments.map((wx) => wx.originalBlob()),
             ),
-            bold_i: undefined,
+            bold_o: undefined,
           }),
         );
       case "historical_lookup":

@@ -124,7 +124,6 @@ export const dummyState = (): JamStateImpl => {
     privServices: new PrivilegedServicesImpl({
       manager: <ServiceIndex>0,
       delegator: <ServiceIndex>0,
-      registrar: <ServiceIndex>0,
       assigners: toTagged(new Array<ServiceIndex>(CORES).fill(<ServiceIndex>0)),
       alwaysAccers: new Map(),
     }),

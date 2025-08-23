@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/types",
-  "version": "0.7.1",
+  "version": "0.7.0",
   "description": "Base Types for JAM",
   "dependencies": {
     "@tsjam/constants": "*",
@@ -28,5 +28,5 @@
     "name": "Andrea Baccega"
   },
   "license": "MIT",
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.0"
 }

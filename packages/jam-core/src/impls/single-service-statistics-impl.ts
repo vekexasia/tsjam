@@ -60,6 +60,14 @@ export class SingleServiceStatisticsImpl
   @eBigIntCodec("accumulate_gas_used")
   accumulateGasUsed!: Gas;
 
+  /**
+   * `t`
+   */
+  @eIntCodec("on_transfers_count")
+  transfersCount!: u32;
+  @eBigIntCodec("on_transfers_gas_used")
+  transfersGasUsed!: Gas;
+
   constructor(
     config?: ConditionalExcept<SingleServiceStatisticsImpl, Function>,
   ) {
@@ -81,6 +89,8 @@ export class SingleServiceStatisticsImpl
       exportCount: <u32>0,
       accumulateCount: <u32>0,
       accumulateGasUsed: <Gas>0n,
+      transfersCount: <u32>0,
+      transfersGasUsed: <Gas>0n,
     });
   }
 }

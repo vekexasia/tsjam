@@ -71,10 +71,11 @@ export class PVMMemory implements IPVMMemory {
     const bytesToWrite = Math.min(bytes.length, Zp - offset);
     // we replace current uint8array with a new copy so that old references to this location
     // in memory are still kept intact and unchanged in case error happens
-    const newMemory = new Uint8Array(Zp);
-    newMemory.set(memory, 0);
-    newMemory.set(bytes.subarray(0, bytesToWrite), offset);
-    this.#innerMemoryContent.set(page, newMemory);
+    // const newMemory = new Uint8Array(Zp);
+    // newMemory.set(memory, 0);
+    // newMemory.set(bytes.subarray(0, bytesToWrite), offset);
+    memory.set(bytes.subarray(0, bytesToWrite), offset);
+    this.#innerMemoryContent.set(page, memory);
     // if offset + bytes.length exceeds page we should call setbytes again
     if (bytesToWrite < bytes.length) {
       this.#setBytes(

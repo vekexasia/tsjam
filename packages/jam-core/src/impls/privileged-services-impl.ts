@@ -49,8 +49,6 @@ export class PrivilegedServicesImpl
   @eSubIntCodec(4, "designate")
   delegator!: ServiceIndex;
 
-  @eSubIntCodec(4)
-  registrar!: ServiceIndex;
   /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits
@@ -83,7 +81,6 @@ export class PrivilegedServicesImpl
         Array.from({ length: CORES }, () => <ServiceIndex>0)
       ),
       delegator: <ServiceIndex>0,
-      registrar: <ServiceIndex>0,
       alwaysAccers: new Map(),
     });
   }

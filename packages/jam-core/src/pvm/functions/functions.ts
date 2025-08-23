@@ -3,9 +3,10 @@ import { HashCodec } from "@/codecs/misc-codecs";
 import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
+import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
-import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
+import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
@@ -129,7 +130,8 @@ export class HostFunctions {
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
       overline_x?: Uint8Array[][];
-      bold_i?: AccumulationInputInpl[];
+      bold_o?: PVMAccumulationOpImpl[];
+      bold_t?: DeferredTransfersImpl;
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
@@ -298,20 +300,33 @@ export class HostFunctions {
         break;
       }
       case 14n: {
-        if (typeof args.bold_i !== "undefined") {
+        if (typeof args.bold_o !== "undefined") {
           v = encodeWithCodec(
-            createArrayLengthDiscriminator(AccumulationInputInpl),
-            args.bold_i,
+            createArrayLengthDiscriminator(PVMAccumulationOpImpl),
+            args.bold_o,
           );
         }
         break;
       }
       case 15n: {
         if (
-          typeof args.bold_i !== "undefined" &&
-          w11.value < args.bold_i.length
+          typeof args.bold_o !== "undefined" &&
+          w11.value < args.bold_o.length
         ) {
-          v = encodeWithCodec(AccumulationInputInpl, args.bold_i[Number(w11)]);
+          v = encodeWithCodec(PVMAccumulationOpImpl, args.bold_o[Number(w11)]);
+        }
+        break;
+      }
+      case 16n: {
+        v = args.bold_t?.toBinary();
+        break;
+      }
+      case 17n: {
+        if (
+          typeof args.bold_t !== "undefined" &&
+          w11.value < args.bold_t.length()
+        ) {
+          v = args.bold_t.elements[Number(w11)].toBinary();
         }
         break;
       }
@@ -448,7 +463,7 @@ export class HostFunctions {
   @HostFn(4)
   write(
     context: PVMProgramExecutionContextImpl,
-    args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
+    args: { bold_s: ServiceAccountImpl; s: ServiceIndex },
   ): Array<
     | PVMExitReasonMod<PVMExitReasonImpl>
     | W7
@@ -466,6 +481,7 @@ export class HostFunctions {
       bold_k = context.memory.getBytes(ko.u32(), kz.u32());
     }
 
+    // const _existed = args.bold_s.storage.has(bold_k);
     const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
@@ -973,7 +989,6 @@ export class HostFunctions {
         manager: m.u32(),
         delegator: v.u32(),
         alwaysAccers: bold_z,
-        registrar: r.u32(),
       }),
     });
 
@@ -1007,9 +1022,6 @@ export class HostFunctions {
     if (x.id !== x.state.assigners[Number(c)]) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
-    if (a.value >= 2 ** 32) {
-      return [IxMod.w7(HostCallResult.WHO)];
-    }
 
     const bold_q = context.memory.getBytes(
       o.toSafeMemoryAddress(),
@@ -1038,7 +1050,6 @@ export class HostFunctions {
         manager: x.state.manager,
         delegator: x.state.delegator,
         alwaysAccers: x.state.alwaysAccers,
-        registrar: x.state.registrar,
       }),
     });
     newX.state.authQueue.elements[Number(c)] = toTagged(nl);
@@ -1090,7 +1101,6 @@ export class HostFunctions {
         manager: x.state.manager,
         delegator: x.state.delegator,
         alwaysAccers: x.state.alwaysAccers,
-        registrar: x.state.registrar,
       }),
       transfers: x.transfers,
     });
@@ -1122,7 +1132,7 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
-    const [o, l, g, m, f, i] = context.registers.slice(7);
+    const [o, l, g, m, f] = context.registers.slice(7);
 
     if (
       !context.memory.canRead(o.toSafeMemoryAddress(), 32) ||
@@ -1178,15 +1188,6 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.CASH)];
     }
 
-    if (
-      args.x.id === args.x.state.registrar &&
-      i.value < MINIMUM_PUBLIC_SERVICE_INDEX &&
-      i.fitsInU32() &&
-      args.x.state.accounts.has(i.u32())
-    ) {
-      return [IxMod.w7(HostCallResult.FULL)];
-    }
-
     const newX = new PVMResultContextImpl({
       id: args.x.id,
       nextFreeID: args.x.nextFreeID,
@@ -1200,19 +1201,9 @@ export class HostFunctions {
         manager: args.x.state.manager,
         delegator: args.x.state.delegator,
         alwaysAccers: args.x.state.alwaysAccers,
-        registrar: args.x.state.registrar,
       }),
       transfers: args.x.transfers,
     });
-    if (
-      args.x.id === args.x.state.registrar &&
-      i.value < MINIMUM_PUBLIC_SERVICE_INDEX
-    ) {
-      // the type casting is correct as MINIMUM_PUBLIC_SERVICE_INDEX = 2^16
-      newX.state.accounts.set(<ServiceIndex>Number(i), a);
-      newX.state.accounts.set(args.x.id, bold_s);
-      return [IxMod.w7(i.value), IxMod.obj({ x: newX })];
-    }
 
     newX.nextFreeID = i_star;
     newX.state.accounts.set(args.x.nextFreeID, a);
@@ -1535,14 +1526,14 @@ export class HostFunctions {
   @HostFn(26)
   provide(
     context: PVMProgramExecutionContextImpl,
-    x: PVMResultContextImpl,
+    args: { x: PVMResultContextImpl; s: ServiceIndex },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(8);
     const w7 = context.registers.w7();
 
-    let s = <ServiceIndex>Number(w7);
+    let s_star = <ServiceIndex>Number(w7);
     if (w7.value === 2n ** 64n - 1n) {
-      s = x.id;
+      s_star = args.s;
     }
 
     if (
@@ -1555,8 +1546,8 @@ export class HostFunctions {
 
     const bold_i = context.memory.getBytes(o.u32(), Number(z));
 
-    const bold_d = x.state.accounts;
-    const bold_a = bold_d.get(s);
+    const bold_d = args.x.state.accounts;
+    const bold_a = bold_d.get(s_star);
 
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.WHO)];
@@ -1567,16 +1558,16 @@ export class HostFunctions {
     }
 
     if (
-      x.provisions.find(
-        (x) => x.serviceId === s && Buffer.compare(x.blob, bold_i) === 0,
+      args.x.provisions.find(
+        (x) => x.serviceId === s_star && Buffer.compare(x.blob, bold_i) === 0,
       )
     ) {
       // already there
       return [IxMod.w7(HostCallResult.HUH)];
     }
-    const newX = x.clone();
+    const newX = args.x.clone();
     newX.provisions.push({
-      serviceId: s,
+      serviceId: s_star,
       blob: bold_i,
     });
 

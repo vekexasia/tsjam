@@ -1,6 +1,7 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import { AccumulationOutImpl } from "@/impls/accumulation-out-impl";
 import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
+import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
 import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
@@ -9,20 +10,16 @@ import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { WorkOutputImpl } from "@/impls/work-output-impl";
 import {
-  createCodec,
   asCodec,
+  createCodec,
   E_4_int,
   E_int,
   E_sub_int,
   encodeWithCodec,
 } from "@tsjam/codec";
-import {
-  MINIMUM_PUBLIC_SERVICE_INDEX,
-  SERVICECODE_MAX_SIZE,
-} from "@tsjam/constants";
+import { SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
-  Balance,
   CoreIndex,
   Gas,
   Hash,
@@ -55,7 +52,7 @@ const AccumulateArgsCodec = createCodec<{
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.7.1 - B.9)
+ * $(0.7.0 - B.9)
  * accumulation is defined in section 12
  */
 export const accumulateInvocation = (
@@ -76,18 +73,8 @@ export const accumulateInvocation = (
 
   // first case
   if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
-    const bold_s = pvmAccState.clone();
-    bold_s.accounts.get(s)!.balance = <Balance>(pvmAccState.accounts.get(s)!
-      .balance +
-      BigInt(
-        accumulateOps
-          .filter((op) => op.isTransfer())
-          .map((op) => op.transfer!.amount)
-          .reduce((a, b) => a + b, 0n),
-      ));
-
     return new AccumulationOutImpl({
-      postState: bold_s,
+      postState: pvmAccState,
       deferredTransfers: new DeferredTransfersImpl([]),
       yield: undefined,
       gasUsed: toTagged(0n),
@@ -112,12 +99,12 @@ export const accumulateInvocation = (
 };
 
 /**
- * $(0.7.1 - B.10)
+ * $(0.7.0 - B.10)
  */
 const I_fn = (
   pvmAccState: PVMAccumulationStateImpl, // bold_e
   service: ServiceIndex, // s
-  p_eta_0: Posterior<JamEntropy["_0"]>,
+  p_eta_0: Posterior<JamEntropyImpl["_0"]>,
   p_tau: Validated<Posterior<TauImpl>>,
 ): PVMResultContextImpl => {
   const d = pvmAccState.accounts.clone();
@@ -134,8 +121,8 @@ const I_fn = (
       ),
     ),
   ).value %
-    (2 ** 32 - MINIMUM_PUBLIC_SERVICE_INDEX - 2 ** 8)) +
-    MINIMUM_PUBLIC_SERVICE_INDEX);
+    (2 ** 32 - 2 ** 9)) +
+    2 ** 8);
 
   const i = check_fn(
     newServiceIndex,
@@ -198,7 +185,12 @@ const F_fn: (
           input.out,
           hostFunctions.fetch(input.ctx, {
             n: p_eta_0,
-            bold_i: accumulateOps,
+            // We know that this is out of 0.7.0 spec as
+            // gp at 0.7.0 sets bold_o to operand and input does not exist.
+            // but this is easy enough in the number of requested changes
+            bold_o: accumulateOps
+              .filter((a) => a.isOperand())
+              .map((a) => a.operand!),
           }),
         );
         G_fn(input, bold_s);
@@ -212,7 +204,6 @@ const F_fn: (
           hostFunctions.write(input.ctx, {
             bold_s,
             s: input.out.x.id,
-            bold_d: e_bold_d,
           }),
         );
         // G_fn(m.ctx, m.out.bold_s, input.out);
@@ -333,7 +324,7 @@ const F_fn: (
         return applyMods(
           input.ctx,
           input.out,
-          hostFunctions.provide(input.ctx, input.out.x),
+          hostFunctions.provide(input.ctx, { x: input.out.x, s: serviceIndex }),
         );
       case "log":
         return applyMods(

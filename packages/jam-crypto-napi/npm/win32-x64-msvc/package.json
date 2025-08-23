@@ -1,6 +1,6 @@
 {
   "name": "jam-crypto-napi-win32-x64-msvc",
-  "version": "0.7.1",
+  "version": "0.7.0",
   "os": [
     "win32"
   ],
@@ -15,5 +15,5 @@
   "engines": {
     "node": ">= 10"
   },
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.0"
 }

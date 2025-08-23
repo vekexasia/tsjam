@@ -45,10 +45,6 @@ export class PVMAccumulationStateImpl implements PVMAccumulationState {
   delegator!: ServiceIndex;
 
   /**
-   * `r`
-   */
-  registrar!: ServiceIndex;
-  /**
    * map of services which are automatically accumulated in each block
    * along with their gas limits
    * `z`
@@ -66,7 +62,6 @@ export class PVMAccumulationStateImpl implements PVMAccumulationState {
       manager: this.manager,
       assigners: toTagged([...this.assigners]),
       delegator: this.delegator,
-      registrar: this.registrar,
       alwaysAccers: new Map(this.alwaysAccers),
     });
   }

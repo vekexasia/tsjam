@@ -123,4 +123,10 @@ export type SingleServiceStatistics = {
    */
   accumulateCount: u32;
   accumulateGasUsed: Gas;
+
+  /**
+   * `t`
+   */
+  transfersCount: u32;
+  transfersGasUsed: Gas;
 };
