@@ -169,24 +169,12 @@ const buildTest = (filename: string) => {
     );
   });
 
-  [...decoded.preState.accounts.entries()].map(
+  [...decoded.preState.accounts.entries()].forEach(
     ([serviceIndex, serviceInfo]) => {
-      const account = new ServiceAccountImpl({
-        balance: serviceInfo.balance,
-        codeHash: serviceInfo.codeHash,
-        minAccGas: serviceInfo.minItemGas,
-        minMemoGas: serviceInfo.minMemoGas,
-        parent: serviceInfo.parentServiceId,
-        created: serviceInfo.creationSlot,
-        lastAcc: serviceInfo.lastAccumulationSlot,
-        preimages: new IdentityMap(),
-        requests: new IdentityMap(),
-        storage: new MerkleServiceAccountStorageImpl(serviceIndex),
-        gratis: <Balance>0n,
-      });
-      account.itemInStorage = () => serviceInfo.items;
-      account.totalOctets = () => serviceInfo.bytes;
-      sampleState.serviceAccounts.set(serviceIndex, account);
+      sampleState.serviceAccounts.set(
+        serviceIndex,
+        serviceInfo.toServiceAccount(serviceIndex),
+      );
     },
   );
 

@@ -13,7 +13,11 @@ import { AccumulationQueueItem } from "./accumulation-queue-item";
  * $(0.7.1 - 11.16)
  */
 export class NewWorkReportsImpl {
-  elements: WorkReportImpl[] = [];
+  elements: WorkReportImpl[];
+
+  constructor(elements: WorkReportImpl[] = []) {
+    this.elements = elements;
+  }
 
   /**
    * `bold R!` in the paper

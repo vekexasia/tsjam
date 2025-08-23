@@ -2,12 +2,16 @@ import packageJSON from "../../package.json";
 import {
   AccumulationHistoryImpl,
   AccumulationQueueImpl,
+  AuthorizerQueueImpl,
+  DeltaImpl,
   IdentityMap,
   IdentityMapCodec,
+  NewWorkReportsImpl,
   PrivilegedServicesImpl,
   ServicesStatisticsImpl,
   SlotImpl,
   TauImpl,
+  ValidatorsImpl,
   WorkReportImpl,
 } from "@/index";
 import {
@@ -37,6 +41,8 @@ import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
+import { accumulateReports } from "@/accumulate";
+import { toTagged } from "@tsjam/utils";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
@@ -140,10 +146,26 @@ const buildTest = (testname: string) => {
   );
   const testCase = TestCase.fromJSON(json);
 
-  // const testBin = TestCase.decode(getFixtureFile(`${testname}.bin`));
   expect(testCase.toJSON()).deep.eq(json);
 
-  const _decoded = "";
+  const newWR = new NewWorkReportsImpl(testCase.input.reports);
+
+  
+  const delta = DeltaImpl.newEmpty();
+  [...testCase.preState.accounts.entries()].forEach(([serviceIndex, testAccount]) => delta.set(serviceIndex, testAccount))
+  accumulateReports(newWR, {
+    accumulationHistory: testCase.preState.history,
+    accumulationQueue: testCase.preState.readyQueue,
+    p_eta_0: testCase.preState.p_eta_0,
+    iota: toTagged(ValidatorsImpl.newEmpty()),
+    authQueue: AuthorizerQueueImpl.newEmpty(),
+    p_tau: testCase.input.p_tau,
+    privServices: testCase.preState.privileges,
+    tau: testCase.preState.tau,
+    serviceAccounts:
+
+  });
+
   /*
   const { input, preState, output, postState } = decoded;
   const testSTate = dummyState({
