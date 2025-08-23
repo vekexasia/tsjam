@@ -1,4 +1,5 @@
 import { HashCodec } from "@/codecs/misc-codecs";
+import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
@@ -648,6 +649,11 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
     const bold_p = context.memory.getBytes(po.checked_u32(), pz.checked_u32());
+    try {
+      PVMProgramCodec.decode(bold_p);
+    } catch (_e) {
+      return [IxMod.w7(HostCallResult.HUH)];
+    }
 
     const sortedKeys = [...refineCtx.bold_m.keys()].sort((a, b) => a - b);
     let n = 0;
@@ -1681,6 +1687,9 @@ export class PVMGuest {
   }
 }
 
+/**
+ * Defined in section B.6
+ */
 export type RefineContext = {
   bold_m: Map<number, PVMGuest>;
   /**

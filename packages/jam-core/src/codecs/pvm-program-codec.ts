@@ -1,6 +1,11 @@
 import { JamCodec, E, E_1, BitSequenceCodec, E_sub } from "@tsjam/codec";
 import { PVMProgram, u32, u8 } from "@tsjam/types";
+import assert from "assert";
 
+/**
+ * Codec defined for deblob
+ * $(0.7.1 - A.2)
+ */
 export const PVMProgramCodec: JamCodec<PVMProgram> = {
   encode(value: PVMProgram, bytes: Uint8Array): number {
     if (value.k.length !== value.c.length) {
@@ -67,6 +72,7 @@ export const PVMProgramCodec: JamCodec<PVMProgram> = {
     ).value;
 
     offset += elements;
+    assert(offset <= bytes.length, "deblob couldnt decode properly");
     return { value: obj, readBytes: offset };
   },
   encodedSize(value: PVMProgram): number {
