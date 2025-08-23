@@ -10,19 +10,18 @@ import {
   codec,
   eSubIntCodec,
 } from "@tsjam/codec";
+import { getConstantsMode } from "@tsjam/constants";
 import type { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getCodecFixtureFile } from "../codec-utils";
 import { dummyDisputesState, dummyEntropy } from "../utils";
-import { getConstantsMode } from "@tsjam/constants";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
     fs.readFileSync(
       new URL(
-        `../../../jamtestvectors/stf/statistics/${getConstantsMode()}/${filename}`,
+        `../../../../jamtestvectors/stf/statistics/${getConstantsMode()}/${filename}`,
         import.meta.url,
       ).pathname,
     ),
@@ -62,11 +61,9 @@ class TestCase extends BaseJamCodecable {
   postState!: TestState;
 }
 
-describe.skip("statistics", () => {
+describe("statistics", () => {
   const doTest = (filename: string) => {
-    const { value: test } = TestCase.decode(
-      getCodecFixtureFile(`${filename}.bin`),
-    );
+    const { value: test } = TestCase.decode(getFixtureFile(`${filename}.bin`));
     const p_pi = test.preState.validatorStatistics.toPosterior({
       extrinsics: test.input.extrinsics,
       authorIndex: test.input.authorIndex,

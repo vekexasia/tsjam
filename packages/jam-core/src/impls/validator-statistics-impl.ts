@@ -34,13 +34,13 @@ export class ValidatorStatisticsImpl
    * `πV`
    */
   @codec(ValidatorStatisticsCollectionImpl)
-  previous!: ValidatorStatisticsCollectionImpl;
+  accumulator!: ValidatorStatisticsCollectionImpl;
 
   /**
    * `πL`
    */
   @codec(ValidatorStatisticsCollectionImpl)
-  accumulator!: ValidatorStatisticsCollectionImpl;
+  previous!: ValidatorStatisticsCollectionImpl;
 
   constructor(config?: ConditionalExcept<ValidatorStatisticsImpl, Function>) {
     super();
@@ -69,15 +69,16 @@ export class ValidatorStatisticsImpl
     const toRet = cloneCodecable(<ValidatorStatisticsImpl>this);
 
     // $(0.7.1 - 13.3 / 13.4)
-    let bold_a = toRet.previous;
+    let bold_a = toRet.accumulator;
     if (deps.p_tau.isNewerEra(deps.tau)) {
       bold_a = ValidatorStatisticsCollectionImpl.newEmpty();
+      toRet.previous = this.accumulator;
     }
 
     for (let v = <ValidatorIndex>0; v < NUMBER_OF_VALIDATORS; v++) {
       const curV = v === deps.authorIndex;
       // $(0.7.1 - 13.5)
-      toRet.previous.elements[v] = new SingleValidatorStatisticsImpl({
+      toRet.accumulator.elements[v] = new SingleValidatorStatisticsImpl({
         blocks: <u32>(bold_a.elements[v].blocks + (curV ? 1 : 0)),
         tickets: <u32>(
           (bold_a.elements[v].tickets +
