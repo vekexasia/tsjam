@@ -36,14 +36,18 @@ export const basicInvocation = (
   let idx = 1;
   while (intermediateState.gas > 0) {
     const out = pvmSingleStep(p, intermediateState);
-    if (process.env.DEBUG_STEPS === "true") {
+    const debugLog = process.env.DEBUG_STEPS === "true";
+    if (debugLog) {
       const ip = intermediateState.instructionPointer;
       const ix = parsedProgram.ixAt(ip);
       log(
         `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(out.p_context)}`,
+        true,
       );
     }
     if (typeof out.exitReason !== "undefined") {
+      log("exitReson != empty", debugLog);
+      log(out.exitReason.toString(), debugLog);
       return {
         context: out.p_context.clone(),
         exitReason: out.exitReason,

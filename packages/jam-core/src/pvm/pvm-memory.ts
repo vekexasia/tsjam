@@ -1,6 +1,7 @@
 import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
+import { log } from "node:console";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
 /**
@@ -186,19 +187,20 @@ export class PVMMemory implements IPVMMemory {
   // TODO: rename to sbrk properly
   firstWriteableInHeap(size: u32): u32 | undefined {
     if (this.heap.pointer + size >= this.heap.end) {
+      log(`Allocating for sbrk ${size} - p: ${Math.ceil(size / Zp)}`);
       for (let i = 0; i < Math.ceil(size / Zp); i++) {
         // allocate one page
-        this.acl.set(this.heap.end + i, PVMMemoryAccessKind.Write);
+        this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
         this.#innerMemoryContent.set(
-          this.heap.end + i,
+          this.heap.end + i * Zp,
           new Uint8Array(Zp).fill(0),
         );
       }
+      this.heap.end = <u32>(this.heap.end + Math.ceil(size / Zp));
     }
 
     const oldPointer = this.heap.pointer;
     this.heap.pointer = <u32>(oldPointer + size);
-    console.log("sbrk", oldPointer, this.heap.pointer, size);
     return oldPointer;
   }
 

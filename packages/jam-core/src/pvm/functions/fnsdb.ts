@@ -99,14 +99,10 @@ export const HostFn = <Args, Out>(
       ctx: PVMProgramExecutionContextImpl,
       args: Args,
     ) {
-      log(`HostCall[${propertyKey}]`);
+      log(`HostCall[${propertyKey}]`, process.env.DEBUG_STEPS == "true");
       // eslint-disable-next-line
       const res = <any>fn.call(this, ctx, args);
-      log(
-        JSON.stringify(res, (_key, value) =>
-          typeof value === "bigint" ? value.toString() : value,
-        ),
-      );
+      // log(res);
       return res;
     };
     return descriptor;

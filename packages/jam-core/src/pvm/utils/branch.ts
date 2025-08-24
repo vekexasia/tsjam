@@ -21,7 +21,6 @@ export const branch = (
   address: u32,
   condition: boolean | 0 | 1,
 ): Array<PVMSingleModPointer | PVMExitReasonMod<PVMExitReasonImpl>> => {
-  debugger;
   if (!condition) {
     // even if (226) says that instruction pointer should not move
     // we should allow that

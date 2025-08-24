@@ -529,7 +529,6 @@ export class Instructions {
     { wA, wB, offset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    debugger;
     return branch(
       context,
       (context.execution.instructionPointer + offset) as u32,

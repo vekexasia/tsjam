@@ -87,6 +87,7 @@ export class ServiceAccountImpl implements ServiceAccount {
         sum += BigInt(length) + 81n;
       }
     }
+    debugger;
     sum += this.storage.octets;
 
     return sum as u64;

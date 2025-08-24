@@ -160,7 +160,12 @@ export const programInitialization = (
 
     heap.start = <u32>rwSectionEnd;
     heap.pointer = heap.start;
-    heap.end = <u32>rwSectionEnd;
+    heap.end = <u32>(rwSectionEnd + Zp);
+    createAcl({
+      from: heap.start,
+      to: heap.end,
+      kind: PVMMemoryAccessKind.Write,
+    });
   }
 
   // fifth case

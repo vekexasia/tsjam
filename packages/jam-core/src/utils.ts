@@ -2,6 +2,7 @@ import { EPOCH_LENGTH } from "@tsjam/constants";
 import { SeqOfLength } from "@tsjam/types";
 import { TicketImpl } from "./impls/ticket-impl";
 import fs from "fs";
+import { xBytesCodec } from "@tsjam/codec";
 
 /**
  * Z fn
@@ -21,11 +22,41 @@ export const outsideInSequencer = <
   return toRet;
 };
 
-const goFS = process.env.DEBUG_STEPS == "true";
+const goFS = process.env.DEBUG_FS == "true";
 if (goFS && fs.existsSync("/tmp/trace.txt")) {
   fs.unlinkSync("/tmp/trace.txt");
 }
-export const log = (str: string) => {
+export const log = (_str: string | object, debug: boolean) => {
+  if (!debug) {
+    return;
+  }
+  let str: string;
+  if (typeof _str === "string") {
+    str = _str;
+  } else {
+    if ("toJSON" in _str && typeof _str.toJSON == "function") {
+      str = _str.toJSON();
+    } else {
+      str = JSON.stringify(_str, (_key, value) => {
+        if (typeof value === "bigint") {
+          return value.toString();
+        }
+        if (value instanceof Uint8Array) {
+          // eslint-disable-next-line
+        return xBytesCodec(value.length).toJSON(<any>value);
+        }
+        if (Buffer.isBuffer(value)) {
+          // eslint-disable-next-line
+        return xBytesCodec(value.length).toJSON(<any>value);
+        }
+
+        if (typeof value.toJSON == "function") {
+          return value.toJSON();
+        }
+        return value;
+      });
+    }
+  }
   if (goFS) {
     fs.appendFileSync(`/tmp/trace.txt`, str + "\n");
   }

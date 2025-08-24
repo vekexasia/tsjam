@@ -48,6 +48,21 @@ export class PVMExitReasonImpl implements PVMExitReason {
     return this.reason === RegularPVMExitReason.OutOfGas;
   }
 
+  toString() {
+    if (this.isHostCall()) {
+      return `HostCall[${this.opCode}]`;
+    } else if (this.isOutOfGas()) {
+      return "OutOfGas";
+    } else if (this.isHalt()) {
+      return "Halt";
+    } else if (this.isPanic()) {
+      return "Panic";
+    } else if (this.isPageFault()) {
+      return `PageFault[x${this.address.toString(16)}][${this.address}]`;
+    }
+    return "Unknon Exit Reason";
+  }
+
   static panic() {
     return new PVMExitReasonImpl({
       reason: RegularPVMExitReason.Panic,

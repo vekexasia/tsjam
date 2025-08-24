@@ -43,10 +43,11 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import packageJSON from "../../package.json";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
+import exp from "constants";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
@@ -93,20 +94,47 @@ class TestAccount extends BaseJamCodecable {
   preimages!: IdentityMap<Hash, 32, Uint8Array>;
 
   toServiceAccount(serviceIndex: ServiceIndex) {
-    const sa = this.service.toServiceAccount(serviceIndex);
+    const service = this.service.toServiceAccount(serviceIndex);
+    const sa = new ServiceAccountImpl({
+      codeHash: service.codeHash,
+      balance: service.balance,
+      minAccGas: service.minAccGas,
+      minMemoGas: service.minMemoGas,
+      gratis: service.gratis,
+      created: service.created,
+      lastAcc: service.lastAcc,
+      parent: service.parent,
+      requests: new IdentityMap(),
+      storage: new MerkleServiceAccountStorageImpl(serviceIndex),
+      preimages: this.preimages,
+    });
 
-    const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
     for (const [key, blob] of this.storage) {
-      storage.set(key, blob);
+      sa.storage.set(key, blob);
     }
 
-    sa.storage = storage;
     sa.preimages = this.preimages;
 
-    // this is needed since the testServiceInfo replaces the original
-    sa.totalOctets = ServiceAccountImpl.prototype.totalOctets.bind(sa);
-    sa.itemInStorage = ServiceAccountImpl.prototype.itemInStorage.bind(sa);
     return sa;
+  }
+
+  static fromServiceAccount(serviceAccount: ServiceAccountImpl) {
+    const testAccount = new TestAccount();
+    testAccount.service = new TestServiceInfo();
+    testAccount.service.codeHash = serviceAccount.codeHash;
+    testAccount.service.balance = serviceAccount.balance;
+    testAccount.service.minItemGas = serviceAccount.minAccGas;
+    testAccount.service.minMemoGas = serviceAccount.minMemoGas;
+    testAccount.service.bytes = serviceAccount.totalOctets();
+    testAccount.service.gratis = serviceAccount.gratis;
+    testAccount.service.items = serviceAccount.itemInStorage();
+    testAccount.service.creationSlot = serviceAccount.created;
+    testAccount.service.lastAccumulationSlot = serviceAccount.lastAcc;
+    testAccount.service.parentServiceId = serviceAccount.parent;
+
+    testAccount.storage = new Map(serviceAccount.storage.entries());
+    testAccount.preimages = serviceAccount.preimages;
+    return testAccount;
   }
 }
 
@@ -198,50 +226,39 @@ const buildTest = (testname: string) => {
   expect(posteriorStatistics.toJSON()).deep.eq(
     testCase.postState.statistics.toJSON(),
   );
+  expect(res.p_accumulationQueue.toJSON()).deep.eq(
+    testCase.postState.readyQueue.toJSON(),
+  );
+  expect(res.p_accumulationHistory.toJSON()).deep.eq(
+    testCase.postState.history.toJSON(),
+  );
 
   const accMerkleRoot = res.p_mostRecentAccumulationOutputs.merkleRoot();
 
-  /*
-  const { input, preState, output, postState } = decoded;
-  const testSTate = dummyState({
-    validators: NUMVALS,
-    cores: NCOR,
-    epoch: EPLEN,
+  console.log(`accumulated root: ${xBytesCodec(32).toJSON(accMerkleRoot)}`);
+  const dd_delta = res.d_delta.toDoubleDagger({
+    accumulationStatistics: res.accumulationStatistics,
+    invokedTransfers: res.deferredTransfers.invokedTransfers({
+      d_delta: res.d_delta,
+      p_tau: testCase.input.p_tau,
+      p_eta_0: testCase.preState.p_eta_0,
+    }),
+    p_tau: testCase.input.p_tau,
   });
-  // preState.accounts.get(<ServiceIndex>1729)!.preimage_l = new Map();
-  console.log("preAccumulate");
+  for (const [sid, sa] of testCase.postState.accounts) {
+    expect(dd_delta.has(sid)).toBe(true);
 
-  const [, res] = accumulateReports(input.reports, {
-    p_tau: input.p_tau,
-    tau: preState.slot,
-    accumulationHistory: preState.accHistory,
-    accumulationQueue: preState.accQueue,
-    serviceAccounts: preState.accounts,
-    privServices: preState.privServices,
-    iota: testSTate.iota,
-    p_eta_0: preState.p_eta_0,
-    authQueue: testSTate.authQueue,
-  }).safeRet();
-  console.log("postAccumulate");
-  const [, p_serviceStatistics] = serviceStatisticsSTF(
-    {
-      guaranteedReports: [],
-      preimages: [],
-      transferStatistics: new Map(),
-      accumulationStatistics: res.accumulationStatistics,
-    },
-    preState.statistics,
-  ).safeRet();
+    const expectedSA = TestAccount.fromServiceAccount(sa.toServiceAccount(sid));
+    const ourSA = TestAccount.fromServiceAccount(dd_delta.get(sid)!);
 
-  expect(res.p_accumulationQueue).deep.equal(postState.accQueue);
-  expect(res.p_accumulationHistory).deep.equal(postState.accHistory);
-  expect(res.accumulateRoot).toEqual(output.ok);
-  console.log(preState.statistics);
-  console.log(p_serviceStatistics);
+    // patch the octets to match the expected
+    //ourSA.service.bytes += testCase.preState.accounts.get(sid)?.service.bytes
+    expect(ourSA.toJSON()).deep.eq(expectedSA.toJSON(), `for sid ${sid}`);
+  }
 
-  expect(p_serviceStatistics).deep.equal(postState.statistics);
-
-  */
+  expect(res.p_privServices.toJSON()).deep.eq(
+    testCase.postState.privileges.toJSON(),
+  );
 };
 
 describe.skipIf(packageJSON["jam:protocolVersion"] === "0.7.1")(
