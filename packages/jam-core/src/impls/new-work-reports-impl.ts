@@ -7,6 +7,7 @@ import {
   WorkReportImpl,
 } from "./work-report-impl";
 import { AccumulationQueueItem } from "./accumulation-queue-item";
+import { IdentitySet } from "@/data-structures/identity-set";
 
 /**
  * `bold R`
@@ -41,7 +42,9 @@ export class NewWorkReportsImpl {
         })
         .map((wr) => {
           // $(0.7.1 - 12.6) | D fn calculated inline
-          const deps = new Set<WorkPackageHash>(wr.srLookup.keys());
+          const deps = new IdentitySet<WorkPackageHash>([
+            ...wr.srLookup.keys(),
+          ]);
           wr.context.prerequisites.forEach((rwp) => deps.add(rwp));
           return new AccumulationQueueItem({
             workReport: wr,
@@ -87,7 +90,7 @@ export class NewWorkReportsImpl {
  */
 export const E_Fn = (
   r: AccumulationQueueItem[],
-  x: Set<WorkPackageHash>,
+  x: IdentitySet<WorkPackageHash>,
 ): AccumulationQueueItem[] => {
   const toRet: AccumulationQueueItem[] = [];
 
@@ -96,7 +99,7 @@ export const E_Fn = (
       continue;
     }
 
-    const newDeps = new Set(dependencies);
+    const newDeps = new IdentitySet([...dependencies.values()]);
     x.forEach((packageHash) => newDeps.delete(packageHash));
     toRet.push(
       new AccumulationQueueItem({ workReport, dependencies: newDeps }),

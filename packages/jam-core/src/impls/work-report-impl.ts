@@ -1,6 +1,7 @@
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
+  BigIntJSONCodec,
   binaryCodec,
   codec,
   createArrayLengthDiscriminator,
@@ -69,7 +70,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   /**
    * `g`
    */
-  @jsonCodec(NumberJSONCodec(), "auth_gas_used")
+  @jsonCodec(BigIntJSONCodec(), "auth_gas_used")
   @binaryCodec(E)
   authGasUsed!: Gas;
 

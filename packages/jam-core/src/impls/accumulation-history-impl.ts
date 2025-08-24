@@ -49,7 +49,7 @@ export class AccumulationHistoryImpl
    * $(0.7.1 - 12.2)
    */
   union() {
-    return new Set(this.elements.map((a) => [...a.values()]).flat());
+    return new IdentitySet(this.elements.map((a) => [...a.values()]).flat());
   }
 
   /**

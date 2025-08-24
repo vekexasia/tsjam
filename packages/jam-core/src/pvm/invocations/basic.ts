@@ -5,6 +5,7 @@ import { PVMProgram } from "@tsjam/types";
 import { ParsedProgram } from "../parse-program";
 import { pvmSingleStep } from "./single-step";
 import { cloneCodecable } from "@tsjam/codec";
+import { log } from "@/utils";
 
 /**
  * Basic invocation
@@ -32,8 +33,16 @@ export const basicInvocation = (
   const p = { parsedProgram, program };
   // how to handle errors here?
   let intermediateState = executionContext;
+  let idx = 1;
   while (intermediateState.gas > 0) {
     const out = pvmSingleStep(p, intermediateState);
+    if (process.env.DEBUG_STEPS === "true") {
+      const ip = intermediateState.instructionPointer;
+      const ix = parsedProgram.ixAt(ip);
+      log(
+        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(out.p_context)}`,
+      );
+    }
     if (typeof out.exitReason !== "undefined") {
       return {
         context: out.p_context.clone(),
@@ -50,4 +59,8 @@ export const basicInvocation = (
     context: resContext,
     exitReason: PVMExitReasonImpl.outOfGas(),
   };
+};
+
+const debugContext = (ctx: PVMProgramExecutionContextImpl) => {
+  return `regs:[${ctx.registers.elements.join(" ")}] gas:${ctx.gas}`;
 };

@@ -1,3 +1,4 @@
+import { IdentityMap } from "@/data-structures/identity-map";
 import {
   createCodec,
   IdentityCodec,
@@ -24,14 +25,13 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
-import type { SlotImpl } from "./slot-impl";
-import { IdentityMap } from "@/data-structures/identity-map";
 import { ConditionalExcept } from "type-fest";
 import { MerkleServiceAccountStorageImpl } from "./merkle-service-account-storage-impl";
+import type { SlotImpl } from "./slot-impl";
 
 export const serviceMetadataCodec = createCodec<{
-  code: PVMProgramCode;
   metadata: Uint8Array;
+  code: PVMProgramCode;
 }>([
   ["metadata", LengthDiscrimantedIdentityCodec],
   ["code", IdentityCodec as unknown as JamCodec<PVMProgramCode>],

@@ -11,6 +11,7 @@ import {
 import { toTagged } from "@tsjam/utils";
 import { IxMod } from "../instructions/utils";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { log } from "@/utils";
 
 export const FnsDb = {
   byCode: new Map<u8, string>(),
@@ -86,7 +87,7 @@ export const HostFn = <Args, Out>(
       (ctx: PVMProgramExecutionContextImpl, args: Args) => Out[]
     >,
   ) => {
-    regFn<Args, Out>({
+    const fn = regFn<Args, Out>({
       fn: {
         opCode: opCode as u8,
         identifier: propertyKey,
@@ -94,6 +95,20 @@ export const HostFn = <Args, Out>(
         gasCost,
       },
     });
+    descriptor.value = function (
+      ctx: PVMProgramExecutionContextImpl,
+      args: Args,
+    ) {
+      log(`HostCall[${propertyKey}]`);
+      // eslint-disable-next-line
+      const res = <any>fn.call(this, ctx, args);
+      log(
+        JSON.stringify(res, (_key, value) =>
+          typeof value === "bigint" ? value.toString() : value,
+        ),
+      );
+      return res;
+    };
     return descriptor;
   };
 };

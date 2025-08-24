@@ -392,6 +392,12 @@ export class Instructions {
 
   @Ix(101, TwoRegIxDecoder)
   sbrk({ rD, wA }: TwoRegArgs, context: PVMIxEvaluateFNContextImpl) {
+    const requestedSize = <u32>Number(wA);
+    const pointer = context.execution.memory.heap.pointer;
+    if (requestedSize === 0) {
+      return [IxMod.reg(rD, pointer)];
+    }
+
     const location = context.execution.memory.firstWriteableInHeap(
       <u32>Number(wA),
     )!;

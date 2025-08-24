@@ -146,30 +146,21 @@ export const programInitialization = (
   {
     const offset = 2 * Zz + Z_Fn(roDataLength);
 
-    console.log(
-      "offset",
-      offset.toString(16),
-      Buffer.from(rwData).toString("hex"),
-    );
     mem.push({ at: <u32>offset, content: rwData });
-    heap.start = <u32>offset;
-    heap.pointer = <u32>(heap.start + rwDataLength);
-    heap.end = <u32>(
+    const rwSectionEnd = <u32>(
       (offset + P_Fn(rwDataLength) + rwDataPaddingPages /* z */ * Zp)
     );
-    // NOTE: this is not in graypaper but the third and fourth
-    // disequations are unsolveable otherwise.
-    // It only happens when oCard is 0
-    if (heap.end === heap.start) {
-      heap.end = <u32>(heap.end + Zp);
-    }
-
     // third+fourth
+    // RW DAta
     createAcl({
-      from: heap.start,
-      to: heap.end,
+      from: offset,
+      to: rwSectionEnd,
       kind: PVMMemoryAccessKind.Write,
     });
+
+    heap.start = <u32>rwSectionEnd;
+    heap.pointer = heap.start;
+    heap.end = <u32>rwSectionEnd;
   }
 
   // fifth case

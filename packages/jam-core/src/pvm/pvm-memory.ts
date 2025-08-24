@@ -15,7 +15,7 @@ export class PVMMemory implements IPVMMemory {
       Page,
       PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
     >,
-    private heap: PVMHeap,
+    public heap: PVMHeap,
   ) {
     // if initialMemory is a map, we can directly use it
     if (initialMemory instanceof Map) {
@@ -29,12 +29,6 @@ export class PVMMemory implements IPVMMemory {
         this.#setBytes(at, content);
       }
     }
-    // debug
-    // for (const [page, memory] of this.#innerMemoryContent.entries()) {
-    //   console.log(
-    //     `Page ${page}|0x${(page * Zp).toString(16)}: ${Buffer.from(memory).toString("hex")}`,
-    //   );
-    // }
   }
 
   #locationFromAddress(address: u32 | bigint) {
@@ -45,6 +39,9 @@ export class PVMMemory implements IPVMMemory {
   }
 
   #pagesInRange(address: u32, length: number) {
+    if (length === 0) {
+      return [];
+    }
     const { page: startPage, offset } = this.#locationFromAddress(address);
     const toRet: number[] = [startPage];
     let remaining = length - (Zp - offset);
@@ -66,6 +63,9 @@ export class PVMMemory implements IPVMMemory {
   }
 
   #setBytes(address: u32 | bigint, bytes: Uint8Array): void {
+    if (bytes.length === 0) {
+      return;
+    }
     const { page, offset } = this.#locationFromAddress(address);
     const memory = this.#getPageMemory(page);
     const bytesToWrite = Math.min(bytes.length, Zp - offset);
@@ -88,6 +88,9 @@ export class PVMMemory implements IPVMMemory {
    * Returns copy of content in single Uint8Array
    */
   #getBytes(address: u32 | bigint, length: number): Uint8Array {
+    if (length === 0) {
+      return new Uint8Array(0);
+    }
     const { page, offset } = this.#locationFromAddress(address);
     const memory = this.#getPageMemory(page);
     const bytesToRead = Math.min(length, Zp - offset);
@@ -182,12 +185,21 @@ export class PVMMemory implements IPVMMemory {
 
   // TODO: rename to sbrk properly
   firstWriteableInHeap(size: u32): u32 | undefined {
-    if (this.heap.end - this.heap.pointer >= size) {
-      const oldPointer = this.heap.pointer;
-      this.heap.pointer = <u32>(oldPointer + size);
-      console.log("sbrk", oldPointer, this.heap.pointer, size);
-      return oldPointer;
+    if (this.heap.pointer + size >= this.heap.end) {
+      for (let i = 0; i < Math.ceil(size / Zp); i++) {
+        // allocate one page
+        this.acl.set(this.heap.end + i, PVMMemoryAccessKind.Write);
+        this.#innerMemoryContent.set(
+          this.heap.end + i,
+          new Uint8Array(Zp).fill(0),
+        );
+      }
     }
+
+    const oldPointer = this.heap.pointer;
+    this.heap.pointer = <u32>(oldPointer + size);
+    console.log("sbrk", oldPointer, this.heap.pointer, size);
+    return oldPointer;
   }
 
   clone() {

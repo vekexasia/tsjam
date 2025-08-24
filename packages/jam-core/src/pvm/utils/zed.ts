@@ -7,7 +7,7 @@ import assert from "node:assert";
  * $(0.7.1 - A.10)
  */
 export const Z = <T extends bigint>(n: number, a: bigint) => {
-  assert(n >= 0, "n in Z(n) must be positive aaaaa");
+  assert(n >= 0, "n in Z(n) must be positive");
   if (n == 0) {
     return 0n as T;
   }

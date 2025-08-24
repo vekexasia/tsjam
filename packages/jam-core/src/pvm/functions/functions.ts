@@ -5,7 +5,6 @@ import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
-import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
@@ -104,6 +103,7 @@ import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
 import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
+import { log } from "@/utils";
 
 export class HostFunctions {
   @HostFn(0)
@@ -1610,6 +1610,7 @@ export class HostFunctions {
 
     formattedMessage += ` ${Buffer.from(message).toString("utf8")}`;
 
+    log(formattedMessage);
     console.log(formattedMessage);
     return [];
   }

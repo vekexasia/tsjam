@@ -43,11 +43,11 @@ import { HostCallExecutor } from "./host-call";
 import assert from "assert";
 
 const AccumulateArgsCodec = createCodec<{
-  t: SlotImpl;
+  t: u32;
   s: ServiceIndex;
   bold_i_length: number;
 }>([
-  ["t", asCodec(SlotImpl)],
+  ["t", E_int<u32>()],
   ["s", E_int<ServiceIndex>()],
   ["bold_i_length", E_int()],
 ]);
@@ -100,7 +100,7 @@ export const accumulateInvocation = (
     5 as u32, // instructionPointer
     gas,
     encodeWithCodec(AccumulateArgsCodec, {
-      t,
+      t: t.value,
       s,
       bold_i_length: accumulateOps.length,
     }),
@@ -191,7 +191,7 @@ const F_fn: (
         return G_fn(ctx, bold_s, out);
       }
       case "fetch": {
-        applyMods(
+        const m = applyMods(
           input.ctx,
           input.out,
           hostFunctions.fetch(input.ctx, {
@@ -199,6 +199,7 @@ const F_fn: (
             bold_i: accumulateOps,
           }),
         );
+        return G_fn(m.ctx, bold_s, m.out);
       }
       case "write": {
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(
