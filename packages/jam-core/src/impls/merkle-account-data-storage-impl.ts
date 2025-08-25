@@ -1,12 +1,17 @@
-import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import { stateKey } from "@/merklization/utils";
 import {
   asCodec,
+  BaseJamCodecable,
+  codec,
   createArrayLengthDiscriminator,
   E_4_int,
   encodeWithCodec,
+  JamCodecable,
+  LengthDiscrimantedIdentityCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
-import {
+import type {
   Hash,
   IServiceAccountRequests,
   IServiceAccountStorage,
@@ -49,8 +54,15 @@ const singleRequestCodec = createArrayLengthDiscriminator<
  * original issue https://github.com/gavofyork/graypaper/issues/436
  *
  */
-export class MerkleServiceAccountStorageImpl {
-  #storage: IdentityMap<StorageKey | RequestKey, 31, Uint8Array> =
+@JamCodecable()
+export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
+  @codec(
+    IdentityMapCodec(xBytesCodec(31), LengthDiscrimantedIdentityCodec, {
+      key: "stateKey",
+      value: "blob",
+    }),
+  )
+  private _storage: IdentityMap<StorageKey | RequestKey, 31, Uint8Array> =
     new IdentityMap();
 
   /**
@@ -61,14 +73,16 @@ export class MerkleServiceAccountStorageImpl {
     private serviceIndex: ServiceIndex,
     public octets: u64 = <u64>0n,
     public items: u32 = <u32>0,
-  ) {}
+  ) {
+    super();
+  }
 
   setFromStateKey(stateKey: StateKey, value: Uint8Array) {
-    this.#storage.set(stateKey as StorageKey | RequestKey, value);
+    this._storage.set(stateKey as StorageKey | RequestKey, value);
   }
 
   entries(): IterableIterator<[StorageKey | RequestKey, Uint8Array]> {
-    return Array.from(this.#storage.entries())
+    return Array.from(this._storage.entries())
       .map(([stateKey, value]): [StorageKey | RequestKey, Uint8Array] => [
         stateKey,
         value,
@@ -81,7 +95,7 @@ export class MerkleServiceAccountStorageImpl {
       set: (key, value) => {
         const innerKey = computeStorageKey(this.serviceIndex, key);
         toRet.delete(key);
-        this.#storage.set(innerKey, value);
+        this._storage.set(innerKey, value);
 
         this.items = <u32>(this.items + 1);
         this.octets = <u64>(
@@ -90,21 +104,21 @@ export class MerkleServiceAccountStorageImpl {
       },
       get: (key) => {
         const internalKey = computeStorageKey(this.serviceIndex, key);
-        return this.#storage.get(internalKey);
+        return this._storage.get(internalKey);
       },
       has: (key) => {
         const internalKey = computeStorageKey(this.serviceIndex, key);
-        return this.#storage.has(internalKey);
+        return this._storage.has(internalKey);
       },
       delete: (key) => {
         const innerKey = computeStorageKey(this.serviceIndex, key);
-        if (this.#storage.has(innerKey)) {
-          const curValue = this.#storage.get(innerKey)!;
+        if (this._storage.has(innerKey)) {
+          const curValue = this._storage.get(innerKey)!;
           this.items = <u32>(this.items - 1);
           this.octets = <u64>(
             (this.octets - 34n - BigInt(curValue.length) - BigInt(key.length))
           );
-          return this.#storage.delete(innerKey);
+          return this._storage.delete(innerKey);
         }
         return false;
       },
@@ -115,7 +129,7 @@ export class MerkleServiceAccountStorageImpl {
 
   get requests(): IServiceAccountRequests {
     const innerGet = (key: RequestKey) => {
-      const b = this.#storage.get(key);
+      const b = this._storage.get(key);
       if (!b) {
         return undefined;
       }
@@ -135,7 +149,7 @@ export class MerkleServiceAccountStorageImpl {
         //     BigInt(81 + length) * (typeof curValue !== "undefined" ? 1n : 0n))
         // );
 
-        this.#storage.set(key, encodeWithCodec(singleRequestCodec, value));
+        this._storage.set(key, encodeWithCodec(singleRequestCodec, value));
 
         this.items = <u32>(this.items + 2);
         this.octets = <u64>(this.octets + BigInt(81) + BigInt(length));
@@ -146,14 +160,14 @@ export class MerkleServiceAccountStorageImpl {
       },
       has: (hash, length) => {
         const key = computeRequestKey(this.serviceIndex, hash, length);
-        return this.#storage.has(key);
+        return this._storage.has(key);
       },
       delete: (hash, length) => {
         const key = computeRequestKey(this.serviceIndex, hash, length);
-        if (this.#storage.has(key)) {
+        if (this._storage.has(key)) {
           this.items = <u32>(this.items - 2);
           this.octets = <u64>(this.octets - BigInt(length + 81));
-          return this.#storage.delete(key);
+          return this._storage.delete(key);
         }
         return false;
       },
@@ -169,17 +183,17 @@ export class MerkleServiceAccountStorageImpl {
       this.items,
     );
 
-    toRet.#storage = this.#storage.clone();
+    toRet._storage = this._storage.clone();
     return toRet;
   }
 
   equals(other: MerkleServiceAccountStorageImpl) {
     return (
       this === other ||
-      [...this.#storage.entries()].every(([k, v]) => {
+      [...this._storage.entries()].every(([k, v]) => {
         return (
-          other.#storage.has(k) &&
-          compareUint8Arrays(other.#storage.get(k)!, v) === 0
+          other._storage.has(k) &&
+          compareUint8Arrays(other._storage.get(k)!, v) === 0
         );
       })
     );

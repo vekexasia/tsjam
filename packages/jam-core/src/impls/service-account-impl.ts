@@ -1,16 +1,22 @@
-import { IdentityMap } from "@/data-structures/identity-map";
+import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import {
+  BaseJamCodecable,
+  codec,
   createCodec,
+  eSubBigIntCodec,
+  eSubIntCodec,
   IdentityCodec,
   JamCodec,
+  JamCodecable,
   LengthDiscrimantedIdentityCodec,
+  xBytesCodec,
 } from "@tsjam/codec";
 import {
   SERVICE_ADDITIONAL_BALANCE_PER_ITEM,
   SERVICE_ADDITIONAL_BALANCE_PER_OCTET,
   SERVICE_MIN_BALANCE,
 } from "@tsjam/constants";
-import {
+import type {
   Balance,
   CodeHash,
   Gas,
@@ -28,7 +34,7 @@ import {
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { ConditionalExcept } from "type-fest";
-import type { SlotImpl } from "./slot-impl";
+import { SlotImpl } from "./slot-impl";
 import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
 import { compareUint8Arrays } from "uint8array-extras";
 
@@ -44,18 +50,49 @@ export const serviceMetadataCodec = createCodec<{
  * `A`
  * $(0.7.1 - 9.3)
  */
-export class ServiceAccountImpl implements ServiceAccount {
+@JamCodecable()
+export class ServiceAccountImpl
+  extends BaseJamCodecable
+  implements ServiceAccount
+{
+  @codec(
+    IdentityMapCodec(xBytesCodec(32), LengthDiscrimantedIdentityCodec, {
+      key: "key",
+      value: "blob",
+    }),
+  )
   preimages: IdentityMap<Hash, 32, Uint8Array> = new IdentityMap();
+
   requests: IServiceAccountRequests;
+
+  @eSubBigIntCodec(8)
   gratis!: Balance;
+
+  @codec(xBytesCodec(32))
   codeHash!: CodeHash;
+
+  @eSubBigIntCodec(8)
   balance!: Balance;
+
+  @eSubBigIntCodec(8)
   minAccGas!: Gas;
+
+  @eSubBigIntCodec(8)
   minMemoGas!: Gas;
+
+  @codec(SlotImpl)
   created!: SlotImpl;
+
+  @codec(SlotImpl)
   lastAcc!: SlotImpl;
+
+  @eSubIntCodec(4)
   parent!: ServiceIndex;
+
   storage!: IServiceAccountStorage;
+
+  @codec(MerkleServiceAccountStorageImpl)
+  merkleStorage: MerkleServiceAccountStorageImpl;
 
   constructor(
     values: Omit<
@@ -70,8 +107,9 @@ export class ServiceAccountImpl implements ServiceAccount {
       | "merkleStorage"
     >,
     // TODO: refactor to make this private
-    public merkleStorage: MerkleServiceAccountStorageImpl,
+    merkleStorage: MerkleServiceAccountStorageImpl,
   ) {
+    super();
     this.preimages = values.preimages;
     this.gratis = values.gratis;
     this.codeHash = values.codeHash;
@@ -81,6 +119,8 @@ export class ServiceAccountImpl implements ServiceAccount {
     this.created = values.created;
     this.lastAcc = values.lastAcc;
     this.parent = values.parent;
+
+    this.merkleStorage = merkleStorage;
 
     this.requests = this.merkleStorage.requests;
     this.storage = this.merkleStorage.storage;
