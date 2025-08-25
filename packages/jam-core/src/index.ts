@@ -29,7 +29,7 @@ export * from "./impls/jam-statistics-impl";
 export * from "./impls/kappa-impl";
 export * from "./impls/lambda-impl";
 export * from "./impls/last-acc-outs-impl";
-export * from "./impls/merkle-service-account-storage-impl";
+export * from "./impls/merkle-account-data-storage-impl";
 export * from "./impls/new-work-reports-impl";
 export * from "./impls/privileged-services-impl";
 export * from "./impls/recent-history-impl";

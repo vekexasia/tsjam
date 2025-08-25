@@ -1,6 +1,5 @@
 import { DeltaImpl } from "@/impls/delta-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { traceJSONCodec } from "@/merklization/state-codecs";
 import { Hashing } from "@tsjam/crypto";
@@ -11,7 +10,6 @@ import {
   Hash,
   JamState,
   ServiceIndex,
-  Tagged,
   u32,
   UpToSeq,
 } from "@tsjam/types";
@@ -21,6 +19,8 @@ import { SlotImpl } from "@/impls/slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { merkleStateMap } from "@/merklization/state";
 import { stateFromMerkleMap } from "@/merklization/reverse";
+import { MerkleServiceAccountStorageImpl } from "@/index";
+import { toTagged } from "@tsjam/utils";
 
 describe("state serialization/deserialization", () => {
   it.skip("should deserialize to same object", () => {
@@ -40,49 +40,43 @@ describe("state serialization/deserialization", () => {
     let acc: ServiceAccountImpl;
     let acc2: ServiceAccountImpl;
     beforeEach(() => {
-      acc = new ServiceAccountImpl({
-        storage: new MerkleServiceAccountStorageImpl(serviceIndex1),
-        balance: <Balance>11n,
-        codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
-        minAccGas: <Gas>13n,
-        minMemoGas: <Gas>14n,
-        gratis: <Balance>15n,
-        created: new SlotImpl(<u32>16),
-        lastAcc: new SlotImpl(<u32>17),
-        parent: <ServiceIndex>18,
-        requests: new IdentityMap(),
-        preimages: new IdentityMap(),
-      });
+      acc = new ServiceAccountImpl(
+        {
+          balance: <Balance>11n,
+          codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
+          minAccGas: <Gas>13n,
+          minMemoGas: <Gas>14n,
+          gratis: <Balance>15n,
+          created: new SlotImpl(<u32>16),
+          lastAcc: new SlotImpl(<u32>17),
+          parent: <ServiceIndex>18,
+          preimages: new IdentityMap(),
+        },
+        new MerkleServiceAccountStorageImpl(serviceIndex1),
+      );
       const preimage = Buffer.from("veke", "utf8");
       const preimageHash = Hashing.blake2b(preimage);
 
-      acc2 = new ServiceAccountImpl({
-        storage: new MerkleServiceAccountStorageImpl(serviceIndex2),
-        balance: <Balance>21n,
-        codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
-        minAccGas: <Gas>23n,
-        minMemoGas: <Gas>24n,
-        gratis: <Balance>25n,
-        created: new SlotImpl(<u32>26),
-        lastAcc: new SlotImpl(<u32>27),
-        parent: <ServiceIndex>28,
-        requests: new IdentityMap([
-          [
-            preimageHash,
-            new Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>([
-              [
-                <Tagged<u32, "length">>4,
-                <UpToSeq<SlotImpl, 3>>[
-                  new SlotImpl(<u32>1),
-                  new SlotImpl(<u32>2),
-                  new SlotImpl(<u32>3),
-                ],
-              ],
-            ]),
-          ],
-        ]),
-        preimages: new IdentityMap([[preimageHash, preimage]]),
-      });
+      acc2 = new ServiceAccountImpl(
+        {
+          balance: <Balance>21n,
+          codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
+          minAccGas: <Gas>23n,
+          minMemoGas: <Gas>24n,
+          gratis: <Balance>25n,
+          created: new SlotImpl(<u32>26),
+          lastAcc: new SlotImpl(<u32>27),
+          parent: <ServiceIndex>28,
+          preimages: new IdentityMap([[preimageHash, preimage]]),
+        },
+        new MerkleServiceAccountStorageImpl(serviceIndex2),
+      );
+
+      acc2.requests.set(preimageHash, toTagged(4), <UpToSeq<SlotImpl, 3>>[
+        new SlotImpl(<u32>1),
+        new SlotImpl(<u32>2),
+        new SlotImpl(<u32>3),
+      ]);
 
       acc.storage.set(new Uint8Array([1, 2]), new Uint8Array([4, 5]));
       acc.storage.set(new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6]));
@@ -96,7 +90,20 @@ describe("state serialization/deserialization", () => {
       state.serviceAccounts = new DeltaImpl(new Map([[serviceIndex1, acc]]));
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
-      expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
+      for (const [serviceIndex, original] of state.serviceAccounts.elements) {
+        expect(restoredState.serviceAccounts.has(serviceIndex)).to.be.true;
+        const sa = restoredState.serviceAccounts.get(serviceIndex)!;
+        expect(sa.balance).deep.eq(original.balance);
+        expect(sa.codeHash).deep.eq(original.codeHash);
+        expect(sa.minAccGas).deep.eq(original.minAccGas);
+        expect(sa.minMemoGas).deep.eq(original.minMemoGas);
+        expect(sa.gratis).deep.eq(original.gratis);
+        expect(sa.created).deep.eq(original.created);
+        expect(sa.lastAcc).deep.eq(original.lastAcc);
+        expect(sa.parent).eq(original.parent);
+        expect(sa.preimages).deep.eq(original.preimages);
+        expect(sa.merkleStorage).deep.eq(original.merkleStorage);
+      }
     });
     it("should work with two accs", () => {
       const state = dummyState();
@@ -109,7 +116,20 @@ describe("state serialization/deserialization", () => {
 
       const map = merkleStateMap(state);
       const restoredState = stateFromMerkleMap(map);
-      expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
+      for (const [serviceIndex, original] of state.serviceAccounts.elements) {
+        expect(restoredState.serviceAccounts.has(serviceIndex)).to.be.true;
+        const sa = restoredState.serviceAccounts.get(serviceIndex)!;
+        expect(sa.balance).deep.eq(original.balance);
+        expect(sa.codeHash).deep.eq(original.codeHash);
+        expect(sa.minAccGas).deep.eq(original.minAccGas);
+        expect(sa.minMemoGas).deep.eq(original.minMemoGas);
+        expect(sa.gratis).deep.eq(original.gratis);
+        expect(sa.created).deep.eq(original.created);
+        expect(sa.lastAcc).deep.eq(original.lastAcc);
+        expect(sa.parent).eq(original.parent);
+        expect(sa.preimages).deep.eq(original.preimages);
+        expect(sa.merkleStorage).deep.eq(original.merkleStorage);
+      }
     });
     it("should restore from trace", () => {
       const state = dummyState();
@@ -126,13 +146,6 @@ describe("state serialization/deserialization", () => {
       const json2 = traceJSONCodec.toJSON(restoredMap);
 
       expect(json).to.deep.eq(json2);
-    });
-    it("should work with preimages", () => {
-      const state = dummyState();
-      state.serviceAccounts = new DeltaImpl(new Map([[serviceIndex2, acc2]]));
-      const map = merkleStateMap(state);
-      const restoredState = stateFromMerkleMap(map);
-      expect(restoredState.serviceAccounts).to.deep.eq(state.serviceAccounts);
     });
   });
 });

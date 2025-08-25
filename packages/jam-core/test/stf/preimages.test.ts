@@ -36,6 +36,7 @@ import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../utils";
+import { MerkleServiceAccountStorageImpl } from "@/index";
 
 @JamCodecable()
 class LookupMetaMapKey extends BaseJamCodecable {
@@ -136,22 +137,20 @@ const buildTest = (filename: string) => {
 
   [...testCase.preState.accounts.entries()].map(
     ([serviceIndex, testAccount]) => {
-      const buildRequests: ServiceAccountImpl["requests"] = new IdentityMap();
+      const storage = new MerkleServiceAccountStorageImpl(serviceIndex);
       [...testAccount.lookup.entries()].map(([key, value]) => {
-        if (!buildRequests.has(key.hash)) {
-          buildRequests.set(key.hash, new Map());
-        }
-        const br = buildRequests.get(key.hash)!;
-        br.set(toTagged(key.length), toTagged(value));
+        storage.requests.set(key.hash, key.length, toTagged(value));
       });
 
       serviceAccounts.set(
         serviceIndex,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        new ServiceAccountImpl(<any>{
-          preimages: testAccount.preimages,
-          requests: buildRequests,
-        }),
+
+        new ServiceAccountImpl(
+          <any>{
+            preimages: testAccount.preimages,
+          },
+          storage,
+        ),
       );
     },
   );
@@ -179,23 +178,23 @@ const buildTest = (filename: string) => {
   });
 
   // check preimages and requests
-  for (const [serviceIndex, testAccount] of testCase.postState.accounts) {
+  for (const [serviceIndex, postTestAccount] of testCase.postState.accounts) {
     const serviceAccount = posterior_delta.get(serviceIndex)!;
-    for (const preimageKey of testAccount.preimages.keys()) {
+    for (const preimageKey of postTestAccount.preimages.keys()) {
       const blob = serviceAccount.preimages.get(preimageKey);
-      expect(blob).deep.eq(testAccount.preimages.get(preimageKey)!);
+      expect(blob).deep.eq(postTestAccount.preimages.get(preimageKey)!);
     }
 
-    for (const [lookupMetaKey, slots] of testAccount.lookup.entries()) {
-      const lookupMeta = serviceAccount.requests.get(lookupMetaKey.hash)!;
+    for (const [lookupMetaKey, slots] of postTestAccount.lookup.entries()) {
+      const lookupMeta = serviceAccount.requests.get(
+        lookupMetaKey.hash,
+        lookupMetaKey.length,
+      )!;
       expect(lookupMeta).toBeDefined();
-      expect(lookupMeta.get(lookupMetaKey.length)).toBeDefined();
 
-      const computedSlots = lookupMeta.get(lookupMetaKey.length)!;
-
-      expect(computedSlots!.length).toBe(slots.length);
+      expect(lookupMeta.length).toBe(slots.length);
       for (let i = 0; i < slots.length; i++) {
-        expect(computedSlots![i]).toEqual(slots[i]);
+        expect(lookupMeta[i]).toEqual(slots[i]);
       }
     }
   }

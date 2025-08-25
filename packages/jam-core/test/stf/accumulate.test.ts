@@ -94,19 +94,20 @@ class TestAccount extends BaseJamCodecable {
 
   toServiceAccount(serviceIndex: ServiceIndex) {
     const service = this.service.toServiceAccount(serviceIndex);
-    const sa = new ServiceAccountImpl({
-      codeHash: service.codeHash,
-      balance: service.balance,
-      minAccGas: service.minAccGas,
-      minMemoGas: service.minMemoGas,
-      gratis: service.gratis,
-      created: service.created,
-      lastAcc: service.lastAcc,
-      parent: service.parent,
-      requests: new IdentityMap(),
-      storage: new MerkleServiceAccountStorageImpl(serviceIndex),
-      preimages: this.preimages,
-    });
+    const sa = new ServiceAccountImpl(
+      {
+        codeHash: service.codeHash,
+        balance: service.balance,
+        minAccGas: service.minAccGas,
+        minMemoGas: service.minMemoGas,
+        gratis: service.gratis,
+        created: service.created,
+        lastAcc: service.lastAcc,
+        parent: service.parent,
+        preimages: this.preimages,
+      },
+      new MerkleServiceAccountStorageImpl(serviceIndex),
+    );
 
     for (const [key, blob] of this.storage) {
       sa.storage.set(key, blob);
@@ -115,25 +116,6 @@ class TestAccount extends BaseJamCodecable {
     sa.preimages = this.preimages;
 
     return sa;
-  }
-
-  static fromServiceAccount(serviceAccount: ServiceAccountImpl) {
-    const testAccount = new TestAccount();
-    testAccount.service = new TestServiceInfo();
-    testAccount.service.codeHash = serviceAccount.codeHash;
-    testAccount.service.balance = serviceAccount.balance;
-    testAccount.service.minItemGas = serviceAccount.minAccGas;
-    testAccount.service.minMemoGas = serviceAccount.minMemoGas;
-    testAccount.service.bytes = serviceAccount.totalOctets();
-    testAccount.service.gratis = serviceAccount.gratis;
-    testAccount.service.items = serviceAccount.itemInStorage();
-    testAccount.service.creationSlot = serviceAccount.created;
-    testAccount.service.lastAccumulationSlot = serviceAccount.lastAcc;
-    testAccount.service.parentServiceId = serviceAccount.parent;
-
-    testAccount.storage = new Map(serviceAccount.storage.entries());
-    testAccount.preimages = serviceAccount.preimages;
-    return testAccount;
   }
 }
 
@@ -248,12 +230,12 @@ const buildTest = (testname: string) => {
   for (const [sid, sa] of testCase.postState.accounts) {
     expect(dd_delta.has(sid)).toBe(true);
 
-    const expectedSA = TestAccount.fromServiceAccount(sa.toServiceAccount(sid));
-    const ourSA = TestAccount.fromServiceAccount(dd_delta.get(sid)!);
-
-    // patch the octets to match the expected
-    //ourSA.service.bytes += testCase.preState.accounts.get(sid)?.service.bytes
-    expect(ourSA.toJSON()).deep.eq(expectedSA.toJSON(), `for sid ${sid}`);
+    const expectedSA = sa.toServiceAccount(sid)!;
+    const ourSA = dd_delta.get(sid)!;
+    expect(
+      expectedSA.equals(ourSA),
+      "expected account different than out",
+    ).toBe(true);
   }
 
   expect(res.p_privServices.toJSON()).deep.eq(

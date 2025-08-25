@@ -51,7 +51,6 @@ export const argumentInvocation = <X>(
     x,
   );
 
-  console.log(`ε = ${hRes.exitReason}`);
   return R_fn(gas, hRes);
 };
 

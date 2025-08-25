@@ -162,23 +162,13 @@ export const merkleStateMap = (state: JamStateImpl) => {
       }),
     );
 
-    for (const [stateKey, v] of serviceAccount.storage.entries()) {
-      toRet.set(stateKey, v);
-    }
-
     for (const [h, p] of serviceAccount.preimages) {
       const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
       toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...h])), p);
     }
 
-    for (const [h, lm] of serviceAccount.requests) {
-      for (const [l, t] of lm) {
-        const e_l = encodeWithCodec(E_4_int, l);
-        toRet.set(
-          stateKey(serviceIndex, new Uint8Array([...e_l, ...h])),
-          encodeWithCodec(createArrayLengthDiscriminator(SlotImpl), t),
-        );
-      }
+    for (const [stateKey, v] of serviceAccount.merkleStorage.entries()) {
+      toRet.set(stateKey, v);
     }
   }
 

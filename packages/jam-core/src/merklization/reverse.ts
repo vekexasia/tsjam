@@ -14,7 +14,6 @@ import { JamStatisticsImpl } from "@/impls/jam-statistics-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
 import { LastAccOutsImpl } from "@/impls/last-acc-outs-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { RHOImpl } from "@/impls/rho-impl";
 import { SafroleStateImpl } from "@/impls/safrole-state-impl";
@@ -42,6 +41,7 @@ import { toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { serviceAccountDataCodec } from "./state-codecs";
 import { stateKey } from "./utils";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 
 export const stateFromMerkleMap = (
   merkleMap: IdentityMap<StateKey, 31, Uint8Array>,
@@ -130,22 +130,24 @@ export const stateFromMerkleMap = (
     );
     const storage = new MerkleServiceAccountStorageImpl(
       serviceIndex,
-      <u64>0n, // we fix octets later
+      <u64>serviceData.totalOctets,
+      <u32>serviceData.itemInStorage,
     );
 
-    const serviceAccount = new ServiceAccountImpl({
-      codeHash: serviceData.codeHash,
-      balance: serviceData.balance,
-      minAccGas: serviceData.minAccGas,
-      minMemoGas: serviceData.minMemoGas,
-      gratis: serviceData.gratis,
-      created: serviceData.created,
-      lastAcc: serviceData.lastAcc,
-      parent: serviceData.parent,
+    const serviceAccount = new ServiceAccountImpl(
+      {
+        codeHash: serviceData.codeHash,
+        balance: serviceData.balance,
+        minAccGas: serviceData.minAccGas,
+        minMemoGas: serviceData.minMemoGas,
+        gratis: serviceData.gratis,
+        created: serviceData.created,
+        lastAcc: serviceData.lastAcc,
+        parent: serviceData.parent,
+        preimages: new IdentityMap(),
+      },
       storage,
-      requests: new IdentityMap(),
-      preimages: new IdentityMap(),
-    });
+    );
 
     const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
       const possiblePreimage = merkleMap.get(sk)!;
@@ -161,47 +163,17 @@ export const stateFromMerkleMap = (
       const preimage = merkleMap.get(preimagekey)!;
       const h = Hashing.blake2b(preimage);
       serviceAccount.preimages.set(h, preimage);
-
-      // get preimage l
-      //
-      const length = preimage.length;
-
-      const e_l = encodeWithCodec(E_sub_int(4), length);
-      const p_l_key = stateKey(serviceIndex, new Uint8Array([...e_l, ...h]));
-      const pl = merkleMap.get(p_l_key);
-      assert(typeof pl !== "undefined", "Preimage l not found");
-      const pl_decoded = createArrayLengthDiscriminator<UpToSeq<SlotImpl, 3>>(
-        asCodec(SlotImpl),
-      ).decode(pl).value;
-      serviceAccount.requests.set(
-        h,
-        serviceAccount.requests.get(h) ?? new Map(),
-      );
-      serviceAccount.requests.get(h)!.set(toTagged(<u32>length), pl_decoded);
+      // we delete to not set it in storage
       serviceRelatedKeys.delete(preimagekey);
-      serviceRelatedKeys.delete(
-        [...serviceRelatedKeys.keys()].find(
-          (a) => Buffer.compare(a, p_l_key) === 0,
-        )!,
+    }
+
+    for (const storageOrRequestKey of serviceRelatedKeys) {
+      storage.setFromStateKey(
+        storageOrRequestKey,
+        merkleMap.get(storageOrRequestKey)!,
       );
     }
 
-    // we now miss storage stuff
-    //
-    for (const storageStateKey of serviceRelatedKeys) {
-      const storageValue = merkleMap.get(storageStateKey)!;
-      storage.setFromStateKey(storageStateKey, storageValue);
-      serviceRelatedKeys.delete(storageStateKey);
-    }
-    // we fix the octets
-    storage.octets = <u64>(
-      (serviceData.totalOctets - serviceAccount.totalOctets())
-    );
-
-    assert(
-      serviceRelatedKeys.size === 0,
-      "Not all service keys were processed",
-    );
     serviceAccounts.set(serviceIndex, serviceAccount);
   }
 
@@ -283,14 +255,13 @@ if (import.meta.vitest) {
           exportCount: <u32>8,
           accumulateCount: <u32>9,
           accumulateGasUsed: <Gas>10n,
-          transfersCount: <u32>11,
-          transfersGasUsed: <Gas>12n,
+          // transfersCount: <u32>11,
+          // transfersGasUsed: <Gas>12n,
         });
         state.statistics.services.elements.set(<ServiceIndex>0, stat);
         const newState = stateFromMerkleMap(merkleStateMap(state));
         expect(newState.statistics.services.toJSON()).deep.eq(
           state.statistics.services.toJSON(),
-          
         );
       });
     });

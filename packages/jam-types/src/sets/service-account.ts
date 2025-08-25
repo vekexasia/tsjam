@@ -4,8 +4,6 @@ import {
   Gas,
   Hash,
   ServiceIndex,
-  StateKey,
-  Tagged,
   UpToSeq,
   u32,
   u64,
@@ -14,24 +12,23 @@ import { PVMProgramCode } from "@/pvm/pvm-program-code";
 import { Slot } from "@/slot";
 
 export interface IServiceAccountStorage {
-  delete(key: Uint8Array): boolean;
-
   has(key: Uint8Array): boolean;
+
+  delete(key: Uint8Array): boolean;
 
   get(key: Uint8Array): Uint8Array | undefined;
 
   set(key: Uint8Array, value: Uint8Array): void;
+}
 
-  entries(): IterableIterator<[StateKey, Uint8Array]>;
+export interface IServiceAccountRequests {
+  has(key: Hash, length: u32): boolean;
 
-  readonly size: number;
+  delete(key: Hash, length: u32): boolean;
 
-  /**
-   * The octects part of the service account that is in regard of the storage
-   * it should compute the second half of formula in
-   * $(0.7.1 - 9.8)
-   */
-  readonly octets: u64;
+  get(key: Hash, length: u32): UpToSeq<Slot, 3> | undefined;
+
+  set(key: Hash, length: u32, value: UpToSeq<Slot, 3>): void;
 }
 
 /**
@@ -58,7 +55,7 @@ export interface ServiceAccount {
    * if there are 3 items, then its available since [2] no but in the past was not available[1] after being available[0]<br>
    * once all three elements are valued. we remove the first 2 only after a certain period has passed (to be defined)
    */
-  requests: Map<Hash, Map<Tagged<u32, "length">, UpToSeq<Slot, 3>>>;
+  requests: IServiceAccountRequests;
 
   /**
    * `f`

@@ -478,12 +478,10 @@ export const singleServiceAccumulation = (
     }
   }
 
-  console.time(`invocation service ${service}`);
   const toRet = accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
     core,
     p_tau: deps.p_tau,
     p_eta_0: deps.p_eta_0,
   });
-  console.timeEnd(`invocation service ${service}`);
   return toRet;
 };

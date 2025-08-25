@@ -64,13 +64,10 @@ export class DeltaImpl implements Delta {
     for (const { serviceId, blob } of provisions) {
       const phash = Hashing.blake2b(blob);
       const plength: Tagged<u32, "length"> = toTagged(<u32>blob.length);
-      if (
-        this.get(serviceId)?.requests.get(phash)?.get(plength)?.length === 0
-      ) {
+      if (this.get(serviceId)?.requests.get(phash, plength)?.length === 0) {
         newD
           .get(serviceId)!
-          .requests.get(phash)!
-          .set(plength, toTagged(<TauImpl[]>[p_tau]));
+          .requests.set(phash, plength, toTagged(<TauImpl[]>[p_tau]));
         newD.get(serviceId)!.preimages.set(phash, blob);
       }
     }
@@ -122,15 +119,11 @@ export class DeltaImpl implements Delta {
     for (const { requester, blob } of p) {
       const x = result.get(requester)!;
       x.preimages = x.preimages.clone();
-      x.requests = x.requests.clone();
 
       const hash = Hashing.blake2b(blob);
       x.preimages.set(hash, blob);
 
-      x.requests.set(hash, x.requests.get(hash) ?? new Map());
-      x.requests
-        .get(hash)!
-        .set(toTagged(<u32>blob.length), toTagged([deps.p_tau]));
+      x.requests.set(hash, toTagged(<u32>blob.length), toTagged([deps.p_tau]));
     }
     return toPosterior(result);
   }

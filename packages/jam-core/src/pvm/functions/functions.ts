@@ -3,7 +3,6 @@ import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
@@ -104,6 +103,7 @@ import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
 import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { log } from "@/utils";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -1141,34 +1141,31 @@ export class HostFunctions {
     );
 
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
-    const a = new ServiceAccountImpl({
-      codeHash: c,
-      requests: new IdentityMap(),
-      balance: <Balance>0n,
-      minAccGas: g.value as u64 as Gas,
-      minMemoGas: m.value as u64 as Gas,
-      preimages: new IdentityMap(),
-      created: args.tau,
-      gratis: f.value as u64 as Balance,
-      lastAcc: new SlotImpl(<u32>0),
-      parent: args.x.id,
+    const a = new ServiceAccountImpl(
+      {
+        codeHash: c,
+        balance: <Balance>0n,
+        minAccGas: g.value as u64 as Gas,
+        minMemoGas: m.value as u64 as Gas,
+        preimages: new IdentityMap(),
+        created: args.tau,
+        gratis: f.value as u64 as Balance,
+        lastAcc: new SlotImpl(<u32>0),
+        parent: args.x.id,
+      },
       storage,
-    });
-    a.requests.set(c, new Map());
-    a.requests
-      .get(c)!
-      .set(
-        <Tagged<u32, "length">>Number(l),
-        [] as unknown as UpToSeq<TauImpl, 3>,
-      );
+    );
+    a.requests.set(
+      c,
+      <Tagged<u32, "length">>Number(l),
+      [] as unknown as UpToSeq<TauImpl, 3>,
+    );
     a.balance = <Balance>(<u64>a.gasThreshold());
 
     const x_bold_s = args.x.bold_s();
 
-    const bold_s = new ServiceAccountImpl({
-      ...x_bold_s,
-      balance: <Balance>(x_bold_s.balance - a.gasThreshold()),
-    });
+    const bold_s = x_bold_s.clone();
+    bold_s.balance = <Balance>(x_bold_s.balance - a.gasThreshold());
 
     if (bold_s.balance < x_bold_s.gasThreshold()) {
       return [IxMod.w7(HostCallResult.CASH)];
@@ -1336,7 +1333,7 @@ export class HostFunctions {
 
     const d_o = bold_d.totalOctets();
     const l = <u32>Number((d_o > 81 ? d_o : 81n) - 81n);
-    const dlhl = bold_d.requests.get(h)?.get(toTagged(l));
+    const dlhl = bold_d.requests.get(h, toTagged(l));
 
     if (bold_d.itemInStorage() !== 2 || typeof dlhl === "undefined") {
       return [IxMod.w7(HostCallResult.HUH)];
@@ -1376,7 +1373,7 @@ export class HostFunctions {
     ).value;
     const x_bold_s = x.bold_s();
 
-    const bold_a = x_bold_s.requests.get(h)?.get(toTagged(Number(z) as u32));
+    const bold_a = x_bold_s.requests.get(h, toTagged(Number(z) as u32));
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
     }
@@ -1414,10 +1411,11 @@ export class HostFunctions {
     const bold_a = newX.bold_s();
 
     const _z = Number(z) as Tagged<u32, "length">;
-    if (typeof bold_a.requests.get(h)?.get(_z) === "undefined") {
-      bold_a.requests.set(h, new Map([[_z, toTagged([])]]));
-    } else if (bold_a.requests.get(h)?.get(_z)?.length === 2) {
-      bold_a.requests.get(h)!.get(_z)!.push(args.tau);
+    if (typeof bold_a.requests.get(h, _z) === "undefined") {
+      bold_a.requests.set(h, _z, toTagged([]));
+    } else if (bold_a.requests.get(h, _z)?.length === 2) {
+      const value = bold_a.requests.get(h, _z)!;
+      bold_a.requests.set(h, _z, toTagged([...value, args.tau]));
     } else {
       return [IxMod.w7(HostCallResult.HUH)];
     }
@@ -1456,36 +1454,28 @@ export class HostFunctions {
     const newX = args.x.clone();
     const x_bold_s = newX.bold_s();
 
-    if (typeof x_bold_s.requests.get(h) === "undefined") {
-      return [IxMod.w7(HostCallResult.HUH)];
-    }
-
-    const xslhz = x_bold_s.requests.get(h)?.get(z.checked_u32());
+    const xslhz = x_bold_s.requests.get(h, z.checked_u32());
 
     if (typeof xslhz === "undefined") {
-      // means we have `h` but no `z`
-      if (x_bold_s.requests.get(h)?.size === 0) {
-        x_bold_s.requests.delete(h);
-      }
-      x_bold_s.preimages.delete(h);
+      return [IxMod.w7(HostCallResult.HUH)];
     } else {
       const [x, y, w] = xslhz;
       if (
-        xslhz.length === 2 &&
-        y.value < args.tau.value - PREIMAGE_EXPIRATION
+        xslhz.length === 0 ||
+        (xslhz.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION)
       ) {
-        x_bold_s.requests.get(h)!.delete(z.checked_u32());
-        if (x_bold_s.requests.get(h)!.size === 0) {
-          x_bold_s.requests.delete(h);
-        }
+        x_bold_s.requests.delete(h, z.checked_u32());
+        // if (x_bold_s.requests.get(h)!.size === 0) {
+        //   x_bold_s.requests.delete(h);
+        // }
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
-        x_bold_s.requests.get(h)!.set(z.checked_u32(), toTagged([x, args.tau]));
+        x_bold_s.requests.set(h, z.checked_u32(), toTagged([x, args.tau]));
       } else if (
         xslhz.length === 3 &&
         y.value < args.tau.value - PREIMAGE_EXPIRATION
       ) {
-        x_bold_s.requests.get(h)!.set(z.checked_u32(), toTagged([w, args.tau]));
+        x_bold_s.requests.set(h, z.checked_u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
       }
@@ -1549,8 +1539,8 @@ export class HostFunctions {
     }
 
     if (
-      bold_a.requests.get(Hashing.blake2b(bold_i))?.get(z.checked_u32())
-        ?.length !== 0
+      bold_a.requests.get(Hashing.blake2b(bold_i), z.checked_u32())?.length !==
+      0
     ) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
@@ -1610,7 +1600,7 @@ export class HostFunctions {
 
     formattedMessage += ` ${Buffer.from(message).toString("utf8")}`;
 
-    log(formattedMessage);
+    log(formattedMessage, true);
     console.log(formattedMessage);
     return [];
   }
@@ -1647,6 +1637,7 @@ const serviceAccountCodec = createCodec<
       | "itemInStorage"
       | "totalOctets"
       | "gasThreshold"
+      | "merkleStorage"
     >,
     Function
   > & {

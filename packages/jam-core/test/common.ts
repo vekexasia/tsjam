@@ -54,19 +54,20 @@ export class TestServiceInfo extends BaseJamCodecable {
   parentServiceId!: ServiceIndex; // a_p
 
   toServiceAccount(serviceIndex: ServiceIndex) {
-    const account = new ServiceAccountImpl({
-      balance: this.balance,
-      codeHash: this.codeHash,
-      minAccGas: this.minItemGas,
-      minMemoGas: this.minMemoGas,
-      parent: this.parentServiceId,
-      created: this.creationSlot,
-      lastAcc: this.lastAccumulationSlot,
-      preimages: new IdentityMap(),
-      requests: new IdentityMap(),
-      storage: new MerkleServiceAccountStorageImpl(serviceIndex),
-      gratis: this.gratis,
-    });
+    const account = new ServiceAccountImpl(
+      {
+        balance: this.balance,
+        codeHash: this.codeHash,
+        minAccGas: this.minItemGas,
+        minMemoGas: this.minMemoGas,
+        parent: this.parentServiceId,
+        created: this.creationSlot,
+        lastAcc: this.lastAccumulationSlot,
+        preimages: new IdentityMap(),
+        gratis: this.gratis,
+      },
+      new MerkleServiceAccountStorageImpl(serviceIndex),
+    );
     account.itemInStorage = () => this.items;
     account.totalOctets = () => this.bytes;
     return account;

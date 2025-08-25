@@ -202,7 +202,9 @@ export const buildTracesTests = (kind: string) => {
       }
 
       const merkleMap = merkleStateMap(posteriorState);
-      const doubleMerkleMap = merkleStateMap(stateFromMerkleMap(merkleMap));
+      const staMM = stateFromMerkleMap(merkleMap);
+      debugger;
+      const doubleMerkleMap = merkleStateMap(staMM);
 
       // sanity check
       const codec = TraceTestState.codecOf("merkleMap");

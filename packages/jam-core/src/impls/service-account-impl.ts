@@ -15,6 +15,8 @@ import {
   CodeHash,
   Gas,
   Hash,
+  IServiceAccountRequests,
+  IServiceAccountStorage,
   PVMProgramCode,
   ServiceAccount,
   ServiceIndex,
@@ -26,8 +28,9 @@ import {
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { ConditionalExcept } from "type-fest";
-import { MerkleServiceAccountStorageImpl } from "./merkle-service-account-storage-impl";
 import type { SlotImpl } from "./slot-impl";
+import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
+import { compareUint8Arrays } from "uint8array-extras";
 
 export const serviceMetadataCodec = createCodec<{
   metadata: Uint8Array;
@@ -43,11 +46,7 @@ export const serviceMetadataCodec = createCodec<{
  */
 export class ServiceAccountImpl implements ServiceAccount {
   preimages: IdentityMap<Hash, 32, Uint8Array> = new IdentityMap();
-  requests: IdentityMap<
-    Hash,
-    32,
-    Map<Tagged<u32, "length">, UpToSeq<SlotImpl, 3>>
-  > = new IdentityMap();
+  requests: IServiceAccountRequests;
   gratis!: Balance;
   codeHash!: CodeHash;
   balance!: Balance;
@@ -56,15 +55,35 @@ export class ServiceAccountImpl implements ServiceAccount {
   created!: SlotImpl;
   lastAcc!: SlotImpl;
   parent!: ServiceIndex;
-  storage!: MerkleServiceAccountStorageImpl;
+  storage!: IServiceAccountStorage;
 
   constructor(
     values: Omit<
       ConditionalExcept<ServiceAccountImpl, Function>,
-      "itemInStorage" | "totalOctets" | "gasThreshold" | "metadata" | "code"
+      | "requests"
+      | "storage"
+      | "itemInStorage"
+      | "totalOctets"
+      | "gasThreshold"
+      | "metadata"
+      | "code"
+      | "merkleStorage"
     >,
+    // TODO: refactor to make this private
+    public merkleStorage: MerkleServiceAccountStorageImpl,
   ) {
-    Object.assign(this, values);
+    this.preimages = values.preimages;
+    this.gratis = values.gratis;
+    this.codeHash = values.codeHash;
+    this.balance = values.balance;
+    this.minAccGas = values.minAccGas;
+    this.minMemoGas = values.minMemoGas;
+    this.created = values.created;
+    this.lastAcc = values.lastAcc;
+    this.parent = values.parent;
+
+    this.requests = this.merkleStorage.requests;
+    this.storage = this.merkleStorage.storage;
   }
 
   /**
@@ -72,7 +91,7 @@ export class ServiceAccountImpl implements ServiceAccount {
    * $(0.7.1 - 9.8)
    */
   itemInStorage(): u32 {
-    return toTagged(2 * this.requests.size + this.storage.size);
+    return this.merkleStorage.items;
   }
 
   /**
@@ -80,16 +99,7 @@ export class ServiceAccountImpl implements ServiceAccount {
    * $(0.7.1 - 9.8)
    */
   totalOctets(): u64 {
-    let sum: bigint = 0n;
-
-    for (const zmap of this.requests.values()) {
-      for (const length of zmap.keys()) {
-        sum += BigInt(length) + 81n;
-      }
-    }
-    sum += this.storage.octets;
-
-    return sum as u64;
+    return this.merkleStorage.octets;
   }
 
   /**
@@ -153,7 +163,7 @@ export class ServiceAccountImpl implements ServiceAccount {
   isPreimageSolicitedButNotYetProvided(hash: Hash, length: number): boolean {
     return (
       !this.preimages.has(hash) &&
-      (this.requests.get(hash)?.get(toTagged(<u32>length))?.length ?? -1) === 0
+      this.requests.get(hash, toTagged(length))?.length === 0
     );
   }
 
@@ -171,18 +181,29 @@ export class ServiceAccountImpl implements ServiceAccount {
     const ap = this.preimages.get(hash);
     if (
       typeof ap !== "undefined" &&
-      I_Fn(this.requests.get(hash)!.get(toTagged(ap.length as u32))!, tau)
+      I_Fn(<UpToSeq<SlotImpl, 3>>this.requests.get(hash, <u32>ap.length)!, tau)
     ) {
       return this.preimages.get(hash)!;
     }
   }
 
   clone() {
-    const toRet = new ServiceAccountImpl(this);
-    toRet.preimages = this.preimages.clone();
-    toRet.requests = this.requests.clone();
-    toRet.storage = this.storage.clone();
-    return toRet;
+    return new ServiceAccountImpl(this, this.merkleStorage.clone());
+  }
+
+  equals(other: ServiceAccountImpl): boolean {
+    return (
+      this === other ||
+      (this.balance === other.balance &&
+        compareUint8Arrays(this.codeHash, other.codeHash) === 0 &&
+        this.created.value === other.created.value &&
+        this.gratis === other.gratis &&
+        this.lastAcc.value === other.lastAcc.value &&
+        this.minAccGas === other.minAccGas &&
+        this.minMemoGas === other.minMemoGas &&
+        this.parent === other.parent &&
+        this.merkleStorage.equals(other.merkleStorage))
+    );
   }
 }
 /**

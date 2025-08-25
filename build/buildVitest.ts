@@ -37,7 +37,6 @@ export const buildPoolOptions = (): PoolOptions => {
 
 export const buildVitest = (project: string) => {
   const root = path.join(__dirname, "..", "packages", project);
-  console.log(root);
   return defineConfig({
     optimizeDeps: {
       include: ["vitest > @vitest/expect > chai"],

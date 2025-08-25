@@ -297,8 +297,7 @@ export class Instructions {
   }
 
   @Ix(73, OneRegTwoImmIxDecoder)
-  store_imm_ind_u64({ wA, vX, vY, rA }: OneRegTwoImmArgs) {
-    log({ wA, vX, vY, rA }, true);
+  store_imm_ind_u64({ wA, vX, vY }: OneRegTwoImmArgs) {
     const location = wA + vX;
     return [
       IxMod.memory(toSafeMemoryAddress(location), encodeWithCodec(E_8, vY)),
