@@ -81,7 +81,6 @@ export class SingleServiceStatisticsImpl
       exportCount: <u32>0,
       accumulateCount: <u32>0,
       accumulateGasUsed: <Gas>0n,
-      transfersGasUsed: <Gas>0n,
     });
   }
 }

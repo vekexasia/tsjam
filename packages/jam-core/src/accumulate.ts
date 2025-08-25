@@ -15,7 +15,6 @@ import {
   Validated,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
-import { ok } from "neverthrow";
 import { AccumulationHistoryImpl } from "./impls/accumulation-history-impl";
 import { AccumulationOutImpl } from "./impls/accumulation-out-impl";
 import { AccumulationQueueImpl } from "./impls/accumulation-queue-impl";
@@ -479,9 +478,12 @@ export const singleServiceAccumulation = (
     }
   }
 
-  return accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
+  console.time(`invocation service ${service}`);
+  const toRet = accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
     core,
     p_tau: deps.p_tau,
     p_eta_0: deps.p_eta_0,
   });
+  console.timeEnd(`invocation service ${service}`);
+  return toRet;
 };

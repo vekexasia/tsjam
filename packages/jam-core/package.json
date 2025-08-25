@@ -35,13 +35,13 @@
     "@tsjam/utils": "*",
     "@vekexasia/bigint-uint8array": "^1.1.1",
     "bigint-buffer": "^1.1.5",
-    "neverthrow": "^8.1.1",
+    "neverthrow": "^8.2.0",
     "type-fest": "^4.41.0",
-    "uint8array-extras": "^1.4.0"
+    "uint8array-extras": "^1.5.0"
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/json-bigint": "^1",
+    "@types/json-bigint": "^1.0.4",
     "json-bigint": "^1.0.0"
   },
   "jam:protocolVersion": "0.7.1"

@@ -1,4 +1,5 @@
-import { defineWorkspace } from "vitest/config";
+import { PoolOptions } from "vitest";
+import { defineConfig } from "vitest/config";
 import path from "path";
 
 export const buildAliases = (import_meta_url: string) => {
@@ -16,16 +17,41 @@ export const buildAliases = (import_meta_url: string) => {
   };
 };
 
+export const buildPoolOptions = (): PoolOptions => {
+  if (process.env.PROFILER === "true") {
+    return {
+      forks: {
+        execArgv: [
+          "--cpu-prof",
+          "--cpu-prof-dir=test-runner-profile-forks",
+          "--heap-prof",
+          "--heap-prof-dir=test-runner-profile-forks",
+        ],
+        singleFork: true,
+      },
+    };
+  } else {
+    return {};
+  }
+};
+
 export const buildVitest = (project: string) => {
   const root = path.join(__dirname, "..", "packages", project);
-  return defineWorkspace([
-    {
-      extends: path.join(__dirname, "vitest.config.mts"),
-      root,
-      test: {
-        name: project,
-        alias: buildAliases(new URL(".", `file://${root}/package.json`).href),
-      },
+  console.log(root);
+  return defineConfig({
+    optimizeDeps: {
+      include: ["vitest > @vitest/expect > chai"],
     },
-  ]);
+    // extends: path.join(__dirname, "vitest.config.mts"),
+    root,
+    test: {
+      //root,
+      watch: false,
+      globals: true,
+      includeSource: ["src/**/*.{js,ts}"],
+      name: project,
+      alias: buildAliases(new URL(".", `file://${root}/package.json`).href),
+      poolOptions: buildPoolOptions(),
+    },
+  });
 };

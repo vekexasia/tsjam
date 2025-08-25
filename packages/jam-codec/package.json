@@ -34,7 +34,7 @@
     "@tsjam/crypto": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
-    "uint8array-extras": "^1.4.0"
+    "uint8array-extras": "^1.5.0"
   },
   "license": "MIT",
   "jam:protocolVersion": "0.7.1"

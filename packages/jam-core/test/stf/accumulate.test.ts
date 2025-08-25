@@ -43,11 +43,10 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
-import { describe, expect, it, test } from "vitest";
+import { describe, expect, it } from "vitest";
 import packageJSON from "../../package.json";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
-import exp from "constants";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(
@@ -204,6 +203,7 @@ const buildTest = (testname: string) => {
     ([serviceIndex, testAccount]) =>
       delta.set(serviceIndex, testAccount.toServiceAccount(serviceIndex)),
   );
+
   const res = accumulateReports(newWR, {
     accumulationHistory: testCase.preState.history,
     accumulationQueue: testCase.preState.readyQueue,
@@ -238,11 +238,11 @@ const buildTest = (testname: string) => {
   console.log(`accumulated root: ${xBytesCodec(32).toJSON(accMerkleRoot)}`);
   const dd_delta = res.d_delta.toDoubleDagger({
     accumulationStatistics: res.accumulationStatistics,
-    invokedTransfers: res.deferredTransfers.invokedTransfers({
-      d_delta: res.d_delta,
-      p_tau: testCase.input.p_tau,
-      p_eta_0: testCase.preState.p_eta_0,
-    }),
+    // invokedTransfers: res.deferredTransfers.invokedTransfers({
+    //   d_delta: res.d_delta,
+    //   p_tau: testCase.input.p_tau,
+    //   p_eta_0: testCase.preState.p_eta_0,
+    // }),
     p_tau: testCase.input.p_tau,
   });
   for (const [sid, sa] of testCase.postState.accounts) {

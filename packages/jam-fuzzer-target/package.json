@@ -6,7 +6,7 @@
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
     "@tsjam/core": "*",
-    "neverthrow": "^8.1.1",
+    "neverthrow": "^8.2.0",
     "type-fest": "^4.41.0"
   },
   "scripts": {

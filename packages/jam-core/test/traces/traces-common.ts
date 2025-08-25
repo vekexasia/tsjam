@@ -5,7 +5,6 @@ import {
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamSignedHeaderImpl,
-  merkelizeState,
   merkleStateMap,
   stateFromMerkleMap,
 } from "@/index";
@@ -18,8 +17,7 @@ import {
 } from "@tsjam/codec";
 import type { MerkleTreeRoot, StateKey } from "@tsjam/types";
 import fs from "fs";
-import { expect, it, test } from "vitest";
-import { TestCase } from "../stf/accumulate.test";
+import { expect, it } from "vitest";
 
 @JamCodecable()
 export class TraceTestState extends BaseJamCodecable {
@@ -62,6 +60,12 @@ export class TracesGenesis extends BaseJamCodecable {
   state!: TraceTestState;
 }
 
+const decodeBin = (kind: string, which: string): TracesTestCase => {
+  const data = fs.readFileSync(
+    `${__dirname}/../../../../jamtestvectors/traces/${kind}/${which}.bin`,
+  );
+  return TracesTestCase.decode(data).value;
+};
 const decodeTrace = (kind: string, which: string): TracesTestCase => {
   const data = fs.readFileSync(
     `${__dirname}/../../../../jamtestvectors/traces/${kind}/${which}.json`,
@@ -70,7 +74,7 @@ const decodeTrace = (kind: string, which: string): TracesTestCase => {
   return TracesTestCase.fromJSON(JSON.parse(data));
 };
 export const tracesTestCase = (kind: string, which: string) => {
-  const trace = decodeTrace(kind, which);
+  const trace = decodeBin(kind, which);
 
   if (which === "00000001") {
     trace.parentBlock = new JamBlockImpl({
@@ -85,7 +89,7 @@ export const tracesTestCase = (kind: string, which: string) => {
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
     });
   } else {
-    const prevTrace = decodeTrace(
+    const prevTrace = decodeBin(
       kind,
       (parseInt(which) - 1).toString().padStart(8, "0"),
     );
