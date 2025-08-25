@@ -39,7 +39,7 @@ export class HeaderTicketMarkerImpl
   }) {
     if (
       deps.p_tau.isSameEra(deps.tau) &&
-      deps.p_tau.slotPhase() < LOTTERY_MAX_SLOT &&
+      deps.tau.slotPhase() < LOTTERY_MAX_SLOT &&
       LOTTERY_MAX_SLOT <= deps.p_tau.slotPhase() &&
       deps.gamma_a.length() === EPOCH_LENGTH
     ) {
@@ -70,7 +70,7 @@ export class HeaderTicketMarkerImpl
   ) {
     if (
       deps.p_tau.isSameEra(deps.tau) &&
-      deps.p_tau.slotPhase() < LOTTERY_MAX_SLOT &&
+      deps.tau.slotPhase() < LOTTERY_MAX_SLOT &&
       LOTTERY_MAX_SLOT <= deps.p_tau.slotPhase() &&
       deps.gamma_a.length() === EPOCH_LENGTH
     ) {

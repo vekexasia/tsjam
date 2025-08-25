@@ -36,6 +36,7 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { IxMod, smod, X_4, X_8, X_fn } from "./utils";
+import { log } from "@/utils";
 
 /**
  * This class holds the ixs implementations.
@@ -265,25 +266,43 @@ export class Instructions {
   @Ix(70, OneRegTwoImmIxDecoder)
   store_imm_ind_u8({ wA, vX, vY }: OneRegTwoImmArgs) {
     const location = wA + vX;
-    return [IxMod.memory(location, new Uint8Array([Number(vY % 0xffn)]))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(location),
+        new Uint8Array([Number(vY % 0xffn)]),
+      ),
+    ];
   }
 
   @Ix(71, OneRegTwoImmIxDecoder)
   store_imm_ind_u16({ wA, vX, vY }: OneRegTwoImmArgs) {
     const location = wA + vX;
-    return [IxMod.memory(location, encodeWithCodec(E_2, vY % 2n ** 16n))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(location),
+        encodeWithCodec(E_2, vY % 2n ** 16n),
+      ),
+    ];
   }
 
   @Ix(72, OneRegTwoImmIxDecoder)
   store_imm_ind_u32({ wA, vX, vY }: OneRegTwoImmArgs) {
     const location = wA + vX;
-    return [IxMod.memory(location, encodeWithCodec(E_4, vY % 2n ** 32n))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(location),
+        encodeWithCodec(E_4, vY % 2n ** 32n),
+      ),
+    ];
   }
 
   @Ix(73, OneRegTwoImmIxDecoder)
-  store_imm_ind_u64({ wA, vX, vY }: OneRegTwoImmArgs) {
+  store_imm_ind_u64({ wA, vX, vY, rA }: OneRegTwoImmArgs) {
+    log({ wA, vX, vY, rA }, true);
     const location = wA + vX;
-    return [IxMod.memory(location, encodeWithCodec(E_8, vY))];
+    return [
+      IxMod.memory(toSafeMemoryAddress(location), encodeWithCodec(E_8, vY)),
+    ];
   }
 
   @Ix(80, OneRegOneIMMOneOffsetIxDecoder)

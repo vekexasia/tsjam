@@ -288,7 +288,7 @@ export class JamStateImpl implements JamState {
     const d_rho = this.rho.toDagger({ p_disputes });
     const [eaError, validatedEA] = newBlock.extrinsics.assurances
       .checkValidity({
-        headerParent: newBlock.header.signedHash(),
+        headerParent: this.block.header.signedHash(),
         kappa: this.kappa,
         d_rho,
       })

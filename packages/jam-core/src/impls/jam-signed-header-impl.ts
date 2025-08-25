@@ -125,10 +125,10 @@ export class JamSignedHeaderImpl
       // $(0.7.1 - 6.15)
       const i = deps.p_gamma_s.tickets![this.slot.slotPhase()];
       // verify ticket identity. if it fails, it means validator is not allowed to produce block
-      if (i.id !== Bandersnatch.vrfOutputSignature(this.seal)) {
-        return false;
-      }
-      return true;
+      return (
+        compareUint8Arrays(i.id, Bandersnatch.vrfOutputSignature(this.seal)) ===
+        0
+      );
     }
   }
 

@@ -1,7 +1,7 @@
 import {
   BaseJamCodecable,
+  eBigIntCodec,
   eIntCodec,
-  eSubBigIntCodec,
   JamCodecable,
 } from "@tsjam/codec";
 import type { Gas, SingleServiceStatistics, u16, u32 } from "@tsjam/types";
@@ -25,7 +25,7 @@ export class SingleServiceStatisticsImpl
    */
   @eIntCodec("refinement_count")
   refinementCount!: u32;
-  @eSubBigIntCodec(8, "refinement_gas_used")
+  @eBigIntCodec("refinement_gas_used")
   refinementGasUsed!: Gas;
 
   /**
@@ -57,7 +57,7 @@ export class SingleServiceStatisticsImpl
    */
   @eIntCodec("accumulate_count")
   accumulateCount!: u32;
-  @eSubBigIntCodec(8, "accumulate_gas_used")
+  @eBigIntCodec("accumulate_gas_used")
   accumulateGasUsed!: Gas;
 
   constructor(
@@ -67,5 +67,21 @@ export class SingleServiceStatisticsImpl
     if (typeof config !== "undefined") {
       Object.assign(this, config);
     }
+  }
+
+  static newEmpty(): SingleServiceStatisticsImpl {
+    return new SingleServiceStatisticsImpl({
+      providedCount: <u16>0,
+      providedSize: <u32>0,
+      refinementCount: <u32>0,
+      refinementGasUsed: <Gas>0n,
+      importCount: <u32>0,
+      extrinsicCount: <u32>0,
+      extrinsicSize: <u32>0,
+      exportCount: <u32>0,
+      accumulateCount: <u32>0,
+      accumulateGasUsed: <Gas>0n,
+      transfersGasUsed: <Gas>0n,
+    });
   }
 }

@@ -1,5 +1,4 @@
 import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentityMap } from "@/data-structures/identity-map";
 import { IdentitySet, identitySetCodec } from "@/data-structures/identity-set";
 import { AuthorizerPoolImpl } from "@/impls/authorizer-pool-impl";
 import "@/impls/beta-impl";
@@ -15,10 +14,8 @@ import { JamSignedHeaderImpl } from "@/impls/jam-signed-header-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-service-account-storage-impl";
 import { RecentHistoryImpl } from "@/impls/recent-history-impl";
 import { RHOImpl } from "@/impls/rho-impl";
-import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import {
@@ -37,7 +34,6 @@ import {
 } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
 import type {
-  Balance,
   DoubleDagger,
   ED25519PublicKey,
   OpaqueHash,

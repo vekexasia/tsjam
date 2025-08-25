@@ -29,7 +29,15 @@ import {
   encodeWithCodec,
 } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import { ServiceIndex, StateKey, u32, u64, UpToSeq } from "@tsjam/types";
+import {
+  Gas,
+  ServiceIndex,
+  StateKey,
+  u16,
+  u32,
+  u64,
+  UpToSeq,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { serviceAccountDataCodec } from "./state-codecs";
@@ -218,3 +226,73 @@ export const stateFromMerkleMap = (
     headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
   });
 };
+
+if (import.meta.vitest) {
+  const { beforeEach, describe, it, expect } = import.meta.vitest;
+
+  const { dummyState, randomHash } = await import("@/test/utils");
+  const { merkleStateMap } = await import("./state");
+
+  describe("reverse merkle", () => {
+    let state: JamStateImpl;
+    beforeEach(() => {
+      state = dummyState();
+    });
+    it("accumulationHistory", () => {
+      state.accumulationHistory.elements[0].add(randomHash());
+      const newState = stateFromMerkleMap(merkleStateMap(state));
+      expect(state.accumulationHistory.toJSON()).deep.eq(
+        newState.accumulationHistory.toJSON(),
+      );
+    });
+    describe("statistics", () => {
+      // const { JamStatisticsImpl } = await import("@/impls/jam-statistics-impl");
+      // const { ServiceStatisticsImpl } = await import(
+      //   "@/impls/service-statistics-impl"
+      // );
+      // const { ValidatorStatisticsImpl } = await import(
+      //   "@/impls/validator-statistics-impl"
+      // );
+      it("should decode core statistics", () => {
+        state.statistics.cores.elements[1].daLoad = <u32>1;
+        state.statistics.cores.elements[1].gasUsed = <Gas>2n;
+        state.statistics.cores.elements[1].bundleSize = <u32>3;
+        state.statistics.cores.elements[1].popularity = <u16>4;
+        state.statistics.cores.elements[1].exportCount = <u16>5;
+        state.statistics.cores.elements[1].importCount = <u16>6;
+        state.statistics.cores.elements[1].extrinsicSize = <u32>7;
+        state.statistics.cores.elements[1].extrinsicCount = <u16>8;
+        const newState = stateFromMerkleMap(merkleStateMap(state));
+
+        expect(newState.statistics.cores.toJSON()).deep.eq(
+          state.statistics.cores.toJSON(),
+        );
+      });
+      it("should decode service statistics", async () => {
+        const { SingleServiceStatisticsImpl } = await import(
+          "@/impls/single-service-statistics-impl"
+        );
+        const stat = new SingleServiceStatisticsImpl({
+          providedCount: <u16>1,
+          providedSize: <u32>2,
+          refinementCount: <u32>3,
+          refinementGasUsed: <Gas>7990n,
+          importCount: <u32>5,
+          extrinsicCount: <u32>6,
+          extrinsicSize: <u32>7,
+          exportCount: <u32>8,
+          accumulateCount: <u32>9,
+          accumulateGasUsed: <Gas>10n,
+          transfersCount: <u32>11,
+          transfersGasUsed: <Gas>12n,
+        });
+        state.statistics.services.elements.set(<ServiceIndex>0, stat);
+        const newState = stateFromMerkleMap(merkleStateMap(state));
+        expect(newState.statistics.services.toJSON()).deep.eq(
+          state.statistics.services.toJSON(),
+          
+        );
+      });
+    });
+  });
+}

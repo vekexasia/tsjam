@@ -112,7 +112,7 @@ export const OneRegTwoImmIxDecoder = (
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
   const vX = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
   const vY = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
-  return { wA: context.execution.registers.elements[ra].value, vX, vY };
+  return { rA: ra, wA: context.execution.registers.elements[ra].value, vX, vY };
 };
 
 export type OneRegTwoImmArgs = ReturnType<typeof OneRegTwoImmIxDecoder>;
