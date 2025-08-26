@@ -2,6 +2,7 @@ import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
+import { log } from "@/utils";
 
 /**
  * Defines the memory content of a single page
@@ -95,10 +96,10 @@ export class PVMMemory implements IPVMMemory {
     const memory = this.#getPageMemory(page);
     const bytesToRead = Math.min(length, Zp - offset);
     const chunk = memory.subarray(offset, offset + bytesToRead);
-    //log(
-    //  `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
-    //  true,
-    //);
+    // log(
+    //   `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
+    //   true,
+    // );
     if (bytesToRead !== length) {
       const sub = this.#getBytes(
         toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),
@@ -129,8 +130,10 @@ export class PVMMemory implements IPVMMemory {
   setBytes(address: u32, bytes: Uint8Array): this {
     assert(this.canWrite(address, bytes.length), "Memory is not writeable");
     this.#setBytes(address, bytes);
-    // console.log(
+
+    // log(
     //   `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
+    //   true,
     // );
     return this;
   }
@@ -189,13 +192,19 @@ export class PVMMemory implements IPVMMemory {
     if (this.heap.pointer + size >= this.heap.end) {
       for (let i = 0; i < Math.ceil(size / Zp); i++) {
         // allocate one page
+        //  log("allocating new page in heap", true);
         this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
         this.#innerMemoryContent.set(
           this.heap.end / Zp + i,
           new Uint8Array(Zp).fill(0),
         );
       }
-      this.heap.end = <u32>(this.heap.end + Math.ceil(size / Zp));
+      //const prevEnd = this.heap.end;
+      this.heap.end = <u32>(this.heap.end + Math.ceil(size / Zp) * Zp);
+      //log(
+      //  `New heap end: 0x${this.heap.end.toString(16)} - ${this.heap.end} - from 0x${prevEnd.toString(16)} - ${prevEnd}`,
+      //  true,
+      //);
     }
 
     const oldPointer = this.heap.pointer;
