@@ -49,11 +49,11 @@ export const applyMods = <T extends object>(
   out: T;
   exitReason?: PVMExitReasonImpl;
 } => {
-  // const newCtx = new PVMProgramExecutionContextImpl({
-  //   ...ctx,
-  //   registers: cloneCodecable(ctx.registers),
-  // });
-  const newCtx = ctx;
+  const newCtx = new PVMProgramExecutionContextImpl({
+    ...ctx,
+    registers: cloneCodecable(ctx.registers),
+  });
+  // const newCtx = ctx;
   let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)

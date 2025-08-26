@@ -7,7 +7,12 @@ export default defineConfig({
   },
 
   test: {
-    projects: ["./packages/jam-core"],
+    projects: [
+      "./packages/jam-codec",
+      "./packages/jam-core",
+      "./packages/jam-fuzzer",
+      "./packages/jam-fuzzer-target",
+    ],
 
     poolOptions: buildPoolOptions(),
   },
