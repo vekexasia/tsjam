@@ -8,6 +8,7 @@
     "@tsjam/core": "*",
     "@tsjam/crypto": "*",
     "@tsjam/fuzzer-target": "*",
+    "@tsjam/types": "*",
     "@tsjam/utils": "*"
   },
   "scripts": {
