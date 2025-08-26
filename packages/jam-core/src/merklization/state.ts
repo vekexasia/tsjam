@@ -1,12 +1,6 @@
 import { IdentityMap } from "@/data-structures/identity-map";
 import { JamStateImpl } from "@/impls/jam-state-impl";
-import { SlotImpl } from "@/impls/slot-impl";
-import {
-  E_4_int,
-  bit,
-  createArrayLengthDiscriminator,
-  encodeWithCodec,
-} from "@tsjam/codec";
+import { E_4_int, bit, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import {
   ByteArrayOfLength,

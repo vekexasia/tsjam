@@ -130,7 +130,6 @@ export const buildTracesTests = (kind: string) => {
         parseInt(which) - 1,
       );
 
-      console.log(xBytesCodec(32).toJSON(initialState.merkleRoot()));
       expect(
         xBytesCodec(32).toJSON(initialState.merkleRoot()),
         "initial state root",

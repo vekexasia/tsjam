@@ -131,10 +131,10 @@ export class PVMMemory implements IPVMMemory {
     assert(this.canWrite(address, bytes.length), "Memory is not writeable");
     this.#setBytes(address, bytes);
 
-    // log(
-    //   `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
-    //   true,
-    // );
+    //log(
+    //  `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
+    //  true,
+    //);
     return this;
   }
 

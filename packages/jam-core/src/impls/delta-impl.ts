@@ -43,7 +43,9 @@ export class DeltaImpl implements Delta {
 
   clone(): DeltaImpl {
     const clone = new DeltaImpl();
-    clone.elements = new Map(this.elements);
+    clone.elements = new Map(
+      [...this.elements].map(([si, s]) => [si, s.clone()]),
+    );
     return clone;
   }
 

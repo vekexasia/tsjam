@@ -1,5 +1,6 @@
 import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import { stateKey } from "@/merklization/utils";
+import { log } from "@/utils";
 import {
   asCodec,
   BaseJamCodecable,
@@ -22,8 +23,8 @@ import type {
   u64,
   UpToSeq,
 } from "@tsjam/types";
-import { SlotImpl } from "./slot-impl";
 import { compareUint8Arrays } from "uint8array-extras";
+import { SlotImpl } from "./slot-impl";
 
 type StorageKey = Tagged<StateKey, "storage">;
 type RequestKey = Tagged<StateKey, "request">;
@@ -36,7 +37,7 @@ const computeStorageKey = (serviceIndex: ServiceIndex, key: Uint8Array) => {
 };
 
 /** computes a_l state key */
-const computeRequestKey = (
+export const computeRequestKey = (
   serviceIndex: ServiceIndex,
   hash: Hash,
   length: u32,
@@ -77,8 +78,19 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
     super();
   }
 
-  setFromStateKey(stateKey: StateKey, value: Uint8Array) {
+  setStorage(stateKey: StateKey, value: Uint8Array) {
+    // log(
+    //   `Setting merkleStorage with key: ${Uint8ArrayJSONCodec.toJSON(stateKey)} to ${Uint8ArrayJSONCodec.toJSON(value)}`,
+    //   true, //process.env.DEBUG_TRACES === "true",
+    // );
     this._storage.set(stateKey as StorageKey | RequestKey, value);
+  }
+  deleteStorage(stateKey: StateKey) {
+    // log(
+    //   `Deleting merkleStorage with key: ${Uint8ArrayJSONCodec.toJSON(stateKey)}`,
+    //   true, //process.env.DEBUG_TRACES === "true",
+    // );
+    return this._storage.delete(stateKey as StorageKey | RequestKey);
   }
 
   entries(): IterableIterator<[StorageKey | RequestKey, Uint8Array]> {
@@ -95,7 +107,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
       set: (key, value) => {
         const innerKey = computeStorageKey(this.serviceIndex, key);
         toRet.delete(key);
-        this._storage.set(innerKey, value);
+        this.setStorage(innerKey, value);
 
         this.items = <u32>(this.items + 1);
         this.octets = <u64>(
@@ -118,7 +130,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
           this.octets = <u64>(
             (this.octets - 34n - BigInt(curValue.length) - BigInt(key.length))
           );
-          return this._storage.delete(innerKey);
+          return this.deleteStorage(innerKey);
         }
         return false;
       },
@@ -148,8 +160,9 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
         //   (this.octets -
         //     BigInt(81 + length) * (typeof curValue !== "undefined" ? 1n : 0n))
         // );
-
-        this._storage.set(key, encodeWithCodec(singleRequestCodec, value));
+        //
+        const rawValue = encodeWithCodec(singleRequestCodec, value);
+        this.setStorage(key, rawValue);
 
         this.items = <u32>(this.items + 2);
         this.octets = <u64>(this.octets + BigInt(81) + BigInt(length));
@@ -167,7 +180,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
         if (this._storage.has(key)) {
           this.items = <u32>(this.items - 2);
           this.octets = <u64>(this.octets - BigInt(length + 81));
-          return this._storage.delete(key);
+          return this.deleteStorage(key);
         }
         return false;
       },

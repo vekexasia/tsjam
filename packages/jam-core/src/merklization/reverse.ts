@@ -14,34 +14,20 @@ import { JamStatisticsImpl } from "@/impls/jam-statistics-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
 import { LastAccOutsImpl } from "@/impls/last-acc-outs-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { RHOImpl } from "@/impls/rho-impl";
 import { SafroleStateImpl } from "@/impls/safrole-state-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { ValidatorsImpl } from "@/impls/validators-impl";
-import {
-  asCodec,
-  createArrayLengthDiscriminator,
-  E_4_int,
-  E_sub_int,
-  encodeWithCodec,
-} from "@tsjam/codec";
+import { log } from "@/utils";
+import { E_4_int, E_sub_int, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
-import {
-  Gas,
-  ServiceIndex,
-  StateKey,
-  u16,
-  u32,
-  u64,
-  UpToSeq,
-} from "@tsjam/types";
+import { Gas, ServiceIndex, StateKey, u16, u32, u64 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import assert from "assert";
 import { serviceAccountDataCodec } from "./state-codecs";
 import { stateKey } from "./utils";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 
 export const stateFromMerkleMap = (
   merkleMap: IdentityMap<StateKey, 31, Uint8Array>,
@@ -168,7 +154,7 @@ export const stateFromMerkleMap = (
     }
 
     for (const storageOrRequestKey of serviceRelatedKeys) {
-      storage.setFromStateKey(
+      storage.setStorage(
         storageOrRequestKey,
         merkleMap.get(storageOrRequestKey)!,
       );

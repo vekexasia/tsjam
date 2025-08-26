@@ -70,7 +70,6 @@ export const accumulateInvocation = (
     p_eta_0: Posterior<JamEntropy["_0"]>;
   },
 ): AccumulationOutImpl => {
-  console.log(">> Accumulate Invocation", s);
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
   const yRes = iRes.clone();
   const bold_c = pvmAccState.accounts.get(s)?.code();

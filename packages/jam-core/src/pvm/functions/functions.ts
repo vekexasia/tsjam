@@ -3,7 +3,6 @@ import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
@@ -20,6 +19,7 @@ import { type WorkPackageImpl } from "@/impls/work-package-impl";
 import { log } from "@/utils";
 import {
   asCodec,
+  BufferJSONCodec,
   cloneCodecable,
   createArrayLengthDiscriminator,
   createCodec,
@@ -28,6 +28,7 @@ import {
   E_sub_int,
   encodeWithCodec,
   LengthDiscrimantedIdentityCodec,
+  Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
 import {
@@ -103,6 +104,10 @@ import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import {
+  computeRequestKey,
+  MerkleServiceAccountStorageImpl,
+} from "@/impls/merkle-account-data-storage-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -460,29 +465,20 @@ export class HostFunctions {
     const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
-      //console.log(
-      //  "\x1b[36m deleting key",
-      //  Uint8ArrayJSONCodec.toJSON(bold_k),
-      //  "\x1b[0m",
-      //  args.s,
-      //);
+      log(
+        `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s}`,
+        process.env.DEBUG_TRACES === "true",
+      );
       bold_a.storage.delete(bold_k);
     } else if (
       vo.fitsInU32() &&
       vz.fitsInU32() &&
       context.memory.canRead(vo.checked_u32(), vz.checked_u32())
     ) {
-      // second bracket
-      //console.log(
-      //  "\x1b[36m writing key",
-      //  Uint8ArrayJSONCodec.toJSON(bold_k),
-      //  "\x1b[0m",
-      //  args.s,
-      //  Uint8ArrayJSONCodec.toJSON(
-      //    context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
-      //  ),
-      //  context.gas,
-      //);
+      log(
+        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.checked_u32(), vz.checked_u32()))}`,
+        process.env.DEBUG_TRACES === "true",
+      );
       bold_a.storage.set(
         bold_k,
         context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
@@ -518,6 +514,7 @@ export class HostFunctions {
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.NONE)];
     }
+    debugger;
     const v = encodeWithCodec(serviceAccountCodec, {
       codeHash: bold_a.codeHash,
       balance: bold_a.balance,
@@ -1469,21 +1466,34 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     } else {
       const [x, y, w] = xslhz;
+      log(
+        `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.checked_u32()))}`,
+        process.env.DEBUG_TRACES === "true",
+      );
       if (
         xslhz.length === 0 ||
         (xslhz.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION)
       ) {
+        log(
+          `l=0 or l=2 but expired... Deleting preimage`,
+          process.env.DEBUG_TRACES === "true",
+        );
         x_bold_s.requests.delete(h, z.checked_u32());
-        // if (x_bold_s.requests.get(h)!.size === 0) {
-        //   x_bold_s.requests.delete(h);
-        // }
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
+        log(
+          `l=1... adding tau=${args.tau.value}`,
+          process.env.DEBUG_TRACES === "true",
+        );
         x_bold_s.requests.set(h, z.checked_u32(), toTagged([x, args.tau]));
       } else if (
         xslhz.length === 3 &&
         y.value < args.tau.value - PREIMAGE_EXPIRATION
       ) {
+        log(
+          `l=3 but expired... removing oldest tau`,
+          process.env.DEBUG_TRACES === "true",
+        );
         x_bold_s.requests.set(h, z.checked_u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
