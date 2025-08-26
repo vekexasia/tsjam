@@ -653,6 +653,7 @@ export class Instructions {
     { rA, wB, vX }: TwoRegOneImmArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
+    // log({ rA, wB, vX }, true);
     const location = toSafeMemoryAddress(wB + vX);
     if (!context.execution.memory.canRead(location, 1)) {
       return handleMemoryFault(

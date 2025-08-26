@@ -36,17 +36,18 @@ export const basicInvocation = (
 } => {
   // how to handle errors here?
   let intermediateState = executionContext;
-  const idx = 1;
+  let idx = 1;
   while (intermediateState.gas > 0) {
+    const curPointer = intermediateState.instructionPointer;
     const out = pvmSingleStep(bold_p, intermediateState);
-    //if (process.env.DEBUG_STEPS === "true") {
-    //  const ip = intermediateState.instructionPointer;
-    //  const ix = bold_p.parsedProgram.ixAt(ip);
-    //  log(
-    //    `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(out.p_context)}`,
-    //    true,
-    //  );
-    //}
+    if (process.env.DEBUG_STEPS === "true") {
+      const ip = curPointer;
+      const ix = bold_p.parsedProgram.ixAt(curPointer);
+      log(
+        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(out.p_context)}`,
+        true,
+      );
+    }
     if (typeof out.exitReason !== "undefined") {
       log("exitReson != empty", process.env.DEBUG_STEPS === "true");
       log(out.exitReason.toString(), process.env.DEBUG_STEPS === "true");

@@ -12,6 +12,7 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { MemoryContent, PVMHeap, PVMMemory } from "./pvm-memory";
+import { log } from "@/utils";
 
 // constants defined in $(0.7.1 - A.39)
 const Zz = 2 ** 16;
@@ -127,6 +128,10 @@ export const programInitialization = (
     to: number;
     kind: PVMMemoryAccessKind.Write | PVMMemoryAccessKind.Read;
   }) => {
+    //log(
+    //  `ACL from ${conf.from.toString(16)} to ${conf.to.toString(16)} as ${conf.kind}`,
+    //  true,
+    //);
     for (let i = conf.from; i < conf.to; i += Zp) {
       // page, kind
       acl.set(Math.floor(i / Zp), conf.kind);

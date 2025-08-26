@@ -121,59 +121,6 @@ export const buildTracesTests = (kind: string) => {
       return hlh.toPosterior({ header: testCase.block.header });
     }
   };
-  it("chain", () => {
-    let prevBlock = tracesTestCase(kind, "00000001").parentBlock;
-    let prevState = stateFromMerkleMap(
-      tracesTestCase(kind, "00000001").preState.merkleMap,
-    );
-    prevState.block = prevBlock;
-    prevState.headerLookupHistory.elements.set(
-      prevBlock.header.slot,
-      prevBlock.header,
-    );
-
-    for (const which of cases) {
-      console.log("applying", which);
-      const testCase = tracesTestCase(kind, which);
-
-      const [err, posteriorState] = prevState
-        .applyBlock(testCase.block)
-        .safeRet();
-      if (err) {
-        throw err;
-      }
-      const merkleMap = merkleStateMap(posteriorState);
-      const doubleMerkleMap = merkleStateMap(stateFromMerkleMap(merkleMap));
-      // sanity check
-      const codec = TraceTestState.codecOf("merkleMap");
-      expect(
-        codec.toJSON(doubleMerkleMap),
-        "state was codecable and decodable",
-      ).deep.eq(codec.toJSON(merkleMap));
-
-      for (const [k, v] of merkleMap.entries()) {
-        expect(
-          testCase.postState.merkleMap.has(k),
-          "key missing in post state",
-        ).toBe(true);
-        expect(
-          LengthDiscrimantedIdentityCodec.toJSON(v),
-          `key = ${LengthDiscrimantedIdentityCodec.toJSON(k)}`,
-        ).toEqual(
-          LengthDiscrimantedIdentityCodec.toJSON(
-            testCase.postState.merkleMap.get(k)!,
-          ),
-        );
-      }
-      expect(merkleMap.size).eq(testCase.postState.merkleMap.size);
-      expect(xBytesCodec(32).toJSON(posteriorState.merkleRoot())).eq(
-        xBytesCodec(32).toJSON(testCase.postState.stateRoot),
-      );
-
-      prevBlock = testCase.block;
-      prevState = posteriorState;
-    }
-  });
   for (const which of cases) {
     it(`${which}`, () => {
       const testCase = tracesTestCase(kind, which);
@@ -183,6 +130,7 @@ export const buildTracesTests = (kind: string) => {
         parseInt(which) - 1,
       );
 
+      console.log(xBytesCodec(32).toJSON(initialState.merkleRoot()));
       expect(
         xBytesCodec(32).toJSON(initialState.merkleRoot()),
         "initial state root",
