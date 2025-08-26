@@ -66,7 +66,7 @@ export const regFn = <Args, Out>(conf: {
       // $(0.7.1 - B.18 / B.20 / B.22) | first bracket
       return [IxMod.outOfGas()];
     }
-    return [...conf.fn.execute(ctx, args), IxMod.gas(gas)];
+    return [IxMod.gas(gas), ...conf.fn.execute(ctx, args)];
   };
 
   FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn.identifier);

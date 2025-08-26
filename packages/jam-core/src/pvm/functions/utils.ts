@@ -13,7 +13,8 @@ import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
-import { cloneCodecable } from "@tsjam/codec";
+import { BufferJSONCodec, cloneCodecable } from "@tsjam/codec";
+import { log } from "@/utils";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -76,6 +77,12 @@ export const applyMods = <T extends object>(
       );
       if (typeof firstUnwriteable === "undefined") {
         newCtx.memory = (newCtx.memory as PVMMemory).clone();
+        log(
+          `✏️ Mem[${mod.data.from.toString(16)}..${
+            mod.data.data.length
+          }] = <${BufferJSONCodec().toJSON(<any>mod.data.data)}>`,
+          true,
+        );
         newCtx.memory.setBytes(mod.data.from, mod.data.data);
       } else {
         const r = applyMods(newCtx, out, [

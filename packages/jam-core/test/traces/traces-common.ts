@@ -203,7 +203,10 @@ export const buildTracesTests = (kind: string) => {
 
       const merkleMap = merkleStateMap(posteriorState);
       const staMM = stateFromMerkleMap(merkleMap);
-      debugger;
+
+      expect(staMM.statistics.toJSON()).deep.eq(
+        stateFromMerkleMap(testCase.postState.merkleMap).statistics.toJSON(),
+      );
       const doubleMerkleMap = merkleStateMap(staMM);
 
       // sanity check

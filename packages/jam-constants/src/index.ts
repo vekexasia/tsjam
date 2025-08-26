@@ -192,7 +192,7 @@ export const TRANSFER_MEMO_SIZE = 128;
  * `D` in the paper
  * $(0.7.1 - B.3)
  */
-export const PREIMAGE_EXPIRATION = 19_200;
+export let PREIMAGE_EXPIRATION = 19_200;
 
 /**
  * `WE` in the paper
@@ -244,7 +244,7 @@ export const TOTAL_GAS_IS_AUTHORIZED = 50_000_000n;
 /**
  * `GT`
  */
-export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
+export let TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
 // $(0.7.1 - 4.25)
 export const Zp = 2 ** 12;
 
@@ -277,6 +277,10 @@ export function initConstants(mode?: "full" | "tiny") {
   MAX_TICKETS_PER_VALIDATOR = <2>v.MAX_TICKETS_PER_VALIDATOR;
   LOTTERY_MAX_SLOT = <500>v.LOTTERY_MAX_SLOT;
   VALIDATOR_CORE_ROTATION = <10>v.VALIDATOR_CORE_ROTATION;
+  TOTAL_GAS_ACCUMULATION_ALL_CORES = <3_500_000_000n>(
+    v.TOTAL_GAS_ACCUMULATION_ALL_CORES
+  );
+  PREIMAGE_EXPIRATION = <19_200>v.PREIMAGE_EXPIRATION;
   CURRENT_MODE = m;
 }
 

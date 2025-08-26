@@ -335,6 +335,7 @@ export class HostFunctions {
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     let bold_a: ServiceAccountImpl | undefined;
     const w7 = context.registers.w7();
+    debugger;
     if (Number(w7) === args.s || w7.value === 2n ** 64n - 1n) {
       bold_a = args.bold_s;
     } else if (w7.fitsInU32() && args.bold_d.has(w7.checked_u32())) {
@@ -353,10 +354,6 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    if (!context.memory.canWrite(o.value, 32)) {
-      return [IxMod.panic()];
-    }
-
     if (typeof bold_a === "undefined" || !bold_a.preimages.has(hash)) {
       return [IxMod.w7(HostCallResult.NONE)];
     }
@@ -372,6 +369,9 @@ export class HostFunctions {
     // length
     const l = w11.value < vLength - f ? w11.value : vLength - f;
 
+    if (false === context.memory.canWrite(o.value, Number(l))) {
+      return [IxMod.panic()];
+    }
     return [
       IxMod.w7(bold_v.length),
       IxMod.memory(o.value, bold_v.subarray(Number(f), Number(f + l))),
@@ -533,12 +533,13 @@ export class HostFunctions {
       parent: bold_a.parent,
     });
 
-    let f = Number(context.registers.w11());
+    // https://github.com/gavofyork/graypaper/pull/480
+    let f = Number(context.registers.w9());
     if (f > v.length) {
       f = v.length;
     }
 
-    let l = Number(context.registers.w12());
+    let l = Number(context.registers.w10());
     if (l > v.length - f) {
       l = v.length - f;
     }

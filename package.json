@@ -4,8 +4,9 @@
   "scripts": {
     "lint": "eslint --fix packages/*/src/**/*.ts",
     "test:tiny": "cross-env JAM_CONSTANTS=tiny yarn vitest run",
+    "trace:tiny": "cross-env DEBUG_FS=true DEBUG_STEPS=true DEBUG_TRACES=true yarn test:tiny",
     "test:full": "cross-env JAM_CONSTANTS=full yarn vitest run",
-    "debugtest:tiny": "cross-env JAM_CONSTANTS=tiny DEBUG_STEPS=true yarn vitest run --inspect-brk=127.0.0.1:3000 --no-file-parallelism",
+    "debugtest:tiny": "cross-env JAM_CONSTANTS=tiny yarn vitest run --inspect-brk=127.0.0.1:3000 --no-file-parallelism",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "build:one": "yarn workspace @tsjam/$0 build",
