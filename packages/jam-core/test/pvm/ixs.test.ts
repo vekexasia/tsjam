@@ -11,10 +11,14 @@ import {
   u32,
 } from "@tsjam/types";
 import JSONBig from "json-bigint";
-import { basicInvocation } from "@/pvm/invocations/basic";
+import { basicInvocation, deblobProgram } from "@/pvm/invocations/basic";
 import { createEvContext } from "./mocks";
 import { PVMMemory } from "@/pvm/pvm-memory";
-import { PVMRegisterImpl } from "@/index";
+import {
+  PVMExitReasonImpl,
+  PVMProgramExecutionContextImpl,
+  PVMRegisterImpl,
+} from "@/index";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
 describe("pvm", () => {
@@ -60,29 +64,36 @@ describe("pvm", () => {
           )),
       );
 
-    const r = basicInvocation(
-      <PVMProgramCode>new Uint8Array(json.program),
-      context.execution,
-    );
-    if (r.exitReason.isPanic()) {
+    const res = deblobProgram(<PVMProgramCode>new Uint8Array(json.program));
+    let exitReason: PVMExitReasonImpl;
+    let outContext: PVMProgramExecutionContextImpl;
+    if (res instanceof PVMExitReasonImpl) {
+      exitReason = res;
+      outContext = context.execution;
+    } else {
+      const r = basicInvocation(res, context.execution);
+      outContext = r.context;
+      exitReason = r.exitReason;
+    }
+    if (exitReason.isPanic()) {
       expect("panic").toEqual(json["expected-status"]);
-    } else if (r.exitReason.isHalt()) {
+    } else if (exitReason.isHalt()) {
       expect("halt").toEqual(json["expected-status"]);
-    } else if (r.exitReason.isOutOfGas()) {
+    } else if (exitReason.isOutOfGas()) {
       expect("out-of-gas").toEqual(json["expected-status"]);
-    } else if (r.exitReason.isPageFault()) {
+    } else if (exitReason.isPageFault()) {
       expect("page-fault").toEqual(json["expected-status"]);
-      expect(r.exitReason.address).toEqual(json["expected-page-fault-address"]);
+      expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
-    expect(r.context.instructionPointer, "instruction pointer").toEqual(
+    expect(outContext.instructionPointer, "instruction pointer").toEqual(
       json["expected-pc"],
     );
-    expect(r.context.registers.elements.map((a) => a.value)).toEqual(
+    expect(outContext.registers.elements.map((a) => a.value)).toEqual(
       json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
     );
     for (const { address, contents } of json["expected-memory"]) {
-      expect(r.context.memory.getBytes(address, contents.length)).toEqual(
+      expect(outContext.memory.getBytes(address, contents.length)).toEqual(
         new Uint8Array(contents),
       );
     }

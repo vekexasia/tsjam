@@ -4,6 +4,7 @@ import { binaryCodec, jsonCodec } from "@/decorators/decorators";
 import { LittleEndian } from "@/ints/little-endian";
 import { BigIntJSONCodec, NumberJSONCodec } from "@/json/codecs";
 import { u16, u32, u8 } from "@tsjam/types";
+import { toBigIntLE, toBufferLE } from "bigint-buffer";
 import assert from "node:assert";
 
 /**
@@ -16,7 +17,8 @@ export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
       bytes.length >= sub,
       `bytes length=${bytes.length} must be >= sub=${sub}`,
     );
-    return LittleEndian.encode(value, bytes.subarray(0, sub));
+    bytes.set(toBufferLE(value, sub));
+    return sub; // LittleEndian.encode(value, bytes.subarray(0, sub));
   },
   decode: (bytes: Uint8Array): { value: T; readBytes: number } => {
     if (bytes.length < sub) {
@@ -24,9 +26,8 @@ export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
       padded.set(bytes);
       return <{ value: T; readBytes: number }>LittleEndian.decode(padded);
     }
-    return <{ value: T; readBytes: number }>(
-      LittleEndian.decode(bytes.subarray(0, sub))
-    );
+    const value: T = <T>toBigIntLE(<Buffer>bytes.subarray(0, sub));
+    return { value, readBytes: sub };
   },
   encodedSize: (): number => {
     return sub;

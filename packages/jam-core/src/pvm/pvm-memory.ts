@@ -96,10 +96,10 @@ export class PVMMemory implements IPVMMemory {
     const memory = this.#getPageMemory(page);
     const bytesToRead = Math.min(length, Zp - offset);
     const chunk = memory.subarray(offset, offset + bytesToRead);
-    log(
-      `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
-      true,
-    );
+    //log(
+    //  `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
+    //  true,
+    //);
     if (bytesToRead !== length) {
       const sub = this.#getBytes(
         toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),

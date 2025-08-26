@@ -3,7 +3,9 @@ import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
+import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
@@ -15,6 +17,7 @@ import { ValidatorsImpl } from "@/impls/validators-impl";
 import { WorkContextImpl } from "@/impls/work-context-impl";
 import { WorkItemImpl } from "@/impls/work-item-impl";
 import { type WorkPackageImpl } from "@/impls/work-package-impl";
+import { log } from "@/utils";
 import {
   asCodec,
   cloneCodecable,
@@ -25,7 +28,6 @@ import {
   E_sub_int,
   encodeWithCodec,
   LengthDiscrimantedIdentityCodec,
-  Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
 import {
@@ -96,14 +98,11 @@ import { toTagged, zeroPad } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import { IxMod } from "../instructions/utils";
-import { basicInvocation } from "../invocations/basic";
+import { basicInvocation, deblobProgram } from "../invocations/basic";
 import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
-import { log } from "@/utils";
-import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -461,12 +460,12 @@ export class HostFunctions {
     const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
-      console.log(
-        "\x1b[36m deleting key",
-        Uint8ArrayJSONCodec.toJSON(bold_k),
-        "\x1b[0m",
-        args.s,
-      );
+      //console.log(
+      //  "\x1b[36m deleting key",
+      //  Uint8ArrayJSONCodec.toJSON(bold_k),
+      //  "\x1b[0m",
+      //  args.s,
+      //);
       bold_a.storage.delete(bold_k);
     } else if (
       vo.fitsInU32() &&
@@ -474,16 +473,16 @@ export class HostFunctions {
       context.memory.canRead(vo.checked_u32(), vz.checked_u32())
     ) {
       // second bracket
-      console.log(
-        "\x1b[36m writing key",
-        Uint8ArrayJSONCodec.toJSON(bold_k),
-        "\x1b[0m",
-        args.s,
-        Uint8ArrayJSONCodec.toJSON(
-          context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
-        ),
-        context.gas,
-      );
+      //console.log(
+      //  "\x1b[36m writing key",
+      //  Uint8ArrayJSONCodec.toJSON(bold_k),
+      //  "\x1b[0m",
+      //  args.s,
+      //  Uint8ArrayJSONCodec.toJSON(
+      //    context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
+      //  ),
+      //  context.gas,
+      //);
       bold_a.storage.set(
         bold_k,
         context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
@@ -831,7 +830,16 @@ export class HostFunctions {
       registers: bold_w,
       memory: refineCtx.bold_m.get(Number(n))!.ram.clone(),
     });
-    const res = basicInvocation(refineCtx.bold_m.get(Number(n))!.code, pvmCtx);
+    const p = deblobProgram(refineCtx.bold_m.get(Number(n))!.code);
+    let res: {
+      context: PVMProgramExecutionContextImpl;
+      exitReason: PVMExitReasonImpl;
+    };
+    if (p instanceof PVMExitReasonImpl) {
+      res = { context: pvmCtx, exitReason: p };
+    } else {
+      res = basicInvocation(p, pvmCtx);
+    }
 
     // compute u*
     const newMemory = <PVMSingleModMemory["data"]>{
@@ -1601,8 +1609,7 @@ export class HostFunctions {
 
     formattedMessage += ` ${Buffer.from(message).toString("utf8")}`;
 
-    log(formattedMessage, true);
-    console.log(formattedMessage);
+    log(formattedMessage, process.env.DEBUG_TRACES === "true");
     return [];
   }
 }

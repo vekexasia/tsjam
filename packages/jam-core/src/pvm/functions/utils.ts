@@ -49,10 +49,11 @@ export const applyMods = <T extends object>(
   out: T;
   exitReason?: PVMExitReasonImpl;
 } => {
-  const newCtx = new PVMProgramExecutionContextImpl({
-    ...ctx,
-    registers: cloneCodecable(ctx.registers),
-  });
+  // const newCtx = new PVMProgramExecutionContextImpl({
+  //   ...ctx,
+  //   registers: cloneCodecable(ctx.registers),
+  // });
+  const newCtx = ctx;
   let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)
@@ -76,13 +77,13 @@ export const applyMods = <T extends object>(
         mod.data.data.length,
       );
       if (typeof firstUnwriteable === "undefined") {
-        newCtx.memory = (newCtx.memory as PVMMemory).clone();
-        log(
-          `✏️ Mem[${mod.data.from.toString(16)}..${
-            mod.data.data.length
-          }] = <${BufferJSONCodec().toJSON(<any>mod.data.data)}>`,
-          true,
-        );
+        // newCtx.memory = (newCtx.memory as PVMMemory).clone();
+        //log(
+        //  `✏️ Mem[${mod.data.from.toString(16)}..${
+        //    mod.data.data.length
+        //  }] = <${BufferJSONCodec().toJSON(<any>mod.data.data)}>`,
+        //  true,
+        //);
         newCtx.memory.setBytes(mod.data.from, mod.data.data);
       } else {
         const r = applyMods(newCtx, out, [
