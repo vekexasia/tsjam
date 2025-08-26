@@ -49,11 +49,12 @@ export const applyMods = <T extends object>(
   out: T;
   exitReason?: PVMExitReasonImpl;
 } => {
-  const newCtx = new PVMProgramExecutionContextImpl({
-    ...ctx,
-    registers: cloneCodecable(ctx.registers),
-  });
-  // const newCtx = ctx;
+  // const newCtx = new PVMProgramExecutionContextImpl({
+  //   ...ctx,
+  //   registers: cloneCodecable(ctx.registers),
+  // });
+  const originalPointer = ctx.instructionPointer;
+  const newCtx = ctx;
   let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)
@@ -87,7 +88,7 @@ export const applyMods = <T extends object>(
         newCtx.memory.setBytes(mod.data.from, mod.data.data);
       } else {
         const r = applyMods(newCtx, out, [
-          ...IxMod.pageFault(firstUnwriteable, ctx),
+          ...IxMod.pageFault(firstUnwriteable, originalPointer),
         ]);
         exitReason = r.exitReason;
         newCtx.instructionPointer = r.ctx.instructionPointer;

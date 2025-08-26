@@ -1280,5 +1280,8 @@ const handleMemoryFault = (
   if (location < 2 ** 16) {
     return [IxMod.panic()];
   }
-  return IxMod.pageFault(<u32>(Zp * Math.floor(location % Zp)), context);
+  return IxMod.pageFault(
+    <u32>(Zp * Math.floor(location % Zp)),
+    context.instructionPointer,
+  );
 };

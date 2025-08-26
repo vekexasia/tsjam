@@ -47,14 +47,14 @@ export const IxMod = {
   }),
   pageFault: (
     location: u32,
-    context: PVMProgramExecutionContext,
+    originalPointer: u32,
   ): [
     PVMSingleModGas,
     PVMSingleModPointer,
     PVMExitReasonMod<PVMExitReasonImpl>,
   ] => [
     IxMod.gas(TRAP_COST), // trap
-    IxMod.ip(context.instructionPointer), // override any other skip
+    IxMod.ip(originalPointer), // override any other skip
     { type: "exit", data: PVMExitReasonImpl.pageFault(location) },
   ],
   skip: (ip: u32, amont: number): PVMSingleModPointer => ({
