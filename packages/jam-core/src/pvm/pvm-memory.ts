@@ -1,7 +1,6 @@
 import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
-import { log } from "@/utils";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
 /**
@@ -192,7 +191,7 @@ export class PVMMemory implements IPVMMemory {
         // allocate one page
         this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
         this.#innerMemoryContent.set(
-          this.heap.end + i * Zp,
+          this.heap.end / Zp + i,
           new Uint8Array(Zp).fill(0),
         );
       }

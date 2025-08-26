@@ -32,6 +32,7 @@ import { SlotImpl, TauImpl } from "./impls/slot-impl";
 import { ValidatorsImpl } from "./impls/validators-impl";
 import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm/invocations/accumulate";
+import { join } from "path";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -266,20 +267,29 @@ export const parallelizedAccumulation = (
   ];
 
   const bold_u = <GasUsed>{ elements: [] };
-  const accumulatedServices: Array<AccumulationOutImpl> = [];
+  const accumulatedServices: Map<ServiceIndex, AccumulationOutImpl> = new Map();
   const p_bold_t: DeferredTransfersImpl = new DeferredTransfersImpl([]);
   const bold_b = new LastAccOutsImpl([]);
 
-  bold_s.forEach((s) => {
-    const acc = singleServiceAccumulation(
-      accState,
-      transfers,
-      works,
-      bold_f,
-      s,
-      deps,
-    );
+  const accumulateS = (s: ServiceIndex) => {
+    let accRes = accumulatedServices.get(s);
+    if (typeof accRes === "undefined") {
+      accRes = singleServiceAccumulation(
+        accState,
+        transfers,
+        works,
+        bold_f,
+        s,
+        deps,
+      );
+      accumulatedServices.set(s, accRes);
+    }
 
+    return accRes;
+  };
+
+  bold_s.forEach((s) => {
+    const acc = accumulateS(s);
     bold_u.elements.push({ serviceIndex: s, gasUsed: acc.gasUsed });
 
     if (typeof acc.yield !== "undefined") {
@@ -288,8 +298,6 @@ export const parallelizedAccumulation = (
 
     // we concat directly here
     p_bold_t.elements.push(...acc.deferredTransfers.elements);
-
-    accumulatedServices.push(acc);
   });
 
   const delta: DeltaImpl = accState.accounts.clone();
@@ -300,7 +308,7 @@ export const parallelizedAccumulation = (
   const n = new DeltaImpl();
   for (let i = 0; i < bold_s.length; i++) {
     const s = bold_s[i];
-    const acc = accumulatedServices[i];
+    const acc = accumulatedServices.get(s)!;
     for (const k of acc.postState.accounts.services()) {
       // if k is a new service and it's not the current one
       if (!delta.has(k) || k === s) {
@@ -319,77 +327,37 @@ export const parallelizedAccumulation = (
     tmpDelta.delete(k);
   }
   const delta_prime = tmpDelta.preimageIntegration(
-    accumulatedServices.map((a) => a.provisions).flat(),
+    [...accumulatedServices.values()].map((a) => a.provisions).flat(),
     deps.p_tau,
   );
 
-  const eStar = singleServiceAccumulation(
-    accState,
-    transfers,
-    works,
-    bold_f,
-    accState.manager,
-    deps,
-  ).postState;
+  const eStar = accumulateS(accState.manager).postState;
 
   const a_prime = structuredClone(accState.assigners); // safe as of 0.7.1
   for (let c = <CoreIndex>0; c < CORES; c++) {
     if (accState.assigners[c] !== eStar.assigners[c]) {
       // if the assigner has changed, we need to accumulate it
       // otherwise we can just copy the state
-      a_prime[c] = singleServiceAccumulation(
-        accState,
-        transfers,
-        works,
-        bold_f,
-        eStar.assigners[c],
-        deps,
-      ).postState.assigners[c];
+      a_prime[c] = accumulateS(eStar.assigners[c]).postState.assigners[c];
     }
   }
 
   let v_prime = structuredClone(accState.delegator); // safe as of 0.7.1
   if (accState.delegator !== eStar.delegator) {
-    v_prime = singleServiceAccumulation(
-      accState,
-      transfers,
-      works,
-      bold_f,
-      accState.delegator,
-      deps,
-    ).postState.delegator;
+    v_prime = accumulateS(accState.delegator).postState.delegator;
   }
 
   let r_prime = structuredClone(accState.registrar); // safe as of 0.7.1
   if (accState.registrar !== eStar.registrar) {
-    r_prime = singleServiceAccumulation(
-      accState,
-      transfers,
-      works,
-      bold_f,
-      accState.registrar,
-      deps,
-    ).postState.registrar;
+    r_prime = accumulateS(accState.registrar).postState.registrar;
   }
 
-  const i_prime = singleServiceAccumulation(
-    accState,
-    transfers,
-    works,
-    bold_f,
-    accState.delegator,
-    deps,
-  ).postState.stagingSet;
+  const i_prime = accumulateS(accState.delegator).postState.stagingSet;
 
   const q_prime = new AuthorizerQueueImpl({ elements: toTagged([]) });
   for (let c = 0; c < CORES; c++) {
-    q_prime.elements[c] = singleServiceAccumulation(
-      accState,
-      transfers,
-      works,
-      bold_f,
+    q_prime.elements[c] = accumulateS(
       accState.assigners[c],
-      deps,
     ).postState.authQueue.elements[c];
   }
 
