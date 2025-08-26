@@ -7,7 +7,7 @@ export const JAM_COMMON_ERA = 1704110400;
  * referred as `P` in the paper
  * also known as slot period
  */
-export const BLOCK_TIME = 6;
+export let BLOCK_TIME = 6;
 /**
  * `H`
  */
@@ -202,7 +202,7 @@ export const ERASURECODE_BASIC_SIZE = 684;
 /**
  * `WP` in the paper
  */
-export const ERASURECODE_EXPORTED_SIZE = 6;
+export let ERASURECODE_EXPORTED_SIZE = 6;
 
 /**
  * `WG` in the paper
@@ -234,7 +234,7 @@ export const TOTAL_GAS_ACCUMULATION_LOGIC = 10_000_000n;
 /**
  * `GR`
  */
-export const TOTAL_GAS_REFINEMENT_LOGIC = 5_000_000_000n;
+export let TOTAL_GAS_REFINEMENT_LOGIC = 5_000_000_000n;
 
 /**
  * `GI`
@@ -261,26 +261,28 @@ export const MINIMUM_PUBLIC_SERVICE_INDEX = 2 ** 16;
 let CURRENT_MODE: "full" | "tiny" = "full";
 
 // Synchronous initialization: import both variants statically and pick one
-import * as _full from "./variants/full";
 import * as _tiny from "./variants/tiny";
 
 export function initConstants(mode?: "full" | "tiny") {
   const m = mode ?? (process.env.JAM_CONSTANTS === "tiny" ? "tiny" : "full");
-  if (m === CURRENT_MODE) return;
-  const v = m === "tiny" ? _tiny : _full;
+  if (m === "full") return;
+  const v = _tiny;
 
   NUMBER_OF_VALIDATORS = <1023>v.NUMBER_OF_VALIDATORS;
-  MINIMUM_VALIDATORS = <683>v.MINIMUM_VALIDATORS;
   CORES = <341>v.CORES;
+  PREIMAGE_EXPIRATION = <19_200>v.PREIMAGE_EXPIRATION;
+  BLOCK_TIME = <6>v.BLOCK_TIME;
   EPOCH_LENGTH = <600>v.EPOCH_LENGTH;
-  MAX_TICKETS_PER_BLOCK = <16>v.MAX_TICKETS_PER_BLOCK;
-  MAX_TICKETS_PER_VALIDATOR = <2>v.MAX_TICKETS_PER_VALIDATOR;
   LOTTERY_MAX_SLOT = <500>v.LOTTERY_MAX_SLOT;
+  MAX_TICKETS_PER_VALIDATOR = <2>v.MAX_TICKETS_PER_VALIDATOR;
+  MAX_TICKETS_PER_BLOCK = <16>v.MAX_TICKETS_PER_BLOCK;
   VALIDATOR_CORE_ROTATION = <10>v.VALIDATOR_CORE_ROTATION;
+  ERASURECODE_EXPORTED_SIZE = <6>v.ERASURECODE_EXPORTED_SIZE;
   TOTAL_GAS_ACCUMULATION_ALL_CORES = <3_500_000_000n>(
     v.TOTAL_GAS_ACCUMULATION_ALL_CORES
   );
-  PREIMAGE_EXPIRATION = <19_200>v.PREIMAGE_EXPIRATION;
+  TOTAL_GAS_REFINEMENT_LOGIC = <5_000_000_000n>v.TOTAL_GAS_REFINEMENT_LOGIC;
+  MINIMUM_VALIDATORS = <683>v.MINIMUM_VALIDATORS;
   CURRENT_MODE = m;
 }
 
