@@ -9,6 +9,7 @@ import {
   Version,
 } from "@tsjam/fuzzer-target";
 import net from "net";
+import { parseArgs } from "node:util";
 
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
@@ -39,7 +40,17 @@ import { GENESIS, GENESIS_STATE } from "./genesis";
 import assert from "assert";
 import path from "path";
 import { GenesisTrace, loadTrace, TraceState } from "./trace-stuff";
-const SOCKET_PATH = "/tmp/jam_target.sock";
+
+// Parse CLI args for socket path (fallback to env, then default)
+const { values: cliArgs } = parseArgs({
+  options: {
+    socket: { type: "string", short: "s" },
+  },
+});
+const SOCKET_PATH =
+  (cliArgs.socket as string | undefined) ??
+  process.env.SOCKET_PATH ??
+  "/tmp/jam_target.sock";
 const sendStuff = (
   message: Message,
   responseType: MessageType,

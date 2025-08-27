@@ -16,8 +16,19 @@ import { Message, MessageCodec, MessageType } from "./proto/message";
 import { PeerInfo } from "./proto/peer-info";
 import { State } from "./proto/state";
 import { SetState } from "./proto/set-state";
+import { parseArgs } from "node:util";
 
-const SOCKET_PATH = "/tmp/jam_target.sock";
+// Parse CLI args for socket path (fallback to env, then default)
+const { values: cliArgs } = parseArgs({
+  options: {
+    socket: { type: "string", short: "s" },
+  },
+});
+const SOCKET_PATH =
+  (cliArgs.socket as string | undefined) ??
+  process.env.SOCKET_PATH ??
+  "/tmp/jam_target.sock";
+
 if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
 
 let state: JamStateImpl | null = null;
