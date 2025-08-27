@@ -36,7 +36,6 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { IxMod, smod, X_4, X_8, X_fn } from "./utils";
-import { log } from "@/utils";
 
 /**
  * This class holds the ixs implementations.

@@ -2,7 +2,6 @@ import { Zp } from "@tsjam/constants";
 import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
-import { log } from "@/utils";
 
 /**
  * Defines the memory content of a single page

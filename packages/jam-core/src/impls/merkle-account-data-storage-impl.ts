@@ -1,6 +1,5 @@
 import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
 import { stateKey } from "@/merklization/utils";
-import { log } from "@/utils";
 import {
   asCodec,
   BaseJamCodecable,

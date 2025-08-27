@@ -32,7 +32,6 @@ import { SlotImpl, TauImpl } from "./impls/slot-impl";
 import { ValidatorsImpl } from "./impls/validators-impl";
 import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm/invocations/accumulate";
-import { join } from "path";
 
 /**
  * Decides which reports to accumulate and accumulates them

@@ -21,7 +21,6 @@ import { SafroleStateImpl } from "@/impls/safrole-state-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { ValidatorsImpl } from "@/impls/validators-impl";
-import { log } from "@/utils";
 import { E_4_int, E_sub_int, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Gas, ServiceIndex, StateKey, u16, u32, u64 } from "@tsjam/types";

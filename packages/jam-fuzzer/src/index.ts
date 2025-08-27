@@ -16,7 +16,6 @@ import {
   IdentityMap,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
-  JamHeaderImpl,
   JamStateImpl,
   merkleStateMap,
   SlotImpl,
@@ -32,15 +31,14 @@ import {
   u8,
   Validated,
 } from "@tsjam/types";
+import fs from "fs";
 import packageJSON from "../package.json";
 import { produceBlock } from "./block-generator";
 import { GENESIS, GENESIS_STATE } from "./genesis";
-import fs from "fs";
 
+import assert from "assert";
 import path from "path";
 import { GenesisTrace, loadTrace, TraceState } from "./trace-stuff";
-import assert from "assert";
-import { dir, trace } from "console";
 const SOCKET_PATH = "/tmp/jam_target.sock";
 const sendStuff = (
   message: Message,
@@ -168,6 +166,7 @@ const checkState = async (
   return true;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const generateBlocks = async () => {
   let state: JamStateImpl = GENESIS_STATE;
   state = GENESIS_STATE;

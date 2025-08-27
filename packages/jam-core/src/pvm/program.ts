@@ -12,7 +12,6 @@ import {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { MemoryContent, PVMHeap, PVMMemory } from "./pvm-memory";
-import { log } from "@/utils";
 
 // constants defined in $(0.7.1 - A.39)
 const Zz = 2 ** 16;
