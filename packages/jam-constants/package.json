@@ -12,9 +12,7 @@
   },
   "exports": {
     ".": {
-      "node": {
-        "default": "./dist/node.esm.mjs"
-      },
+      "import": "./dist/node.esm.mjs",
       "types": "./dist/types/index.d.ts"
     }
   },

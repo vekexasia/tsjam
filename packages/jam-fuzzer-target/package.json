@@ -7,10 +7,13 @@
     "@tsjam/constants": "*",
     "@tsjam/core": "*",
     "neverthrow": "^8.2.0",
+    "nexe": "^5.0.0-beta.4",
     "type-fest": "^4.41.0"
   },
   "scripts": {
     "build": "npx rollup --config ./rollup.config.mjs",
+    "build:nexe": "npx nexe -i dist/cli.mjs -o jam-fuzzer-target --build --verbose --target=22.18.0 --make=-j8 --flags=\"--max-old-space-size=16384\"",
+    "build:deliverable": "yarn build && node scripts/build-deliverable.js",
     "lint": "npx eslint --ext .ts src test",
     "test": "vitest",
     "coverage": "vitest run --coverage",

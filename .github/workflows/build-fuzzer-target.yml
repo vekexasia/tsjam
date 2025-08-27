@@ -43,11 +43,10 @@ jobs:
             nexe-cache-${{ runner.os }}-${{ env.NODE_VERSION }}-
             nexe-cache-${{ runner.os }}-
 
-      - name: Compile fuzzer target with nexe
+      - name: Compile fuzzer target with nexe (package script)
         env:
           NODE_VERSION: 22.18.0
         run: |
-          INPUT=packages/jam-fuzzer-target/dist/cli.mjs
           # derive artifact name from package.json version and jam:protocolVersion
           VERSION=$(node -p "require('./packages/jam-fuzzer-target/package.json').version")
           PROTO=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
@@ -59,15 +58,8 @@ jobs:
           export NEXE_CACHE_DIR="$HOME/.cache/nexe"
           mkdir -p "$NEXE_CACHE_DIR"
 
-          if [ ! -f "$INPUT" ]; then
-            echo "Built input $INPUT not found; listing dist directory"
-            ls -la packages/jam-fuzzer-target/dist
-            exit 1
-          fi
-
-          # Try compiling targeting Node 22 linux x64; fall back to a generic build if target syntax differs
-          # Using a persistent cache directory helps subsequent runs avoid re-downloading/rebuilding Node.
-          npx nexe -i "$INPUT" -o "$OUT" --build --verbose --target=22.18.0 --make=-j8 
+          # Build the executable using the package-local script that also sets the output name
+          yarn workspace @tsjam/fuzzer-target build:deliverable
 
 
       - name: Upload artifact

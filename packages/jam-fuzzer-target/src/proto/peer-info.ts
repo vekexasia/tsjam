@@ -10,6 +10,7 @@ import {
 import { Version } from "./version";
 import { u8 } from "@tsjam/types";
 import packageJSON from "../../package.json";
+import { getConstantsMode } from "@tsjam/constants";
 
 const Utf8JSONCodec = {
   fromJSON(json: string) {
@@ -40,7 +41,7 @@ export class PeerInfo extends BaseJamCodecable {
 
   static build(): PeerInfo {
     const toRet = new PeerInfo();
-    toRet.name = "tsjam";
+    toRet.name = `tsjam-${packageJSON["version"]}-${getConstantsMode()}`;
     toRet.jamVersion = new Version();
     toRet.jamVersion.major = <u8>(
       parseInt(packageJSON["jam:protocolVersion"].split(".")[0])

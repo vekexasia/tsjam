@@ -16,3 +16,4 @@ docs/
 #!.yarn/cache
 .pnp.*
 test-runner-profile*
+packages/jam-fuzzer-target/jam-fuzzer-target-v0.7.0-proto0.7.0

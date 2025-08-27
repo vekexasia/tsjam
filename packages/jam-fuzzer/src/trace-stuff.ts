@@ -12,6 +12,7 @@ import {
   JamSignedHeaderImpl,
 } from "@tsjam/core";
 import type { StateKey, StateRootHash } from "@tsjam/types";
+import assert from "assert";
 
 @JamCodecable()
 export class TraceState extends BaseJamCodecable {
@@ -57,6 +58,12 @@ export class GenesisTrace extends BaseJamCodecable {
   state!: TraceState;
 }
 
-export const loadTrace = (jsonStr: string) => {
-  return TraceStep.fromJSON(JSON.parse(jsonStr));
+export const loadTrace = (bin: Uint8Array) => {
+  const toRet = TraceStep.decode(bin);
+
+  assert(
+    toRet.readBytes === bin.length,
+    `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
+  );
+  return toRet.value;
 };

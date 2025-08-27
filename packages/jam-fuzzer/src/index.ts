@@ -14,7 +14,9 @@ import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   IdentityMap,
+  JamBlockExtrinsicsImpl,
   JamBlockImpl,
+  JamHeaderImpl,
   JamStateImpl,
   merkleStateMap,
   SlotImpl,
@@ -36,8 +38,9 @@ import { GENESIS, GENESIS_STATE } from "./genesis";
 import fs from "fs";
 
 import path from "path";
-import { loadTrace, TraceState } from "./trace-stuff";
+import { GenesisTrace, loadTrace, TraceState } from "./trace-stuff";
 import assert from "assert";
+import { dir, trace } from "console";
 const SOCKET_PATH = "/tmp/jam_target.sock";
 const sendStuff = (
   message: Message,
@@ -227,54 +230,68 @@ const sendSingleBlockFromTrace = async () => {
     fs.existsSync(process.env.TRACE_PATH),
     `TRACE_PATH ${process.env.TRACE_PATH} does not exist`,
   );
-  console.log(`Loading trace from ${process.env.TRACE_PATH}`);
-  const trace = loadTrace(fs.readFileSync(process.env.TRACE_PATH, "utf8"));
-  const dir = path.dirname(process.env.TRACE_PATH!);
-  const files = fs.readdirSync(dir).filter((a) => a.endsWith(".json"));
-  const index = files.findIndex(
-    (a) => path.basename(a) === path.basename(process.env.TRACE_PATH!),
+  assert(
+    fs.statSync(process.env.TRACE_PATH).isDirectory(),
+    "TRACE_PATH is not a directory",
+  );
+  assert(
+    fs.existsSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
+    "genesis.json not found in TRACE_PATH",
   );
 
-  console.log(
-    `Loading prevTrace from ${path.join(dir, files[index - 1])} (index ${index})`,
-  );
-  const prevTrace = loadTrace(
-    fs.readFileSync(path.join(dir, files[index - 1]), "utf8"),
-  );
+  console.log(`Loading trace from ${process.env.TRACE_PATH}`);
+  const genesis = GenesisTrace.decode(
+    fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
+  ).value;
+
+  const files = fs
+    .readdirSync(process.env.TRACE_PATH)
+    .filter((a) => a.endsWith(".bin"))
+    .filter((a) => a !== "genesis.bin")
+    .sort((a, b) => a.localeCompare(b));
+
+  const state = stateFromMerkleMap(genesis.state.merkleMap);
+  state.block = new JamBlockImpl({
+    header: genesis.header,
+    extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
+  });
+
   const sr = await sendStuff(
     new Message({
       setState: new SetState({
-        header: prevTrace.block.header,
-        state: new State({ value: trace.preState.merkleMap }),
+        header: genesis.header,
+        state: new State({ value: genesis.state.merkleMap }),
       }),
     }),
     MessageType.STATE_ROOT,
   );
-
-  console.log("Checking pre-state");
-  console.log(BufferJSONCodec().toJSON(trace.preState.stateRoot));
-  console.log(TraceState.codecOf("merkleMap").toJSON(trace.preState.merkleMap));
-  if (Buffer.compare(trace.preState.stateRoot, sr.stateRoot!) !== 0) {
-    return await compareState(
-      trace.preState.merkleMap,
-      prevTrace.block.header.signedHash(),
-    );
+  if (Buffer.compare(sr.stateRoot!, genesis.state.stateRoot) !== 0) {
+    throw new Error("Genesis state root mismatch");
   }
-  console.log("Pre-state good, sending block");
 
-  const res = await sendStuff(
-    new Message({ importBlock: trace.block }),
-    MessageType.STATE_ROOT,
-  );
-
-  const isSuccess = await checkState(
-    { new: trace.postState, prev: trace.preState },
-    prevTrace.block.header.signedHash(),
-    res.stateRoot!,
-  );
-  if (!isSuccess) {
-    return;
+  for (const file of files) {
+    console.log(file);
+    const trace = loadTrace(
+      fs.readFileSync(path.join(process.env.TRACE_PATH, file)),
+    );
+    const sr = await sendStuff(
+      new Message({ importBlock: trace.block }),
+      MessageType.STATE_ROOT,
+    );
+    const isSuccess = await checkState(
+      {
+        new: trace.postState,
+        prev: trace.preState,
+      },
+      state.block!.header.signedHash(),
+      sr.stateRoot!,
+    );
+    if (!isSuccess) {
+      console.error("State mismatch at block", trace.block.header.slot);
+      return;
+    }
   }
 
   console.log("All good");
+  process.exit(0);
 };

@@ -58,6 +58,9 @@ const server = net.createServer((socket) => {
           header: message.setState!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
         });
+        state.headerLookupHistory = state.headerLookupHistory.toPosterior({
+          header: message.setState!.header,
+        });
         historyMap = new IdentityMap();
         historyMap.set(
           message.setState!.header.signedHash(),
