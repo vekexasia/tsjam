@@ -166,6 +166,8 @@ const checkState = async (
 ) => {
   if (Buffer.compare(state.new.stateRoot, responseStateRoot) !== 0) {
     console.log("State roots differ");
+    console.log("expected", BufferJSONCodec().toJSON(state.new.stateRoot));
+    console.log("received", BufferJSONCodec().toJSON(responseStateRoot));
     if (Buffer.compare(state.prev.stateRoot, responseStateRoot) === 0) {
       console.log("But previous state root matches");
       console.log("Block was not applied from target");
@@ -244,41 +246,59 @@ const sendSingleBlockFromTrace = async () => {
     fs.statSync(process.env.TRACE_PATH).isDirectory(),
     "TRACE_PATH is not a directory",
   );
-  assert(
-    fs.existsSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
-    "genesis.json not found in TRACE_PATH",
-  );
-
-  console.log(`Loading trace from ${process.env.TRACE_PATH}`);
-  const genesis = GenesisTrace.decode(
-    fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
-  ).value;
-
   const files = fs
     .readdirSync(process.env.TRACE_PATH)
     .filter((a) => a.endsWith(".bin"))
     .filter((a) => a !== "genesis.bin")
     .sort((a, b) => a.localeCompare(b));
 
-  const state = stateFromMerkleMap(genesis.state.merkleMap);
-  state.block = new JamBlockImpl({
-    header: genesis.header,
-    extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
-  });
+  let state: JamStateImpl;
+  if (fs.existsSync(path.join(process.env.TRACE_PATH, "genesis.bin"))) {
+    console.log(`Loading trace from ${process.env.TRACE_PATH}`);
+    const genesis = GenesisTrace.decode(
+      fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
+    ).value;
 
-  const sr = await sendStuff(
-    new Message({
-      setState: new SetState({
-        header: genesis.header,
-        state: new State({ value: genesis.state.merkleMap }),
+    state = stateFromMerkleMap(genesis.state.merkleMap);
+    state.block = new JamBlockImpl({
+      header: genesis.header,
+      extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
+    });
+
+    const sr = await sendStuff(
+      new Message({
+        setState: new SetState({
+          header: genesis.header,
+          state: new State({ value: genesis.state.merkleMap }),
+        }),
       }),
-    }),
-    MessageType.STATE_ROOT,
-  );
-  if (Buffer.compare(sr.stateRoot!, genesis.state.stateRoot) !== 0) {
-    throw new Error("Genesis state root mismatch");
-  }
+      MessageType.STATE_ROOT,
+    );
+    if (Buffer.compare(sr.stateRoot!, genesis.state.stateRoot) !== 0) {
+      throw new Error("Genesis state root mismatch");
+    }
+  } else {
+    console.log(`initing using file order`);
+    const initialTrace = loadTrace(
+      fs.readFileSync(path.join(process.env.TRACE_PATH, files[0])),
+    );
+    const sr = await sendStuff(
+      new Message({
+        setState: new SetState({
+          header: initialTrace.block.header,
+          state: new State({ value: initialTrace.postState.merkleMap }),
+        }),
+      }),
+      MessageType.STATE_ROOT,
+    );
 
+    if (Buffer.compare(sr.stateRoot!, initialTrace.postState.stateRoot) !== 0) {
+      throw new Error("initial state root mismatch");
+    }
+    state = stateFromMerkleMap(initialTrace.postState.merkleMap);
+    state.block = initialTrace.block;
+    files.splice(0, 1);
+  }
   for (const file of files) {
     console.log(file);
     const trace = loadTrace(
