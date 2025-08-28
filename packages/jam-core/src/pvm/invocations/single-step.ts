@@ -53,7 +53,7 @@ export const pvmSingleStep = (
 
   let args: unknown;
   try {
-    args = ix.decode(byteArgs, context);
+    args = ix.decode(byteArgs);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.warn(`Decoding error for ${ix.identifier}`, e.message);

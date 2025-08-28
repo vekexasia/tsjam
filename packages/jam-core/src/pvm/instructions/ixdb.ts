@@ -1,5 +1,7 @@
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { Gas, PVMIx, PVMIxDecodeFN, PVMIxReturnMods, u8 } from "@tsjam/types";
+import { HydratedArgs } from "./types";
+import { hydrateIxArgs } from "./hydrator";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown>>(),
@@ -33,8 +35,11 @@ export const regIx = <T>(
  */
 export const Ix = <
   Descriptor extends
-    | ((args: Args) => EvaluateReturn)
-    | ((args: Args, context: PVMIxEvaluateFNContextImpl) => EvaluateReturn),
+    | ((args: HydratedArgs<Args>) => EvaluateReturn)
+    | ((
+        args: HydratedArgs<Args>,
+        context: PVMIxEvaluateFNContextImpl,
+      ) => EvaluateReturn),
   Args,
   EvaluateReturn extends PVMIxReturnMods,
 >(
@@ -51,7 +56,17 @@ export const Ix = <
         opCode: opCode as u8,
         identifier: propertyKey,
         decode: decoder,
-        evaluate: descriptor.value!,
+        evaluate: function hydratedEvaluate(
+          args: HydratedArgs<Args>,
+          context: PVMIxEvaluateFNContextImpl,
+        ) {
+          return descriptor.value!.call(
+            this,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            hydrateIxArgs(<any>args, context),
+            context,
+          );
+        },
         gasCost: 1n as Gas,
       },
       (descriptor as { isBlockTermination: boolean })

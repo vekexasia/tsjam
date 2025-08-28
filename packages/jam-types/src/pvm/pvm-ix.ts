@@ -33,7 +33,7 @@ export interface PVMIx<Args> {
    * decode the full instruction from the bytes.
    * the byte array is chunked to include only the bytes of the instruction (included opcode)
    */
-  decode(bytes: Uint8Array, context: PVMIxEvaluateFNContext): Args;
+  decode(bytes: Uint8Array): Args;
 
   evaluate(args: Args, context: PVMIxEvaluateFNContext): PVMIxReturnMods;
   readonly gasCost: Gas;

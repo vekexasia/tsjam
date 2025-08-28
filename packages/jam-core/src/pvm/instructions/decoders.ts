@@ -10,8 +10,9 @@ import assert from "node:assert";
 import { readVarIntFromBuffer } from "../utils/varint";
 import { Z } from "../utils/zed";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { HydratedArgs } from "./types";
 
-export const NoArgIxDecoder = () => null;
+export const NoArgIxDecoder = () => ({});
 export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;
 
 // $(0.7.1 - A.21)
@@ -22,23 +23,20 @@ export const OneImmIxDecoder = (bytes: Uint8Array) => {
   return { vX: <u8>Number(readVarIntFromBuffer(bytes, lx as u8)) };
 };
 
-export type OneImmArgs = ReturnType<typeof OneImmIxDecoder>;
+export type OneImmArgs = HydratedArgs<ReturnType<typeof OneImmIxDecoder>>;
 
 // $(0.7.1 - A.22)
-export const OneRegOneExtImmArgsIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const OneRegOneExtImmArgsIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length > 0, "no input bytes");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
 
   const vX = E_8.decode(bytes.subarray(1, 1 + 8)).value;
 
-  return { rA, wA: context.execution.registers.elements[rA], vX };
+  return { rA, vX };
 };
 
-export type OneRegOneExtImmArgs = ReturnType<
-  typeof OneRegOneExtImmArgsIxDecoder
+export type OneRegOneExtImmArgs = HydratedArgs<
+  ReturnType<typeof OneRegOneExtImmArgsIxDecoder>
 >;
 
 /**
@@ -65,63 +63,53 @@ export const TwoImmIxDecoder = (bytes: Uint8Array) => {
   return { vX, vY };
 };
 
-export type TwoImmArgs = ReturnType<typeof TwoImmIxDecoder>;
+export type TwoImmArgs = HydratedArgs<ReturnType<typeof TwoImmIxDecoder>>;
 
 // $(0.7.1 - A.24)
-export const OneOffsetIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const OneOffsetIxDecoder = (bytes: Uint8Array) => {
   const lx = Math.min(4, bytes.length);
-  const vX =
-    BigInt(context.execution.instructionPointer) +
-    Z(lx, E_sub(lx).decode(bytes.subarray(0, lx)).value);
+  const ipOffsetRaw: i32 = <i32>(
+    Number(Z(lx, E_sub(lx).decode(bytes.subarray(0, lx)).value))
+  );
 
-  assert(vX >= 0n && vX <= 2n ** 32n, "jump location out of bounds");
-
-  return { vX: <u32>Number(vX) };
+  return { ipOffsetRaw };
 };
 
-export type OneOffsetArgs = ReturnType<typeof OneOffsetIxDecoder>;
+export type OneOffsetArgs = HydratedArgs<ReturnType<typeof OneOffsetIxDecoder>>;
 
 // $(0.7.1 - A.25)
-export const OneRegOneImmIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const OneRegOneImmIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length > 0, "no input bytes");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.max(0, bytes.length - 1));
   const vX = <PVMRegisterRawValue>(
     readVarIntFromBuffer(bytes.subarray(1), lx as u8)
   );
-  return { rA, vX, wA: context.execution.registers.elements[rA].value };
+  return { rA, vX };
 };
 
-export type OneRegOneImmArgs = ReturnType<typeof OneRegOneImmIxDecoder>;
+export type OneRegOneImmArgs = HydratedArgs<
+  ReturnType<typeof OneRegOneImmIxDecoder>
+>;
 
 // $(0.7.1 - A.26)
-export const OneRegTwoImmIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
-  const ra = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
+export const OneRegTwoImmIxDecoder = (bytes: Uint8Array) => {
+  const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.floor(bytes[0] / 16) % 8);
   assert(bytes.length >= lx + 1, "not enough bytes");
 
   const ly = Math.min(4, Math.max(0, bytes.length - 1 - lx));
   const vX = readVarIntFromBuffer(bytes.subarray(1, 1 + lx), lx as u8);
   const vY = readVarIntFromBuffer(bytes.subarray(1 + lx), ly as u8);
-  return { rA: ra, wA: context.execution.registers.elements[ra].value, vX, vY };
+  return { rA, vX, vY };
 };
 
-export type OneRegTwoImmArgs = ReturnType<typeof OneRegTwoImmIxDecoder>;
+export type OneRegTwoImmArgs = HydratedArgs<
+  ReturnType<typeof OneRegTwoImmIxDecoder>
+>;
 //
 // $(0.7.1 - A.27)
-export const OneRegOneIMMOneOffsetIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const OneRegOneIMMOneOffsetIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length > 0, "no input bytes");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const lx = Math.min(4, Math.floor(bytes[0] / 16) % 8);
@@ -132,55 +120,30 @@ export const OneRegOneIMMOneOffsetIxDecoder = (
     bytes.subarray(1, 1 + lx),
     lx as u8,
   ) as PVMRegisterRawValue;
-  // this is not vy as in the paper since we 're missing the current instruction pointer
-  // at this stage. to get vy = ip + offset
 
-  const offset = Number(
+  const ipOffsetRaw = Number(
     Z(ly, E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
-  ) as u32;
-  // console.log(
-  //   "offset data = ",
-  //   Buffer.from(bytes.subarray(2 + lx, 1 + lx + ly)).toString("hex"),
-  //   ", E_(ly).decode() = ",
-  //   E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value,
-  //   ", offset =",
-  //   offset,
-  // );
+  ) as i32;
 
-  // console.log(
-  //   "dakk",
-  //   Z(2, 63091n),
-  //   Z_inv(2, -2275n),
-  //   Buffer.from(encodeWithCodec(E_2, Z_inv(2, -2275n))).toString("hex"),
-  // );
-  const vY = <u32>(context.execution.instructionPointer + offset);
-  const wA = context.execution.registers.elements[rA].value;
-  // console.log({ rA, lx, ly, vX, vY, offset });
-  return { rA, wA, vX, vY };
+  return { rA, vX, ipOffsetRaw };
 };
 
-export type OneRegOneIMMOneOffsetArgs = ReturnType<
-  typeof OneRegOneIMMOneOffsetIxDecoder
+export type OneRegOneIMMOneOffsetArgs = HydratedArgs<
+  ReturnType<typeof OneRegOneIMMOneOffsetIxDecoder>
 >;
 
 // $(0.7.1 - A.28)
-export const TwoRegIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const TwoRegIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length > 0, "no input bytes");
   const rD = <RegisterIdentifier>Math.min(12, bytes[0] % 16);
   const rA = <RegisterIdentifier>Math.min(12, Math.floor(bytes[0] / 16));
-  return { rD, wA: context.execution.registers.elements[rA].value };
+  return { rD, rA };
 };
 
-export type TwoRegArgs = ReturnType<typeof TwoRegIxDecoder>;
+export type TwoRegArgs = HydratedArgs<ReturnType<typeof TwoRegIxDecoder>>;
 
 // $(0.7.1 - A.29)
-export const TwoRegOneImmIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const TwoRegOneImmIxDecoder = (bytes: Uint8Array) => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
@@ -190,38 +153,34 @@ export const TwoRegOneImmIxDecoder = (
     rA,
     rB,
     vX,
-    wA: context.execution.registers.elements[rA].value,
-    wB: context.execution.registers.elements[rB].value,
   };
 };
 
-export type TwoRegOneImmArgs = ReturnType<typeof TwoRegOneImmIxDecoder>;
+export type TwoRegOneImmArgs = HydratedArgs<
+  ReturnType<typeof TwoRegOneImmIxDecoder>
+>;
 
 // $(0.7.1 - A.30)
-export const TwoRegOneOffsetIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const TwoRegOneOffsetIxDecoder = (bytes: Uint8Array) => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
-  const offset = Number(
+  const ipOffsetRaw = Number(
     Z(lX, E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
   ) as i32;
   return {
-    wA: context.execution.registers.elements[rA].value,
-    wB: context.execution.registers.elements[rB].value,
-    offset,
+    rA,
+    rB,
+    ipOffsetRaw,
   };
 };
 
-export type TwoRegOneOffsetArgs = ReturnType<typeof TwoRegOneOffsetIxDecoder>;
+export type TwoRegOneOffsetArgs = HydratedArgs<
+  ReturnType<typeof TwoRegOneOffsetIxDecoder>
+>;
 
 // $(0.7.1 - A.31)
-export const TwoRegTwoImmIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const TwoRegTwoImmIxDecoder = (bytes: Uint8Array) => {
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   assert(bytes.length >= 2, "not enough bytes [1]");
@@ -240,27 +199,25 @@ export const TwoRegTwoImmIxDecoder = (
     vX,
     vY,
     rA,
-    wA: context.execution.registers.elements[rA].value,
-    wB: context.execution.registers.elements[rB].value,
+    rB,
   };
 };
 
-export type TwoRegTwoImmIxArgs = ReturnType<typeof TwoRegTwoImmIxDecoder>;
+export type TwoRegTwoImmIxArgs = HydratedArgs<
+  ReturnType<typeof TwoRegTwoImmIxDecoder>
+>;
 
 // $(0.7.1 - A.32)
-export const ThreeRegIxDecoder = (
-  bytes: Uint8Array,
-  context: PVMIxEvaluateFNContextImpl,
-) => {
+export const ThreeRegIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length >= 2, "not enough bytes (2)");
   const rA = Math.min(12, bytes[0] % 16) as RegisterIdentifier;
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const rD = Math.min(12, bytes[1]) as RegisterIdentifier;
   return {
+    rA,
+    rB,
     rD,
-    wA: context.execution.registers.elements[rA].value,
-    wB: context.execution.registers.elements[rB].value,
   };
 };
 
-export type ThreeRegArgs = ReturnType<typeof ThreeRegIxDecoder>;
+export type ThreeRegArgs = HydratedArgs<ReturnType<typeof ThreeRegIxDecoder>>;

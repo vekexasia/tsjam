@@ -2,7 +2,6 @@ import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-conte
 import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { PVMIxReturnMods, PVMProgramExecutionContext, u32 } from "@tsjam/types";
-import { toSafeMemoryAddress } from "../pvm-memory";
 import { branch } from "../utils/branch";
 import { djump } from "../utils/djump";
 import { Z, Z4, Z8, Z8_inv } from "../utils/zed";
@@ -36,6 +35,7 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { IxMod, smod, X_4, X_8, X_fn } from "./utils";
+import { toSafeMemoryAddress } from "../pvm-memory";
 
 /**
  * This class holds the ixs implementations.
@@ -88,8 +88,8 @@ export class Instructions {
 
   @Ix(40, OneOffsetIxDecoder)
   @BlockTermination
-  jump({ vX }: OneOffsetArgs, context: PVMIxEvaluateFNContextImpl) {
-    return branch(context, vX, true);
+  jump({ ipOffset }: OneOffsetArgs, context: PVMIxEvaluateFNContextImpl) {
+    return branch(context, ipOffset, true);
   }
 
   @Ix(50, OneRegOneImmIxDecoder)
@@ -306,100 +306,100 @@ export class Instructions {
   @Ix(80, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   load_imm_jump(
-    { rA, vX, vY }: OneRegOneIMMOneOffsetArgs,
+    { rA, vX, ipOffset }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return [IxMod.reg(rA, vX), ...branch(context, vY, true)];
+    return [IxMod.reg(rA, vX), ...branch(context, ipOffset, true)];
   }
 
   @Ix(81, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_eq_imm(
-    { wA, vX, vY }: OneRegOneIMMOneOffsetArgs,
+    { wA, vX, ipOffset }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA === vX);
+    return branch(context, ipOffset, wA === vX);
   }
 
   @Ix(82, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_ne_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA != vX);
+    return branch(context, ipOffset, wA != vX);
   }
 
   @Ix(83, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_lt_u_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA < vX);
+    return branch(context, ipOffset, wA < vX);
   }
 
   @Ix(84, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_le_u_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA <= vX);
+    return branch(context, ipOffset, wA <= vX);
   }
 
   @Ix(85, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_ge_u_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA >= vX);
+    return branch(context, ipOffset, wA >= vX);
   }
 
   @Ix(86, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_gt_u_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, wA > vX);
+    return branch(context, ipOffset, wA > vX);
   }
 
   @Ix(87, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_lt_s_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, Z(8, wA) < Z(8, vX));
+    return branch(context, ipOffset, Z(8, wA) < Z(8, vX));
   }
 
   @Ix(88, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_le_s_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, Z(8, wA) <= Z(8, vX));
+    return branch(context, ipOffset, Z(8, wA) <= Z(8, vX));
   }
 
   @Ix(89, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_ge_s_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, Z(8, wA) >= Z(8, vX));
+    return branch(context, ipOffset, Z(8, wA) >= Z(8, vX));
   }
 
   @Ix(90, OneRegOneIMMOneOffsetIxDecoder)
   @BlockTermination
   branch_gt_s_imm(
-    { vX, vY, wA }: OneRegOneIMMOneOffsetArgs,
+    { vX, ipOffset, wA }: OneRegOneIMMOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(context, vY, Z(8, wA) > Z(8, vX));
+    return branch(context, ipOffset, Z(8, wA) > Z(8, vX));
   }
 
   @Ix(100, TwoRegIxDecoder)
@@ -543,79 +543,55 @@ export class Instructions {
   @Ix(170, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_eq(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      wA === wB,
-    );
+    return branch(context, ipOffset, wA === wB);
   }
 
   @Ix(171, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_ne(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      wA !== wB,
-    );
+    return branch(context, ipOffset, wA !== wB);
   }
 
   @Ix(172, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_lt_u(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      wA < wB,
-    );
+    return branch(context, ipOffset, wA < wB);
   }
 
   @Ix(173, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_lt_s(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      Z(8, wA) < Z(8, wB),
-    );
+    return branch(context, ipOffset, Z(8, wA) < Z(8, wB));
   }
 
   @Ix(174, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_ge_u(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      wA >= wB,
-    );
+    return branch(context, ipOffset, wA >= wB);
   }
 
   @Ix(175, TwoRegOneOffsetIxDecoder)
   @BlockTermination
   branch_ge_s(
-    { wA, wB, offset }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
   ) {
-    return branch(
-      context,
-      (context.execution.instructionPointer + offset) as u32,
-      Z(8, wA) >= Z(8, wB),
-    );
+    return branch(context, ipOffset, Z(8, wA) >= Z(8, wB));
   }
 
   @Ix(120, TwoRegOneImmIxDecoder)
