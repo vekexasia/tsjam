@@ -1,16 +1,7 @@
-import {
-  IParsedProgram,
-  Posterior,
-  PVMIx,
-  PVMProgram,
-  u32,
-  u8,
-} from "@tsjam/types";
+import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import "./instructions/instructions";
 import { Ixdb } from "./instructions/ixdb";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { toPosterior } from "@tsjam/utils";
 import { applyMods } from "./functions/utils";
 import { IxMod, TRAP_COST } from "./instructions/utils";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
@@ -21,6 +12,11 @@ export class ParsedProgram implements IParsedProgram {
   // $(0.7.1 - A.3)
   #ixSkips: Map<u32, u32>;
   #ixs: Map<u32, u8> = new Map<u32, u8>();
+
+  /**
+   * holds just in time decoded cache for ixs
+   */
+  #ixDecodeCache: Map<u32 /* programcounter */, object> = new Map();
 
   private constructor(public rawProgram: PVMProgram) {
     this.#blockBeginnings = new Set<u32>();
@@ -77,7 +73,7 @@ export class ParsedProgram implements IParsedProgram {
    * it modifies the context according to the single step.
    * $(0.7.1 - A.6)
    */
-  execute(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
+  singleStep(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
     const ix = this.ixAt(ctx.execution.instructionPointer);
     if (typeof ix === "undefined") {
       const o = applyMods(ctx.execution, {} as object, [
@@ -88,34 +84,36 @@ export class ParsedProgram implements IParsedProgram {
     }
 
     const skip = this.skip(ctx.execution.instructionPointer) + 1;
-    const byteArgs = this.rawProgram.c.subarray(
-      ctx.execution.instructionPointer + 1,
-      // TODO: this should not be possible
-      typeof skip !== "undefined"
-        ? ctx.execution.instructionPointer + skip
-        : this.rawProgram.c.length,
-    );
 
-    let args: unknown;
-    try {
-      args = ix.decode(byteArgs);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.warn(`Decoding error for ${ix.identifier}`, e.message);
-      const o = applyMods(ctx.execution, {} as object, [
-        IxMod.skip(ctx.execution.instructionPointer, skip), //NOTE: not sure we should skip
-        IxMod.gas(TRAP_COST + ix.gasCost),
-        IxMod.panic(),
-      ]);
-      return o;
+    let args = this.#ixDecodeCache.get(ctx.execution.instructionPointer);
+    if (typeof args === "undefined") {
+      try {
+        const byteArgs = this.rawProgram.c.subarray(
+          ctx.execution.instructionPointer + 1,
+          // TODO: undefined should not be possible
+          typeof skip !== "undefined"
+            ? ctx.execution.instructionPointer + skip
+            : this.rawProgram.c.length,
+        );
+
+        args = <object>ix.decode(byteArgs);
+        this.#ixDecodeCache.set(ctx.execution.instructionPointer, args);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.warn(`Decoding error for ${ix.identifier}`, e.message);
+        const o = applyMods(ctx.execution, {} as object, [
+          IxMod.skip(ctx.execution.instructionPointer, skip), //NOTE: not sure we should skip
+          IxMod.gas(TRAP_COST + ix.gasCost),
+          IxMod.panic(),
+        ]);
+        return o;
+      }
     }
-
     const ixMods = ix.evaluate(args, ctx);
 
     // TODO: check if pagefault is handled correctly
     // because gp states it should return prev ixpointer but i have the feeling it is not the case in this implementation
     //
-
     // we apply the gas and skip.
     // if an instruction pointer is set we apply it and override the skip inside
     // the applyMods

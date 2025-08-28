@@ -32,7 +32,7 @@ export const basicInvocation = (
   let idx = 1;
   while (ctx.execution.gas > 0) {
     const curPointer = ctx.execution.instructionPointer;
-    const exitReason = bold_p.execute(ctx); //pvmSingleStep(bold_p, intermediateState);
+    const exitReason = bold_p.singleStep(ctx); //pvmSingleStep(bold_p, intermediateState);
     if (process.env.DEBUG_STEPS === "true") {
       const ip = curPointer;
       const ix = bold_p.ixAt(curPointer);
