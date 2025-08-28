@@ -23,8 +23,8 @@ export type YMod = PVMSingleModObject<{ y: PVMResultContextImpl }>;
 
 /**
  * applies modifications from fns output to compute new ctx and out
- * @param ctx - the current context
- * @param out - the current out
+ * @param ctx - the current context - NOTE: this may be modified
+ * @param out - the current out - NOTE: this may be modified
  * @param mods - the modifications to apply
  * it's idempotent
  */
@@ -41,11 +41,7 @@ export const applyMods = <T extends object>(
     | PVMSingleModObject<T>
     | PVMSingleModGas
   >,
-): {
-  ctx: PVMProgramExecutionContextImpl;
-  out: T;
-  exitReason?: PVMExitReasonImpl;
-} => {
+): PVMExitReasonImpl | undefined => {
   // const newCtx = new PVMProgramExecutionContextImpl({
   //   ...ctx,
   //   registers: cloneCodecable(ctx.registers),
@@ -87,9 +83,12 @@ export const applyMods = <T extends object>(
         const r = applyMods(newCtx, out, [
           ...IxMod.pageFault(firstUnwriteable, originalPointer),
         ]);
-        exitReason = r.exitReason;
-        newCtx.instructionPointer = r.ctx.instructionPointer;
-        newCtx.gas = r.ctx.gas;
+        if (typeof r !== "undefined") {
+          exitReason = r;
+        }
+        //exitReason = r.exitReason;
+        //newCtx.instructionPointer = r.ctx.instructionPointer;
+        //newCtx.gas = r.ctx.gas;
       }
     } else if (mod.type === "object") {
       for (const key of Object.keys(mod.data)) {
@@ -98,9 +97,5 @@ export const applyMods = <T extends object>(
       }
     }
   }
-  return {
-    ctx: newCtx,
-    out,
-    exitReason,
-  };
+  return exitReason;
 };

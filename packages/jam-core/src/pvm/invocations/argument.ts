@@ -9,6 +9,7 @@ import {
 import { programInitialization } from "../program";
 import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./host-call";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 /**
  * `ΨM` in the paper
@@ -39,19 +40,15 @@ export const argumentInvocation = <X>(
     return { gasUsed: <Gas>0n, res: WorkOutputImpl.panic(), out: x };
   }
   const { programCode, memory, registers } = res;
-  const hRes = hostCallInvocation(
-    programCode,
-    new PVMProgramExecutionContextImpl({
-      instructionPointer,
-      gas,
-      registers,
-      memory,
-    }),
-    f,
-    x,
-  );
+  const context = new PVMProgramExecutionContextImpl({
+    instructionPointer,
+    gas,
+    registers,
+    memory,
+  });
+  const hRes = hostCallInvocation(programCode, context, f, x);
 
-  return R_fn(gas, hRes);
+  return R_fn(gas, hRes, context);
 };
 
 type ArgumentInvocationOut<X> = {
@@ -65,8 +62,9 @@ type ArgumentInvocationOut<X> = {
 const R_fn = <X>(
   gas: Gas,
   hostCall: HostCallOut<X>,
+  context: PVMProgramExecutionContextImpl,
 ): ArgumentInvocationOut<X> => {
-  const u_prime = hostCall.context.gas;
+  const u_prime = context.gas;
   const gas_prime: Gas = <Gas>(gas - (u_prime > 0n ? u_prime : 0n));
 
   if (hostCall.exitReason?.reason === RegularPVMExitReason.OutOfGas) {
@@ -77,17 +75,17 @@ const R_fn = <X>(
     };
   }
   if (hostCall.exitReason?.reason === RegularPVMExitReason.Halt) {
-    const readable = hostCall.context.memory.canRead(
-      hostCall.context.registers.w7().value,
-      Number(hostCall.context.registers.w8()),
+    const readable = context.memory.canRead(
+      context.registers.w7().value,
+      Number(context.registers.w8()),
     );
     if (readable) {
       return {
         gasUsed: gas_prime,
         res: new WorkOutputImpl<WorkError.OutOfGas>(
-          hostCall.context.memory.getBytes(
-            hostCall.context.registers.w7().value,
-            Number(hostCall.context.registers.w8()),
+          context.memory.getBytes(
+            context.registers.w7().value,
+            Number(context.registers.w8()),
           ),
         ),
         out: hostCall.out,

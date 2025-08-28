@@ -108,6 +108,7 @@ import {
   computeRequestKey,
   MerkleServiceAccountStorageImpl,
 } from "@/impls/merkle-account-data-storage-impl";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -514,7 +515,6 @@ export class HostFunctions {
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.NONE)];
     }
-    debugger;
     const v = encodeWithCodec(serviceAccountCodec, {
       codeHash: bold_a.codeHash,
       balance: bold_a.balance,
@@ -828,40 +828,47 @@ export class HostFunctions {
       memory: refineCtx.bold_m.get(Number(n))!.ram.clone(),
     });
     const p = deblobProgram(refineCtx.bold_m.get(Number(n))!.code);
-    let res: {
-      context: PVMProgramExecutionContextImpl;
-      exitReason: PVMExitReasonImpl;
-    };
+    let exitReason: PVMExitReasonImpl;
+    let ixCtx: PVMIxEvaluateFNContextImpl | undefined;
     if (p instanceof PVMExitReasonImpl) {
-      res = { context: pvmCtx, exitReason: p };
+      ixCtx = undefined; //explicit
+      exitReason = p;
     } else {
-      res = basicInvocation(p, pvmCtx);
+      ixCtx = new PVMIxEvaluateFNContextImpl({
+        execution: pvmCtx,
+        program: p,
+      });
+      exitReason = basicInvocation(p, ixCtx);
     }
+
+    // at this point pvmCtx has been either reimained the same or modified by
+    // basicInvocation
+    const updatedCtx = pvmCtx;
 
     // compute u*
     const newMemory = <PVMSingleModMemory["data"]>{
       from: o.checked_u32(),
       data: new Uint8Array(112),
     };
-    E_8.encode(res.context.gas, newMemory.data.subarray(0, 8));
-    PVMRegistersImpl.encode(res.context.registers, newMemory.data.subarray(8));
+    E_8.encode(updatedCtx.gas, newMemory.data.subarray(0, 8));
+    PVMRegistersImpl.encode(updatedCtx.registers, newMemory.data.subarray(8));
 
     // compute m*
     const mStar = new Map(refineCtx.bold_m.entries());
     const pvmGuest = new PVMGuest({
       code: mStar.get(Number(n)!)!.code,
-      instructionPointer: res.context.instructionPointer,
-      ram: res.context.memory,
+      instructionPointer: updatedCtx.instructionPointer,
+      ram: updatedCtx.memory,
     });
     mStar.set(Number(n), pvmGuest);
 
-    switch (res.exitReason.reason) {
+    switch (exitReason.reason) {
       case IrregularPVMExitReason.HostCall: {
         mStar.get(Number(n))!.instructionPointer = toTagged(
-          res.context.instructionPointer + 1,
+          updatedCtx.instructionPointer + 1,
         );
         return [
-          IxMod.w8(res.exitReason.opCode!),
+          IxMod.w8(exitReason.opCode!),
           IxMod.w7(InnerPVMResultCode.HOST),
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
@@ -870,7 +877,7 @@ export class HostFunctions {
       case IrregularPVMExitReason.PageFault: {
         return [
           IxMod.w7(InnerPVMResultCode.FAULT),
-          IxMod.w8(res.exitReason.address!), // address
+          IxMod.w8(exitReason.address!), // address
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];

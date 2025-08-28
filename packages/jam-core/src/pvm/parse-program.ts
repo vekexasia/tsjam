@@ -1,7 +1,20 @@
-import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import {
+  IParsedProgram,
+  Posterior,
+  PVMIx,
+  PVMProgram,
+  u32,
+  u8,
+} from "@tsjam/types";
 import assert from "node:assert";
 import "./instructions/instructions";
 import { Ixdb } from "./instructions/ixdb";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { toPosterior } from "@tsjam/utils";
+import { applyMods } from "./functions/utils";
+import { IxMod, TRAP_COST } from "./instructions/utils";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 export class ParsedProgram implements IParsedProgram {
   #blockBeginnings: Set<u32>;
@@ -9,31 +22,31 @@ export class ParsedProgram implements IParsedProgram {
   #ixSkips: Map<u32, u32>;
   #ixs: Map<u32, u8> = new Map<u32, u8>();
 
-  private constructor(program: PVMProgram) {
+  private constructor(public rawProgram: PVMProgram) {
     this.#blockBeginnings = new Set<u32>();
     this.#ixSkips = new Map<u32, u32>();
     this.#ixs = new Map<u32, u8>();
 
     assert(
-      program.k[0] === 1 && Ixdb.byCode.has(program.c[0] as u8),
-      `First instruction must be an instruction k[0]=${program.k[0]} c[0]=${program.c[0]}`,
+      rawProgram.k[0] === 1 && Ixdb.byCode.has(rawProgram.c[0] as u8),
+      `First instruction must be an instruction k[0]=${rawProgram.k[0]} c[0]=${rawProgram.c[0]}`,
     );
-    this.#ixs.set(0 as u32, program.c[0] as u8);
+    this.#ixs.set(0 as u32, rawProgram.c[0] as u8);
     let lastIx = 0 as u32;
-    for (let i = 1; i < program.k.length; i++) {
+    for (let i = 1; i < rawProgram.k.length; i++) {
       // if this is an instruction opcode
-      if (program.k[i] === 1) {
-        this.#ixs.set(i as u32, program.c[i] as u8);
+      if (rawProgram.k[i] === 1) {
+        this.#ixs.set(i as u32, rawProgram.c[i] as u8);
         // basically the skips
         this.#ixSkips.set(lastIx, (i - lastIx - 1) as u32);
         lastIx = i as u32;
       }
     }
     // calculates skips $(0.7.1 - A.3)
-    this.#ixSkips.set(lastIx, (program.k.length - lastIx - 1) as u32);
+    this.#ixSkips.set(lastIx, (rawProgram.k.length - lastIx - 1) as u32);
     this.#blockBeginnings.add(0 as u32);
     for (const [ix, skip] of this.#ixSkips.entries()) {
-      if (Ixdb.blockTerminators.has(program.c[ix] as u8)) {
+      if (Ixdb.blockTerminators.has(rawProgram.c[ix] as u8)) {
         this.#blockBeginnings.add((ix + skip + 1) as u32);
       }
     }
@@ -57,6 +70,61 @@ export class ParsedProgram implements IParsedProgram {
 
   isBlockBeginning(pointer: u32): boolean {
     return this.#blockBeginnings.has(pointer);
+  }
+
+  /**
+   * `Ψ1` | singleStep
+   * it modifies the context according to the single step.
+   * $(0.7.1 - A.6)
+   */
+  execute(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
+    const ix = this.ixAt(ctx.execution.instructionPointer);
+    if (typeof ix === "undefined") {
+      const o = applyMods(ctx.execution, {} as object, [
+        IxMod.gas(TRAP_COST),
+        IxMod.panic(),
+      ]);
+      return o;
+    }
+
+    const skip = this.skip(ctx.execution.instructionPointer) + 1;
+    const byteArgs = this.rawProgram.c.subarray(
+      ctx.execution.instructionPointer + 1,
+      // TODO: this should not be possible
+      typeof skip !== "undefined"
+        ? ctx.execution.instructionPointer + skip
+        : this.rawProgram.c.length,
+    );
+
+    let args: unknown;
+    try {
+      args = ix.decode(byteArgs);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      console.warn(`Decoding error for ${ix.identifier}`, e.message);
+      const o = applyMods(ctx.execution, {} as object, [
+        IxMod.skip(ctx.execution.instructionPointer, skip), //NOTE: not sure we should skip
+        IxMod.gas(TRAP_COST + ix.gasCost),
+        IxMod.panic(),
+      ]);
+      return o;
+    }
+
+    const ixMods = ix.evaluate(args, ctx);
+
+    // TODO: check if pagefault is handled correctly
+    // because gp states it should return prev ixpointer but i have the feeling it is not the case in this implementation
+    //
+
+    // we apply the gas and skip.
+    // if an instruction pointer is set we apply it and override the skip inside
+    // the applyMods
+    // $(0.7.1 - A.8)
+    return applyMods(ctx.execution, {} as object, [
+      IxMod.gas(ix.gasCost), // g′ = g − g∆
+      IxMod.skip(ctx.execution.instructionPointer, skip), // i'
+      ...ixMods,
+    ]);
   }
 
   /**

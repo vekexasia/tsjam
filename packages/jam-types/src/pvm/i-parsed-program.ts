@@ -1,7 +1,9 @@
 import { u32 } from "@/generic-types";
 import { PVMIx } from "@/pvm/pvm-ix";
+import { PVMProgram } from "./pvm-program";
 
 export interface IParsedProgram {
+  rawProgram: PVMProgram;
   /**
    * Get the instruction at the given pointer
    * @param pointer - the ix pointer

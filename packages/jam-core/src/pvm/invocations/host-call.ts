@@ -3,6 +3,8 @@ import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-executio
 import { u8 } from "@tsjam/types";
 import "@/pvm/functions/functions";
 import { basicInvocation, deblobProgram } from "./basic";
+import assert from "assert";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 /**
  * Host call invocation
@@ -15,69 +17,50 @@ export const hostCallInvocation = <X>(
   f: HostCallExecutor<X>,
   x: X,
 ): HostCallOut<X> => {
+  // NOTE:this is not part of A.35 but an optimization
+  // to avoid deblobbing multiple times in basicInvocation
   const r = deblobProgram(program);
   if (r instanceof PVMExitReasonImpl) {
     return {
       exitReason: r,
       out: x,
-      context: ctx,
     };
   }
+
+  const ixCtx = new PVMIxEvaluateFNContextImpl({
+    execution: ctx,
+    program: r,
+  });
   while (true) {
-    const out = basicInvocation(r, ctx);
-    if (out.exitReason.isHostCall()) {
+    const outExit = basicInvocation(r, ixCtx);
+    if (outExit.isHostCall()) {
+      // i'
+      const p_i = ixCtx.execution.instructionPointer;
       const hostCallRes = f({
-        hostCallOpcode: out.exitReason.opCode,
-        ctx: out.context,
+        hostCallOpcode: outExit.opCode,
+        ctx: ctx,
         out: x,
       });
+      // all flows of A.35 when its host call wants instruction pointer
+      // to be the one after the basic invocation
+      ctx.instructionPointer = p_i;
 
-      if (
-        "exitReason" in hostCallRes &&
-        typeof hostCallRes.exitReason !== "undefined"
-      ) {
-        const exitReason = hostCallRes.exitReason;
-        if (exitReason.isPageFault()) {
-          // if page fault we need to use the context from basic invocation
-          return {
-            exitReason,
-            context: out.context,
-            out: x,
-          };
-        } else {
-          // otherwise only use the instructionpointer from basic (out)
-          hostCallRes.ctx.instructionPointer = out.context.instructionPointer;
-          return {
-            exitReason,
-            context: hostCallRes.ctx,
-            out: hostCallRes.out,
-          };
-        }
-      } else {
-        // all good we skip to next loop cycle, update the context and x
-        ctx.instructionPointer = out.context.instructionPointer;
-        ctx.gas = hostCallRes.ctx.gas;
-        ctx.registers = hostCallRes.ctx.registers;
-        ctx.memory = hostCallRes.ctx.memory;
-        x = hostCallRes.out;
-        // return hostCallInvocation(
-        //   program,
-        //   new PVMProgramExecutionContextImpl({
-        //     instructionPointer: out.context.instructionPointer,
-        //     gas: hostCallRes.ctx.gas,
-        //     registers: hostCallRes.ctx.registers,
-        //     memory: hostCallRes.ctx.memory,
-        //   }),
-        //   f,
-        //   hostCallRes.out,
-        // );
+      if (typeof hostCallRes !== "undefined") {
+        // https://github.com/gavofyork/graypaper/pull/485
+        assert(
+          false == hostCallRes.isPageFault(),
+          "host call cannot return page fault",
+        );
+        return {
+          exitReason: hostCallRes,
+          out: x, // this has been modified already by hostcall
+        };
       }
     } else {
       // regular execution without host call
       return {
-        exitReason: out.exitReason,
+        exitReason: outExit,
         out: x,
-        context: out.context,
       };
     }
   }
@@ -85,20 +68,16 @@ export const hostCallInvocation = <X>(
 
 export type HostCallOut<X> = {
   exitReason?: PVMExitReasonImpl;
-  context: PVMProgramExecutionContextImpl;
   out: X;
 };
 
 /**
  * `Ω(X)` in the paper
+ * it can modify ctx and out (not pure function)
  * $(0.7.1 - A.36)
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
   ctx: PVMProgramExecutionContextImpl;
   out: X;
-}) => {
-  exitReason?: PVMExitReasonImpl;
-  out: X;
-  ctx: PVMProgramExecutionContextImpl;
-};
+}) => PVMExitReasonImpl | undefined;

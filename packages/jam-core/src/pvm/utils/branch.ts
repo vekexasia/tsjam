@@ -26,7 +26,7 @@ export const branch = (
     // we should allow that
     return [];
   }
-  if (!context.parsedProgram.isBlockBeginning(address)) {
+  if (!context.program.isBlockBeginning(address)) {
     return [
       IxMod.ip(context.execution.instructionPointer), // stay here - overrides any other ip mods before
       IxMod.panic(), // should not account for gas of panic

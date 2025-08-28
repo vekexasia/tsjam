@@ -27,12 +27,12 @@ export const djump = (
     return [IxMod.ip(context.execution.instructionPointer), IxMod.halt()];
   } else if (
     a === 0 ||
-    a > context.program.j.length * ZA ||
+    a > context.program.rawProgram.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
     return [IxMod.ip(context.execution.instructionPointer), IxMod.panic()];
   }
 
-  return [IxMod.ip(context.program.j[a / ZA - 1])];
+  return [IxMod.ip(context.program.rawProgram.j[a / ZA - 1])];
 };

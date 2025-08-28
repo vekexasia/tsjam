@@ -12,12 +12,13 @@ import {
 } from "@tsjam/types";
 import JSONBig from "json-bigint";
 import { basicInvocation, deblobProgram } from "@/pvm/invocations/basic";
-import { createEvContext } from "./mocks";
 import { PVMMemory } from "@/pvm/pvm-memory";
 import {
   PVMExitReasonImpl,
+  PVMIxEvaluateFNContextImpl,
   PVMProgramExecutionContextImpl,
   PVMRegisterImpl,
+  PVMRegistersImpl,
 } from "@/index";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
@@ -26,7 +27,6 @@ describe("pvm", () => {
     const json = JSONBigNative.parse(
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
-    const context = createEvContext();
     const pvmACL = new Map<
       Page,
       PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
@@ -42,38 +42,41 @@ describe("pvm", () => {
         );
       }
     }
-
-    context.execution.memory = new PVMMemory(
-      json["initial-memory"].map(
-        (v: { address: number; contents: number[] }) => ({
-          at: v.address,
-          content: new Uint8Array(v.contents),
-        }),
+    const execContext = new PVMProgramExecutionContextImpl({
+      instructionPointer: toTagged(json["initial-pc"]),
+      gas: toTagged(BigInt(json["initial-gas"]) as Gas),
+      memory: new PVMMemory(
+        json["initial-memory"].map(
+          (v: { address: number; contents: number[] }) => ({
+            at: v.address,
+            content: new Uint8Array(v.contents),
+          }),
+        ),
+        pvmACL,
+        { start: <u32>0, end: <u32>0, pointer: <u32>0 },
       ),
-      pvmACL,
-      { start: <u32>0, end: <u32>0, pointer: <u32>0 },
-    );
-    context.execution.gas = toTagged(BigInt(json["initial-gas"]) as Gas);
-    context.execution.instructionPointer = toTagged(json["initial-pc"]);
+      registers: new PVMRegistersImpl(),
+    });
     json["initial-regs"]
       .map((reg: number) => BigInt(reg))
-      .map(
+      .forEach(
         (r: bigint, index: number) =>
-          (context.execution.registers.elements[index] = new PVMRegisterImpl(
+          (execContext.registers.elements[index] = new PVMRegisterImpl(
             <PVMRegisterRawValue>r,
           )),
       );
-
     const res = deblobProgram(<PVMProgramCode>new Uint8Array(json.program));
     let exitReason: PVMExitReasonImpl;
-    let outContext: PVMProgramExecutionContextImpl;
     if (res instanceof PVMExitReasonImpl) {
       exitReason = res;
-      outContext = context.execution;
     } else {
-      const r = basicInvocation(res, context.execution);
-      outContext = r.context;
-      exitReason = r.exitReason;
+      exitReason = basicInvocation(
+        res,
+        new PVMIxEvaluateFNContextImpl({
+          program: res,
+          execution: execContext,
+        }),
+      );
     }
     if (exitReason.isPanic()) {
       expect("panic").toEqual(json["expected-status"]);
@@ -86,14 +89,14 @@ describe("pvm", () => {
       expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
-    expect(outContext.instructionPointer, "instruction pointer").toEqual(
+    expect(execContext.instructionPointer, "instruction pointer").toEqual(
       json["expected-pc"],
     );
-    expect(outContext.registers.elements.map((a) => a.value)).toEqual(
+    expect(execContext.registers.elements.map((a) => a.value)).toEqual(
       json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
     );
     for (const { address, contents } of json["expected-memory"]) {
-      expect(outContext.memory.getBytes(address, contents.length)).toEqual(
+      expect(execContext.memory.getBytes(address, contents.length)).toEqual(
         new Uint8Array(contents),
       );
     }

@@ -3,14 +3,12 @@ import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMProgram } from "@tsjam/types";
 import { ParsedProgram } from "../parse-program";
-import { pvmSingleStep } from "./single-step";
 import { log } from "@/utils";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 export const deblobProgram = (
   bold_p: Uint8Array,
-):
-  | PVMExitReasonImpl
-  | { parsedProgram: ParsedProgram; program: PVMProgram } => {
+): PVMExitReasonImpl | ParsedProgram => {
   let program: PVMProgram;
   try {
     program = PVMProgramCodec.decode(bold_p).value;
@@ -18,8 +16,7 @@ export const deblobProgram = (
   } catch (e) {
     return PVMExitReasonImpl.panic();
   }
-  const parsedProgram = ParsedProgram.parse(program);
-  return { parsedProgram, program };
+  return ParsedProgram.parse(program);
 };
 /**
  * Basic invocation
@@ -28,35 +25,27 @@ export const deblobProgram = (
  */
 export const basicInvocation = (
   // bold_p: Uint8Array,
-  bold_p: { parsedProgram: ParsedProgram; program: PVMProgram },
-  executionContext: PVMProgramExecutionContextImpl,
-): {
-  context: PVMProgramExecutionContextImpl;
-  exitReason: PVMExitReasonImpl;
-} => {
+  bold_p: ParsedProgram,
+  ctx: PVMIxEvaluateFNContextImpl,
+): PVMExitReasonImpl => {
   // how to handle errors here?
-  let intermediateState = executionContext;
   let idx = 1;
-  while (intermediateState.gas > 0) {
-    const curPointer = intermediateState.instructionPointer;
-    const out = pvmSingleStep(bold_p, intermediateState);
+  while (ctx.execution.gas > 0) {
+    const curPointer = ctx.execution.instructionPointer;
+    const exitReason = bold_p.execute(ctx); //pvmSingleStep(bold_p, intermediateState);
     if (process.env.DEBUG_STEPS === "true") {
       const ip = curPointer;
-      const ix = bold_p.parsedProgram.ixAt(curPointer);
+      const ix = bold_p.ixAt(curPointer);
       log(
-        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(out.p_context)}`,
+        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
         true,
       );
     }
-    if (typeof out.exitReason !== "undefined") {
+    if (typeof exitReason !== "undefined") {
       log("exitReson != empty", process.env.DEBUG_STEPS === "true");
-      log(out.exitReason.toString(), process.env.DEBUG_STEPS === "true");
-      return {
-        context: out.p_context.clone(),
-        exitReason: out.exitReason,
-      };
+      log(exitReason.toString(), process.env.DEBUG_STEPS === "true");
+      return exitReason;
     }
-    intermediateState = out.p_context;
   }
 
   // const resContext = new PVMProgramExecutionContextImpl(intermediateState);
@@ -64,10 +53,7 @@ export const basicInvocation = (
   // resContext.registers = resContext.registers;
   //resContext.memory = resContext.memory.clone();
   //resContext.registers = cloneCodecable(resContext.registers);
-  return {
-    context: intermediateState,
-    exitReason: PVMExitReasonImpl.outOfGas(),
-  };
+  return PVMExitReasonImpl.outOfGas();
 };
 
 const debugContext = (ctx: PVMProgramExecutionContextImpl) => {

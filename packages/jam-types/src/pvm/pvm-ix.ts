@@ -1,15 +1,14 @@
-import { PVMProgramExecutionContext } from "@/pvm/pvm-program-execution-context";
-import { PVMProgram } from "@/pvm/pvm-program";
-import { IParsedProgram } from "@/pvm/i-parsed-program";
 import { Gas, u8 } from "@/generic-types";
-import { RegisterIdentifier } from "./register-identifier";
+import { IParsedProgram } from "@/pvm/i-parsed-program";
+import { PVMProgramExecutionContext } from "@/pvm/pvm-program-execution-context";
 import {
-  PVMSingleModPointer,
+  PVMExitReasonMod,
   PVMSingleModGas,
   PVMSingleModMemory,
+  PVMSingleModPointer,
   PVMSingleModRegister,
-  PVMExitReasonMod,
 } from "./pvm-modifications";
+import { RegisterIdentifier } from "./register-identifier";
 export type PVMIxReturnMods = Array<
   | PVMSingleModPointer
   | PVMSingleModGas
@@ -21,8 +20,7 @@ export type PVMIxReturnMods = Array<
 
 export type PVMIxEvaluateFNContext = {
   execution: PVMProgramExecutionContext;
-  program: PVMProgram;
-  parsedProgram: IParsedProgram;
+  program: IParsedProgram;
 };
 /**
  * * A generic PVM instruction that can take any number of arguments

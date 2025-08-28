@@ -179,7 +179,7 @@ const F_fn: (
     const e_bold_d = input.out.x.state.accounts;
     switch (fnIdentifier) {
       case "read": {
-        const { ctx, out } = applyMods(
+        const exitReason = applyMods(
           input.ctx,
           input.out,
           hostFunctions.read(input.ctx, {
@@ -188,7 +188,9 @@ const F_fn: (
             bold_d: e_bold_d,
           }),
         );
-        return G_fn(ctx, bold_s, out);
+        // apply mods in G
+        G_fn(input, bold_s);
+        return exitReason;
       }
       case "fetch": {
         const m = applyMods(
@@ -199,19 +201,25 @@ const F_fn: (
             bold_i: accumulateOps,
           }),
         );
-        return G_fn(m.ctx, bold_s, m.out);
+        G_fn(input, bold_s);
+        return m;
       }
       case "write": {
+        const out = { bold_s };
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(
           input.ctx,
-          { bold_s },
+          out,
           hostFunctions.write(input.ctx, {
             bold_s,
             s: input.out.x.id,
             bold_d: e_bold_d,
           }),
         );
-        return G_fn(m.ctx, m.out.bold_s, input.out);
+        // G_fn(m.ctx, m.out.bold_s, input.out);
+        // bold_s is modified within applyMods
+        // most likely the instance is changed
+        G_fn(input, out.bold_s);
+        return m;
       }
       case "lookup": {
         const m = applyMods(
@@ -223,7 +231,8 @@ const F_fn: (
             bold_d: e_bold_d,
           }),
         );
-        return G_fn(m.ctx, bold_s, m.out);
+        G_fn(input, bold_s);
+        return m;
       }
       case "gas": {
         const m = applyMods(
@@ -231,7 +240,8 @@ const F_fn: (
           input.out,
           hostFunctions.gas(input.ctx, undefined),
         );
-        return G_fn(m.ctx, bold_s, m.out);
+        G_fn(input, bold_s);
+        return m;
       }
       case "info": {
         const m = applyMods(
@@ -242,8 +252,8 @@ const F_fn: (
             s: input.out.x.id,
           }),
         );
-
-        return G_fn(m.ctx, bold_s, m.out);
+        G_fn(input, bold_s);
+        return m;
       }
       case "bless":
         return applyMods(
@@ -258,6 +268,7 @@ const F_fn: (
           input.out,
           hostFunctions.assign(input.ctx, input.out.x),
         );
+
       case "designate":
         return applyMods(
           input.ctx,
@@ -338,18 +349,15 @@ const F_fn: (
  * $(0.7.1 - B.12)
  */
 const G_fn = (
-  context: PVMProgramExecutionContextImpl,
+  data: {
+    ctx: PVMProgramExecutionContextImpl;
+    out: { x: PVMResultContextImpl; y: PVMResultContextImpl };
+  },
   serviceAccount: ServiceAccountImpl,
-  x: { x: PVMResultContextImpl; y: PVMResultContextImpl },
-): ReturnType<
-  HostCallExecutor<{ x: PVMResultContextImpl; y: PVMResultContextImpl }>
-> => {
-  const x_star = x.x.clone();
-  x_star.state.accounts.set(x.x.id, serviceAccount);
-  return {
-    out: { x: x_star, y: x.y },
-    ctx: context.clone(),
-  };
+): undefined => {
+  const x_star = data.out.x.clone();
+  x_star.state.accounts.set(data.out.x.id, serviceAccount);
+  data.out.x = x_star;
 };
 
 /**
