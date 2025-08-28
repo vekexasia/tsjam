@@ -90,10 +90,7 @@ export class ParsedProgram implements IParsedProgram {
       try {
         const byteArgs = this.rawProgram.c.subarray(
           ctx.execution.instructionPointer + 1,
-          // TODO: undefined should not be possible
-          typeof skip !== "undefined"
-            ? ctx.execution.instructionPointer + skip
-            : this.rawProgram.c.length,
+          ctx.execution.instructionPointer + skip,
         );
 
         args = <object>ix.decode(byteArgs);

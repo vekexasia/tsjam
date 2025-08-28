@@ -30,10 +30,12 @@ export const basicInvocation = (
 ): PVMExitReasonImpl => {
   // how to handle errors here?
   let idx = 1;
-  while (ctx.execution.gas > 0) {
-    const curPointer = ctx.execution.instructionPointer;
+  const isDebugLog = process.env.DEBUG_STEPS === "true";
+  const execCtx = ctx.execution;
+  while (execCtx.gas > 0) {
+    const curPointer = execCtx.instructionPointer;
     const exitReason = bold_p.singleStep(ctx); //pvmSingleStep(bold_p, intermediateState);
-    if (process.env.DEBUG_STEPS === "true") {
+    if (isDebugLog) {
       const ip = curPointer;
       const ix = bold_p.ixAt(curPointer);
       log(
@@ -47,12 +49,6 @@ export const basicInvocation = (
       return exitReason;
     }
   }
-
-  // const resContext = new PVMProgramExecutionContextImpl(intermediateState);
-  //resContext.memory = resContext.memory;
-  // resContext.registers = resContext.registers;
-  //resContext.memory = resContext.memory.clone();
-  //resContext.registers = cloneCodecable(resContext.registers);
   return PVMExitReasonImpl.outOfGas();
 };
 
