@@ -1,5 +1,6 @@
 import fs from "fs";
 import { rollupCreate } from "../../build/rollupconfigcreator.mjs";
+import { terser } from "rollup-plugin-terser";
 const tsOptions = { compilerOptions: { rootDir: "." } };
 
 const p = JSON.parse(fs.readFileSync("package.json", "utf-8"));
@@ -18,15 +19,23 @@ export default [
         outputFile: "dist/cli.mjs",
         isBrowser: false,
         isEsm: true,
+        plugins: [terser()],
       },
       {
         compilerOptions: {
           rootDir: ".",
+          sourceMap: false,
+          inlineSourceMap: false,
           declaration: false,
           declarationMap: false,
         },
       },
     ),
-    external,
+    external: [
+      ...Object.keys(p.devDependencies ?? {}),
+      "@tsjam/crypto-napi",
+      "bigint-buffer",
+      "sodium-native",
+    ],
   },
 ];

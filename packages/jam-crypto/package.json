@@ -13,10 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "node": {
-        "import": "./dist/node.esm.mjs",
-        "default": "./dist/node.cjs.js"
-      }
+      "default": "./dist/node.esm.mjs"
     }
   },
   "engines": {

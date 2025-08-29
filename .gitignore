@@ -17,3 +17,5 @@ docs/
 .pnp.*
 test-runner-profile*
 packages/jam-fuzzer-target/jam-fuzzer-target*
+build/tsjam-fuzzer-target/.yarn
+tsjam-fuzzer-target.tgz

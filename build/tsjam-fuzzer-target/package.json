@@ -1,0 +1,23 @@
+{
+  "name": "fuzzer-target-binary",
+  "version": "0.7.0",
+  "description": "Fuzzer Target for conformance Test for JAM",
+  "dependencies": {
+    "@tsjam/crypto-napi": "file:../../packages/jam-crypto-napi",
+    "bigint-buffer": "^1.1.5",
+    "sodium-native": "4.3.3"
+  },
+  "scripts": {
+    "build:deliverable": "node scripts/build-deliverable.js"
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "license": "MIT",
+  "jam:protocolVersion": "0.7.0"
+}
