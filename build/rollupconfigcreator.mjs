@@ -23,7 +23,7 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
         file:
           outputFile ??
           `dist/${isBrowser ? "browser" : "node"}.${isEsm ? "esm" : "cjs"}.${isEsm ? "m" : ""}js`,
-        inlineDynamicImports: false,
+        inlineDynamicImports: true,
         sourcemap: true,
         sourcemapPathTransform: (relativeSP) => {
           // somehow it adds an extra ../
