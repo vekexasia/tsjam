@@ -10,6 +10,7 @@ import assert from "node:assert";
 import { readVarIntFromBuffer } from "../utils/varint";
 import { Z } from "../utils/zed";
 import { HydratedArgs } from "./types";
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
 
 export const NoArgIxDecoder = () => ({});
 export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;
@@ -34,7 +35,7 @@ export const OneRegOneExtImmArgsIxDecoder = (bytes: Uint8Array) => {
   return {
     rA,
     vX,
-    wA: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
   };
 };
 
@@ -94,7 +95,7 @@ export const OneRegOneImmIxDecoder = (bytes: Uint8Array) => {
   return {
     rA,
     vX,
-    wA: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
   };
 };
 
@@ -139,7 +140,7 @@ export const OneRegOneIMMOneOffsetIxDecoder = (bytes: Uint8Array) => {
     rA,
     vX,
     ipOffsetRaw,
-    wA: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
     ipOffset: 0, // will be hydrated later
   };
 };
@@ -156,8 +157,8 @@ export const TwoRegIxDecoder = (bytes: Uint8Array) => {
   return {
     rA,
     rD,
-    wA: 0n, // will be hydrated later
-    wD: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
+    wD: new PVMRegisterImpl(), // will be hydrated later
   };
 };
 
@@ -174,8 +175,8 @@ export const TwoRegOneImmIxDecoder = (bytes: Uint8Array) => {
     rA,
     rB,
     vX,
-    wA: 0n, // will be hydrated later
-    wB: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
+    wB: new PVMRegisterImpl(), // will be hydrated later
   };
 };
 
@@ -223,6 +224,8 @@ export const TwoRegTwoImmIxDecoder = (bytes: Uint8Array) => {
     vY,
     rA,
     rB,
+    wA: new PVMRegisterImpl(),
+    wB: new PVMRegisterImpl(),
   };
 };
 
@@ -240,9 +243,9 @@ export const ThreeRegIxDecoder = (bytes: Uint8Array) => {
     rA,
     rB,
     rD,
-    wA: 0n, // will be hydrated later
-    wB: 0n, // will be hydrated later
-    wD: 0n, // will be hydrated later
+    wA: new PVMRegisterImpl(), // will be hydrated later
+    wB: new PVMRegisterImpl(), // will be hydrated later
+    wD: new PVMRegisterImpl(), // will be hydrated later
   };
 };
 

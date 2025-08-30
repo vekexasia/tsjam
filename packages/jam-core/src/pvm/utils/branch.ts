@@ -1,11 +1,5 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import {
-  PVMExitReasonMod,
-  PVMIxEvaluateFNContext,
-  PVMSingleModPointer,
-  u32,
-} from "@tsjam/types";
-import { IxMod } from "../instructions/utils";
+import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
 
 /**
  * Branch to the given address if the condition is true.
@@ -20,17 +14,16 @@ export const branch = (
   context: PVMIxEvaluateFNContext,
   address: u32,
   condition: boolean | 0 | 1,
-): Array<PVMSingleModPointer | PVMExitReasonMod<PVMExitReasonImpl>> => {
-  if (!condition) {
-    // even if (226) says that instruction pointer should not move
-    // we should allow that
-    return [];
+  skipIfFalse: number,
+): PVMExitReasonImpl | void => {
+  if (condition) {
+    if (!context.program.isBlockBeginning(address)) {
+      return PVMExitReasonImpl.panic();
+    }
+    context.execution.instructionPointer = address;
+  } else {
+    context.execution.instructionPointer = <u32>(
+      (context.execution.instructionPointer + skipIfFalse)
+    );
   }
-  if (!context.program.isBlockBeginning(address)) {
-    return [
-      IxMod.ip(context.execution.instructionPointer), // stay here - overrides any other ip mods before
-      IxMod.panic(), // should not account for gas of panic
-    ];
-  }
-  return [IxMod.ip(address)];
 };

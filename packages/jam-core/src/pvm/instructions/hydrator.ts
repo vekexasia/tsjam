@@ -1,6 +1,7 @@
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
+import { RegisterIdentifier, u32 } from "@tsjam/types";
 import type { HydratedArgs } from "./types";
-import { PVMRegisterRawValue, RegisterIdentifier, u32 } from "@tsjam/types";
 
 /**
  * hydrates the Ix args from the pure decoders
@@ -12,22 +13,22 @@ export function hydrateIxArgs<
     rD?: RegisterIdentifier;
     ipOffsetRaw?: number;
     // hydrated
-    wA?: PVMRegisterRawValue;
-    wB?: PVMRegisterRawValue;
-    wD?: PVMRegisterRawValue;
+    wA?: PVMRegisterImpl;
+    wB?: PVMRegisterImpl;
+    wD?: PVMRegisterImpl;
     ipOffset: u32;
   },
 >(decoded: T, ctx: PVMIxEvaluateFNContextImpl): HydratedArgs<T> {
   const regs = ctx.execution.registers.elements;
   // registers
   if (typeof decoded.rA !== "undefined") {
-    decoded.wA = regs[decoded.rA!].value;
+    decoded.wA = regs[decoded.rA!];
   }
   if (typeof decoded.rB !== "undefined") {
-    decoded.wB = regs[decoded.rB!].value;
+    decoded.wB = regs[decoded.rB!];
   }
   if (typeof decoded.rD !== "undefined") {
-    decoded.wD = regs[decoded.rD!].value;
+    decoded.wD = regs[decoded.rD!];
   }
   if (typeof decoded.ipOffsetRaw !== "undefined") {
     decoded.ipOffset = <u32>(

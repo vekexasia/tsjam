@@ -1,11 +1,5 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import {
-  PVMExitReasonMod,
-  PVMIxEvaluateFNContext,
-  PVMSingleModPointer,
-  u32,
-} from "@tsjam/types";
-import { IxMod } from "../instructions/utils";
+import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
 
 const ZA = 2;
 /**
@@ -15,24 +9,21 @@ const ZA = 2;
  * $(0.7.1 - A.18)
  */
 export const djump = (
-  context: PVMIxEvaluateFNContext,
   a: u32,
-): Array<
-  | PVMSingleModPointer
-  | PVMSingleModPointer
-  | PVMExitReasonMod<PVMExitReasonImpl>
-> => {
+  context: PVMIxEvaluateFNContext,
+): PVMExitReasonImpl | void => {
   // first branch of djump(a)
   if (a == 2 ** 32 - 2 ** 16) {
-    return [IxMod.ip(context.execution.instructionPointer), IxMod.halt()];
+    return PVMExitReasonImpl.halt();
   } else if (
     a === 0 ||
     a > context.program.rawProgram.j.length * ZA ||
     a % ZA != 0 ||
     false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
   ) {
-    return [IxMod.ip(context.execution.instructionPointer), IxMod.panic()];
+    return PVMExitReasonImpl.panic();
   }
-
-  return [IxMod.ip(context.program.rawProgram.j[a / ZA - 1])];
+  context.execution.instructionPointer = <u32>(
+    context.program.rawProgram.j[a / ZA - 1]
+  );
 };

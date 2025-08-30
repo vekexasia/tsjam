@@ -216,5 +216,5 @@ export class PVMMemory implements IPVMMemory {
 }
 
 export const toSafeMemoryAddress = (rawAddr: bigint): u32 => {
-  return <u32>Number(BigInt(rawAddr) % 2n ** 32n);
+  return <u32>Number(rawAddr % 2n ** 32n);
 };

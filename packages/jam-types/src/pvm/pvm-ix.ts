@@ -9,6 +9,7 @@ import {
   PVMSingleModRegister,
 } from "./pvm-modifications";
 import { RegisterIdentifier } from "./register-identifier";
+import { PVMExitReason } from "./pvm-exit-reason";
 export type PVMIxReturnMods = Array<
   | PVMSingleModPointer
   | PVMSingleModGas
@@ -33,7 +34,11 @@ export interface PVMIx<Args> {
    */
   decode(bytes: Uint8Array): Args;
 
-  evaluate(args: Args, context: PVMIxEvaluateFNContext): PVMIxReturnMods;
+  evaluate(
+    args: Args,
+    context: PVMIxEvaluateFNContext,
+    skip: number,
+  ): PVMExitReason | void;
   readonly gasCost: Gas;
   readonly opCode: u8;
   readonly identifier: string;

@@ -1,4 +1,4 @@
-import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import { Gas, IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import "./instructions/instructions";
 import { Ixdb } from "./instructions/ixdb";
@@ -77,6 +77,7 @@ export class ParsedProgram implements IParsedProgram {
   singleStep(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
     const ip = ctx.execution.instructionPointer;
     const ix = this.ixAt(ip);
+    // console.log(ix?.identifier, ip);
     if (typeof ix === "undefined") {
       const o = applyMods(ctx.execution, {} as object, [
         IxMod.gas(TRAP_COST),
@@ -105,20 +106,7 @@ export class ParsedProgram implements IParsedProgram {
         return o;
       }
     }
-    const ixMods = ix.evaluate(args, ctx);
-
-    // TODO: check if pagefault is handled correctly
-    // because gp states it should return prev ixpointer but i have the feeling it is not the case in this implementation
-    //
-    // we apply the gas and skip.
-    // if an instruction pointer is set we apply it and override the skip inside
-    // the applyMods
-    // $(0.7.1 - A.8)
-    return applyMods(ctx.execution, {} as object, [
-      IxMod.gas(ix.gasCost), // g′ = g − g∆
-      IxMod.skip(ip, skip), // i'
-      ...ixMods,
-    ]);
+    return <PVMExitReasonImpl | undefined>ix.evaluate(args, ctx, skip);
   }
 
   /**

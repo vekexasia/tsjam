@@ -1,7 +1,9 @@
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { Gas, PVMIx, PVMIxDecodeFN, PVMIxReturnMods, u8 } from "@tsjam/types";
+import { Gas, PVMIx, PVMIxDecodeFN, u32, u8 } from "@tsjam/types";
 import { HydratedArgs } from "./types";
 import { hydrateIxArgs } from "./hydrator";
+import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { TRAP_COST } from "./utils";
 
 export const Ixdb = {
   byCode: new Map<u8, PVMIx<unknown>>(),
@@ -34,17 +36,16 @@ export const regIx = <T>(
  * Decorator to register an instruction
  */
 export const Ix = <
-  Descriptor extends
-    | ((args: HydratedArgs<Args>) => EvaluateReturn)
-    | ((
-        args: HydratedArgs<Args>,
-        context: PVMIxEvaluateFNContextImpl,
-      ) => EvaluateReturn),
+  Descriptor extends (
+    args: HydratedArgs<Args>,
+    context: PVMIxEvaluateFNContextImpl,
+    skip: number,
+  ) => void | PVMExitReasonImpl,
   Args,
-  EvaluateReturn extends PVMIxReturnMods,
 >(
   opCode: number,
   decoder: PVMIxDecodeFN<Args>,
+  handlesInstructionPointer?: boolean,
 ) => {
   return (
     _target: unknown,
@@ -59,9 +60,25 @@ export const Ix = <
         evaluate: function hydratedEvaluate(
           args: HydratedArgs<Args>,
           context: PVMIxEvaluateFNContextImpl,
+          skip: number,
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return descriptor.value!(hydrateIxArgs(<any>args, context), context);
+          const toRet = descriptor.value!(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            hydrateIxArgs(<any>args, context),
+            context,
+            skip,
+          );
+          context.execution.gas = <Gas>(context.execution.gas - this.gasCost);
+          if (toRet?.isPageFault()) {
+            context.execution.gas = <Gas>(context.execution.gas - TRAP_COST);
+          } else {
+            if (!handlesInstructionPointer) {
+              context.execution.instructionPointer = <u32>(
+                (context.execution.instructionPointer + skip)
+              );
+            }
+          }
+          return toRet;
         },
         gasCost: 1n as Gas,
       },
@@ -104,9 +121,7 @@ if (import.meta.vitest) {
           decode() {
             return [];
           },
-          evaluate() {
-            return [];
-          },
+          evaluate() {},
           gasCost: 1n as Gas,
         },
         true, // blockterminator
@@ -123,9 +138,7 @@ if (import.meta.vitest) {
         decode() {
           return [];
         },
-        evaluate() {
-          return [];
-        },
+        evaluate() {},
       });
       expect(() =>
         regIx({
@@ -135,9 +148,7 @@ if (import.meta.vitest) {
           decode() {
             return [];
           },
-          evaluate() {
-            return [];
-          },
+          evaluate() {},
         }),
       ).toThrow();
     });
@@ -149,9 +160,7 @@ if (import.meta.vitest) {
         decode() {
           return [];
         },
-        evaluate() {
-          return [];
-        },
+        evaluate() {},
       });
       expect(() =>
         regIx({
@@ -161,9 +170,7 @@ if (import.meta.vitest) {
           decode() {
             return [];
           },
-          evaluate() {
-            return [];
-          },
+          evaluate() {},
         }),
       ).toThrow();
     });
@@ -175,9 +182,7 @@ if (import.meta.vitest) {
         decode() {
           return [];
         },
-        evaluate() {
-          return [];
-        },
+        evaluate() {},
       });
       expect(Ixdb.blockTerminators.has(0 as u8)).toBe(false);
     });
