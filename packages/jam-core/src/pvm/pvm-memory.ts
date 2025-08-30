@@ -55,11 +55,11 @@ export class PVMMemory implements IPVMMemory {
 
   #getPageMemory(page: number): Uint8Array {
     const memory = this.#innerMemoryContent.get(page);
-    assert(
-      memory,
-      `Page ${page}|0x${(page * Zp).toString(16)} is not allocated`,
-    );
-    return memory;
+    // assert(
+    //   memory,
+    //   `Page ${page}|0x${(page * Zp).toString(16)} is not allocated`,
+    // );
+    return memory!;
   }
 
   #setBytes(address: u32 | bigint, bytes: Uint8Array): void {
@@ -127,7 +127,7 @@ export class PVMMemory implements IPVMMemory {
   }
 
   setBytes(address: u32, bytes: Uint8Array): this {
-    assert(this.canWrite(address, bytes.length), "Memory is not writeable");
+    assert(this.canWrite(address, bytes.length));
     this.#setBytes(address, bytes);
 
     //log(
@@ -138,7 +138,7 @@ export class PVMMemory implements IPVMMemory {
   }
 
   getBytes(address: u32 | bigint, length: number): Uint8Array {
-    assert(this.canRead(address, length), "Memory is not readable");
+    assert(this.canRead(address, length));
     const r = this.#getBytes(address, length);
     return r;
   }
@@ -195,7 +195,7 @@ export class PVMMemory implements IPVMMemory {
         this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
         this.#innerMemoryContent.set(
           this.heap.end / Zp + i,
-          new Uint8Array(Zp).fill(0),
+          new Uint8Array(Zp),
         );
       }
       //const prevEnd = this.heap.end;
@@ -227,11 +227,6 @@ export class PVMMemory implements IPVMMemory {
     return str;
   }
 }
-
-export const toInBoundsMemoryAddress = (rawAddr: bigint): u32 => {
-  assert(rawAddr < 2n ** 32n, "Address is out of memory bounds");
-  return <u32>Number(rawAddr);
-};
 
 export const toSafeMemoryAddress = (rawAddr: u32 | bigint): u32 => {
   return <u32>Number(BigInt(rawAddr) % 2n ** 32n);

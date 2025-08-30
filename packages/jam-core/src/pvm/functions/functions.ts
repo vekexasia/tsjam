@@ -1,3 +1,4 @@
+import assert from "assert";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
@@ -343,8 +344,8 @@ export class HostFunctions {
     debugger;
     if (Number(w7) === args.s || w7.value === 2n ** 64n - 1n) {
       bold_a = args.bold_s;
-    } else if (w7.fitsInU32() && args.bold_d.has(w7.checked_u32())) {
-      bold_a = args.bold_d.get(w7.checked_u32());
+    } else if (w7.fitsInU32() && args.bold_d.has(w7.u32())) {
+      bold_a = args.bold_d.get(w7.u32());
     }
     // else bold_a is undefined
     const [h, o] = context.registers.slice(8);
@@ -406,9 +407,9 @@ export class HostFunctions {
     } else if (
       s_star !== args.s &&
       w7.fitsInU32() &&
-      args.bold_d.has(w7.checked_u32())
+      args.bold_d.has(w7.u32())
     ) {
-      bold_a = args.bold_d.get(w7.checked_u32());
+      bold_a = args.bold_d.get(w7.u32());
     }
 
     const [ko, kz, o, w11, w12] = context.registers.slice(8);
@@ -428,12 +429,12 @@ export class HostFunctions {
 
     const f = w11.value < bold_v.length ? Number(w11) : bold_v.length;
     const l = w12.value < bold_v.length - f ? Number(w12) : bold_v.length - f;
-    if (!o.fitsInU32() || !context.memory.canWrite(o.checked_u32(), l)) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     }
     return [
       IxMod.w7(bold_v.length),
-      IxMod.memory(o.checked_u32(), bold_v.subarray(f, f + l)),
+      IxMod.memory(o.u32(), bold_v.subarray(f, f + l)),
     ];
   }
 
@@ -456,11 +457,11 @@ export class HostFunctions {
     if (
       !ko.fitsInU32() ||
       !kz.fitsInU32() ||
-      !context.memory.canRead(ko.checked_u32(), kz.checked_u32())
+      !context.memory.canRead(ko.u32(), kz.u32())
     ) {
       return [IxMod.panic()];
     } else {
-      bold_k = context.memory.getBytes(ko.checked_u32(), kz.checked_u32());
+      bold_k = context.memory.getBytes(ko.u32(), kz.u32());
     }
 
     const bold_a = args.bold_s.clone();
@@ -474,16 +475,13 @@ export class HostFunctions {
     } else if (
       vo.fitsInU32() &&
       vz.fitsInU32() &&
-      context.memory.canRead(vo.checked_u32(), vz.checked_u32())
+      context.memory.canRead(vo.u32(), vz.u32())
     ) {
       log(
-        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.checked_u32(), vz.checked_u32()))}`,
+        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))}`,
         process.env.DEBUG_TRACES === "true",
       );
-      bold_a.storage.set(
-        bold_k,
-        context.memory.getBytes(vo.checked_u32(), vz.checked_u32()),
-      );
+      bold_a.storage.set(bold_k, context.memory.getBytes(vo.u32(), vz.u32()));
     } else {
       return [IxMod.panic()];
     }
@@ -541,13 +539,10 @@ export class HostFunctions {
     }
 
     const o = context.registers.w8();
-    if (!o.fitsInU32() || !context.memory.canWrite(o.checked_u32(), l)) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     } else {
-      return [
-        IxMod.w7(v.length),
-        IxMod.memory(o.checked_u32(), v.subarray(f, f + l)),
-      ];
+      return [IxMod.w7(v.length), IxMod.memory(o.u32(), v.subarray(f, f + l))];
     }
   }
 
@@ -562,7 +557,7 @@ export class HostFunctions {
     args: { s: ServiceIndex; bold_d: DeltaImpl; tau: TauImpl },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, h, o, w10, w11] = context.registers.slice(7);
-    if (!h.fitsInU32() || !context.memory.canRead(h.checked_u32(), 32)) {
+    if (!h.fitsInU32() || !context.memory.canRead(h.u32(), 32)) {
       return [IxMod.panic()];
     }
     let bold_a: ServiceAccountImpl;
@@ -576,7 +571,7 @@ export class HostFunctions {
 
     const v = bold_a.historicalLookup(
       toTagged(args.tau),
-      HashCodec.decode(context.memory.getBytes(h.checked_u32(), 32)).value,
+      HashCodec.decode(context.memory.getBytes(h.u32(), 32)).value,
     );
 
     if (typeof v === "undefined") {
@@ -585,14 +580,11 @@ export class HostFunctions {
 
     const f = Math.min(Number(w10), v.length);
     const l = Math.min(Number(w11), v.length - f);
-    if (!o.fitsInU32() || !context.memory.canWrite(o.checked_u32(), l)) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     }
 
-    return [
-      IxMod.w7(v.length),
-      IxMod.memory(o.checked_u32(), v.subarray(f, l)),
-    ];
+    return [IxMod.w7(v.length), IxMod.memory(o.u32(), v.subarray(f, l))];
   }
 
   /**
@@ -609,7 +601,7 @@ export class HostFunctions {
     const [p, w8] = context.registers.slice(7);
     const z = Math.min(Number(w8), ERASURECODE_SEGMENT_SIZE);
 
-    if (!p.fitsInU32() || !context.memory.canRead(p.checked_u32(), z)) {
+    if (!p.fitsInU32() || !context.memory.canRead(p.u32(), z)) {
       return [IxMod.panic()];
     }
     if (
@@ -620,7 +612,7 @@ export class HostFunctions {
     }
     const bold_x = zeroPad(
       ERASURECODE_SEGMENT_SIZE,
-      context.memory.getBytes(p.checked_u32(), z),
+      context.memory.getBytes(p.u32(), z),
     );
     const newRefineCtx = structuredClone(args.refineCtx); // ok to structuredClone as of 0.7.1
     newRefineCtx.segments.push(bold_x);
@@ -642,11 +634,11 @@ export class HostFunctions {
     if (
       !po.fitsInU32() ||
       !pz.fitsInU32() ||
-      !context.memory.canRead(po.checked_u32(), pz.checked_u32())
+      !context.memory.canRead(po.u32(), pz.u32())
     ) {
       return [IxMod.panic()];
     }
-    const bold_p = context.memory.getBytes(po.checked_u32(), pz.checked_u32());
+    const bold_p = context.memory.getBytes(po.u32(), pz.u32());
     try {
       PVMProgramCodec.decode(bold_p);
       // eslint-disable-next-line
@@ -690,7 +682,7 @@ export class HostFunctions {
     if (
       !o.fitsInU32() ||
       !z.fitsInU32() ||
-      !context.memory.canWrite(o.checked_u32(), z.checked_u32())
+      !context.memory.canWrite(o.u32(), z.u32())
     ) {
       return [IxMod.panic()];
     }
@@ -700,9 +692,7 @@ export class HostFunctions {
     }
     if (
       !s.fitsInU32() ||
-      !refineCtx.bold_m
-        .get(Number(n))!
-        .ram.canRead(s.checked_u32(), z.checked_u32())
+      !refineCtx.bold_m.get(Number(n))!.ram.canRead(s.u32(), z.u32())
     ) {
       return [IxMod.w7(HostCallResult.OOB)];
     }
@@ -710,10 +700,8 @@ export class HostFunctions {
     return [
       IxMod.w7(HostCallResult.OK),
       IxMod.memory(
-        o.checked_u32(),
-        refineCtx.bold_m
-          .get(Number(n))!
-          .ram.getBytes(s.checked_u32(), z.checked_u32()),
+        o.u32(),
+        refineCtx.bold_m.get(Number(n))!.ram.getBytes(s.u32(), z.u32()),
       ),
     ];
   }
@@ -723,11 +711,11 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
   ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod<PVMExitReasonImpl>> {
-    const [n, o, s, z] = context.registers.slice(7);
+    const [n, s, o, z] = context.registers.slice(7);
     if (
-      !o.fitsInU32() ||
+      !s.fitsInU32() ||
       !z.fitsInU32() ||
-      !context.memory.canWrite(o.checked_u32(), z.checked_u32())
+      !context.memory.canRead(s.u32(), z.u32())
     ) {
       return [IxMod.panic()];
     }
@@ -735,17 +723,18 @@ export class HostFunctions {
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    if (!refineCtx.bold_m.get(Number(n))!.ram.canRead(s.value, Number(z))) {
+    if (
+      !o.fitsInU32() ||
+      !refineCtx.bold_m.get(Number(n))!.ram.canRead(o.u32(), Number(z))
+    ) {
       return [IxMod.w7(HostCallResult.OOB)];
     }
 
     return [
       IxMod.w7(HostCallResult.OK),
       IxMod.memory(
-        o.checked_u32(),
-        refineCtx.bold_m
-          .get(Number(n))!
-          .ram.getBytes(s.checked_u32(), Number(z)),
+        o.u32(),
+        refineCtx.bold_m.get(Number(n))!.ram.getBytes(s.u32(), Number(z)),
       ),
     ];
   }
@@ -810,13 +799,13 @@ export class HostFunctions {
     | PVMExitReasonMod<PVMExitReasonImpl>
   > {
     const [n, o] = context.registers.slice(7);
-    if (!context.memory.canWrite(o.value, 112)) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), 112)) {
       return [IxMod.panic()];
     }
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    const g = E_8.decode(context.memory.getBytes(o.value, 8)).value;
+    const g = E_8.decode(context.memory.getBytes(o.u32(), 8)).value;
     const bold_w = PVMRegistersImpl.decode(
       context.memory.getBytes(o.value + 8n, 112 - 8),
     ).value;
@@ -847,7 +836,7 @@ export class HostFunctions {
 
     // compute u*
     const newMemory = <PVMSingleModMemory["data"]>{
-      from: o.checked_u32(),
+      from: o.u32(),
       data: new Uint8Array(112),
     };
     E_8.encode(updatedCtx.gas, newMemory.data.subarray(0, 8));
@@ -933,22 +922,19 @@ export class HostFunctions {
     x: PVMResultContextImpl,
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [m, a, v, r, o, n] = context.registers.slice(7);
-    if (!context.memory.canRead(a.toSafeMemoryAddress(), 4 * CORES)) {
+    if (!a.fitsInU32() || !context.memory.canRead(a.u32(), 4 * CORES)) {
       return [IxMod.panic()];
     }
 
     const bold_a = PrivilegedServicesImpl.codecOf("assigners").decode(
-      context.memory.getBytes(a.toSafeMemoryAddress(), 4 * CORES),
+      context.memory.getBytes(a.u32(), 4 * CORES),
     ).value;
 
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 12 * Number(n))) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 12 * Number(n))) {
       return [IxMod.panic()];
     }
     const bold_z = new Map<ServiceIndex, Gas>();
-    const buf = context.memory.getBytes(
-      o.toSafeMemoryAddress(),
-      12 * Number(n),
-    );
+    const buf = context.memory.getBytes(o.u32(), 12 * Number(n));
     for (let i = 0; i < n.value; i++) {
       const data = buf.subarray(i * 12, (i + 1) * 12);
       const key = E_sub_int<ServiceIndex>(4).decode(data).value;
@@ -960,7 +946,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    if (m.value >= 2 ** 32 || a.value >= 2 ** 32 || r.value >= 2 ** 32) {
+    if (!m.fitsInU32() || !v.fitsInU32() || !r.fitsInU32()) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
@@ -976,10 +962,10 @@ export class HostFunctions {
         stagingSet: x.state.stagingSet,
         // modifications start here
         assigners: bold_a,
-        manager: m.checked_u32(),
-        delegator: v.checked_u32(),
+        manager: m.u32(),
+        delegator: v.u32(),
         alwaysAccers: bold_z,
-        registrar: r.checked_u32(),
+        registrar: r.u32(),
       }),
     });
 
@@ -1187,7 +1173,8 @@ export class HostFunctions {
     if (
       args.x.id === args.x.state.registrar &&
       i.value < MINIMUM_PUBLIC_SERVICE_INDEX &&
-      args.x.state.accounts.has(i.checked_u32())
+      i.fitsInU32() &&
+      args.x.state.accounts.has(i.u32())
     ) {
       return [IxMod.w7(HostCallResult.FULL)];
     }
@@ -1213,7 +1200,8 @@ export class HostFunctions {
       args.x.id === args.x.state.registrar &&
       i.value < MINIMUM_PUBLIC_SERVICE_INDEX
     ) {
-      newX.state.accounts.set(i.checked_u32(), a);
+      // the type casting is correct as MINIMUM_PUBLIC_SERVICE_INDEX = 2^16
+      newX.state.accounts.set(<ServiceIndex>Number(i), a);
       newX.state.accounts.set(args.x.id, bold_s);
       return [IxMod.w7(i.value), IxMod.obj({ x: newX })];
     }
@@ -1281,11 +1269,11 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    if (!d.fitsInU32() || !bold_d.has(d.checked_u32())) {
+    if (!d.fitsInU32() || !bold_d.has(d.u32())) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
-    if (l.value < bold_d.get(d.checked_u32())!.minMemoGas) {
+    if (l.value < bold_d.get(d.u32())!.minMemoGas) {
       return [IxMod.w7(HostCallResult.LOW)];
     }
     if (a.value < x.bold_s().gasThreshold()) {
@@ -1295,7 +1283,7 @@ export class HostFunctions {
 
     const t: DeferredTransferImpl = new DeferredTransferImpl({
       source: x.id,
-      destination: d.checked_u32(),
+      destination: d.u32(),
       amount: a.u64(),
       gas: l.u64(),
       memo: toTagged(
@@ -1328,12 +1316,12 @@ export class HostFunctions {
     ).value;
     if (
       !d.fitsInU32() ||
-      args.x.id != d.checked_u32() ||
-      !args.x.state.accounts.has(d.checked_u32())
+      args.x.id != d.u32() ||
+      !args.x.state.accounts.has(d.u32())
     ) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    const bold_d = args.x.state.accounts.get(d.checked_u32())!;
+    const bold_d = args.x.state.accounts.get(d.u32())!;
 
     if (
       compareUint8Arrays(
@@ -1354,7 +1342,7 @@ export class HostFunctions {
     const [, y] = dlhl;
     if (dlhl.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION) {
       const newX = args.x.clone();
-      newX.state.accounts.delete(d.checked_u32());
+      newX.state.accounts.delete(d.u32());
       const s_prime = newX.state.accounts.get(args.x.id)!;
       s_prime.balance = toTagged(s_prime.balance + bold_d.balance);
 
@@ -1467,14 +1455,14 @@ export class HostFunctions {
     const newX = args.x.clone();
     const x_bold_s = newX.bold_s();
 
-    const xslhz = x_bold_s.requests.get(h, z.checked_u32());
+    const xslhz = x_bold_s.requests.get(h, z.u32());
 
     if (typeof xslhz === "undefined") {
       return [IxMod.w7(HostCallResult.HUH)];
     } else {
       const [x, y, w] = xslhz;
       log(
-        `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.checked_u32()))}`,
+        `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
         process.env.DEBUG_TRACES === "true",
       );
       if (
@@ -1485,14 +1473,14 @@ export class HostFunctions {
           `l=0 or l=2 but expired... Deleting preimage`,
           process.env.DEBUG_TRACES === "true",
         );
-        x_bold_s.requests.delete(h, z.checked_u32());
+        x_bold_s.requests.delete(h, z.u32());
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
         log(
           `l=1... adding tau=${args.tau.value}`,
           process.env.DEBUG_TRACES === "true",
         );
-        x_bold_s.requests.set(h, z.checked_u32(), toTagged([x, args.tau]));
+        x_bold_s.requests.set(h, z.u32(), toTagged([x, args.tau]));
       } else if (
         xslhz.length === 3 &&
         y.value < args.tau.value - PREIMAGE_EXPIRATION
@@ -1501,7 +1489,7 @@ export class HostFunctions {
           `l=3 but expired... removing oldest tau`,
           process.env.DEBUG_TRACES === "true",
         );
-        x_bold_s.requests.set(h, z.checked_u32(), toTagged([w, args.tau]));
+        x_bold_s.requests.set(h, z.u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
       }
@@ -1527,12 +1515,10 @@ export class HostFunctions {
     x: PVMResultContextImpl,
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const o = context.registers.w7();
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
-    const h = HashCodec.decode(
-      context.memory.getBytes(o.toSafeMemoryAddress(), 32),
-    ).value;
+    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
     const newX = x.clone();
     newX.yield = h;
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
@@ -1551,11 +1537,15 @@ export class HostFunctions {
       s = x.id;
     }
 
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), Number(z))) {
+    if (
+      !o.fitsInU32() ||
+      !z.fitsInU32() ||
+      context.memory.canRead(o.u32(), z.u32())
+    ) {
       return [IxMod.panic()];
     }
 
-    const bold_i = context.memory.getBytes(o.toSafeMemoryAddress(), Number(z));
+    const bold_i = context.memory.getBytes(o.u32(), Number(z));
 
     const bold_d = x.state.accounts;
     const bold_a = bold_d.get(s);
@@ -1564,10 +1554,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
-    if (
-      bold_a.requests.get(Hashing.blake2b(bold_i), z.checked_u32())?.length !==
-      0
-    ) {
+    if (bold_a.requests.get(Hashing.blake2b(bold_i), z.u32())?.length !== 0) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
@@ -1601,16 +1588,21 @@ export class HostFunctions {
       serviceIndex?: ServiceIndex;
     },
   ): Array<never> {
-    const level = context.registers.w7().checked_u32();
-    const w8 = context.registers.w8().u64();
-    const w9 = context.registers.w9().checked_u32();
+    const [w7, _w8, _w9, _w10, _w11] = context.registers.slice(7);
+    assert(w7.fitsInU32());
+    assert(_w9.fitsInU32());
+    assert(_w11.fitsInU32());
+
+    const level = w7.u32();
+    const w8 = _w8.u64();
+    const w9 = _w9.u32();
     let target = undefined;
     if (w8 !== 0n && w9 !== 0) {
       target = context.memory.getBytes(w8, w9);
     }
 
-    const w10 = context.registers.w10().u64();
-    const w11 = context.registers.w11().checked_u32();
+    const w10 = _w10.u64();
+    const w11 = _w11.u32();
 
     const message = context.memory.getBytes(w10, w11);
     const lvlString = ["FATAL", "WARN", "INFO", "DEBUG", "TRACE"][level];

@@ -8,11 +8,11 @@ import {
 import type {
   PVMRegisterRawValue,
   PVMRegisterValue,
+  Tagged,
   u32,
   u64,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import assert from "node:assert";
 
 @JamCodecable()
 export class PVMRegisterImpl
@@ -27,12 +27,11 @@ export class PVMRegisterImpl
     this.value = value ?? toTagged(0n);
   }
 
-  checked_u32<T extends u32>(): T {
-    assert(this.fitsInU32(), "Value exceeds u32 range");
+  u32<T extends u32>(this: Tagged<PVMRegisterImpl, "<u32">): T {
     return Number(this.value) as T;
   }
 
-  fitsInU32(): boolean {
+  fitsInU32(): this is Tagged<PVMRegisterImpl, "<u32"> {
     return this.value < 2n ** 32n;
   }
 
