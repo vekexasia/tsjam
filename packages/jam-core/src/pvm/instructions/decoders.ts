@@ -9,7 +9,6 @@ import {
 import assert from "node:assert";
 import { readVarIntFromBuffer } from "../utils/varint";
 import { Z } from "../utils/zed";
-import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { HydratedArgs } from "./types";
 
 export const NoArgIxDecoder = () => ({});
@@ -32,7 +31,11 @@ export const OneRegOneExtImmArgsIxDecoder = (bytes: Uint8Array) => {
 
   const vX = E_8.decode(bytes.subarray(1, 1 + 8)).value;
 
-  return { rA, vX };
+  return {
+    rA,
+    vX,
+    wA: 0n, // will be hydrated later
+  };
 };
 
 export type OneRegOneExtImmArgs = HydratedArgs<
@@ -72,7 +75,10 @@ export const OneOffsetIxDecoder = (bytes: Uint8Array) => {
     Number(Z(lx, E_sub(lx).decode(bytes.subarray(0, lx)).value))
   );
 
-  return { ipOffsetRaw };
+  return {
+    ipOffsetRaw,
+    ipOffset: 0, // will be hydrated later
+  };
 };
 
 export type OneOffsetArgs = HydratedArgs<ReturnType<typeof OneOffsetIxDecoder>>;
@@ -85,7 +91,11 @@ export const OneRegOneImmIxDecoder = (bytes: Uint8Array) => {
   const vX = <PVMRegisterRawValue>(
     readVarIntFromBuffer(bytes.subarray(1), lx as u8)
   );
-  return { rA, vX };
+  return {
+    rA,
+    vX,
+    wA: 0n, // will be hydrated later
+  };
 };
 
 export type OneRegOneImmArgs = HydratedArgs<
@@ -125,7 +135,13 @@ export const OneRegOneIMMOneOffsetIxDecoder = (bytes: Uint8Array) => {
     Z(ly, E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
   ) as i32;
 
-  return { rA, vX, ipOffsetRaw };
+  return {
+    rA,
+    vX,
+    ipOffsetRaw,
+    wA: 0n, // will be hydrated later
+    ipOffset: 0, // will be hydrated later
+  };
 };
 
 export type OneRegOneIMMOneOffsetArgs = HydratedArgs<
@@ -137,7 +153,12 @@ export const TwoRegIxDecoder = (bytes: Uint8Array) => {
   assert(bytes.length > 0, "no input bytes");
   const rD = <RegisterIdentifier>Math.min(12, bytes[0] % 16);
   const rA = <RegisterIdentifier>Math.min(12, Math.floor(bytes[0] / 16));
-  return { rD, rA };
+  return {
+    rA,
+    rD,
+    wA: 0n, // will be hydrated later
+    wD: 0n, // will be hydrated later
+  };
 };
 
 export type TwoRegArgs = HydratedArgs<ReturnType<typeof TwoRegIxDecoder>>;
@@ -153,6 +174,8 @@ export const TwoRegOneImmIxDecoder = (bytes: Uint8Array) => {
     rA,
     rB,
     vX,
+    wA: 0n, // will be hydrated later
+    wB: 0n, // will be hydrated later
   };
 };
 
@@ -217,6 +240,9 @@ export const ThreeRegIxDecoder = (bytes: Uint8Array) => {
     rA,
     rB,
     rD,
+    wA: 0n, // will be hydrated later
+    wB: 0n, // will be hydrated later
+    wD: 0n, // will be hydrated later
   };
 };
 

@@ -8,11 +8,13 @@ import {
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
+  RegisterIdentifier,
+  SingleRegisterIdentifier,
   u32,
   u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import assert from "node:assert";
+//import assert from "node:assert";
 
 export const X_fn = (n: bigint) => (x: bigint) =>
   x + (x / 2n ** (8n * n - 1n)) * (2n ** 64n - 2n ** (8n * n));
@@ -64,21 +66,29 @@ export const IxMod = {
     type: "gas",
     data: value as Gas,
   }),
-  reg: <T extends number>(
+  reg: <T extends RegisterIdentifier>(
     register: T,
-    value: number | bigint,
+    value: bigint,
   ): PVMSingleModRegister<T> => {
-    assert(register >= 0 && register < 13, `${register} not in bounds`);
+    // assert(register >= 0 && register < 13);
     return {
       type: "register",
       data: {
         index: register,
-        value: BigInt(value) as PVMRegisterRawValue,
+        value: <PVMRegisterRawValue>value,
       },
     };
   },
-  w7: (value: number | bigint) => IxMod.reg(7, value),
-  w8: (value: number | bigint) => IxMod.reg(8, value),
+  w7: (value: bigint | number) =>
+    IxMod.reg<SingleRegisterIdentifier<7>>(
+      <SingleRegisterIdentifier<7>>7,
+      BigInt(value),
+    ),
+  w8: (value: bigint | number) =>
+    IxMod.reg<SingleRegisterIdentifier<8>>(
+      <SingleRegisterIdentifier<8>>8,
+      BigInt(value),
+    ),
   memory: (from: number | bigint, data: Uint8Array): PVMSingleModMemory => ({
     type: "memory",
     data: {

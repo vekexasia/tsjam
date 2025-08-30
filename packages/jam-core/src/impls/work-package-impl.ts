@@ -32,7 +32,9 @@ import type {
   CoreIndex,
   Gas,
   PVMProgramCode,
+  PVMRegisterRawValue,
   PVMResultContext,
+  RegisterIdentifier,
   ServiceIndex,
   u32,
   WorkError,
@@ -209,7 +211,10 @@ const F_Fn =
     }
     return applyMods(input.ctx, input.out as never, [
       IxMod.gas(10n),
-      IxMod.reg(7, HostCallResult.WHAT),
+      IxMod.reg(
+        <RegisterIdentifier>7,
+        <PVMRegisterRawValue>HostCallResult.WHAT,
+      ),
     ]);
   };
 

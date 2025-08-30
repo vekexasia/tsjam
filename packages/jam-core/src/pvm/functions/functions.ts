@@ -327,7 +327,10 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    return [IxMod.w7(v.length), IxMod.memory(o.value, v.subarray(f, f + l))];
+    return [
+      IxMod.w7(BigInt(v.length)),
+      IxMod.memory(o.value, v.subarray(f, f + l)),
+    ];
   }
 
   /**
@@ -379,7 +382,7 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
     return [
-      IxMod.w7(bold_v.length),
+      IxMod.w7(BigInt(bold_v.length)),
       IxMod.memory(o.value, bold_v.subarray(Number(f), Number(f + l))),
     ];
   }
@@ -433,7 +436,7 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
     return [
-      IxMod.w7(bold_v.length),
+      IxMod.w7(BigInt(bold_v.length)),
       IxMod.memory(o.u32(), bold_v.subarray(f, f + l)),
     ];
   }
@@ -489,9 +492,9 @@ export class HostFunctions {
     if (bold_a.gasThreshold() > bold_a.balance) {
       return [IxMod.w7(HostCallResult.FULL)];
     }
-    let l: number | bigint;
+    let l: bigint;
     if (args.bold_s.storage.has(bold_k)) {
-      l = args.bold_s.storage.get(bold_k)!.length;
+      l = BigInt(args.bold_s.storage.get(bold_k)!.length);
     } else {
       l = HostCallResult.NONE;
     }
@@ -542,7 +545,10 @@ export class HostFunctions {
     if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     } else {
-      return [IxMod.w7(v.length), IxMod.memory(o.u32(), v.subarray(f, f + l))];
+      return [
+        IxMod.w7(BigInt(v.length)),
+        IxMod.memory(o.u32(), v.subarray(f, f + l)),
+      ];
     }
   }
 
@@ -584,7 +590,10 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    return [IxMod.w7(v.length), IxMod.memory(o.u32(), v.subarray(f, l))];
+    return [
+      IxMod.w7(BigInt(v.length)),
+      IxMod.memory(o.u32(), v.subarray(f, l)),
+    ];
   }
 
   /**
@@ -618,7 +627,7 @@ export class HostFunctions {
     newRefineCtx.segments.push(bold_x);
 
     return [
-      IxMod.w7(args.segmentOffset + args.refineCtx.segments.length),
+      IxMod.w7(BigInt(args.segmentOffset + args.refineCtx.segments.length)),
       IxMod.obj(newRefineCtx),
     ];
   }
@@ -665,7 +674,7 @@ export class HostFunctions {
       instructionPointer: <u32>Number(i.value),
     });
     return [
-      IxMod.w7(n), // new Service index?
+      IxMod.w7(BigInt(n)), // new Service index?
       IxMod.obj(newContext),
     ];
   }
@@ -857,8 +866,8 @@ export class HostFunctions {
           updatedCtx.instructionPointer + 1,
         );
         return [
-          IxMod.w8(exitReason.opCode!),
-          IxMod.w7(InnerPVMResultCode.HOST),
+          IxMod.w8(BigInt(exitReason.opCode!)),
+          IxMod.w7(BigInt(InnerPVMResultCode.HOST)),
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];

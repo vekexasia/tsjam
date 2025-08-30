@@ -18,17 +18,18 @@ export function hydrateIxArgs<
     ipOffset: u32;
   },
 >(decoded: T, ctx: PVMIxEvaluateFNContextImpl): HydratedArgs<T> {
+  const regs = ctx.execution.registers.elements;
   // registers
-  if ("rA" in decoded) {
-    decoded.wA = ctx.execution.registers.elements[decoded.rA!].value;
+  if (typeof decoded.rA !== "undefined") {
+    decoded.wA = regs[decoded.rA!].value;
   }
-  if ("rB" in decoded) {
-    decoded.wB = ctx.execution.registers.elements[decoded.rB!].value;
+  if (typeof decoded.rB !== "undefined") {
+    decoded.wB = regs[decoded.rB!].value;
   }
-  if ("rD" in decoded) {
-    decoded.wD = ctx.execution.registers.elements[decoded.rD!].value;
+  if (typeof decoded.rD !== "undefined") {
+    decoded.wD = regs[decoded.rD!].value;
   }
-  if ("ipOffsetRaw" in decoded) {
+  if (typeof decoded.ipOffsetRaw !== "undefined") {
     decoded.ipOffset = <u32>(
       (ctx.execution.instructionPointer + decoded.ipOffsetRaw!)
     );

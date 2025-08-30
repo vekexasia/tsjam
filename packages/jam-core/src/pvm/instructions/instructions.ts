@@ -1,7 +1,8 @@
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { E_2, E_2_int, E_4, E_4_int, E_8, encodeWithCodec } from "@tsjam/codec";
+import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { PVMIxReturnMods, PVMProgramExecutionContext, u32 } from "@tsjam/types";
+import { toSafeMemoryAddress } from "../pvm-memory";
 import { branch } from "../utils/branch";
 import { djump } from "../utils/djump";
 import { Z, Z4, Z8, Z8_inv } from "../utils/zed";
@@ -35,7 +36,6 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { IxMod, smod, X_4, X_8, X_fn } from "./utils";
-import { toSafeMemoryAddress } from "../pvm-memory";
 
 /**
  * This class holds the ixs implementations.
@@ -119,7 +119,7 @@ export class Instructions {
     return [
       IxMod.reg(
         rA,
-        context.execution.memory.getBytes(memoryAddress, 1)[0] as number as u32,
+        BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0]),
       ),
     ];
   }
@@ -137,8 +137,7 @@ export class Instructions {
     return [
       IxMod.reg(
         rA,
-        E_2_int.decode(context.execution.memory.getBytes(memoryAddress, 2))
-          .value,
+        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
       ),
     ];
   }
@@ -155,8 +154,7 @@ export class Instructions {
     return [
       IxMod.reg(
         rA,
-        E_4_int.decode(context.execution.memory.getBytes(memoryAddress, 4))
-          .value,
+        E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value,
       ),
     ];
   }
@@ -412,14 +410,14 @@ export class Instructions {
     const requestedSize = <u32>Number(wA);
     const pointer = context.execution.memory.heap.pointer;
     if (requestedSize === 0) {
-      return [IxMod.reg(rD, pointer)];
+      return [IxMod.reg(rD, BigInt(pointer))];
     }
 
     const location = context.execution.memory.firstWriteableInHeap(
       <u32>Number(wA),
     )!;
 
-    return [IxMod.reg(rD, location)];
+    return [IxMod.reg(rD, BigInt(location))];
   }
 
   @Ix(102, TwoRegIxDecoder)
@@ -636,7 +634,7 @@ export class Instructions {
       );
     }
     return [
-      IxMod.reg(rA, context.execution.memory.getBytes(location, 1)[0] as u32),
+      IxMod.reg(rA, BigInt(context.execution.memory.getBytes(location, 1)[0])),
     ];
   }
 
@@ -768,12 +766,12 @@ export class Instructions {
 
   @Ix(136, TwoRegOneImmIxDecoder)
   set_lt_u_imm({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, wB < vX ? 1 : 0)];
+    return [IxMod.reg(rA, wB < vX ? 1n : 0n)];
   }
 
   @Ix(137, TwoRegOneImmIxDecoder)
   set_lt_s_imm({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, Z8(wB) < Z8(BigInt(vX)) ? 1 : 0)];
+    return [IxMod.reg(rA, Z8(wB) < Z8(BigInt(vX)) ? 1n : 0n)];
   }
 
   @Ix(138, TwoRegOneImmIxDecoder)
@@ -806,12 +804,12 @@ export class Instructions {
 
   @Ix(142, TwoRegOneImmIxDecoder)
   set_gt_u_imm({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, wB > vX ? 1 : 0)];
+    return [IxMod.reg(rA, wB > vX ? 1n : 0n)];
   }
 
   @Ix(143, TwoRegOneImmIxDecoder)
   set_gt_s_imm({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, Z8(wB) > Z8(BigInt(vX)) ? 1 : 0)];
+    return [IxMod.reg(rA, Z8(wB) > Z8(BigInt(vX)) ? 1n : 0n)];
   }
 
   @Ix(144, TwoRegOneImmIxDecoder)
@@ -821,7 +819,7 @@ export class Instructions {
 
   @Ix(145, TwoRegOneImmIxDecoder)
   shlo_r_imm_alt_32({ rA, wB, vX }: TwoRegOneImmArgs) {
-    return [IxMod.reg(rA, (Number(vX) >>> Number(wB % 32n)) as u32)];
+    return [IxMod.reg(rA, BigInt(Number(vX) >>> Number(wB % 32n)))];
   }
 
   @Ix(146, TwoRegOneImmIxDecoder)
@@ -992,9 +990,9 @@ export class Instructions {
   rem_s_32({ wA, wB, rD }: ThreeRegArgs) {
     const z4a = Z4(wA % 2n ** 32n);
     const z4b = Z4(wB % 2n ** 32n);
-    let newVal: number | bigint;
+    let newVal: bigint;
     if (z4a === -1 * 2 ** 31 && z4b === -1) {
-      newVal = 0;
+      newVal = 0n;
     } else {
       newVal = Z8_inv(smod(BigInt(z4a), BigInt(z4b)));
     }
@@ -1075,9 +1073,9 @@ export class Instructions {
   rem_s_64({ wA, wB, rD }: ThreeRegArgs) {
     const z8a = Z8(wA);
     const z8b = Z8(wB);
-    let newVal: number | bigint;
+    let newVal: bigint;
     if (z8a === -1n * 2n ** 63n && z8b === -1n) {
-      newVal = 0 as u32;
+      newVal = 0n;
     } else {
       newVal = Z8_inv(smod(z8a, z8b));
     }
@@ -1142,14 +1140,14 @@ export class Instructions {
 
   @Ix(216, ThreeRegIxDecoder)
   set_lt_u({ wA, wB, rD }: ThreeRegArgs) {
-    return [IxMod.reg(rD, wA < wB ? 1 : 0)];
+    return [IxMod.reg(rD, wA < wB ? 1n : 0n)];
   }
 
   @Ix(217, ThreeRegIxDecoder)
   set_lt_s({ wA, wB, rD }: ThreeRegArgs) {
     const z4a = Z8(wA);
     const z4b = Z8(wB);
-    return [IxMod.reg(rD, z4a < z4b ? 1 : 0)];
+    return [IxMod.reg(rD, z4a < z4b ? 1n : 0n)];
   }
 
   @Ix(218, ThreeRegIxDecoder)

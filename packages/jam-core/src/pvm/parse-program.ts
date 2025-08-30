@@ -49,10 +49,11 @@ export class ParsedProgram implements IParsedProgram {
   }
 
   ixAt<K extends PVMIx<unknown>>(pointer: u32): K | undefined {
-    if (!this.#ixs.has(pointer)) {
+    const ix = this.#ixs.get(pointer);
+    if (typeof ix === "undefined") {
       return undefined;
     }
-    return Ixdb.byCode.get(this.#ixs.get(pointer)!) as K | undefined;
+    return Ixdb.byCode.get(ix) as K | undefined;
   }
 
   /**
@@ -74,7 +75,8 @@ export class ParsedProgram implements IParsedProgram {
    * $(0.7.1 - A.6)
    */
   singleStep(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
-    const ix = this.ixAt(ctx.execution.instructionPointer);
+    const ip = ctx.execution.instructionPointer;
+    const ix = this.ixAt(ip);
     if (typeof ix === "undefined") {
       const o = applyMods(ctx.execution, {} as object, [
         IxMod.gas(TRAP_COST),
@@ -83,23 +85,20 @@ export class ParsedProgram implements IParsedProgram {
       return o;
     }
 
-    const skip = this.skip(ctx.execution.instructionPointer) + 1;
+    const skip = this.#ixSkips.get(ip)! + 1;
 
-    let args = this.#ixDecodeCache.get(ctx.execution.instructionPointer);
+    let args = this.#ixDecodeCache.get(ip);
     if (typeof args === "undefined") {
       try {
-        const byteArgs = this.rawProgram.c.subarray(
-          ctx.execution.instructionPointer + 1,
-          ctx.execution.instructionPointer + skip,
-        );
+        const byteArgs = this.rawProgram.c.subarray(ip + 1, ip + skip);
 
         args = <object>ix.decode(byteArgs);
-        this.#ixDecodeCache.set(ctx.execution.instructionPointer, args);
+        this.#ixDecodeCache.set(ip, args);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         console.warn(`Decoding error for ${ix.identifier}`, e.message);
         const o = applyMods(ctx.execution, {} as object, [
-          IxMod.skip(ctx.execution.instructionPointer, skip), //NOTE: not sure we should skip
+          IxMod.skip(ip, skip), //NOTE: not sure we should skip
           IxMod.gas(TRAP_COST + ix.gasCost),
           IxMod.panic(),
         ]);
@@ -117,7 +116,7 @@ export class ParsedProgram implements IParsedProgram {
     // $(0.7.1 - A.8)
     return applyMods(ctx.execution, {} as object, [
       IxMod.gas(ix.gasCost), // g′ = g − g∆
-      IxMod.skip(ctx.execution.instructionPointer, skip), // i'
+      IxMod.skip(ip, skip), // i'
       ...ixMods,
     ]);
   }

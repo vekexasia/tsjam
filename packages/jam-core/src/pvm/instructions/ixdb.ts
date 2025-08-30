@@ -60,12 +60,8 @@ export const Ix = <
           args: HydratedArgs<Args>,
           context: PVMIxEvaluateFNContextImpl,
         ) {
-          return descriptor.value!.call(
-            this,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            hydrateIxArgs(<any>args, context),
-            context,
-          );
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return descriptor.value!(hydrateIxArgs(<any>args, context), context);
         },
         gasCost: 1n as Gas,
       },

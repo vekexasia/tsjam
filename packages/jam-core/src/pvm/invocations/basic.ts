@@ -28,7 +28,6 @@ export const basicInvocation = (
   bold_p: ParsedProgram,
   ctx: PVMIxEvaluateFNContextImpl,
 ): PVMExitReasonImpl => {
-  // how to handle errors here?
   let idx = 1;
   const isDebugLog = process.env.DEBUG_STEPS === "true";
   const execCtx = ctx.execution;
@@ -44,8 +43,8 @@ export const basicInvocation = (
       );
     }
     if (typeof exitReason !== "undefined") {
-      log("exitReson != empty", process.env.DEBUG_STEPS === "true");
-      log(exitReason.toString(), process.env.DEBUG_STEPS === "true");
+      log("exitReson != empty", isDebugLog);
+      log(exitReason.toString(), isDebugLog);
       return exitReason;
     }
   }
