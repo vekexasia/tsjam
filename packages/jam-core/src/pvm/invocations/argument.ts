@@ -9,7 +9,6 @@ import {
 import { programInitialization } from "../program";
 import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./host-call";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 /**
  * `ΨM` in the paper
@@ -75,18 +74,15 @@ const R_fn = <X>(
     };
   }
   if (hostCall.exitReason?.reason === RegularPVMExitReason.Halt) {
-    const readable = context.memory.canRead(
-      context.registers.w7().value,
-      Number(context.registers.w8()),
-    );
+    const w7 = context.registers.w7();
+    const readable =
+      w7.fitsInU32() &&
+      context.memory.canRead(w7.u32(), Number(context.registers.w8()));
     if (readable) {
       return {
         gasUsed: gas_prime,
         res: new WorkOutputImpl<WorkError.OutOfGas>(
-          context.memory.getBytes(
-            context.registers.w7().value,
-            Number(context.registers.w8()),
-          ),
+          context.memory.getBytes(w7.u32(), Number(context.registers.w8())),
         ),
         out: hostCall.out,
       };

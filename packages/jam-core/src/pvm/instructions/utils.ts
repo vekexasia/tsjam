@@ -89,10 +89,10 @@ export const IxMod = {
       <SingleRegisterIdentifier<8>>8,
       BigInt(value),
     ),
-  memory: (from: number | bigint, data: Uint8Array): PVMSingleModMemory => ({
+  memory: (from: u32, data: Uint8Array): PVMSingleModMemory => ({
     type: "memory",
     data: {
-      from: Number(from) as u32,
+      from,
       data,
     },
   }),

@@ -242,22 +242,37 @@ export class Instructions {
 
   @Ix(59, OneRegOneImmIxDecoder)
   store_u8({ wA, vX }: OneRegOneImmArgs) {
-    return [IxMod.memory(vX, new Uint8Array([Number(wA % 256n)]))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(vX),
+        new Uint8Array([Number(wA % 256n)]),
+      ),
+    ];
   }
 
   @Ix(60, OneRegOneImmIxDecoder)
   store_u16({ wA, vX }: OneRegOneImmArgs) {
-    return [IxMod.memory(vX, encodeWithCodec(E_2, wA % 2n ** 16n))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(vX),
+        encodeWithCodec(E_2, wA % 2n ** 16n),
+      ),
+    ];
   }
 
   @Ix(61, OneRegOneImmIxDecoder)
   store_u32({ wA, vX }: OneRegOneImmArgs) {
-    return [IxMod.memory(vX, encodeWithCodec(E_4, wA % 2n ** 32n))];
+    return [
+      IxMod.memory(
+        toSafeMemoryAddress(vX),
+        encodeWithCodec(E_4, wA % 2n ** 32n),
+      ),
+    ];
   }
 
   @Ix(62, OneRegOneImmIxDecoder)
   store_u64({ wA, vX }: OneRegOneImmArgs) {
-    return [IxMod.memory(vX, encodeWithCodec(E_8, wA))];
+    return [IxMod.memory(toSafeMemoryAddress(vX), encodeWithCodec(E_8, wA))];
   }
 
   @Ix(70, OneRegTwoImmIxDecoder)

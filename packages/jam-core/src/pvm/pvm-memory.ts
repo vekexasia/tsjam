@@ -31,10 +31,10 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  #locationFromAddress(address: u32 | bigint) {
+  #locationFromAddress(address: u32) {
     return {
-      page: Math.floor(Number(address) / Zp),
-      offset: Number(address) % Zp,
+      page: Math.floor(address / Zp),
+      offset: address % Zp,
     };
   }
 
@@ -62,7 +62,7 @@ export class PVMMemory implements IPVMMemory {
     return memory!;
   }
 
-  #setBytes(address: u32 | bigint, bytes: Uint8Array): void {
+  #setBytes(address: u32, bytes: Uint8Array): void {
     if (bytes.length === 0) {
       return;
     }
@@ -87,7 +87,7 @@ export class PVMMemory implements IPVMMemory {
   /**
    * Returns copy of content in single Uint8Array
    */
-  #getBytes(address: u32 | bigint, length: number): Uint8Array {
+  #getBytes(address: u32, length: number): Uint8Array {
     if (length === 0) {
       return new Uint8Array(0);
     }
@@ -137,19 +137,13 @@ export class PVMMemory implements IPVMMemory {
     return this;
   }
 
-  getBytes(address: u32 | bigint, length: number): Uint8Array {
+  getBytes(address: u32, length: number): Uint8Array {
     assert(this.canRead(address, length));
     const r = this.#getBytes(address, length);
     return r;
   }
 
-  canRead(address: u32 | bigint, length: number): boolean {
-    if (typeof address === "bigint") {
-      if (address >= 2n ** 32n) {
-        return false;
-      }
-      address = <u32>Number(address);
-    }
+  canRead(address: u32, length: number): boolean {
     return this.firstUnreadable(address, length) === undefined;
   }
 
@@ -162,14 +156,7 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  canWrite(address: u32 | bigint, length: number): boolean {
-    if (typeof address === "bigint") {
-      if (address >= 2n ** 32n) {
-        return false;
-      }
-      address = <u32>Number(address);
-    }
-
+  canWrite(address: u32, length: number): boolean {
     return this.firstUnwriteable(address, length) === undefined;
   }
 
@@ -187,7 +174,7 @@ export class PVMMemory implements IPVMMemory {
   }
 
   // TODO: rename to sbrk properly
-  firstWriteableInHeap(size: u32): u32 | undefined {
+  firstWriteableInHeap(size: u32): u32 {
     if (this.heap.pointer + size >= this.heap.end) {
       for (let i = 0; i < Math.ceil(size / Zp); i++) {
         // allocate one page
@@ -228,6 +215,6 @@ export class PVMMemory implements IPVMMemory {
   }
 }
 
-export const toSafeMemoryAddress = (rawAddr: u32 | bigint): u32 => {
+export const toSafeMemoryAddress = (rawAddr: bigint): u32 => {
   return <u32>Number(BigInt(rawAddr) % 2n ** 32n);
 };

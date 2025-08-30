@@ -323,13 +323,13 @@ export class HostFunctions {
 
     const f = w8.value < v.length ? Number(w8.value) : v.length;
     const l = w9.value < v.length - f ? Number(w9.value) : v.length - f;
-    if (!context.memory.canWrite(o.value, l)) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     }
 
     return [
       IxMod.w7(BigInt(v.length)),
-      IxMod.memory(o.value, v.subarray(f, f + l)),
+      IxMod.memory(o.u32(), v.subarray(f, f + l)),
     ];
   }
 
@@ -344,7 +344,6 @@ export class HostFunctions {
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     let bold_a: ServiceAccountImpl | undefined;
     const w7 = context.registers.w7();
-    debugger;
     if (Number(w7) === args.s || w7.value === 2n ** 64n - 1n) {
       bold_a = args.bold_s;
     } else if (w7.fitsInU32() && args.bold_d.has(w7.u32())) {
@@ -354,9 +353,9 @@ export class HostFunctions {
     const [h, o] = context.registers.slice(8);
 
     let hash: Blake2bHash;
-    if (context.memory.canRead(h.value, 32)) {
+    if (h.fitsInU32() && context.memory.canRead(h.u32(), 32)) {
       hash = <Blake2bHash>(
-        HashCodec.decode(context.memory.getBytes(h.value, 32)).value
+        HashCodec.decode(context.memory.getBytes(h.u32(), 32)).value
       );
     } else {
       // v = ∇
@@ -378,12 +377,12 @@ export class HostFunctions {
     // length
     const l = w11.value < vLength - f ? w11.value : vLength - f;
 
-    if (false === context.memory.canWrite(o.value, Number(l))) {
+    if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), Number(l))) {
       return [IxMod.panic()];
     }
     return [
       IxMod.w7(BigInt(bold_v.length)),
-      IxMod.memory(o.value, bold_v.subarray(Number(f), Number(f + l))),
+      IxMod.memory(o.u32(), bold_v.subarray(Number(f), Number(f + l))),
     ];
   }
 
@@ -769,7 +768,7 @@ export class HostFunctions {
     if (r.value > 4 || p.value < 16 || p.value + c.value >= 2 ** 32 / Zp) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
-    if (r.value > 2 && bold_u.canRead(p.value, Number(c))) {
+    if (r.value > 2 && p.fitsInU32() && bold_u.canRead(p.u32(), Number(c))) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
@@ -816,7 +815,7 @@ export class HostFunctions {
     }
     const g = E_8.decode(context.memory.getBytes(o.u32(), 8)).value;
     const bold_w = PVMRegistersImpl.decode(
-      context.memory.getBytes(o.value + 8n, 112 - 8),
+      context.memory.getBytes(<u32>(o.u32() + 8), 112 - 8),
     ).value;
 
     const pvmCtx = new PVMProgramExecutionContextImpl({
@@ -866,8 +865,8 @@ export class HostFunctions {
           updatedCtx.instructionPointer + 1,
         );
         return [
-          IxMod.w8(BigInt(exitReason.opCode!)),
-          IxMod.w7(BigInt(InnerPVMResultCode.HOST)),
+          IxMod.w8(exitReason.opCode!),
+          IxMod.w7(InnerPVMResultCode.HOST),
           IxMod.memory(newMemory.from, newMemory.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
@@ -1601,16 +1600,18 @@ export class HostFunctions {
     assert(w7.fitsInU32());
     assert(_w9.fitsInU32());
     assert(_w11.fitsInU32());
+    assert(_w8.fitsInU32());
+    assert(_w10.fitsInU32());
 
     const level = w7.u32();
-    const w8 = _w8.u64();
+    const w8 = _w8.u32();
     const w9 = _w9.u32();
     let target = undefined;
-    if (w8 !== 0n && w9 !== 0) {
+    if (w8 !== 0 && w9 !== 0) {
       target = context.memory.getBytes(w8, w9);
     }
 
-    const w10 = _w10.u64();
+    const w10 = _w10.u32();
     const w11 = _w11.u32();
 
     const message = context.memory.getBytes(w10, w11);
