@@ -98,6 +98,7 @@ export const rollupCreate = (conf, typescriptOptions = null) => {
           }
         },
       },
+      ...(conf.plugins ?? []),
     ],
   };
 };

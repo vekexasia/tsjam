@@ -41,7 +41,7 @@ export class PeerInfo extends BaseJamCodecable {
 
   static build(): PeerInfo {
     const toRet = new PeerInfo();
-    toRet.name = `tsjam-${packageJSON["version"]}-${getConstantsMode()}`;
+    toRet.name = `tsjam-${packageJSON["version"]}-${getConstantsMode()}-$$commit$$`;
     toRet.jamVersion = new Version();
     toRet.jamVersion.major = <u8>(
       parseInt(packageJSON["jam:protocolVersion"].split(".")[0])

@@ -1,8 +1,10 @@
+import replace from "@rollup/plugin-replace";
 import fs from "fs";
 import { rollupCreate } from "../../build/rollupconfigcreator.mjs";
+import { execSync } from "child_process";
 import { terser } from "rollup-plugin-terser";
 const tsOptions = { compilerOptions: { rootDir: "." } };
-
+const shortHash = execSync("git rev-parse --short=8 HEAD").toString().trim();
 const p = JSON.parse(fs.readFileSync("package.json", "utf-8"));
 const external = Object.keys(p.dependencies ?? {})
   .concat("vitest")
@@ -19,7 +21,16 @@ export default [
         outputFile: "dist/cli.mjs",
         isBrowser: false,
         isEsm: true,
-        plugins: [terser()],
+        plugins: [
+          replace({
+            values: {
+              $$commit$$: shortHash,
+            },
+            delimiters: ["", ""],
+            preventAssignment: true,
+          }),
+          terser(),
+        ],
       },
       {
         compilerOptions: {
