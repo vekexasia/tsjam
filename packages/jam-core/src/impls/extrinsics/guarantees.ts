@@ -468,6 +468,11 @@ export class GuaranteesExtrinsicImpl
         return err(EGError.LOOKUP_ANCHOR_NOT_WITHIN_L);
       }
 
+      if (process.env.RUNNING_TRACE_TESTS === "true") {
+        // NOTE: we skip header history checks as they are not provided
+        continue;
+      }
+
       // $(0.7.1 - 11.35)
       const lookupHeader = deps.headerLookupHistory.get(
         workContext.lookupAnchorSlot,

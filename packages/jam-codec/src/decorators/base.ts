@@ -77,7 +77,7 @@ export abstract class BaseJamCodecable {
     throw new Error("stub");
   }
 
-  toJSON() {
+  toJSON(): object {
     throw new Error("stub!");
   }
 }

@@ -197,7 +197,7 @@ export let PREIMAGE_EXPIRATION = 19_200;
 /**
  * `WE` in the paper
  */
-export const ERASURECODE_BASIC_SIZE = 684;
+export let ERASURECODE_BASIC_SIZE = 684;
 
 /**
  * `WP` in the paper
@@ -283,6 +283,7 @@ export function initConstants(mode?: "full" | "tiny") {
   );
   TOTAL_GAS_REFINEMENT_LOGIC = <5_000_000_000n>v.TOTAL_GAS_REFINEMENT_LOGIC;
   MINIMUM_VALIDATORS = <683>v.MINIMUM_VALIDATORS;
+  ERASURECODE_BASIC_SIZE = <684>v.ERASURECODE_BASIC_SIZE;
   CURRENT_MODE = m;
 }
 

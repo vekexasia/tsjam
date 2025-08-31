@@ -10,6 +10,7 @@ import {
 } from "@tsjam/fuzzer-target";
 import net from "net";
 import { parseArgs } from "node:util";
+import { diff } from "jest-diff";
 
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
@@ -19,8 +20,10 @@ import {
   JamBlockImpl,
   JamStateImpl,
   merkleStateMap,
+  serviceAccountDataCodec,
   SlotImpl,
   stateFromMerkleMap,
+  stateKey,
   TauImpl,
 } from "@tsjam/core";
 import {
@@ -40,7 +43,6 @@ import { GENESIS, GENESIS_STATE } from "./genesis";
 import assert from "assert";
 import path from "path";
 import { GenesisTrace, loadTrace, TraceState } from "./trace-stuff";
-
 // Parse CLI args for socket path (fallback to env, then default)
 const { values: cliArgs } = parseArgs({
   options: {
@@ -95,7 +97,9 @@ const compareState = async (
   );
 
   const stateMap = fullState.state!.value;
+  const receivedState = stateFromMerkleMap(stateMap);
   const expectedMap = merkleMap;
+  const expectedState = stateFromMerkleMap(expectedMap);
   console.log("state diverged");
   //console.error(
   //  "Expected state map:",
@@ -105,6 +109,16 @@ const compareState = async (
   //  }).toJSON(expectedMap),
   //);
 
+  for (const [key, value] of stateMap.entries()) {
+    const expectedValue = expectedMap.get(key)!;
+    if (Buffer.compare(value, expectedValue) !== 0) {
+      reverseDifferentState(key, expectedState, receivedState);
+      // throw new Error(
+      //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      //   `State mismatch for key ${key.toString()}: expected ${BufferJSONCodec().toJSON(<any>expectedValue)}, got ${BufferJSONCodec().toJSON(<any>value)}`,
+      // );
+    }
+  }
   if (
     stateMap.size !== expectedMap.size ||
     !Array.from(stateMap.keys()).every((key) => expectedMap.has(key))
@@ -113,16 +127,142 @@ const compareState = async (
       `State mismatch: expected ${expectedMap.size} entries, got ${stateMap.size}`,
     );
   }
+};
 
-  for (const [key, value] of stateMap.entries()) {
-    const expectedValue = expectedMap.get(key)!;
-    if (Buffer.compare(value, expectedValue) !== 0) {
-      throw new Error(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        `State mismatch for key ${key.toString()}: expected ${BufferJSONCodec().toJSON(<any>expectedValue)}, got ${BufferJSONCodec().toJSON(<any>value)}`,
+const reverseDifferentState = (
+  key: StateKey,
+  expected: JamStateImpl,
+  actual: JamStateImpl,
+) => {
+  if (Buffer.compare(stateKey(1), key) === 0) {
+    // authPool
+    console.log(
+      "authPool",
+      diff(expected.authPool.toJSON(), actual.authPool.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(2), key) === 0) {
+    // authQueue
+    console.log(
+      "authQueue",
+      diff(expected.authQueue.toJSON(), actual.authQueue.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(3), key) === 0) {
+    // beta
+    console.log("beta", diff(expected.beta.toJSON(), actual.beta.toJSON()));
+    return;
+  } else if (Buffer.compare(stateKey(4), key) === 0) {
+    // safrole
+    console.log(
+      "safrole",
+      diff(expected.safroleState.toJSON(), actual.safroleState.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(5), key) === 0) {
+    // disputes
+    console.log(
+      "disputes",
+      diff(expected.disputes.toJSON(), actual.disputes.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(6), key) === 0) {
+    // entropy
+    console.log(
+      "entropy",
+      diff(expected.entropy.toJSON(), actual.entropy.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(7), key) === 0) {
+    // iota
+    console.log("iota", diff(expected.iota.toJSON(), actual.iota.toJSON()));
+    return;
+  } else if (Buffer.compare(stateKey(8), key) === 0) {
+    // kappa
+    console.log("kappa", diff(expected.kappa.toJSON(), actual.kappa.toJSON()));
+    return;
+  } else if (Buffer.compare(stateKey(9), key) === 0) {
+    // lambda
+    console.log(
+      "lambda",
+      diff(expected.lambda.toJSON(), actual.lambda.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(10), key) === 0) {
+    // rho
+    console.log("rho", diff(expected.rho.toJSON(), actual.rho.toJSON()));
+    return;
+  } else if (Buffer.compare(stateKey(11), key) === 0) {
+    // slot
+    console.log("slot", diff(expected.slot.toJSON(), actual.slot.toJSON()));
+    return;
+  } else if (Buffer.compare(stateKey(12), key) === 0) {
+    // privServices
+    console.log(
+      "privServices",
+      diff(expected.privServices.toJSON(), actual.privServices.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(13), key) === 0) {
+    // statistics
+    console.log(
+      "statistics",
+      diff(expected.statistics.toJSON(), actual.statistics.toJSON()),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(14), key) === 0) {
+    // accumulation Queue
+    console.log(
+      "accumulationQueue",
+      diff(
+        expected.accumulationQueue.toJSON(),
+        actual.accumulationQueue.toJSON(),
+      ),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(15), key) === 0) {
+    // accumulationHistory
+    console.log(
+      "accumulationHistory",
+      diff(
+        expected.accumulationHistory.toJSON(),
+        actual.accumulationHistory.toJSON(),
+      ),
+    );
+    return;
+  } else if (Buffer.compare(stateKey(16), key) === 0) {
+    //theta
+    console.log(
+      "theta",
+      diff(
+        expected.mostRecentAccumulationOutputs.toJSON(),
+        actual.mostRecentAccumulationOutputs.toJSON(),
+      ),
+    );
+    return;
+  }
+
+  for (const [serviceIndex, serviceAccount] of expected.serviceAccounts
+    .elements) {
+    if (Buffer.compare(stateKey(255, serviceIndex), key) === 0) {
+      // its about this service
+      //
+      //
+      console.log(
+        `serviceAccount ${serviceIndex}`,
+        diff(
+          serviceAccount.toJSON(),
+          actual.serviceAccounts.get(serviceIndex)?.toJSON() ?? {},
+          {
+            contextLines: 1,
+            expand: false,
+          },
+        ),
       );
+      return;
     }
   }
+  // else it should be inside the account data which packs everything
 };
 
 const client = net.createConnection({ path: SOCKET_PATH }, async () => {

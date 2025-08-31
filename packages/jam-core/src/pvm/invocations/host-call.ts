@@ -5,6 +5,7 @@ import "@/pvm/functions/functions";
 import { basicInvocation, deblobProgram } from "./basic";
 import assert from "assert";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { log } from "@/utils";
 
 /**
  * Host call invocation
@@ -46,6 +47,7 @@ export const hostCallInvocation = <X>(
       ctx.instructionPointer = p_i;
 
       if (typeof hostCallRes !== "undefined") {
+        log("not defined res", process.env.DEBUG_TRACES == "true");
         // https://github.com/gavofyork/graypaper/pull/485
         assert(
           false == hostCallRes.isPageFault(),
@@ -57,6 +59,10 @@ export const hostCallInvocation = <X>(
         };
       }
     } else {
+      log(
+        `hostCallInvocation: non-host call exit ${outExit}`,
+        process.env.DEBUG_TRACES == "true",
+      );
       // regular execution without host call
       return {
         exitReason: outExit,

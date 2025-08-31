@@ -43,7 +43,8 @@ export const regFn = <Args, Out>(conf: {
   fn: DetailedPVMFn<Args, Out[], PVMProgramExecutionContextImpl>;
 }): PVMFn<
   Args,
-  Array<Out | PVMSingleModGas> | PVMExitReasonMod<PVMExitReason>[],
+  | Array<Out | PVMSingleModGas>
+  | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>],
   PVMProgramExecutionContextImpl
 > => {
   if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
@@ -54,7 +55,8 @@ export const regFn = <Args, Out>(conf: {
   }
   const newfn: PVMFn<
     Args,
-    Array<Out | PVMSingleModGas> | [PVMExitReasonMod<PVMExitReason>],
+    | Array<Out | PVMSingleModGas>
+    | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>],
     PVMProgramExecutionContextImpl
   > = (ctx: PVMProgramExecutionContextImpl, args) => {
     // $(0.7.1 - B.17 / B.19 / B.21)
@@ -64,7 +66,7 @@ export const regFn = <Args, Out>(conf: {
         : conf.fn.gasCost;
     if (gas > ctx.gas) {
       // $(0.7.1 - B.18 / B.20 / B.22) | first bracket
-      return [IxMod.outOfGas()];
+      return [IxMod.gas(gas), IxMod.outOfGas()];
     }
     return [IxMod.gas(gas), ...conf.fn.execute(ctx, args)];
   };
@@ -102,7 +104,7 @@ export const HostFn = <Args, Out>(
       log(`HostCall[${propertyKey}]`, process.env.DEBUG_STEPS == "true");
       // eslint-disable-next-line
       const res = <any>fn.call(this, ctx, args);
-      // log(res);
+      log(res, process.env.DEBUG_STEPS == "true");
       return res;
     };
     return descriptor;

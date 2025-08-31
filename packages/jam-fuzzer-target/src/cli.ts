@@ -129,3 +129,5 @@ server.listen(SOCKET_PATH, () => {
   console.log(PeerInfo.build().toJSON());
 });
 server.on("error", (err) => console.error("Server error:", err));
+
+export { server };

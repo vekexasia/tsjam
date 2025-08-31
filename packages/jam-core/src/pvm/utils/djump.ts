@@ -13,17 +13,17 @@ export const djump = (
   context: PVMIxEvaluateFNContext,
 ): PVMExitReasonImpl | void => {
   // first branch of djump(a)
+  const newIP = context.program.rawProgram.j[a / ZA - 1];
   if (a == 2 ** 32 - 2 ** 16) {
     return PVMExitReasonImpl.halt();
   } else if (
     a === 0 ||
     a > context.program.rawProgram.j.length * ZA ||
     a % ZA != 0 ||
-    false /* TODO: check if start of block context.program.j[jumpLocation / ZA] !== 1*/
+    typeof newIP === "undefined" ||
+    !context.program.isBlockBeginning(newIP)
   ) {
     return PVMExitReasonImpl.panic();
   }
-  context.execution.instructionPointer = <u32>(
-    context.program.rawProgram.j[a / ZA - 1]
-  );
+  context.execution.instructionPointer = newIP;
 };

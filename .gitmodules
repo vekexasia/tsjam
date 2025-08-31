@@ -6,3 +6,6 @@
 [submodule "jamtestnet"]
 	path = jamtestnet
 	url = git@github.com:jam-duna/jamtestnet.git
+[submodule "jam-conformance"]
+	path = jam-conformance
+	url = git@github.com:davxy/jam-conformance.git

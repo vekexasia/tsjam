@@ -1,14 +1,18 @@
-import assert from "assert";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
+import {
+  computeRequestKey,
+  MerkleServiceAccountStorageImpl,
+} from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
@@ -90,14 +94,15 @@ import {
   PVMSingleModMemory,
   PVMSingleModObject,
   RegularPVMExitReason,
+  SeqOfLength,
   ServiceIndex,
-  Tagged,
   Tau,
   u32,
   u64,
   UpToSeq,
 } from "@tsjam/types";
 import { toTagged, zeroPad } from "@tsjam/utils";
+import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import { compareUint8Arrays } from "uint8array-extras";
 import { IxMod } from "../instructions/utils";
@@ -106,11 +111,6 @@ import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import {
-  computeRequestKey,
-  MerkleServiceAccountStorageImpl,
-} from "@/impls/merkle-account-data-storage-impl";
-import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 
 export class HostFunctions {
   @HostFn(0)
@@ -177,15 +177,11 @@ export class HostFunctions {
         break;
       }
       case 1n: {
-        if (typeof args.n !== "undefined") {
-          v = args.n;
-        }
+        v = args.n;
         break;
       }
       case 2n: {
-        if (typeof args.bold_r !== "undefined") {
-          v = args.bold_r;
-        }
+        v = args.bold_r;
         break;
       }
       case 3n: {
@@ -229,9 +225,7 @@ export class HostFunctions {
         break;
       }
       case 7n: {
-        if (typeof args.p !== "undefined") {
-          v = args.p.toBinary();
-        }
+        v = args.p?.toBinary();
         break;
       }
       case 8n: {
@@ -247,9 +241,7 @@ export class HostFunctions {
         break;
       }
       case 9n: {
-        if (typeof args.p !== "undefined") {
-          v = args.p.authToken;
-        }
+        v = args.p?.authToken;
         break;
       }
       case 10n: {
@@ -415,28 +407,25 @@ export class HostFunctions {
   ): Array<PVMExitReasonMod<PVMExitReasonImpl> | W7 | PVMSingleModMemory> {
     const w7 = context.registers.w7();
     let bold_a: ServiceAccountImpl | undefined;
-    let s_star = args.s;
-    if (w7.value !== 2n ** 64n - 1n) {
-      s_star = <ServiceIndex>Number(w7);
+    let s_star = <ServiceIndex>Number(w7);
+    if (w7.value === 2n ** 64n - 1n) {
+      s_star = args.s;
     }
     if (s_star === args.s) {
       bold_a = args.bold_s;
-    } else if (
-      s_star !== args.s &&
-      w7.fitsInU32() &&
-      args.bold_d.has(w7.u32())
-    ) {
-      bold_a = args.bold_d.get(w7.u32());
+    } else if (args.bold_d.has(s_star)) {
+      bold_a = args.bold_d.get(s_star);
     }
 
     const [ko, kz, o, w11, w12] = context.registers.slice(8);
-    if (!context.memory.canRead(ko.toSafeMemoryAddress(), Number(kz))) {
+    if (
+      !ko.fitsInU32() ||
+      !kz.fitsInU32() ||
+      !context.memory.canRead(ko.u32(), kz.u32())
+    ) {
       return [IxMod.panic()];
     }
-    const bold_k = context.memory.getBytes(
-      ko.toSafeMemoryAddress(),
-      Number(kz),
-    );
+    const bold_k = context.memory.getBytes(ko.u32(), kz.u32());
 
     const bold_v = bold_a?.storage.get(bold_k);
     if (typeof bold_v === "undefined") {
@@ -481,13 +470,12 @@ export class HostFunctions {
       bold_k = context.memory.getBytes(ko.u32(), kz.u32());
     }
 
-    // const _existed = args.bold_s.storage.has(bold_k);
     const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
       log(
         `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s}`,
-        process.env.DEBUG_TRACES === "true",
+        process.env.DEBUG_STEPS === "true",
       );
       bold_a.storage.delete(bold_k);
     } else if (
@@ -497,7 +485,7 @@ export class HostFunctions {
     ) {
       log(
         `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))}`,
-        process.env.DEBUG_TRACES === "true",
+        process.env.DEBUG_STEPS === "true",
       );
       bold_a.storage.set(bold_k, context.memory.getBytes(vo.u32(), vz.u32()));
     } else {
@@ -545,16 +533,10 @@ export class HostFunctions {
       parent: bold_a.parent,
     });
 
-    // https://github.com/gavofyork/graypaper/pull/480
-    let f = Number(context.registers.w9());
-    if (f > v.length) {
-      f = v.length;
-    }
-
-    let l = Number(context.registers.w10());
-    if (l > v.length - f) {
-      l = v.length - f;
-    }
+    // NOTE: https://github.com/gavofyork/graypaper/pull/480
+    // that is why we have w9 and w10 instead of w11 and w12
+    const f = Math.min(Number(context.registers.w9().value), v.length);
+    const l = Math.min(Number(context.registers.w10().value), v.length - f);
 
     const o = context.registers.w8();
     if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
@@ -599,8 +581,8 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.NONE)];
     }
 
-    const f = Math.min(Number(w10), v.length);
-    const l = Math.min(Number(w11), v.length - f);
+    const f = Math.min(Number(w10.value), v.length);
+    const l = Math.min(Number(w11.value), v.length - f);
     if (!o.fitsInU32() || !context.memory.canWrite(o.u32(), l)) {
       return [IxMod.panic()];
     }
@@ -618,7 +600,13 @@ export class HostFunctions {
   @HostFn(7)
   export(
     context: PVMProgramExecutionContextImpl,
-    args: { refineCtx: RefineContext; segmentOffset: number },
+    args: {
+      refineCtx: RefineContext;
+      /**
+       * ς
+       */
+      segmentOffset: number;
+    },
   ): Array<
     W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModObject<RefineContext>
   > {
@@ -638,7 +626,10 @@ export class HostFunctions {
       ERASURECODE_SEGMENT_SIZE,
       context.memory.getBytes(p.u32(), z),
     );
-    const newRefineCtx = structuredClone(args.refineCtx); // ok to structuredClone as of 0.7.1
+    const newRefineCtx: RefineContext = {
+      segments: args.refineCtx.segments.slice(),
+      bold_m: args.refineCtx.bold_m,
+    };
     newRefineCtx.segments.push(bold_x);
 
     return [
@@ -682,7 +673,10 @@ export class HostFunctions {
       end: <u32>0,
       pointer: <u32>0,
     });
-    const newContext = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
+    const newContext: RefineContext = {
+      bold_m: new Map(refineCtx.bold_m),
+      segments: refineCtx.segments,
+    };
     newContext.bold_m.set(n, {
       code: bold_p,
       ram: bold_u,
@@ -714,6 +708,7 @@ export class HostFunctions {
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
+
     if (
       !s.fitsInU32() ||
       !refineCtx.bold_m.get(Number(n))!.ram.canRead(s.u32(), z.u32())
@@ -730,11 +725,17 @@ export class HostFunctions {
     ];
   }
 
+  /**
+   * places stuff from ram to refineContext memory
+   * basically the inverse of peek
+   */
   @HostFn(10)
   poke(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
-  ): Array<W7 | PVMSingleModMemory | PVMExitReasonMod<PVMExitReasonImpl>> {
+  ): Array<
+    W7 | PVMSingleModObject<RefineContext> | PVMExitReasonMod<PVMExitReasonImpl>
+  > {
     const [n, s, o, z] = context.registers.slice(7);
     if (
       !s.fitsInU32() ||
@@ -747,20 +748,28 @@ export class HostFunctions {
     if (!refineCtx.bold_m.has(Number(n))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
+
     if (
       !o.fitsInU32() ||
-      !refineCtx.bold_m.get(Number(n))!.ram.canRead(o.u32(), Number(z))
+      !refineCtx.bold_m.get(Number(n))!.ram.canWrite(o.u32(), Number(z))
     ) {
       return [IxMod.w7(HostCallResult.OOB)];
     }
 
-    return [
-      IxMod.w7(HostCallResult.OK),
-      IxMod.memory(
-        o.u32(),
-        refineCtx.bold_m.get(Number(n))!.ram.getBytes(s.u32(), Number(z)),
-      ),
-    ];
+    const newContext: RefineContext = {
+      bold_m: new Map(refineCtx.bold_m),
+      segments: refineCtx.segments,
+    };
+    const curN = newContext.bold_m.get(Number(n.value))!;
+    const newRam = curN.ram.clone();
+    newContext.bold_m.set(Number(n.value), {
+      code: curN.code,
+      instructionPointer: curN.instructionPointer,
+      ram: newRam,
+    });
+    newRam.setBytes(o.u32(), context.memory.getBytes(s.u32(), Number(z)));
+
+    return [IxMod.w7(HostCallResult.OK), IxMod.obj(newContext)];
   }
 
   /**
@@ -790,10 +799,11 @@ export class HostFunctions {
 
     const p_u = bold_u.clone();
 
+    // for each page from p to c
     for (let i = 0; i < c.value; i++) {
       if (r.value < 3) {
         p_u
-          .changeAcl(Number(p) + i, PVMMemoryAccessKind.Write)
+          .changeAcl(Number(p) + i, PVMMemoryAccessKind.Write) //needed to avoid assert
           .setBytes(<u32>((Number(p) + i) * Zp), new Uint8Array(Zp).fill(0)); // fill with zeros
       }
 
@@ -805,8 +815,16 @@ export class HostFunctions {
         p_u.changeAcl(Number(p) + i, PVMMemoryAccessKind.Null);
       }
     }
-    const newRefineCtx = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
-    newRefineCtx.bold_m.get(Number(n))!.ram = p_u;
+    const newRefineCtx: RefineContext = {
+      bold_m: new Map(refineCtx.bold_m),
+      segments: refineCtx.segments,
+    };
+    const curN = refineCtx.bold_m.get(Number(n.value))!;
+    newRefineCtx.bold_m.set(Number(n.value), {
+      code: curN.code,
+      instructionPointer: curN.instructionPointer,
+      ram: p_u,
+    });
 
     return [IxMod.w7(HostCallResult.OK), IxMod.obj(newRefineCtx)];
   }
@@ -840,6 +858,9 @@ export class HostFunctions {
       registers: bold_w,
       memory: refineCtx.bold_m.get(Number(n))!.ram.clone(),
     });
+
+    // NOTE:this should have been handled by the basic invocation but
+    // we optimized it out so we need to do it here
     const p = deblobProgram(refineCtx.bold_m.get(Number(n))!.code);
     let exitReason: PVMExitReasonImpl;
     let ixCtx: PVMIxEvaluateFNContextImpl | undefined;
@@ -859,17 +880,18 @@ export class HostFunctions {
     const updatedCtx = pvmCtx;
 
     // compute u*
-    const newMemory = <PVMSingleModMemory["data"]>{
+    const u_star = <PVMSingleModMemory["data"]>{
       from: o.u32(),
       data: new Uint8Array(112),
     };
-    E_8.encode(updatedCtx.gas, newMemory.data.subarray(0, 8));
-    PVMRegistersImpl.encode(updatedCtx.registers, newMemory.data.subarray(8));
+    E_8.encode(updatedCtx.gas, u_star.data.subarray(0, 8));
+    PVMRegistersImpl.encode(updatedCtx.registers, u_star.data.subarray(8));
 
     // compute m*
-    const mStar = new Map(refineCtx.bold_m.entries());
+    const mStar = new Map(refineCtx.bold_m);
     const pvmGuest = new PVMGuest({
       code: mStar.get(Number(n)!)!.code,
+      // updated later if hostCAll
       instructionPointer: updatedCtx.instructionPointer,
       ram: updatedCtx.memory,
     });
@@ -883,7 +905,7 @@ export class HostFunctions {
         return [
           IxMod.w8(exitReason.opCode!),
           IxMod.w7(InnerPVMResultCode.HOST),
-          IxMod.memory(newMemory.from, newMemory.data),
+          IxMod.memory(u_star.from, u_star.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
       }
@@ -891,44 +913,50 @@ export class HostFunctions {
         return [
           IxMod.w7(InnerPVMResultCode.FAULT),
           IxMod.w8(exitReason.address!), // address
-          IxMod.memory(newMemory.from, newMemory.data),
+          IxMod.memory(u_star.from, u_star.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
       }
       case RegularPVMExitReason.OutOfGas: {
         return [
           IxMod.w7(InnerPVMResultCode.OOG),
-          IxMod.memory(newMemory.from, newMemory.data),
+          IxMod.memory(u_star.from, u_star.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
       }
       case RegularPVMExitReason.Panic: {
         return [
           IxMod.w7(InnerPVMResultCode.PANIC),
-          IxMod.memory(newMemory.from, newMemory.data),
+          IxMod.memory(u_star.from, u_star.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
       }
       case RegularPVMExitReason.Halt: {
         return [
           IxMod.w7(InnerPVMResultCode.HALT),
-          IxMod.memory(newMemory.from, newMemory.data),
+          IxMod.memory(u_star.from, u_star.data),
           IxMod.obj({ ...refineCtx, bold_m: mStar }),
         ];
       }
     }
   }
 
+  /**
+   * Remove a machine from refineContext.bold_m
+   */
   @HostFn(13)
   expunge(
     context: PVMProgramExecutionContextImpl,
     refineCtx: RefineContext,
   ): Array<W7 | PVMSingleModObject<RefineContext>> {
     const [n] = context.registers.slice(7);
-    if (!refineCtx.bold_m.has(Number(n))) {
+    if (!refineCtx.bold_m.has(Number(n.value))) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
-    const newRefineCtx = structuredClone(refineCtx); // ok to structuredClone as of 0.7.1
+    const newRefineCtx: RefineContext = {
+      bold_m: new Map(refineCtx.bold_m),
+      segments: refineCtx.segments,
+    };
     newRefineCtx.bold_m.delete(Number(n));
     return [
       IxMod.w7(refineCtx.bold_m.get(Number(n))!.instructionPointer),
@@ -945,7 +973,7 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
-    const [m, a, v, r, o, n] = context.registers.slice(7);
+    const [m, a, v, o, n] = context.registers.slice(7);
     if (!a.fitsInU32() || !context.memory.canRead(a.u32(), 4 * CORES)) {
       return [IxMod.panic()];
     }
@@ -954,11 +982,15 @@ export class HostFunctions {
       context.memory.getBytes(a.u32(), 4 * CORES),
     ).value;
 
-    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 12 * Number(n))) {
+    if (
+      !o.fitsInU32() ||
+      !context.memory.canRead(o.u32(), 12 * Number(n.value))
+    ) {
       return [IxMod.panic()];
     }
+
     const bold_z = new Map<ServiceIndex, Gas>();
-    const buf = context.memory.getBytes(o.u32(), 12 * Number(n));
+    const buf = context.memory.getBytes(o.u32(), 12 * Number(n.value));
     for (let i = 0; i < n.value; i++) {
       const data = buf.subarray(i * 12, (i + 1) * 12);
       const key = E_sub_int<ServiceIndex>(4).decode(data).value;
@@ -970,7 +1002,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    if (!m.fitsInU32() || !v.fitsInU32() || !r.fitsInU32()) {
+    if (!m.fitsInU32() || !v.fitsInU32()) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
@@ -985,8 +1017,8 @@ export class HostFunctions {
         authQueue: x.state.authQueue,
         stagingSet: x.state.stagingSet,
         // modifications start here
-        assigners: bold_a,
         manager: m.u32(),
+        assigners: bold_a,
         delegator: v.u32(),
         alwaysAccers: bold_z,
       }),
@@ -1012,26 +1044,25 @@ export class HostFunctions {
     const [c, o, a] = context.registers.slice(7);
 
     if (
-      !context.memory.canRead(o.toSafeMemoryAddress(), AUTHQUEUE_MAX_SIZE * 32)
+      !o.fitsInU32() ||
+      !context.memory.canRead(o.u32(), AUTHQUEUE_MAX_SIZE * 32)
     ) {
       return [IxMod.panic()];
     }
     if (c.value >= CORES) {
       return [IxMod.w7(HostCallResult.CORE)];
     }
-    if (x.id !== x.state.assigners[Number(c)]) {
+    if (x.id !== x.state.assigners[Number(c.value)]) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    const bold_q = context.memory.getBytes(
-      o.toSafeMemoryAddress(),
-      AUTHQUEUE_MAX_SIZE * 32,
-    );
-    const nl: AuthorizerHash[] = [];
+    const data = context.memory.getBytes(o.u32(), AUTHQUEUE_MAX_SIZE * 32);
+    const bold_q: SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE> =
+      toTagged([]);
     for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
-      nl.push(
+      bold_q.push(
         <AuthorizerHash>(
-          HashCodec.decode(bold_q.subarray(i * 32, (i + 1) * 32)).value
+          HashCodec.decode(data.subarray(i * 32, (i + 1) * 32)).value
         ),
       );
     }
@@ -1052,8 +1083,8 @@ export class HostFunctions {
         alwaysAccers: x.state.alwaysAccers,
       }),
     });
-    newX.state.authQueue.elements[Number(c)] = toTagged(nl);
-    newX.state.assigners[Number(c)] = <ServiceIndex>Number(a);
+    newX.state.authQueue.elements[Number(c.value)] = bold_q;
+    newX.state.assigners[Number(c.value)] = <ServiceIndex>Number(a.value);
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
 
@@ -1068,19 +1099,14 @@ export class HostFunctions {
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const o = context.registers.w7();
     if (
-      !context.memory.canRead(
-        o.toSafeMemoryAddress(),
-        336 * NUMBER_OF_VALIDATORS,
-      )
+      !o.fitsInU32() ||
+      !context.memory.canRead(o.u32(), 336 * NUMBER_OF_VALIDATORS)
     ) {
       return [IxMod.panic()];
     }
 
     const bold_v = ValidatorsImpl.decode(
-      context.memory.getBytes(
-        o.toSafeMemoryAddress(),
-        336 * NUMBER_OF_VALIDATORS,
-      ),
+      context.memory.getBytes(o.u32(), 336 * NUMBER_OF_VALIDATORS),
     ).value;
 
     if (x.id !== x.state.delegator) {
@@ -1135,19 +1161,20 @@ export class HostFunctions {
     const [o, l, g, m, f] = context.registers.slice(7);
 
     if (
-      !context.memory.canRead(o.toSafeMemoryAddress(), 32) ||
-      l.value >= 2 ** 32
+      !o.fitsInU32() ||
+      !context.memory.canRead(o.u32(), 32) ||
+      !l.fitsInU32()
     ) {
       return [IxMod.panic()];
     }
     const c = <CodeHash>(
-      HashCodec.decode(context.memory.getBytes(o.toSafeMemoryAddress(), 32))
-        .value
+      HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value
     );
     if (f.value !== 0n && args.x.id !== args.x.state.manager) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
+    log(`nextFreeId: ${args.x.nextFreeID}`, process.env.DEBUG_STEPS === "true");
     const i_star = check_fn(
       <ServiceIndex>(
         (MINIMUM_PUBLIC_SERVICE_INDEX +
@@ -1156,12 +1183,19 @@ export class HostFunctions {
       ),
       args.x.state.accounts,
     );
+    //const i_star = check_fn(
+    //  <ServiceIndex>(
+    //    (2 ** 8 + ((args.x.nextFreeID - 2 ** 8 + 42) % (2 ** 32 - 2 ** 9)))
+    //  ),
+    //  args.x.state.accounts,
+    //);
+    log(`i*: ${i_star}`, process.env.DEBUG_STEPS === "true");
 
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
     const a = new ServiceAccountImpl(
       {
         codeHash: c,
-        balance: <Balance>0n,
+        balance: <Balance>0n, // set later to a_t
         minAccGas: g.value as u64 as Gas,
         minMemoGas: m.value as u64 as Gas,
         preimages: new IdentityMap(),
@@ -1172,11 +1206,7 @@ export class HostFunctions {
       },
       storage,
     );
-    a.requests.set(
-      c,
-      <Tagged<u32, "length">>Number(l),
-      [] as unknown as UpToSeq<TauImpl, 3>,
-    );
+    a.requests.set(c, l.u32(), [] as unknown as UpToSeq<TauImpl, 3>);
     a.balance = <Balance>(<u64>a.gasThreshold());
 
     const x_bold_s = args.x.bold_s();
@@ -1190,7 +1220,7 @@ export class HostFunctions {
 
     const newX = new PVMResultContextImpl({
       id: args.x.id,
-      nextFreeID: args.x.nextFreeID,
+      nextFreeID: args.x.nextFreeID, // set later to i*
       provisions: args.x.provisions,
       yield: args.x.yield,
       state: new PVMAccumulationStateImpl({
@@ -1226,15 +1256,13 @@ export class HostFunctions {
     x: PVMResultContextImpl,
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, g, m] = context.registers.slice(7);
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     } else {
-      // FIXME: structuredclone
       const x_bold_s_prime = x.bold_s().clone();
 
       x_bold_s_prime.codeHash = <CodeHash>(
-        HashCodec.decode(context.memory.getBytes(o.toSafeMemoryAddress(), 32))
-          .value
+        HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value
       );
       x_bold_s_prime.minAccGas = g.u64();
       x_bold_s_prime.minMemoGas = m.u64();
@@ -1254,8 +1282,9 @@ export class HostFunctions {
   /**
    * `ΩT`
    * transfer host call
+   * NOTE: gas is dynamic
    */
-  @HostFn(20)
+  @HostFn(20, (ctx) => <Gas>(ctx.registers.w9().value + 10n))
   transfer(
     context: PVMProgramExecutionContextImpl,
     x: PVMResultContextImpl,
@@ -1264,7 +1293,10 @@ export class HostFunctions {
 
     const bold_d = x.state.accounts.clone();
 
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), TRANSFER_MEMO_SIZE)) {
+    if (
+      !o.fitsInU32() ||
+      !context.memory.canRead(o.u32(), TRANSFER_MEMO_SIZE)
+    ) {
       return [IxMod.panic()];
     }
 
@@ -1278,21 +1310,19 @@ export class HostFunctions {
     if (a.value < x.bold_s().gasThreshold()) {
       return [IxMod.w7(HostCallResult.CASH)];
     }
-    const b = x.bold_s().balance - a.value;
+    const b = <Balance>(x.bold_s().balance - a.value);
 
     const t: DeferredTransferImpl = new DeferredTransferImpl({
       source: x.id,
       destination: d.u32(),
       amount: a.u64(),
       gas: l.u64(),
-      memo: toTagged(
-        context.memory.getBytes(o.toSafeMemoryAddress(), TRANSFER_MEMO_SIZE),
-      ),
+      memo: toTagged(context.memory.getBytes(o.u32(), TRANSFER_MEMO_SIZE)),
     });
 
     const newX = x.clone();
     newX.transfers.elements.push(t);
-    newX.state.accounts.get(x.id)!.balance = <Balance>b;
+    newX.state.accounts.get(x.id)!.balance = b;
 
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
@@ -1307,12 +1337,10 @@ export class HostFunctions {
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [d, o] = context.registers.slice(7);
 
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
-    const h = HashCodec.decode(
-      context.memory.getBytes(o.toSafeMemoryAddress(), 32),
-    ).value;
+    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
     if (
       !d.fitsInU32() ||
       args.x.id != d.u32() ||
@@ -1332,22 +1360,22 @@ export class HostFunctions {
     }
 
     const d_o = bold_d.totalOctets();
-    const l = <u32>Number((d_o > 81 ? d_o : 81n) - 81n);
-    const dlhl = bold_d.requests.get(h, toTagged(l));
+    const l = <u32>(Math.max(81, Number(d_o)) - 81);
+    const dlhl = bold_d.requests.get(h, l);
 
     if (bold_d.itemInStorage() !== 2 || typeof dlhl === "undefined") {
       return [IxMod.w7(HostCallResult.HUH)];
     }
+
     const [, y] = dlhl;
     if (dlhl.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION) {
       const newX = args.x.clone();
-      newX.state.accounts.delete(d.u32());
-      const s_prime = newX.state.accounts.get(args.x.id)!;
+      const s_prime = newX.bold_s(); // already cloned
       s_prime.balance = toTagged(s_prime.balance + bold_d.balance);
 
-      // NOTE: not necessary to re set but here for clarity
+      newX.state.accounts.delete(d.u32());
+      // reset bold_s
       newX.state.accounts.set(args.x.id, s_prime);
-
       return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
     }
     return [IxMod.w7(HostCallResult.HUH)];
@@ -1364,16 +1392,14 @@ export class HostFunctions {
   ): Array<W7 | W8 | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
 
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
 
-    const h = HashCodec.decode(
-      context.memory.getBytes(o.toSafeMemoryAddress(), 32),
-    ).value;
+    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
     const x_bold_s = x.bold_s();
 
-    const bold_a = x_bold_s.requests.get(h, toTagged(Number(z) as u32));
+    const bold_a = x_bold_s.requests.get(h, Number(z) as u32);
     if (typeof bold_a === "undefined") {
       return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
     }
@@ -1400,17 +1426,17 @@ export class HostFunctions {
     args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
     const h: Hash = HashCodec.decode(
-      context.memory.getBytes(o.toSafeMemoryAddress(), 32),
+      context.memory.getBytes(o.u32(), 32),
     ).value;
 
     const newX = args.x.clone();
     const bold_a = newX.bold_s();
 
-    const _z = Number(z) as Tagged<u32, "length">;
+    const _z = <u32>Number(z);
     if (typeof bold_a.requests.get(h, _z) === "undefined") {
       bold_a.requests.set(h, _z, toTagged([]));
     } else if (bold_a.requests.get(h, _z)?.length === 2) {
@@ -1438,7 +1464,7 @@ export class HostFunctions {
     args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [o, z] = context.registers.slice(7);
-    if (!context.memory.canRead(o.toSafeMemoryAddress(), 32)) {
+    if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
     if (!z.fitsInU32()) {
@@ -1447,9 +1473,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    const h = HashCodec.decode(
-      context.memory.getBytes(o.toSafeMemoryAddress(), 32),
-    ).value;
+    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
 
     const newX = args.x.clone();
     const x_bold_s = newX.bold_s();
@@ -1462,7 +1486,7 @@ export class HostFunctions {
       const [x, y, w] = xslhz;
       log(
         `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
-        process.env.DEBUG_TRACES === "true",
+        process.env.DEBUG_STEPS === "true",
       );
       if (
         xslhz.length === 0 ||
@@ -1544,7 +1568,7 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    const bold_i = context.memory.getBytes(o.u32(), Number(z));
+    const bold_i = context.memory.getBytes(o.u32(), z.u32());
 
     const bold_d = args.x.state.accounts;
     const bold_a = bold_d.get(s_star);

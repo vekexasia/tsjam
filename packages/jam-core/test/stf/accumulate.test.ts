@@ -215,9 +215,9 @@ const buildTest = (testname: string) => {
     testCase.postState.history.toJSON(),
   );
 
-  const accMerkleRoot = res.p_mostRecentAccumulationOutputs.merkleRoot();
+  //const accMerkleRoot = res.p_mostRecentAccumulationOutputs.merkleRoot();
+  //console.log(`accumulated root: ${xBytesCodec(32).toJSON(accMerkleRoot)}`);
 
-  console.log(`accumulated root: ${xBytesCodec(32).toJSON(accMerkleRoot)}`);
   const dd_delta = res.d_delta.toDoubleDagger({
     accumulationStatistics: res.accumulationStatistics,
     invokedTransfers: res.deferredTransfers.invokedTransfers({

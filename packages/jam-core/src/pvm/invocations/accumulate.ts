@@ -112,12 +112,12 @@ const I_fn = (
   const newServiceIndex = <ServiceIndex>((E_4_int.decode(
     Hashing.blake2b(
       encodeWithCodec(
-        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: SlotImpl }>([
-          ["s", E_sub_int<ServiceIndex>(4)],
+        createCodec<{ s: ServiceIndex; p_eta_0: Hash; tau: u32 }>([
+          ["s", E_int<ServiceIndex>()],
           ["p_eta_0", HashCodec],
-          ["tau", asCodec(SlotImpl)],
+          ["tau", E_int<u32>()],
         ]),
-        { s: service, p_eta_0, tau: p_tau },
+        { s: service, p_eta_0, tau: p_tau.value },
       ),
     ),
   ).value %

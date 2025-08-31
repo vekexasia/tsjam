@@ -37,6 +37,7 @@ import {
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
 import { smod, X_4, X_8, X_fn } from "./utils";
+import { log } from "@/utils";
 
 /**
  * This class holds the ixs implementations.
@@ -101,8 +102,13 @@ export class Instructions {
 
   @Ix(50, OneRegOneImmIxDecoder, true)
   @BlockTermination
-  jump_ind({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
+  jump_ind(
+    { wA, vX, rA }: OneRegOneImmArgs,
+    context: PVMIxEvaluateFNContextImpl,
+  ) {
+    log({ rA, vX }, true);
     const jumpLocation = Number((wA.value + vX) % 2n ** 32n) as u32;
+    log(`jumping to ${jumpLocation}`, true);
     return djump(jumpLocation, context);
   }
 

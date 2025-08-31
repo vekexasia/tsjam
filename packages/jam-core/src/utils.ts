@@ -60,5 +60,5 @@ export const log = (_str: string | object, debug: boolean) => {
   if (goFS) {
     fs.appendFileSync(`/tmp/trace.txt`, str + "\n");
   }
-  console.log(str);
+  // console.log(str);
 };
