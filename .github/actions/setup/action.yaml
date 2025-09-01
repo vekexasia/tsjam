@@ -28,4 +28,4 @@ runs:
 
     - name: Install node dependencies
       shell: bash
-      run: yarn workspaces focus -A
+      run: yarn 
