@@ -8,9 +8,9 @@ import {
   State,
   Version,
 } from "@tsjam/fuzzer-target";
+import { diff } from "jest-diff";
 import net from "net";
 import { parseArgs } from "node:util";
-import { diff } from "jest-diff";
 
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { EPOCH_LENGTH } from "@tsjam/constants";
@@ -20,7 +20,6 @@ import {
   JamBlockImpl,
   JamStateImpl,
   merkleStateMap,
-  serviceAccountDataCodec,
   SlotImpl,
   stateFromMerkleMap,
   stateKey,

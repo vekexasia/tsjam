@@ -576,7 +576,7 @@ export class Instructions {
   @Ix(171, TwoRegOneOffsetIxDecoder, true)
   @BlockTermination
   branch_ne(
-    { wA, wB, ipOffset, rA, rB }: TwoRegOneOffsetArgs,
+    { wA, wB, ipOffset }: TwoRegOneOffsetArgs,
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {

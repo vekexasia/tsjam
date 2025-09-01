@@ -1,11 +1,11 @@
-import { Gas, IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
-import assert from "node:assert";
-import "./instructions/instructions";
-import { Ixdb } from "./instructions/ixdb";
-import { applyMods } from "./functions/utils";
-import { IxMod, TRAP_COST } from "./instructions/utils";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import assert from "node:assert";
+import { applyMods } from "./functions/utils";
+import "./instructions/instructions";
+import { Ixdb } from "./instructions/ixdb";
+import { IxMod, TRAP_COST } from "./instructions/utils";
 
 export class ParsedProgram implements IParsedProgram {
   #blockBeginnings: Set<u32>;
