@@ -65,7 +65,7 @@ export const MAXIMUM_EXTRINSICS_IN_WP = 128;
  * `Wm` in the paper
  * 2^11
  */
-export const MAX_WORKPACKAGE_ENTRIES = 2048;
+export const MAX_WORKPACKAGE_ENTRIES = 3072;
 
 /**
  * `Wr` in the paper
@@ -165,7 +165,7 @@ export const MAX_SIZE_ENCODED_PACKAGE = 13_794_305;
 /**
  * `WC` in the paper
  */
-export const SERVICECODE_MAX_SIZE = 4_000_0000;
+export const SERVICECODE_MAX_SIZE = 4_000_000;
 
 /**
  * `BS` in the paper
