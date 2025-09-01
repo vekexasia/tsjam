@@ -28,7 +28,10 @@ import { SlotImpl } from "./slot-impl";
 type StorageKey = Tagged<StateKey, "storage">;
 type RequestKey = Tagged<StateKey, "request">;
 
-const computeStorageKey = (serviceIndex: ServiceIndex, key: Uint8Array) => {
+export const computeStorageKey = (
+  serviceIndex: ServiceIndex,
+  key: Uint8Array,
+) => {
   const k = new Uint8Array(4 + key.length);
   E_4_int.encode(<u32>(2 ** 32 - 1), k);
   k.set(key, 4);

@@ -1,8 +1,19 @@
 import {
+  IdentityMap,
+  IdentityMapCodec,
+  JamBlockImpl,
+  JamSignedHeaderImpl,
+  JamStateImpl,
+  merkleStateMap,
+  stateFromMerkleMap,
+  stateKey,
+} from "@/index";
+import {
   BaseJamCodecable,
   codec,
   JamCodecable,
   LengthDiscrimantedIdentityCodec,
+  Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
 import fs from "fs";
@@ -13,16 +24,6 @@ import type {
   StateKey,
   StateRootHash,
 } from "../../jam-types/dist/types/generic-types";
-import {
-  stateFromMerkleMap,
-  JamStateImpl,
-  stateKey,
-  IdentityMapCodec,
-  IdentityMap,
-  JamBlockImpl,
-  JamSignedHeaderImpl,
-  merkleStateMap,
-} from "@/index";
 
 describe("fuzzer_traces", () => {
   beforeAll(() => {
@@ -39,7 +40,6 @@ describe("fuzzer_traces", () => {
       .filter((a) => a.endsWith(".bin"))
       .sort((a, b) => a.localeCompare(b));
 
-    console.log(`initing using file order`);
     const initialTrace = loadTrace(
       fs.readFileSync(path.join(traceDir, files[0])),
     );
@@ -232,8 +232,17 @@ const reverseDifferentState = (
     }
   }
 
+  // not handled probably only storage or preimage(s)
   console.log(key);
-  // else it should be inside the account data which packs everything
+  const actualMap = merkleStateMap(actual);
+  const expectedMap = merkleStateMap(expected);
+
+  console.log(
+    diff(
+      Uint8ArrayJSONCodec.toJSON(expectedMap.get(key)!),
+      Uint8ArrayJSONCodec.toJSON(actualMap.get(key)!),
+    ),
+  );
 };
 
 @JamCodecable()

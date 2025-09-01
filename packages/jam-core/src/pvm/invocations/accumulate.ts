@@ -7,17 +7,10 @@ import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-imp
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
-import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { TauImpl } from "@/impls/slot-impl";
 import { WorkOutputImpl } from "@/impls/work-output-impl";
-import {
-  asCodec,
-  createCodec,
-  E_4_int,
-  E_int,
-  E_sub_int,
-  encodeWithCodec,
-} from "@tsjam/codec";
-import { SERVICECODE_MAX_SIZE } from "@tsjam/constants";
+import { createCodec, E_4_int, E_int, encodeWithCodec } from "@tsjam/codec";
+import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   CoreIndex,
@@ -31,13 +24,14 @@ import {
   WorkError,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
+import assert from "assert";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
+import { IxMod } from "../instructions/utils";
 import { check_fn } from "../utils/check-fn";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
-import assert from "assert";
 
 const AccumulateArgsCodec = createCodec<{
   t: u32;
@@ -333,7 +327,11 @@ const F_fn: (
           hostFunctions.log(input.ctx, { core, serviceIndex }),
         );
     }
-    throw new Error("not implemented" + input.hostCallOpcode);
+
+    return applyMods(input.ctx, input.out, [
+      IxMod.gas(10n),
+      IxMod.w7(HostCallResult.WHAT),
+    ]);
   };
 
 /**

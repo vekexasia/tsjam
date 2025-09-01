@@ -6,6 +6,7 @@ import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import {
   computeRequestKey,
+  computeStorageKey,
   MerkleServiceAccountStorageImpl,
 } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
@@ -137,6 +138,10 @@ export class HostFunctions {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
     const o = w7;
     let v: Uint8Array | undefined;
+    log(
+      `HostFunction::fetch w10:${w10.value}`,
+      process.env.DEBUG_STEPS === "true",
+    );
     switch (w10.value) {
       case 0n: {
         v = new Uint8Array([
@@ -146,24 +151,29 @@ export class HostFunctions {
           ...encodeWithCodec(E_sub_int(2), CORES), // C
           ...encodeWithCodec(E_sub_int(4), PREIMAGE_EXPIRATION), // D
           ...encodeWithCodec(E_sub_int(4), EPOCH_LENGTH), // E
+          // 34
           ...encodeWithCodec(E_8, MAX_GAS_ACCUMULATION), // GA
           ...encodeWithCodec(E_8, MAX_GAS_IS_AUTHORIZED), // GI
           ...encodeWithCodec(E_8, TOTAL_GAS_REFINEMENT_LOGIC), // GR
           ...encodeWithCodec(E_8, TOTAL_GAS_ACCUMULATION_ALL_CORES), // GT
           ...encodeWithCodec(E_sub_int(2), RECENT_HISTORY_LENGTH), // H
           ...encodeWithCodec(E_sub_int(2), MAXIMUM_WORK_ITEMS), // I
+          // 70
           ...encodeWithCodec(E_sub_int(2), MAX_WORK_PREREQUISITES), // J
           ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_BLOCK), // K
           ...encodeWithCodec(E_sub_int(4), MAXIMUM_AGE_LOOKUP_ANCHOR), // L
           ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_VALIDATOR), // N
+          // 80
           ...encodeWithCodec(E_sub_int(2), AUTHPOOL_SIZE), // O
           ...encodeWithCodec(E_sub_int(2), BLOCK_TIME), // P
           ...encodeWithCodec(E_sub_int(2), AUTHQUEUE_MAX_SIZE), // Q
           ...encodeWithCodec(E_sub_int(2), VALIDATOR_CORE_ROTATION), // R
           ...encodeWithCodec(E_sub_int(2), MAXIMUM_EXTRINSICS_IN_WP), // T
+          // 90
           ...encodeWithCodec(E_sub_int(2), WORK_TIMEOUT), // U
           ...encodeWithCodec(E_sub_int(2), NUMBER_OF_VALIDATORS), // V
           ...encodeWithCodec(E_sub_int(4), MAXIMUM_SIZE_IS_AUTHORIZED), // WA
+          // 98
           ...encodeWithCodec(E_sub_int(4), MAX_SIZE_ENCODED_PACKAGE), // WB
           ...encodeWithCodec(E_sub_int(4), SERVICECODE_MAX_SIZE), // WC
           ...encodeWithCodec(E_sub_int(4), ERASURECODE_BASIC_SIZE), // WE
@@ -474,7 +484,7 @@ export class HostFunctions {
 
     if (vz.value === 0n) {
       log(
-        `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s}`,
+        `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} - ${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
         process.env.DEBUG_STEPS === "true",
       );
       bold_a.storage.delete(bold_k);
@@ -484,7 +494,7 @@ export class HostFunctions {
       context.memory.canRead(vo.u32(), vz.u32())
     ) {
       log(
-        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))}`,
+        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
         process.env.DEBUG_STEPS === "true",
       );
       bold_a.storage.set(bold_k, context.memory.getBytes(vo.u32(), vz.u32()));
@@ -1343,8 +1353,7 @@ export class HostFunctions {
     const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
     if (
       !d.fitsInU32() ||
-      args.x.id != d.u32() ||
-      !args.x.state.accounts.has(d.u32())
+      (args.x.id != d.u32() && !args.x.state.accounts.has(d.u32()))
     ) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
@@ -1368,6 +1377,7 @@ export class HostFunctions {
     }
 
     const [, y] = dlhl;
+
     if (dlhl.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION) {
       const newX = args.x.clone();
       const s_prime = newX.bold_s(); // already cloned
