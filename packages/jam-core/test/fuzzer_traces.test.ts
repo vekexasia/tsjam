@@ -24,8 +24,9 @@ import type {
   StateKey,
   StateRootHash,
 } from "../../jam-types/dist/types/generic-types";
+import { getConstantsMode } from "@tsjam/constants";
 
-describe("fuzzer_traces", () => {
+describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
     process.env.RUNNING_TRACE_TESTS = "true";
   });

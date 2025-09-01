@@ -25,6 +25,8 @@ export default [
           replace({
             values: {
               $$commit$$: shortHash,
+              // https://github.com/davxy/jam-conformance/issues/35
+              "process.env.RUNNING_TRACE_TESTS": '"true"',
             },
             delimiters: ["", ""],
             preventAssignment: true,
