@@ -42,10 +42,6 @@ jobs:
             nexe-cache-${{ runner.os }}-${{ env.NODE_VERSION }}-
             nexe-cache-${{ runner.os }}-
 
-      - name: "Build package"
-        run: ./build/build_fuzzer_target.sh
-      
-
       - name: Compile fuzzer target with nexe (package script)
         env:
           NODE_VERSION: 22.18.0
@@ -53,7 +49,7 @@ jobs:
           # derive artifact name from package.json version and jam:protocolVersion
           ##VERSION=$(node -p "require('./packages/jam-fuzzer-target/package.json').version")
           ##PROTO=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
-          OUT=jam-fuzzer-target.tgz
+          OUT=tsjam-fuzzer-target.tgz
           # expose the computed name to later steps
           echo "ARTIFACT_NAME=$OUT" >> $GITHUB_ENV
           # ensure a stable cache location for nexe build artifacts

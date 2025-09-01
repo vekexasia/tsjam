@@ -3,9 +3,9 @@
 yarn build; 
 cp ./packages/jam-fuzzer-target/dist/cli.mjs ./build/tsjam-fuzzer-target/
 cd ./build/tsjam-fuzzer-target/
+touch yarn.lock
 rm -rf node_modules
-yarn install 
-yarn build:deliverable
+yarn install --no-immutable && yarn build:deliverable
 cd ..
 
 FILENAME=tsjam-fuzzer-target.tgz
