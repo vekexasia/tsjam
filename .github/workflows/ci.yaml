@@ -48,4 +48,4 @@ jobs:
 
       - name: Test Jam
         run: |
-          yarn test
+          yarn test:${{matrix.constants}}
