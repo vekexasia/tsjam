@@ -43,7 +43,7 @@ class TestState extends BaseJamCodecable {
 @JamCodecable()
 class TestInput extends BaseJamCodecable {
   @codec(AssurancesExtrinsicImpl)
-  ea!: AssurancesExtrinsicImpl;
+  ea!: Validated<AssurancesExtrinsicImpl>;
 
   @codec(SlotImpl)
   slot!: Validated<Posterior<TauImpl>>;
@@ -86,10 +86,8 @@ describe("assurances", () => {
     if (!eaVerified) {
       return;
     }
-    const newReports = AssurancesExtrinsicImpl.newlyAvailableReports(
-      toTagged(test.input.ea),
-      test.preState.d_rho,
-    );
+    const newReports = test.input.ea.newlyAvailableReports(test.preState.d_rho);
+
     const dd_rho = test.preState.d_rho.toDoubleDagger({
       rho: test.preState.d_rho,
       p_tau: test.input.slot,

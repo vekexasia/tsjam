@@ -63,10 +63,7 @@ export class JamStatisticsImpl
     transferStatistics: TransferStatistics;
   }): Posterior<JamStatisticsImpl> {
     const bold_I = deps.extrinsics.reportGuarantees.workReports();
-    const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
-      deps.ea,
-      deps.d_rho,
-    );
+    const bold_R = deps.ea.newlyAvailableReports(deps.d_rho);
     const toRet = new JamStatisticsImpl();
     toRet.validators = this.validators.toPosterior({
       tau: deps.tau,

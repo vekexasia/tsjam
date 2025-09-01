@@ -184,13 +184,13 @@ export class AssurancesExtrinsicImpl
    * Computes `bold R` in
    * $(0.7.1 - 11.16)
    */
-  static newlyAvailableReports(
-    ea: Validated<AssurancesExtrinsicImpl>,
+  newlyAvailableReports(
+    this: Validated<AssurancesExtrinsicImpl>,
     d_rho: Dagger<RHOImpl>,
   ): NewWorkReportsImpl {
     const bold_R = new NewWorkReportsImpl();
     for (let c = <CoreIndex>0; c < CORES; c++) {
-      const sum = ea.nPositiveVotes(c);
+      const sum = this.nPositiveVotes(c);
 
       if (sum > (NUMBER_OF_VALIDATORS * 2) / 3) {
         bold_R.elements.push(d_rho.elementAt(c)!.workReport);

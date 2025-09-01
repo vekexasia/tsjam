@@ -37,7 +37,7 @@ export class SingleServiceStatisticsImpl
   /**
    * `x`
    */
-  @eIntCodec("exports")
+  @eIntCodec("extrinsic_count")
   extrinsicCount!: u32;
 
   /**
@@ -49,7 +49,7 @@ export class SingleServiceStatisticsImpl
   /**
    * `e`
    */
-  @eIntCodec("extrinsic_count")
+  @eIntCodec("exports")
   exportCount!: u32;
 
   /**

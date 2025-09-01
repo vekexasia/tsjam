@@ -34,6 +34,7 @@ import {
 } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
 import type {
+  Dagger,
   DoubleDagger,
   ED25519PublicKey,
   OpaqueHash,
@@ -42,13 +43,18 @@ import type {
   Validated,
   WorkPackageHash,
 } from "@tsjam/types";
-import { toDagger, toPosterior } from "@tsjam/utils";
+import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import fs from "fs";
 import type { ConditionalExcept } from "type-fest";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
 import { dummyState } from "../utils";
+import {
+  AccumulationStatisticsImpl,
+  AssurancesExtrinsicImpl,
+  PreimagesExtrinsicImpl,
+} from "@/index";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -211,7 +217,6 @@ const buildTest = (filename: string) => {
     p_lambda: decoded.preState.p_lambda,
   });
 
-  debugger;
   expect(TestOuputOk.codecOf("reporters").toJSON(reporters)).deep.eq(
     TestOuputOk.codecOf("reporters").toJSON(decoded.output.ok!.reporters),
   );
@@ -237,7 +242,30 @@ const buildTest = (filename: string) => {
     TestOuputOk.codecOf("reported").toJSON(decoded.output.ok!.reported),
   );
 
-  // console.log(decoded.preState.toJSON());
+  const ea = <Validated<AssurancesExtrinsicImpl>>(
+    AssurancesExtrinsicImpl.newEmpty()
+  );
+  const d_rho = decoded.preState.dd_rho as unknown as Dagger<RHOImpl>;
+  const coreStats = sampleState.statistics.cores.toPosterior({
+    ea,
+    d_rho,
+    bold_I: res.value.workReports(),
+    bold_R: ea.newlyAvailableReports(d_rho),
+  });
+  expect(coreStats.toJSON()).deep.eq(decoded.postState.coreStatistics.toJSON());
+
+  const servicesStats = sampleState.statistics.services.toPosterior({
+    guaranteedReports: res.value.workReports(),
+    transferStatistics: new Map(),
+    ep: <Validated<PreimagesExtrinsicImpl>>PreimagesExtrinsicImpl.newEmpty(),
+    accumulationStatistics: new AccumulationStatisticsImpl({
+      elements: new Map(),
+    }),
+  });
+
+  expect(servicesStats.toJSON()).deep.eq(
+    decoded.postState.servicesStatistics.toJSON(),
+  );
 };
 describe("workreports", () => {
   it("anchor_not_recent-1", () => {

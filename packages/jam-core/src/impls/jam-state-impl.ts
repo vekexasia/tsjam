@@ -15,10 +15,7 @@ import {
   DisputesStateImpl,
   DisputesToPosteriorError,
 } from "./disputes-state-impl";
-import {
-  AssurancesExtrinsicImpl,
-  EAValidationError,
-} from "./extrinsics/assurances";
+import { EAValidationError } from "./extrinsics/assurances";
 import type { EGError } from "./extrinsics/guarantees";
 import type { EPError } from "./extrinsics/preimages";
 import type { ETError } from "./extrinsics/tickets";
@@ -297,10 +294,7 @@ export class JamStateImpl implements JamState {
       return err(eaError);
     }
 
-    const bold_R = AssurancesExtrinsicImpl.newlyAvailableReports(
-      validatedEA,
-      d_rho,
-    );
+    const bold_R = validatedEA.newlyAvailableReports(d_rho);
 
     const {
       p_accumulationHistory,
