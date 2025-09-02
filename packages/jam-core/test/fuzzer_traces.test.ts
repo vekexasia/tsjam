@@ -108,6 +108,7 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756790723", () => doTest("1756790723"));
   it("1756791458", () => doTest("1756791458"));
   it("1756792661", () => doTest("1756792661"));
+  it("1756814312", () => doTest("1756814312"));
 });
 
 const reverseDifferentState = (
