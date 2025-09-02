@@ -58,6 +58,13 @@ export class GenesisTrace extends BaseJamCodecable {
   state!: TraceState;
 }
 
+export const loadTraceJSON = (bin: Uint8Array) => {
+  const toRet = TraceStep.fromJSON(
+    JSON.parse(Buffer.from(bin).toString("utf8")),
+  );
+
+  return toRet;
+};
 export const loadTrace = (bin: Uint8Array) => {
   const toRet = TraceStep.decode(bin);
 
@@ -65,5 +72,7 @@ export const loadTrace = (bin: Uint8Array) => {
     toRet.readBytes === bin.length,
     `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
   );
+
+  assert(Buffer.compare(toRet.value.toBinary(), bin) === 0, "trace mismatch");
   return toRet.value;
 };
