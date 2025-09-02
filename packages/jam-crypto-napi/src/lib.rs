@@ -76,11 +76,19 @@ pub fn ring_vrf_verify(
   ring_size: u32,
 ) -> bool {
   use ark_vrf::ring::Verifier as _;
-  let signature = RingVrfSignature::deserialize_compressed(signature).unwrap();
+  let signature = if let Ok(s) = RingVrfSignature::deserialize_compressed(signature) {
+    s
+  } else {
+    return false;
+  };
   let input = vrf_input_point(vrf_input_data);
   let output = signature.output;
   let params = ring_proof_params(ring_size.try_into().unwrap());
-  let commitment = RingCommitment::deserialize_compressed(commitment.as_ref()).unwrap();
+  let commitment = if let Ok(c) = RingCommitment::deserialize_compressed(commitment.as_ref()) {
+    c
+  } else {
+    return false;
+  };
 
   let verifier_key = params.verifier_key_from_commitment(commitment);
   let verifier = params.verifier(verifier_key);
@@ -207,7 +215,12 @@ pub fn ietf_vrf_verify(
 
 #[napi]
 pub fn ietf_vrf_output_hash(signature: &[u8]) -> Buffer {
-  let signature = IetfVrfSignature::deserialize_compressed(signature).unwrap();
+  let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed(signature) {
+    s
+  } else {
+    return Vec::new().into();
+  };
+
   let output = signature.output;
   output.hash()[..32].try_into().unwrap()
 }
