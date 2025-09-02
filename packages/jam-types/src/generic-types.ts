@@ -169,22 +169,6 @@ export type Posterior<T> = Tagged<T, "Posterior">;
 export type Dagger<T> = Tagged<T, "Dagger">;
 export type DoubleDagger<T> = Tagged<T, "DoubleDagger">;
 
-export type UnTagged<T> =
-  T extends Tagged<number, never, never>
-    ? number
-    : T extends Tagged<bigint, never, never>
-      ? bigint
-      : T extends Tagged<(infer El)[], never, never>
-        ? El[]
-        : T extends Tagged<infer X, never, never>
-          ? Omit<X, typeof tags>
-          : T;
-export type UnTaggedObject<T> = {
-  [K in keyof UnTagged<T>]: UnTagged<T>[K] extends Tagged<infer X, never, never>
-    ? UnTagged<X>
-    : UnTagged<T>[K];
-};
-
 export type Validated<T> = Tagged<T, "validated">;
 
 /**
