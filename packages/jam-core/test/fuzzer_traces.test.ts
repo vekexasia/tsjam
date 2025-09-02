@@ -1,6 +1,7 @@
 import {
   IdentityMap,
   IdentityMapCodec,
+  JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamSignedHeaderImpl,
   JamStateImpl,
@@ -46,20 +47,27 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     );
 
     // set initial block and initial state
-    let jamState = stateFromMerkleMap(initialTrace.postState.merkleMap);
-    jamState.block = initialTrace.block;
+    let jamState = stateFromMerkleMap(initialTrace.preState.merkleMap);
+    jamState.block = new JamBlockImpl({
+      header: new JamSignedHeaderImpl({}),
+      extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
+    });
+
+    jamState.block!.header.signedHash = () => initialTrace.block.header.parent;
 
     // TODO: check merkleroot
 
-    files.splice(0, 1);
+    //files.splice(0, 1);
     for (const file of files) {
       console.log(file);
       const trace = loadTrace(fs.readFileSync(path.join(traceDir, file)));
       const res = jamState.applyBlock(trace.block);
+      let newState: JamStateImpl = jamState;
       if (res.isErr()) {
-        throw new Error(res.error);
+        console.log("Error applying block", res.error);
+      } else {
+        newState = res.value;
       }
-      const newState = res.value;
       if (
         Buffer.compare(newState.merkleRoot(), trace.postState.stateRoot) !== 0
       ) {
@@ -97,6 +105,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756548796", () => doTest("1756548796"));
   it("1756548916", () => doTest("1756548916"));
   it("1756572122", () => doTest("1756572122"));
+  it("1756790723", () => doTest("1756790723"));
+  it("1756791458", () => doTest("1756791458"));
+  it("1756792661", () => doTest("1756792661"));
 });
 
 const reverseDifferentState = (
@@ -297,5 +308,7 @@ export const loadTrace = (bin: Uint8Array) => {
     toRet.readBytes === bin.length,
     `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
   );
+  assert(Buffer.compare(toRet.value.toBinary(), bin) === 0, "cannot re-encode");
+
   return toRet.value;
 };
