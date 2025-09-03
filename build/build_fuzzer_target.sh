@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yarn build; 
+yarn build --force; 
 cp ./packages/jam-fuzzer-target/dist/cli.mjs ./build/tsjam-fuzzer-target/
 cd ./build/tsjam-fuzzer-target/
 touch yarn.lock
