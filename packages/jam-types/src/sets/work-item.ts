@@ -55,7 +55,9 @@ export interface WorkItem {
 
   /**
    * `bold i`
-   * Sequence of imported Data Segments
+   * Sequence of imported Data Segments which were previously exported by other packages
+   * they're referenced by merkle tree root which includes any other segments
+   * introduced at that time + index
    */
   importSegments: UpToSeq<
     {
@@ -76,6 +78,7 @@ export interface WorkItem {
   /**
    * `x`
    * Blob hash and lengths to be introduced in the block.
+   *
    */
   exportedDataSegments: UpToSeq<
     {

@@ -16,7 +16,8 @@ import {
   lengthDiscriminatedCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
-import { MAX_IMPORTED_ITEMS } from "@tsjam/constants";
+import { ERASURECODE_SEGMENT_SIZE, MAX_IMPORTED_ITEMS } from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
 import type {
   CodeHash,
   ExportingWorkPackageHash,
@@ -31,6 +32,8 @@ import type {
   WorkPayload,
 } from "@tsjam/types";
 import { isHash } from "@tsjam/utils";
+import { WorkDigestImpl } from "./work-digest-impl";
+import { WorkOutputImpl } from "./work-output-impl";
 
 /**
  * $(0.7.1 - C.35) I fn
@@ -143,9 +146,10 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
 
   /**
    * `bold i`
-   * Sequence of imported Data Segments
+   * Sequence of imported Data Segments which were previously exported by other packages
+   * they're referenced by merkle tree root which includes any other segments
+   * introduced at that time + index
    */
-
   @jsonCodec(
     ArrayOfJSONCodec(
       createJSONCodec([
@@ -181,6 +185,41 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
     WorkItemExportedSegment,
     typeof MAX_IMPORTED_ITEMS
   >;
+
+  /**
+   * S(fn) from (0.7.1 - 14.5)
+   */
+  encodedSize() {
+    return (
+      this.payload.length +
+      this.importSegments.length * ERASURECODE_SEGMENT_SIZE +
+      this.exportedDataSegments.reduce((a, b) => a + b.length, 0)
+    );
+  }
+
+  /**
+   * $(0.7.1 - 14.9)
+   */
+  buildDigest(output: WorkOutputImpl, gasUsed: Gas) {
+    return new WorkDigestImpl({
+      serviceIndex: this.service,
+      codeHash: this.codeHash,
+      payloadHash: Hashing.blake2b(this.payload),
+      gasLimit: this.accumulateGasLimit,
+      result: output,
+      refineLoad: {
+        gasUsed,
+        importCount: <u16>this.importSegments.length,
+        extrinsicCount: <u16>this.exportedDataSegments.length,
+        extrinsicSize: <u32>(
+          this.exportedDataSegments
+            .map((x) => x.length)
+            .reduce((a, b) => a + b, 0)
+        ),
+        exportCount: <u16>this.exportCount,
+      },
+    });
+  }
 }
 
 if (import.meta.vitest) {

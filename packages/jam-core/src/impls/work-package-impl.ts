@@ -1,3 +1,4 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import { hostFunctions } from "@/pvm/functions/functions";
 import { applyMods } from "@/pvm/functions/utils";
 import { IxMod } from "@/pvm/instructions/utils";
@@ -18,9 +19,12 @@ import {
 } from "@tsjam/codec";
 import {
   HostCallResult,
+  MAX_SIZE_ENCODED_PACKAGE,
   MAXIMUM_SIZE_IS_AUTHORIZED,
   MAXIMUM_WORK_ITEMS,
+  TOTAL_GAS_ACCUMULATION_LOGIC,
   TOTAL_GAS_IS_AUTHORIZED,
+  TOTAL_GAS_REFINEMENT_LOGIC,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import type {
@@ -37,6 +41,7 @@ import type {
   RegisterIdentifier,
   ServiceIndex,
   u32,
+  Validated,
   WorkError,
   WorkPackage,
   WorkPackageHash,
@@ -46,7 +51,6 @@ import type { DeltaImpl } from "./delta-impl";
 import { WorkContextImpl } from "./work-context-impl";
 import { WorkItemImpl } from "./work-item-impl";
 import { WorkOutputImpl } from "./work-output-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
 
 /**
  * Identified by `P` set
@@ -179,6 +183,38 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
        */
       gasUsed: res.gasUsed,
     };
+  }
+
+  validate(): this is Validated<WorkPackageImpl> {
+    // $(0.7.1 - 14.5) |check on the encoded size
+    if (
+      this.authToken.length +
+        this.authConfig.length +
+        this.workItems.map((w) => w.encodedSize()).reduce((a, b) => a + b, 0) >
+      MAX_SIZE_ENCODED_PACKAGE
+    ) {
+      return false;
+    }
+
+    // check gas limits
+    // $(0.7.1 - 14.8)
+    if (
+      this.workItems
+        .map((w) => w.accumulateGasLimit)
+        .reduce((a, b) => a + b, 0n) >= TOTAL_GAS_ACCUMULATION_LOGIC
+    ) {
+      return false;
+    }
+
+    //
+    if (
+      this.workItems.map((w) => w.refineGasLimit).reduce((a, b) => a + b, 0n) >=
+      TOTAL_GAS_REFINEMENT_LOGIC
+    ) {
+      return false;
+    }
+
+    return true;
   }
 }
 

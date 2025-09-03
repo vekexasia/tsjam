@@ -23,12 +23,7 @@ import {
   WorkItem,
   WorkPackageHash,
 } from "@tsjam/types";
-import {
-  isExportingWorkPackageHash,
-  isHash,
-  toTagged,
-  zeroPad,
-} from "@tsjam/utils";
+import { isExportingWorkPackageHash, toTagged, zeroPad } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { WorkReportImpl } from ".";
@@ -37,7 +32,6 @@ import { IdentityMap } from "./data-structures/identity-map";
 import { AvailabilitySpecificationImpl } from "./impls/availability-specification-impl";
 import { DeltaImpl } from "./impls/delta-impl";
 import { TauImpl } from "./impls/slot-impl";
-import { WorkDigestImpl } from "./impls/work-digest-impl";
 import { WorkOutputImpl } from "./impls/work-output-impl";
 import { WorkPackageImpl } from "./impls/work-package-impl";
 import { wellBalancedBinaryMerkleRoot } from "./merklization/binary";
@@ -111,7 +105,7 @@ export const computeWorkReport = (
       if (r instanceof Uint8Array) {
         _deps.rLengthSoFar += r.length;
       }
-      const workResult = C_fn(pack.workItems[j], r, gasUsed);
+      const workResult = pack.workItems[j].buildDigest(r, gasUsed);
       return { result: workResult, out: e };
     });
 
@@ -316,8 +310,7 @@ const L_fn = (
   bold_l: Map<WorkPackageHash, Hash>,
 ): Hash => {
   //bold_l = segment root dictionary
-  if (!isHash(hash)) {
-    // ExportingWorkPackageHash
+  if (isExportingWorkPackageHash(hash)) {
     const x = bold_l.get(hash.value);
     assert(typeof x !== "undefined");
     return x;
@@ -354,41 +347,6 @@ const inner_J_fn = (
       return J_fn(0, s, index);
     })
     .flat();
-};
-
-/**
- * `C` constructs WorkDigest from item and output
- * $(0.7.1 - 14.9)
- */
-export const C_fn = (
-  workItem: WorkItem,
-  /**
-   * `bold_l`
-   */
-  out: WorkOutputImpl,
-  /**
-   * `u`
-   */
-  gasUsed: Gas,
-): WorkDigestImpl => {
-  return new WorkDigestImpl({
-    serviceIndex: workItem.service,
-    codeHash: workItem.codeHash,
-    payloadHash: Hashing.blake2b(workItem.payload),
-    gasLimit: workItem.accumulateGasLimit,
-    result: out,
-    refineLoad: {
-      gasUsed,
-      importCount: <u16>workItem.importSegments.length,
-      extrinsicCount: <u16>workItem.exportedDataSegments.length,
-      extrinsicSize: <u32>(
-        workItem.exportedDataSegments
-          .map((x) => x.length)
-          .reduce((a, b) => a + b, 0)
-      ),
-      exportCount: <u16>workItem.exportCount,
-    },
-  });
 };
 
 // TODO:
