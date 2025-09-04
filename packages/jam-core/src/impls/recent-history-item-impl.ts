@@ -49,6 +49,9 @@ export class RecentHistoryItemImpl
     Object.assign(this, config);
   }
 
+  /**
+   * all reported work package hash
+   */
   packageHashes(): IdentitySet<WorkPackageHash> {
     return new IdentitySet([...this.reportedPackages.keys()]);
   }

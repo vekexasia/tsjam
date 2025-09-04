@@ -199,6 +199,8 @@ export class WorkItemImpl extends BaseJamCodecable implements WorkItem {
 
   /**
    * $(0.7.1 - 14.9)
+   * @param output - bold_l
+   * @param gasUsed - u
    */
   buildDigest(output: WorkOutputImpl, gasUsed: Gas) {
     return new WorkDigestImpl({

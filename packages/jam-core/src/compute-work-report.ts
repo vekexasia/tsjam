@@ -10,36 +10,26 @@ import {
   ERASURECODE_EXPORTED_SIZE,
   MAX_WORKREPORT_OUTPUT_SIZE,
 } from "@tsjam/constants";
-import { Hashing } from "@tsjam/crypto";
-import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 import {
   CoreIndex,
   ExportSegment,
   Gas,
   Hash,
-  u16,
-  u32,
   WorkError,
   WorkItem,
   WorkPackageHash,
 } from "@tsjam/types";
-import { isExportingWorkPackageHash, toTagged, zeroPad } from "@tsjam/utils";
+import { isExportingWorkPackageHash, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
-import { WorkReportImpl } from ".";
+import { AvailabilitySpecificationImpl, WorkReportImpl } from ".";
 import { HashCodec } from "./codecs/misc-codecs";
 import { IdentityMap } from "./data-structures/identity-map";
-import { AvailabilitySpecificationImpl } from "./impls/availability-specification-impl";
 import { DeltaImpl } from "./impls/delta-impl";
 import { TauImpl } from "./impls/slot-impl";
 import { WorkOutputImpl } from "./impls/work-output-impl";
 import { WorkPackageImpl } from "./impls/work-package-impl";
-import { wellBalancedBinaryMerkleRoot } from "./merklization/binary";
-import {
-  constantDepthBinaryTree,
-  J_fn,
-  L_fn as Leaf_fn,
-} from "./merklization/constant-depth";
+import { J_fn } from "./merklization/constant-depth";
 import { refineInvocation } from "./pvm/invocations/refine";
 
 export const computationWorkReportError = "t not in B:wr" as const;
@@ -62,6 +52,7 @@ export const computeWorkReport = (
   const { res: bold_t, gasUsed } = pack.isAuthorized(core, {
     delta: deps.delta,
   });
+
   if (bold_t.isError()) {
     return err(computationWorkReportError);
   }
@@ -116,10 +107,9 @@ export const computeWorkReport = (
     .map(({ out: e }) => e)
     .flat() as ExportSegment[];
 
-  const encodedPackage = pack.toBinary();
-  const h = pack.hash();
-  const s = A_fn(
-    h,
+  // $(0.7.1 - 14.16)
+  const s = AvailabilitySpecificationImpl.build(
+    pack.hash(),
     encodeWithCodec(
       createCodec<{
         encodedPackage: Uint8Array;
@@ -133,7 +123,7 @@ export const computeWorkReport = (
         ["j", createArrayLengthDiscriminator(HashCodec)],
       ]),
       {
-        encodedPackage,
+        encodedPackage: pack.toBinary(),
         x: pack.workItems
           .map((wi) => wi.exportedDataSegments.map((a) => a.originalBlob()))
           .flat(),
@@ -164,60 +154,8 @@ export const computeWorkReport = (
     }),
   );
 };
-/**
- * compute availability specifier
- * @returns AvailabilitySpecification
- * $(0.7.1 - 14.17)
- */
-const A_fn = (
-  packageHash: WorkPackageHash,
-  bold_b: Uint8Array,
-  exportedSegments: ExportSegment[], // bold_s
-): AvailabilitySpecificationImpl => {
-  const s_flower = transpose(
-    [...exportedSegments, ...pagedProof(exportedSegments)].map((x) =>
-      erasureCoding(6, x),
-    ),
-  ).map((x) => wellBalancedBinaryMerkleRoot(x));
 
-  const b_flower = erasureCoding(
-    Math.ceil(bold_b.length / ERASURECODE_BASIC_SIZE),
-    zeroPad(ERASURECODE_BASIC_SIZE, bold_b),
-  ).map(Hashing.blake2b);
-
-  return new AvailabilitySpecificationImpl({
-    segmentCount: exportedSegments.length as u16,
-    packageHash,
-    bundleLength: toTagged(<u32>bold_b.length),
-    segmentRoot: constantDepthBinaryTree(exportedSegments),
-    erasureRoot: wellBalancedBinaryMerkleRoot(
-      transpose<Hash>([b_flower, s_flower]).flat(),
-    ),
-  });
-};
-
-const pagedProofCodec = createArrayLengthDiscriminator(HashCodec);
-/**
- * Paged Proof
- * $(0.7.1 - 14.11)
- */
-const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
-  const limit = 64 * Math.ceil(segments.length / 64);
-  const toRet = [];
-  for (let i = 0; i < limit; i += 64) {
-    const j6 = J_fn(6, segments, i);
-    const l6 = Leaf_fn(6, segments, i);
-    const encoded = new Uint8Array([
-      ...encodeWithCodec(pagedProofCodec, j6),
-      ...encodeWithCodec(pagedProofCodec, l6),
-    ]);
-    toRet.push(
-      zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),
-    );
-  }
-  return toRet as ExportSegment[];
-};
-
+// $(0.7.1 - 14.12)
 const I_fn = (
   /**
    * `bold_p`

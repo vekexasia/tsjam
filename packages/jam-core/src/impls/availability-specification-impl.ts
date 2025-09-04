@@ -1,19 +1,35 @@
 import { HashCodec } from "@/codecs/misc-codecs";
+import { wellBalancedBinaryMerkleRoot } from "@/merklization/binary";
+import {
+  constantDepthBinaryTree,
+  J_fn,
+  L_fn,
+} from "@/merklization/constant-depth";
 import {
   BaseJamCodecable,
   codec,
+  createArrayLengthDiscriminator,
+  encodeWithCodec,
   eSubIntCodec,
   JamCodecable,
 } from "@tsjam/codec";
-import { MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
+import {
+  ERASURECODE_BASIC_SIZE,
+  ERASURECODE_EXPORTED_SIZE,
+  MAXIMUM_AGE_LOOKUP_ANCHOR,
+} from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
+import { transpose, erasureCoding } from "@tsjam/erasurecoding";
 import type {
   AvailabilitySpecification,
+  ExportSegment,
   Hash,
   Tagged,
   u16,
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
+import { zeroPad, toTagged } from "@tsjam/utils";
 import type { ConditionalExcept } from "type-fest";
 
 /**
@@ -69,4 +85,58 @@ export class AvailabilitySpecificationImpl
     super();
     Object.assign(this, config);
   }
+
+  /**
+   * compute availability specifier
+   * @returns AvailabilitySpecification
+   * $(0.7.1 - 14.17)
+   */
+  static build(
+    packageHash: WorkPackageHash,
+    bold_b: Uint8Array,
+    exportedSegments: ExportSegment[], // bold_s
+  ): AvailabilitySpecificationImpl {
+    const s_flower = transpose(
+      [...exportedSegments, ...pagedProof(exportedSegments)].map((x) =>
+        erasureCoding(6, x),
+      ),
+    ).map((x) => wellBalancedBinaryMerkleRoot(x));
+
+    const b_flower = erasureCoding(
+      Math.ceil(bold_b.length / ERASURECODE_BASIC_SIZE),
+      zeroPad(ERASURECODE_BASIC_SIZE, bold_b),
+    ).map(Hashing.blake2b);
+
+    return new AvailabilitySpecificationImpl({
+      segmentCount: exportedSegments.length as u16,
+      packageHash,
+      bundleLength: toTagged(<u32>bold_b.length),
+      segmentRoot: constantDepthBinaryTree(exportedSegments),
+      erasureRoot: wellBalancedBinaryMerkleRoot(
+        transpose<Hash>([b_flower, s_flower]).flat(),
+      ),
+    });
+  }
 }
+
+const pagedProofCodec = createArrayLengthDiscriminator(HashCodec);
+/**
+ * Paged Proof
+ * $(0.7.1 - 14.11)
+ */
+const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
+  const limit = 64 * Math.ceil(segments.length / 64);
+  const toRet = [];
+  for (let i = 0; i < limit; i += 64) {
+    const j6 = J_fn(6, segments, i);
+    const l6 = L_fn(6, segments, i);
+    const encoded = new Uint8Array([
+      ...encodeWithCodec(pagedProofCodec, j6),
+      ...encodeWithCodec(pagedProofCodec, l6),
+    ]);
+    toRet.push(
+      zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),
+    );
+  }
+  return toRet as ExportSegment[];
+};
