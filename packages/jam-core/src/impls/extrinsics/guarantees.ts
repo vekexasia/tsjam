@@ -125,6 +125,9 @@ export class SingleWorkReportGuaranteeImpl
 
   /**
    * `t`
+   * this is the time of which the validator started working on the
+   * WorkPackage. It is used so that it uniquely identifies the guarantor
+   * between M* and M
    */
   @codec(SlotImpl)
   slot!: SlotImpl;
@@ -168,8 +171,8 @@ export class SingleWorkReportGuaranteeImpl
   }
 
   checkValidity(deps: {
-    M_STAR: GuarantorsAssignment;
-    M: GuarantorsAssignment;
+    M_STAR: Tagged<GuarantorsAssignmentImpl, "M*">;
+    M: Tagged<GuarantorsAssignmentImpl, "M">;
     p_tau: Posterior<Tau>;
   }): Result<Validated<SingleWorkReportGuaranteeImpl>, EGError> {
     // $(0.7.1 - 11.3) | Check the number of dependencies in the workreports
@@ -210,7 +213,7 @@ export class SingleWorkReportGuaranteeImpl
     // $(0.7.1 - 11.26)
     const messageToSign = this.messageToSign();
     for (const signature of this.signatures) {
-      let guarantorAssignment = deps.M_STAR;
+      let guarantorAssignment: GuarantorsAssignmentImpl = deps.M_STAR;
       if (
         curRotation === Math.floor(this.slot.value / VALIDATOR_CORE_ROTATION)
       ) {

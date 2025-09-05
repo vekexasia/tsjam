@@ -63,19 +63,23 @@ export class GuarantorsAssignmentImpl implements GuarantorsAssignment {
     p_tau: Validated<Posterior<TauImpl>>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_offenders: Posterior<DisputesStateImpl["offenders"]>;
-  }) {
-    return M_fn({
-      entropy: deps.p_eta2,
-      tauOffset: <u32>0,
-      validatorKeys: deps.p_kappa,
-      p_offenders: deps.p_offenders,
-      p_tau: deps.p_tau,
-    });
+  }): Tagged<GuarantorsAssignmentImpl, "M"> {
+    return toTagged(
+      M_fn({
+        entropy: deps.p_eta2,
+        tauOffset: <u32>0,
+        validatorKeys: deps.p_kappa,
+        p_offenders: deps.p_offenders,
+        p_tau: deps.p_tau,
+      }),
+    );
   }
 
   /**
    * $(0.7.1 - 11.22)
    * M*
+   * this is computed to allow guarantors from prev slot to actually compute and
+   * feed in work reports after their rotation is over.
    */
   static prevRotation(deps: {
     p_eta2: Posterior<JamEntropyImpl["_2"]>;

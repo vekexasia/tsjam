@@ -112,8 +112,7 @@ export class GridValidatorArrangement {
   }
 
   guarantors(__tau: SlotImpl) {
-    // TODO: needs to check GuarantorAssignmentImpl
-    // and .reporters in EG
+    // TODO: use .reporters in EG
     throw new Error("Not implemented");
   }
 }

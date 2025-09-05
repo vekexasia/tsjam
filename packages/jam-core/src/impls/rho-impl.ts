@@ -40,6 +40,9 @@ export class RHOElementImpl extends BaseJamCodecable implements RHOElement {
   workReport!: WorkReportImpl;
   /**
    * `t`
+   * - it is the time of which the entry in rho has been created
+   *   and it is used to check for timeout of workreport in case not enough
+   *   assurances show up
    */
   @codec(SlotImpl, "timeout")
   reportSlot!: SlotImpl;
