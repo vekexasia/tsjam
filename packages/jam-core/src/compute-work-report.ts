@@ -53,19 +53,11 @@ export const computeWorkReport = (
     delta: deps.delta,
   });
 
-  if (bold_t.isError()) {
-    return err(computationWorkReportError);
-  }
-
   if (
-    bold_t.isSuccess() &&
+    !bold_t.isSuccess() ||
     bold_t.success.length > MAX_WORKREPORT_OUTPUT_SIZE
   ) {
     return err(computationWorkReportError);
-  }
-  if (!bold_t.isSuccess()) {
-    // it's impossible it is not success at this point
-    throw new Error("type guard for typescript");
   }
 
   const _keys_in_bold_l = pack.workItems

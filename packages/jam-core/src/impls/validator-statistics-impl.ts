@@ -55,16 +55,18 @@ export class ValidatorStatisticsImpl
     tau: TauImpl;
     p_tau: Validated<Posterior<TauImpl>>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
-    p_disputes: Posterior<DisputesStateImpl>;
-    p_entropy: Posterior<JamEntropyImpl>;
+    p_offenders: Posterior<DisputesStateImpl["offenders"]>;
+    p_eta2: Posterior<JamEntropyImpl["_2"]>;
+    p_eta3: Posterior<JamEntropyImpl["_3"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
   }): Posterior<ValidatorStatisticsImpl> {
     const reporters = deps.extrinsics.reportGuarantees.reporters({
       p_tau: deps.p_tau,
       p_lambda: deps.p_lambda,
       p_kappa: deps.p_kappa,
-      p_disputes: deps.p_disputes,
-      p_entropy: deps.p_entropy,
+      p_offenders: deps.p_offenders,
+      p_eta2: deps.p_eta2,
+      p_eta3: deps.p_eta3,
     });
     const toRet = cloneCodecable(<ValidatorStatisticsImpl>this);
 

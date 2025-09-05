@@ -75,8 +75,9 @@ describe("statistics", () => {
           LambdaImpl.decode(test.preState.p_kappa.toBinary()).value
         ),
       ),
-      p_disputes: toTagged(dummyDisputesState()),
-      p_entropy: dummyEntropy(),
+      p_offenders: toTagged(dummyDisputesState().offenders),
+      p_eta2: toPosterior(dummyEntropy()._2),
+      p_eta3: toPosterior(dummyEntropy()._3),
     });
 
     expect(p_pi.previous.toJSON(), "previous").deep.eq(

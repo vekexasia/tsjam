@@ -7,7 +7,6 @@ import {
   CoreIndex,
   Gas,
   GasUsed,
-  JamEntropy,
   Posterior,
   ServiceIndex,
   Tagged,
@@ -32,6 +31,7 @@ import { SlotImpl, TauImpl } from "./impls/slot-impl";
 import { ValidatorsImpl } from "./impls/validators-impl";
 import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm/invocations/accumulate";
+import { JamEntropyImpl } from "./impls/jam-entropy-impl";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -48,7 +48,7 @@ export const accumulateReports = (
     p_tau: Validated<Posterior<TauImpl>>;
     privServices: PrivilegedServicesImpl;
     iota: Tagged<ValidatorsImpl, "iota">;
-    p_eta_0: Posterior<JamEntropy["_0"]>;
+    p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ) => {
   /*
@@ -158,7 +158,7 @@ export const outerAccumulation = (
   freeAccServices: Map<ServiceIndex, Gas>,
   deps: {
     p_tau: Validated<Posterior<TauImpl>>;
-    p_eta_0: Posterior<JamEntropy["_0"]>;
+    p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): {
   nAccumulatedWork: number;
@@ -245,7 +245,7 @@ export const parallelizedAccumulation = (
   bold_f: Map<ServiceIndex, Gas>,
   deps: {
     p_tau: Validated<Posterior<TauImpl>>;
-    p_eta_0: Posterior<JamEntropy["_0"]>;
+    p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): {
   postAccState: PVMAccumulationStateImpl;
@@ -379,7 +379,7 @@ export const singleServiceAccumulation = (
   service: ServiceIndex,
   deps: {
     p_tau: Validated<Posterior<TauImpl>>;
-    p_eta_0: Posterior<JamEntropy["_0"]>;
+    p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
   let g = (gasPerService.get(service) || 0n) as Gas;

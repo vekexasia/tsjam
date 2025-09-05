@@ -361,10 +361,11 @@ export class JamStateImpl implements JamState {
 
         dd_rho,
         d_recentHistory: toDagger(d_beta.recentHistory),
-        p_entropy,
+        p_eta2: p_entropy._2,
+        p_eta3: p_entropy._3,
         p_kappa,
         p_lambda,
-        p_disputes,
+        p_offenders: toPosterior(p_disputes.offenders),
         p_tau,
       })
       .safeRet();
@@ -392,9 +393,10 @@ export class JamStateImpl implements JamState {
       ea: validatedEA,
       ep: validatedEP,
       d_rho,
-      p_disputes,
+      p_offenders: toPosterior(p_disputes.offenders),
       authorIndex: newBlock.header.authorIndex,
-      p_entropy,
+      p_eta2: p_entropy._2,
+      p_eta3: p_entropy._3,
       p_kappa,
       p_lambda,
       accumulationStatistics,

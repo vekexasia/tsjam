@@ -22,16 +22,16 @@ import type { SlotImpl, TauImpl } from "./slot-impl";
 @JamCodecable(true)
 export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
   @codec(HashCodec)
-  _0!: Blake2bHash;
+  _0!: Tagged<Blake2bHash, "_0">;
 
   @codec(HashCodec)
-  _1!: Blake2bHash;
+  _1!: Tagged<Blake2bHash, "_1">;
 
   @codec(HashCodec)
-  _2!: Blake2bHash;
+  _2!: Tagged<Blake2bHash, "_2">;
 
   @codec(HashCodec)
-  _3!: Blake2bHash;
+  _3!: Tagged<Blake2bHash, "_3">;
 
   constructor(config?: JamEntropy) {
     super();
@@ -55,7 +55,11 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     let [p_1, p_2, p_3] = [this._1, this._2, this._3];
 
     if (deps.p_tau.isNewerEra(deps.slot)) {
-      [p_1, p_2, p_3] = [this._0, this._1, this._2];
+      [p_1, p_2, p_3] = [
+        this._0 as Blake2bHash as JamEntropyImpl["_1"],
+        this._1 as Blake2bHash as JamEntropyImpl["_2"],
+        this._2 as Blake2bHash as JamEntropyImpl["_3"],
+      ];
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <any>new JamEntropyImpl({

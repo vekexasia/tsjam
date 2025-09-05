@@ -58,7 +58,7 @@ export const accumulateInvocation = (
   deps: {
     core: CoreIndex;
     p_tau: Validated<Posterior<TauImpl>>;
-    p_eta_0: Posterior<JamEntropy["_0"]>;
+    p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
   const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);

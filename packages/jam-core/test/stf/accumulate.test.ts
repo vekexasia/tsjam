@@ -7,6 +7,7 @@ import {
   GuaranteesExtrinsicImpl,
   IdentityMap,
   IdentityMapCodec,
+  JamEntropyImpl,
   MerkleServiceAccountStorageImpl,
   NewWorkReportsImpl,
   PreimagesExtrinsicImpl,
@@ -125,7 +126,7 @@ class TestState extends BaseJamCodecable {
   tau!: Validated<Posterior<TauImpl>>;
 
   @codec(xBytesCodec(32), "entropy")
-  p_eta_0!: Posterior<JamEntropy["_0"]>;
+  p_eta_0!: Posterior<JamEntropyImpl["_0"]>;
 
   @codec(AccumulationQueueImpl, "ready_queue")
   readyQueue!: AccumulationQueueImpl;

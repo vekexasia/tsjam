@@ -1,0 +1,40 @@
+{
+  "name": "@tsjam/np",
+  "version": "0.7.0",
+  "description": "Network Protocol for JAM",
+  "dependencies": {
+    "@tsjam/codec": "*",
+    "@tsjam/constants": "*",
+    "@tsjam/core": "*"
+  },
+  "scripts": {
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "lint": "npx eslint --ext .ts src test",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && vitest run"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "import": "./dist/node.esm.mjs",
+        "default": "./dist/node.cjs.js"
+      },
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jest-diff": "^30.1.1",
+    "rollup-plugin-terser": "^7.0.2"
+  },
+  "jam:protocolVersion": "0.7.0"
+}

@@ -62,6 +62,21 @@ export class ValidatorDataImpl
     }
   }
 
+  ipv6(): string {
+    const ipv6 = Buffer.from(this.metadata.subarray(0, 16));
+    const parts = [];
+    for (let i = 0; i < 16; i += 2) {
+      // NOTE: jam-np does not specify if its BE or LE
+      parts.push(ipv6.readUInt16BE(i).toString(16));
+    }
+    // NOTE: 0000 is not shortened to ::
+    return parts.join(":");
+  }
+
+  port(): number {
+    return Buffer.from(this.metadata.subarray(16, 18)).readUInt16LE(0);
+  }
+
   static newEmpty() {
     return new ValidatorDataImpl({
       banderSnatch: <BandersnatchKey>new Uint8Array(32).fill(0),

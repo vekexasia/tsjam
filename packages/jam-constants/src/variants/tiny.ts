@@ -14,3 +14,6 @@ export const TOTAL_GAS_ACCUMULATION_ALL_CORES = 20_000_000n;
 export const TOTAL_GAS_REFINEMENT_LOGIC = 1_000_000_000n;
 export const MINIMUM_VALIDATORS = 5;
 export const ERASURECODE_BASIC_SIZE = 4;
+
+// https://github.com/zdave-parity/jam-np/blob/main/simple.md
+export const RECOVERY_THRESHOLD = 2;

@@ -105,6 +105,10 @@ export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>
     }
     return clone;
   }
+
+  toSet(): Set<V> {
+    return new Set(this.internalMap.values());
+  }
 }
 
 export const IdentityMapCodec = <

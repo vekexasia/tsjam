@@ -1631,6 +1631,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tsjam/np@workspace:packages/jam-np":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/np@workspace:packages/jam-np"
+  dependencies:
+    "@tsjam/codec": "npm:*"
+    "@tsjam/constants": "npm:*"
+    "@tsjam/core": "npm:*"
+    jest-diff: "npm:^30.1.1"
+    rollup-plugin-terser: "npm:^7.0.2"
+  languageName: unknown
+  linkType: soft
+
 "@tsjam/types@npm:*, @tsjam/types@workspace:*, @tsjam/types@workspace:packages/jam-types":
   version: 0.0.0-use.local
   resolution: "@tsjam/types@workspace:packages/jam-types"

@@ -54,9 +54,10 @@ export class JamStatisticsImpl
     ea: Validated<AssurancesExtrinsicImpl>;
     ep: Validated<PreimagesExtrinsicImpl>;
     d_rho: Dagger<RHOImpl>;
-    p_disputes: Posterior<DisputesStateImpl>;
+    p_offenders: Posterior<DisputesStateImpl["offenders"]>;
     authorIndex: JamHeaderImpl["authorIndex"];
-    p_entropy: Posterior<JamEntropyImpl>;
+    p_eta2: Posterior<JamEntropyImpl["_2"]>;
+    p_eta3: Posterior<JamEntropyImpl["_3"]>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     accumulationStatistics: AccumulationStatisticsImpl;
@@ -69,9 +70,10 @@ export class JamStatisticsImpl
       tau: deps.tau,
       p_tau: deps.p_tau,
       extrinsics: deps.extrinsics,
-      p_disputes: deps.p_disputes,
+      p_offenders: deps.p_offenders,
       authorIndex: deps.authorIndex,
-      p_entropy: deps.p_entropy,
+      p_eta2: deps.p_eta2,
+      p_eta3: deps.p_eta3,
       p_kappa: deps.p_kappa,
       p_lambda: deps.p_lambda,
     });

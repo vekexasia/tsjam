@@ -251,6 +251,9 @@ export const Zp = 2 ** 12;
 // `S`
 export const MINIMUM_PUBLIC_SERVICE_INDEX = 2 ** 16;
 
+// `R` in jam-np
+export let RECOVERY_THRESHOLD = 683;
+
 /**
  * Runtime initialization helpers
  *
@@ -285,6 +288,7 @@ export function initConstants(mode?: "full" | "tiny") {
   MINIMUM_VALIDATORS = <683>v.MINIMUM_VALIDATORS;
   ERASURECODE_BASIC_SIZE = <684>v.ERASURECODE_BASIC_SIZE;
   CURRENT_MODE = m;
+  RECOVERY_THRESHOLD = <683>v.RECOVERY_THRESHOLD;
 }
 
 export function getConstantsMode() {

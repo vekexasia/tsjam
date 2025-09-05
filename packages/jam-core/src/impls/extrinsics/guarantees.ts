@@ -1,7 +1,6 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { IdentitySet } from "@/data-structures/identity-set";
-import { FisherYatesH } from "@/fisher-yates";
 import {
   BaseJamCodecable,
   codec,
@@ -14,7 +13,6 @@ import {
 } from "@tsjam/codec";
 import {
   CORES,
-  EPOCH_LENGTH,
   JAM_GUARANTEE,
   MAX_WORK_PREREQUISITES,
   MAX_WORKREPORT_OUTPUT_SIZE,
@@ -33,20 +31,17 @@ import type {
   ED25519Signature,
   EG_Extrinsic,
   GuarantorsAssignment,
-  Hash,
-  JamEntropy,
   Posterior,
   SingleWorkReportGuarantee,
   SingleWorkReportGuaranteeSignature,
   Tagged,
   Tau,
-  u32,
   UpToSeq,
   Validated,
   ValidatorIndex,
   WorkPackageHash,
 } from "@tsjam/types";
-import { toPosterior, toTagged } from "@tsjam/utils";
+import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import type { AccumulationHistoryImpl } from "../accumulation-history-impl";
@@ -55,6 +50,7 @@ import type { AuthorizerPoolImpl } from "../authorizer-pool-impl";
 import type { BetaImpl } from "../beta-impl";
 import type { DeltaImpl } from "../delta-impl";
 import type { DisputesStateImpl } from "../disputes-state-impl";
+import { GuarantorsAssignmentImpl } from "../guarantors-assignment-impl";
 import type { HeaderLookupHistoryImpl } from "../header-lookup-history-impl";
 import type { JamEntropyImpl } from "../jam-entropy-impl";
 import type { JamStateImpl } from "../jam-state-impl";
@@ -265,72 +261,38 @@ export class GuaranteesExtrinsicImpl
   }
 
   /**
-   * $(0.7.1 - 11.22)
-   */
-  M_star(deps: {
-    p_entropy: Posterior<JamEntropyImpl>;
-    p_kappa: Posterior<JamStateImpl["kappa"]>;
-    p_lambda: Posterior<JamStateImpl["lambda"]>;
-    p_disputes: Posterior<DisputesStateImpl>;
-    p_tau: Validated<Posterior<TauImpl>>;
-  }): GuarantorsAssignment {
-    return M_STAR_fn({
-      p_eta2: toPosterior(deps.p_entropy._2),
-      p_eta3: toPosterior(deps.p_entropy._3),
-      p_kappa: deps.p_kappa,
-      p_lambda: deps.p_lambda,
-      p_offenders: toPosterior(deps.p_disputes.offenders),
-      p_tau: deps.p_tau,
-    });
-  }
-
-  /**
-   * $(0.7.1 - 11.19 / 11.20 / 11.21)
-   */
-  M(deps: {
-    p_entropy: Posterior<JamEntropyImpl>;
-    p_tau: Validated<Posterior<TauImpl>>;
-    p_kappa: Posterior<JamStateImpl["kappa"]>;
-    p_disputes: Posterior<DisputesStateImpl>;
-  }): GuarantorsAssignment {
-    return M_fn({
-      entropy: deps.p_entropy._2,
-      p_tau: deps.p_tau,
-      tauOffset: <u32>0,
-      validatorKeys: deps.p_kappa,
-      p_offenders: toPosterior(deps.p_disputes.offenders),
-    });
-  }
-
-  /**
    * $(0.7.1 - 11.26) | calculates bold G in it
+   * it can be used as well from assurers to get which reporters/guarantors to query
+   * for their shard
    */
   reporters(deps: {
+    p_eta2: Posterior<JamEntropyImpl["_2"]>;
+    p_eta3: Posterior<JamEntropyImpl["_3"]>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     p_tau: Validated<Posterior<TauImpl>>;
-    p_disputes: Posterior<DisputesStateImpl>;
-    p_entropy: Posterior<JamStateImpl["entropy"]>;
+    p_offenders: Posterior<DisputesStateImpl["offenders"]>;
   }) {
-    const M_star = this.M_star({
-      p_entropy: deps.p_entropy,
+    const M_star = GuarantorsAssignmentImpl.prevRotation({
+      p_eta2: deps.p_eta2,
+      p_eta3: deps.p_eta3,
       p_kappa: deps.p_kappa,
       p_lambda: deps.p_lambda,
-      p_disputes: deps.p_disputes,
+      p_offenders: deps.p_offenders,
       p_tau: deps.p_tau,
     });
 
-    const M = this.M({
+    const M = GuarantorsAssignmentImpl.curRotation({
+      p_eta2: deps.p_eta2,
       p_tau: deps.p_tau,
-      p_disputes: deps.p_disputes,
-      p_entropy: deps.p_entropy,
+      p_offenders: deps.p_offenders,
       p_kappa: deps.p_kappa,
     });
 
     const reporters = new IdentitySet<ED25519PublicKey>();
     const curRotation = Math.floor(deps.p_tau.value / VALIDATOR_CORE_ROTATION);
     for (const { signatures, slot } of this.elements) {
-      let usedG = M_star;
+      let usedG: GuarantorsAssignmentImpl = M_star;
       if (curRotation === Math.floor(slot.value / VALIDATOR_CORE_ROTATION)) {
         usedG = M;
       }
@@ -342,6 +304,8 @@ export class GuaranteesExtrinsicImpl
   }
 
   checkValidity(deps: {
+    p_eta2: Posterior<JamEntropyImpl["_2"]>;
+    p_eta3: Posterior<JamEntropyImpl["_3"]>;
     authPool: AuthorizerPoolImpl;
     serviceAccounts: DeltaImpl;
     headerLookupHistory: HeaderLookupHistoryImpl;
@@ -352,11 +316,10 @@ export class GuaranteesExtrinsicImpl
 
     d_recentHistory: Dagger<RecentHistoryImpl>;
     dd_rho: DoubleDagger<RHOImpl>;
-    p_entropy: Posterior<JamStateImpl["entropy"]>;
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     p_tau: Validated<Posterior<TauImpl>>;
-    p_disputes: Posterior<DisputesStateImpl>;
+    p_offenders: Posterior<DisputesStateImpl["offenders"]>;
   }): Result<Validated<GuaranteesExtrinsicImpl>, EGError> {
     if (this.elements.length === 0) {
       return ok(toTagged(this)); // optimization
@@ -377,23 +340,28 @@ export class GuaranteesExtrinsicImpl
       }
     }
 
+    const m_star = GuarantorsAssignmentImpl.prevRotation({
+      p_tau: deps.p_tau,
+      p_kappa: deps.p_kappa,
+      p_eta2: deps.p_eta2,
+      p_eta3: deps.p_eta3,
+      p_lambda: deps.p_lambda,
+      p_offenders: deps.p_offenders,
+    });
+
+    const m = GuarantorsAssignmentImpl.curRotation({
+      p_eta2: deps.p_eta2,
+      p_offenders: deps.p_offenders,
+      p_tau: deps.p_tau,
+      p_kappa: deps.p_kappa,
+    });
+
     for (const element of this.elements) {
       const [e, _] = element
         .checkValidity({
           p_tau: deps.p_tau,
-          M_STAR: this.M_star({
-            p_tau: deps.p_tau,
-            p_kappa: deps.p_kappa,
-            p_entropy: deps.p_entropy,
-            p_lambda: deps.p_lambda,
-            p_disputes: deps.p_disputes,
-          }),
-          M: this.M({
-            p_disputes: deps.p_disputes,
-            p_tau: deps.p_tau,
-            p_entropy: deps.p_entropy,
-            p_kappa: deps.p_kappa,
-          }),
+          M_STAR: m_star,
+          M: m,
         })
         .safeRet();
 
@@ -607,71 +575,6 @@ export enum EGError {
   LOOKUP_HASH_MISMATCH = "LOOKUP_HASH_MISMATCH",
   REPORT_NOT_IN_ACCOUNTS = "REPORT_NOT_IN_ACCOUNTS",
 }
-
-const M_fn = (input: {
-  entropy: Hash;
-  tauOffset: u32;
-  p_tau: Validated<Posterior<TauImpl>>;
-  validatorKeys: Posterior<JamStateImpl["kappa"] | JamStateImpl["lambda"]>;
-  p_offenders: Posterior<DisputesStateImpl["offenders"]>;
-}) => {
-  // R(c,n) = [(x + n) mod CORES | x E c]
-  const R = (c: number[], n: number) => c.map((x) => (x + n) % CORES);
-  // P(e,t) = R(F([floor(CORES * i / NUMBER_OF_VALIDATORS) | i E NUMBER_OF_VALIDATORS], e), floor(t mod EPOCH_LENGTH/ R))
-  const P = (e: Hash, t: TauImpl) => {
-    return R(
-      FisherYatesH(
-        Array.from({ length: NUMBER_OF_VALIDATORS }, (_, i) =>
-          Math.floor((CORES * i) / NUMBER_OF_VALIDATORS),
-        ),
-        e,
-      ),
-      Math.floor((t.value % EPOCH_LENGTH) / VALIDATOR_CORE_ROTATION),
-    );
-  };
-  return {
-    // c
-    validatorsAssignedCore: P(
-      input.entropy,
-      toTagged(new SlotImpl(<u32>(input.p_tau.value + input.tauOffset))),
-    ),
-    // k
-    validatorsED22519Key: input.validatorKeys
-      .phi(input.p_offenders)
-      .elements.map((v) => v.ed25519),
-  } as GuarantorsAssignment;
-};
-
-const M_STAR_fn = (input: {
-  p_eta2: Posterior<JamEntropy["_2"]>;
-  p_eta3: Posterior<JamEntropy["_3"]>;
-  p_kappa: Posterior<JamStateImpl["kappa"]>;
-  p_lambda: Posterior<JamStateImpl["lambda"]>;
-  p_offenders: Posterior<DisputesStateImpl["offenders"]>;
-  p_tau: Validated<Posterior<TauImpl>>;
-}) => {
-  if (
-    new SlotImpl(
-      <u32>(input.p_tau.value - VALIDATOR_CORE_ROTATION),
-    ).epochIndex() == input.p_tau.epochIndex()
-  ) {
-    return M_fn({
-      entropy: input.p_eta2,
-      tauOffset: -VALIDATOR_CORE_ROTATION as u32,
-      p_tau: input.p_tau,
-      validatorKeys: input.p_kappa,
-      p_offenders: input.p_offenders,
-    });
-  } else {
-    return M_fn({
-      entropy: input.p_eta3,
-      tauOffset: -VALIDATOR_CORE_ROTATION as u32,
-      p_tau: input.p_tau,
-      validatorKeys: input.p_lambda,
-      p_offenders: input.p_offenders,
-    });
-  }
-};
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const { getCodecFixtureFile } = await import("@/test/codec-utils.js");

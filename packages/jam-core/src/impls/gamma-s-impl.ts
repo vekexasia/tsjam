@@ -25,12 +25,13 @@ import type {
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
+import { compareUint8Arrays } from "uint8array-extras";
+import { JamEntropyImpl } from "./jam-entropy-impl";
+import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
+import { SafroleStateImpl } from "./safrole-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
-import { SafroleStateImpl } from "./safrole-state-impl";
-import { compareUint8Arrays } from "uint8array-extras";
-import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
 
 export class GammaSImpl extends BaseJamCodecable implements GammaS {
   @sequenceCodec(EPOCH_LENGTH, xBytesCodec(32))
@@ -65,7 +66,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
     keyPair: { public: BandersnatchKey; private: BandersnatchKey },
     deps: {
       p_tau: Validated<Posterior<TauImpl>>;
-      p_entropy_3: Posterior<JamEntropy["_3"]>;
+      p_entropy_3: Posterior<JamEntropyImpl["_3"]>;
     },
   ): boolean {
     if (this.isFallback()) {

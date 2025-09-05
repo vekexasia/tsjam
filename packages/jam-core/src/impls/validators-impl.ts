@@ -6,6 +6,8 @@ import {
 } from "@tsjam/codec";
 import { NUMBER_OF_VALIDATORS } from "@tsjam/constants";
 import type {
+  CoreIndex,
+  ED25519PublicKey,
   Posterior,
   SeqOfLength,
   ValidatorIndex,
@@ -16,6 +18,7 @@ import assert from "assert";
 import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
+import { compareUint8Arrays } from "uint8array-extras";
 
 @JamCodecable()
 export class ValidatorsImpl extends BaseJamCodecable implements Validators {
@@ -34,6 +37,29 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
   at(index: ValidatorIndex): ValidatorDataImpl {
     assert(index >= 0 && index < NUMBER_OF_VALIDATORS, "Index out of bounds");
     return this.elements[index];
+  }
+
+  /**
+   * computes the shard that the given validator is assigned to
+   * to be used when assurers needs to ask for their piece of data
+   * or guarantors need to know who to ask for data
+   */
+  shardOf(v: ValidatorIndex, core: CoreIndex): number {
+    // recovery threshold
+    const R = 2;
+    return (core * R + v) % NUMBER_OF_VALIDATORS;
+  }
+
+  /**
+   * finds the index of the given ed25519 public key in the validator set
+   * returns undefined if not found
+   */
+  indexOfEd25519(ed25519: ED25519PublicKey): ValidatorIndex | undefined {
+    for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
+      if (compareUint8Arrays(this.elements[i].ed25519, ed25519) === 0) {
+        return i;
+      }
+    }
   }
 
   /**

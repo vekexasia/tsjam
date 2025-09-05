@@ -19,6 +19,11 @@ import { RHOImpl } from "@/impls/rho-impl";
 import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import {
+  AccumulationStatisticsImpl,
+  AssurancesExtrinsicImpl,
+  PreimagesExtrinsicImpl,
+} from "@/index";
+import {
   BaseJamCodecable,
   binaryCodec,
   buildGenericKeyValueCodec,
@@ -43,18 +48,13 @@ import type {
   Validated,
   WorkPackageHash,
 } from "@tsjam/types";
-import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
+import { toDagger, toPosterior } from "@tsjam/utils";
 import fs from "fs";
 import type { ConditionalExcept } from "type-fest";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
 import { dummyState } from "../utils";
-import {
-  AccumulationStatisticsImpl,
-  AssurancesExtrinsicImpl,
-  PreimagesExtrinsicImpl,
-} from "@/index";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -195,9 +195,10 @@ const buildTest = (filename: string) => {
     accumulationHistory: sampleState.accumulationHistory,
     p_kappa: decoded.preState.p_kappa,
     p_lambda: decoded.preState.p_lambda,
-    p_entropy: decoded.preState.p_entropy,
+    p_eta2: toPosterior(decoded.preState.p_entropy._2),
+    p_eta3: toPosterior(decoded.preState.p_entropy._3),
     p_tau: decoded.input.slot,
-    p_disputes: toPosterior(sampleState.disputes),
+    p_offenders: toPosterior(sampleState.disputes.offenders),
   });
 
   if (res.isErr()) {
@@ -210,9 +211,10 @@ const buildTest = (filename: string) => {
   }
 
   const reporters = res.value.reporters({
-    p_disputes: toPosterior(sampleState.disputes),
+    p_offenders: toPosterior(sampleState.disputes.offenders),
     p_tau: decoded.input.slot,
-    p_entropy: decoded.preState.p_entropy,
+    p_eta2: toPosterior(decoded.preState.p_entropy._2),
+    p_eta3: toPosterior(decoded.preState.p_entropy._3),
     p_kappa: decoded.preState.p_kappa,
     p_lambda: decoded.preState.p_lambda,
   });
