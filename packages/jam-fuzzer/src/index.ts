@@ -418,9 +418,13 @@ const sendSingleBlockFromTrace = async () => {
     }
   } else {
     console.log(`initing using file order`);
-    const initialTrace = loadTrace(
+    const [initialErr, initialTrace] = loadTrace(
       fs.readFileSync(path.join(process.env.TRACE_PATH, files[0])),
-    );
+    ).safeRet();
+    if (typeof initialErr !== "undefined") {
+      console.log(initialErr);
+      return;
+    }
     const sr = await sendStuff(
       new Message({
         setState: new SetState({
@@ -440,9 +444,13 @@ const sendSingleBlockFromTrace = async () => {
   }
   for (const file of files) {
     console.log(file);
-    const trace = loadTrace(
+    const [traceErr, trace] = loadTrace(
       fs.readFileSync(path.join(process.env.TRACE_PATH, file)),
-    );
+    ).safeRet();
+    if (typeof traceErr !== "undefined") {
+      console.error(`Error loading trace from ${file}: ${traceErr}`);
+      return;
+    }
     const sr = await sendStuff(
       new Message({ importBlock: trace.block }),
       MessageType.STATE_ROOT,

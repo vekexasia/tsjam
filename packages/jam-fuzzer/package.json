@@ -10,7 +10,8 @@
     "@tsjam/fuzzer-target": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
-    "jest-diff": "^30.1.1"
+    "jest-diff": "^30.1.1",
+    "neverthrow": "^8.2.0"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",

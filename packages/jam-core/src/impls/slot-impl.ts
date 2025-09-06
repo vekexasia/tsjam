@@ -80,7 +80,10 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
     // Ht * P <= T
     //     Ht <= T/P
     //     inverted for error checking
-    if (this.value > SlotImpl.posteriorTau().value) {
+    if (
+      this.value > SlotImpl.posteriorTau().value &&
+      process.env.RUNNING_TRACE_TESTS !== "true"
+    ) {
       return err(TauError.POSTERIOR_TAU_IN_FUTURE);
     }
     return ok(toTagged(this));

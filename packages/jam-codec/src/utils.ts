@@ -54,9 +54,15 @@ export const createCodec = <T extends object>(
         if (typeof codec.decode === "undefined") {
           throw new Error(`codec.decode for ${String(key)} is undefined`);
         }
+
         const { value, readBytes } = codec.decode(bytes.subarray(offset));
         toRet[key] = value;
         offset += readBytes;
+        if (offset > bytes.length) {
+          throw new Error(
+            `codec.decode: cannot decode key ${String(key)}, out of bytes`,
+          );
+        }
       }
       return { value: toRet, readBytes: offset };
     },

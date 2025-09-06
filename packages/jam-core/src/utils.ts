@@ -38,6 +38,9 @@ export const log = (_str: string | object, debug: boolean) => {
       str = _str.toJSON();
     } else {
       str = JSON.stringify(_str, (_key, value) => {
+        if (typeof value === "undefined") {
+          return value;
+        }
         if (typeof value === "bigint") {
           return value.toString();
         }

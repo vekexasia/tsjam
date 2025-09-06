@@ -13,6 +13,7 @@ import {
 } from "@tsjam/core";
 import type { StateKey, StateRootHash } from "@tsjam/types";
 import assert from "assert";
+import { err, ok, Result } from "neverthrow";
 
 @JamCodecable()
 export class TraceState extends BaseJamCodecable {
@@ -65,14 +66,22 @@ export const loadTraceJSON = (bin: Uint8Array) => {
 
   return toRet;
 };
-export const loadTrace = (bin: Uint8Array) => {
-  const toRet = TraceStep.decode(bin);
 
-  assert(
-    toRet.readBytes === bin.length,
-    `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
-  );
+export const loadTrace = (bin: Uint8Array): Result<TraceStep, string> => {
+  try {
+    const toRet = TraceStep.decode(bin);
 
-  assert(Buffer.compare(toRet.value.toBinary(), bin) === 0, "trace mismatch");
-  return toRet.value;
+    assert(
+      toRet.readBytes === bin.length,
+      `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
+    );
+    assert(
+      Buffer.compare(toRet.value.toBinary(), bin) === 0,
+      "cannot re-encode",
+    );
+
+    return ok(toRet.value);
+  } catch (e) {
+    return err((e as Error).message);
+  }
 };

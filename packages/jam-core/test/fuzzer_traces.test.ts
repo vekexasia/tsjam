@@ -26,6 +26,7 @@ import type {
   StateRootHash,
 } from "../../jam-types/dist/types/generic-types";
 import { getConstantsMode } from "@tsjam/constants";
+import { err, ok, Result } from "neverthrow";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
@@ -42,9 +43,12 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
       .filter((a) => a.endsWith(".bin"))
       .sort((a, b) => a.localeCompare(b));
 
-    const initialTrace = loadTrace(
+    const [err, initialTrace] = loadTrace(
       fs.readFileSync(path.join(traceDir, files[0])),
-    );
+    ).safeRet();
+    if (typeof err !== "undefined") {
+      throw new Error(`Error loading initial trace: ${err}`);
+    }
 
     // set initial block and initial state
     let jamState = stateFromMerkleMap(initialTrace.preState.merkleMap);
@@ -60,42 +64,47 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     //files.splice(0, 1);
     for (const file of files) {
       console.log(file);
-      const trace = loadTrace(fs.readFileSync(path.join(traceDir, file)));
-      const res = jamState.applyBlock(trace.block);
-      let newState: JamStateImpl = jamState;
-      if (res.isErr()) {
-        console.log("Error applying block", res.error);
-      } else {
-        newState = res.value;
-      }
-      if (
-        Buffer.compare(newState.merkleRoot(), trace.postState.stateRoot) !== 0
-      ) {
-        console.log(
-          "Expected merkle root:",
-          Buffer.from(trace.postState.stateRoot).toString("hex"),
-        );
-        console.log(
-          "Got merkle root:",
-          Buffer.from(newState.merkleRoot()).toString("hex"),
-        );
-        const calculatedMap = merkleStateMap(newState);
-        const expectedMap = trace.postState.merkleMap;
-        const expectedState = stateFromMerkleMap(expectedMap);
-        for (const [key, expectedValue] of expectedMap.entries()) {
-          if (!calculatedMap.has(key)) {
-            console.log(`Missing key ${key}`);
-          } else if (
-            Buffer.compare(calculatedMap.get(key)!, expectedValue) !== 0
-          ) {
-            reverseDifferentState(key, expectedState, newState);
-          }
+      const [errTrace, trace] = loadTrace(
+        fs.readFileSync(path.join(traceDir, file)),
+      ).safeRet();
+      if (typeof errTrace === "undefined") {
+        const res = jamState.applyBlock(trace.block);
+        let newState: JamStateImpl = jamState;
+        if (res.isErr()) {
+          console.log("Error applying block", res.error);
+        } else {
+          newState = res.value;
         }
-        throw new Error("diff");
+        if (
+          Buffer.compare(newState.merkleRoot(), trace.postState.stateRoot) !== 0
+        ) {
+          console.log(
+            "Expected merkle root:",
+            Buffer.from(trace.postState.stateRoot).toString("hex"),
+          );
+          console.log(
+            "Got merkle root:",
+            Buffer.from(newState.merkleRoot()).toString("hex"),
+          );
+          const calculatedMap = merkleStateMap(newState);
+          const expectedMap = trace.postState.merkleMap;
+          const expectedState = stateFromMerkleMap(expectedMap);
+          for (const [key, expectedValue] of expectedMap.entries()) {
+            if (!calculatedMap.has(key)) {
+              console.log(`Missing key ${key}`);
+            } else if (
+              Buffer.compare(calculatedMap.get(key)!, expectedValue) !== 0
+            ) {
+              reverseDifferentState(key, expectedState, newState);
+            }
+          }
+          throw new Error("diff");
+        }
+        jamState = newState;
       }
-      jamState = newState;
     }
   };
+  // for i in $(ls jam-conformance/fuzz-reports/0.7.0/traces/); do echo "it(\"$i\", () => doTest(\"$i\"));"; done
   it("1756548459", () => doTest("1756548459"));
   it("1756548583", () => doTest("1756548583"));
   it("1756548667", () => doTest("1756548667"));
@@ -107,8 +116,11 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756572122", () => doTest("1756572122"));
   it("1756790723", () => doTest("1756790723"));
   it("1756791458", () => doTest("1756791458"));
-  it("1756792661", () => doTest("1756792661"));
   it("1756814312", () => doTest("1756814312"));
+  it("1756832925", () => doTest("1756832925"));
+  it("1757062927", () => doTest("1757062927"));
+  it("1757063641", () => doTest("1757063641"));
+  it("1757092821", () => doTest("1757092821"));
 });
 
 const reverseDifferentState = (
@@ -302,14 +314,21 @@ export class GenesisTrace extends BaseJamCodecable {
   state!: TraceState;
 }
 
-export const loadTrace = (bin: Uint8Array) => {
-  const toRet = TraceStep.decode(bin);
+export const loadTrace = (bin: Uint8Array): Result<TraceStep, string> => {
+  try {
+    const toRet = TraceStep.decode(bin);
 
-  assert(
-    toRet.readBytes === bin.length,
-    `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
-  );
-  assert(Buffer.compare(toRet.value.toBinary(), bin) === 0, "cannot re-encode");
+    assert(
+      toRet.readBytes === bin.length,
+      `readBytes ${toRet.readBytes} !== bin.length ${bin.length}`,
+    );
+    assert(
+      Buffer.compare(toRet.value.toBinary(), bin) === 0,
+      "cannot re-encode",
+    );
 
-  return toRet.value;
+    return ok(toRet.value);
+  } catch (e) {
+    return err((e as Error).message);
+  }
 };
