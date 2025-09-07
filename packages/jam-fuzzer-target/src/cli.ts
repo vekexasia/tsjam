@@ -8,6 +8,7 @@ import {
   merkleStateMap,
   stateFromMerkleMap,
 } from "@tsjam/core";
+import "@tsjam/utils";
 import { HeaderHash } from "@tsjam/types";
 import assert from "node:assert";
 import fs from "node:fs";
@@ -17,6 +18,7 @@ import { PeerInfo } from "./proto/peer-info";
 import { State } from "./proto/state";
 import { SetState } from "./proto/set-state";
 import { parseArgs } from "node:util";
+import { err, ok, Result } from "neverthrow";
 
 // Parse CLI args for socket path (fallback to env, then default)
 const { values: cliArgs } = parseArgs({
@@ -33,6 +35,14 @@ if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
 
 let state: JamStateImpl | null = null;
 let historyMap: IdentityMap<HeaderHash, 32, SetState>;
+const decodeMessage = (data: Buffer): Result<Message, string> => {
+  try {
+    return ok(MessageCodec.decode(data).value);
+  } catch (e) {
+    return err("Decoding error: " + (e as Error).message);
+  }
+};
+
 const server = net.createServer((socket) => {
   const send = (message: Message) => {
     const bin = encodeWithCodec(MessageCodec, message);
@@ -54,7 +64,19 @@ const server = net.createServer((socket) => {
     }
   });
   const onMessage = (data: Buffer) => {
-    const message = MessageCodec.decode(data).value;
+    const [errDecoding, message] = decodeMessage(data).safeRet();
+    if (typeof errDecoding === "string") {
+      if (data[0] === 1) {
+        // import block deserialization error we do send back current state root
+        console.error(`Error decoding block: ${errDecoding}`);
+        send(new Message({ stateRoot: state!.merkleRoot() }));
+        return;
+      } else {
+        console.error(`Error decoding message: ${errDecoding}`);
+        return;
+      }
+    }
+
     console.log(`received message ${message.type()}`);
     switch (message.type()) {
       case MessageType.PEER_INFO:

@@ -12,6 +12,7 @@ import { GetState } from "./get-state";
 import { PeerInfo } from "./peer-info";
 import { SetState } from "./set-state";
 import { State } from "./state";
+import assert from "assert";
 
 export enum MessageType {
   PEER_INFO = "PEER_INFO",
@@ -64,9 +65,10 @@ export const MessageCodec: JamCodec<Message> = {
 
   decode(bytes) {
     const { value: length } = E_4_int.decode(bytes);
-    const { value: pojo } = oneOfMessageCodec.decode(
+    const { value: pojo, readBytes } = oneOfMessageCodec.decode(
       bytes.subarray(4, 4 + length),
     );
+    assert(readBytes === length, "MessageCodec: readBytes !== length");
     return {
       value: pojo,
       readBytes: 4 + length,
