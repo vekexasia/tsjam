@@ -5,8 +5,7 @@ import {
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamSignedHeaderImpl,
-  merkleStateMap,
-  stateFromMerkleMap,
+  JamStateImpl,
 } from "@/index";
 import {
   BaseJamCodecable,
@@ -124,7 +123,9 @@ export const buildTracesTests = (kind: string) => {
   for (const which of cases) {
     it(`${which}`, () => {
       const testCase = tracesTestCase(kind, which);
-      const initialState = stateFromMerkleMap(testCase.preState.merkleMap);
+      const initialState = JamStateImpl.fromMerkleMap(
+        testCase.preState.merkleMap,
+      );
 
       initialState.headerLookupHistory = buildHeaderLookupHistory(
         parseInt(which) - 1,
@@ -148,13 +149,15 @@ export const buildTracesTests = (kind: string) => {
         throw err;
       }
 
-      const merkleMap = merkleStateMap(posteriorState);
-      const staMM = stateFromMerkleMap(merkleMap);
+      const merkleMap = posteriorState.merkle.map;
+      const staMM = JamStateImpl.fromMerkleMap(merkleMap);
 
       expect(staMM.statistics.toJSON()).deep.eq(
-        stateFromMerkleMap(testCase.postState.merkleMap).statistics.toJSON(),
+        JamStateImpl.fromMerkleMap(
+          testCase.postState.merkleMap,
+        ).statistics.toJSON(),
       );
-      const doubleMerkleMap = merkleStateMap(staMM);
+      const doubleMerkleMap = staMM.merkle.map;
 
       // sanity check
       const codec = TraceTestState.codecOf("merkleMap");

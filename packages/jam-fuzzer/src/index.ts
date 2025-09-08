@@ -19,9 +19,7 @@ import {
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamStateImpl,
-  merkleStateMap,
   SlotImpl,
-  stateFromMerkleMap,
   stateKey,
   TauImpl,
 } from "@tsjam/core";
@@ -96,9 +94,9 @@ const compareState = async (
   );
 
   const stateMap = fullState.state!.value;
-  const receivedState = stateFromMerkleMap(stateMap);
+  const receivedState = JamStateImpl.fromMerkleMap(stateMap);
   const expectedMap = merkleMap;
-  const expectedState = stateFromMerkleMap(expectedMap);
+  const expectedState = JamStateImpl.fromMerkleMap(expectedMap);
   console.log("state diverged");
   //console.error(
   //  "Expected state map:",
@@ -325,7 +323,7 @@ const generateBlocks = async () => {
   let lastBlock: JamBlockImpl = GENESIS;
   lastBlock = GENESIS;
 
-  const merkleMap = merkleStateMap(state);
+  const merkleMap = state.merkle.map;
   // set genesis state
   const setState = new SetState({
     header: lastBlock.header,
@@ -338,10 +336,7 @@ const generateBlocks = async () => {
   );
 
   if (Buffer.compare(state.merkleRoot(), stateRootResponse.stateRoot!) !== 0) {
-    return await compareState(
-      merkleStateMap(state),
-      lastBlock.header.signedHash(),
-    );
+    return await compareState(state.merkle.map, lastBlock.header.signedHash());
   }
 
   for (let i = EPOCH_LENGTH + 1; ; i++) {
@@ -356,12 +351,12 @@ const generateBlocks = async () => {
     const isSuccess = await checkState(
       {
         new: new TraceState({
-          stateRoot: newState.merkleRoot(),
-          merkleMap: merkleStateMap(newState),
+          stateRoot: newState.merkle.root,
+          merkleMap: newState.merkle.map,
         }),
         prev: new TraceState({
-          stateRoot: state.merkleRoot(),
-          merkleMap: merkleStateMap(state),
+          stateRoot: state.merkle.root,
+          merkleMap: state.merkle.map,
         }),
       },
       newState.block!.header.signedHash(),
@@ -398,7 +393,7 @@ const sendSingleBlockFromTrace = async () => {
       fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
     ).value;
 
-    state = stateFromMerkleMap(genesis.state.merkleMap);
+    state = JamStateImpl.fromMerkleMap(genesis.state.merkleMap);
     state.block = new JamBlockImpl({
       header: genesis.header,
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
@@ -438,7 +433,7 @@ const sendSingleBlockFromTrace = async () => {
     if (Buffer.compare(sr.stateRoot!, initialTrace.postState.stateRoot) !== 0) {
       throw new Error("initial state root mismatch");
     }
-    state = stateFromMerkleMap(initialTrace.postState.merkleMap);
+    state = JamStateImpl.fromMerkleMap(initialTrace.postState.merkleMap);
     state.block = initialTrace.block;
     files.splice(0, 1);
   }

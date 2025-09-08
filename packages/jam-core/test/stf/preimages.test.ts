@@ -35,7 +35,7 @@ import { toTagged } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
-import { dummyState } from "../utils";
+import { dummyState } from "../dummy-utils";
 import { MerkleServiceAccountStorageImpl } from "@/index";
 
 @JamCodecable()

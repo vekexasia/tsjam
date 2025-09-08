@@ -54,7 +54,7 @@ import type { ConditionalExcept } from "type-fest";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
-import { dummyState } from "../utils";
+import { dummyState } from "../dummy-utils";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {

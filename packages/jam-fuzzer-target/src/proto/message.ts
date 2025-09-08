@@ -85,7 +85,7 @@ if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   const fs = await import("fs");
   describe("Message", () => {
-    it.skip("should encode and decode PeerInfo", () => {
+    it("should encode and decode PeerInfo", () => {
       const bin = fs.readFileSync(
         `${__dirname}/../../test/fixtures/0_peer_info.bin`,
       );
@@ -101,7 +101,7 @@ if (import.meta.vitest) {
         },
       });
     });
-    it.skip("should encode and decode GetState", () => {
+    it("should encode and decode GetState", () => {
       const bin = fs.readFileSync(
         `${__dirname}/../../test/fixtures/12_get_state.bin`,
       );
@@ -118,7 +118,7 @@ if (import.meta.vitest) {
         },
       });
     });
-    it.skip("should encode and decode State", () => {
+    it("should encode and decode State", () => {
       const bin = fs.readFileSync(
         `${__dirname}/../../test/fixtures/13_state.bin`,
       );
@@ -130,40 +130,6 @@ if (import.meta.vitest) {
         JSON.parse(
           fs.readFileSync(
             `${__dirname}/../../test/fixtures/13_state.json`,
-            "utf8",
-          ),
-        ).State,
-      );
-    });
-    it.skip("should encode and decode Block", () => {
-      const bin = fs.readFileSync(
-        `${__dirname}/../../test/fixtures/4_block.bin`,
-      );
-      const { value: message } = oneOfMessageCodec.decode(bin);
-
-      expect(message.type()).toBe(MessageType.IMPORT_BLOCK);
-
-      expect(message.importBlock?.toJSON()).deep.eq(
-        JSON.parse(
-          fs.readFileSync(
-            `${__dirname}/../../test/fixtures/4_block.json`,
-            "utf8",
-          ),
-        ).Block,
-      );
-    });
-    it.skip("should encode and decode SetState", () => {
-      const bin = fs.readFileSync(
-        `${__dirname}/../../test/fixtures/2_set_state.bin`,
-      );
-      const { value: message } = oneOfMessageCodec.decode(bin);
-
-      expect(message.type()).toBe(MessageType.SET_STATE);
-
-      expect(message.setState?.toJSON()).deep.eq(
-        JSON.parse(
-          fs.readFileSync(
-            `${__dirname}/../../test/fixtures/2_set_state.json`,
             "utf8",
           ),
         ).State,

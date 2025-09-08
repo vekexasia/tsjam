@@ -27,7 +27,7 @@ import type { OpaqueHash, Posterior, SeqOfLength } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { dummyState } from "../utils";
+import { dummyState } from "../dummy-utils";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {

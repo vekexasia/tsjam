@@ -14,11 +14,9 @@ import {
   UpToSeq,
 } from "@tsjam/types";
 import { beforeEach, describe, expect, it } from "vitest";
-import { dummyState } from "../utils";
+import { dummyState } from "../dummy-utils";
 import { SlotImpl } from "@/impls/slot-impl";
 import { IdentityMap } from "@/data-structures/identity-map";
-import { merkleStateMap } from "@/merklization/state";
-import { stateFromMerkleMap } from "@/merklization/reverse";
 import { MerkleServiceAccountStorageImpl } from "@/index";
 import { toTagged } from "@tsjam/utils";
 
@@ -26,8 +24,8 @@ describe("state serialization/deserialization", () => {
   it.skip("should deserialize to same object", () => {
     const state: JamStateImpl = dummyState();
 
-    const map = merkleStateMap(state);
-    const restoredState = stateFromMerkleMap(map);
+    const map = state.merkle.map;
+    const restoredState = JamStateImpl.fromMerkleMap(map);
     for (const key of Object.keys(state)) {
       expect(restoredState[key as keyof JamState], key).deep.eq(
         state[key as keyof JamState],
@@ -88,10 +86,10 @@ describe("state serialization/deserialization", () => {
     it("should work with one acc", () => {
       const state = dummyState();
       state.serviceAccounts = new DeltaImpl(new Map([[serviceIndex1, acc]]));
-      const map = merkleStateMap(state);
-      const restoredState = stateFromMerkleMap(map);
+      const map = state.merkle.map;
+      const restoredState = JamStateImpl.fromMerkleMap(map);
       for (const [serviceIndex, original] of state.serviceAccounts.elements) {
-        expect(restoredState.serviceAccounts.has(serviceIndex)).to.be.true;
+        expect(restoredState.serviceAccounts.has(serviceIndex)).toBe(true);
         const sa = restoredState.serviceAccounts.get(serviceIndex)!;
         expect(sa.balance).deep.eq(original.balance);
         expect(sa.codeHash).deep.eq(original.codeHash);
@@ -114,10 +112,10 @@ describe("state serialization/deserialization", () => {
         ]),
       );
 
-      const map = merkleStateMap(state);
-      const restoredState = stateFromMerkleMap(map);
+      const map = state.merkle.map;
+      const restoredState = JamStateImpl.fromMerkleMap(map);
       for (const [serviceIndex, original] of state.serviceAccounts.elements) {
-        expect(restoredState.serviceAccounts.has(serviceIndex)).to.be.true;
+        expect(restoredState.serviceAccounts.has(serviceIndex)).toBe(true);
         const sa = restoredState.serviceAccounts.get(serviceIndex)!;
         expect(sa.balance).deep.eq(original.balance);
         expect(sa.codeHash).deep.eq(original.codeHash);
@@ -140,7 +138,7 @@ describe("state serialization/deserialization", () => {
         ]),
       );
 
-      const map = merkleStateMap(state);
+      const map = state.merkle.map;
       const json = traceJSONCodec.toJSON(map);
       const restoredMap = traceJSONCodec.fromJSON(json);
       const json2 = traceJSONCodec.toJSON(restoredMap);

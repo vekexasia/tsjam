@@ -5,8 +5,6 @@ import {
   JamBlockImpl,
   JamSignedHeaderImpl,
   JamStateImpl,
-  merkleStateMap,
-  stateFromMerkleMap,
   stateKey,
 } from "@/index";
 import {
@@ -51,7 +49,7 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     }
 
     // set initial block and initial state
-    let jamState = stateFromMerkleMap(initialTrace.preState.merkleMap);
+    let jamState = JamStateImpl.fromMerkleMap(initialTrace.preState.merkleMap);
     jamState.block = new JamBlockImpl({
       header: new JamSignedHeaderImpl({}),
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
@@ -86,9 +84,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
             "Got merkle root:",
             Buffer.from(newState.merkleRoot()).toString("hex"),
           );
-          const calculatedMap = merkleStateMap(newState);
+          const calculatedMap = newState.merkle.map;
           const expectedMap = trace.postState.merkleMap;
-          const expectedState = stateFromMerkleMap(expectedMap);
+          const expectedState = JamStateImpl.fromMerkleMap(expectedMap);
           for (const [key, expectedValue] of expectedMap.entries()) {
             if (!calculatedMap.has(key)) {
               console.log(`Missing key ${key}`);
@@ -259,8 +257,8 @@ const reverseDifferentState = (
 
   // not handled probably only storage or preimage(s)
   console.log(key);
-  const actualMap = merkleStateMap(actual);
-  const expectedMap = merkleStateMap(expected);
+  const actualMap = actual.merkle.map;
+  const expectedMap = expected.merkle.map;
 
   console.log(
     diff(

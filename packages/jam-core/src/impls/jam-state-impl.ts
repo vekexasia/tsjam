@@ -1,42 +1,57 @@
 import { accumulateReports } from "@/accumulate";
-import { Bandersnatch } from "@tsjam/crypto";
-import { JamState, Posterior, StateRootHash, Tagged } from "@tsjam/types";
+import { Bandersnatch, Hashing } from "@tsjam/crypto";
+import {
+  JamState,
+  Posterior,
+  ServiceIndex,
+  StateRootHash,
+  Tagged,
+  u32,
+  u64,
+} from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import type { AccumulationHistoryImpl } from "./accumulation-history-impl";
-import type { AccumulationQueueImpl } from "./accumulation-queue-impl";
-import type { AuthorizerPoolImpl } from "./authorizer-pool-impl";
-import type { AuthorizerQueueImpl } from "./authorizer-queue-impl";
-import type { BetaImpl } from "./beta-impl";
-import type { DeltaImpl } from "./delta-impl";
+import { AccumulationHistoryImpl } from "./accumulation-history-impl";
+import { AccumulationQueueImpl } from "./accumulation-queue-impl";
+import { AuthorizerPoolImpl } from "./authorizer-pool-impl";
+import { AuthorizerQueueImpl } from "./authorizer-queue-impl";
+import { BetaImpl } from "./beta-impl";
+import { DeltaImpl } from "./delta-impl";
 import {
   DisputesStateImpl,
   DisputesToPosteriorError,
 } from "./disputes-state-impl";
 import { EAValidationError } from "./extrinsics/assurances";
-import type { EGError } from "./extrinsics/guarantees";
-import type { EPError } from "./extrinsics/preimages";
-import type { ETError } from "./extrinsics/tickets";
-import type { GammaAError } from "./gamma-a-impl";
-import type { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
-import type { JamBlockImpl } from "./jam-block-impl";
-import type { JamEntropyImpl } from "./jam-entropy-impl";
-import type { JamStatisticsImpl } from "./jam-statistics-impl";
-import type { KappaImpl } from "./kappa-impl";
-import type { LambdaImpl } from "./lambda-impl";
-import type { LastAccOutsImpl } from "./last-acc-outs-impl";
-import type { PrivilegedServicesImpl } from "./privileged-services-impl";
-import type { RHOImpl } from "./rho-impl";
-import type { SafroleStateImpl } from "./safrole-state-impl";
-import type { TauError, TauImpl } from "./slot-impl";
-import type { ValidatorsImpl } from "./validators-impl";
-import type { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
-import type { DisputesCulpritError } from "./extrinsics/disputes/culprits";
-import type { DisputesFaultError } from "./extrinsics/disputes/faults";
-import { merkleStateMap, M_fn, bits } from "@/merklization/state";
+import { EGError } from "./extrinsics/guarantees";
+import { EPError } from "./extrinsics/preimages";
+import { ETError } from "./extrinsics/tickets";
+import { GammaAError } from "./gamma-a-impl";
+import { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
+import { JamBlockImpl } from "./jam-block-impl";
+import { JamEntropyImpl } from "./jam-entropy-impl";
+import { JamStatisticsImpl } from "./jam-statistics-impl";
+import { KappaImpl } from "./kappa-impl";
+import { LambdaImpl } from "./lambda-impl";
+import { LastAccOutsImpl } from "./last-acc-outs-impl";
+import { PrivilegedServicesImpl } from "./privileged-services-impl";
+import { RHOImpl } from "./rho-impl";
+import { SafroleStateImpl } from "./safrole-state-impl";
+import { SlotImpl, type TauError, type TauImpl } from "./slot-impl";
+import { ValidatorsImpl } from "./validators-impl";
+import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
+import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
+import { DisputesFaultError } from "./extrinsics/disputes/faults";
 import { HeaderValidationError } from "./jam-signed-header-impl";
+import { MerkleState, MerkleStateMap } from "@/merklization/merkle-state";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { SafeMap } from "@/data-structures/safe-map";
+import { serviceAccountDataCodec } from "@/merklization/state-codecs";
+import { stateKey } from "@/merklization/utils";
+import { E_sub_int, encodeWithCodec, E_4_int } from "@tsjam/codec";
+import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
+import { ServiceAccountImpl } from "./service-account-impl";
 
 export class JamStateImpl implements JamState {
   /**
@@ -134,19 +149,23 @@ export class JamStateImpl implements JamState {
    */
   headerLookupHistory!: HeaderLookupHistoryImpl;
 
-  constructor(config: ConditionalExcept<JamStateImpl, Function>) {
+  #merkleState?: MerkleState;
+
+  constructor(
+    config: Omit<ConditionalExcept<JamStateImpl, Function>, "merkle">,
+  ) {
     Object.assign(this, config);
   }
 
+  get merkle(): MerkleState {
+    if (typeof this.#merkleState === "undefined") {
+      this.#merkleState = MerkleState.fromState(this);
+    }
+    return this.#merkleState;
+  }
+
   merkleRoot(): StateRootHash {
-    const stateMap = merkleStateMap(this);
-    return M_fn(
-      new Map(
-        [...stateMap.entries()].map(([k, v]) => {
-          return [bits(k), [k, v]];
-        }),
-      ),
-    ) as StateRootHash;
+    return this.merkle.root;
   }
 
   applyBlock(
@@ -438,5 +457,166 @@ export class JamStateImpl implements JamState {
     );
 
     return ok(p_state);
+  }
+
+  static fromMerkleMap(merkleMap: MerkleStateMap) {
+    const authPool = AuthorizerPoolImpl.decode(
+      merkleMap.get(stateKey(1))!,
+    ).value;
+
+    const authQueue = AuthorizerQueueImpl.decode(
+      merkleMap.get(stateKey(2))!,
+    ).value;
+
+    const beta = BetaImpl.decode(merkleMap.get(stateKey(3))!).value;
+
+    const safroleState = SafroleStateImpl.decode(
+      merkleMap.get(stateKey(4))!,
+    ).value;
+
+    const disputes = DisputesStateImpl.decode(
+      merkleMap.get(stateKey(5))!,
+    ).value;
+
+    const entropy = JamEntropyImpl.decode(merkleMap.get(stateKey(6))!).value;
+
+    const iota = ValidatorsImpl.decode(merkleMap.get(stateKey(7))!).value;
+
+    const kappa = KappaImpl.decode(merkleMap.get(stateKey(8))!).value;
+
+    const lambda = LambdaImpl.decode(merkleMap.get(stateKey(9))!).value;
+
+    const rho = RHOImpl.decode(merkleMap.get(stateKey(10))!).value;
+
+    const slot = <TauImpl>SlotImpl.decode(merkleMap.get(stateKey(11))!).value;
+
+    const privServices = PrivilegedServicesImpl.decode(
+      merkleMap.get(stateKey(12))!,
+    ).value;
+
+    const statistics = JamStatisticsImpl.decode(
+      merkleMap.get(stateKey(13))!,
+    ).value;
+
+    const accumulationQueue = AccumulationQueueImpl.decode(
+      merkleMap.get(stateKey(14))!,
+    ).value;
+
+    const accumulationHistory = AccumulationHistoryImpl.decode(
+      merkleMap.get(stateKey(15))!,
+    ).value;
+
+    const mostRecentAccumulationOutputs = LastAccOutsImpl.decode(
+      merkleMap.get(stateKey(16))!,
+    ).value;
+
+    const serviceKeys = [...merkleMap.keys()].filter((k) => {
+      return (
+        k[0] === 255 &&
+        k[2] === 0 &&
+        k[4] === 0 &&
+        k[6] === 0 &&
+        k[8] === 0 &&
+        k[9] === 0 &&
+        32 + 5 * 8 + 4 * 4 === merkleMap.get(k)!.length
+      );
+    });
+
+    const serviceAccounts = new DeltaImpl();
+    for (const serviceDataKey of serviceKeys) {
+      const serviceKey = new Uint8Array([
+        serviceDataKey[1],
+        serviceDataKey[3],
+        serviceDataKey[5],
+        serviceDataKey[7],
+      ]);
+      const serviceData = serviceAccountDataCodec.decode(
+        merkleMap.get(serviceDataKey)!,
+      ).value;
+
+      const serviceIndex = E_sub_int<ServiceIndex>(4).decode(serviceKey).value;
+      // filter out service data keys that are related to this service
+      const serviceRelatedKeys = new Set(
+        [...merkleMap.keys()].filter((k) => {
+          return (
+            k[0] === serviceKey[0] &&
+            k[2] === serviceKey[1] &&
+            k[4] === serviceKey[2] &&
+            k[6] === serviceKey[3]
+          );
+        }),
+      );
+      const storage = new MerkleServiceAccountStorageImpl(
+        serviceIndex,
+        <u64>serviceData.totalOctets,
+        <u32>serviceData.itemInStorage,
+      );
+
+      const serviceAccount = new ServiceAccountImpl(
+        {
+          codeHash: serviceData.codeHash,
+          balance: serviceData.balance,
+          minAccGas: serviceData.minAccGas,
+          minMemoGas: serviceData.minMemoGas,
+          gratis: serviceData.gratis,
+          created: serviceData.created,
+          lastAcc: serviceData.lastAcc,
+          parent: serviceData.parent,
+          preimages: new IdentityMap(),
+        },
+        storage,
+      );
+
+      const preimage_p_keys = [...serviceRelatedKeys.values()].filter((sk) => {
+        const possiblePreimage = merkleMap.get(sk)!;
+        const h = Hashing.blake2b(possiblePreimage);
+
+        const p_p_key = stateKey(
+          serviceIndex,
+          new Uint8Array([
+            ...encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2)),
+            ...h,
+          ]),
+        );
+        return Buffer.compare(p_p_key, sk) === 0;
+      });
+      for (const preimagekey of preimage_p_keys) {
+        const preimage = merkleMap.get(preimagekey)!;
+        const h = Hashing.blake2b(preimage);
+        serviceAccount.preimages.set(h, preimage);
+        // we delete to not set it in storage
+        serviceRelatedKeys.delete(preimagekey);
+      }
+
+      for (const storageOrRequestKey of serviceRelatedKeys) {
+        storage.setStorage(
+          storageOrRequestKey,
+          merkleMap.get(storageOrRequestKey)!,
+        );
+      }
+
+      serviceAccounts.set(serviceIndex, serviceAccount);
+    }
+
+    return new JamStateImpl({
+      accumulationHistory,
+      accumulationQueue,
+      authPool,
+      authQueue,
+      beta,
+      disputes,
+      entropy,
+      iota: toTagged(iota),
+      kappa: toTagged(kappa),
+      lambda: toTagged(lambda),
+      mostRecentAccumulationOutputs,
+      privServices,
+      rho,
+      safroleState,
+      serviceAccounts,
+      slot,
+      statistics,
+      headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
+    });
   }
 }

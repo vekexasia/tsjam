@@ -15,7 +15,7 @@ import type { Posterior, Validated, ValidatorIndex } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { dummyDisputesState, dummyEntropy } from "../utils";
+import { dummyDisputesState, dummyEntropy } from "../dummy-utils";
 
 export const getFixtureFile = (filename: string): Uint8Array => {
   return new Uint8Array(

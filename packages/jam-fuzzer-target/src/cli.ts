@@ -5,8 +5,6 @@ import {
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamStateImpl,
-  merkleStateMap,
-  stateFromMerkleMap,
 } from "@tsjam/core";
 import "@tsjam/utils";
 import { HeaderHash } from "@tsjam/types";
@@ -86,7 +84,7 @@ const server = net.createServer((socket) => {
 
       case MessageType.SET_STATE:
         const stateMap = message.setState!.state.value;
-        state = stateFromMerkleMap(stateMap);
+        state = JamStateImpl.fromMerkleMap(stateMap);
         state.block = new JamBlockImpl({
           header: message.setState!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
@@ -117,7 +115,7 @@ const server = net.createServer((socket) => {
           block.header.signedHash(),
           new SetState({
             header: block.header,
-            state: new State({ value: merkleStateMap(res.value) }),
+            state: new State({ value: res.value.merkle.map }),
           }),
         );
 
