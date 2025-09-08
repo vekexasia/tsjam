@@ -42,16 +42,16 @@ export const bits = (ar: Uint8Array): bit[] => {
 };
 
 // $(0.7.1 - D.3)
-const B_fn = (l: Hash, r: Hash): ByteArrayOfLength<64> => {
+const branch = (left: Hash, right: Hash): ByteArrayOfLength<64> => {
   return new Uint8Array([
-    l[0] & 0b01111111,
-    ...l.subarray(1),
-    ...r,
+    left[0] & 0b01111111,
+    ...left.subarray(1),
+    ...right,
   ]) as ByteArrayOfLength<64>;
 };
 
 // $(0.7.1 - D.4) | implementation avoids using bits()
-const L_fn = (
+const leaf = (
   k: ByteArrayOfLength<31>,
   v: Uint8Array,
 ): ByteArrayOfLength<64> => {
@@ -77,7 +77,7 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
     return <Hash>new Uint8Array(32).fill(0);
   } else if (d.size === 1) {
     const [[k, v]] = d.values();
-    return Hashing.blake2b(L_fn(k, v));
+    return Hashing.blake2b(leaf(k, v));
   } else {
     const l = new Map(
       [...d.entries()]
@@ -89,7 +89,8 @@ export const M_fn = (d: Map<bit[], [StateKey, Uint8Array]>): Hash => {
         .filter(([k]) => k[0] === 1)
         .map(([k, v]) => [k.slice(1), v]),
     );
-    return Hashing.blake2b(B_fn(M_fn(l), M_fn(r)));
+    // TODO:optimize by writing branch inline and allowing M_fn to accept Uint8ARray to set value
+    return Hashing.blake2b(branch(M_fn(l), M_fn(r)));
   }
 };
 

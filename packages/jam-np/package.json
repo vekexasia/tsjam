@@ -5,6 +5,7 @@
   "dependencies": {
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
+    "@tsjam/types": "*",
     "@tsjam/core": "*"
   },
   "scripts": {
