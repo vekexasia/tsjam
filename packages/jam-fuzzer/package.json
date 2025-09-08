@@ -10,7 +10,7 @@
     "@tsjam/fuzzer-target": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
-    "jest-diff": "^30.1.1",
+    "jest-diff": "^30.1.2",
     "neverthrow": "^8.2.0"
   },
   "scripts": {
@@ -40,7 +40,7 @@
   "license": "MIT",
   "jam:protocolVersion": "0.7.0",
   "devDependencies": {
-    "@types/deep-diff": "^1",
+    "@types/deep-diff": "^1.0.5",
     "deep-diff": "^1.0.2"
   }
 }
