@@ -15,7 +15,6 @@ import type {
 import { GammaAImpl } from "./gamma-a-impl";
 import { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
-import { compareUint8Arrays } from "uint8array-extras";
 
 @JamCodecable()
 export class HeaderTicketMarkerImpl
@@ -85,7 +84,7 @@ export class HeaderTicketMarkerImpl
       );
       for (let i = 0; i < EPOCH_LENGTH; i++) {
         if (
-          compareUint8Arrays(value.elements[i].id, expectedHw[i].id) !== 0 ||
+          Buffer.compare(value.elements[i].id, expectedHw[i].id) !== 0 ||
           value.elements[i].attempt !== expectedHw[i].attempt
         ) {
           return false;

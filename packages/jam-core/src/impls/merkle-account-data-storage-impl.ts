@@ -63,7 +63,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
       value: "blob",
     }),
   )
-  private _storage: IdentityMap<StorageKey | RequestKey, 31, Uint8Array> =
+  private _storage: IdentityMap<StorageKey | RequestKey, 31, Buffer> =
     new IdentityMap();
 
   /**
@@ -78,7 +78,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
     super();
   }
 
-  setStorage(stateKey: StateKey, value: Uint8Array) {
+  setStorage(stateKey: StateKey, value: Buffer) {
     // log(
     //   `Setting merkleStorage with key: ${Uint8ArrayJSONCodec.toJSON(stateKey)} to ${Uint8ArrayJSONCodec.toJSON(value)}`,
     //   true, //process.env.DEBUG_TRACES === "true",
@@ -93,9 +93,9 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
     return this._storage.delete(stateKey as StorageKey | RequestKey);
   }
 
-  entries(): IterableIterator<[StorageKey | RequestKey, Uint8Array]> {
+  entries(): IterableIterator<[StorageKey | RequestKey, Buffer]> {
     return Array.from(this._storage.entries())
-      .map(([stateKey, value]): [StorageKey | RequestKey, Uint8Array] => [
+      .map(([stateKey, value]): [StorageKey | RequestKey, Buffer] => [
         stateKey,
         value,
       ])

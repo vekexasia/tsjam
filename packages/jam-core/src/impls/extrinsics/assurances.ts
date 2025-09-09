@@ -27,7 +27,6 @@ import type {
   ValidatorIndex,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { compareUint8Arrays } from "uint8array-extras";
 import type { JamStateImpl } from "../jam-state-impl";
 import { NewWorkReportsImpl } from "../new-work-reports-impl";
 import type { RHOImpl } from "../rho-impl";
@@ -73,17 +72,9 @@ export class AssuranceExtrinsicImpl
     kappa: JamStateImpl["kappa"];
     headerParent: HeaderHash;
   }) {
-    const bitSeq: Buffer = encodeWithCodec(
-      BitSequenceCodec(CORES),
-      this.bitstring,
-    );
-    const toHash = Buffer.allocUnsafe(32 + bitSeq.length);
-    deps.headerParent.copy(toHash);
-    bitSeq.copy(toHash, 32);
-
-    const message = Buffer.allocUnsafe(JAM_AVAILABLE.length + 32);
-    JAM_AVAILABLE.copy(message);
-    Hashing.blake2b(toHash).copy(message, JAM_AVAILABLE.length);
+    const bitSeq = encodeWithCodec(BitSequenceCodec(CORES), this.bitstring);
+    const toHash = Buffer.concat([deps.headerParent, bitSeq]);
+    const message = Buffer.concat([JAM_AVAILABLE, Hashing.blake2b(toHash)]);
 
     return Ed25519.verifySignature(
       this.signature,
@@ -106,7 +97,7 @@ export class AssuranceExtrinsicImpl
     }
 
     // $(0.7.1 - 11.11)
-    if (compareUint8Arrays(this.anchorHash, deps.headerParent) !== 0) {
+    if (Buffer.compare(this.anchorHash, deps.headerParent) !== 0) {
       return false;
     }
 

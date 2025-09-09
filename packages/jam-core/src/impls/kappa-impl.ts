@@ -11,7 +11,6 @@ import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
 import { ValidatorsImpl } from "./validators-impl";
-import { compareUint8Arrays } from "uint8array-extras";
 
 @JamCodecable()
 export class KappaImpl extends ValidatorsImpl {
@@ -39,7 +38,7 @@ export class KappaImpl extends ValidatorsImpl {
     key: BandersnatchKey,
   ): ValidatorIndex | -1 {
     const index = this.elements.findIndex(
-      (v) => compareUint8Arrays(v.banderSnatch, key) === 0,
+      (v) => Buffer.compare(v.banderSnatch, key) === 0,
     );
     return index as ValidatorIndex;
   }

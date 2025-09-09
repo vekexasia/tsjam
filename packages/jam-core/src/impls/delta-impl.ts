@@ -4,7 +4,6 @@ import {
   Delta,
   DoubleDagger,
   Posterior,
-  PVMResultContext,
   ServiceIndex,
   Tagged,
   u32,
@@ -14,6 +13,7 @@ import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 import { InvokedTransfers } from "./deferred-transfers-impl";
 import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import { PVMResultContextImpl } from "./pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "./service-account-impl";
 import type { TauImpl } from "./slot-impl";
 
@@ -60,7 +60,7 @@ export class DeltaImpl implements Delta {
    * @returns a new DeltaImpl with the preimages integrated
    */
   preimageIntegration(
-    provisions: PVMResultContext["provisions"],
+    provisions: PVMResultContextImpl["provisions"],
     p_tau: Validated<Posterior<TauImpl>>,
   ) {
     const newD = this.clone();

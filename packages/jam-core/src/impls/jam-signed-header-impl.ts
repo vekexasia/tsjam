@@ -1,4 +1,3 @@
-import { HashCodec } from "@/codecs/misc-codecs";
 import {
   codec,
   encodeWithCodec,
@@ -23,7 +22,6 @@ import type {
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
-import { compareUint8Arrays } from "uint8array-extras";
 import { DisputesToPosteriorError } from "./disputes-state-impl";
 import type { DisputeExtrinsicImpl } from "./extrinsics/disputes";
 import { GammaPImpl } from "./gamma-p-impl";
@@ -66,23 +64,17 @@ export class JamSignedHeaderImpl
     p_entropy_3: Posterior<JamEntropyImpl["_3"]>,
     p_gamma_s: Posterior<GammaSImpl>,
     p_tau: Validated<Posterior<TauImpl>>,
-  ): Uint8Array {
+  ): Buffer {
     if (p_gamma_s.isFallback()) {
-      const toRet = Buffer.allocUnsafe(JAM_FALLBACK_SEAL.length + 32);
-
-      JAM_FALLBACK_SEAL.copy(toRet);
-      p_entropy_3.copy(toRet, JAM_FALLBACK_SEAL.length);
-
-      return toRet;
+      return Buffer.concat([JAM_FALLBACK_SEAL, p_entropy_3]);
     } else {
       const i = p_gamma_s.tickets![p_tau.slotPhase()];
-      const toRet = Buffer.allocUnsafe(JAM_TICKET_SEAL.length + 32 + 1);
 
-      JAM_TICKET_SEAL.copy(toRet);
-      p_entropy_3.copy(toRet, JAM_TICKET_SEAL.length);
-      toRet[JAM_TICKET_SEAL.length + 32] = i.attempt;
-
-      return toRet;
+      return Buffer.concat([
+        JAM_TICKET_SEAL,
+        p_entropy_3,
+        Buffer.from([i.attempt]),
+      ]);
     }
   }
 
@@ -121,7 +113,7 @@ export class JamSignedHeaderImpl
     // $(0.7.1 - 6.16)
     if (deps.p_gamma_s.isFallback()) {
       const i = deps.p_gamma_s.keys![this.slot.slotPhase()];
-      if (compareUint8Arrays(i, ha) !== 0) {
+      if (Buffer.compare(i, ha) !== 0) {
         return false;
       }
       return true;
@@ -130,8 +122,7 @@ export class JamSignedHeaderImpl
       const i = deps.p_gamma_s.tickets![this.slot.slotPhase()];
       // verify ticket identity. if it fails, it means validator is not allowed to produce block
       return (
-        compareUint8Arrays(i.id, Bandersnatch.vrfOutputSignature(this.seal)) ===
-        0
+        Buffer.compare(i.id, Bandersnatch.vrfOutputSignature(this.seal)) === 0
       );
     }
   }
@@ -278,7 +269,7 @@ export class JamSignedHeaderImpl
     p_gamma_p: Posterior<GammaPImpl>;
     p_entropy_3: Posterior<JamEntropyImpl["_3"]>;
   }): Result<Validated<JamSignedHeaderImpl>, HeaderValidationError> {
-    if (compareUint8Arrays(this.parent, deps.prevHeader.signedHash()) !== 0) {
+    if (Buffer.compare(this.parent, deps.prevHeader.signedHash()) !== 0) {
       return err(HeaderValidationError.INVALID_PARENT);
     }
 
@@ -286,7 +277,7 @@ export class JamSignedHeaderImpl
 
     // $(0.7.1 - 5.8)
     if (
-      compareUint8Arrays(deps.curState.merkleRoot(), this.parentStateRoot) !== 0
+      Buffer.compare(deps.curState.merkleRoot(), this.parentStateRoot) !== 0
     ) {
       return err(HeaderValidationError.INVALID_PARENT_STATE_ROOT);
     }
@@ -328,7 +319,7 @@ export class JamSignedHeaderImpl
     /**
      * $(0.7.1 - 5.4)
      */
-    if (compareUint8Arrays(this.extrinsicHash, deps.extrinsicHash) !== 0) {
+    if (Buffer.compare(this.extrinsicHash, deps.extrinsicHash) !== 0) {
       return err(HeaderValidationError.INVALID_EXTRINSIC_HASH);
     }
 

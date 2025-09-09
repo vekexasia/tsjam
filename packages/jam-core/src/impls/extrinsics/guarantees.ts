@@ -1,10 +1,8 @@
-import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { IdentitySet } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
   codec,
-  encodeWithCodec,
   eSubIntCodec,
   JamCodecable,
   lengthDiscriminatedCodec,

@@ -1553,7 +1553,6 @@ __metadata:
     "@tsjam/crypto": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
-    uint8array-extras: "npm:^1.5.0"
   languageName: unknown
   linkType: soft
 
@@ -1579,7 +1578,6 @@ __metadata:
     json-bigint: "npm:^1.0.0"
     neverthrow: "npm:^8.2.0"
     type-fest: "npm:^4.41.0"
-    uint8array-extras: "npm:^1.5.0"
   languageName: unknown
   linkType: soft
 
@@ -11722,13 +11720,6 @@ __metadata:
   version: 2.1.0
   resolution: "uc.micro@npm:2.1.0"
   checksum: 10c0/8862eddb412dda76f15db8ad1c640ccc2f47cdf8252a4a30be908d535602c8d33f9855dfcccb8b8837855c1ce1eaa563f7fa7ebe3c98fd0794351aab9b9c55fa
-  languageName: node
-  linkType: hard
-
-"uint8array-extras@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "uint8array-extras@npm:1.5.0"
-  checksum: 10c0/0e74641ac7dadb02eadefc1ccdadba6010e007757bda824960de3c72bbe2b04e6d3af75648441f412148c4103261d54fcb60be45a2863beb76643a55fddba3bd
   languageName: node
   linkType: hard
 

@@ -26,7 +26,6 @@ import type {
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
 import { ConditionalExcept } from "type-fest";
-import { compareUint8Arrays } from "uint8array-extras";
 import { JamEntropyImpl } from "./jam-entropy-impl";
 import { JamSignedHeaderImpl } from "./jam-signed-header-impl";
 import type { JamStateImpl } from "./jam-state-impl";
@@ -72,10 +71,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
   ): boolean {
     if (this.isFallback()) {
       return (
-        compareUint8Arrays(
-          this.keys[deps.p_tau.slotPhase()],
-          keyPair.public,
-        ) === 0
+        Buffer.compare(this.keys[deps.p_tau.slotPhase()], keyPair.public) === 0
       );
     } else {
       const real_i_y = this.tickets![deps.p_tau.slotPhase()].id;
@@ -83,7 +79,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
         keyPair.private,
         JamSignedHeaderImpl.sealSignContext(deps.p_entropy_3, this, deps.p_tau),
       );
-      return compareUint8Arrays(real_i_y, i_y) === 0;
+      return Buffer.compare(real_i_y, i_y) === 0;
     }
   }
 
@@ -124,10 +120,9 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
       >;
       // $(0.7.1 - 6.26) F calculated in place
       for (let i = 0; i < EPOCH_LENGTH; i++) {
-        const preimage = Buffer.allocUnsafe(32 + 4);
-        deps.p_eta2.copy(preimage);
-        E_4_int.encode(<u32>i, preimage.subarray(32));
-        const h_4 = Hashing.blake2b(preimage).subarray(0, 4);
+        const h_4 = Hashing.blake2b(
+          Buffer.concat([deps.p_eta2, encodeWithCodec(E_4_int, <u32>i)]),
+        ).subarray(0, 4);
         const index =
           E_4.decode(h_4).value % BigInt(deps.p_kappa.elements.length);
         newGammaS.push(deps.p_kappa.elements[Number(index)].banderSnatch);

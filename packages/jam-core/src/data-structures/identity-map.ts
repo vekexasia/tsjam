@@ -8,7 +8,6 @@ import {
 } from "@tsjam/codec";
 import { ByteArrayOfLength } from "@tsjam/types";
 import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
-import { compareUint8Arrays } from "uint8array-extras";
 import { SafeKey } from "./safe-key";
 
 export class IdentityMap<K extends ByteArrayOfLength<N>, N extends number, V>
@@ -123,7 +122,7 @@ export const IdentityMapCodec = <
   return {
     ...mapCodec(
       buildGenericKeyValueCodec(keyCodec, valueCodec, (a, b) =>
-        compareUint8Arrays(a, b),
+        Buffer.compare(a, b),
       ),
       (v) => new IdentityMap<K, N, V>([...v.entries()]),
       (v) => v,

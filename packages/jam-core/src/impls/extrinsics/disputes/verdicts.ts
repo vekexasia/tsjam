@@ -34,7 +34,6 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { compareUint8Arrays } from "uint8array-extras";
 
 @JamCodecable()
 export class DisputeVerdictJudgementImpl
@@ -262,7 +261,7 @@ export class DisputesVerdicts extends BaseJamCodecable {
     // $(0.7.1 - 10.7)
     for (let i = 1; i < this.elements.length; i++) {
       const [prev, curr] = [this.elements[i - 1], this.elements[i]];
-      if (compareUint8Arrays(prev.target, curr.target) >= 0) {
+      if (Buffer.compare(prev.target, curr.target) >= 0) {
         return err(
           DisputesVerdictError.VERDICTS_MUST_BE_ORDERED_UNIQUE_BY_HASH,
         );

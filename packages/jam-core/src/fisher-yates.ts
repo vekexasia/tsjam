@@ -32,8 +32,7 @@ export const FisherYatesH = <T>(arr: T[], entropy: Hash) => {
 const Q = (l: number, entropy: Hash): u32[] => {
   const toRet = <u32[]>[];
   const buf = Buffer.allocUnsafe(32 + 4);
-  // TODO: eventually migrate entropy to be a buffer so we can use .copy which is native c++
-  buf.set(entropy);
+  entropy.copy(buf);
   // TODO: instead of hashing 8 times the same element just reuse and read
   for (let i = 0; i < l; i++) {
     // E_4.encode
@@ -53,7 +52,7 @@ if (import.meta.vitest) {
     it("test", () => {
       const entropy = Buffer.allocUnsafe(32).fill(255);
       const arr = [0, 1, 2, 3, 4, 5, 6, 7];
-      expect(FisherYatesH(arr, entropy as Uint8Array as Hash)).deep.eq([
+      expect(FisherYatesH(arr, entropy as Hash)).deep.eq([
         1, 2, 6, 0, 7, 4, 3, 5,
       ]);
     });

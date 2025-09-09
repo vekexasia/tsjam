@@ -19,7 +19,7 @@ export class State extends BaseJamCodecable {
     }),
     SINGLE_ELEMENT_CLASS,
   )
-  value!: IdentityMap<StateKey, 31, Uint8Array>;
+  value!: IdentityMap<StateKey, 31, Buffer>;
 
   constructor(config?: ConditionalExcept<State, Function>) {
     super();

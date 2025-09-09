@@ -1,8 +1,8 @@
+import { IdentitySet } from "@/data-structures/identity-set";
 import {
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
-  encodeWithCodec,
   eSubIntCodec,
   fixedSizeIdentityCodec,
   JamCodecable,
@@ -25,17 +25,14 @@ import type {
   UpToSeq,
   Validated,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
 import type { GammaAImpl } from "../gamma-a-impl";
+import type { GammaZImpl } from "../gamma-z-impl";
 import type { JamEntropyImpl } from "../jam-entropy-impl";
 import type { SafroleStateImpl } from "../safrole-state-impl";
-import { TicketImpl } from "../ticket-impl";
-import type { GammaZImpl } from "../gamma-z-impl";
 import type { TauImpl } from "../slot-impl";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentitySet } from "@/data-structures/identity-set";
-import { compareUint8Arrays } from "uint8array-extras";
-import { toTagged } from "@tsjam/utils";
+import { TicketImpl } from "../ticket-impl";
 
 export enum ETError {
   LOTTERY_ENDED = "Lottery has ended",
@@ -152,7 +149,7 @@ export class TicketsExtrinsicImpl
 
     // $(0.7.1 - 6.32) | tickets should be in order and unique
     for (let i = 1; i < n.length; i++) {
-      if (compareUint8Arrays(n[i - 1].id, n[i].id) >= 0) {
+      if (Buffer.compare(n[i - 1].id, n[i].id) >= 0) {
         return err(ETError.UNSORTED_VRF_PROOFS);
       }
     }

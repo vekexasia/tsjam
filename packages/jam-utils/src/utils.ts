@@ -48,10 +48,10 @@ export const toPosterior = <T>(
  */
 export const zeroPad = <T extends number>(
   n: T,
-  buf: Uint8Array,
+  buf: Buffer,
 ): ByteArrayOfLength<T> => {
   const toRet = Buffer.alloc(Math.ceil(buf.length / n) * n);
-  toRet.set(buf);
+  buf.copy(toRet);
   return toTagged(toRet);
 };
 
@@ -60,7 +60,7 @@ export const zeroPad = <T extends number>(
  * Can be used to check about the workItem importedDataSegments[0].root
  */
 export const isHash = <X = unknown>(x: Hash | X): x is Hash => {
-  return x instanceof Uint8Array && x.length === 32;
+  return Buffer.isBuffer(x) && x.length === 32;
 };
 
 export const isExportingWorkPackageHash = (

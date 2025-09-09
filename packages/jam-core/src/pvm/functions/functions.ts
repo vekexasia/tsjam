@@ -105,7 +105,6 @@ import {
 import { toTagged, zeroPad } from "@tsjam/utils";
 import assert from "assert";
 import { ConditionalExcept } from "type-fest";
-import { compareUint8Arrays } from "uint8array-extras";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation, deblobProgram } from "../invocations/basic";
 import { PVMMemory } from "../pvm-memory";
@@ -1357,7 +1356,7 @@ export class HostFunctions {
     const bold_d = args.x.state.accounts.get(d.u32())!;
 
     if (
-      compareUint8Arrays(
+      Buffer.compare(
         bold_d.codeHash,
         encodeWithCodec(E_sub_int(32), args.x.id),
       ) !== 0

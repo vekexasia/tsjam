@@ -280,7 +280,7 @@ export class TraceState extends BaseJamCodecable {
     }),
     "keyvals",
   )
-  merkleMap!: IdentityMap<StateKey, 31, Uint8Array>;
+  merkleMap!: IdentityMap<StateKey, 31, Buffer>;
 
   constructor(config?: Pick<TraceState, "merkleMap" | "stateRoot">) {
     super();

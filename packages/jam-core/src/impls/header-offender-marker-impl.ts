@@ -7,7 +7,6 @@ import {
 } from "@tsjam/codec";
 import { ED25519PublicKey, OffendersMarker, Validated } from "@tsjam/types";
 import { DisputeExtrinsicImpl } from "./extrinsics/disputes";
-import { compareUint8Arrays } from "uint8array-extras";
 
 /**
  * `HO`
@@ -42,7 +41,7 @@ export class HeaderOffenderMarkerImpl
       return false;
     }
     for (let i = 0; i < this.elements.length; i++) {
-      if (compareUint8Arrays(this.elements[i], target.elements[i]) !== 0) {
+      if (Buffer.compare(this.elements[i], target.elements[i]) !== 0) {
         return false;
       }
     }

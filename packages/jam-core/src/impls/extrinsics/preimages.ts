@@ -16,7 +16,6 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { compareUint8Arrays } from "uint8array-extras";
 import type { DeltaImpl } from "../delta-impl";
 
 @JamCodecable()
@@ -25,7 +24,7 @@ export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
   requester!: ServiceIndex;
 
   @codec(LengthDiscrimantedIdentityCodec)
-  blob!: Uint8Array;
+  blob!: Buffer;
 }
 
 /**
@@ -58,7 +57,7 @@ export class PreimagesExtrinsicImpl
       if (prev.requester > this.elements[i].requester) {
         return err(EPError.PREIMAGES_NOT_SORTED);
       } else if (prev.requester === this.elements[i].requester) {
-        const comparisonResult = compareUint8Arrays(
+        const comparisonResult = Buffer.compare(
           prev.blob,
           this.elements[i].blob,
         );

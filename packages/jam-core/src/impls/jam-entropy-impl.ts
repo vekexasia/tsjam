@@ -1,10 +1,5 @@
 import { HashCodec } from "@/codecs/misc-codecs";
-import {
-  BaseJamCodecable,
-  codec,
-  encodeWithCodec,
-  JamCodecable,
-} from "@tsjam/codec";
+import { BaseJamCodecable, codec, JamCodecable } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import type {
   Blake2bHash,
@@ -85,12 +80,8 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     }
   > {
     // $(0.7.1 - 6.22) | rotate `η_0`
-    const preimage = Buffer.allocUnsafe(64);
 
-    this._0.copy(preimage);
-    deps.vrfOutputHash.copy(preimage, 32);
-
-    const p_0 = Hashing.blake2b(preimage);
+    const p_0 = Hashing.blake2b(Buffer.concat([this._0, deps.vrfOutputHash]));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <any>new JamEntropyImpl({

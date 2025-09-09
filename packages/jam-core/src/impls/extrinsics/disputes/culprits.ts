@@ -22,7 +22,6 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import { compareUint8Arrays } from "uint8array-extras";
 import { VerdictVoteKind } from "./verdicts";
 
 @JamCodecable()
@@ -104,7 +103,7 @@ export class DisputesCulprits extends BaseJamCodecable {
     if (this.elements.length > 0) {
       for (let i = 1; i < this.elements.length; i++) {
         const [prev, curr] = [this.elements[i - 1], this.elements[i]];
-        if (compareUint8Arrays(prev.key, curr.key) >= 0) {
+        if (Buffer.compare(prev.key, curr.key) >= 0) {
           return err(
             DisputesCulpritError.CULPRIT_NOT_ORDERED_BY_ED25519_PUBLIC_KEY,
           );
@@ -123,7 +122,7 @@ export class DisputesCulprits extends BaseJamCodecable {
       negativeVerdicts.every((v) => {
         if (
           this.elements.filter(
-            (c) => compareUint8Arrays(c.target, v.reportHash) === 0,
+            (c) => Buffer.compare(c.target, v.reportHash) === 0,
           ).length < 2
         ) {
           return false;

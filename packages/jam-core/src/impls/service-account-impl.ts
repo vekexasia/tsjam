@@ -36,7 +36,6 @@ import assert from "node:assert";
 import { ConditionalExcept } from "type-fest";
 import { SlotImpl } from "./slot-impl";
 import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
-import { compareUint8Arrays } from "uint8array-extras";
 
 export const serviceMetadataCodec = createCodec<{
   metadata: Uint8Array;
@@ -61,7 +60,7 @@ export class ServiceAccountImpl
       value: "blob",
     }),
   )
-  preimages: IdentityMap<Hash, 32, Uint8Array> = new IdentityMap();
+  preimages: IdentityMap<Hash, 32, Buffer> = new IdentityMap();
 
   requests: IServiceAccountRequests;
 
@@ -235,7 +234,7 @@ export class ServiceAccountImpl
     return (
       this === other ||
       (this.balance === other.balance &&
-        compareUint8Arrays(this.codeHash, other.codeHash) === 0 &&
+        Buffer.compare(this.codeHash, other.codeHash) === 0 &&
         this.created.value === other.created.value &&
         this.gratis === other.gratis &&
         this.lastAcc.value === other.lastAcc.value &&

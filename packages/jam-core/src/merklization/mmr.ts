@@ -1,6 +1,5 @@
 import { Hashing } from "@tsjam/crypto";
 import { ByteArrayOfLength, Hash } from "@tsjam/types";
-import { concatUint8Arrays } from "uint8array-extras";
 
 /**
  * section E.2 `A`
@@ -28,7 +27,7 @@ const p = <T extends Hash>(
   } else if (pos < peeks.length && typeof peeks[pos] === "undefined") {
     return replace(peeks, pos, newEl);
   } else {
-    const a = concatUint8Arrays([peeks[pos]!, newEl]);
+    const a = Buffer.concat([peeks[pos]!, newEl]);
     return p(replace(peeks, pos, undefined), hashFn(a), pos + 1, hashFn);
   }
 };

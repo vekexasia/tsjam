@@ -18,7 +18,6 @@ import assert from "assert";
 import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
-import { compareUint8Arrays } from "uint8array-extras";
 
 @JamCodecable()
 export class ValidatorsImpl extends BaseJamCodecable implements Validators {
@@ -56,7 +55,7 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
    */
   indexOfEd25519(ed25519: ED25519PublicKey): ValidatorIndex | undefined {
     for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
-      if (compareUint8Arrays(this.elements[i].ed25519, ed25519) === 0) {
+      if (Buffer.compare(this.elements[i].ed25519, ed25519) === 0) {
         return i;
       }
     }

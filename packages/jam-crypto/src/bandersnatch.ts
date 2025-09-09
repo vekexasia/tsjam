@@ -31,8 +31,8 @@ export const Bandersnatch = {
   verifySignature(
     signature: BandersnatchSignature,
     pubkey: BandersnatchKey,
-    message: Uint8Array,
-    context: Uint8Array,
+    message: Buffer,
+    context: Buffer,
   ): boolean {
     return ietfVrfVerify(pubkey, context, message, signature);
   },
@@ -46,14 +46,10 @@ export const Bandersnatch = {
    */
   sign(
     privkey: BandersnatchKey,
-    message: Uint8Array,
-    context: Uint8Array,
+    message: Buffer,
+    context: Buffer,
   ): BandersnatchSignature {
-    return ietfVrfSign(
-      privkey,
-      context,
-      message,
-    ) as Uint8Array as BandersnatchSignature;
+    return ietfVrfSign(privkey, context, message) as BandersnatchSignature;
   },
 
   /**
@@ -62,17 +58,15 @@ export const Bandersnatch = {
    * $(0.7.1 - G.2)
    */
   vrfOutputSignature(signature: BandersnatchSignature): OpaqueHash {
-    return ietfVrfOutputHash(
-      signature,
-    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
+    return ietfVrfOutputHash(signature) as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   /** generate output from secret and context */
-  vrfOutputSeed(privKey: BandersnatchKey, context: Uint8Array): OpaqueHash {
+  vrfOutputSeed(privKey: BandersnatchKey, context: Buffer): OpaqueHash {
     return ietfVrfOutputHashFromSecret(
       privKey,
       context,
-    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
+    ) as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   /**
@@ -80,21 +74,19 @@ export const Bandersnatch = {
    * $(0.7.1 - G.5)
    */
   vrfOutputRingProof(ringProof: RingVRFProof): OpaqueHash {
-    return ringVrfOutputHash(
-      ringProof,
-    ) as Uint8Array as ByteArrayOfLength<32> as OpaqueHash;
+    return ringVrfOutputHash(ringProof) as ByteArrayOfLength<32> as OpaqueHash;
   },
 
   verifyVrfProof(
     proof: RingVRFProof,
     ringRoot: BandersnatchRingRoot,
-    context: Uint8Array,
+    context: Buffer,
   ): boolean {
     return ringVrfVerify(
       proof,
       context,
       Buffer.alloc(0),
-      Buffer.from(ringRoot),
+      ringRoot,
       NUMBER_OF_VALIDATORS,
     );
   },
@@ -106,17 +98,17 @@ export const Bandersnatch = {
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
     const inputBuf = Buffer.alloc(input.length * 32);
     input.forEach((key, idx) => {
-      inputBuf.set(key, idx * 32);
+      key.copy(inputBuf, idx * 32);
     });
 
     return ringRoot(inputBuf) as Uint8Array as T;
   },
 
   publicKey(secretSeed: ByteArrayOfLength<32>): BandersnatchKey {
-    return publicKey(secretSeed) as Uint8Array as BandersnatchKey;
+    return publicKey(secretSeed) as BandersnatchKey;
   },
 
   privKey(seed: ByteArrayOfLength<32>): BandersnatchKey {
-    return secretKey(seed) as Uint8Array as BandersnatchKey;
+    return secretKey(seed) as BandersnatchKey;
   },
 };

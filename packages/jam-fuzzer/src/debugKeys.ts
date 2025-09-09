@@ -4,16 +4,7 @@ import { Hashing, Bandersnatch, Ed25519 } from "@tsjam/crypto";
 
 export const generateDebugKeys = (index: number) => {
   const a = encodeWithCodec(E_sub_int(4), index);
-  const trivialSeed = Buffer.from([
-    ...a,
-    ...a,
-    ...a,
-    ...a,
-    ...a,
-    ...a,
-    ...a,
-    ...a,
-  ]);
+  const trivialSeed = Buffer.concat([a, a, a, a, a, a, a, a]);
 
   const bandersnatch_secret_seed = Hashing.blake2b(
     Buffer.from([
@@ -62,16 +53,16 @@ if (import.meta.vitest) {
 
       const signature = Bandersnatch.sign(
         bandersnatch.private,
-        new TextEncoder().encode("message"),
-        new TextEncoder().encode("context"),
+        Buffer.from(new TextEncoder().encode("message")),
+        Buffer.from(new TextEncoder().encode("context")),
       );
 
       expect(
         Bandersnatch.verifySignature(
           signature,
           bandersnatch.public,
-          new TextEncoder().encode("message"),
-          new TextEncoder().encode("context"),
+          Buffer.from(new TextEncoder().encode("message")),
+          Buffer.from(new TextEncoder().encode("context")),
         ),
       ).toBe(true);
     });

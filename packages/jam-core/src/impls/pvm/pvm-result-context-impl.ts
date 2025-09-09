@@ -41,7 +41,7 @@ export class PVMResultContextImpl implements PVMResultContext {
     /**
      * `bold_i`
      */
-    blob: Uint8Array;
+    blob: Buffer;
   }>;
 
   constructor(config: ConditionalExcept<PVMResultContextImpl, Function>) {

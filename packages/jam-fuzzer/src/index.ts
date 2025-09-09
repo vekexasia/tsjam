@@ -82,7 +82,7 @@ const sendStuff = (
 };
 
 const compareState = async (
-  merkleMap: IdentityMap<StateKey, 31, Uint8Array>,
+  merkleMap: IdentityMap<StateKey, 31, Buffer>,
   lastHeaderHash: HeaderHash,
 ) => {
   // request full state

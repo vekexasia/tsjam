@@ -27,7 +27,7 @@ export class TraceState extends BaseJamCodecable {
     }),
     "keyvals",
   )
-  merkleMap!: IdentityMap<StateKey, 31, Uint8Array>;
+  merkleMap!: IdentityMap<StateKey, 31, Buffer>;
 
   constructor(config?: Pick<TraceState, "merkleMap" | "stateRoot">) {
     super();
@@ -59,15 +59,13 @@ export class GenesisTrace extends BaseJamCodecable {
   state!: TraceState;
 }
 
-export const loadTraceJSON = (bin: Uint8Array) => {
-  const toRet = TraceStep.fromJSON(
-    JSON.parse(Buffer.from(bin).toString("utf8")),
-  );
+export const loadTraceJSON = (bin: Buffer) => {
+  const toRet = TraceStep.fromJSON(JSON.parse(bin.toString("utf8")));
 
   return toRet;
 };
 
-export const loadTrace = (bin: Uint8Array): Result<TraceStep, string> => {
+export const loadTrace = (bin: Buffer): Result<TraceStep, string> => {
   try {
     const toRet = TraceStep.decode(bin);
 

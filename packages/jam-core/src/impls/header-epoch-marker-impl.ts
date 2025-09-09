@@ -18,7 +18,6 @@ import type {
   ValidatorIndex,
 } from "@tsjam/types";
 import type { ConditionalExcept } from "type-fest";
-import { compareUint8Arrays } from "uint8array-extras";
 import { GammaPImpl } from "./gamma-p-impl";
 import { JamEntropyImpl } from "./jam-entropy-impl";
 import { TauImpl } from "./slot-impl";
@@ -110,10 +109,10 @@ export class HeaderEpochMarkerImpl
       if (typeof epochMarker === "undefined") {
         return false;
       }
-      if (compareUint8Arrays(epochMarker.entropy, deps.entropy._0) !== 0) {
+      if (Buffer.compare(epochMarker.entropy, deps.entropy._0) !== 0) {
         return false;
       }
-      if (compareUint8Arrays(epochMarker.entropy2, deps.entropy._1) !== 0) {
+      if (Buffer.compare(epochMarker.entropy2, deps.entropy._1) !== 0) {
         return false;
       }
       if (epochMarker.validators.length !== NUMBER_OF_VALIDATORS) {
@@ -121,11 +120,11 @@ export class HeaderEpochMarkerImpl
       }
       for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
         if (
-          compareUint8Arrays(
+          Buffer.compare(
             epochMarker!.validators[i].bandersnatch,
             deps.p_gamma_p.at(i).banderSnatch,
           ) !== 0 ||
-          compareUint8Arrays(
+          Buffer.compare(
             epochMarker!.validators[i].ed25519,
             deps.p_gamma_p.at(i).ed25519,
           ) !== 0

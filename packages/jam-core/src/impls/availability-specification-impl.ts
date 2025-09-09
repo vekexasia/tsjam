@@ -9,7 +9,6 @@ import {
   BaseJamCodecable,
   codec,
   createArrayLengthDiscriminator,
-  encodeWithCodec,
   eSubIntCodec,
   JamCodecable,
 } from "@tsjam/codec";

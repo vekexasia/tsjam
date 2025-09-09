@@ -13,7 +13,7 @@ import { serviceAccountDataCodec } from "./state-codecs";
 import { stateKey } from "./utils";
 
 // utility types
-export type MerkleStateMap = IdentityMap<StateKey, 31, Uint8Array>;
+export type MerkleStateMap = IdentityMap<StateKey, 31, Buffer>;
 export type MerkleBranchNode = MerkleStateTrieNode & {
   identifier: ByteArrayOfLength<64>;
   left: MerkleStateTrieNode;

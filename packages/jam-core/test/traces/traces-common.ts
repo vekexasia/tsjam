@@ -30,7 +30,7 @@ export class TraceTestState extends BaseJamCodecable {
     }),
     "keyvals",
   )
-  merkleMap!: IdentityMap<StateKey, 31, Uint8Array>;
+  merkleMap!: IdentityMap<StateKey, 31, Buffer>;
 }
 
 @JamCodecable()

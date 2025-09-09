@@ -85,8 +85,8 @@ export const computeWorkReport = (
     .map((_, j) => {
       const { res: r, gasUsed, out: e } = I_fn(pack, j, _deps);
       // part of I_fn optimization to avoud recomputing
-      if (r instanceof Uint8Array) {
-        _deps.rLengthSoFar += r.length;
+      if (r.isSuccess()) {
+        _deps.rLengthSoFar += r.success.length;
       }
       const workResult = pack.workItems[j].buildDigest(r, gasUsed);
       return { result: workResult, out: e };
@@ -171,7 +171,7 @@ const I_fn = (
 ): {
   res: WorkOutputImpl<WorkError>; // `r`
   gasUsed: Gas; // `u`
-  out: Uint8Array[]; // `e`
+  out: Buffer[]; // `e`
 } => {
   const w = workPackage.workItems[workIndex];
   const l = workPackage.workItems

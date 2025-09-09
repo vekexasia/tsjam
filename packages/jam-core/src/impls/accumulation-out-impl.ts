@@ -35,7 +35,7 @@ export class AccumulationOutImpl implements AccumulationOut {
     /**
      * `bold_i`
      */
-    blob: Uint8Array;
+    blob: Buffer;
   }>;
 
   constructor(config: ConditionalExcept<AccumulationOutImpl, Function>) {
