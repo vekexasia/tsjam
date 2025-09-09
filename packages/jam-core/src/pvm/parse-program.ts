@@ -1,59 +1,69 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { IParsedProgram, PVMIx, PVMProgram, u32, u8 } from "@tsjam/types";
+import { PVMProgram, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import { applyMods } from "./functions/utils";
 import "./instructions/instructions";
-import { Ixdb } from "./instructions/ixdb";
+import { Ixdb, PVMIx } from "./instructions/ixdb";
 import { IxMod, TRAP_COST } from "./instructions/utils";
 
-export class ParsedProgram implements IParsedProgram {
-  #blockBeginnings: Set<u32>;
+type InstructionPointer = u32;
+type IxPointerCache = {
+  opCode: u8;
   // $(0.7.1 - A.3)
-  #ixSkips: Map<u32, u32>;
-  #ixs: Map<u32, u8> = new Map<u32, u8>();
+  skip: u32;
+  isBlockBeginning: boolean;
 
-  /**
-   * holds just in time decoded cache for ixs
-   */
-  #ixDecodeCache: Map<u32 /* programcounter */, object> = new Map();
+  // cache stuff
+  ix?: PVMIx<unknown>;
+  decodedArgs?: object;
+};
+
+export class ParsedProgram {
+  #ixPointerCache: Map<InstructionPointer, IxPointerCache> = new Map();
 
   private constructor(public rawProgram: PVMProgram) {
-    this.#blockBeginnings = new Set<u32>();
-    this.#ixSkips = new Map<u32, u32>();
-    this.#ixs = new Map<u32, u8>();
-
     assert(
       rawProgram.k[0] === 1 && Ixdb.byCode.has(rawProgram.c[0] as u8),
       `First instruction must be an instruction k[0]=${rawProgram.k[0]} c[0]=${rawProgram.c[0]}`,
     );
-    this.#ixs.set(0 as u32, rawProgram.c[0] as u8);
+    let lastBlockTerminator = true;
     let lastIx = 0 as u32;
     for (let i = 1; i < rawProgram.k.length; i++) {
       // if this is an instruction opcode
       if (rawProgram.k[i] === 1) {
-        this.#ixs.set(i as u32, rawProgram.c[i] as u8);
-        // basically the skips
-        this.#ixSkips.set(lastIx, (i - lastIx - 1) as u32);
+        const opCode = rawProgram.c[lastIx] as u8;
+        this.#ixPointerCache.set(lastIx, {
+          opCode,
+          skip: (i - lastIx - 1) as u32,
+          isBlockBeginning: lastBlockTerminator,
+        });
+        lastBlockTerminator = Ixdb.blockTerminators.has(opCode);
         lastIx = i as u32;
       }
     }
     // calculates skips $(0.7.1 - A.3)
-    this.#ixSkips.set(lastIx, (rawProgram.k.length - lastIx - 1) as u32);
-    this.#blockBeginnings.add(0 as u32);
-    for (const [ix, skip] of this.#ixSkips.entries()) {
-      if (Ixdb.blockTerminators.has(rawProgram.c[ix] as u8)) {
-        this.#blockBeginnings.add((ix + skip + 1) as u32);
-      }
-    }
+    this.#ixPointerCache.set(lastIx, {
+      opCode: rawProgram.c[lastIx] as u8,
+      skip: (rawProgram.k.length - lastIx - 1) as u32,
+      isBlockBeginning: lastBlockTerminator,
+    });
   }
 
-  ixAt<K extends PVMIx<unknown>>(pointer: u32): K | undefined {
-    const ix = this.#ixs.get(pointer);
+  /**
+   * returns the cache and lazyloads .ix
+   */
+  ixCacheAt<K extends PVMIx<unknown>>(
+    pointer: InstructionPointer,
+  ): IxPointerCache | undefined {
+    const ix = this.#ixPointerCache.get(pointer);
     if (typeof ix === "undefined") {
       return undefined;
     }
-    return Ixdb.byCode.get(ix) as K | undefined;
+    if (typeof ix.ix === "undefined") {
+      ix.ix = Ixdb.byCode.get(ix.opCode) as K | undefined;
+    }
+    return ix;
   }
 
   /**
@@ -62,11 +72,11 @@ export class ParsedProgram implements IParsedProgram {
    */
   skip(pointer: u32): u32 {
     // we assume that the pointer is valid
-    return this.#ixSkips.get(pointer)!;
+    return this.#ixPointerCache.get(pointer)!.skip;
   }
 
   isBlockBeginning(pointer: u32): boolean {
-    return this.#blockBeginnings.has(pointer);
+    return this.#ixPointerCache.get(pointer)?.isBlockBeginning === true;
   }
 
   /**
@@ -76,9 +86,8 @@ export class ParsedProgram implements IParsedProgram {
    */
   singleStep(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
     const ip = ctx.execution.instructionPointer;
-    const ix = this.ixAt(ip);
-    // console.log(ix?.identifier, ip);
-    if (typeof ix === "undefined") {
+    const ixCache = this.ixCacheAt(ip);
+    if (typeof ixCache === "undefined" || typeof ixCache.ix === "undefined") {
       const o = applyMods(ctx.execution, {} as object, [
         IxMod.gas(TRAP_COST),
         IxMod.panic(),
@@ -86,27 +95,28 @@ export class ParsedProgram implements IParsedProgram {
       return o;
     }
 
-    const skip = this.#ixSkips.get(ip)! + 1;
-
-    let args = this.#ixDecodeCache.get(ip);
-    if (typeof args === "undefined") {
+    const skip = ixCache.skip + 1;
+    // lazyload decodedArgs
+    if (typeof ixCache.decodedArgs === "undefined") {
       try {
         const byteArgs = this.rawProgram.c.subarray(ip + 1, ip + skip);
 
-        args = <object>ix.decode(byteArgs);
-        this.#ixDecodeCache.set(ip, args);
+        ixCache.decodedArgs = <object>ixCache.ix.decode(byteArgs);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
-        console.warn(`Decoding error for ${ix.identifier}`, e.message);
+        console.warn(`Decoding error for ${ixCache.ix.identifier}`, e.message);
         const o = applyMods(ctx.execution, {} as object, [
           IxMod.skip(ip, skip), //NOTE: not sure we should skip
-          IxMod.gas(TRAP_COST + ix.gasCost),
+          IxMod.gas(TRAP_COST + ixCache.ix.gasCost),
           IxMod.panic(),
         ]);
         return o;
       }
     }
-    return <PVMExitReasonImpl | undefined>ix.evaluate(args, ctx, skip);
+
+    return <PVMExitReasonImpl | undefined>(
+      ixCache.ix.evaluate(ixCache.decodedArgs, ctx, skip)
+    );
   }
 
   /**
@@ -126,7 +136,7 @@ if (import.meta.vitest) {
   describe("ParsedProgram", () => {
     it.skip("should instantiate the context", () => {
       const program: PVMProgram = {
-        c: new Uint8Array([
+        c: Buffer.from([
           0x04,
           0x07,
           0x0a, // a0 = 0x0a
@@ -159,12 +169,12 @@ if (import.meta.vitest) {
       expect(parsed.isBlockBeginning(10 as u32)).toBe(true);
       expect(parsed.isBlockBeginning(3 as u32)).toBe(false);
 
-      expect(parsed.ixAt(0 as u32)).toBeDefined();
-      expect(parsed.ixAt(1 as u32)).not.toBeDefined();
+      expect(parsed.ixCacheAt(0 as u32)).toBeDefined();
+      expect(parsed.ixCacheAt(1 as u32)).not.toBeDefined();
     });
     it("should fail if no ix valid at index 0", () => {
       const program: PVMProgram = {
-        c: new Uint8Array([0xff, 0x07, 0x0a]),
+        c: Buffer.from([0xff, 0x07, 0x0a]),
         j: [] as u32[],
         k: [1, 0, 0],
         z: 0 as u8,
@@ -175,7 +185,7 @@ if (import.meta.vitest) {
     });
     it("should fail if k[0] is not 1", () => {
       const program: PVMProgram = {
-        c: new Uint8Array([0x04, 0x07, 0x0a]),
+        c: Buffer.from([0x04, 0x07, 0x0a]),
         j: [] as u32[],
         k: [0, 0, 0],
         z: 0 as u8,

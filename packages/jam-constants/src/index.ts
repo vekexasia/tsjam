@@ -93,49 +93,59 @@ export const MAXIMUM_SIZE_IS_AUTHORIZED = 64_000;
  * Denoted with `Xa` in the paper. It's value is `jam_available`
  * $(0.7.1 - 11.14)
  */
-export const JAM_AVAILABLE = new TextEncoder().encode("jam_available");
+export const JAM_AVAILABLE = Buffer.from(
+  new TextEncoder().encode("jam_available"),
+);
 /**
  * Denoted with `XB` in the paper. It's value is `jam_beefy`
  */
-export const JAM_BEEFY = new TextEncoder().encode("jam_beefy");
+export const JAM_BEEFY = Buffer.from(new TextEncoder().encode("jam_beefy"));
 /**
  * Denoted with `XE` in the paper. It's value is `jam_entropy`
  * $(0.7.1 - 6.18)
  */
-export const JAM_ENTROPY = new TextEncoder().encode("jam_entropy");
+export const JAM_ENTROPY = Buffer.from(new TextEncoder().encode("jam_entropy"));
 /**
  * Denoted with `XE` in the paper. It's value is `jam_fallback_seal`
  * $(0.7.1 - 6.19)
  */
-export const JAM_FALLBACK_SEAL = new TextEncoder().encode("jam_fallback_seal");
+export const JAM_FALLBACK_SEAL = Buffer.from(
+  new TextEncoder().encode("jam_fallback_seal"),
+);
 /**
  * Denoted with `XG` in the paper. It's value is `jam_guarantee`
  * $(0.7.1 - 11.27)
  */
-export const JAM_GUARANTEE = new TextEncoder().encode("jam_guarantee");
+export const JAM_GUARANTEE = Buffer.from(
+  new TextEncoder().encode("jam_guarantee"),
+);
 /**
  * Denoted with `XI` in the paper. It's value is `jam_announce`
  */
-export const JAM_ANNOUNCE = new TextEncoder().encode("jam_announce");
+export const JAM_ANNOUNCE = Buffer.from(
+  new TextEncoder().encode("jam_announce"),
+);
 /**
  * Denoted with `XT` in the paper. It's value is `jam_ticket_seal`
  * $(0.7.1 - 6.20)
  */
-export const JAM_TICKET_SEAL = new TextEncoder().encode("jam_ticket_seal");
+export const JAM_TICKET_SEAL = Buffer.from(
+  new TextEncoder().encode("jam_ticket_seal"),
+);
 /**
  * Denoted with `XU` in the paper. It's value is `jam_audit`
  */
-export const JAM_AUDIT = new TextEncoder().encode("jam_audit");
+export const JAM_AUDIT = Buffer.from(new TextEncoder().encode("jam_audit"));
 /**
  * Denoted with `Xtrue` in the paper. It's value is `jam_valid`
  * $(0.7.1 - 10.4)
  */
-export const JAM_VALID = new TextEncoder().encode("jam_valid");
+export const JAM_VALID = Buffer.from(new TextEncoder().encode("jam_valid"));
 /**
  * Denoted with `Xfalse` in the paper. It's value is `jam_invalid`
  * $(0.7.1 - 10.4)
  */
-export const JAM_INVALID = new TextEncoder().encode("jam_invalid");
+export const JAM_INVALID = Buffer.from(new TextEncoder().encode("jam_invalid"));
 
 /**
  * `GA` in the paper

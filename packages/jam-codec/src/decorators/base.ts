@@ -73,7 +73,7 @@ export abstract class BaseJamCodecable {
     };
   }
 
-  toBinary(): Uint8Array {
+  toBinary(): Buffer {
     throw new Error("stub");
   }
 

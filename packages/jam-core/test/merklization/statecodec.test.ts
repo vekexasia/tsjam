@@ -41,7 +41,7 @@ describe("state serialization/deserialization", () => {
       acc = new ServiceAccountImpl(
         {
           balance: <Balance>11n,
-          codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
+          codeHash: <CodeHash>(<Hash>Hashing.blake2b(Buffer.from([12]))),
           minAccGas: <Gas>13n,
           minMemoGas: <Gas>14n,
           gratis: <Balance>15n,
@@ -58,7 +58,7 @@ describe("state serialization/deserialization", () => {
       acc2 = new ServiceAccountImpl(
         {
           balance: <Balance>21n,
-          codeHash: <CodeHash>(<Hash>Hashing.blake2b(new Uint8Array([12]))),
+          codeHash: <CodeHash>(<Hash>Hashing.blake2b(Buffer.from([12]))),
           minAccGas: <Gas>23n,
           minMemoGas: <Gas>24n,
           gratis: <Balance>25n,
@@ -76,12 +76,9 @@ describe("state serialization/deserialization", () => {
         new SlotImpl(<u32>3),
       ]);
 
-      acc.storage.set(new Uint8Array([1, 2]), new Uint8Array([4, 5]));
-      acc.storage.set(new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6]));
-      acc2.storage.set(
-        new Uint8Array([1, 2, 3, 4]),
-        new Uint8Array([4, 5, 6, 7]),
-      );
+      acc.storage.set(Buffer.from([1, 2]), Buffer.from([4, 5]));
+      acc.storage.set(Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6]));
+      acc2.storage.set(Buffer.from([1, 2, 3, 4]), Buffer.from([4, 5, 6, 7]));
     });
     it("should work with one acc", () => {
       const state = dummyState();

@@ -54,11 +54,10 @@ export class DisputeCulpritImpl
   signature!: ED25519Signature;
 
   isSignatureValid(): boolean {
-    return Ed25519.verifySignature(
-      this.signature,
-      this.key,
-      new Uint8Array([...JAM_GUARANTEE, ...this.target]),
-    );
+    const message = Buffer.allocUnsafe(JAM_GUARANTEE.length + 32);
+    JAM_GUARANTEE.copy(message);
+    this.target.copy(message, JAM_GUARANTEE.length);
+    return Ed25519.verifySignature(this.signature, this.key, message);
   }
 }
 

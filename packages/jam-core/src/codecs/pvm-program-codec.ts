@@ -94,10 +94,10 @@ if (import.meta.vitest) {
       const p: PVMProgram = {
         j: [],
         z: 1 as u8,
-        c: new Uint8Array(0),
+        c: Buffer.alloc(0),
         k: [],
       };
-      const bytes = new Uint8Array(PVMProgramCodec.encodedSize(p));
+      const bytes = Buffer.allocUnsafe(PVMProgramCodec.encodedSize(p));
       const written = PVMProgramCodec.encode(p, bytes);
       expect(written).toEqual(bytes.length);
       const decoded = PVMProgramCodec.decode(bytes);
@@ -108,10 +108,10 @@ if (import.meta.vitest) {
       const p: PVMProgram = {
         j: [],
         z: 1 as u8,
-        c: new Uint8Array([45]),
+        c: Buffer.from([45]),
         k: [1],
       };
-      const bytes = new Uint8Array(PVMProgramCodec.encodedSize(p));
+      const bytes = Buffer.allocUnsafe(PVMProgramCodec.encodedSize(p));
       const written = PVMProgramCodec.encode(p, bytes);
       expect(written).toEqual(bytes.length);
       const decoded = PVMProgramCodec.decode(bytes);
@@ -122,10 +122,10 @@ if (import.meta.vitest) {
       const p: PVMProgram = {
         j: [],
         z: 1 as u8,
-        c: new Uint8Array([45]),
+        c: Buffer.from([45]),
         k: [1, 0],
       };
-      const bytes = new Uint8Array(PVMProgramCodec.encodedSize(p));
+      const bytes = Buffer.alloc(PVMProgramCodec.encodedSize(p));
       expect(() => PVMProgramCodec.encode(p, bytes)).toThrow(
         "k and c must have the same length",
       );

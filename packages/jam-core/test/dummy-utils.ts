@@ -46,10 +46,10 @@ import { toTagged } from "@tsjam/utils";
 
 export const dummyValidator = (): ValidatorDataImpl => {
   return new ValidatorDataImpl({
-    banderSnatch: Buffer.alloc(32).fill(0) as Uint8Array as BandersnatchKey,
-    ed25519: Buffer.alloc(32).fill(0) as Uint8Array as ED25519PublicKey,
-    blsKey: new Uint8Array(144).fill(0) as BLSKey,
-    metadata: new Uint8Array(128).fill(0) as ByteArrayOfLength<128>,
+    banderSnatch: Buffer.alloc(32) as Uint8Array as BandersnatchKey,
+    ed25519: Buffer.alloc(32) as Uint8Array as ED25519PublicKey,
+    blsKey: Buffer.alloc(144) as BLSKey,
+    metadata: Buffer.alloc(128) as ByteArrayOfLength<128>,
   });
 };
 export const dummyValidators = <T extends ValidatorsImpl>(): T => {
@@ -65,13 +65,11 @@ export const dummySafroleState = (): SafroleStateImpl => {
     gamma_p: toTagged(new GammaPImpl({ elements: dummyValidators().elements })),
     gamma_s: new GammaSImpl({
       keys: toTagged(
-        new Array(EPOCH_LENGTH).fill(
-          new Uint8Array(32).fill(0) as BandersnatchKey,
-        ),
+        new Array(EPOCH_LENGTH).fill(Buffer.alloc(32) as BandersnatchKey),
       ),
     }),
     gamma_z: new GammaZImpl({
-      root: new Uint8Array(144).fill(0) as BandersnatchRingRoot,
+      root: Buffer.alloc(144) as BandersnatchRingRoot,
     }),
   });
 };
@@ -85,7 +83,7 @@ export const dummyAuthQueue = (): AuthorizerQueueImpl => {
           toTagged(
             new Array(AUTHQUEUE_MAX_SIZE)
               .fill(null)
-              .map(() => <AuthorizerHash>new Uint8Array(32).fill(0)),
+              .map(() => <AuthorizerHash>Buffer.alloc(32)),
           ),
         ),
     ),
@@ -103,10 +101,10 @@ export const dummyDisputesState = (): DisputesStateImpl => {
 
 export const dummyEntropy = <T extends JamEntropyImpl>(): T => {
   return <T>new JamEntropyImpl({
-    _0: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
-    _1: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
-    _2: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
-    _3: <Blake2bHash>(<Hash>new Uint8Array(32).fill(0)),
+    _0: <Blake2bHash>(<Hash>Buffer.alloc(32)),
+    _1: <Blake2bHash>(<Hash>Buffer.alloc(32)),
+    _2: <Blake2bHash>(<Hash>Buffer.alloc(32)),
+    _3: <Blake2bHash>(<Hash>Buffer.alloc(32)),
   });
 };
 

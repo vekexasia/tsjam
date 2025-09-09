@@ -33,12 +33,12 @@ export const basicInvocation = (
   const execCtx = ctx.execution;
   while (execCtx.gas > 0) {
     const curPointer = execCtx.instructionPointer;
-    const exitReason = bold_p.singleStep(ctx); //pvmSingleStep(bold_p, intermediateState);
+    const exitReason = bold_p.singleStep(ctx);
     if (isDebugLog) {
       const ip = curPointer;
-      const ix = bold_p.ixAt(curPointer);
+      const ix = bold_p.ixCacheAt(curPointer);
       log(
-        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
+        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
         true,
       );
     }

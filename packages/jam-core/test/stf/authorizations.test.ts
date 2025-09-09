@@ -33,14 +33,12 @@ import { CORES, getConstantsMode } from "@tsjam/constants";
 export const getCodecFixtureFile = (
   filename: string,
   kind: "tiny" | "full" = getConstantsMode(),
-): Uint8Array => {
-  return new Uint8Array(
-    fs.readFileSync(
-      new URL(
-        `../../../jamtestvectors/stf/authorizations/${kind}/${filename}`,
-        import.meta.url,
-      ).pathname,
-    ),
+): Buffer => {
+  return fs.readFileSync(
+    new URL(
+      `../../../jamtestvectors/stf/authorizations/${kind}/${filename}`,
+      import.meta.url,
+    ).pathname,
   );
 };
 

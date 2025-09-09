@@ -93,7 +93,7 @@ export const Bandersnatch = {
     return ringVrfVerify(
       proof,
       context,
-      new Uint8Array(0),
+      Buffer.alloc(0),
       Buffer.from(ringRoot),
       NUMBER_OF_VALIDATORS,
     );

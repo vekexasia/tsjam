@@ -17,14 +17,12 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { dummyDisputesState, dummyEntropy } from "../dummy-utils";
 
-export const getFixtureFile = (filename: string): Uint8Array => {
-  return new Uint8Array(
-    fs.readFileSync(
-      new URL(
-        `../../../../jamtestvectors/stf/statistics/${getConstantsMode()}/${filename}`,
-        import.meta.url,
-      ).pathname,
-    ),
+export const getFixtureFile = (filename: string): Buffer => {
+  return fs.readFileSync(
+    new URL(
+      `../../../../jamtestvectors/stf/statistics/${getConstantsMode()}/${filename}`,
+      import.meta.url,
+    ).pathname,
   );
 };
 

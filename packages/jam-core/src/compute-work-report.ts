@@ -164,7 +164,7 @@ const I_fn = (
     /**
      * `bold_t`
      */
-    authorizerOutput: Uint8Array;
+    authorizerOutput: Buffer;
     overline_i: ExportSegment[][];
     rLengthSoFar: number; // `∑k<j,(r∈B,... )=I(p,k) |r|`
   },
@@ -195,9 +195,7 @@ const I_fn = (
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
-          new Uint8Array(
-            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
-          ).fill(0),
+          Buffer.alloc(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE),
         ),
     };
   }
@@ -209,9 +207,7 @@ const I_fn = (
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
-          new Uint8Array(
-            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
-          ).fill(0),
+          Buffer.alloc(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE),
         ),
     };
   }
@@ -222,9 +218,7 @@ const I_fn = (
       out: new Array(w.exportCount)
         .fill(0)
         .map(() =>
-          new Uint8Array(
-            ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE,
-          ).fill(0),
+          Buffer.alloc(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE),
         ),
       gasUsed: re.gasUsed,
     };
@@ -280,4 +274,4 @@ const inner_J_fn = (
 };
 
 // TODO:
-const merkleTreeRootRetriever: (h: Hash) => Uint8Array[] = () => [];
+const merkleTreeRootRetriever: (h: Hash) => Buffer[] = () => [];

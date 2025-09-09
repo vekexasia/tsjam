@@ -1,5 +1,6 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { u32 } from "@tsjam/types";
 
 /**
  * Branch to the given address if the condition is true.
@@ -11,7 +12,7 @@ import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
  * $(0.7.1 - A.17)
  */
 export const branch = (
-  context: PVMIxEvaluateFNContext,
+  context: PVMIxEvaluateFNContextImpl,
   address: u32,
   condition: boolean | 0 | 1,
   skipIfFalse: number,

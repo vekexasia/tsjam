@@ -27,6 +27,6 @@ export class TicketImpl extends BaseJamCodecable implements Ticket {
   }
 
   static newEmpty(): TicketImpl {
-    return new TicketImpl({ id: <Hash>new Uint8Array(32).fill(0), attempt: 0 });
+    return new TicketImpl({ id: <Hash>Buffer.alloc(32), attempt: 0 });
   }
 }

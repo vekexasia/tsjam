@@ -13,7 +13,7 @@ export interface WorkOutputError<E extends WorkError>
   error: E;
 }
 export interface WorkOutputSuccess extends WorkOutputImpl {
-  success: Uint8Array;
+  success: Buffer;
 }
 /**
  * `E u B`
@@ -174,7 +174,7 @@ export class WorkOutputImpl<T extends WorkError = WorkError>
     }
   }
 
-  toBinary(): Uint8Array {
+  toBinary(): Buffer {
     return encodeWithCodec(WorkOutputImpl, this);
   }
 

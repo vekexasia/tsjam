@@ -82,16 +82,19 @@ export class JamBlockExtrinsicsImpl
    * $(0.7.1 - 5.4 / 5.5 / 5.6)
    */
   extrinsicHash(): Hash {
-    const items = [
-      ...Hashing.blake2b(this.tickets.toBinary()),
-      ...Hashing.blake2b(this.preimages.toBinary()),
-      ...Hashing.blake2b(
+    const items: Hash[] = [
+      Hashing.blake2b(this.tickets.toBinary()),
+      Hashing.blake2b(this.preimages.toBinary()),
+      Hashing.blake2b(
         encodeWithCodec(codec_Eg_4Hx, this.reportGuarantees.elements),
       ),
-      ...Hashing.blake2b(this.assurances.toBinary()),
-      ...Hashing.blake2b(this.disputes.toBinary()),
+      Hashing.blake2b(this.assurances.toBinary()),
+      Hashing.blake2b(this.disputes.toBinary()),
     ];
-    const preimage = new Uint8Array(items);
+    const preimage = Buffer.alloc(items.length * 32);
+    for (let i = 0; i < items.length; i++) {
+      items[i].copy(preimage, i * 32);
+    }
     return Hashing.blake2b(preimage);
   }
 

@@ -47,8 +47,8 @@ export class GammaPImpl extends ValidatorsImpl {
         const validator = new ValidatorDataImpl({
           ed25519: v.ed25519,
           banderSnatch: v.bandersnatch,
-          blsKey: <BLSKey>new Uint8Array(144).fill(0),
-          metadata: <ByteArrayOfLength<128>>new Uint8Array(128).fill(0),
+          blsKey: <BLSKey>Buffer.alloc(144),
+          metadata: <ByteArrayOfLength<128>>Buffer.alloc(128),
         });
         return validator;
       }),

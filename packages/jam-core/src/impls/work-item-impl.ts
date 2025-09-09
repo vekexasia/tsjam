@@ -90,7 +90,7 @@ export class WorkItemExportedSegment extends BaseJamCodecable {
   /**
    * $(0.7.1 - 14.14) - X
    */
-  originalBlob(): Uint8Array {
+  originalBlob(): Buffer {
     throw new Error("X() not implemented");
   }
 }

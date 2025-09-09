@@ -69,12 +69,16 @@ export class DisputeVerdictJudgementImpl
     validatorSet: KappaImpl | LambdaImpl;
   }): boolean {
     const validatorPubKey = deps.validatorSet.at(this.index).ed25519;
-    let message: Uint8Array;
+    let prefix: Buffer;
     if (this.vote) {
-      message = new Uint8Array([...JAM_VALID, ...deps.target]);
+      prefix = JAM_VALID;
     } else {
-      message = new Uint8Array([...JAM_INVALID, ...deps.target]);
+      prefix = JAM_INVALID;
     }
+    const message: Buffer = Buffer.allocUnsafe(prefix.length + 32);
+    prefix.copy(message);
+    deps.target.copy(message, prefix.length);
+
     const signatureVerified = Ed25519.verifySignature(
       this.signature,
       validatorPubKey,

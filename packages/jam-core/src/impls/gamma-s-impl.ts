@@ -1,9 +1,9 @@
-import { HashCodec } from "@/codecs/misc-codecs";
 import { outsideInSequencer } from "@/utils";
 import {
   BaseJamCodecable,
   E_1,
   E_4,
+  E_4_int,
   encodeWithCodec,
   sequenceCodec,
   xBytesCodec,
@@ -21,6 +21,7 @@ import type {
   JamEntropy,
   Posterior,
   SeqOfLength,
+  u32,
   Validated,
 } from "@tsjam/types";
 import { toPosterior, toTagged } from "@tsjam/utils";
@@ -53,7 +54,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
     return GammaSImpl.toJSON(this);
   }
 
-  toBinary(): Uint8Array {
+  toBinary(): Buffer {
     return encodeWithCodec(GammaSImpl, this);
   }
 
@@ -121,14 +122,12 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
         typeof EPOCH_LENGTH,
         "gamma_s"
       >;
-      const p_eta2 = encodeWithCodec(HashCodec, deps.p_eta2);
       // $(0.7.1 - 6.26) F calculated in place
       for (let i = 0; i < EPOCH_LENGTH; i++) {
-        const e4Buf = new Uint8Array(4);
-        E_4.encode(BigInt(i), e4Buf);
-        const h_4 = Hashing.blake2b(
-          new Uint8Array([...p_eta2, ...e4Buf]),
-        ).subarray(0, 4);
+        const preimage = Buffer.allocUnsafe(32 + 4);
+        deps.p_eta2.copy(preimage);
+        E_4_int.encode(<u32>i, preimage.subarray(32));
+        const h_4 = Hashing.blake2b(preimage).subarray(0, 4);
         const index =
           E_4.decode(h_4).value % BigInt(deps.p_kappa.elements.length);
         newGammaS.push(deps.p_kappa.elements[Number(index)].banderSnatch);
@@ -234,7 +233,7 @@ export class GammaSImpl extends BaseJamCodecable implements GammaS {
       keys: toTagged(
         Array.from(
           { length: EPOCH_LENGTH },
-          () => <BandersnatchKey>new Uint8Array(32).fill(0),
+          () => <BandersnatchKey>Buffer.alloc(32),
         ),
       ),
     });

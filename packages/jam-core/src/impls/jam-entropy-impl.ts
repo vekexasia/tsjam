@@ -85,12 +85,12 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
     }
   > {
     // $(0.7.1 - 6.22) | rotate `η_0`
-    const p_0 = Hashing.blake2b(
-      new Uint8Array([
-        ...encodeWithCodec(HashCodec, this._0),
-        ...encodeWithCodec(HashCodec, deps.vrfOutputHash),
-      ]),
-    );
+    const preimage = Buffer.allocUnsafe(64);
+
+    this._0.copy(preimage);
+    deps.vrfOutputHash.copy(preimage, 32);
+
+    const p_0 = Hashing.blake2b(preimage);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <any>new JamEntropyImpl({
@@ -124,10 +124,10 @@ export class JamEntropyImpl extends BaseJamCodecable implements JamEntropy {
 
   static newEmpty(): JamEntropyImpl {
     return new JamEntropyImpl({
-      _0: <Blake2bHash>new Uint8Array(32).fill(0),
-      _1: <Blake2bHash>new Uint8Array(32).fill(0),
-      _2: <Blake2bHash>new Uint8Array(32).fill(0),
-      _3: <Blake2bHash>new Uint8Array(32).fill(0),
+      _0: <Blake2bHash>Buffer.alloc(32),
+      _1: <Blake2bHash>Buffer.alloc(32),
+      _2: <Blake2bHash>Buffer.alloc(32),
+      _3: <Blake2bHash>Buffer.alloc(32),
     });
   }
 }

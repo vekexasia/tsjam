@@ -8,9 +8,9 @@ export type MemoryContent = { at: u32; content: Uint8Array };
  */
 export type PVMHeap = { start: u32; end: u32; pointer: u32 };
 export class PVMMemory implements IPVMMemory {
-  #innerMemoryContent = new Map<Page, Uint8Array>();
+  #innerMemoryContent = new Map<Page, Buffer>();
   constructor(
-    initialMemory: MemoryContent[] | Map<Page, Uint8Array>,
+    initialMemory: MemoryContent[] | Map<Page, Buffer>,
     private acl: Map<
       Page,
       PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
@@ -23,7 +23,7 @@ export class PVMMemory implements IPVMMemory {
     } else {
       this.#innerMemoryContent = new Map();
       for (const page of acl.keys()) {
-        this.#innerMemoryContent.set(page, new Uint8Array(Zp).fill(0));
+        this.#innerMemoryContent.set(page, Buffer.alloc(Zp));
       }
       for (const { at, content } of initialMemory) {
         this.#setBytes(at, content);
@@ -53,30 +53,14 @@ export class PVMMemory implements IPVMMemory {
     return toRet;
   }
 
-  #getPageMemory(page: number): Uint8Array {
-    const memory = this.#innerMemoryContent.get(page);
-    // assert(
-    //   memory,
-    //   `Page ${page}|0x${(page * Zp).toString(16)} is not allocated`,
-    // );
-    return memory!;
-  }
-
   #setBytes(address: u32, bytes: Uint8Array): void {
     if (bytes.length === 0) {
       return;
     }
     const { page, offset } = this.#locationFromAddress(address);
-    const memory = this.#getPageMemory(page);
+    const memory = this.#innerMemoryContent.get(page)!;
     const bytesToWrite = Math.min(bytes.length, Zp - offset);
-    // we replace current uint8array with a new copy so that old references to this location
-    // in memory are still kept intact and unchanged in case error happens
-    // const newMemory = new Uint8Array(Zp);
-    // newMemory.set(memory, 0);
-    // newMemory.set(bytes.subarray(0, bytesToWrite), offset);
     memory.set(bytes.subarray(0, bytesToWrite), offset);
-    this.#innerMemoryContent.set(page, memory);
-    // if offset + bytes.length exceeds page we should call setbytes again
     if (bytesToWrite < bytes.length) {
       this.#setBytes(
         toSafeMemoryAddress(BigInt(address) + BigInt(bytesToWrite)),
@@ -85,17 +69,15 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  /**
-   * Returns copy of content in single Uint8Array
-   */
-  #getBytes(address: u32, length: number): Uint8Array {
+  #getBytes(address: u32, length: number): Buffer {
     if (length === 0) {
-      return new Uint8Array(0);
+      return Buffer.alloc(0);
     }
     const { page, offset } = this.#locationFromAddress(address);
-    const memory = this.#getPageMemory(page);
+    const memory = this.#innerMemoryContent.get(page)!;
     const bytesToRead = Math.min(length, Zp - offset);
-    const chunk = memory.subarray(offset, offset + bytesToRead);
+    const chunk = Buffer.allocUnsafe(length);
+    memory.copy(chunk, 0, offset, offset + bytesToRead);
     // log(
     //   `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
     //   true,
@@ -105,12 +87,9 @@ export class PVMMemory implements IPVMMemory {
         toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),
         length - bytesToRead,
       );
-      const toRet = new Uint8Array(chunk.length + sub.length);
-      toRet.set(chunk);
-      toRet.set(sub, chunk.length);
-      return toRet;
+      chunk.set(sub, bytesToRead);
     }
-    return chunk.slice();
+    return chunk;
   }
 
   changeAcl(page: Page, kind: PVMMemoryAccessKind): this {
@@ -138,7 +117,7 @@ export class PVMMemory implements IPVMMemory {
     return this;
   }
 
-  getBytes(address: u32, length: number): Uint8Array {
+  getBytes(address: u32, length: number): Buffer {
     assert(this.canRead(address, length));
     const r = this.#getBytes(address, length);
     return r;
@@ -177,14 +156,12 @@ export class PVMMemory implements IPVMMemory {
   // TODO: rename to sbrk properly
   firstWriteableInHeap(size: u32): u32 {
     if (this.heap.pointer + size >= this.heap.end) {
-      for (let i = 0; i < Math.ceil(size / Zp); i++) {
+      const cnt = Math.ceil(size / Zp);
+      for (let i = 0; i < cnt; i++) {
         // allocate one page
         //  log("allocating new page in heap", true);
         this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
-        this.#innerMemoryContent.set(
-          this.heap.end / Zp + i,
-          new Uint8Array(Zp),
-        );
+        this.#innerMemoryContent.set(this.heap.end / Zp + i, Buffer.alloc(Zp));
       }
       //const prevEnd = this.heap.end;
       this.heap.end = <u32>(this.heap.end + Math.ceil(size / Zp) * Zp);

@@ -51,7 +51,7 @@ if (import.meta.vitest) {
     ];
     for (const value of cases) {
       it(`should encode and decode ${value.v} - in ${value.bytes} bytes`, () => {
-        const bytes = new Uint8Array(value.bytes);
+        const bytes = Buffer.alloc(value.bytes);
         const used = E4star.encode(value.v, bytes);
         expect(used, "used-bytes").toBe(value.bytes);
         const { value: decoded, readBytes } = E4star.decode(bytes);
@@ -60,7 +60,7 @@ if (import.meta.vitest) {
       });
     }
     it("should fail for 2^29 (and above)", () => {
-      const bytes = new Uint8Array(5);
+      const bytes = Buffer.alloc(5);
       expect(() => E4star.encode(2n ** 29n, bytes)).toThrow(
         "value is too large",
       );

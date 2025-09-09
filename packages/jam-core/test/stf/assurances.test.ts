@@ -17,20 +17,17 @@ import type {
   Tagged,
   Validated,
 } from "@tsjam/types";
-import { toTagged } from "@tsjam/utils";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { getConstantsMode } from "@tsjam/constants";
 
-export const getCodecFixtureFile = (filename: string): Uint8Array => {
-  return new Uint8Array(
-    fs.readFileSync(
-      new URL(
-        `../../../../jamtestvectors/stf/assurances/${getConstantsMode()}/${filename}`,
-        import.meta.url,
-      ).pathname,
-    ),
+export const getCodecFixtureFile = (filename: string): Buffer => {
+  return fs.readFileSync(
+    new URL(
+      `../../../../jamtestvectors/stf/assurances/${getConstantsMode()}/${filename}`,
+      import.meta.url,
+    ).pathname,
   );
 };
 @JamCodecable()

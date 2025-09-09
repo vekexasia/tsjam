@@ -1,4 +1,4 @@
-import { E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { E_4_int } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import { Hash, u32 } from "@tsjam/types";
 
@@ -31,15 +31,16 @@ export const FisherYatesH = <T>(arr: T[], entropy: Hash) => {
  */
 const Q = (l: number, entropy: Hash): u32[] => {
   const toRet = <u32[]>[];
+  const buf = Buffer.allocUnsafe(32 + 4);
+  // TODO: eventually migrate entropy to be a buffer so we can use .copy which is native c++
+  buf.set(entropy);
+  // TODO: instead of hashing 8 times the same element just reuse and read
   for (let i = 0; i < l; i++) {
+    // E_4.encode
+    buf.writeUint32LE(Math.floor(i / 8), 32);
     toRet.push(
       E_4_int.decode(
-        Hashing.blake2b(
-          new Uint8Array([
-            ...entropy,
-            ...encodeWithCodec(E_4_int, <u32>Math.floor(i / 8)),
-          ]),
-        ).subarray((4 * i) % 32, ((4 * i) % 32) + 4),
+        Hashing.blake2b(buf).subarray((4 * i) % 32, ((4 * i) % 32) + 4),
       ).value,
     );
   }
@@ -50,9 +51,9 @@ if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
   describe("fisheryates", () => {
     it("test", () => {
-      const entropy = new Uint8Array(32).fill(255);
+      const entropy = Buffer.allocUnsafe(32).fill(255);
       const arr = [0, 1, 2, 3, 4, 5, 6, 7];
-      expect(FisherYatesH(arr, entropy as Hash)).deep.eq([
+      expect(FisherYatesH(arr, entropy as Uint8Array as Hash)).deep.eq([
         1, 2, 6, 0, 7, 4, 3, 5,
       ]);
     });

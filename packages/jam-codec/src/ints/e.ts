@@ -121,7 +121,7 @@ if (import.meta.vitest) {
   describe("E", () => {
     it("should encode from 0 to 255", () => {
       for (let i = 0; i < 256; i++) {
-        const bytes = new Uint8Array(10);
+        const bytes = Buffer.alloc(10);
         E.encode(BigInt(i), bytes);
         const { value: decoded } = E.decode(bytes);
         expect(decoded).toBe(BigInt(i));
@@ -141,7 +141,7 @@ if (import.meta.vitest) {
     ];
     for (const value of cases) {
       it(`should encode and decode ${value.v} - in ${value.bytes} bytes`, () => {
-        const bytes = new Uint8Array(10);
+        const bytes = Buffer.alloc(10);
         const written = E.encode(value.v, bytes);
         expect(written, "written-bytes").toBe(value.bytes);
         const { value: decoded, readBytes } = E.decode(bytes);
@@ -149,14 +149,14 @@ if (import.meta.vitest) {
         expect(readBytes, "read-bytes").toBe(value.bytes);
       });
       it(`should calculate encoded size for ${value.v} equal to encodedSize`, () => {
-        const bytes = new Uint8Array(10);
+        const bytes = Buffer.alloc(10);
         const written = E.encode(value.v, bytes);
         expect(written, "written-bytes").toBe(value.bytes);
         expect(E.encodedSize(value.v), "encodedSize").toBe(value.bytes);
       });
     }
     it("fails for 2^64", () => {
-      const bytes = new Uint8Array(10);
+      const bytes = Buffer.alloc(10);
       expect(() => E.encode(2n ** 64n, bytes)).toThrow("value is too large");
     });
   });

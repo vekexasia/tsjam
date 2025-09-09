@@ -68,17 +68,21 @@ export class JamSignedHeaderImpl
     p_tau: Validated<Posterior<TauImpl>>,
   ): Uint8Array {
     if (p_gamma_s.isFallback()) {
-      return new Uint8Array([
-        ...JAM_FALLBACK_SEAL,
-        ...encodeWithCodec(HashCodec, p_entropy_3),
-      ]);
+      const toRet = Buffer.allocUnsafe(JAM_FALLBACK_SEAL.length + 32);
+
+      JAM_FALLBACK_SEAL.copy(toRet);
+      p_entropy_3.copy(toRet, JAM_FALLBACK_SEAL.length);
+
+      return toRet;
     } else {
       const i = p_gamma_s.tickets![p_tau.slotPhase()];
-      return new Uint8Array([
-        ...JAM_TICKET_SEAL,
-        ...encodeWithCodec(HashCodec, p_entropy_3),
-        i.attempt,
-      ]);
+      const toRet = Buffer.allocUnsafe(JAM_TICKET_SEAL.length + 32 + 1);
+
+      JAM_TICKET_SEAL.copy(toRet);
+      p_entropy_3.copy(toRet, JAM_TICKET_SEAL.length);
+      toRet[JAM_TICKET_SEAL.length + 32] = i.attempt;
+
+      return toRet;
     }
   }
 
@@ -138,17 +142,19 @@ export class JamSignedHeaderImpl
    */
   private verifyEntropy(p_kappa: Posterior<KappaImpl>) {
     const ha = this.blockAuthor(p_kappa);
+    const context = Buffer.alloc(JAM_ENTROPY.length + 32);
+
+    JAM_ENTROPY.copy(context);
+    Bandersnatch.vrfOutputSignature(this.seal).copy(
+      context,
+      JAM_ENTROPY.length,
+    );
+
     return Bandersnatch.verifySignature(
       this.entropySource,
       ha,
-      new Uint8Array([]), // message - empty to not bias the entropy
-      new Uint8Array([
-        ...JAM_ENTROPY,
-        ...encodeWithCodec(
-          HashCodec,
-          Bandersnatch.vrfOutputSignature(this.seal),
-        ),
-      ]),
+      Buffer.alloc(0), // message - empty to not bias the entropy
+      context,
     );
   }
 
@@ -219,6 +225,13 @@ export class JamSignedHeaderImpl
       p_tau,
     );
 
+    const entropyContext = Buffer.allocUnsafe(JAM_ENTROPY.length + 32);
+    JAM_ENTROPY.copy(entropyContext);
+    Bandersnatch.vrfOutputSeed(keyPair.private, sealSignContext).copy(
+      entropyContext,
+      JAM_ENTROPY.length,
+    );
+
     const toRet = new JamSignedHeaderImpl({
       parent: this.signedHash(),
       parentStateRoot: curState.merkleRoot(),
@@ -238,14 +251,8 @@ export class JamSignedHeaderImpl
       }),
       entropySource: Bandersnatch.sign(
         keyPair.private,
-        new Uint8Array([]), // message - empty to not bias the entropy
-        new Uint8Array([
-          ...JAM_ENTROPY,
-          ...encodeWithCodec(
-            HashCodec,
-            Bandersnatch.vrfOutputSeed(keyPair.private, sealSignContext),
-          ),
-        ]),
+        Buffer.alloc(0), // message - empty to not bias the entropy
+        entropyContext,
       ),
       offendersMark: HeaderOffenderMarkerImpl.build(
         toTagged(extrinsics.disputes),

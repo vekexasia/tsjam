@@ -127,62 +127,62 @@ export class HostFunctions {
     args: {
       p?: WorkPackageImpl;
       n?: Hash; // TODO: discover what this is
-      bold_r?: Uint8Array;
+      bold_r?: Buffer;
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
-      overline_x?: Uint8Array[][];
+      overline_x?: Buffer[][];
       bold_o?: PVMAccumulationOpImpl[];
       bold_t?: DeferredTransfersImpl;
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = context.registers.slice(7);
     const o = w7;
-    let v: Uint8Array | undefined;
+    let v: Buffer | undefined;
     log(
       `HostFunction::fetch w10:${w10.value}`,
       process.env.DEBUG_STEPS === "true",
     );
     switch (w10.value) {
       case 0n: {
-        v = new Uint8Array([
-          ...encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_ITEM), // Bi
-          ...encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_OCTET), // BL
-          ...encodeWithCodec(E_8, SERVICE_MIN_BALANCE), // BS
-          ...encodeWithCodec(E_sub_int(2), CORES), // C
-          ...encodeWithCodec(E_sub_int(4), PREIMAGE_EXPIRATION), // D
-          ...encodeWithCodec(E_sub_int(4), EPOCH_LENGTH), // E
+        v = Buffer.concat([
+          encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_ITEM), // Bi
+          encodeWithCodec(E_8, SERVICE_ADDITIONAL_BALANCE_PER_OCTET), // BL
+          encodeWithCodec(E_8, SERVICE_MIN_BALANCE), // BS
+          encodeWithCodec(E_sub_int(2), CORES), // C
+          encodeWithCodec(E_sub_int(4), PREIMAGE_EXPIRATION), // D
+          encodeWithCodec(E_sub_int(4), EPOCH_LENGTH), // E
           // 34
-          ...encodeWithCodec(E_8, MAX_GAS_ACCUMULATION), // GA
-          ...encodeWithCodec(E_8, MAX_GAS_IS_AUTHORIZED), // GI
-          ...encodeWithCodec(E_8, TOTAL_GAS_REFINEMENT_LOGIC), // GR
-          ...encodeWithCodec(E_8, TOTAL_GAS_ACCUMULATION_ALL_CORES), // GT
-          ...encodeWithCodec(E_sub_int(2), RECENT_HISTORY_LENGTH), // H
-          ...encodeWithCodec(E_sub_int(2), MAXIMUM_WORK_ITEMS), // I
+          encodeWithCodec(E_8, MAX_GAS_ACCUMULATION), // GA
+          encodeWithCodec(E_8, MAX_GAS_IS_AUTHORIZED), // GI
+          encodeWithCodec(E_8, TOTAL_GAS_REFINEMENT_LOGIC), // GR
+          encodeWithCodec(E_8, TOTAL_GAS_ACCUMULATION_ALL_CORES), // GT
+          encodeWithCodec(E_sub_int(2), RECENT_HISTORY_LENGTH), // H
+          encodeWithCodec(E_sub_int(2), MAXIMUM_WORK_ITEMS), // I
           // 70
-          ...encodeWithCodec(E_sub_int(2), MAX_WORK_PREREQUISITES), // J
-          ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_BLOCK), // K
-          ...encodeWithCodec(E_sub_int(4), MAXIMUM_AGE_LOOKUP_ANCHOR), // L
-          ...encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_VALIDATOR), // N
+          encodeWithCodec(E_sub_int(2), MAX_WORK_PREREQUISITES), // J
+          encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_BLOCK), // K
+          encodeWithCodec(E_sub_int(4), MAXIMUM_AGE_LOOKUP_ANCHOR), // L
+          encodeWithCodec(E_sub_int(2), MAX_TICKETS_PER_VALIDATOR), // N
           // 80
-          ...encodeWithCodec(E_sub_int(2), AUTHPOOL_SIZE), // O
-          ...encodeWithCodec(E_sub_int(2), BLOCK_TIME), // P
-          ...encodeWithCodec(E_sub_int(2), AUTHQUEUE_MAX_SIZE), // Q
-          ...encodeWithCodec(E_sub_int(2), VALIDATOR_CORE_ROTATION), // R
-          ...encodeWithCodec(E_sub_int(2), MAXIMUM_EXTRINSICS_IN_WP), // T
+          encodeWithCodec(E_sub_int(2), AUTHPOOL_SIZE), // O
+          encodeWithCodec(E_sub_int(2), BLOCK_TIME), // P
+          encodeWithCodec(E_sub_int(2), AUTHQUEUE_MAX_SIZE), // Q
+          encodeWithCodec(E_sub_int(2), VALIDATOR_CORE_ROTATION), // R
+          encodeWithCodec(E_sub_int(2), MAXIMUM_EXTRINSICS_IN_WP), // T
           // 90
-          ...encodeWithCodec(E_sub_int(2), WORK_TIMEOUT), // U
-          ...encodeWithCodec(E_sub_int(2), NUMBER_OF_VALIDATORS), // V
-          ...encodeWithCodec(E_sub_int(4), MAXIMUM_SIZE_IS_AUTHORIZED), // WA
+          encodeWithCodec(E_sub_int(2), WORK_TIMEOUT), // U
+          encodeWithCodec(E_sub_int(2), NUMBER_OF_VALIDATORS), // V
+          encodeWithCodec(E_sub_int(4), MAXIMUM_SIZE_IS_AUTHORIZED), // WA
           // 98
-          ...encodeWithCodec(E_sub_int(4), MAX_SIZE_ENCODED_PACKAGE), // WB
-          ...encodeWithCodec(E_sub_int(4), SERVICECODE_MAX_SIZE), // WC
-          ...encodeWithCodec(E_sub_int(4), ERASURECODE_BASIC_SIZE), // WE
-          ...encodeWithCodec(E_sub_int(4), MAX_WORKPACKAGE_ENTRIES), // WM
-          ...encodeWithCodec(E_sub_int(4), ERASURECODE_EXPORTED_SIZE), // WP
-          ...encodeWithCodec(E_sub_int(4), MAX_TOT_SIZE_BLOBS_WORKREPORT), // WR
-          ...encodeWithCodec(E_sub_int(4), TRANSFER_MEMO_SIZE), // WM
-          ...encodeWithCodec(E_sub_int(4), MAX_EXPORTED_ITEMS), // WX
-          ...encodeWithCodec(E_sub_int(4), LOTTERY_MAX_SLOT), // Y
+          encodeWithCodec(E_sub_int(4), MAX_SIZE_ENCODED_PACKAGE), // WB
+          encodeWithCodec(E_sub_int(4), SERVICECODE_MAX_SIZE), // WC
+          encodeWithCodec(E_sub_int(4), ERASURECODE_BASIC_SIZE), // WE
+          encodeWithCodec(E_sub_int(4), MAX_WORKPACKAGE_ENTRIES), // WM
+          encodeWithCodec(E_sub_int(4), ERASURECODE_EXPORTED_SIZE), // WP
+          encodeWithCodec(E_sub_int(4), MAX_TOT_SIZE_BLOBS_WORKREPORT), // WR
+          encodeWithCodec(E_sub_int(4), TRANSFER_MEMO_SIZE), // WM
+          encodeWithCodec(E_sub_int(4), MAX_EXPORTED_ITEMS), // WX
+          encodeWithCodec(E_sub_int(4), LOTTERY_MAX_SLOT), // Y
         ]);
         break;
       }
@@ -240,12 +240,9 @@ export class HostFunctions {
       }
       case 8n: {
         if (typeof args.p !== "undefined") {
-          v = new Uint8Array([
-            ...encodeWithCodec(HashCodec, args.p.authCodeHash),
-            ...encodeWithCodec(
-              LengthDiscrimantedIdentityCodec,
-              args.p.authConfig,
-            ),
+          v = Buffer.concat([
+            encodeWithCodec(HashCodec, args.p.authCodeHash),
+            encodeWithCodec(LengthDiscrimantedIdentityCodec, args.p.authConfig),
           ]);
         }
         break;
@@ -469,7 +466,7 @@ export class HostFunctions {
     | PVMSingleModObject<{ bold_s: ServiceAccountImpl }>
   > {
     const [ko, kz, vo, vz] = context.registers.slice(7);
-    let bold_k: Uint8Array;
+    let bold_k: Buffer;
     if (
       !ko.fitsInU32() ||
       !kz.fitsInU32() ||
@@ -814,7 +811,7 @@ export class HostFunctions {
       if (r.value < 3) {
         p_u
           .changeAcl(Number(p) + i, PVMMemoryAccessKind.Write) //needed to avoid assert
-          .setBytes(<u32>((Number(p) + i) * Zp), new Uint8Array(Zp).fill(0)); // fill with zeros
+          .setBytes(<u32>((Number(p) + i) * Zp), Buffer.alloc(Zp)); // fill with zeros
       }
 
       if (r.value == 1n || r.value == 3n) {
@@ -892,7 +889,7 @@ export class HostFunctions {
     // compute u*
     const u_star = <PVMSingleModMemory["data"]>{
       from: o.u32(),
-      data: new Uint8Array(112),
+      data: Buffer.alloc(112),
     };
     E_8.encode(updatedCtx.gas, u_star.data.subarray(0, 8));
     PVMRegistersImpl.encode(updatedCtx.registers, u_star.data.subarray(8));

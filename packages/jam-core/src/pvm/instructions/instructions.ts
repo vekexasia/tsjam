@@ -72,7 +72,7 @@ export class Instructions {
 
   @Ix(30, TwoImmIxDecoder)
   store_imm_u8({ vX, vY }: TwoImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(vX, new Uint8Array([Number(vY % 256n)]), context);
+    return storeSafe(vX, Buffer.from([Number(vY % 256n)]), context);
   }
 
   @Ix(31, TwoImmIxDecoder)
@@ -226,7 +226,7 @@ export class Instructions {
   store_u8({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
     return storeSafe(
       toSafeMemoryAddress(vX),
-      new Uint8Array([Number(wA.value % 256n)]),
+      Buffer.from([Number(wA.value % 256n)]),
       context,
     );
   }
@@ -266,7 +266,7 @@ export class Instructions {
     const location = wA.value + vX;
     return storeSafe(
       toSafeMemoryAddress(location),
-      new Uint8Array([Number(vY % 0xffn)]),
+      Buffer.from([Number(vY % 0xffn)]),
       context,
     );
   }
@@ -631,7 +631,7 @@ export class Instructions {
     const location = toSafeMemoryAddress(wB.value + vX);
     return storeSafe(
       location as u32,
-      new Uint8Array([Number(wA.value & 0xffn)]),
+      Buffer.from([Number(wA.value & 0xffn)]),
       context,
     );
   }
@@ -655,7 +655,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = toSafeMemoryAddress(wB.value + vX);
-    const tmp = new Uint8Array(4);
+    const tmp = Buffer.allocUnsafe(4);
     E_4.encode(BigInt(wA.value % 2n ** 32n), tmp);
     return storeSafe(location, tmp, context);
   }
@@ -728,7 +728,10 @@ export class Instructions {
       );
     }
     const r = context.execution.memory.getBytes(location, 8);
-    wA.value = <PVMRegisterRawValue>E_8.decode(r).value;
+
+    //wA.value = <PVMRegisterRawValue>Buffer.from(r).readBigUint64LE(0);
+    wA.value = <PVMRegisterRawValue>r.readBigUInt64LE(0);
+    // wA.value = <PVMRegisterRawValue>E_8.decode(r).value;
   }
 
   // # load signed
@@ -1313,7 +1316,7 @@ const handleMemoryFault = (location: u32): PVMExitReasonImpl => {
 };
 const storeSafe = (
   location: u32,
-  bytes: Uint8Array,
+  bytes: Buffer,
   context: PVMIxEvaluateFNContextImpl,
 ) => {
   if (!context.execution.memory.canWrite(location, bytes.length)) {

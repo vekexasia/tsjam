@@ -89,7 +89,7 @@ const R_fn = <X>(
     } else {
       return {
         gasUsed: gas_prime,
-        res: new WorkOutputImpl<WorkError.OutOfGas>(new Uint8Array()),
+        res: new WorkOutputImpl<WorkError.OutOfGas>(Buffer.alloc(0)),
         out: hostCall.out,
       };
     }

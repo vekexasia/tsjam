@@ -84,14 +84,14 @@ if (import.meta.vitest) {
   describe("BitSequence", () => {
     describe("encode/decode", () => {
       it("should encode and decode a value", () => {
-        const bytes = new Uint8Array(8);
+        const bytes = Buffer.alloc(8);
         const a = BitSequenceCodec(8);
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1];
         const encodedLength = a.encode(value, bytes);
         expect(a.decode(bytes.subarray(0, encodedLength)).value).toEqual(value);
       });
       it("should encode and decode a value with 9 elements", () => {
-        const bytes = new Uint8Array(8);
+        const bytes = Buffer.alloc(8);
         const a = BitSequenceCodec(9);
         const value: bit[] = [1, 0, 1, 1, 0, 0, 1, 1, 1];
         const encodedLength = a.encode(value, bytes);

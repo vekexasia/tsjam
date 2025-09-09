@@ -104,12 +104,10 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
    * $(0.7.1 - 14.10)
    */
   authorizer(): Blake2bHash {
-    return Hashing.blake2b(
-      new Uint8Array([
-        ...encodeWithCodec(HashCodec, this.authCodeHash),
-        ...this.authConfig,
-      ]),
-    );
+    const b = Buffer.allocUnsafe(32 + this.authConfig.length);
+    this.authCodeHash.copy(b, 0);
+    this.authConfig.copy(b, 32);
+    return Hashing.blake2b(b);
   }
 
   /**

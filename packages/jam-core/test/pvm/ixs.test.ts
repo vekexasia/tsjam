@@ -49,7 +49,7 @@ describe("pvm", () => {
         json["initial-memory"].map(
           (v: { address: number; contents: number[] }) => ({
             at: v.address,
-            content: new Uint8Array(v.contents),
+            content: Buffer.from(v.contents),
           }),
         ),
         pvmACL,
@@ -65,7 +65,9 @@ describe("pvm", () => {
             <PVMRegisterRawValue>r,
           )),
       );
-    const res = deblobProgram(<PVMProgramCode>new Uint8Array(json.program));
+    const res = deblobProgram(
+      <PVMProgramCode>Buffer.from(<number[]>json.program),
+    );
     let exitReason: PVMExitReasonImpl;
     if (res instanceof PVMExitReasonImpl) {
       exitReason = res;
@@ -97,7 +99,7 @@ describe("pvm", () => {
     );
     for (const { address, contents } of json["expected-memory"]) {
       expect(execContext.memory.getBytes(address, contents.length)).toEqual(
-        new Uint8Array(contents),
+        Buffer.from(contents),
       );
     }
     // expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));

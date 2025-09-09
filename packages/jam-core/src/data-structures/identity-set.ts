@@ -10,7 +10,6 @@ import {
 } from "@tsjam/codec";
 import { ByteArrayOfLength } from "@tsjam/types";
 import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
-import { compareUint8Arrays } from "uint8array-extras";
 import { isSafeKey, SafeKey } from "./safe-key";
 
 export class IdentitySet<T extends Uint8Array> implements Set<T> {
@@ -113,14 +112,14 @@ export const IdentitySetCodec = <
     ...mapCodec(
       createArrayLengthDiscriminator(itemCodec),
       (v) => new IdentitySet<T>(<T[]>v),
-      (v) => Array.from(v.values()).sort(compareUint8Arrays),
+      (v) => Array.from(v.values()).sort(Buffer.compare),
     ),
     ...ZipJSONCodecs(ArrayOfJSONCodec(itemCodec), {
       fromJSON(json) {
         return new IdentitySet<T>(<T[]>json);
       },
       toJSON(value) {
-        return Array.from(value.values()).sort(compareUint8Arrays);
+        return Array.from(value.values()).sort(Buffer.compare);
       },
     }),
   };

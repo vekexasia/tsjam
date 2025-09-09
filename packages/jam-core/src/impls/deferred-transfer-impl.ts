@@ -72,7 +72,7 @@ export class DeferredTransferImpl
       destination: <ServiceIndex>0,
       amount: <Balance>0n,
       memo: <ByteArrayOfLength<typeof TRANSFER_MEMO_SIZE>>(
-        new Uint8Array(TRANSFER_MEMO_SIZE).fill(0)
+        Buffer.alloc(TRANSFER_MEMO_SIZE)
       ),
       gas: <Gas>0n,
     });

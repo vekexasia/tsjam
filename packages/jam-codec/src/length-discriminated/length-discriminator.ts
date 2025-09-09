@@ -93,13 +93,13 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("LengthDiscriminator", () => {
     it("should encode and decode a value", () => {
-      const bytes = new Uint8Array(10);
+      const bytes = Buffer.alloc(10);
       const a = new LengthDiscriminator(E);
       const encodedLength = a.encode(2n, bytes);
       expect(a.decode(bytes.subarray(0, encodedLength)).value).toBe(2n);
     });
     it("should encode the length of the encoded value", () => {
-      const bytes = new Uint8Array(12);
+      const bytes = Buffer.alloc(12);
       const a = new LengthDiscriminator(E);
       const value = 2n ** (7n * 8n);
       const encodedLength = a.encode(value, bytes);

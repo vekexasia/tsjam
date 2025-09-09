@@ -43,7 +43,7 @@ if (import.meta.vitest) {
     ];
     for (const value of cases) {
       it(`should encode and decode ${value.v} - in ${value.bytes} bytes`, () => {
-        const bytes = new Uint8Array(value.bytes);
+        const bytes = Buffer.alloc(value.bytes);
         LittleEndian.encode(value.v, bytes);
         const { value: decoded, readBytes } = LittleEndian.decode(bytes);
         expect(decoded).toBe(value.v);

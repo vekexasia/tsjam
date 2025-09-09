@@ -22,7 +22,7 @@ export const E_sub = <T extends bigint = bigint>(sub: number): JamCodec<T> => ({
   },
   decode: (bytes: Uint8Array): { value: T; readBytes: number } => {
     if (bytes.length < sub) {
-      const padded = new Uint8Array(sub).fill(0);
+      const padded = Buffer.alloc(sub).fill(0);
       padded.set(bytes);
       return <{ value: T; readBytes: number }>LittleEndian.decode(padded);
     }
@@ -54,7 +54,7 @@ export const E_sub_int = <T extends number>(sub: number): JamCodec<T> => ({
   },
   decode: (bytes: Uint8Array): { value: T; readBytes: number } => {
     if (bytes.length < sub) {
-      const padded = new Uint8Array(sub).fill(0);
+      const padded = Buffer.alloc(sub).fill(0);
       padded.set(bytes);
       const r = LittleEndian.decode(padded);
       return {

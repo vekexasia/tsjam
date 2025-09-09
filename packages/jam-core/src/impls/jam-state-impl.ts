@@ -524,7 +524,7 @@ export class JamStateImpl implements JamState {
 
     const serviceAccounts = new DeltaImpl();
     for (const serviceDataKey of serviceKeys) {
-      const serviceKey = new Uint8Array([
+      const serviceKey = Buffer.from([
         serviceDataKey[1],
         serviceDataKey[3],
         serviceDataKey[5],
@@ -573,10 +573,8 @@ export class JamStateImpl implements JamState {
 
         const p_p_key = stateKey(
           serviceIndex,
-          new Uint8Array([
-            ...encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2)),
-            ...h,
-          ]),
+          // TODO: rewrite to move performant Buffer.allocUnsafe + copy
+          Buffer.from([...encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2)), ...h]),
         );
         return Buffer.compare(p_p_key, sk) === 0;
       });

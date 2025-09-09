@@ -34,13 +34,13 @@ import { VALIDATORS } from "./debugKeys";
 
 export const GENESIS = new JamBlockImpl({
   header: new JamSignedHeaderImpl({
-    parent: toTagged(new Uint8Array(32).fill(0)),
-    parentStateRoot: toTagged(new Uint8Array(32).fill(0)),
-    extrinsicHash: toTagged(new Uint8Array(32).fill(0)),
+    parent: toTagged(Buffer.alloc(32)),
+    parentStateRoot: toTagged(Buffer.alloc(32)),
+    extrinsicHash: toTagged(Buffer.alloc(32)),
     slot: <TauImpl>new SlotImpl(<u32>0),
     epochMarker: new HeaderEpochMarkerImpl({
-      entropy: <Blake2bHash>new Uint8Array(32).fill(0),
-      entropy2: <Blake2bHash>new Uint8Array(32).fill(0),
+      entropy: Buffer.alloc(32) as Uint8Array as Blake2bHash,
+      entropy2: Buffer.alloc(32) as Uint8Array as Blake2bHash,
       validators: toTagged(
         VALIDATORS.map((keys) => {
           return new EpochMarkerValidatorImpl({
@@ -52,8 +52,8 @@ export const GENESIS = new JamBlockImpl({
     }),
     offendersMark: new HeaderOffenderMarkerImpl([]),
     authorIndex: <ValidatorIndex>0,
-    entropySource: toTagged(new Uint8Array(96).fill(0)),
-    seal: toTagged(new Uint8Array(96).fill(0)),
+    entropySource: toTagged(Buffer.alloc(96)),
+    seal: toTagged(Buffer.alloc(96)),
   }),
   extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
 });

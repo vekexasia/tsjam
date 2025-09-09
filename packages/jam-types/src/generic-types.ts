@@ -18,7 +18,7 @@ export type u64 = Tagged<bigint, "u64">;
 export type i32 = Tagged<number, "i32">;
 
 export type ByteArrayOfLength<T extends number> = Tagged<
-  Uint8Array,
+  Buffer,
   `ByteArrayOfLength${T}`
 >;
 
@@ -174,14 +174,14 @@ export type Validated<T> = Tagged<T, "validated">;
 /**
  * Used in WorkItem
  */
-export type WorkPayload = Tagged<Uint8Array, "WorkPayload">;
+export type WorkPayload = Tagged<Buffer, "WorkPayload">;
 
 /**
  * Data containing hte Authorization Token inside a WorkPackage
  */
-export type Authorization = Tagged<Uint8Array, "Authorization">;
+export type Authorization = Tagged<Buffer, "Authorization">;
 
 /**
  * Parametrization blob to be used in WorkPackage
  */
-export type AuthorizationParams = Tagged<Uint8Array, "AuthorizationParams">;
+export type AuthorizationParams = Tagged<Buffer, "AuthorizationParams">;

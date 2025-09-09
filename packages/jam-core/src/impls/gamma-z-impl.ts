@@ -50,7 +50,7 @@ export class GammaZImpl extends BaseJamCodecable implements GammaZ {
 
   static newEmpty(): GammaZImpl {
     return new GammaZImpl({
-      root: <BandersnatchRingRoot>new Uint8Array(144).fill(0),
+      root: <BandersnatchRingRoot>Buffer.alloc(144),
     });
   }
 }

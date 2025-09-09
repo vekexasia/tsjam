@@ -5,14 +5,12 @@ import * as fs from "node:fs";
 export const getCodecFixtureFile = (
   filename: string,
   size: "tiny" | "full" = getConstantsMode(),
-): Uint8Array => {
-  return new Uint8Array(
-    fs.readFileSync(
-      new URL(
-        `../../../jamtestvectors/codec/${size}/${filename}`,
-        import.meta.url,
-      ).pathname,
-    ),
+): Buffer => {
+  return fs.readFileSync(
+    new URL(
+      `../../../jamtestvectors/codec/${size}/${filename}`,
+      import.meta.url,
+    ).pathname,
   );
 };
 

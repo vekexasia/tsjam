@@ -139,7 +139,7 @@ export class MerkleState {
 
       for (const [h, p] of serviceAccount.preimages) {
         const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
-        toRet.set(stateKey(serviceIndex, new Uint8Array([...pref, ...h])), p);
+        toRet.set(stateKey(serviceIndex, Buffer.concat([pref, h])), p);
       }
 
       for (const [stateKey, v] of serviceAccount.merkleStorage.entries()) {
@@ -173,10 +173,10 @@ export class MerkleStateTrieNode {
    * $(0.7.1 - D.3)
    */
   static branch(left: MerkleStateTrieNode, right: MerkleStateTrieNode) {
-    const identifier = new Uint8Array([
-      left.hash[0] & 0b01111111,
-      ...left.hash.subarray(1),
-      ...right.hash,
+    const identifier = Buffer.concat([
+      Buffer.from([left.hash[0] & 0b01111111]),
+      left.hash.subarray(1),
+      right.hash,
     ]) as ByteArrayOfLength<64>;
 
     // $(0.7.1 - D.6)
@@ -191,17 +191,17 @@ export class MerkleStateTrieNode {
   static leaf(key: StateKey, value: Uint8Array) {
     let identifier: ByteArrayOfLength<64>;
     if (value.length <= 32) {
-      identifier = new Uint8Array([
-        0b10000000 + value.length,
-        ...key,
-        ...value,
-        ...new Array(32 - value.length).fill(0),
+      identifier = Buffer.concat([
+        Buffer.from([0b10000000 + value.length]),
+        key,
+        value,
+        Buffer.alloc(32 - value.length),
       ]) as ByteArrayOfLength<64>;
     } else {
-      identifier = new Uint8Array([
-        0b11000000,
-        ...key,
-        ...Hashing.blake2b(value),
+      identifier = Buffer.concat([
+        Buffer.from([0b11000000]),
+        key,
+        Hashing.blake2b(value),
       ]) as ByteArrayOfLength<64>;
     }
 
@@ -216,7 +216,7 @@ export class MerkleStateTrieNode {
 }
 
 // utility stuff
-const EMPTYNODE = new MerkleStateTrieNode(<Hash>new Uint8Array(32).fill(0));
+const EMPTYNODE = new MerkleStateTrieNode(<Hash>Buffer.alloc(32));
 const bits = (ar: Uint8Array): bit[] => {
   const a = [...ar]
     .map((a) =>

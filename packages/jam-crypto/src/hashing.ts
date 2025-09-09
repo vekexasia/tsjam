@@ -8,9 +8,11 @@ blake2b.ready((err) => {
 });
 export const Hashing = {
   blake2b<T extends Blake2bHash>(bytes: Uint8Array): T {
-    return <T>(<Blake2bHash>blake2b().update(bytes).digest());
+    const r = blake2b().update(bytes).digest();
+    return <T>(<Blake2bHash>Buffer.from(r.buffer, r.byteOffset, r.byteLength));
   },
   keccak256<T extends Hash>(bytes: Uint8Array): T {
-    return <T>(<Hash>keccak256(bytes));
+    const r = keccak256(bytes);
+    return <T>(<Hash>Buffer.from(r.buffer, r.byteOffset, r.byteLength));
   },
 };

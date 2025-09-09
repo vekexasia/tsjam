@@ -22,19 +22,15 @@ import type {
   u64,
   UpToSeq,
 } from "@tsjam/types";
-import { compareUint8Arrays } from "uint8array-extras";
 import { SlotImpl } from "./slot-impl";
 
 type StorageKey = Tagged<StateKey, "storage">;
 type RequestKey = Tagged<StateKey, "request">;
 
-export const computeStorageKey = (
-  serviceIndex: ServiceIndex,
-  key: Uint8Array,
-) => {
-  const k = new Uint8Array(4 + key.length);
+export const computeStorageKey = (serviceIndex: ServiceIndex, key: Buffer) => {
+  const k = Buffer.allocUnsafe(4 + key.length);
   E_4_int.encode(<u32>(2 ** 32 - 1), k);
-  k.set(key, 4);
+  key.copy(k, 4);
   return <StorageKey>stateKey(serviceIndex, k);
 };
 
@@ -44,7 +40,9 @@ export const computeRequestKey = (
   hash: Hash,
   length: u32,
 ) => {
-  const k = new Uint8Array([...encodeWithCodec(E_4_int, length), ...hash]);
+  const k = Buffer.alloc(4 + 32);
+  k.set(encodeWithCodec(E_4_int, length));
+  hash.copy(k, 4);
   return <RequestKey>stateKey(serviceIndex, k);
 };
 const singleRequestCodec = createArrayLengthDiscriminator<
@@ -106,7 +104,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
 
   get storage(): IServiceAccountStorage {
     const toRet = <IServiceAccountStorage>{
-      set: (key, value) => {
+      set: (key: Buffer, value) => {
         const innerKey = computeStorageKey(this.serviceIndex, key);
         toRet.delete(key);
         this.setStorage(innerKey, value);
@@ -116,15 +114,15 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
           (this.octets + 34n + BigInt(value.length) + BigInt(key.length))
         );
       },
-      get: (key) => {
+      get: (key: Buffer) => {
         const internalKey = computeStorageKey(this.serviceIndex, key);
         return this._storage.get(internalKey);
       },
-      has: (key) => {
+      has: (key: Buffer) => {
         const internalKey = computeStorageKey(this.serviceIndex, key);
         return this._storage.has(internalKey);
       },
-      delete: (key) => {
+      delete: (key: Buffer) => {
         const innerKey = computeStorageKey(this.serviceIndex, key);
         if (this._storage.has(innerKey)) {
           const curValue = this._storage.get(innerKey)!;
@@ -208,7 +206,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
       [...this._storage.entries()].every(([k, v]) => {
         return (
           other._storage.has(k) &&
-          compareUint8Arrays(other._storage.get(k)!, v) === 0
+          Buffer.compare(other._storage.get(k)!, v) === 0
         );
       })
     );
@@ -240,7 +238,7 @@ if (import.meta.vitest) {
             <u32>4,
           );
           const key = randomHash();
-          const value = new Uint8Array([1, 2, 3]);
+          const value = Buffer.from([1, 2, 3]);
           x.storage.set(key, value);
           expect(x.storage.has(key)).toBe(true);
           expect(x.items).not.toBe(4);
@@ -263,7 +261,7 @@ if (import.meta.vitest) {
             initialitems,
           );
           const key = randomHash();
-          const value = new Uint8Array([1, 2, 3]);
+          const value = Buffer.from([1, 2, 3]);
           x.storage.set(key, value);
           expect(x.items).toBe(<u32>(initialitems + 1));
           expect(Number(x.octets)).toBe(
@@ -277,13 +275,13 @@ if (import.meta.vitest) {
             <u32>4,
           );
           const key = randomHash();
-          const value = new Uint8Array([1, 2, 3]);
+          const value = Buffer.from([1, 2, 3]);
           x.storage.set(key, value);
 
           const octetsBefore = x.octets;
           const itemsBefore = x.items;
 
-          x.storage.set(key, new Uint8Array([1, 2, 3, 4]));
+          x.storage.set(key, Buffer.from([1, 2, 3, 4]));
 
           expect(x.items).toBe(itemsBefore);
           expect(x.octets).toBe(octetsBefore + 1n);

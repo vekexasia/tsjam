@@ -56,7 +56,7 @@ export const refineInvocation = (
   core: CoreIndex,
   index: number,
   workPackage: WorkPackageImpl,
-  authorizerOutput: Uint8Array,
+  authorizerOutput: Buffer,
   importSegments: ExportSegment[][],
   exportSegmentOffset: number,
   deps: {
@@ -147,7 +147,7 @@ const F_fn: (
   tau: TauImpl,
   importSegments: ExportSegment[][],
   exportSegmentOffset: number,
-  authorizerOutput: Uint8Array, // bold_r
+  authorizerOutput: Buffer, // bold_r
   workPackage: WorkPackageImpl,
   workItemIndex: number, // i
 ) => HostCallExecutor<RefineContext> =
@@ -158,7 +158,7 @@ const F_fn: (
     tau: TauImpl,
     importSegments: ExportSegment[][],
     exportSegmentOffset: number,
-    authorizerOutput: Uint8Array,
+    authorizerOutput: Buffer,
     workPackage: WorkPackageImpl,
     workItemIndex: number,
   ) =>
@@ -178,7 +178,7 @@ const F_fn: (
           input.out,
           hostFunctions.fetch(input.ctx, {
             p: workPackage,
-            n: <Hash>new Uint8Array(32).fill(0),
+            n: <Hash>Buffer.alloc(32),
             bold_r: authorizerOutput,
             i: workItemIndex,
             overline_i: importSegments,

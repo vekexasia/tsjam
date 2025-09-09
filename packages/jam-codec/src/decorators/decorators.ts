@@ -130,7 +130,7 @@ export function JamCodecable<
       constructor.name,
       // @ts-expect-error i know what I'm doing
       class extends constructor {
-        toBinary(): Uint8Array {
+        toBinary(): Buffer {
           return encodeWithCodec(codec, this);
         }
         toJSON(): object {

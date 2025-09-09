@@ -93,7 +93,7 @@ export class AvailabilitySpecificationImpl
    */
   static build(
     packageHash: WorkPackageHash,
-    bold_b: Uint8Array,
+    bold_b: Buffer,
     exportedSegments: ExportSegment[], // bold_s
   ): AvailabilitySpecificationImpl {
     const s_flower = transpose(
@@ -124,16 +124,19 @@ const pagedProofCodec = createArrayLengthDiscriminator(HashCodec);
  * Paged Proof
  * $(0.7.1 - 14.11)
  */
-const pagedProof = (segments: ExportSegment[]): Uint8Array[] => {
+const pagedProof = (segments: ExportSegment[]): Buffer[] => {
   const limit = 64 * Math.ceil(segments.length / 64);
-  const toRet = [];
+  const toRet: Buffer[] = [];
   for (let i = 0; i < limit; i += 64) {
     const j6 = J_fn(6, segments, i);
     const l6 = L_fn(6, segments, i);
-    const encoded = new Uint8Array([
-      ...encodeWithCodec(pagedProofCodec, j6),
-      ...encodeWithCodec(pagedProofCodec, l6),
-    ]);
+    const j6Size = pagedProofCodec.encodedSize(j6);
+    const encoded = Buffer.allocUnsafe(
+      j6Size + pagedProofCodec.encodedSize(l6),
+    );
+    pagedProofCodec.encode(j6, encoded);
+    pagedProofCodec.encode(l6, encoded.subarray(j6Size));
+
     toRet.push(
       zeroPad(ERASURECODE_BASIC_SIZE * ERASURECODE_EXPORTED_SIZE, encoded),
     );

@@ -1,5 +1,6 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMIxEvaluateFNContext, u32 } from "@tsjam/types";
+import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { u32 } from "@tsjam/types";
 
 const ZA = 2;
 /**
@@ -10,7 +11,7 @@ const ZA = 2;
  */
 export const djump = (
   a: u32,
-  context: PVMIxEvaluateFNContext,
+  context: PVMIxEvaluateFNContextImpl,
 ): PVMExitReasonImpl | void => {
   // first branch of djump(a)
   const newIP = context.program.rawProgram.j[a / ZA - 1];

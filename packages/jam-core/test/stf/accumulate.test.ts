@@ -35,13 +35,7 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
-import type {
-  Hash,
-  JamEntropy,
-  Posterior,
-  ServiceIndex,
-  Validated,
-} from "@tsjam/types";
+import type { Hash, Posterior, ServiceIndex, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
@@ -49,14 +43,12 @@ import packageJSON from "../../package.json";
 import { TestOutputCodec } from "../codec-utils";
 import { TestServiceInfo } from "../common";
 
-export const getFixtureFile = (filename: string): Uint8Array => {
-  return new Uint8Array(
-    fs.readFileSync(
-      new URL(
-        `../../../../jamtestvectors/stf/accumulate/${getConstantsMode()}/${filename}`,
-        import.meta.url,
-      ).pathname,
-    ),
+export const getFixtureFile = (filename: string): Buffer => {
+  return fs.readFileSync(
+    new URL(
+      `../../../../jamtestvectors/stf/accumulate/${getConstantsMode()}/${filename}`,
+      import.meta.url,
+    ).pathname,
   );
 };
 
@@ -79,7 +71,7 @@ class TestAccount extends BaseJamCodecable {
       (a, b) => Buffer.compare(a, b),
     ),
   )
-  storage!: Map<Uint8Array, Uint8Array>;
+  storage!: Map<Buffer, Buffer>;
 
   /**
    * -- This is mostly provided to lookup code blob for accumulate procedure execution
@@ -91,7 +83,7 @@ class TestAccount extends BaseJamCodecable {
       value: "blob",
     }),
   )
-  preimages!: IdentityMap<Hash, 32, Uint8Array>;
+  preimages!: IdentityMap<Hash, 32, Buffer>;
 
   toServiceAccount(serviceIndex: ServiceIndex) {
     const service = this.service.toServiceAccount(serviceIndex);

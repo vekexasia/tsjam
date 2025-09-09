@@ -11,7 +11,7 @@ import { ByteArrayOfLength, SeqOfLength } from "@tsjam/types";
 export const split = <N extends number, K extends number>(
   n: N,
   k: K,
-  data: Uint8Array,
+  data: Buffer,
 ): SeqOfLength<ByteArrayOfLength<N>, K> => {
   assert(data.length === n * k, "data length must be n * k");
   const toRet = [];
@@ -25,8 +25,8 @@ export const join = <N extends number, K extends number>(
   n: N,
   k: K,
   data: SeqOfLength<ByteArrayOfLength<K>, N>,
-): Uint8Array => {
-  const toRet = new Uint8Array(n * k);
+): Buffer => {
+  const toRet = Buffer.allocUnsafe(n * k);
   for (let i = 0; i < k; i++) {
     toRet.set(data[i], i * n);
   }
@@ -36,12 +36,12 @@ export const join = <N extends number, K extends number>(
 export const unzip = <N extends number, K extends number>(
   n: N,
   k: K,
-  data: Uint8Array,
+  data: Buffer,
 ): SeqOfLength<ByteArrayOfLength<N>, K> => {
   assert(data.length === n * k, "data length must be n * k");
   const toRet = [];
   for (let i = 0; i < k; i++) {
-    const arr = new Uint8Array(n);
+    const arr = Buffer.allocUnsafe(n);
     for (let j = 0; j < n; j++) {
       arr[j] = data[j * k + i];
     }
@@ -54,8 +54,8 @@ export const lace = <N extends number, K extends number>(
   n: N,
   k: K,
   data: SeqOfLength<ByteArrayOfLength<N>, K>,
-): Uint8Array => {
-  const toRet = new Uint8Array(n * k);
+): Buffer => {
+  const toRet = Buffer.allocUnsafe(n * k);
   for (let i = 0; i < k; i++) {
     for (let j = 0; j < n; j++) {
       toRet[j * k + i] = data[i][j];
@@ -87,7 +87,7 @@ export const transpose = <T>(matrix: T[][]): T[][] => {
 export const erasureCoding = (
   k: number,
   d: Uint8Array,
-): SeqOfLength<Uint8Array, 1023> => {
+): SeqOfLength<Buffer, 1023> => {
   assert(d.length === 684 * k, "data length must be 684*k");
   throw new Error("Not implemented");
 };

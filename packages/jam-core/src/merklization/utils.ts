@@ -17,7 +17,7 @@ export const stateKey = (
     const a = Hashing.blake2b(h);
     const s = i;
     const n = encodeWithCodec(E_4, BigInt(s));
-    return new Uint8Array([
+    return Buffer.from([
       n[0],
       a[0],
       n[1],
@@ -32,7 +32,7 @@ export const stateKey = (
   if (typeof _s === "number") {
     // its ServiceIndex
     const n = encodeWithCodec(E_4, BigInt(_s));
-    return new Uint8Array([
+    return Buffer.from([
       i,
       n[0],
       0,
@@ -44,5 +44,5 @@ export const stateKey = (
       ...new Array(31 - 4 - 4).fill(0),
     ]) as StateKey;
   }
-  return new Uint8Array([i, ...new Array(30).fill(0)]) as StateKey;
+  return Buffer.from([i, ...new Array(30).fill(0)]) as StateKey;
 };

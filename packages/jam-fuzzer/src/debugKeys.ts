@@ -4,7 +4,7 @@ import { Hashing, Bandersnatch, Ed25519 } from "@tsjam/crypto";
 
 export const generateDebugKeys = (index: number) => {
   const a = encodeWithCodec(E_sub_int(4), index);
-  const trivialSeed = new Uint8Array([
+  const trivialSeed = Buffer.from([
     ...a,
     ...a,
     ...a,
@@ -16,14 +16,14 @@ export const generateDebugKeys = (index: number) => {
   ]);
 
   const bandersnatch_secret_seed = Hashing.blake2b(
-    new Uint8Array([
+    Buffer.from([
       ...new TextEncoder().encode("jam_val_key_bandersnatch"),
       ...trivialSeed,
     ]),
   );
 
   const ed25519_secret_seed = Hashing.blake2b(
-    new Uint8Array([
+    Buffer.from([
       ...new TextEncoder().encode("jam_val_key_ed25519"),
       ...trivialSeed,
     ]),

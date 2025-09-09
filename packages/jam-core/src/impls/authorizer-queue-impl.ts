@@ -57,7 +57,7 @@ export class AuthorizerQueueImpl
         Array.from({ length: CORES }, () =>
           Array.from(
             { length: AUTHQUEUE_MAX_SIZE },
-            () => <Hash>new Uint8Array(32).fill(0),
+            () => <Hash>Buffer.alloc(32),
           ),
         )
       ),

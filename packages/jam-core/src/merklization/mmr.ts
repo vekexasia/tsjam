@@ -45,26 +45,26 @@ const replace = <T>(elements: T[], index: number, value: T) => {
 export const MMRSuperPeak = (_peeks: Array<Hash | undefined>) => {
   const peeks = _peeks.filter((a) => typeof a !== "undefined");
   if (peeks.length === 0) {
-    return <Hash>new Uint8Array(32).fill(0);
+    return <Hash>Buffer.alloc(32);
   }
   return <Hash>innerMMRSuperPeak(peeks);
 };
 
-const PEAK = new TextEncoder().encode("peak");
+const PEAK = Buffer.from(new TextEncoder().encode("peak"));
 const innerMMRSuperPeak = (
   peeks: ByteArrayOfLength<32>[],
 ): ByteArrayOfLength<32> => {
   if (peeks.length === 0) {
-    return <Hash>new Uint8Array(32).fill(0);
+    return <Hash>Buffer.alloc(32);
   }
   if (peeks.length === 1) {
     return peeks[0];
   }
   return Hashing.keccak256(
-    new Uint8Array([
-      ...PEAK,
-      ...innerMMRSuperPeak(peeks.slice(0, peeks.length - 1)),
-      ...peeks[peeks.length - 1],
+    Buffer.concat([
+      PEAK,
+      innerMMRSuperPeak(peeks.slice(0, peeks.length - 1)),
+      peeks[peeks.length - 1],
     ]),
   );
 };

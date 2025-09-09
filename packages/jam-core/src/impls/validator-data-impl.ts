@@ -79,10 +79,10 @@ export class ValidatorDataImpl
 
   static newEmpty() {
     return new ValidatorDataImpl({
-      banderSnatch: <BandersnatchKey>new Uint8Array(32).fill(0),
-      ed25519: <ED25519PublicKey>new Uint8Array(32).fill(0),
-      blsKey: <BLSKey>new Uint8Array(144).fill(0),
-      metadata: <ByteArrayOfLength<128>>new Uint8Array(128).fill(0),
+      banderSnatch: <BandersnatchKey>Buffer.alloc(32),
+      ed25519: <ED25519PublicKey>Buffer.alloc(32),
+      blsKey: <BLSKey>Buffer.alloc(144),
+      metadata: <ByteArrayOfLength<128>>Buffer.alloc(128),
     });
   }
 }

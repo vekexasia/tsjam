@@ -50,7 +50,7 @@ export const zeroPad = <T extends number>(
   n: T,
   buf: Uint8Array,
 ): ByteArrayOfLength<T> => {
-  const toRet = new Uint8Array(Math.ceil(buf.length / n) * n).fill(0);
+  const toRet = Buffer.alloc(Math.ceil(buf.length / n) * n);
   toRet.set(buf);
   return toTagged(toRet);
 };

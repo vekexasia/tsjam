@@ -41,7 +41,6 @@ export * from "./pvm/accumulation-out";
 export * from "./pvm/accumulation-statistics";
 export * from "./pvm/deferred-transfer";
 export * from "./pvm/gas-used";
-export * from "./pvm/i-parsed-program";
 export * from "./pvm/privileged-services";
 export * from "./pvm/pvm-accumulation-op";
 export * from "./pvm/pvm-accumulation-state";

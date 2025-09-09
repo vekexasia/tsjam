@@ -55,7 +55,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("Optional", () => {
     it("should encode and decode a value", () => {
-      const bytes = new Uint8Array(10);
+      const bytes = Buffer.alloc(10);
       const a = new Optional(E);
       const encodedLength = a.encode(2n, bytes);
       expect(a.decode(bytes.subarray(0, encodedLength)).value).toBe(2n);
@@ -66,7 +66,7 @@ if (import.meta.vitest) {
       expect(a.encodedSize(undefined)).toBe(1);
     });
     it("should encode/decode nil value", () => {
-      const bytes = new Uint8Array(1);
+      const bytes = Buffer.alloc(1);
       bytes[0] = 255; // force set byte to check if it's reset
       const a = new Optional(E);
       const encodedLength = a.encode(undefined, bytes);

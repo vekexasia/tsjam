@@ -5,13 +5,13 @@ import { JamCodec, JamEncodable } from "@/codec.js";
  * @param codec - the codec to use
  * @param value - the value to encode
  */
-export const encodeWithCodec = <T, X extends Uint8Array>(
+export const encodeWithCodec = <T, X extends Buffer>(
   codec: JamEncodable<T>,
   value: T,
 ): X => {
-  const buffer = <X>new Uint8Array(codec.encodedSize(value));
+  const buffer = Buffer.allocUnsafe(codec.encodedSize(value));
   codec.encode(value, buffer);
-  return buffer;
+  return buffer as Uint8Array as X;
 };
 
 /**

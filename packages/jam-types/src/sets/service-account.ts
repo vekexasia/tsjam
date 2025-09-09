@@ -12,13 +12,13 @@ import { PVMProgramCode } from "@/pvm/pvm-program-code";
 import { Slot } from "@/slot";
 
 export interface IServiceAccountStorage {
-  has(key: Uint8Array): boolean;
+  has(key: Buffer): boolean;
 
-  delete(key: Uint8Array): boolean;
+  delete(key: Buffer): boolean;
 
-  get(key: Uint8Array): Uint8Array | undefined;
+  get(key: Buffer): Buffer | undefined;
 
-  set(key: Uint8Array, value: Uint8Array): void;
+  set(key: Buffer, value: Buffer): void;
 }
 
 export interface IServiceAccountRequests {

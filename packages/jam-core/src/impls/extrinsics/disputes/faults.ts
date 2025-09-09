@@ -57,14 +57,12 @@ export class DisputeFaultImpl extends BaseJamCodecable implements DisputeFault {
   signature!: ED25519Signature;
 
   isSignatureValid(): boolean {
-    return Ed25519.verifySignature(
-      this.signature,
-      this.key,
-      new Uint8Array([
-        ...(this.vote ? JAM_VALID : JAM_INVALID),
-        ...this.target,
-      ]),
-    );
+    const prefix = this.vote ? JAM_VALID : JAM_INVALID;
+    const message = Buffer.allocUnsafe(prefix.length + 32);
+    prefix.copy(message);
+    this.target.copy(message, prefix.length);
+
+    return Ed25519.verifySignature(this.signature, this.key, message);
   }
 }
 

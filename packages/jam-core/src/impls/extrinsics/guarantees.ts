@@ -164,10 +164,10 @@ export class SingleWorkReportGuaranteeImpl
 
   messageToSign(): Uint8Array {
     // $(0.7.1 - 11.26)
-    return new Uint8Array([
-      ...JAM_GUARANTEE,
-      ...encodeWithCodec(HashCodec, this.report.hash()),
-    ]);
+    const message = Buffer.allocUnsafe(JAM_GUARANTEE.length + 32);
+    JAM_GUARANTEE.copy(message);
+    this.report.hash().copy(message, JAM_GUARANTEE.length);
+    return message;
   }
 
   checkValidity(deps: {
@@ -535,7 +535,7 @@ export class GuaranteesExtrinsicImpl
           Buffer.compare(
             bold_d.codeHash,
             deps.serviceAccounts.get(bold_d.serviceIndex)?.codeHash ??
-              new Uint8Array(),
+              Buffer.alloc(0),
           ) !== 0
         ) {
           return err(EGError.WRONG_CODEHASH);

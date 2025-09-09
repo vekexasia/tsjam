@@ -73,18 +73,22 @@ export class AssuranceExtrinsicImpl
     kappa: JamStateImpl["kappa"];
     headerParent: HeaderHash;
   }) {
+    const bitSeq: Buffer = encodeWithCodec(
+      BitSequenceCodec(CORES),
+      this.bitstring,
+    );
+    const toHash = Buffer.allocUnsafe(32 + bitSeq.length);
+    deps.headerParent.copy(toHash);
+    bitSeq.copy(toHash, 32);
+
+    const message = Buffer.allocUnsafe(JAM_AVAILABLE.length + 32);
+    JAM_AVAILABLE.copy(message);
+    Hashing.blake2b(toHash).copy(message, JAM_AVAILABLE.length);
+
     return Ed25519.verifySignature(
       this.signature,
       deps.kappa.at(this.validatorIndex).ed25519,
-      new Uint8Array([
-        ...JAM_AVAILABLE, // XA
-        ...Hashing.blake2b(
-          new Uint8Array([
-            ...encodeWithCodec(HashCodec, deps.headerParent),
-            ...encodeWithCodec(BitSequenceCodec(CORES), this.bitstring),
-          ]),
-        ),
-      ]),
+      message,
     );
   }
 

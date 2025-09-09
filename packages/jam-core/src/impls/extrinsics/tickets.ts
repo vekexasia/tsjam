@@ -76,10 +76,10 @@ export class TicketsExtrinsicElementImpl
     const sig = Bandersnatch.verifyVrfProof(
       this.proof,
       deps.p_gamma_z.root,
-      new Uint8Array([
-        ...JAM_TICKET_SEAL,
-        ...encodeWithCodec(HashCodec, deps.p_entropy._2),
-        this.attempt,
+      Buffer.concat([
+        JAM_TICKET_SEAL,
+        deps.p_entropy._2,
+        Buffer.from([this.attempt]),
       ]),
     );
     if (!sig) {

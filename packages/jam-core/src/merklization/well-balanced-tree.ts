@@ -6,7 +6,7 @@ import { HashFn } from "./utils";
 /**
  * $(0.7.1 - E.3)
  */
-export const wellBalancedTree = <T extends Uint8Array | Hash>(
+export const wellBalancedTree = <T extends Buffer | Hash>(
   elements: T[],
   hashFn: HashFn = Hashing.blake2b,
 ): Hash => {

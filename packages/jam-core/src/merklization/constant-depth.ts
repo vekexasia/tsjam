@@ -4,14 +4,14 @@ import { Hash } from "@tsjam/types";
 import { binaryMerkleTree, traceBinaryMerkleTree } from "./binary";
 import { HashFn } from "./utils";
 
-const leaf: Uint8Array = new TextEncoder().encode("leaf");
+const leaf: Buffer = Buffer.from(new TextEncoder().encode("leaf"));
 
 /**
  * `M`
  * $(0.7.1 - E.4)
  */
 export const constantDepthBinaryTree = (
-  elements: Uint8Array[],
+  elements: Buffer[],
   hashFn: HashFn = Hashing.blake2b,
 ): Hash => {
   return binaryMerkleTree(C_fn(elements, hashFn), hashFn);
@@ -22,7 +22,7 @@ export const constantDepthBinaryTree = (
  */
 export const J_fn = (
   x: number,
-  elements: Uint8Array[],
+  elements: Buffer[],
   index: number,
   hashFn: HashFn = Hashing.blake2b,
 ): ReturnType<HashFn>[] => {
@@ -46,7 +46,7 @@ export const J_fn = (
  */
 export const L_fn = (
   x: number,
-  elements: Uint8Array[],
+  elements: Buffer[],
   index: number,
   hashFn: HashFn = Hashing.blake2b,
 ): ReturnType<HashFn>[] => {
@@ -57,7 +57,7 @@ export const L_fn = (
     i < twoOverX * index + twoOverX && i < elements.length;
     i++
   ) {
-    toRet.push(hashFn(new Uint8Array([...leaf, ...elements[i]])));
+    toRet.push(hashFn(Buffer.concat([leaf, elements[i]])));
   }
   return toRet;
 };
@@ -75,11 +75,9 @@ const C_fn = (
 ): ReturnType<HashFn>[] => {
   const nEl = Math.pow(2, Math.ceil(Math.log2(Math.max(1, elements.length))));
   // create with padding
-  const toRet: ReturnType<HashFn>[] = new Array(nEl).fill(
-    new Uint8Array(32).fill(0),
-  );
+  const toRet: ReturnType<HashFn>[] = new Array(nEl).fill(Buffer.alloc(32));
   for (let i = 0; i < elements.length; i++) {
-    toRet.push(hashFn(new Uint8Array([...leaf, ...elements[i]])));
+    toRet.push(hashFn(Buffer.concat([leaf, elements[i]])));
   }
   return toRet;
 };

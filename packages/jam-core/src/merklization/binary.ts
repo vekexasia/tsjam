@@ -9,18 +9,19 @@ const $node: Uint8Array = new TextEncoder().encode("node");
 /**
  * $(0.7.1 - E.1)
  */
-export const binaryMerkleTree = <T extends Uint8Array | Hash>(
+export const binaryMerkleTree = <T extends Buffer | Hash>(
   elements: T[],
   hashFn: HashFn = Hashing.blake2b,
 ): T | Hash => {
   if (elements.length === 0) {
-    return new Uint8Array(32).fill(0) as Hash;
+    return Buffer.alloc(32) as Hash;
   }
   if (elements.length === 1) {
     return elements[0];
   }
   const mid = Math.ceil(elements.length / 2);
-  const buf = new Uint8Array([
+  // TODO: optimize by allocating buffer ans using .copy
+  const buf = Buffer.from([
     ...$node,
     ...binaryMerkleTree(elements.slice(0, mid), hashFn),
     ...binaryMerkleTree(elements.slice(mid), hashFn),
@@ -48,7 +49,7 @@ const P_sup = <T extends Uint8Array | Hash>(
  * @param hashFn - the hashfn
  * @returns each opposite node from top to bottom as the tree is the navigated to arrive at the leaf
  */
-export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
+export const traceBinaryMerkleTree = <T extends Buffer | Hash>(
   elements: T[],
   index: number,
   hashFn: HashFn = Hashing.blake2b,
@@ -74,7 +75,7 @@ export const traceBinaryMerkleTree = <T extends Uint8Array | Hash>(
  * $(0.7.1 - E.3)
  */
 export const wellBalancedBinaryMerkleRoot = (
-  elements: (Hash | Uint8Array)[],
+  elements: (Hash | Buffer)[],
   hashFn: HashFn = Hashing.blake2b,
 ): MerkleTreeRoot => {
   if (elements.length === 1) {

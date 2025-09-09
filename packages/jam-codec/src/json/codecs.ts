@@ -58,7 +58,7 @@ export const BufferJSONCodec = <
 >(): JSONCodec<T, string> => {
   return {
     fromJSON(json) {
-      return <T>new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
+      return Buffer.from(json.slice(2), "hex") as Uint8Array as T;
     },
     toJSON(value) {
       return bufToHex(value);
@@ -68,7 +68,7 @@ export const BufferJSONCodec = <
 
 export const Uint8ArrayJSONCodec: JSONCodec<Uint8Array, string> = {
   fromJSON(json) {
-    return new Uint8Array([...Buffer.from(json.slice(2), "hex")]);
+    return Buffer.from(json.slice(2), "hex");
   },
   toJSON(value) {
     return bufToHex(value);
