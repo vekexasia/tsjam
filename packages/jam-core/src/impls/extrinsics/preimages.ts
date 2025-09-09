@@ -68,13 +68,15 @@ export class PreimagesExtrinsicImpl
     }
     // $(0.7.1 - 12.35) data must be solicited by a service but not yet provided
     for (const { requester, blob } of this.elements) {
+      const reqAcc = deps.serviceAccounts.get(requester);
+      if (typeof reqAcc === "undefined") {
+        return err(EPError.UNKNOWN_REQUESTER);
+      }
       if (
-        !deps.serviceAccounts
-          .get(requester)!
-          .isPreimageSolicitedButNotYetProvided(
-            Hashing.blake2b(blob),
-            blob.length,
-          )
+        reqAcc.isPreimageSolicitedButNotYetProvided(
+          Hashing.blake2b(blob),
+          blob.length,
+        ) === false
       ) {
         return err(EPError.PREIMAGE_PROVIDED_OR_UNSOLICITED);
       }
@@ -92,6 +94,7 @@ export enum EPError {
   VALIDATION_ERROR = "VALIDATION_ERROR",
   PREIMAGE_PROVIDED_OR_UNSOLICITED = "PREIMAGE_PROVIDED_OR_UNSOLICITED",
   PREIMAGES_NOT_SORTED = "PREIMAGES_NOT_SORTED",
+  UNKNOWN_REQUESTER = "UNKNOWN_REQUESTER",
 }
 
 if (import.meta.vitest) {

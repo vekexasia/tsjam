@@ -152,10 +152,6 @@ const F_fn: (
   ) =>
   (input) => {
     const fnIdentifier = FnsDb.byCode.get(input.hostCallOpcode)!;
-    assert(
-      typeof fnIdentifier === "string",
-      `Unknown identifier for ${input.hostCallOpcode}`,
-    );
     const bold_s = input.out.x.bold_s();
     const e_bold_d = input.out.x.state.accounts;
     switch (fnIdentifier) {
