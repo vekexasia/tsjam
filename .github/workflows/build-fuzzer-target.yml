@@ -131,8 +131,29 @@ jobs:
             echo "Test script exited with status: $TEST_STATUS" >&2
             exit $TEST_STATUS
           fi
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Compute jamVersion and commit
+        if: github.event_name != 'pull_request'
+        id: compute_meta
+        run: |
+          set -euo pipefail
+          jamVersion=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
+          echo "jamVersion=$jamVersion" >> $GITHUB_ENV
+          echo "commitSha=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_ENV
+
+      - name: Create draft release in vekexasia/tsjam-releases
+        if: github.event_name != 'pull_request'
+        uses: ncipollo/release-action@v1
+        env:
+          # Personal Access Token with repo scope stored in secrets
+          RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ./${{ env.ARTIFACT_NAME }}
+          token: ${{ env.RELEASES_TOKEN }}
+          owner: vekexasia
+          repo: tsjam-releases
+          tag: "${{ env.jamVersion }}"
+          name: "${{ env.jamVersion }} - ${{env.commitSha}}"
+          body: ${{ env.commitSha }}
+          draft: false
+          allowUpdates: true
+          artifacts: ./${{ env.ARTIFACT_NAME }}
+          artifactContentType: application/gzip
