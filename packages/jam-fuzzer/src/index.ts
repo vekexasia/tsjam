@@ -13,7 +13,7 @@ import net from "net";
 import { parseArgs } from "node:util";
 
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
-import { EPOCH_LENGTH } from "@tsjam/constants";
+import { EPOCH_LENGTH, getConstantsMode } from "@tsjam/constants";
 import {
   IdentityMap,
   JamBlockExtrinsicsImpl,
@@ -371,6 +371,7 @@ const generateBlocks = async () => {
 };
 
 const sendSingleBlockFromTrace = async () => {
+  console.log(getConstantsMode());
   assert(process.env.TRACE_PATH, "TRACE_PATH environment variable is not set");
   assert(
     fs.existsSync(process.env.TRACE_PATH),
@@ -444,7 +445,7 @@ const sendSingleBlockFromTrace = async () => {
     ).safeRet();
     if (typeof traceErr !== "undefined") {
       console.error(`Error loading trace from ${file}: ${traceErr}`);
-      return;
+      continue; // we continue to load next one if any
     }
     const sr = await sendStuff(
       new Message({ importBlock: trace.block }),
@@ -460,7 +461,7 @@ const sendSingleBlockFromTrace = async () => {
     );
     if (!isSuccess) {
       console.error("State mismatch at block", trace.block.header.slot);
-      return;
+      process.exit(1);
     }
   }
 

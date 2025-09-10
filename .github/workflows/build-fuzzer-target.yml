@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
 
       - name: Setup Node.js 22.18
         uses: actions/setup-node@v4
@@ -58,6 +61,76 @@ jobs:
           mkdir -p "$NEXE_CACHE_DIR"
 
           ./build/build_fuzzer_target.sh
+
+      - name: Untar and launch target in background
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${ARTIFACT_NAME:?ARTIFACT_NAME is required}"
+          # Create a temporary directory and extract the built artifact
+          TARGET_DIR="$(mktemp -d)"
+          echo "Using temp dir: $TARGET_DIR"
+          tar -xzf "$ARTIFACT_NAME" -C "$TARGET_DIR"
+
+          cd $TARGET_DIR
+          ls
+          # Try common executable name first, otherwise discover any executable in the archive
+          EXE="./tsjam-fuzzer-target/jam-fuzzer-target"
+          if [[ -z "${EXE:-}" ]] || [[ ! -x "$EXE" ]]; then
+            echo "No executable found in extracted artifact" >&2
+            exit 1
+          fi
+
+          SOCKET_PATH="$TARGET_DIR/socket.sock"
+          echo "SOCKET_PATH=$SOCKET_PATH" >> $GITHUB_ENV
+          echo "Launching: $EXE with $SOCKET_PATH"
+          nohup env JAM_CONSTANTS=tiny "$EXE" -s "$SOCKET_PATH" > "$RUNNER_TEMP/tsjam-target.log" 2>&1 &
+          echo $! > "$GITHUB_WORKSPACE/.fuzzer_pid"
+          echo "Background PID: $(cat "$GITHUB_WORKSPACE/.fuzzer_pid")"
+          sleep 2
+          cat $RUNNER_TEMP/tsjam-target.log
+
+      - name: Run tests and stop target
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TEST_CMD="./build/test-target.sh"
+          pwd;
+          echo "Socket is: $SOCKET_PATH"
+          set +e
+          TEST_STATUS=1
+          if [[ -n "$TEST_CMD" ]]; then
+            $TEST_CMD -s $SOCKET_PATH
+            TEST_STATUS=$?
+          fi
+          set -e
+
+          # Stop background process regardless of test result
+          if [[ -f .fuzzer_pid ]]; then
+            PID="$(cat .fuzzer_pid)"
+            echo "Stopping background PID: $PID"
+            kill "$PID" 2>/dev/null || true
+            for i in {1..10}; do
+              if ! kill -0 "$PID" 2>/dev/null; then
+                echo "Process $PID exited"
+                break
+              fi
+              sleep 1
+            done
+            if kill -0 "$PID" 2>/dev/null; then
+              echo "Force killing PID: $PID"
+              kill -9 "$PID" 2>/dev/null || true
+            fi
+          else
+            echo "No .fuzzer_pid file found; nothing to stop"
+          fi
+
+          # Fail step if tests failed (non-zero)
+          if [[ $TEST_STATUS -ne 0 ]]; then
+            echo "Test script exited with status: $TEST_STATUS" >&2
+            exit $TEST_STATUS
+          fi
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

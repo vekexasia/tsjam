@@ -369,7 +369,7 @@ export class GenesisTrace extends BaseJamCodecable {
   state!: TraceState;
 }
 
-export const loadTrace = (bin: Uint8Array): Result<TraceStep, string> => {
+export const loadTrace = (bin: Buffer): Result<TraceStep, string> => {
   try {
     const toRet = TraceStep.decode(bin);
 

@@ -15,6 +15,7 @@ import { parseArgs } from "node:util";
 import { Message, MessageCodec, MessageType } from "./proto/message";
 import { PeerInfo } from "./proto/peer-info";
 import { State } from "./proto/state";
+import { StateRootHash } from "@tsjam/types";
 
 // Parse CLI args for socket path (fallback to env, then default)
 const { values: cliArgs } = parseArgs({
@@ -29,7 +30,6 @@ const SOCKET_PATH =
 
 if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
 
-let state: JamStateImpl | null = null;
 const decodeMessage = (data: Buffer): Result<Message, string> => {
   try {
     return ok(MessageCodec.decode(data).value);
@@ -54,9 +54,15 @@ const server = net.createServer((socket) => {
     buffer = Buffer.concat([buffer, data]);
     if (buffer.length === toRead) {
       console.log("<-", buffer.length);
-      onMessage(buffer);
-      toRead = -1;
-      buffer = Buffer.alloc(0); // Reset buffer after processing
+      onMessage(buffer)
+        .catch((e) => {
+          // in case of any error rethrow it.
+          throw e;
+        })
+        .then(() => {
+          toRead = -1;
+          buffer = Buffer.alloc(0); // Reset buffer after processing
+        });
     }
   });
   const onMessage = async (data: Buffer) => {
@@ -65,7 +71,7 @@ const server = net.createServer((socket) => {
       if (data[0] === 1) {
         // import block deserialization error we do send back current state root
         console.error(`Error decoding block: ${errDecoding}`);
-        send(new Message({ stateRoot: state!.merkleRoot() }));
+        send(new Message({ stateRoot: Buffer.alloc(32) as StateRootHash }));
         return;
       } else {
         console.error(`Error decoding message: ${errDecoding}`);
@@ -80,10 +86,10 @@ const server = net.createServer((socket) => {
         send(new Message({ peerInfo: pi }));
         break;
 
-      case MessageType.SET_STATE:
+      case MessageType.SET_STATE: {
         stateDB = new JamStateDataBase();
         const stateMap = message.setState!.state.value;
-        state = JamStateImpl.fromMerkleMap(stateMap);
+        const state = JamStateImpl.fromMerkleMap(stateMap);
         state.block = new JamBlockImpl({
           header: message.setState!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
@@ -94,9 +100,12 @@ const server = net.createServer((socket) => {
         await stateDB.save(state);
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
-
-      case MessageType.IMPORT_BLOCK:
+      }
+      case MessageType.IMPORT_BLOCK: {
         const block = message.importBlock!;
+        const state = await stateDB.fromHeaderHash(
+          message.importBlock!.header.parent,
+        );
         assert(state, "State must be initialized before applying a block");
         const res = state.applyBlock(block);
         if (res.isErr()) {
@@ -105,27 +114,26 @@ const server = net.createServer((socket) => {
           send(new Message({ stateRoot: state.merkleRoot() }));
           return;
         }
-        state = res.value;
         await stateDB.save(state);
         send(new Message({ stateRoot: res.value.merkleRoot() }));
         break;
-
-      case MessageType.GET_STATE:
-        const oldState = await stateDB.fromHeaderHash(
+      }
+      case MessageType.GET_STATE: {
+        const state = await stateDB.fromHeaderHash(
           message.getState!.headerHash,
         );
         assert(
-          oldState,
+          state,
           "State not found for header hash: " +
             xBytesCodec(32).toJSON(message.getState!.headerHash),
         );
         send(
           new Message({
-            state: new State({ value: oldState.merkle.map }),
+            state: new State({ value: state.merkle.map }),
           }),
         );
         break;
-
+      }
       default:
         console.error("Unhandled message type:", message.type());
     }
