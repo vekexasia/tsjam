@@ -47,6 +47,7 @@ const server = net.createServer((socket) => {
   let buffer: Buffer = Buffer.alloc(0);
   let toRead = -1;
   let stateDB: JamStateDataBase;
+  let lastState: JamStateImpl | undefined = undefined;
   socket.on("data", (data) => {
     if (toRead === -1) {
       toRead = E_sub_int(4).decode(data).value + 4;
@@ -99,6 +100,7 @@ const server = net.createServer((socket) => {
         });
         await stateDB.save(state);
         send(new Message({ stateRoot: state.merkleRoot() }));
+        lastState = state;
         break;
       }
       case MessageType.IMPORT_BLOCK: {
@@ -106,17 +108,26 @@ const server = net.createServer((socket) => {
         const state = await stateDB.fromHeaderHash(
           message.importBlock!.header.parent,
         );
-        assert(state, "State must be initialized before applying a block");
-        const res = state.applyBlock(block);
-        if (res.isErr()) {
-          console.log("Block application error:");
-          console.log(res.error);
-          send(new Message({ stateRoot: state.merkleRoot() }));
-          return;
+        if (typeof state === "undefined") {
+          console.log(
+            `Cannot find provided parent header ${message.importBlock!.header.parent.toString("utf8")}`,
+          );
+          assert(lastState, "No last state available");
+          send(new Message({ stateRoot: lastState.merkleRoot() }));
+          break;
+        } else {
+          const res = state.applyBlock(block);
+          if (res.isErr()) {
+            console.log("Block application error:");
+            console.log(res.error);
+            send(new Message({ stateRoot: state.merkleRoot() }));
+            return;
+          }
+          await stateDB.save(res.value);
+          lastState = state;
+          send(new Message({ stateRoot: res.value.merkleRoot() }));
+          break;
         }
-        await stateDB.save(state);
-        send(new Message({ stateRoot: res.value.merkleRoot() }));
-        break;
       }
       case MessageType.GET_STATE: {
         const state = await stateDB.fromHeaderHash(
