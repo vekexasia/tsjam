@@ -26,7 +26,7 @@ export const argumentInvocation = <X>(
   encodedProgram: PVMProgramCode,
   instructionPointer: u32, // ı
   gas: Gas, // ϱ
-  args: Uint8Array, // a
+  args: Buffer, // a
   f: HostCallExecutor<X>,
   x: X,
 ): {

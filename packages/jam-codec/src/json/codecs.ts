@@ -96,6 +96,7 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
   },
   keyCodec: JSONCodec<K>,
   valueCodec: JSONCodec<V>,
+  keySorter: (a: K, b: K) => number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): JSONCodec<Map<K, V>, Array<{ [key in KN | VN]: any }>> => {
   return {
@@ -109,10 +110,12 @@ export const MapJSONCodec = <K, V, KN extends string, VN extends string>(
     },
     toJSON(value) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return <any>[...value.entries()].map(([key, value]) => ({
-        [jsonKeys.key]: keyCodec.toJSON(key),
-        [jsonKeys.value]: valueCodec.toJSON(value),
-      }));
+      return <any>[...value.entries()]
+        .sort((a, b) => keySorter(a[0], b[0]))
+        .map(([key, value]) => ({
+          [jsonKeys.key]: keyCodec.toJSON(key),
+          [jsonKeys.value]: valueCodec.toJSON(value),
+        }));
     },
   };
 };

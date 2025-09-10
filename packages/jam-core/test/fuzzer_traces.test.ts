@@ -25,6 +25,8 @@ import type {
 } from "../../jam-types/dist/types/generic-types";
 import { getConstantsMode } from "@tsjam/constants";
 import { err, ok, Result } from "neverthrow";
+import { resetTraceLog } from "@/utils";
+import { JamStateDataBase } from "@/impls/jam-state-db";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
@@ -34,8 +36,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     process.env.RUNNING_TRACE_TESTS = "false";
   });
   const dir = `${__dirname}/../../../jam-conformance/fuzz-reports/0.7.0/traces/`;
-  const doTest = (what: string) => {
+  const doTest = async (what: string) => {
     const traceDir = `${dir}${what}/`;
+    const stateDB = new JamStateDataBase();
     const files = fs
       .readdirSync(traceDir)
       .filter((a) => a.endsWith(".bin"))
@@ -49,23 +52,52 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     }
 
     // set initial block and initial state
-    let jamState = JamStateImpl.fromMerkleMap(initialTrace.preState.merkleMap);
-    jamState.block = new JamBlockImpl({
+    const initialState = JamStateImpl.fromMerkleMap(
+      initialTrace.preState.merkleMap,
+    );
+    initialState.block = new JamBlockImpl({
       header: new JamSignedHeaderImpl({}),
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
     });
 
-    jamState.block!.header.signedHash = () => initialTrace.block.header.parent;
+    initialState.block!.header.signedHash = () =>
+      initialTrace.block.header.parent;
 
     // TODO: check merkleroot
+    if (
+      Buffer.compare(
+        initialState.merkleRoot(),
+        initialTrace.preState.stateRoot,
+      ) !== 0
+    ) {
+      console.log(
+        "Expected merkle root:",
+        Buffer.from(initialTrace.preState.stateRoot).toString("hex"),
+      );
+      console.log(
+        "Got merkle root:",
+        Buffer.from(initialState.merkleRoot()).toString("hex"),
+      );
+    } else {
+      console.log("initial state merkle matches... Proceeding");
+    }
+    stateDB.save(initialState);
 
     //files.splice(0, 1);
     for (const file of files) {
+      process.env.TRACE_FILE = `/tmp/trace_${what}_${file}.txt`;
+      resetTraceLog();
       console.log(file);
       const [errTrace, trace] = loadTrace(
         fs.readFileSync(path.join(traceDir, file)),
       ).safeRet();
       if (typeof errTrace === "undefined") {
+        const jamState = await stateDB.fromHeaderHash(
+          trace.block.header.parent,
+        );
+        if (typeof jamState === "undefined") {
+          throw new Error("cannot find state");
+        }
         const res = jamState.applyBlock(trace.block);
         let newState: JamStateImpl = jamState;
         if (res.isErr()) {
@@ -98,8 +130,10 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
           }
           throw new Error("diff");
         }
-        jamState = newState;
+        await stateDB.save(newState);
       }
+
+      console.log(file, "ok");
     }
   };
   // for i in $(ls jam-conformance/fuzz-reports/0.7.0/traces/); do echo "it(\"$i\", () => doTest(\"$i\"));"; done

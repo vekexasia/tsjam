@@ -52,4 +52,5 @@ export const traceJSONCodec = MapJSONCodec(
   { key: "key", value: "value" },
   Uint8ArrayJSONCodec as JSONCodec<StateKey, string>,
   Uint8ArrayJSONCodec,
+  (a, b) => Buffer.compare(a, b),
 );

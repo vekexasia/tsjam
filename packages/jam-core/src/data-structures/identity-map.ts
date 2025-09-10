@@ -127,13 +127,18 @@ export const IdentityMapCodec = <
       (v) => new IdentityMap<K, N, V>([...v.entries()]),
       (v) => v,
     ),
-    ...ZipJSONCodecs(MapJSONCodec(jsonKeys, keyCodec, valueCodec), {
-      fromJSON(json) {
-        return new IdentityMap<K, N, V>([...json.entries()]);
+    ...ZipJSONCodecs(
+      MapJSONCodec(jsonKeys, keyCodec, valueCodec, (a, b) =>
+        Buffer.compare(a, b),
+      ),
+      {
+        fromJSON(json) {
+          return new IdentityMap<K, N, V>([...json.entries()]);
+        },
+        toJSON(value) {
+          return value;
+        },
       },
-      toJSON(value) {
-        return value;
-      },
-    }),
+    ),
   };
 };

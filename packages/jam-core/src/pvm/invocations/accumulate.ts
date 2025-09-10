@@ -24,7 +24,6 @@ import {
   WorkError,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import assert from "assert";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";

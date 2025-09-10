@@ -22,10 +22,15 @@ export const outsideInSequencer = <
   return toRet;
 };
 
-const goFS = process.env.DEBUG_FS == "true";
-if (goFS && fs.existsSync("/tmp/trace.txt")) {
-  fs.unlinkSync("/tmp/trace.txt");
+const goFS = typeof process.env.TRACE_FILE === "string";
+if (goFS && fs.existsSync(process.env.TRACE_FILE!)) {
+  fs.unlinkSync(process.env.TRACE_FILE!);
 }
+export const resetTraceLog = () => {
+  if (goFS && fs.existsSync(process.env.TRACE_FILE!)) {
+    fs.unlinkSync(process.env.TRACE_FILE!);
+  }
+};
 export const log = (_str: string | object, debug: boolean) => {
   if (!debug) {
     return;
@@ -61,7 +66,7 @@ export const log = (_str: string | object, debug: boolean) => {
     }
   }
   if (goFS) {
-    fs.appendFileSync(`/tmp/trace.txt`, str + "\n");
+    fs.appendFileSync(process.env.TRACE_FILE!, str + "\n");
   }
   // console.log(str);
 };

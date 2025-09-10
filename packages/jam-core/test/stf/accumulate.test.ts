@@ -62,6 +62,7 @@ class TestAccount extends BaseJamCodecable {
       { key: "key", value: "value" },
       BufferJSONCodec(),
       BufferJSONCodec(),
+      (a, b) => Buffer.compare(a, b),
     ),
   )
   @binaryCodec(
@@ -133,7 +134,12 @@ class TestState extends BaseJamCodecable {
   statistics!: ServicesStatisticsImpl;
 
   @jsonCodec(
-    MapJSONCodec({ key: "id", value: "data" }, NumberJSONCodec(), TestAccount),
+    MapJSONCodec(
+      { key: "id", value: "data" },
+      NumberJSONCodec(),
+      TestAccount,
+      (a, b) => a - b,
+    ),
   )
   @binaryCodec(buildGenericKeyValueCodec(E_4_int, TestAccount, (a, b) => a - b))
   accounts!: Map<ServiceIndex, TestAccount>;

@@ -36,8 +36,8 @@ const owzsCodec = createCodec<{
  * @param argument - the argument to the program
  */
 export const programInitialization = (
-  encodedProgram: Uint8Array,
-  argument: Uint8Array,
+  encodedProgram: Buffer,
+  argument: Buffer,
 ):
   | undefined
   | {

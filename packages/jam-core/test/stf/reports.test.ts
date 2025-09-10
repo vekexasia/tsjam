@@ -85,6 +85,7 @@ class TestState extends BaseJamCodecable {
       { key: "id", value: "data" },
       NumberJSONCodec(),
       WrapJSONCodec("service", TestServiceInfo),
+      (a, b) => a - b,
     ),
   )
   @binaryCodec(

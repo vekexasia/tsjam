@@ -38,6 +38,7 @@ export class ServicesStatisticsImpl
       { key: "id", value: "record" },
       NumberJSONCodec(),
       SingleServiceStatisticsImpl,
+      (a, b) => a - b,
     ),
     SINGLE_ELEMENT_CLASS,
   )

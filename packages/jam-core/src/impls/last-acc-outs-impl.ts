@@ -55,6 +55,7 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
     this.elements.push(
       new SingleAccOutImpl({ serviceIndex, accumulationResult }),
     );
+    this.elements.sort((a, b) => a.serviceIndex - b.serviceIndex);
   }
 
   static union(a: LastAccOutsImpl, b: LastAccOutsImpl): LastAccOutsImpl {

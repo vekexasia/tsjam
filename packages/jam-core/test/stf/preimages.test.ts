@@ -60,6 +60,7 @@ class TestAccount extends BaseJamCodecable {
       { key: "key", value: "value" },
       LookupMetaMapKey,
       ArrayOfJSONCodec(SlotImpl),
+      () => 0,
     ),
     "lookup_meta",
   )
@@ -76,7 +77,12 @@ class TestAccount extends BaseJamCodecable {
 @JamCodecable()
 class TestState extends BaseJamCodecable {
   @jsonCodec(
-    MapJSONCodec({ key: "id", value: "data" }, NumberJSONCodec(), TestAccount),
+    MapJSONCodec(
+      { key: "id", value: "data" },
+      NumberJSONCodec(),
+      TestAccount,
+      (a, b) => a - b,
+    ),
   )
   @binaryCodec(
     buildGenericKeyValueCodec(E_sub_int(4), TestAccount, (a, b) => a - b),

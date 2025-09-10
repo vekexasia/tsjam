@@ -1,22 +1,20 @@
 import { E_sub_int, encodeWithCodec, xBytesCodec } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
 import {
-  IdentityMap,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
+  JamStateDataBase,
   JamStateImpl,
 } from "@tsjam/core";
 import "@tsjam/utils";
-import { HeaderHash } from "@tsjam/types";
+import { err, ok, Result } from "neverthrow";
 import assert from "node:assert";
 import fs from "node:fs";
 import net from "node:net";
+import { parseArgs } from "node:util";
 import { Message, MessageCodec, MessageType } from "./proto/message";
 import { PeerInfo } from "./proto/peer-info";
 import { State } from "./proto/state";
-import { SetState } from "./proto/set-state";
-import { parseArgs } from "node:util";
-import { err, ok, Result } from "neverthrow";
 
 // Parse CLI args for socket path (fallback to env, then default)
 const { values: cliArgs } = parseArgs({
@@ -32,7 +30,6 @@ const SOCKET_PATH =
 if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
 
 let state: JamStateImpl | null = null;
-let historyMap: IdentityMap<HeaderHash, 32, SetState>;
 const decodeMessage = (data: Buffer): Result<Message, string> => {
   try {
     return ok(MessageCodec.decode(data).value);
@@ -49,6 +46,7 @@ const server = net.createServer((socket) => {
   };
   let buffer: Buffer = Buffer.alloc(0);
   let toRead = -1;
+  let stateDB: JamStateDataBase;
   socket.on("data", (data) => {
     if (toRead === -1) {
       toRead = E_sub_int(4).decode(data).value + 4;
@@ -61,7 +59,7 @@ const server = net.createServer((socket) => {
       buffer = Buffer.alloc(0); // Reset buffer after processing
     }
   });
-  const onMessage = (data: Buffer) => {
+  const onMessage = async (data: Buffer) => {
     const [errDecoding, message] = decodeMessage(data).safeRet();
     if (typeof errDecoding === "string") {
       if (data[0] === 1) {
@@ -83,6 +81,7 @@ const server = net.createServer((socket) => {
         break;
 
       case MessageType.SET_STATE:
+        stateDB = new JamStateDataBase();
         const stateMap = message.setState!.state.value;
         state = JamStateImpl.fromMerkleMap(stateMap);
         state.block = new JamBlockImpl({
@@ -92,11 +91,7 @@ const server = net.createServer((socket) => {
         state.headerLookupHistory = state.headerLookupHistory.toPosterior({
           header: message.setState!.header,
         });
-        historyMap = new IdentityMap();
-        historyMap.set(
-          message.setState!.header.signedHash(),
-          message.setState!,
-        );
+        await stateDB.save(state);
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
 
@@ -111,19 +106,14 @@ const server = net.createServer((socket) => {
           return;
         }
         state = res.value;
-        historyMap.set(
-          block.header.signedHash(),
-          new SetState({
-            header: block.header,
-            state: new State({ value: res.value.merkle.map }),
-          }),
-        );
-
+        await stateDB.save(state);
         send(new Message({ stateRoot: res.value.merkleRoot() }));
         break;
 
       case MessageType.GET_STATE:
-        const oldState = historyMap.get(message.getState!.headerHash);
+        const oldState = await stateDB.fromHeaderHash(
+          message.getState!.headerHash,
+        );
         assert(
           oldState,
           "State not found for header hash: " +
@@ -131,7 +121,7 @@ const server = net.createServer((socket) => {
         );
         send(
           new Message({
-            state: oldState.state,
+            state: new State({ value: oldState.merkle.map }),
           }),
         );
         break;

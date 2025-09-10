@@ -3,7 +3,6 @@ import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-conte
 import { Gas, u8 } from "@tsjam/types";
 import { hydrateIxArgs } from "./hydrator";
 import { HydratedArgs } from "./types";
-import { TRAP_COST } from "./utils";
 
 /**
  * * A generic PVM instruction that can take any number of arguments
@@ -93,10 +92,7 @@ export const Ix = <
           );
           // @ts-expect-error Gas is bigint
           context.execution.gas -= this.gasCost;
-          if (toRet?.isPageFault()) {
-            // @ts-expect-error Gas is bigint
-            context.execution.gas -= TRAP_COST;
-          } else if (!handlesInstructionPointer) {
+          if (!toRet?.isPageFault() && !handlesInstructionPointer) {
             // @ts-expect-error Gas is bigint
             context.execution.instructionPointer += skip;
           }

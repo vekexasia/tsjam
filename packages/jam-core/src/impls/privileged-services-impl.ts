@@ -59,6 +59,7 @@ export class PrivilegedServicesImpl
       { key: "service", value: "gas" },
       NumberJSONCodec(),
       NumberJSONCodec(),
+      (a, b) => a - b,
     ),
     "always_acc",
   )
