@@ -479,20 +479,20 @@ export class HostFunctions {
     const bold_a = args.bold_s.clone();
 
     if (vz.value === 0n) {
-      log(
-        `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} - ${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
-        process.env.DEBUG_STEPS === "true",
-      );
+      // log(
+      //   `HostFunction::write delete key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} - ${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
+      //   process.env.DEBUG_STEPS === "true",
+      // );
       bold_a.storage.delete(bold_k);
     } else if (
       vo.fitsInU32() &&
       vz.fitsInU32() &&
       context.memory.canRead(vo.u32(), vz.u32())
     ) {
-      log(
-        `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
-        process.env.DEBUG_STEPS === "true",
-      );
+      // log(
+      //   `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
+      //   process.env.DEBUG_STEPS === "true",
+      // );
       bold_a.storage.set(bold_k, context.memory.getBytes(vo.u32(), vz.u32()));
     } else {
       return [IxMod.panic()];

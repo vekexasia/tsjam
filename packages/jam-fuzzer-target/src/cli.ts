@@ -133,11 +133,13 @@ const server = net.createServer((socket) => {
         const state = await stateDB.fromHeaderHash(
           message.getState!.headerHash,
         );
-        assert(
-          state,
-          "State not found for header hash: " +
-            xBytesCodec(32).toJSON(message.getState!.headerHash),
-        );
+        if (typeof state === "undefined") {
+          throw new Error(
+            "State not found for header hash: " +
+              xBytesCodec(32).toJSON(message.getState!.headerHash),
+          );
+        }
+
         send(
           new Message({
             state: new State({ value: state.merkle.map }),
