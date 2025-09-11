@@ -2,6 +2,7 @@ import { getConstantsMode } from "@tsjam/constants";
 import {
   AccumulationHistoryImpl,
   AccumulationQueueImpl,
+  AppliedBlock,
   AuthorizerPoolImpl,
   AuthorizerQueueImpl,
   BetaImpl,
@@ -10,7 +11,6 @@ import {
   EpochMarkerValidatorImpl,
   GammaPImpl,
   HeaderEpochMarkerImpl,
-  HeaderLookupHistoryImpl,
   HeaderOffenderMarkerImpl,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
@@ -31,32 +31,6 @@ import {
 import { Blake2bHash, Tagged, u32, ValidatorIndex } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { VALIDATORS } from "./debugKeys";
-
-export const GENESIS = new JamBlockImpl({
-  header: new JamSignedHeaderImpl({
-    parent: toTagged(Buffer.alloc(32)),
-    parentStateRoot: toTagged(Buffer.alloc(32)),
-    extrinsicHash: toTagged(Buffer.alloc(32)),
-    slot: <TauImpl>new SlotImpl(<u32>0),
-    epochMarker: new HeaderEpochMarkerImpl({
-      entropy: Buffer.alloc(32) as Uint8Array as Blake2bHash,
-      entropy2: Buffer.alloc(32) as Uint8Array as Blake2bHash,
-      validators: toTagged(
-        VALIDATORS.map((keys) => {
-          return new EpochMarkerValidatorImpl({
-            ed25519: keys.ed25519.public,
-            bandersnatch: keys.bandersnatch.public,
-          });
-        }),
-      ),
-    }),
-    offendersMark: new HeaderOffenderMarkerImpl([]),
-    authorIndex: <ValidatorIndex>0,
-    entropySource: toTagged(Buffer.alloc(96)),
-    seal: toTagged(Buffer.alloc(96)),
-  }),
-  extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
-});
 
 export const GENESIS_STATE = new JamStateImpl({
   authPool: AuthorizerPoolImpl.newEmpty(),
@@ -92,10 +66,33 @@ export const GENESIS_STATE = new JamStateImpl({
   slot: <TauImpl>new SlotImpl(<u32>0),
 
   mostRecentAccumulationOutputs: LastAccOutsImpl.newEmpty(),
+});
 
-  headerLookupHistory: HeaderLookupHistoryImpl.newEmpty(),
-
-  block: GENESIS,
+export const GENESIS = <AppliedBlock>new JamBlockImpl({
+  posteriorState: GENESIS_STATE,
+  header: new JamSignedHeaderImpl({
+    parent: toTagged(Buffer.alloc(32)),
+    parentStateRoot: toTagged(Buffer.alloc(32)),
+    extrinsicHash: toTagged(Buffer.alloc(32)),
+    slot: <TauImpl>new SlotImpl(<u32>0),
+    epochMarker: new HeaderEpochMarkerImpl({
+      entropy: Buffer.alloc(32) as Uint8Array as Blake2bHash,
+      entropy2: Buffer.alloc(32) as Uint8Array as Blake2bHash,
+      validators: toTagged(
+        VALIDATORS.map((keys) => {
+          return new EpochMarkerValidatorImpl({
+            ed25519: keys.ed25519.public,
+            bandersnatch: keys.bandersnatch.public,
+          });
+        }),
+      ),
+    }),
+    offendersMark: new HeaderOffenderMarkerImpl([]),
+    authorIndex: <ValidatorIndex>0,
+    entropySource: toTagged(Buffer.alloc(96)),
+    seal: toTagged(Buffer.alloc(96)),
+  }),
+  extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
 });
 
 // set the state according to the genesis header

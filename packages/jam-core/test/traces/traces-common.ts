@@ -1,4 +1,6 @@
 import {
+  AppliedBlock,
+  ChainManager,
   HeaderLookupHistoryImpl,
   IdentityMap,
   IdentityMapCodec,
@@ -121,34 +123,38 @@ export const buildTracesTests = (kind: string) => {
     }
   };
   for (const which of cases) {
-    it(`${which}`, () => {
+    it(`${which}`, async () => {
       const testCase = tracesTestCase(kind, which);
-      const initialState = JamStateImpl.fromMerkleMap(
+
+      const chainManager = new ChainManager();
+      testCase.parentBlock.posteriorState = JamStateImpl.fromMerkleMap(
         testCase.preState.merkleMap,
       );
-
-      initialState.headerLookupHistory = buildHeaderLookupHistory(
+      await chainManager.init(<AppliedBlock>testCase.parentBlock);
+      chainManager.headerLookupHistory = buildHeaderLookupHistory(
         parseInt(which) - 1,
       );
 
       expect(
-        xBytesCodec(32).toJSON(initialState.merkleRoot()),
+        xBytesCodec(32).toJSON(
+          chainManager.bestBlock.posteriorState.merkleRoot(),
+        ),
         "initial state root",
       ).eq(xBytesCodec(32).toJSON(testCase.preState.stateRoot));
 
-      initialState.block = testCase.parentBlock;
-      initialState.headerLookupHistory.elements.set(
+      chainManager.headerLookupHistory.elements.set(
         testCase.parentBlock.header.slot,
         testCase.parentBlock.header,
       );
 
-      const [err, posteriorState] = initialState
-        .applyBlock(testCase.block)
-        .safeRet();
-      if (err) {
+      const [err, appliedBlock] = (
+        await chainManager.handleIncomingBlock(testCase.block)
+      ).safeRet();
+      if (typeof err !== "undefined") {
         throw err;
       }
 
+      const posteriorState = appliedBlock.posteriorState;
       const merkleMap = posteriorState.merkle.map;
       const staMM = JamStateImpl.fromMerkleMap(merkleMap);
 

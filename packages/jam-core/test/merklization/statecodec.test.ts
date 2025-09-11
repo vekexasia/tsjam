@@ -1,6 +1,9 @@
+import { IdentityMap } from "@/data-structures/identity-map";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
+import { SlotImpl } from "@/impls/slot-impl";
+import { MerkleServiceAccountStorageImpl } from "@/index";
 import { traceJSONCodec } from "@/merklization/state-codecs";
 import { Hashing } from "@tsjam/crypto";
 import {
@@ -8,30 +11,15 @@ import {
   CodeHash,
   Gas,
   Hash,
-  JamState,
   ServiceIndex,
   u32,
   UpToSeq,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyState } from "../dummy-utils";
-import { SlotImpl } from "@/impls/slot-impl";
-import { IdentityMap } from "@/data-structures/identity-map";
-import { MerkleServiceAccountStorageImpl } from "@/index";
-import { toTagged } from "@tsjam/utils";
 
 describe("state serialization/deserialization", () => {
-  it.skip("should deserialize to same object", () => {
-    const state: JamStateImpl = dummyState();
-
-    const map = state.merkle.map;
-    const restoredState = JamStateImpl.fromMerkleMap(map);
-    for (const key of Object.keys(state)) {
-      expect(restoredState[key as keyof JamState], key).deep.eq(
-        state[key as keyof JamState],
-      );
-    }
-  });
   describe("serviceAccounts", () => {
     const serviceIndex1 = <ServiceIndex>20000;
     const serviceIndex2 = <ServiceIndex>30000;

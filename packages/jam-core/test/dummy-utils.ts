@@ -23,6 +23,7 @@ import { SafroleStateImpl } from "@/impls/safrole-state-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { ValidatorDataImpl } from "@/impls/validator-data-impl";
 import { ValidatorsImpl } from "@/impls/validators-impl";
+import { JamBlockImpl } from "@/index";
 import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
@@ -144,6 +145,5 @@ export const dummyState = (): JamStateImpl => {
     mostRecentAccumulationOutputs: new LastAccOutsImpl(
       new Array<SingleAccOutImpl>(),
     ),
-    headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
   });
 };

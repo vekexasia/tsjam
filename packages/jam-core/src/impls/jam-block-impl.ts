@@ -22,6 +22,9 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
   @codec(JamBlockExtrinsicsImpl, "extrinsic")
   extrinsics!: JamBlockExtrinsicsImpl;
 
+  // when a block is applied it produces a state and has a parent
+  posteriorState?: JamStateImpl;
+
   constructor(config?: ConditionalExcept<JamBlockImpl, Function>) {
     super();
     if (config) {
@@ -32,14 +35,14 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
   /**
    * Creates a new block given the computed extrinsics
    */
-  static create(
-    curState: JamStateImpl,
+  createNext(
+    this: AppliedBlock,
     p_tau: Validated<Posterior<TauImpl>>,
     extrinsics: JamBlockExtrinsicsImpl,
     keyPair: { private: BandersnatchKey; public: BandersnatchKey },
   ): Result<JamBlockImpl, DisputesToPosteriorError | HeaderCreationError> {
-    const [hErr, header] = curState
-      .block!.header.buildNext(curState, extrinsics, p_tau, keyPair)
+    const [hErr, header] = this.header
+      .buildNext(this.posteriorState, extrinsics, p_tau, keyPair)
       .safeRet();
     if (hErr) {
       return err(hErr);
@@ -53,6 +56,14 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
     );
   }
 }
+
+/**
+ * Type util for a block that has been Successfully applied
+ * and hence has a posterior
+ */
+export type AppliedBlock = JamBlockImpl & {
+  posteriorState: JamStateImpl;
+};
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;

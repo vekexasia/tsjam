@@ -1,19 +1,21 @@
 import {
+  AppliedBlock,
+  ChainManager,
   JamBlockExtrinsicsImpl,
-  JamBlockImpl,
-  JamStateImpl,
   SlotImpl,
   TauImpl,
 } from "@tsjam/core";
 import { Posterior, u32, Validated } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { VALIDATORS } from "./debugKeys";
-import { GENESIS_STATE } from "./genesis";
+import { GENESIS } from "./genesis";
 
-export const produceBlock = (
-  state: JamStateImpl,
+export const produceBlock = async (
+  parent: AppliedBlock,
   p_tau: Validated<Posterior<TauImpl>>,
-) => {
+  chainManager: ChainManager,
+): Promise<AppliedBlock> => {
+  const state = parent.posteriorState;
   const extrinsics = JamBlockExtrinsicsImpl.newEmpty();
   const p_entropy13 = state.entropy.rotate1_3({ slot: state.slot, p_tau });
   const p_kappa = state.kappa.toPosterior(state, { p_tau });
@@ -34,34 +36,37 @@ export const produceBlock = (
     throw new Error("No validator key found for producing the block");
   }
 
-  const [blockErr, block] = JamBlockImpl.create(
-    state,
-    p_tau,
-    extrinsics,
-    validatorKey.bandersnatch,
-  ).safeRet();
+  const [blockErr, block] = parent
+    .createNext(p_tau, extrinsics, validatorKey.bandersnatch)
+    .safeRet();
   if (blockErr) {
     throw new Error(blockErr);
   }
 
-  const [sateErr, newState] = state.applyBlock(block).safeRet();
+  const [sateErr, newBlock] = (
+    await chainManager.handleIncomingBlock(block)
+  ).safeRet();
 
   if (sateErr) {
     throw new Error(sateErr);
   }
-  return newState;
+  return newBlock;
 };
 
 if (import.meta.vitest) {
   const { describe, it } = import.meta.vitest;
 
   describe("BlockGenerator", () => {
-    it("should produce a valid block from the genesis state", () => {
-      produceBlock(GENESIS_STATE, toTagged(new SlotImpl(<u32>420420)));
+    it("should produce a valid block from the genesis state", async () => {
+      const chainManager = new ChainManager();
+      await chainManager.init(GENESIS);
+      produceBlock(GENESIS, toTagged(new SlotImpl(<u32>420420)), chainManager);
     });
 
-    it("should produce a valid block skipping epoch", () => {
-      produceBlock(GENESIS_STATE, toTagged(new SlotImpl(<u32>601)));
+    it("should produce a valid block skipping epoch", async () => {
+      const chainManager = new ChainManager();
+      await chainManager.init(GENESIS);
+      produceBlock(GENESIS, toTagged(new SlotImpl(<u32>601)), chainManager);
     });
   });
 }

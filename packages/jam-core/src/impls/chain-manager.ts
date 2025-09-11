@@ -1,57 +1,95 @@
-import { err, ok, Result } from "neverthrow";
-import { JamBlockImpl } from "./jam-block-impl";
-import { JamStateDataBase } from "./jam-state-db";
-import { JamStateImpl } from "./jam-state-impl";
 import assert from "assert";
+import { err, ok, Result } from "neverthrow";
+import { DisputesToPosteriorError } from "./disputes-state-impl";
+import { EAValidationError } from "./extrinsics/assurances";
+import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
+import { DisputesFaultError } from "./extrinsics/disputes/faults";
+import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
+import { EGError } from "./extrinsics/guarantees";
+import { EPError } from "./extrinsics/preimages";
+import { ETError } from "./extrinsics/tickets";
+import { GammaAError } from "./gamma-a-impl";
+import { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
+import { AppliedBlock, JamBlockImpl } from "./jam-block-impl";
+import { JamBlocksDB } from "./jam-blocks-db";
+import { HeaderValidationError } from "./jam-signed-header-impl";
+import { TauError } from "./slot-impl";
 
 export class ChainManager {
-  #lastState: JamStateImpl | undefined;
-  #stateDB!: JamStateDataBase;
+  #bestBlock: AppliedBlock | undefined;
+  #blocksDB!: JamBlocksDB;
+  headerLookupHistory!: HeaderLookupHistoryImpl;
 
   constructor() {}
 
-  async init() {
-    this.#stateDB = new JamStateDataBase();
+  async init(genesis: AppliedBlock) {
+    this.#blocksDB = new JamBlocksDB();
+    this.headerLookupHistory = HeaderLookupHistoryImpl.newEmpty();
+    await this.#blocksDB.save(genesis);
+    this.#bestBlock = genesis;
   }
 
-  get lastState(): JamStateImpl {
-    assert(typeof this.#lastState !== "undefined");
-    return this.#lastState!;
+  get bestBlock(): AppliedBlock {
+    assert(typeof this.#bestBlock !== "undefined");
+    return this.#bestBlock!;
   }
 
-  get stateDB() {
-    return this.#stateDB;
-  }
-
-  async setGenesis(state: JamStateImpl) {
-    await this.#stateDB.save(state);
-    this.#lastState = state;
+  get blocksDB() {
+    return this.#blocksDB;
   }
 
   async handleIncomingBlock(
     block: JamBlockImpl,
-  ): Promise<Result<JamStateImpl, unknown>> {
-    const parentState = await this.#stateDB.fromHeaderHash(block.header.parent);
-    if (typeof parentState === "undefined") {
-      return err(
-        new Error(
-          `Cannot find provided parent header ${block.header.parent.toString("utf8")}`,
-        ),
-      );
+  ): Promise<
+    Result<
+      AppliedBlock,
+      | DisputesToPosteriorError
+      | DisputesVerdictError
+      | DisputesCulpritError
+      | DisputesFaultError
+      | GammaAError
+      | EAValidationError
+      | ETError
+      | EPError
+      | EGError
+      | TauError
+      | HeaderValidationError
+      | ChainManagerErrorCodes
+    >
+  > {
+    const parentBlock = await this.#blocksDB.fromHeaderHash(
+      block.header.parent,
+    );
+    if (typeof parentBlock === "undefined") {
+      return err(ChainManagerErrorCodes.UNKNOWN_PARENT);
     }
+    const parentState = parentBlock.posteriorState;
 
-    if (parentState.slot.value !== this.#lastState?.slot.value) {
+    if (parentState.slot.value !== this.#bestBlock!.header.slot.value) {
       // we are forking handle it here
       console.log("forking");
     }
 
-    const res = parentState.applyBlock(block);
+    const res = parentState.applyBlock(
+      block,
+      parentBlock,
+      this.headerLookupHistory,
+    );
     if (res.isErr()) {
       return err(res.error);
     }
 
-    await this.#stateDB.save(res.value);
-    this.#lastState = res.value;
-    return ok(res.value);
+    this.headerLookupHistory = this.headerLookupHistory.toPosterior({
+      header: block.header,
+    });
+
+    block.posteriorState = res.value;
+    await this.#blocksDB.save(<AppliedBlock>block);
+    this.#bestBlock = <AppliedBlock>block;
+    return ok(this.#bestBlock);
   }
+}
+
+export enum ChainManagerErrorCodes {
+  UNKNOWN_PARENT = "UNKNOWN_PARENT",
 }

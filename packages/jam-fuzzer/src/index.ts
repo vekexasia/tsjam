@@ -15,6 +15,8 @@ import { parseArgs } from "node:util";
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { EPOCH_LENGTH, getConstantsMode } from "@tsjam/constants";
 import {
+  AppliedBlock,
+  ChainManager,
   IdentityMap,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
@@ -318,12 +320,10 @@ const checkState = async (
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const generateBlocks = async () => {
-  let state: JamStateImpl = GENESIS_STATE;
-  state = GENESIS_STATE;
-  let lastBlock: JamBlockImpl = GENESIS;
+  let lastBlock = GENESIS;
   lastBlock = GENESIS;
 
-  const merkleMap = state.merkle.map;
+  const merkleMap = GENESIS_STATE.merkle.map;
   // set genesis state
   const setState = new SetState({
     header: lastBlock.header,
@@ -335,38 +335,46 @@ const generateBlocks = async () => {
     MessageType.STATE_ROOT,
   );
 
-  if (Buffer.compare(state.merkleRoot(), stateRootResponse.stateRoot!) !== 0) {
-    return await compareState(state.merkle.map, lastBlock.header.signedHash());
+  if (
+    Buffer.compare(GENESIS_STATE.merkleRoot(), stateRootResponse.stateRoot!) !==
+    0
+  ) {
+    return await compareState(
+      GENESIS_STATE.merkle.map,
+      lastBlock.header.signedHash(),
+    );
   }
+
+  const chainManager = new ChainManager();
+  chainManager.init(GENESIS);
 
   for (let i = EPOCH_LENGTH + 1; ; i++) {
     const p_tau = <Validated<Posterior<TauImpl>>>new SlotImpl(<u32>i);
-    const newState = produceBlock(state, p_tau);
+    const newBlock = await produceBlock(lastBlock, p_tau, chainManager);
     console.log("Produced block for slot", i);
-    console.dir(newState.block!.toJSON(), { depth: null });
+    console.dir(newBlock.toJSON(), { depth: null });
     const res = await sendStuff(
-      new Message({ importBlock: newState.block! }),
+      new Message({ importBlock: newBlock }),
       MessageType.STATE_ROOT,
     );
     const isSuccess = await checkState(
       {
         new: new TraceState({
-          stateRoot: newState.merkle.root,
-          merkleMap: newState.merkle.map,
+          stateRoot: newBlock.posteriorState.merkle.root,
+          merkleMap: newBlock.posteriorState.merkle.map,
         }),
         prev: new TraceState({
-          stateRoot: state.merkle.root,
-          merkleMap: state.merkle.map,
+          stateRoot: lastBlock.posteriorState.merkle.root,
+          merkleMap: lastBlock.posteriorState.merkle.map,
         }),
       },
-      newState.block!.header.signedHash(),
+      newBlock.header.signedHash(),
       res.stateRoot!,
     );
     if (!isSuccess) {
       return;
     }
-    state = newState;
-    lastBlock = newState.block!;
+    lastBlock = newBlock;
   }
 };
 
@@ -387,17 +395,17 @@ const sendSingleBlockFromTrace = async () => {
     .filter((a) => a !== "genesis.bin")
     .sort((a, b) => a.localeCompare(b));
 
-  let state: JamStateImpl;
+  let lastBlock: AppliedBlock;
   if (fs.existsSync(path.join(process.env.TRACE_PATH, "genesis.bin"))) {
     console.log(`Loading trace from ${process.env.TRACE_PATH}`);
     const genesis = GenesisTrace.decode(
       fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
     ).value;
 
-    state = JamStateImpl.fromMerkleMap(genesis.state.merkleMap);
-    state.block = new JamBlockImpl({
+    lastBlock = <AppliedBlock>new JamBlockImpl({
       header: genesis.header,
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
+      posteriorState: JamStateImpl.fromMerkleMap(genesis.state.merkleMap),
     });
 
     const sr = await sendStuff(
@@ -434,8 +442,10 @@ const sendSingleBlockFromTrace = async () => {
     if (Buffer.compare(sr.stateRoot!, initialTrace.postState.stateRoot) !== 0) {
       throw new Error("initial state root mismatch");
     }
-    state = JamStateImpl.fromMerkleMap(initialTrace.postState.merkleMap);
-    state.block = initialTrace.block;
+    lastBlock = <AppliedBlock>initialTrace.block;
+    lastBlock.posteriorState = JamStateImpl.fromMerkleMap(
+      initialTrace.postState.merkleMap,
+    );
     files.splice(0, 1);
   }
   for (const file of files) {
@@ -456,7 +466,7 @@ const sendSingleBlockFromTrace = async () => {
         new: trace.postState,
         prev: trace.preState,
       },
-      state.block!.header.signedHash(),
+      lastBlock.header.signedHash(),
       sr.stateRoot!,
     );
     if (!isSuccess) {

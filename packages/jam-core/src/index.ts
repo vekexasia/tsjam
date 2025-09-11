@@ -26,7 +26,7 @@ export * from "./impls/jam-entropy-impl";
 export * from "./impls/jam-header-impl";
 export * from "./impls/jam-signed-header-impl";
 export * from "./impls/jam-state-impl";
-export * from "./impls/jam-state-db";
+export * from "./impls/jam-blocks-db";
 export * from "./impls/jam-statistics-impl";
 export * from "./impls/kappa-impl";
 export * from "./impls/lambda-impl";

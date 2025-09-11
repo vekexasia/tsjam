@@ -21,6 +21,7 @@ import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import {
   AccumulationStatisticsImpl,
   AssurancesExtrinsicImpl,
+  HeaderLookupHistoryImpl,
   PreimagesExtrinsicImpl,
 } from "@/index";
 import {
@@ -162,14 +163,12 @@ const buildTest = (filename: string) => {
   const sampleState = dummyState();
   sampleState.disputes.offenders = decoded.preState.p_psi_o;
 
+  const headerLookupHistory = HeaderLookupHistoryImpl.newEmpty();
   // we need to mock in $(0.7.1 - 11.35)
   decoded.input.guarantees.elements.forEach((e) => {
     const header = new JamSignedHeaderImpl();
     header.signedHash = () => e.report.context.lookupAnchorHash;
-    sampleState.headerLookupHistory.elements.set(
-      e.report.context.lookupAnchorSlot,
-      header,
-    );
+    headerLookupHistory.elements.set(e.report.context.lookupAnchorSlot, header);
   });
 
   [...decoded.preState.accounts.entries()].forEach(
@@ -187,7 +186,7 @@ const buildTest = (filename: string) => {
       beefyBelt: [],
     }),
     serviceAccounts: sampleState.serviceAccounts,
-    headerLookupHistory: sampleState.headerLookupHistory,
+    headerLookupHistory,
     d_recentHistory: toDagger(decoded.preState.recentBlocks),
     rho: decoded.preState.dd_rho,
     dd_rho: decoded.preState.dd_rho,

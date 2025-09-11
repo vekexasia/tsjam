@@ -1,6 +1,7 @@
 import { E_sub_int, encodeWithCodec, xBytesCodec } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
 import {
+  AppliedBlock,
   ChainManager,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
@@ -87,17 +88,14 @@ const server = net.createServer((socket) => {
 
       case MessageType.SET_STATE: {
         chainManager = new ChainManager();
-        await chainManager.init();
         const stateMap = message.setState!.state.value;
         const state = JamStateImpl.fromMerkleMap(stateMap);
-        state.block = new JamBlockImpl({
+        const gen = <AppliedBlock>new JamBlockImpl({
           header: message.setState!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
+          posteriorState: state,
         });
-        state.headerLookupHistory = state.headerLookupHistory.toPosterior({
-          header: message.setState!.header,
-        });
-        await chainManager.setGenesis(state);
+        await chainManager.init(gen);
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
       }
@@ -109,14 +107,18 @@ const server = net.createServer((socket) => {
         if (err) {
           console.log(err);
         }
-        send(new Message({ stateRoot: chainManager.lastState!.merkleRoot() }));
+        send(
+          new Message({
+            stateRoot: chainManager.bestBlock!.posteriorState.merkleRoot(),
+          }),
+        );
         break;
       }
       case MessageType.GET_STATE: {
-        const state = await chainManager.stateDB.fromHeaderHash(
+        const block = await chainManager.blocksDB.fromHeaderHash(
           message.getState!.headerHash,
         );
-        if (typeof state === "undefined") {
+        if (typeof block === "undefined") {
           throw new Error(
             "State not found for header hash: " +
               xBytesCodec(32).toJSON(message.getState!.headerHash),
@@ -125,7 +127,7 @@ const server = net.createServer((socket) => {
 
         send(
           new Message({
-            state: new State({ value: state.merkle.map }),
+            state: new State({ value: block.posteriorState.merkle.map }),
           }),
         );
         break;

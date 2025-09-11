@@ -1,4 +1,9 @@
 import { accumulateReports } from "@/accumulate";
+import { IdentityMap } from "@/data-structures/identity-map";
+import { MerkleState, MerkleStateMap } from "@/merklization/merkle-state";
+import { serviceAccountDataCodec } from "@/merklization/state-codecs";
+import { stateKey } from "@/merklization/utils";
+import { E_4_int, E_sub_int, encodeWithCodec } from "@tsjam/codec";
 import { Bandersnatch, Hashing } from "@tsjam/crypto";
 import {
   JamState,
@@ -10,7 +15,6 @@ import {
   u64,
 } from "@tsjam/types";
 import { toDagger, toPosterior, toTagged } from "@tsjam/utils";
-import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { ConditionalExcept } from "type-fest";
 import { AccumulationHistoryImpl } from "./accumulation-history-impl";
@@ -24,41 +28,30 @@ import {
   DisputesToPosteriorError,
 } from "./disputes-state-impl";
 import { EAValidationError } from "./extrinsics/assurances";
+import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
+import { DisputesFaultError } from "./extrinsics/disputes/faults";
+import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
 import { EGError } from "./extrinsics/guarantees";
 import { EPError } from "./extrinsics/preimages";
 import { ETError } from "./extrinsics/tickets";
 import { GammaAError } from "./gamma-a-impl";
 import { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
-import { JamBlockImpl } from "./jam-block-impl";
+import { AppliedBlock, JamBlockImpl } from "./jam-block-impl";
 import { JamEntropyImpl } from "./jam-entropy-impl";
+import { HeaderValidationError } from "./jam-signed-header-impl";
 import { JamStatisticsImpl } from "./jam-statistics-impl";
 import { KappaImpl } from "./kappa-impl";
 import { LambdaImpl } from "./lambda-impl";
 import { LastAccOutsImpl } from "./last-acc-outs-impl";
+import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "./privileged-services-impl";
 import { RHOImpl } from "./rho-impl";
 import { SafroleStateImpl } from "./safrole-state-impl";
+import { ServiceAccountImpl } from "./service-account-impl";
 import { SlotImpl, type TauError, type TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
-import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
-import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
-import { DisputesFaultError } from "./extrinsics/disputes/faults";
-import { HeaderValidationError } from "./jam-signed-header-impl";
-import { MerkleState, MerkleStateMap } from "@/merklization/merkle-state";
-import { IdentityMap } from "@/data-structures/identity-map";
-import { SafeMap } from "@/data-structures/safe-map";
-import { serviceAccountDataCodec } from "@/merklization/state-codecs";
-import { stateKey } from "@/merklization/utils";
-import { E_sub_int, encodeWithCodec, E_4_int } from "@tsjam/codec";
-import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
-import { ServiceAccountImpl } from "./service-account-impl";
 
 export class JamStateImpl implements JamState {
-  /**
-   * The block which produced this state
-   * or undefined if state was reconstructed without block
-   */
-  block?: JamBlockImpl;
   /**
    * `α`
    */
@@ -144,11 +137,6 @@ export class JamStateImpl implements JamState {
    */
   mostRecentAccumulationOutputs!: LastAccOutsImpl;
 
-  /**
-   * NOTE: this is not included in gp but used as per type doc
-   */
-  headerLookupHistory!: HeaderLookupHistoryImpl;
-
   #merkleState?: MerkleState;
 
   constructor(
@@ -170,6 +158,8 @@ export class JamStateImpl implements JamState {
 
   applyBlock(
     newBlock: JamBlockImpl,
+    parent: AppliedBlock,
+    headerLookupHistory: HeaderLookupHistoryImpl,
   ): Result<
     Posterior<JamStateImpl>,
     | DisputesToPosteriorError
@@ -184,8 +174,6 @@ export class JamStateImpl implements JamState {
     | TauError
     | HeaderValidationError
   > {
-    assert(this.block, "Cannot apply block to a state without a block");
-
     // $(0.7.1 - 6.1)
     const proposed_p_tau = toPosterior(newBlock.header.slot);
 
@@ -290,7 +278,7 @@ export class JamStateImpl implements JamState {
         p_kappa,
         extrinsicHash: newBlock.extrinsics.extrinsicHash(),
         curState: this,
-        prevHeader: this.block.header,
+        prevHeader: parent.header,
         p_entropy_3: toPosterior(p_entropy._3),
         p_gamma_s,
         p_gamma_p,
@@ -304,7 +292,7 @@ export class JamStateImpl implements JamState {
     const d_rho = this.rho.toDagger({ p_disputes });
     const [eaError, validatedEA] = newBlock.extrinsics.assurances
       .checkValidity({
-        headerParent: this.block.header.signedHash(),
+        headerParent: parent.header.signedHash(),
         kappa: this.kappa,
         d_rho,
       })
@@ -375,7 +363,7 @@ export class JamStateImpl implements JamState {
         accumulationHistory: this.accumulationHistory,
         accumulationQueue: this.accumulationQueue,
         authPool: this.authPool,
-        headerLookupHistory: this.headerLookupHistory,
+        headerLookupHistory,
         serviceAccounts: this.serviceAccounts,
 
         dd_rho,
@@ -428,13 +416,8 @@ export class JamStateImpl implements JamState {
       p_queue: p_authQueue,
     });
 
-    const p_headerLookupHistory = this.headerLookupHistory.toPosterior({
-      header: newBlock.header,
-    });
-
     const p_state = toPosterior(
       new JamStateImpl({
-        block: newBlock,
         entropy: p_entropy,
         slot: newBlock.header.slot,
         iota: toTagged(p_iota),
@@ -451,7 +434,6 @@ export class JamStateImpl implements JamState {
         lambda: toTagged(p_lambda),
         kappa: toTagged(p_kappa),
         disputes: p_disputes,
-        headerLookupHistory: p_headerLookupHistory,
         mostRecentAccumulationOutputs: p_mostRecentAccumulationOutputs,
       }),
     );
@@ -613,7 +595,6 @@ export class JamStateImpl implements JamState {
       serviceAccounts,
       slot,
       statistics,
-      headerLookupHistory: new HeaderLookupHistoryImpl(new SafeMap()),
     });
   }
 }

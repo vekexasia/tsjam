@@ -1,13 +1,14 @@
 import {
+  AppliedBlock,
   ChainManager,
   IdentityMap,
   IdentityMapCodec,
-  JamBlockExtrinsicsImpl,
   JamBlockImpl,
   JamSignedHeaderImpl,
   JamStateImpl,
   stateKey,
 } from "@/index";
+import { resetTraceLog } from "@/utils";
 import {
   BaseJamCodecable,
   codec,
@@ -16,17 +17,13 @@ import {
   Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
+import { getConstantsMode } from "@tsjam/constants";
 import fs from "fs";
 import { diff } from "jest-diff";
-import path from "path";
-import { afterAll, assert, beforeAll, chai, describe, it } from "vitest";
-import type {
-  StateKey,
-  StateRootHash,
-} from "../../jam-types/dist/types/generic-types";
-import { getConstantsMode } from "@tsjam/constants";
 import { err, ok, Result } from "neverthrow";
-import { resetTraceLog } from "@/utils";
+import path from "path";
+import { afterAll, assert, beforeAll, describe, it } from "vitest";
+import type { StateKey, StateRootHash } from "@tsjam/types";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
@@ -50,25 +47,17 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
       throw new Error(`Error loading initial trace: ${err}`);
     }
     const chainManager = new ChainManager();
-    await chainManager.init();
-
-    // set initial block and initial state
-    const initialState = JamStateImpl.fromMerkleMap(
-      initialTrace.preState.merkleMap,
-    );
-    initialState.block = new JamBlockImpl({
-      header: new JamSignedHeaderImpl({}),
-      extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
-    });
-
-    initialState.block!.header.signedHash = () =>
+    initialTrace.block.header.signedHash = () =>
       initialTrace.block.header.parent;
 
-    await chainManager.setGenesis(initialState);
+    initialTrace.block.posteriorState = JamStateImpl.fromMerkleMap(
+      initialTrace.preState.merkleMap,
+    );
+    await chainManager.init(<AppliedBlock>initialTrace.block);
 
     if (
       Buffer.compare(
-        chainManager.lastState.merkleRoot(),
+        chainManager.bestBlock.posteriorState.merkleRoot(),
         initialTrace.preState.stateRoot,
       ) !== 0
     ) {
@@ -78,7 +67,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
       );
       console.log(
         "Got merkle root:",
-        Buffer.from(initialState.merkleRoot()).toString("hex"),
+        Buffer.from(
+          chainManager.bestBlock.posteriorState.merkleRoot(),
+        ).toString("hex"),
       );
     } else {
       console.log("initial state merkle matches... Proceeding");
@@ -99,7 +90,7 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
         }
         if (
           Buffer.compare(
-            chainManager.lastState.merkleRoot(),
+            chainManager.bestBlock.posteriorState.merkleRoot(),
             trace.postState.stateRoot,
           ) !== 0
         ) {
@@ -109,9 +100,12 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
           );
           console.log(
             "Got merkle root:",
-            Buffer.from(chainManager.lastState.merkleRoot()).toString("hex"),
+            Buffer.from(
+              chainManager.bestBlock.posteriorState.merkleRoot(),
+            ).toString("hex"),
           );
-          const calculatedMap = chainManager.lastState.merkle.map;
+          const calculatedMap =
+            chainManager.bestBlock.posteriorState.merkle.map;
           const expectedMap = trace.postState.merkleMap;
           const expectedState = JamStateImpl.fromMerkleMap(expectedMap);
           for (const [key, expectedValue] of expectedMap.entries()) {
@@ -120,7 +114,11 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
             } else if (
               Buffer.compare(calculatedMap.get(key)!, expectedValue) !== 0
             ) {
-              reverseDifferentState(key, expectedState, chainManager.lastState);
+              reverseDifferentState(
+                key,
+                expectedState,
+                chainManager.bestBlock.posteriorState,
+              );
             }
           }
           throw new Error("diff");
