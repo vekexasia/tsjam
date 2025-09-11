@@ -86,15 +86,21 @@ const server = net.createServer((socket) => {
         send(new Message({ peerInfo: pi }));
         break;
 
-      case MessageType.SET_STATE: {
-        const stateMap = message.setState!.state.value;
+      case MessageType.INITIALIZE: {
+        const stateMap = message.initialize!.state.value;
         const state = JamStateImpl.fromMerkleMap(stateMap);
         const gen = <AppliedBlock>new JamBlockImpl({
-          header: message.setState!.header,
+          header: message.initialize!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
           posteriorState: state,
         });
         chainManager = await ChainManager.build(gen);
+        message.initialize!.ancestry.forEach((ancestryItem) => {
+          gen.posteriorState.headerLookupHistory.elements.set(
+            ancestryItem.slot,
+            ancestryItem.headerHash,
+          );
+        });
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
       }
@@ -105,12 +111,15 @@ const server = net.createServer((socket) => {
 
         if (err) {
           console.log(err);
+          send(new Message({ error: "error" }));
+          break;
+        } else {
+          send(
+            new Message({
+              stateRoot: chainManager.bestBlock!.posteriorState.merkleRoot(),
+            }),
+          );
         }
-        send(
-          new Message({
-            stateRoot: chainManager.bestBlock!.posteriorState.merkleRoot(),
-          }),
-        );
         break;
       }
       case MessageType.GET_STATE: {

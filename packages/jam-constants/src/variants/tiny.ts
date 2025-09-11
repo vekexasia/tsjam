@@ -17,3 +17,5 @@ export const ERASURECODE_BASIC_SIZE = 4;
 
 // https://github.com/zdave-parity/jam-np/blob/main/simple.md
 export const RECOVERY_THRESHOLD = 2;
+
+export const MAXIMUM_AGE_LOOKUP_ANCHOR = 24;
