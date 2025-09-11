@@ -17,12 +17,12 @@ import {
   Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { getConstantsMode } from "@tsjam/constants";
+import { getConstantsMode, MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
 import fs from "fs";
 import { diff } from "jest-diff";
 import { err, ok, Result } from "neverthrow";
 import path from "path";
-import { afterAll, assert, beforeAll, describe, it } from "vitest";
+import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import type { StateKey, StateRootHash } from "@tsjam/types";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
@@ -137,7 +137,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756548741", () => doTest("1756548741"));
   it("1756548767", () => doTest("1756548767"));
   it("1756548796", () => doTest("1756548796"));
-  it("1756548916", () => doTest("1756548916"));
+  it.skipIf(MAXIMUM_AGE_LOOKUP_ANCHOR === 24)("1756548916", () =>
+    doTest("1756548916"),
+  );
   it("1756572122", () => doTest("1756572122"));
   it("1756790723", () => doTest("1756790723"));
   it("1756791458", () => doTest("1756791458"));

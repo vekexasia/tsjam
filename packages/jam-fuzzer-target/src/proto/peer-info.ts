@@ -6,9 +6,10 @@ import {
   codec,
   LengthDiscrimantedIdentityCodec,
   mapCodec,
+  eSubIntCodec,
 } from "@tsjam/codec";
 import { Version } from "./version";
-import { u8 } from "@tsjam/types";
+import type { u32, u8 } from "@tsjam/types";
 import packageJSON from "../../package.json";
 import { getConstantsMode } from "@tsjam/constants";
 
@@ -23,7 +24,19 @@ const Utf8JSONCodec = {
 
 @JamCodecable()
 export class PeerInfo extends BaseJamCodecable {
-  @jsonCodec(Utf8JSONCodec)
+  @eSubIntCodec(1, "fuzz_version")
+  fuzzVersion!: u8;
+
+  @eSubIntCodec(4, "fuzz_features")
+  features!: u32;
+
+  @codec(Version, "jam_version")
+  jamVersion!: Version;
+
+  @codec(Version, "app_version")
+  appVersion!: Version;
+
+  @jsonCodec(Utf8JSONCodec, "app_name")
   @binaryCodec(
     mapCodec(
       LengthDiscrimantedIdentityCodec,
@@ -33,15 +46,13 @@ export class PeerInfo extends BaseJamCodecable {
   )
   name!: string;
 
-  @codec(Version, "app_version")
-  appVersion!: Version;
-
-  @codec(Version, "jam_version")
-  jamVersion!: Version;
-
   static build(): PeerInfo {
     const toRet = new PeerInfo();
+    toRet.fuzzVersion = <u8>1;
     toRet.name = `tsjam-${packageJSON["version"]}-${getConstantsMode()}-$$commit$$`;
+    toRet.features = <u32>(1 | // ancestors
+      2); // simple forking
+
     toRet.jamVersion = new Version();
     toRet.jamVersion.major = <u8>(
       parseInt(packageJSON["jam:protocolVersion"].split(".")[0])

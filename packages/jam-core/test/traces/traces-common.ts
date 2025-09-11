@@ -114,12 +114,12 @@ export const buildTracesTests = (kind: string) => {
     if (index === 0) {
       const hlh = HeaderLookupHistoryImpl.newEmpty();
       const genesis = tracesTestCase(kind, "00000001").parentBlock;
-      hlh.elements.set(genesis.header.slot, genesis.header);
+      hlh.elements.set(genesis.header.slot, genesis.header.signedHash());
       return hlh;
     } else {
       const hlh = buildHeaderLookupHistory(index - 1);
       const testCase = tracesTestCase(kind, index.toString().padStart(8, "0"));
-      return hlh.toPosterior({ header: testCase.block.header });
+      return hlh.toPosterior(testCase.block.header);
     }
   };
   for (const which of cases) {
@@ -133,7 +133,7 @@ export const buildTracesTests = (kind: string) => {
         buildHeaderLookupHistory(parseInt(which) - 1);
       testCase.parentBlock.posteriorState.headerLookupHistory.elements.set(
         testCase.parentBlock.header.slot,
-        testCase.parentBlock.header,
+        testCase.parentBlock.header.signedHash(),
       );
       const chainManager = await ChainManager.build(
         <AppliedBlock>testCase.parentBlock,

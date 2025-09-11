@@ -4,7 +4,7 @@ import {
   MessageCodec,
   MessageType,
   PeerInfo,
-  SetState,
+  Initialize,
   State,
   Version,
 } from "@tsjam/fuzzer-target";
@@ -325,13 +325,14 @@ const generateBlocks = async () => {
 
   const merkleMap = GENESIS_STATE.merkle.map;
   // set genesis state
-  const setState = new SetState({
+  const initialize = new Initialize({
     header: lastBlock.header,
     state: new State({ value: merkleMap }),
+    ancestry: [],
   });
 
   const stateRootResponse = await sendStuff(
-    new Message({ setState }),
+    new Message({ initialize }),
     MessageType.STATE_ROOT,
   );
 
@@ -409,9 +410,10 @@ const sendSingleBlockFromTrace = async () => {
 
     const sr = await sendStuff(
       new Message({
-        setState: new SetState({
+        initialize: new Initialize({
           header: genesis.header,
           state: new State({ value: genesis.state.merkleMap }),
+          ancestry: [],
         }),
       }),
       MessageType.STATE_ROOT,
@@ -430,9 +432,10 @@ const sendSingleBlockFromTrace = async () => {
     }
     const sr = await sendStuff(
       new Message({
-        setState: new SetState({
+        initialize: new Initialize({
           header: initialTrace.block.header,
           state: new State({ value: initialTrace.postState.merkleMap }),
+          ancestry: [],
         }),
       }),
       MessageType.STATE_ROOT,

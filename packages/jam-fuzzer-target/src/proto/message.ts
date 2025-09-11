@@ -3,6 +3,7 @@ import {
   E_4_int,
   eitherOneOfCodec,
   JamCodec,
+  LengthDiscrimantedIdentityCodec,
   mapCodec,
   xBytesCodec,
 } from "@tsjam/codec";
@@ -10,25 +11,27 @@ import { JamBlockImpl } from "@tsjam/core";
 import { StateRootHash, u32 } from "@tsjam/types";
 import { GetState } from "./get-state";
 import { PeerInfo } from "./peer-info";
-import { SetState } from "./set-state";
+import { Initialize } from "./initialize";
 import { State } from "./state";
 import assert from "assert";
 
 export enum MessageType {
   PEER_INFO = "PEER_INFO",
   IMPORT_BLOCK = "IMPORT_BLOCK",
-  SET_STATE = "SET_STATE",
+  INITIALIZE = "INITIALIZE",
   GET_STATE = "GET_STATE",
   STATE = "STATE",
   STATE_ROOT = "STATE_ROOT",
+  ERROR = "ERROR",
 }
 export class Message {
   peerInfo?: PeerInfo;
+  initialize?: Initialize;
+  stateRoot?: StateRootHash;
   importBlock?: JamBlockImpl;
-  setState?: SetState;
   getState?: GetState;
   state?: State;
-  stateRoot?: StateRootHash;
+  error?: string;
   constructor(config?: Partial<Message>) {
     Object.assign(this, config);
   }
@@ -36,21 +39,31 @@ export class Message {
   type(): MessageType {
     if (this.peerInfo) return MessageType.PEER_INFO;
     if (this.importBlock) return MessageType.IMPORT_BLOCK;
-    if (this.setState) return MessageType.SET_STATE;
+    if (this.initialize) return MessageType.INITIALIZE;
     if (this.getState) return MessageType.GET_STATE;
     if (this.state) return MessageType.STATE;
     if (this.stateRoot) return MessageType.STATE_ROOT;
+    if (this.error) return MessageType.ERROR;
     throw new Error("Invalid message type");
   }
 }
 export const oneOfMessageCodec = mapCodec(
   eitherOneOfCodec<Message>([
     ["peerInfo", asCodec(PeerInfo)],
+    ["initialize", asCodec(Initialize)],
+    ["stateRoot", xBytesCodec<StateRootHash, 32>(32)],
     ["importBlock", asCodec(JamBlockImpl)],
-    ["setState", asCodec(SetState)],
     ["getState", asCodec(GetState)],
     ["state", asCodec(State)],
-    ["stateRoot", xBytesCodec<StateRootHash, 32>(32)],
+    [
+      "error",
+      mapCodec(
+        LengthDiscrimantedIdentityCodec,
+        (b) => Buffer.from(b).toString("utf8"),
+        (s) => Buffer.from(s, "utf8"),
+      ),
+      255,
+    ],
   ]),
   (pojo: Message) => new Message(pojo),
   (message) => message,
@@ -87,7 +100,7 @@ if (import.meta.vitest) {
   describe("Message", () => {
     it("should encode and decode PeerInfo", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../test/fixtures/0_peer_info.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000000_target_peer_info.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -95,41 +108,93 @@ if (import.meta.vitest) {
 
       expect(message).deep.eq({
         peerInfo: {
-          name: "fuzzer",
-          appVersion: { major: 0, minor: 1, patch: 24 },
-          jamVersion: { major: 0, minor: 6, patch: 7 },
+          name: "polkajam",
+          appVersion: { major: 0, minor: 1, patch: 25 },
+          jamVersion: { major: 0, minor: 7, patch: 0 },
+          features: 2,
+          fuzzVersion: 1,
         },
       });
     });
+    it("should encode and decode Error", () => {
+      const bin = fs.readFileSync(
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000006_target_error.bin`,
+      );
+      const { value: message } = oneOfMessageCodec.decode(bin);
+
+      expect(message.type()).toBe(MessageType.ERROR);
+
+      expect(message).deep.eq({
+        error:
+          "Chain error: block execution failure: reports error: wrong core assignment",
+      });
+    });
+    it("should encode and decode Initialize", () => {
+      const bin = fs.readFileSync(
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000001_fuzzer_initialize.bin`,
+      );
+      const { value: message } = oneOfMessageCodec.decode(bin);
+
+      expect(message.type()).toBe(MessageType.INITIALIZE);
+
+      expect(message.state?.toJSON()).deep.eq(
+        JSON.parse(
+          fs.readFileSync(
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000001_fuzzer_initialize.json`,
+            "utf8",
+          ),
+        ).State,
+      );
+    });
+
+    it("should encode and decode StateRoot", () => {
+      const bin = fs.readFileSync(
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000001_target_state_root.bin`,
+      );
+      const { value: message } = oneOfMessageCodec.decode(bin);
+
+      expect(message.type()).toBe(MessageType.STATE_ROOT);
+
+      expect(message.state?.toJSON()).deep.eq(
+        JSON.parse(
+          fs.readFileSync(
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000001_target_state_root.json`,
+            "utf8",
+          ),
+        ).State,
+      );
+    });
+
+    it("should encode and decode ImportBlock", () => {
+      const bin = fs.readFileSync(
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000002_fuzzer_import_block.bin`,
+      );
+      const { value: message } = oneOfMessageCodec.decode(bin);
+
+      expect(message.type()).toBe(MessageType.IMPORT_BLOCK);
+
+      expect(message.state?.toJSON()).deep.eq(
+        JSON.parse(
+          fs.readFileSync(
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000002_fuzzer_import_block.json`,
+            "utf8",
+          ),
+        ).State,
+      );
+    });
+
     it("should encode and decode GetState", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../test/fixtures/12_get_state.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000030_fuzzer_get_state.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
       expect(message.type()).toBe(MessageType.GET_STATE);
 
-      expect(message).deep.eq({
-        getState: {
-          headerHash: Buffer.from(
-            "ebb6aede4c24e43fae47cf6324ed4c1d353119935d277794f2366fd0135cf6bc",
-            "hex",
-          ),
-        },
-      });
-    });
-    it("should encode and decode State", () => {
-      const bin = fs.readFileSync(
-        `${__dirname}/../../test/fixtures/13_state.bin`,
-      );
-      const { value: message } = oneOfMessageCodec.decode(bin);
-
-      expect(message.type()).toBe(MessageType.STATE);
-
       expect(message.state?.toJSON()).deep.eq(
         JSON.parse(
           fs.readFileSync(
-            `${__dirname}/../../test/fixtures/13_state.json`,
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/00000030_fuzzer_get_state.json`,
             "utf8",
           ),
         ).State,

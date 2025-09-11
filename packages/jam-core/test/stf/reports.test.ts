@@ -10,7 +10,6 @@ import {
   GuaranteesExtrinsicImpl,
 } from "@/impls/extrinsics/guarantees";
 import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
-import { JamSignedHeaderImpl } from "@/impls/jam-signed-header-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { KappaImpl } from "@/impls/kappa-impl";
 import { LambdaImpl } from "@/impls/lambda-impl";
@@ -166,9 +165,10 @@ const buildTest = (filename: string) => {
   const headerLookupHistory = HeaderLookupHistoryImpl.newEmpty();
   // we need to mock in $(0.7.1 - 11.35)
   decoded.input.guarantees.elements.forEach((e) => {
-    const header = new JamSignedHeaderImpl();
-    header.signedHash = () => e.report.context.lookupAnchorHash;
-    headerLookupHistory.elements.set(e.report.context.lookupAnchorSlot, header);
+    headerLookupHistory.elements.set(
+      e.report.context.lookupAnchorSlot,
+      e.report.context.lookupAnchorHash,
+    );
   });
 
   [...decoded.preState.accounts.entries()].forEach(

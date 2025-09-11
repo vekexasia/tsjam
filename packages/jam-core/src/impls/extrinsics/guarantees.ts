@@ -443,17 +443,14 @@ export class GuaranteesExtrinsicImpl
       }
 
       // $(0.7.1 - 11.35)
-      const lookupHeader = deps.headerLookupHistory.get(
+      const lookupHeaderHash = deps.headerLookupHistory.get(
         workContext.lookupAnchorSlot,
       );
-      if (typeof lookupHeader === "undefined") {
+      if (typeof lookupHeaderHash === "undefined") {
         return err(EGError.LOOKUP_ANCHOR_TIMESLOT_MISMATCH);
       }
       if (
-        Buffer.compare(
-          lookupHeader.signedHash(),
-          workContext.lookupAnchorHash,
-        ) !== 0
+        Buffer.compare(lookupHeaderHash, workContext.lookupAnchorHash) !== 0
       ) {
         return err(EGError.LOOKUP_HASH_MISMATCH);
       }
