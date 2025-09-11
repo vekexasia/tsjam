@@ -1,8 +1,5 @@
 name: Build fuzzer target executable
 on:
-  push:
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -49,9 +46,6 @@ jobs:
         env:
           NODE_VERSION: 22.18.0
         run: |
-          # derive artifact name from package.json version and jam:protocolVersion
-          ##VERSION=$(node -p "require('./packages/jam-fuzzer-target/package.json').version")
-          ##PROTO=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
           OUT=tsjam-fuzzer-target.tgz
           # expose the computed name to later steps
           echo "ARTIFACT_NAME=$OUT" >> $GITHUB_ENV
