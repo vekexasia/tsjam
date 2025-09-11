@@ -1,21 +1,20 @@
 import { E_sub_int, encodeWithCodec, xBytesCodec } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
 import {
+  ChainManager,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
-  JamStateDataBase,
   JamStateImpl,
 } from "@tsjam/core";
+import { StateRootHash } from "@tsjam/types";
 import "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
-import assert from "node:assert";
 import fs from "node:fs";
 import net from "node:net";
 import { parseArgs } from "node:util";
 import { Message, MessageCodec, MessageType } from "./proto/message";
 import { PeerInfo } from "./proto/peer-info";
 import { State } from "./proto/state";
-import { StateRootHash } from "@tsjam/types";
 
 // Parse CLI args for socket path (fallback to env, then default)
 const { values: cliArgs } = parseArgs({
@@ -46,8 +45,7 @@ const server = net.createServer((socket) => {
   };
   let buffer: Buffer = Buffer.alloc(0);
   let toRead = -1;
-  let stateDB: JamStateDataBase;
-  let lastState: JamStateImpl | undefined = undefined;
+  let chainManager: ChainManager;
   socket.on("data", (data) => {
     if (toRead === -1) {
       toRead = E_sub_int(4).decode(data).value + 4;
@@ -88,7 +86,8 @@ const server = net.createServer((socket) => {
         break;
 
       case MessageType.SET_STATE: {
-        stateDB = new JamStateDataBase();
+        chainManager = new ChainManager();
+        await chainManager.init();
         const stateMap = message.setState!.state.value;
         const state = JamStateImpl.fromMerkleMap(stateMap);
         state.block = new JamBlockImpl({
@@ -98,39 +97,23 @@ const server = net.createServer((socket) => {
         state.headerLookupHistory = state.headerLookupHistory.toPosterior({
           header: message.setState!.header,
         });
-        await stateDB.save(state);
+        await chainManager.setGenesis(state);
         send(new Message({ stateRoot: state.merkleRoot() }));
-        lastState = state;
         break;
       }
       case MessageType.IMPORT_BLOCK: {
-        const block = message.importBlock!;
-        const state = await stateDB.fromHeaderHash(
-          message.importBlock!.header.parent,
-        );
-        if (typeof state === "undefined") {
-          console.log(
-            `Cannot find provided parent header ${message.importBlock!.header.parent.toString("utf8")}`,
-          );
-          assert(lastState, "No last state available");
-          send(new Message({ stateRoot: lastState.merkleRoot() }));
-          break;
-        } else {
-          const res = state.applyBlock(block);
-          if (res.isErr()) {
-            console.log("Block application error:");
-            console.log(res.error);
-            send(new Message({ stateRoot: state.merkleRoot() }));
-            return;
-          }
-          await stateDB.save(res.value);
-          lastState = state;
-          send(new Message({ stateRoot: res.value.merkleRoot() }));
-          break;
+        const [err] = (
+          await chainManager.handleIncomingBlock(message.importBlock!)
+        ).safeRet();
+
+        if (err) {
+          console.log(err);
         }
+        send(new Message({ stateRoot: chainManager.lastState!.merkleRoot() }));
+        break;
       }
       case MessageType.GET_STATE: {
-        const state = await stateDB.fromHeaderHash(
+        const state = await chainManager.stateDB.fromHeaderHash(
           message.getState!.headerHash,
         );
         if (typeof state === "undefined") {

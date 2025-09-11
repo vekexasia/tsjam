@@ -1,4 +1,5 @@
 import {
+  ChainManager,
   IdentityMap,
   IdentityMapCodec,
   JamBlockExtrinsicsImpl,
@@ -18,7 +19,7 @@ import {
 import fs from "fs";
 import { diff } from "jest-diff";
 import path from "path";
-import { afterAll, assert, beforeAll, describe, it } from "vitest";
+import { afterAll, assert, beforeAll, chai, describe, it } from "vitest";
 import type {
   StateKey,
   StateRootHash,
@@ -26,7 +27,6 @@ import type {
 import { getConstantsMode } from "@tsjam/constants";
 import { err, ok, Result } from "neverthrow";
 import { resetTraceLog } from "@/utils";
-import { JamStateDataBase } from "@/impls/jam-state-db";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
@@ -38,7 +38,6 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   const dir = `${__dirname}/../../../jam-conformance/fuzz-reports/0.7.0/traces/`;
   const doTest = async (what: string) => {
     const traceDir = `${dir}${what}/`;
-    const stateDB = new JamStateDataBase();
     const files = fs
       .readdirSync(traceDir)
       .filter((a) => a.endsWith(".bin"))
@@ -50,6 +49,8 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     if (typeof err !== "undefined") {
       throw new Error(`Error loading initial trace: ${err}`);
     }
+    const chainManager = new ChainManager();
+    await chainManager.init();
 
     // set initial block and initial state
     const initialState = JamStateImpl.fromMerkleMap(
@@ -63,10 +64,11 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     initialState.block!.header.signedHash = () =>
       initialTrace.block.header.parent;
 
-    // TODO: check merkleroot
+    await chainManager.setGenesis(initialState);
+
     if (
       Buffer.compare(
-        initialState.merkleRoot(),
+        chainManager.lastState.merkleRoot(),
         initialTrace.preState.stateRoot,
       ) !== 0
     ) {
@@ -81,7 +83,6 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     } else {
       console.log("initial state merkle matches... Proceeding");
     }
-    stateDB.save(initialState);
 
     //files.splice(0, 1);
     for (const file of files) {
@@ -92,21 +93,15 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
         fs.readFileSync(path.join(traceDir, file)),
       ).safeRet();
       if (typeof errTrace === "undefined") {
-        const jamState = await stateDB.fromHeaderHash(
-          trace.block.header.parent,
-        );
-        if (typeof jamState === "undefined") {
-          throw new Error("cannot find state");
-        }
-        const res = jamState.applyBlock(trace.block);
-        let newState: JamStateImpl = jamState;
+        const res = await chainManager.handleIncomingBlock(trace.block);
         if (res.isErr()) {
           console.log("Error applying block", res.error);
-        } else {
-          newState = res.value;
         }
         if (
-          Buffer.compare(newState.merkleRoot(), trace.postState.stateRoot) !== 0
+          Buffer.compare(
+            chainManager.lastState.merkleRoot(),
+            trace.postState.stateRoot,
+          ) !== 0
         ) {
           console.log(
             "Expected merkle root:",
@@ -114,9 +109,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
           );
           console.log(
             "Got merkle root:",
-            Buffer.from(newState.merkleRoot()).toString("hex"),
+            Buffer.from(chainManager.lastState.merkleRoot()).toString("hex"),
           );
-          const calculatedMap = newState.merkle.map;
+          const calculatedMap = chainManager.lastState.merkle.map;
           const expectedMap = trace.postState.merkleMap;
           const expectedState = JamStateImpl.fromMerkleMap(expectedMap);
           for (const [key, expectedValue] of expectedMap.entries()) {
@@ -125,12 +120,11 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
             } else if (
               Buffer.compare(calculatedMap.get(key)!, expectedValue) !== 0
             ) {
-              reverseDifferentState(key, expectedState, newState);
+              reverseDifferentState(key, expectedState, chainManager.lastState);
             }
           }
           throw new Error("diff");
         }
-        await stateDB.save(newState);
       }
 
       console.log(file, "ok");

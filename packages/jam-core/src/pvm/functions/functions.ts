@@ -6,7 +6,6 @@ import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import {
   computeRequestKey,
-  computeStorageKey,
   MerkleServiceAccountStorageImpl,
 } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
@@ -35,7 +34,6 @@ import {
   E_sub_int,
   encodeWithCodec,
   LengthDiscrimantedIdentityCodec,
-  Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
 import {

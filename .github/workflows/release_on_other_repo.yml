@@ -1,0 +1,53 @@
+name: Release in tsjam-releases
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Release
+    timeout-minutes: 120
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - name: Setup Node.js 22.18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.18'
+
+      - name: Compute jamVersion and commit
+        if: github.event_name != 'pull_request'
+        id: compute_meta
+        run: |
+          set -euo pipefail
+          jamVersion=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
+          echo "jamVersion=$jamVersion" >> $GITHUB_ENV
+          echo "jamVersion=$jamVersion" 
+
+      - name: Download the tar from release like a boss
+        uses: robinraju/release-downloader@v1
+        id: downloadtar
+        with:
+          repository: 'vekexasia/tsjam'
+          latest: ${{ inputs.release_tag == env.jamVersion }}
+          fileName: 'tsjam-fuzzer-target.tgz'
+          out-file-path: './downloaded/'
+          token: ${{ secrets.RELEASES_TOKEN }}
+
+      - name: Create release in vekexasia/tsjam-releases
+        if: github.event_name != 'pull_request'
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.RELEASES_TOKEN }}
+          owner: vekexasia
+          repo: tsjam-releases
+          tag: "${{ steps.downloadtar.outputs.tag_name }}"
+          name: "${{ steps.downloadtar.outputs.release_name}}"
+          draft: false
+          allowUpdates: true
+          artifacts: ./downloaded/tsjam-fuzzer-target.tgz
+          artifactContentType: application/gzip
