@@ -27,6 +27,9 @@ export default [
               $$commit$$: shortHash,
               // https://github.com/davxy/jam-conformance/issues/35
               "process.env.RUNNING_TRACE_TESTS": '"true"',
+              "process.env.TRACE_FILE": false,
+              "process.env.DEBUG_STEPS": false,
+              "process.env.DEBUG_TRACES": false,
             },
             delimiters: ["", ""],
             preventAssignment: true,

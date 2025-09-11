@@ -36,8 +36,7 @@ import {
   TwoRegTwoImmIxDecoder,
 } from "./decoders";
 import { BlockTermination, Ix } from "./ixdb";
-import { smod, X_4, X_8, X_fn } from "./utils";
-import { log } from "@/utils";
+import { smod, X_1, X_2, X_4, X_8 } from "./utils";
 
 /**
  * This class holds the ixs implementations.
@@ -102,13 +101,8 @@ export class Instructions {
 
   @Ix(50, OneRegOneImmIxDecoder, true)
   @BlockTermination
-  jump_ind(
-    { wA, vX, rA }: OneRegOneImmArgs,
-    context: PVMIxEvaluateFNContextImpl,
-  ) {
-    log({ rA, vX }, true);
+  jump_ind({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
     const jumpLocation = Number((wA.value + vX) % 2n ** 32n) as u32;
-    log(`jumping to ${jumpLocation}`, true);
     return djump(jumpLocation, context);
   }
 
@@ -170,9 +164,9 @@ export class Instructions {
       );
     }
 
-    wA.value = <PVMRegisterRawValue>(
-      E_8.decode(context.execution.memory.getBytes(memoryAddress, 8)).value
-    );
+    wA.value = <
+      PVMRegisterRawValue // E_8
+    >context.execution.memory.getBytes(memoryAddress, 8).readBigUint64LE();
   }
 
   // ### Load signed
@@ -186,7 +180,7 @@ export class Instructions {
     }
 
     wA.value = <PVMRegisterRawValue>(
-      X_fn(1n)(BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0]))
+      X_1(BigInt(context.execution.memory.getBytes(memoryAddress, 1)[0]))
     );
   }
 
@@ -200,9 +194,7 @@ export class Instructions {
     }
 
     wA.value = <PVMRegisterRawValue>(
-      X_fn(2n)(
-        E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value,
-      )
+      X_2(E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value)
     );
   }
 

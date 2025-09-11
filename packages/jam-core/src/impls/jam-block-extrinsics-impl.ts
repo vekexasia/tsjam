@@ -1,4 +1,3 @@
-import { HashCodec } from "@/codecs/misc-codecs";
 import {
   asCodec,
   BaseJamCodecable,
@@ -120,7 +119,8 @@ export const codec_Eg_4Hx = createArrayLengthDiscriminator<
       "report",
       <JamCodec<WorkReportImpl>>{
         encode(w, buf) {
-          return HashCodec.encode(w.hash(), buf);
+          w.hash().copy(buf);
+          return 32;
         },
         decode() {
           throw new Error("codec_Eg_4Hx should not be used for decoding");

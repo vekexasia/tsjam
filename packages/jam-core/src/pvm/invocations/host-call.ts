@@ -1,11 +1,10 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { u8 } from "@tsjam/types";
-import "@/pvm/functions/functions";
-import { basicInvocation, deblobProgram } from "./basic";
-import assert from "assert";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { log } from "@/utils";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import "@/pvm/functions/functions";
+import { u8 } from "@tsjam/types";
+import assert from "assert";
+import { basicInvocation, deblobProgram } from "./basic";
 
 /**
  * Host call invocation
@@ -47,7 +46,7 @@ export const hostCallInvocation = <X>(
       ctx.instructionPointer = p_i;
 
       if (typeof hostCallRes !== "undefined") {
-        log("not defined res", process.env.DEBUG_TRACES == "true");
+        // log("not defined res", process.env.DEBUG_TRACES == "true");
         // https://github.com/gavofyork/graypaper/pull/485
         assert(
           false == hostCallRes.isPageFault(),
@@ -59,10 +58,10 @@ export const hostCallInvocation = <X>(
         };
       }
     } else {
-      log(
-        `hostCallInvocation: non-host call exit ${outExit}`,
-        process.env.DEBUG_TRACES == "true",
-      );
+      // log(
+      //   `hostCallInvocation: non-host call exit ${outExit}`,
+      //   process.env.DEBUG_TRACES == "true",
+      // );
       // regular execution without host call
       return {
         exitReason: outExit,

@@ -1,13 +1,9 @@
-import { HashCodec } from "@/codecs/misc-codecs";
 import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
-import {
-  computeRequestKey,
-  MerkleServiceAccountStorageImpl,
-} from "@/impls/merkle-account-data-storage-impl";
+import { MerkleServiceAccountStorageImpl } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
 import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
@@ -25,7 +21,6 @@ import { type WorkPackageImpl } from "@/impls/work-package-impl";
 import { log } from "@/utils";
 import {
   asCodec,
-  BufferJSONCodec,
   cloneCodecable,
   createArrayLengthDiscriminator,
   createCodec,
@@ -238,7 +233,7 @@ export class HostFunctions {
       case 8n: {
         if (typeof args.p !== "undefined") {
           v = Buffer.concat([
-            encodeWithCodec(HashCodec, args.p.authCodeHash),
+            args.p.authCodeHash,
             encodeWithCodec(LengthDiscrimantedIdentityCodec, args.p.authConfig),
           ]);
         }
@@ -365,9 +360,7 @@ export class HostFunctions {
 
     let hash: Blake2bHash;
     if (h.fitsInU32() && context.memory.canRead(h.u32(), 32)) {
-      hash = <Blake2bHash>(
-        HashCodec.decode(context.memory.getBytes(h.u32(), 32)).value
-      );
+      hash = <Blake2bHash>context.memory.getBytes(h.u32(), 32);
     } else {
       // v = ∇
       return [IxMod.panic()];
@@ -491,7 +484,10 @@ export class HostFunctions {
       //   `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
       //   process.env.DEBUG_STEPS === "true",
       // );
-      bold_a.storage.set(bold_k, context.memory.getBytes(vo.u32(), vz.u32()));
+      bold_a.storage.set(
+        bold_k,
+        Buffer.concat([context.memory.getBytes(vo.u32(), vz.u32())]),
+      );
     } else {
       return [IxMod.panic()];
     }
@@ -578,7 +574,7 @@ export class HostFunctions {
 
     const v = bold_a.historicalLookup(
       toTagged(args.tau),
-      HashCodec.decode(context.memory.getBytes(h.u32(), 32)).value,
+      <Hash>context.memory.getBytes(h.u32(), 32),
     );
 
     if (typeof v === "undefined") {
@@ -1064,11 +1060,7 @@ export class HostFunctions {
     const bold_q: SeqOfLength<AuthorizerHash, typeof AUTHQUEUE_MAX_SIZE> =
       toTagged([]);
     for (let i = 0; i < AUTHQUEUE_MAX_SIZE; i++) {
-      bold_q.push(
-        <AuthorizerHash>(
-          HashCodec.decode(data.subarray(i * 32, (i + 1) * 32)).value
-        ),
-      );
+      bold_q.push(<AuthorizerHash>data.subarray(i * 32, (i + 1) * 32));
     }
     const newX = new PVMResultContextImpl({
       id: x.id,
@@ -1171,14 +1163,12 @@ export class HostFunctions {
     ) {
       return [IxMod.panic()];
     }
-    const c = <CodeHash>(
-      HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value
-    );
+    const c = <CodeHash>context.memory.getBytes(o.u32(), 32);
     if (f.value !== 0n && args.x.id !== args.x.state.manager) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    log(`nextFreeId: ${args.x.nextFreeID}`, process.env.DEBUG_STEPS === "true");
+    //log(`nextFreeId: ${args.x.nextFreeID}`, process.env.DEBUG_STEPS === "true");
     const i_star = check_fn(
       <ServiceIndex>(
         (MINIMUM_PUBLIC_SERVICE_INDEX +
@@ -1193,7 +1183,7 @@ export class HostFunctions {
     //  ),
     //  args.x.state.accounts,
     //);
-    log(`i*: ${i_star}`, process.env.DEBUG_STEPS === "true");
+    //log(`i*: ${i_star}`, process.env.DEBUG_STEPS === "true");
 
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
     const a = new ServiceAccountImpl(
@@ -1265,9 +1255,7 @@ export class HostFunctions {
     } else {
       const x_bold_s_prime = x.bold_s().clone();
 
-      x_bold_s_prime.codeHash = <CodeHash>(
-        HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value
-      );
+      x_bold_s_prime.codeHash = <CodeHash>context.memory.getBytes(o.u32(), 32);
       x_bold_s_prime.minAccGas = g.u64();
       x_bold_s_prime.minMemoGas = m.u64();
 
@@ -1344,7 +1332,7 @@ export class HostFunctions {
     if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
-    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
+    const h = <Hash>context.memory.getBytes(o.u32(), 32);
     if (
       !d.fitsInU32() ||
       (args.x.id != d.u32() && !args.x.state.accounts.has(d.u32()))
@@ -1400,7 +1388,7 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
-    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
+    const h = <Hash>context.memory.getBytes(o.u32(), 32);
     const x_bold_s = x.bold_s();
 
     const bold_a = x_bold_s.requests.get(h, Number(z) as u32);
@@ -1433,9 +1421,7 @@ export class HostFunctions {
     if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
-    const h: Hash = HashCodec.decode(
-      context.memory.getBytes(o.u32(), 32),
-    ).value;
+    const h = <Hash>context.memory.getBytes(o.u32(), 32);
 
     const newX = args.x.clone();
     const bold_a = newX.bold_s();
@@ -1477,7 +1463,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
-    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
+    const h = <Hash>context.memory.getBytes(o.u32(), 32);
 
     const newX = args.x.clone();
     const x_bold_s = newX.bold_s();
@@ -1488,34 +1474,34 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     } else {
       const [x, y, w] = xslhz;
-      log(
-        `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
-        process.env.DEBUG_STEPS === "true",
-      );
+      // log(
+      //   `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
+      //   process.env.DEBUG_STEPS === "true",
+      // );
       if (
         xslhz.length === 0 ||
         (xslhz.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION)
       ) {
-        log(
-          `l=0 or l=2 but expired... Deleting preimage`,
-          process.env.DEBUG_TRACES === "true",
-        );
+        // log(
+        //   `l=0 or l=2 but expired... Deleting preimage`,
+        //   process.env.DEBUG_TRACES === "true",
+        // );
         x_bold_s.requests.delete(h, z.u32());
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
-        log(
-          `l=1... adding tau=${args.tau.value}`,
-          process.env.DEBUG_TRACES === "true",
-        );
+        // log(
+        //   `l=1... adding tau=${args.tau.value}`,
+        //   process.env.DEBUG_TRACES === "true",
+        // );
         x_bold_s.requests.set(h, z.u32(), toTagged([x, args.tau]));
       } else if (
         xslhz.length === 3 &&
         y.value < args.tau.value - PREIMAGE_EXPIRATION
       ) {
-        log(
-          `l=3 but expired... removing oldest tau`,
-          process.env.DEBUG_TRACES === "true",
-        );
+        //log(
+        //  `l=3 but expired... removing oldest tau`,
+        //  process.env.DEBUG_TRACES === "true",
+        //);
         x_bold_s.requests.set(h, z.u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];
@@ -1545,7 +1531,7 @@ export class HostFunctions {
     if (!o.fitsInU32() || !context.memory.canRead(o.u32(), 32)) {
       return [IxMod.panic()];
     }
-    const h = HashCodec.decode(context.memory.getBytes(o.u32(), 32)).value;
+    const h = <Hash>context.memory.getBytes(o.u32(), 32);
     const newX = x.clone();
     newX.yield = h;
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];

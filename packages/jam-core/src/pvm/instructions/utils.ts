@@ -18,6 +18,8 @@ import { toTagged } from "@tsjam/utils";
 
 export const X_fn = (n: bigint) => (x: bigint) =>
   x + (x / 2n ** (8n * n - 1n)) * (2n ** 64n - 2n ** (8n * n));
+export const X_1 = X_fn(1n);
+export const X_2 = X_fn(2n);
 export const X_4 = X_fn(4n);
 export const X_8 = X_fn(8n);
 

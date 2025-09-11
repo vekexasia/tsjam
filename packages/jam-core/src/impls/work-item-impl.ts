@@ -6,7 +6,6 @@ import {
   codec,
   createArrayLengthDiscriminator,
   createJSONCodec,
-  E_sub_int,
   eSubBigIntCodec,
   eSubIntCodec,
   JamCodec,
@@ -39,27 +38,23 @@ import { WorkOutputImpl } from "./work-output-impl";
  * $(0.7.1 - C.35) I fn
  */
 const importDataSegmentCodec: JamCodec<WorkItemImpl["importSegments"][0]> = {
-  encode(value, bytes) {
+  // @ts-expect-error codec still has Uint8array
+  encode(value, bytes: Buffer) {
     const root = value.root;
     if (!isHash(root)) {
-      let offset = HashCodec.encode(root.value, bytes.subarray(0, 32));
-      offset += E_sub_int<number>(2).encode(
-        value.index + 2 ** 15,
-        bytes.subarray(offset),
-      );
-      return offset;
+      root.value.copy(bytes);
+      // E_2
+      bytes.writeUint16LE(value.index + 2 ** 15, 32);
     } else {
-      let offset = HashCodec.encode(root, bytes.subarray(0, 32));
-      offset += E_sub_int<number>(2).encode(
-        value.index,
-        bytes.subarray(offset),
-      );
-      return offset;
+      root.copy(bytes);
+      bytes.writeUint16LE(value.index, 32);
     }
+    return 32 + 2;
   },
-  decode(bytes) {
-    const { value: root } = HashCodec.decode(bytes.subarray(0, 32));
-    const { value: index } = E_sub_int<u16>(2).decode(bytes.subarray(32));
+  // @ts-expect-error codec still has Uint8array
+  decode(bytes: Buffer) {
+    const root = bytes.subarray(0, 32);
+    const index = bytes.readUint16LE(32);
     if (index > 2 ** 15) {
       return {
         value: {
