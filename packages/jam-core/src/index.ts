@@ -7,6 +7,7 @@ export * from "./impls/authorizer-pool-impl";
 export * from "./impls/authorizer-queue-impl";
 export * from "./impls/availability-specification-impl";
 export * from "./impls/beta-impl";
+export * from "./impls/chain-manager";
 export * from "./impls/core-statistics-impl";
 export * from "./impls/deferred-transfer-impl";
 export * from "./impls/deferred-transfers-impl";
