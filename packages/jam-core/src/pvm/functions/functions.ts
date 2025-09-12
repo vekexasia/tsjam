@@ -118,7 +118,7 @@ export class HostFunctions {
     context: PVMProgramExecutionContextImpl,
     args: {
       p?: WorkPackageImpl;
-      n?: Hash; // TODO: discover what this is
+      n?: Hash;
       bold_r?: Buffer;
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];

@@ -102,7 +102,6 @@ describe("assurances", () => {
     if (test.output.ok) {
       expect(newReports.elements).deep.eq(test.output.ok, "newReports");
     }
-    // TODO: check output.ok?
     return true;
   };
 

@@ -20,11 +20,10 @@ export const binaryMerkleTree = <T extends Buffer | Hash>(
     return elements[0];
   }
   const mid = Math.ceil(elements.length / 2);
-  // TODO: optimize by allocating buffer ans using .copy
-  const buf = Buffer.from([
-    ...$node,
-    ...binaryMerkleTree(elements.slice(0, mid), hashFn),
-    ...binaryMerkleTree(elements.slice(mid), hashFn),
+  const buf = Buffer.concat([
+    $node,
+    binaryMerkleTree(elements.slice(0, mid), hashFn),
+    binaryMerkleTree(elements.slice(mid), hashFn),
   ]);
   return hashFn(buf);
 };

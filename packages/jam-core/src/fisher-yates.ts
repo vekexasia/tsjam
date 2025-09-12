@@ -33,14 +33,15 @@ const Q = (l: number, entropy: Hash): u32[] => {
   const toRet = <u32[]>[];
   const buf = Buffer.allocUnsafe(32 + 4);
   entropy.copy(buf);
-  // TODO: instead of hashing 8 times the same element just reuse and read
+  let hash: Hash;
   for (let i = 0; i < l; i++) {
-    // E_4.encode
-    buf.writeUint32LE(Math.floor(i / 8), 32);
+    if (i % 8 === 0) {
+      // E_4.encode
+      buf.writeUint32LE(Math.floor(i / 8), 32);
+      hash = Hashing.blake2b(buf);
+    }
     toRet.push(
-      E_4_int.decode(
-        Hashing.blake2b(buf).subarray((4 * i) % 32, ((4 * i) % 32) + 4),
-      ).value,
+      E_4_int.decode(hash!.subarray((4 * i) % 32, ((4 * i) % 32) + 4)).value,
     );
   }
   return toRet;

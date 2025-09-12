@@ -28,6 +28,7 @@ import { toPosterior, toTagged } from "@tsjam/utils";
 import * as fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { dummyState } from "../dummy-utils";
+import { HeaderTicketMarkerImpl } from "@/impls/header-ticket-marker-impl";
 
 @JamCodecable()
 class TestState extends BaseJamCodecable {
@@ -78,8 +79,8 @@ class TestInput extends BaseJamCodecable {
 class TestOutputOk extends BaseJamCodecable {
   @optionalCodec(HeaderEpochMarkerImpl)
   epochMark?: HeaderEpochMarkerImpl;
-  @codec(JamHeaderImpl.codecOf("ticketsMark"))
-  ticketsMark?: SeqOfLength<TicketImpl, typeof EPOCH_LENGTH>;
+  @optionalCodec(HeaderTicketMarkerImpl)
+  ticketsMark?: HeaderTicketMarkerImpl;
 }
 
 @JamCodecable()
@@ -224,6 +225,23 @@ const buildTest = (name: string) => {
   // expect(newState.tau).deep.eq(testCase.postState.tau);
   expect(p_entropy.toJSON()).deep.eq(testCase.postState.eta.toJSON());
   // TODO: output
+  //
+  const epochMarker = HeaderEpochMarkerImpl.build({
+    tau: curState.slot,
+    p_tau: p_tau.value,
+    entropy: curState.entropy,
+    p_gamma_p: p_gamma_p,
+  });
+
+  expect(testCase.output.ok!.epochMark).deep.eq(epochMarker);
+
+  const ticketsMark = HeaderTicketMarkerImpl.build({
+    tau: curState.slot,
+    p_tau: p_tau.value,
+    gamma_a: curState.safroleState.gamma_a,
+  });
+
+  expect(testCase.output.ok!.ticketsMark).deep.eq(ticketsMark);
 };
 
 describe("safrole-test-vectors", () => {

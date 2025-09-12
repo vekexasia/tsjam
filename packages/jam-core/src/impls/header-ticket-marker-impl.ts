@@ -15,6 +15,7 @@ import type {
 import { GammaAImpl } from "./gamma-a-impl";
 import { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
+import { toTagged } from "@tsjam/utils";
 
 @JamCodecable()
 export class HeaderTicketMarkerImpl
@@ -25,7 +26,7 @@ export class HeaderTicketMarkerImpl
   elements!: SeqOfLength<TicketImpl, typeof EPOCH_LENGTH>;
   constructor(elements: TicketImpl[] = []) {
     super();
-    Object.assign(this, elements);
+    this.elements = toTagged(elements);
   }
 
   /**
