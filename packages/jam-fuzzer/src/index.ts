@@ -1,10 +1,10 @@
 import {
   GetState,
+  Initialize,
   Message,
   MessageCodec,
   MessageType,
   PeerInfo,
-  Initialize,
   State,
   Version,
 } from "@tsjam/fuzzer-target";
@@ -13,7 +13,7 @@ import net from "net";
 import { parseArgs } from "node:util";
 
 import { BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
-import { EPOCH_LENGTH, getConstantsMode } from "@tsjam/constants";
+import { EPOCH_LENGTH } from "@tsjam/constants";
 import {
   AppliedBlock,
   ChainManager,
