@@ -54,7 +54,7 @@ const SOCKET_PATH =
   "/tmp/jam_target.sock";
 const sendStuff = (
   message: Message,
-  responseType: MessageType,
+  responseType: MessageType | MessageType[],
 ): Promise<Message> => {
   const buf = encodeWithCodec(MessageCodec, message);
   return new Promise((resolve, reject) => {
@@ -69,7 +69,13 @@ const sendStuff = (
         client.off("data", listener);
         // console.log(`<- ${buffer.length}`);
         const value = MessageCodec.decode(buffer).value;
-        if (value.type() !== responseType) {
+        if (Array.isArray(responseType)) {
+          if (!responseType.includes(value.type())) {
+            return reject(
+              new Error(`Unexpected response type: ${value.type()}`),
+            );
+          }
+        } else if (value.type() !== responseType) {
           return reject(new Error(`Unexpected response type: ${value.type()}`));
         }
         resolve(value);
@@ -267,6 +273,8 @@ const reverseDifferentState = (
 const client = net.createConnection({ path: SOCKET_PATH }, async () => {
   console.log("Connected to server at", SOCKET_PATH);
   const fuzzerPeer = new PeerInfo();
+  fuzzerPeer.fuzzVersion = <u8>1;
+  fuzzerPeer.features = <u32>(1 | 2); // ancestors | simple forking
   fuzzerPeer.name = "tsjam-fuzzer";
   fuzzerPeer.jamVersion = new Version();
   fuzzerPeer.jamVersion.major = <u8>(
@@ -293,7 +301,7 @@ const client = net.createConnection({ path: SOCKET_PATH }, async () => {
     new Message({ peerInfo: fuzzerPeer }),
     MessageType.PEER_INFO,
   );
-  console.log(`Server Peer: `, peerResponse.peerInfo!.toJSON());
+  console.log(`Server Peer: `, peerResponse.peerInfo!.name);
   await sendSingleBlockFromTrace();
   // await generateBlocks();
 });
@@ -353,10 +361,10 @@ const generateBlocks = async () => {
     const newBlock = await produceBlock(lastBlock, p_tau, chainManager);
     console.log("Produced block for slot", i);
     console.dir(newBlock.toJSON(), { depth: null });
-    const res = await sendStuff(
-      new Message({ importBlock: newBlock }),
+    const res = await sendStuff(new Message({ importBlock: newBlock }), [
       MessageType.STATE_ROOT,
-    );
+      MessageType.ERROR,
+    ]);
     const isSuccess = await checkState(
       {
         new: new TraceState({
@@ -379,7 +387,6 @@ const generateBlocks = async () => {
 };
 
 const sendSingleBlockFromTrace = async () => {
-  console.log(getConstantsMode());
   assert(process.env.TRACE_PATH, "TRACE_PATH environment variable is not set");
   assert(
     fs.existsSync(process.env.TRACE_PATH),
@@ -396,8 +403,8 @@ const sendSingleBlockFromTrace = async () => {
     .sort((a, b) => a.localeCompare(b));
 
   let lastBlock: AppliedBlock;
+  console.log(`Loading trace from ${process.env.TRACE_PATH}`);
   if (fs.existsSync(path.join(process.env.TRACE_PATH, "genesis.bin"))) {
-    console.log(`Loading trace from ${process.env.TRACE_PATH}`);
     const genesis = GenesisTrace.decode(
       fs.readFileSync(path.join(process.env.TRACE_PATH, "genesis.bin")),
     ).value;
@@ -422,7 +429,6 @@ const sendSingleBlockFromTrace = async () => {
       throw new Error("Genesis state root mismatch");
     }
   } else {
-    console.log(`initing using file order`);
     const [initialErr, initialTrace] = loadTrace(
       fs.readFileSync(path.join(process.env.TRACE_PATH, files[0])),
     ).safeRet();
@@ -459,21 +465,33 @@ const sendSingleBlockFromTrace = async () => {
       console.error(`Error loading trace from ${file}: ${traceErr}`);
       continue; // we continue to load next one if any
     }
-    const sr = await sendStuff(
-      new Message({ importBlock: trace.block }),
+    const resp = await sendStuff(new Message({ importBlock: trace.block }), [
       MessageType.STATE_ROOT,
-    );
-    const isSuccess = await checkState(
-      {
-        new: trace.postState,
-        prev: trace.preState,
-      },
-      lastBlock.header.signedHash(),
-      sr.stateRoot!,
-    );
-    if (!isSuccess) {
-      console.error("State mismatch at block", trace.block.header.slot);
-      process.exit(1);
+      MessageType.ERROR,
+    ]);
+    if (resp.type() === MessageType.ERROR) {
+      // postState and preSTate should be the same
+      console.log("Error importing block:", resp.error!);
+      if (
+        Buffer.compare(trace.preState.stateRoot, trace.postState.stateRoot) !==
+        0
+      ) {
+        console.error("But preState and postState differ");
+        process.exit(1);
+      }
+    } else {
+      const isSuccess = await checkState(
+        {
+          new: trace.postState,
+          prev: trace.preState,
+        },
+        lastBlock.header.signedHash(),
+        resp.stateRoot!,
+      );
+      if (!isSuccess) {
+        console.error("State mismatch at block", trace.block.header.slot);
+        process.exit(1);
+      }
     }
   }
 
