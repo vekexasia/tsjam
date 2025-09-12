@@ -1,3 +1,5 @@
+import { IdentityMap } from "@/data-structures/identity-map";
+import { HeaderHash } from "@tsjam/types";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
 import { DisputesToPosteriorError } from "./disputes-state-impl";
@@ -9,24 +11,44 @@ import { EGError } from "./extrinsics/guarantees";
 import { EPError } from "./extrinsics/preimages";
 import { ETError } from "./extrinsics/tickets";
 import { GammaAError } from "./gamma-a-impl";
-import { HeaderLookupHistoryImpl } from "./header-lookup-history-impl";
 import { AppliedBlock, JamBlockImpl } from "./jam-block-impl";
 import { JamBlocksDB } from "./jam-blocks-db";
 import { HeaderValidationError } from "./jam-signed-header-impl";
 import { TauError } from "./slot-impl";
 
+/**
+ * Eventually Grandpa
+ * actually handles this
+ * - finalizedBlock = bestBlock -1
+ * - a fork can happen on bestBlock
+ * - as soon one of the multiple forks gets a new block added, the other forks are discarded
+ */
 export class ChainManager {
-  #bestBlock: AppliedBlock | undefined;
-  #blocksDB!: JamBlocksDB;
-  headerLookupHistory!: HeaderLookupHistoryImpl;
+  #bestBlock!: AppliedBlock;
+  #finalizedBlock!: AppliedBlock;
+  /**
+   * keeps only finalized blocks
+   */
+  #finalizedBlocksDB: JamBlocksDB;
 
-  constructor() {}
+  unfinalizedBlocks: IdentityMap<HeaderHash, 32, AppliedBlock> =
+    new IdentityMap();
 
-  async init(genesis: AppliedBlock) {
-    this.#blocksDB = new JamBlocksDB();
-    this.headerLookupHistory = HeaderLookupHistoryImpl.newEmpty();
-    await this.#blocksDB.save(genesis);
+  private constructor(genesis: AppliedBlock) {
+    this.#finalizedBlocksDB = new JamBlocksDB();
     this.#bestBlock = genesis;
+    this.#finalizedBlock = genesis; // the only case where finalized === best
+  }
+
+  static async build(genesis: AppliedBlock) {
+    const toRet = new ChainManager(genesis);
+    await toRet.#finalizedBlocksDB.save(genesis);
+    return toRet;
+  }
+
+  get finalizedBlock(): AppliedBlock {
+    assert(typeof this.#finalizedBlock !== "undefined");
+    return this.#finalizedBlock!;
   }
 
   get bestBlock(): AppliedBlock {
@@ -35,7 +57,7 @@ export class ChainManager {
   }
 
   get blocksDB() {
-    return this.#blocksDB;
+    return this.#finalizedBlocksDB;
   }
 
   async handleIncomingBlock(
@@ -57,35 +79,58 @@ export class ChainManager {
       | ChainManagerErrorCodes
     >
   > {
-    const parentBlock = await this.#blocksDB.fromHeaderHash(
-      block.header.parent,
-    );
+    let parentBlock = this.unfinalizedBlocks.get(block.header.parent);
     if (typeof parentBlock === "undefined") {
-      return err(ChainManagerErrorCodes.UNKNOWN_PARENT);
+      // check from the finalized blocks in db
+      parentBlock = await this.#finalizedBlocksDB.fromHeaderHash(
+        block.header.parent,
+      );
     }
-    const parentState = parentBlock.posteriorState;
-
-    if (parentState.slot.value !== this.#bestBlock!.header.slot.value) {
-      // we are forking handle it here
-      console.log("forking");
+    if (typeof parentBlock === "undefined") {
+      if (
+        Buffer.compare(
+          block.header.parent,
+          this.#finalizedBlock.header.signedHash(),
+        ) !== 0
+      ) {
+        // parent is not the finalized block, so we don't know it and it cant be one before finalized
+        return err(ChainManagerErrorCodes.UNKNOWN_PARENT);
+      }
+      parentBlock = this.#finalizedBlock;
     }
-
-    const res = parentState.applyBlock(
-      block,
-      parentBlock,
-      this.headerLookupHistory,
-    );
+    const res = parentBlock.append(block);
     if (res.isErr()) {
       return err(res.error);
     }
 
-    this.headerLookupHistory = this.headerLookupHistory.toPosterior({
-      header: block.header,
-    });
+    // This is till we implement Grandpa
+    const newFinalized = parentBlock;
+    if (
+      Buffer.compare(
+        newFinalized.header.signedHash(),
+        this.#finalizedBlock.header.signedHash(),
+      ) !== 0
+    ) {
+      // a new finalized Block
+      this.#finalizedBlock = newFinalized;
+      // we remove any competing blocks for same slot
+      [...this.unfinalizedBlocks.values()]
+        .filter((b) => b.header.slot.value === newFinalized.header.slot.value)
+        .filter(
+          (b) =>
+            Buffer.compare(
+              b.header.signedHash(),
+              newFinalized.header.signedHash(),
+            ) !== 0,
+        )
+        .forEach((b) => this.unfinalizedBlocks.delete(b.header.signedHash()));
+    }
 
-    block.posteriorState = res.value;
-    await this.#blocksDB.save(<AppliedBlock>block);
-    this.#bestBlock = <AppliedBlock>block;
+    this.unfinalizedBlocks.set(res.value.header.signedHash(), res.value);
+    await this.#finalizedBlocksDB.save(newFinalized);
+
+    // TODO: when GrandPa this will be different
+    this.#bestBlock = res.value;
     return ok(this.#bestBlock);
   }
 }

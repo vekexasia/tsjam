@@ -46,14 +46,15 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
     if (typeof err !== "undefined") {
       throw new Error(`Error loading initial trace: ${err}`);
     }
-    const chainManager = new ChainManager();
     initialTrace.block.header.signedHash = () =>
       initialTrace.block.header.parent;
 
     initialTrace.block.posteriorState = JamStateImpl.fromMerkleMap(
       initialTrace.preState.merkleMap,
     );
-    await chainManager.init(<AppliedBlock>initialTrace.block);
+    const chainManager = await ChainManager.build(
+      <AppliedBlock>initialTrace.block,
+    );
 
     if (
       Buffer.compare(

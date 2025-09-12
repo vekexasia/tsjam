@@ -47,6 +47,7 @@ export class JamSignedHeaderImpl
   @codec(xBytesCodec(96))
   seal!: BandersnatchSignature;
 
+  #signedHash?: HeaderHash;
   constructor(
     config?: Partial<ConditionalExcept<JamSignedHeaderImpl, Function>>,
   ) {
@@ -57,7 +58,10 @@ export class JamSignedHeaderImpl
   }
 
   signedHash(): HeaderHash {
-    return Hashing.blake2b(this.toBinary());
+    if (typeof this.#signedHash === "undefined") {
+      this.#signedHash = Hashing.blake2b(this.toBinary());
+    }
+    return this.#signedHash;
   }
 
   public static sealSignContext(

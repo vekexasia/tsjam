@@ -87,7 +87,6 @@ const server = net.createServer((socket) => {
         break;
 
       case MessageType.SET_STATE: {
-        chainManager = new ChainManager();
         const stateMap = message.setState!.state.value;
         const state = JamStateImpl.fromMerkleMap(stateMap);
         const gen = <AppliedBlock>new JamBlockImpl({
@@ -95,7 +94,7 @@ const server = net.createServer((socket) => {
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
           posteriorState: state,
         });
-        await chainManager.init(gen);
+        chainManager = await ChainManager.build(gen);
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
       }

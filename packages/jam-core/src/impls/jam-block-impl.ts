@@ -8,7 +8,7 @@ import {
   HeaderCreationError,
   JamSignedHeaderImpl,
 } from "./jam-signed-header-impl";
-import type { JamStateImpl } from "./jam-state-impl";
+import type { ApplyBlockErrors, JamStateImpl } from "./jam-state-impl";
 import { TauImpl } from "./slot-impl";
 
 /**
@@ -30,6 +30,29 @@ export class JamBlockImpl extends BaseJamCodecable implements JamBlock {
     if (config) {
       Object.assign(this, config);
     }
+  }
+
+  /**
+   * Appends A block to the current one
+   * and returns the new block with the posterior state
+   */
+  append(
+    this: AppliedBlock,
+    block: JamBlockImpl,
+  ): Result<AppliedBlock, ApplyBlockErrors> {
+    const [applicationError, res] = this.posteriorState
+      .applyBlock(block, this /* parent */)
+      .safeRet();
+    if (applicationError) {
+      return err(applicationError);
+    }
+    return ok(
+      <AppliedBlock>new JamBlockImpl({
+        header: block.header,
+        extrinsics: block.extrinsics,
+        posteriorState: res,
+      }),
+    );
   }
 
   /**

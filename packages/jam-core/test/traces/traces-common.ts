@@ -126,13 +126,17 @@ export const buildTracesTests = (kind: string) => {
     it(`${which}`, async () => {
       const testCase = tracesTestCase(kind, which);
 
-      const chainManager = new ChainManager();
       testCase.parentBlock.posteriorState = JamStateImpl.fromMerkleMap(
         testCase.preState.merkleMap,
       );
-      await chainManager.init(<AppliedBlock>testCase.parentBlock);
-      chainManager.headerLookupHistory = buildHeaderLookupHistory(
-        parseInt(which) - 1,
+      testCase.parentBlock.posteriorState.headerLookupHistory =
+        buildHeaderLookupHistory(parseInt(which) - 1);
+      testCase.parentBlock.posteriorState.headerLookupHistory.elements.set(
+        testCase.parentBlock.header.slot,
+        testCase.parentBlock.header,
+      );
+      const chainManager = await ChainManager.build(
+        <AppliedBlock>testCase.parentBlock,
       );
 
       expect(
@@ -141,11 +145,6 @@ export const buildTracesTests = (kind: string) => {
         ),
         "initial state root",
       ).eq(xBytesCodec(32).toJSON(testCase.preState.stateRoot));
-
-      chainManager.headerLookupHistory.elements.set(
-        testCase.parentBlock.header.slot,
-        testCase.parentBlock.header,
-      );
 
       const [err, appliedBlock] = (
         await chainManager.handleIncomingBlock(testCase.block)

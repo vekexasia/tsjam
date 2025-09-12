@@ -1,5 +1,4 @@
 import { IdentitySet } from "@/data-structures/identity-set";
-import { SafeMap } from "@/data-structures/safe-map";
 import { AccumulationHistoryImpl } from "@/impls/accumulation-history-impl";
 import { AccumulationQueueImpl } from "@/impls/accumulation-queue-impl";
 import { AccumulationQueueItem } from "@/impls/accumulation-queue-item";
@@ -12,7 +11,6 @@ import { GammaAImpl } from "@/impls/gamma-a-impl";
 import { GammaPImpl } from "@/impls/gamma-p-impl";
 import { GammaSImpl } from "@/impls/gamma-s-impl";
 import { GammaZImpl } from "@/impls/gamma-z-impl";
-import { HeaderLookupHistoryImpl } from "@/impls/header-lookup-history-impl";
 import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
 import { JamStateImpl } from "@/impls/jam-state-impl";
 import { JamStatisticsImpl } from "@/impls/jam-statistics-impl";
@@ -23,7 +21,7 @@ import { SafroleStateImpl } from "@/impls/safrole-state-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
 import { ValidatorDataImpl } from "@/impls/validator-data-impl";
 import { ValidatorsImpl } from "@/impls/validators-impl";
-import { JamBlockImpl } from "@/index";
+import { HeaderLookupHistoryImpl } from "@/index";
 import {
   AUTHQUEUE_MAX_SIZE,
   CORES,
@@ -119,6 +117,7 @@ export const dummyState = (): JamStateImpl => {
     iota: dummyValidators(),
     serviceAccounts: new DeltaImpl(new Map()),
     entropy: dummyEntropy(),
+    headerLookupHistory: HeaderLookupHistoryImpl.newEmpty(),
     authQueue: dummyAuthQueue(),
     privServices: new PrivilegedServicesImpl({
       manager: <ServiceIndex>0,

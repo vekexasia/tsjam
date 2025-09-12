@@ -345,8 +345,7 @@ const generateBlocks = async () => {
     );
   }
 
-  const chainManager = new ChainManager();
-  chainManager.init(GENESIS);
+  const chainManager = await ChainManager.build(GENESIS);
 
   for (let i = EPOCH_LENGTH + 1; ; i++) {
     const p_tau = <Validated<Posterior<TauImpl>>>new SlotImpl(<u32>i);

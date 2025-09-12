@@ -137,6 +137,8 @@ export class JamStateImpl implements JamState {
    */
   mostRecentAccumulationOutputs!: LastAccOutsImpl;
 
+  headerLookupHistory!: HeaderLookupHistoryImpl;
+
   #merkleState?: MerkleState;
 
   constructor(
@@ -159,21 +161,7 @@ export class JamStateImpl implements JamState {
   applyBlock(
     newBlock: JamBlockImpl,
     parent: AppliedBlock,
-    headerLookupHistory: HeaderLookupHistoryImpl,
-  ): Result<
-    Posterior<JamStateImpl>,
-    | DisputesToPosteriorError
-    | DisputesVerdictError
-    | DisputesCulpritError
-    | DisputesFaultError
-    | GammaAError
-    | EAValidationError
-    | ETError
-    | EPError
-    | EGError
-    | TauError
-    | HeaderValidationError
-  > {
+  ): Result<Posterior<JamStateImpl>, ApplyBlockErrors> {
     // $(0.7.1 - 6.1)
     const proposed_p_tau = toPosterior(newBlock.header.slot);
 
@@ -363,9 +351,8 @@ export class JamStateImpl implements JamState {
         accumulationHistory: this.accumulationHistory,
         accumulationQueue: this.accumulationQueue,
         authPool: this.authPool,
-        headerLookupHistory,
+        headerLookupHistory: this.headerLookupHistory,
         serviceAccounts: this.serviceAccounts,
-
         dd_rho,
         d_recentHistory: toDagger(d_beta.recentHistory),
         p_eta2: p_entropy._2,
@@ -434,6 +421,9 @@ export class JamStateImpl implements JamState {
         lambda: toTagged(p_lambda),
         kappa: toTagged(p_kappa),
         disputes: p_disputes,
+        headerLookupHistory: this.headerLookupHistory.toPosterior({
+          header: newBlock.header,
+        }),
         mostRecentAccumulationOutputs: p_mostRecentAccumulationOutputs,
       }),
     );
@@ -441,7 +431,10 @@ export class JamStateImpl implements JamState {
     return ok(p_state);
   }
 
-  static fromMerkleMap(merkleMap: MerkleStateMap) {
+  static fromMerkleMap(
+    merkleMap: MerkleStateMap,
+    headerLookupHistory: HeaderLookupHistoryImpl = HeaderLookupHistoryImpl.newEmpty(),
+  ) {
     const authPool = AuthorizerPoolImpl.decode(
       merkleMap.get(stateKey(1))!,
     ).value;
@@ -585,6 +578,7 @@ export class JamStateImpl implements JamState {
       beta,
       disputes,
       entropy,
+      headerLookupHistory,
       iota: toTagged(iota),
       kappa: toTagged(kappa),
       lambda: toTagged(lambda),
@@ -598,3 +592,16 @@ export class JamStateImpl implements JamState {
     });
   }
 }
+
+export type ApplyBlockErrors =
+  | DisputesToPosteriorError
+  | DisputesVerdictError
+  | DisputesCulpritError
+  | DisputesFaultError
+  | GammaAError
+  | EAValidationError
+  | ETError
+  | EPError
+  | EGError
+  | TauError
+  | HeaderValidationError;

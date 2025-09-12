@@ -11,6 +11,7 @@ import {
   EpochMarkerValidatorImpl,
   GammaPImpl,
   HeaderEpochMarkerImpl,
+  HeaderLookupHistoryImpl,
   HeaderOffenderMarkerImpl,
   JamBlockExtrinsicsImpl,
   JamBlockImpl,
@@ -48,6 +49,8 @@ export const GENESIS_STATE = new JamStateImpl({
   serviceAccounts: DeltaImpl.newEmpty(),
 
   entropy: JamEntropyImpl.newEmpty(),
+
+  headerLookupHistory: HeaderLookupHistoryImpl.newEmpty(),
 
   authQueue: AuthorizerQueueImpl.newEmpty(),
 

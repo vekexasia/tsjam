@@ -58,14 +58,12 @@ if (import.meta.vitest) {
 
   describe("BlockGenerator", () => {
     it("should produce a valid block from the genesis state", async () => {
-      const chainManager = new ChainManager();
-      await chainManager.init(GENESIS);
+      const chainManager = await ChainManager.build(GENESIS);
       produceBlock(GENESIS, toTagged(new SlotImpl(<u32>420420)), chainManager);
     });
 
     it("should produce a valid block skipping epoch", async () => {
-      const chainManager = new ChainManager();
-      await chainManager.init(GENESIS);
+      const chainManager = await ChainManager.build(GENESIS);
       produceBlock(GENESIS, toTagged(new SlotImpl(<u32>601)), chainManager);
     });
   });
