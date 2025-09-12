@@ -82,7 +82,7 @@ export const MAX_WORK_PREREQUISITES = 8;
  *
  * it's essentially 1 day = 14400 * 6s = 86400s
  */
-export const MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
+export let MAXIMUM_AGE_LOOKUP_ANCHOR = 14400;
 
 /**
  * `Wa` in the paper
@@ -299,6 +299,7 @@ export function initConstants(mode?: "full" | "tiny") {
   ERASURECODE_BASIC_SIZE = <684>v.ERASURECODE_BASIC_SIZE;
   CURRENT_MODE = m;
   RECOVERY_THRESHOLD = <683>v.RECOVERY_THRESHOLD;
+  MAXIMUM_AGE_LOOKUP_ANCHOR = <14400>v.MAXIMUM_AGE_LOOKUP_ANCHOR;
 }
 
 export function getConstantsMode() {

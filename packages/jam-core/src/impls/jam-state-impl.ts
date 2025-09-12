@@ -421,9 +421,9 @@ export class JamStateImpl implements JamState {
         lambda: toTagged(p_lambda),
         kappa: toTagged(p_kappa),
         disputes: p_disputes,
-        headerLookupHistory: this.headerLookupHistory.toPosterior({
-          header: newBlock.header,
-        }),
+        headerLookupHistory: this.headerLookupHistory.toPosterior(
+          newBlock.header,
+        ),
         mostRecentAccumulationOutputs: p_mostRecentAccumulationOutputs,
       }),
     );

@@ -86,15 +86,21 @@ const server = net.createServer((socket) => {
         send(new Message({ peerInfo: pi }));
         break;
 
-      case MessageType.SET_STATE: {
-        const stateMap = message.setState!.state.value;
+      case MessageType.INITIALIZE: {
+        const stateMap = message.initialize!.state.value;
         const state = JamStateImpl.fromMerkleMap(stateMap);
         const gen = <AppliedBlock>new JamBlockImpl({
-          header: message.setState!.header,
+          header: message.initialize!.header,
           extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
           posteriorState: state,
         });
         chainManager = await ChainManager.build(gen);
+        message.initialize!.ancestry.forEach((ancestryItem) => {
+          gen.posteriorState.headerLookupHistory.elements.set(
+            ancestryItem.slot,
+            ancestryItem.headerHash,
+          );
+        });
         send(new Message({ stateRoot: state.merkleRoot() }));
         break;
       }
@@ -105,23 +111,36 @@ const server = net.createServer((socket) => {
 
         if (err) {
           console.log(err);
+          send(new Message({ error: err }));
+          break;
+        } else {
+          send(
+            new Message({
+              stateRoot: chainManager.bestBlock!.posteriorState.merkleRoot(),
+            }),
+          );
         }
-        send(
-          new Message({
-            stateRoot: chainManager.bestBlock!.posteriorState.merkleRoot(),
-          }),
-        );
         break;
       }
       case MessageType.GET_STATE: {
-        const block = await chainManager.blocksDB.fromHeaderHash(
+        let block = await chainManager.blocksDB.fromHeaderHash(
           message.getState!.headerHash,
         );
         if (typeof block === "undefined") {
-          throw new Error(
-            "State not found for header hash: " +
-              xBytesCodec(32).toJSON(message.getState!.headerHash),
-          );
+          // try with best block
+          if (
+            Buffer.compare(
+              chainManager.bestBlock.header.signedHash(),
+              message.getState!.headerHash,
+            ) === 0
+          ) {
+            block = chainManager.bestBlock;
+          } else {
+            throw new Error(
+              "State not found for header hash: " +
+                xBytesCodec(32).toJSON(message.getState!.headerHash),
+            );
+          }
         }
 
         send(

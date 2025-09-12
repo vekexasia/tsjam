@@ -1,7 +1,9 @@
 import { JamCodec } from "./codec.js";
 
 type Entries<T> = {
-  [K in keyof T]: [K, JamCodec<NonNullable<T[K]>>];
+  [K in keyof T]:
+    | [K, JamCodec<NonNullable<T[K]>>, number]
+    | [K, JamCodec<NonNullable<T[K]>>];
 }[keyof T];
 
 /**
@@ -14,12 +16,23 @@ type Entries<T> = {
 export const eitherOneOfCodec = <T extends object>(
   itemsCodec: Entries<T>[],
 ): JamCodec<T> => {
+  const indicesToBytes = itemsCodec.map((a, idx) => {
+    if (a.length === 3) {
+      return a[2];
+    }
+    return idx;
+  });
+  const bytesToIndices: Record<number, number> = {};
+  indicesToBytes.forEach((b, i) => {
+    bytesToIndices[b] = i;
+  });
+
   return {
     encode(value, bytes) {
       for (let i = 0; i < itemsCodec.length; i++) {
         const [key, codec] = itemsCodec[i];
         if (typeof value[key] !== "undefined") {
-          bytes[0] = i;
+          bytes[0] = indicesToBytes[i];
           return 1 + codec.encode(value[key]!, bytes.subarray(1));
         }
       }
@@ -27,7 +40,7 @@ export const eitherOneOfCodec = <T extends object>(
     },
     decode(bytes) {
       const byte = bytes[0];
-      const [key, codec] = itemsCodec[byte];
+      const [key, codec] = itemsCodec[bytesToIndices[byte]];
       const { value, readBytes } = codec.decode(bytes.subarray(1));
       return { value: <T>{ [key]: value }, readBytes: 1 + readBytes };
     },
