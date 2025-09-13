@@ -8,6 +8,7 @@ import {
   PVMMemoryAccessKind,
   PVMProgramCode,
   PVMRegisterRawValue,
+  Tagged,
   u32,
 } from "@tsjam/types";
 import JSONBig from "json-bigint";
@@ -98,9 +99,12 @@ describe("pvm", () => {
       json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
     );
     for (const { address, contents } of json["expected-memory"]) {
-      expect(execContext.memory.getBytes(address, contents.length)).toEqual(
-        Buffer.from(contents),
-      );
+      expect(
+        (<Tagged<PVMMemory, "canRead">>execContext.memory).getBytes(
+          address,
+          contents.length,
+        ),
+      ).toEqual(Buffer.from(contents));
     }
     // expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
   };

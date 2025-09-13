@@ -1,5 +1,11 @@
 import { Zp } from "@tsjam/constants";
-import { IPVMMemory, Page, PVMMemoryAccessKind, u32 } from "@tsjam/types";
+import {
+  IPVMMemory,
+  Page,
+  PVMMemoryAccessKind,
+  Tagged,
+  u32,
+} from "@tsjam/types";
 import assert from "node:assert";
 export type MemoryContent = { at: u32; content: Uint8Array };
 
@@ -71,11 +77,15 @@ export class PVMMemory implements IPVMMemory {
 
   #getBytes(address: u32, length: number): Buffer {
     if (length === 0) {
-      return Buffer.alloc(0);
+      return Buffer.allocUnsafe(0);
     }
     const { page, offset } = this.#locationFromAddress(address);
     const memory = this.#innerMemoryContent.get(page)!;
     const bytesToRead = Math.min(length, Zp - offset);
+    // TODO: if we do this we need to make sure that the underlying memory is not changed
+    // if (bytesToRead === length) {
+    //   return memory.subarray(offset, offset + bytesToRead);
+    // }
     const chunk = Buffer.allocUnsafe(length);
     memory.copy(chunk, 0, offset, offset + bytesToRead);
     // log(
@@ -92,6 +102,15 @@ export class PVMMemory implements IPVMMemory {
     return chunk;
   }
 
+  changeAcl(
+    page: Page,
+    kind: PVMMemoryAccessKind.Read,
+  ): Tagged<this, "canRead">;
+  changeAcl(
+    page: Page,
+    kind: PVMMemoryAccessKind.Write,
+  ): Tagged<this, "canWrite">;
+  changeAcl(page: Page, kind: PVMMemoryAccessKind.Null): this;
   changeAcl(page: Page, kind: PVMMemoryAccessKind): this {
     if (!this.acl.has(page)) {
       assert(
@@ -106,24 +125,29 @@ export class PVMMemory implements IPVMMemory {
     return this;
   }
 
-  setBytes(address: u32, bytes: Uint8Array): this {
-    assert(this.canWrite(address, bytes.length));
+  setBytes(
+    this: Tagged<PVMMemory, "canWrite">,
+    address: u32,
+    bytes: Uint8Array,
+  ) {
     this.#setBytes(address, bytes);
 
     //log(
     //  `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
     //  true,
     //);
-    return this;
   }
 
-  getBytes(address: u32, length: number): Buffer {
-    assert(this.canRead(address, length));
+  getBytes(
+    this: Tagged<PVMMemory, "canRead">,
+    address: u32,
+    length: number,
+  ): Buffer {
     const r = this.#getBytes(address, length);
     return r;
   }
 
-  canRead(address: u32, length: number): boolean {
+  canRead(address: u32, length: number): this is Tagged<PVMMemory, "canRead"> {
     return this.firstUnreadable(address, length) === undefined;
   }
 
@@ -136,7 +160,10 @@ export class PVMMemory implements IPVMMemory {
     }
   }
 
-  canWrite(address: u32, length: number): boolean {
+  canWrite(
+    address: u32,
+    length: number,
+  ): this is Tagged<PVMMemory, "canRead" | "canWrite"> {
     return this.firstUnwriteable(address, length) === undefined;
   }
 

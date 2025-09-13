@@ -90,6 +90,7 @@ import {
   RegularPVMExitReason,
   SeqOfLength,
   ServiceIndex,
+  Tagged,
   Tau,
   u32,
   u64,
@@ -709,19 +710,14 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
-    if (
-      !s.fitsInU32() ||
-      !refineCtx.bold_m.get(Number(n))!.ram.canRead(s.u32(), z.u32())
-    ) {
+    const ram = refineCtx.bold_m.get(Number(n))!.ram;
+    if (!s.fitsInU32() || !ram.canRead(s.u32(), z.u32())) {
       return [IxMod.w7(HostCallResult.OOB)];
     }
 
     return [
       IxMod.w7(HostCallResult.OK),
-      IxMod.memory(
-        o.u32(),
-        refineCtx.bold_m.get(Number(n))!.ram.getBytes(s.u32(), z.u32()),
-      ),
+      IxMod.memory(o.u32(), ram.getBytes(s.u32(), z.u32())),
     ];
   }
 
@@ -767,7 +763,11 @@ export class HostFunctions {
       instructionPointer: curN.instructionPointer,
       ram: newRam,
     });
-    newRam.setBytes(o.u32(), context.memory.getBytes(s.u32(), Number(z)));
+    // checked above
+    (<Tagged<PVMMemory, "canWrite">>newRam).setBytes(
+      o.u32(),
+      context.memory.getBytes(s.u32(), Number(z)),
+    );
 
     return [IxMod.w7(HostCallResult.OK), IxMod.obj(newContext)];
   }
@@ -1553,7 +1553,7 @@ export class HostFunctions {
     if (
       !o.fitsInU32() ||
       !z.fitsInU32() ||
-      context.memory.canRead(o.u32(), z.u32())
+      !context.memory.canRead(o.u32(), z.u32())
     ) {
       return [IxMod.panic()];
     }
@@ -1613,13 +1613,16 @@ export class HostFunctions {
     const w9 = _w9.u32();
     let target = undefined;
     if (w8 !== 0 && w9 !== 0) {
-      target = context.memory.getBytes(w8, w9);
+      target = (<Tagged<PVMMemory, "canRead">>context.memory).getBytes(w8, w9);
     }
 
     const w10 = _w10.u32();
     const w11 = _w11.u32();
 
-    const message = context.memory.getBytes(w10, w11);
+    const message = (<Tagged<PVMMemory, "canRead">>context.memory).getBytes(
+      w10,
+      w11,
+    );
     const lvlString = ["FATAL", "WARN", "INFO", "DEBUG", "TRACE"][level];
     // const lvlIdentifier = ["⛔️", "⚠️", "ℹ️", "💁", "🪡"][level];
     let formattedMessage = `${new Date().toISOString()} ${lvlString}@${deps.core}`;

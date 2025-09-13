@@ -75,10 +75,10 @@ const R_fn = <X>(
   }
   if (hostCall.exitReason?.reason === RegularPVMExitReason.Halt) {
     const w7 = context.registers.w7();
-    const readable =
+    if (
       w7.fitsInU32() &&
-      context.memory.canRead(w7.u32(), Number(context.registers.w8()));
-    if (readable) {
+      context.memory.canRead(w7.u32(), Number(context.registers.w8()))
+    ) {
       return {
         gasUsed: gas_prime,
         res: new WorkOutputImpl<WorkError.OutOfGas>(

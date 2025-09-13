@@ -10,8 +10,10 @@ import {
   PVMSingleModObject,
   PVMSingleModPointer,
   PVMSingleModRegister,
+  Tagged,
 } from "@tsjam/types";
 import { IxMod } from "../instructions/utils";
+import { PVMMemory } from "../pvm-memory";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -78,7 +80,10 @@ export const applyMods = <T extends object>(
         //  }] = <${BufferJSONCodec().toJSON(<any>mod.data.data)}>`,
         //  true,
         //);
-        newCtx.memory.setBytes(mod.data.from, mod.data.data);
+        (<Tagged<PVMMemory, "canWrite">>newCtx.memory).setBytes(
+          mod.data.from,
+          mod.data.data,
+        );
       } else {
         const r = applyMods(newCtx, out, [
           ...IxMod.pageFault(firstUnwriteable, originalPointer),

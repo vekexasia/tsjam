@@ -22,7 +22,7 @@ export interface IPVMMemory {
    * @param address - offset to write the value to
    * @param bytes - the value to write
    */
-  setBytes(address: u32, bytes: Uint8Array): this;
+  setBytes(address: u32, bytes: Uint8Array): void;
 
   /**
    * @throws in case there is an issue accessing the memory
