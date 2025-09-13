@@ -1,11 +1,12 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { PVMProgram, u32, u8 } from "@tsjam/types";
+import { PVMProgram, PVMProgramCode, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import { applyMods } from "./functions/utils";
 import "./instructions/instructions";
 import { Ixdb, PVMIx } from "./instructions/ixdb";
 import { IxMod, TRAP_COST } from "./instructions/utils";
+import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 
 type InstructionPointer = u32;
 type IxPointerCache = {
@@ -127,6 +128,17 @@ export class ParsedProgram {
    */
   static parse(program: PVMProgram): ParsedProgram {
     return new ParsedProgram(program);
+  }
+
+  static deblob(bold_p: PVMProgramCode): ParsedProgram | PVMExitReasonImpl {
+    let program: PVMProgram;
+    try {
+      program = PVMProgramCodec.decode(bold_p).value;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      return PVMExitReasonImpl.panic();
+    }
+    return ParsedProgram.parse(program);
   }
 }
 

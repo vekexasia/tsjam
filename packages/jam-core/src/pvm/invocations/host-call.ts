@@ -2,9 +2,10 @@ import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import "@/pvm/functions/functions";
-import { u8 } from "@tsjam/types";
+import { PVMProgramCode, u8 } from "@tsjam/types";
 import assert from "assert";
-import { basicInvocation, deblobProgram } from "./basic";
+import { basicInvocation } from "./basic";
+import { ParsedProgram } from "../parse-program";
 
 /**
  * Host call invocation
@@ -12,14 +13,14 @@ import { basicInvocation, deblobProgram } from "./basic";
  * $(0.7.1 - A.35)
  */
 export const hostCallInvocation = <X>(
-  program: Uint8Array,
+  program: PVMProgramCode,
   ctx: PVMProgramExecutionContextImpl, // ı, ξ, ω, μ
   f: HostCallExecutor<X>,
   x: X,
 ): HostCallOut<X> => {
   // NOTE:this is not part of A.35 but an optimization
   // to avoid deblobbing multiple times in basicInvocation
-  const r = deblobProgram(program);
+  const r = ParsedProgram.deblob(program);
   if (r instanceof PVMExitReasonImpl) {
     return {
       exitReason: r,

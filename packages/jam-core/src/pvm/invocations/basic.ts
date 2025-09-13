@@ -1,23 +1,9 @@
-import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { PVMProgram } from "@tsjam/types";
-import { ParsedProgram } from "../parse-program";
-import { log } from "@/utils";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { log } from "@/utils";
+import { ParsedProgram } from "../parse-program";
 
-export const deblobProgram = (
-  bold_p: Uint8Array,
-): PVMExitReasonImpl | ParsedProgram => {
-  let program: PVMProgram;
-  try {
-    program = PVMProgramCodec.decode(bold_p).value;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    return PVMExitReasonImpl.panic();
-  }
-  return ParsedProgram.parse(program);
-};
 /**
  * Basic invocation
  * `Ψ` in the graypaper

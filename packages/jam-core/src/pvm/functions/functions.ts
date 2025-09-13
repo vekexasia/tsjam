@@ -85,6 +85,7 @@ import {
   IrregularPVMExitReason,
   PVMExitReasonMod,
   PVMMemoryAccessKind,
+  PVMProgramCode,
   PVMSingleModMemory,
   PVMSingleModObject,
   RegularPVMExitReason,
@@ -100,11 +101,12 @@ import { toTagged, zeroPad } from "@tsjam/utils";
 import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import { IxMod } from "../instructions/utils";
-import { basicInvocation, deblobProgram } from "../invocations/basic";
+import { basicInvocation } from "../invocations/basic";
 import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { ParsedProgram } from "../parse-program";
 
 export class HostFunctions {
   @HostFn(0)
@@ -679,7 +681,7 @@ export class HostFunctions {
       segments: refineCtx.segments,
     };
     newContext.bold_m.set(n, {
-      code: bold_p,
+      code: <PVMProgramCode>bold_p,
       ram: bold_u,
       instructionPointer: <u32>Number(i.value),
     });
@@ -861,7 +863,7 @@ export class HostFunctions {
 
     // NOTE:this should have been handled by the basic invocation but
     // we optimized it out so we need to do it here
-    const p = deblobProgram(refineCtx.bold_m.get(Number(n))!.code);
+    const p = ParsedProgram.deblob(refineCtx.bold_m.get(Number(n))!.code);
     let exitReason: PVMExitReasonImpl;
     let ixCtx: PVMIxEvaluateFNContextImpl | undefined;
     if (p instanceof PVMExitReasonImpl) {
@@ -1701,7 +1703,7 @@ export class PVMGuest {
   /**
    * `p`
    */
-  code!: Uint8Array;
+  code!: PVMProgramCode;
   /**
    * `u`
    */

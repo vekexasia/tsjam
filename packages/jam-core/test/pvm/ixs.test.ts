@@ -12,7 +12,7 @@ import {
   u32,
 } from "@tsjam/types";
 import JSONBig from "json-bigint";
-import { basicInvocation, deblobProgram } from "@/pvm/invocations/basic";
+import { basicInvocation } from "@/pvm/invocations/basic";
 import { PVMMemory } from "@/pvm/pvm-memory";
 import {
   PVMExitReasonImpl,
@@ -21,6 +21,7 @@ import {
   PVMRegisterImpl,
   PVMRegistersImpl,
 } from "@/index";
+import { ParsedProgram } from "@/pvm/parse-program";
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
 describe("pvm", () => {
@@ -66,7 +67,7 @@ describe("pvm", () => {
             <PVMRegisterRawValue>r,
           )),
       );
-    const res = deblobProgram(
+    const res = ParsedProgram.deblob(
       <PVMProgramCode>Buffer.from(<number[]>json.program),
     );
     let exitReason: PVMExitReasonImpl;
