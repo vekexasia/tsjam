@@ -73,7 +73,7 @@ export type TwoImmArgs = HydratedArgs<ReturnType<typeof TwoImmIxDecoder>>;
 export const OneOffsetIxDecoder = (bytes: Uint8Array) => {
   const lx = Math.min(4, bytes.length);
   const ipOffsetRaw: i32 = <i32>(
-    Number(Z(lx, E_sub(lx).decode(bytes.subarray(0, lx)).value))
+    Number(Z(lx)(E_sub(lx).decode(bytes.subarray(0, lx)).value))
   );
 
   return {
@@ -133,7 +133,7 @@ export const OneRegOneIMMOneOffsetIxDecoder = (bytes: Uint8Array) => {
   ) as PVMRegisterRawValue;
 
   const ipOffsetRaw = Number(
-    Z(ly, E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
+    Z(ly)(E_sub(ly).decode(bytes.subarray(1 + lx, 1 + lx + ly)).value),
   ) as i32;
 
   return {
@@ -190,7 +190,7 @@ export const TwoRegOneOffsetIxDecoder = (bytes: Uint8Array) => {
   const rB = Math.min(12, Math.floor(bytes[0] / 16)) as RegisterIdentifier;
   const lX = Math.min(4, Math.max(0, bytes.length - 1));
   const ipOffsetRaw = Number(
-    Z(lX, E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
+    Z(lX)(E_sub(lX).decode(bytes.subarray(1, 1 + lX)).value),
   ) as i32;
   return {
     rA,

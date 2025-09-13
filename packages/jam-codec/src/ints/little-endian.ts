@@ -1,5 +1,5 @@
-import { uncheckedConverter } from "@vekexasia/bigint-uint8array";
 import { JamCodec } from "@/codec";
+import { toBigIntLE, toBufferLE } from "bigint-buffer";
 import assert from "node:assert";
 
 /**
@@ -11,16 +11,14 @@ export const LittleEndian: JamCodec<bigint> = {
     if (bytes.length === 0) {
       return 0;
     }
-    value = BigInt(value);
-    assert.ok(value >= 0, "value must be positive");
-    assert.ok(value < 2 ** (8 * bytes.length), "value is too large");
-    // we could use the converter but the performance would take a hit at no benefit (checks above)
-    uncheckedConverter.littleEndianToArray(value, bytes);
+    assert.ok(value >= 0);
+    assert.ok(value < 2 ** (8 * bytes.length));
+    bytes.set(toBufferLE(value, bytes.length));
     return bytes.length;
   },
   decode: (bytes: Uint8Array): { value: bigint; readBytes: number } => {
     return {
-      value: uncheckedConverter.arrayToLittleEndian(bytes),
+      value: toBigIntLE(<Buffer>bytes),
       readBytes: bytes.length, // when this method is being called we know the length
     };
   },

@@ -5,7 +5,7 @@ import { PVMRegisterRawValue, u32 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "../pvm-memory";
 import { branch } from "../utils/branch";
 import { djump } from "../utils/djump";
-import { Z, Z4, Z8, Z8_inv } from "../utils/zed";
+import { Z1, Z2, Z4, Z8, Z8_inv } from "../utils/zed";
 import {
   type NoArgIxArgs,
   NoArgIxDecoder,
@@ -372,7 +372,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) < Z(8, vX), skip);
+    return branch(context, ipOffset, Z8(wA.value) < Z8(vX), skip);
   }
 
   @Ix(88, OneRegOneIMMOneOffsetIxDecoder, true)
@@ -382,7 +382,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) <= Z(8, vX), skip);
+    return branch(context, ipOffset, Z8(wA.value) <= Z8(vX), skip);
   }
 
   @Ix(89, OneRegOneIMMOneOffsetIxDecoder, true)
@@ -392,7 +392,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) >= Z(8, vX), skip);
+    return branch(context, ipOffset, Z8(wA.value) >= Z8(vX), skip);
   }
 
   @Ix(90, OneRegOneIMMOneOffsetIxDecoder, true)
@@ -402,7 +402,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) > Z(8, vX), skip);
+    return branch(context, ipOffset, Z8(wA.value) > Z8(vX), skip);
   }
 
   @Ix(100, TwoRegIxDecoder)
@@ -507,12 +507,12 @@ export class Instructions {
 
   @Ix(108, TwoRegIxDecoder)
   sign_extend_8({ wD, wA }: TwoRegArgs) {
-    wD.value = Z8_inv(Z(1, wA.value % 2n ** 8n));
+    wD.value = Z8_inv(Z1(wA.value % 2n ** 8n));
   }
 
   @Ix(109, TwoRegIxDecoder)
   sign_extend_16({ wD, wA }: TwoRegArgs) {
-    wD.value = Z8_inv(Z(2, wA.value % 2n ** 16n));
+    wD.value = Z8_inv(Z2(wA.value % 2n ** 16n));
   }
 
   @Ix(110, TwoRegIxDecoder)
@@ -583,7 +583,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) < Z(8, wB.value), skip);
+    return branch(context, ipOffset, Z8(wA.value) < Z8(wB.value), skip);
   }
 
   @Ix(174, TwoRegOneOffsetIxDecoder, true)
@@ -603,7 +603,7 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
     skip: number,
   ) {
-    return branch(context, ipOffset, Z(8, wA.value) >= Z(8, wB.value), skip);
+    return branch(context, ipOffset, Z8(wA.value) >= Z8(wB.value), skip);
   }
 
   @Ix(120, TwoRegOneImmIxDecoder)
@@ -725,7 +725,7 @@ export class Instructions {
       );
     }
     const raw = context.execution.memory.getBytes(location, 1);
-    const val = Z8_inv(Z(1, BigInt(raw[0])));
+    const val = Z8_inv(Z1(BigInt(raw[0])));
     wA.value = <PVMRegisterRawValue>val;
   }
 
@@ -742,7 +742,7 @@ export class Instructions {
     }
     const val = context.execution.memory.getBytes(location, 2);
     const num = val.readUint16LE();
-    wA.value = <PVMRegisterRawValue>Z8_inv(Z(2, BigInt(num)));
+    wA.value = <PVMRegisterRawValue>Z8_inv(Z2(BigInt(num)));
   }
 
   @Ix(129, TwoRegOneImmIxDecoder)
@@ -758,7 +758,7 @@ export class Instructions {
     }
     const val = context.execution.memory.getBytes(location, 4);
     const num = val.readUInt32LE();
-    wA.value = <PVMRegisterRawValue>Z8_inv(Z(4, BigInt(num)));
+    wA.value = <PVMRegisterRawValue>Z8_inv(Z4(BigInt(num)));
   }
 
   // math
@@ -810,8 +810,8 @@ export class Instructions {
 
   @Ix(140, TwoRegOneImmIxDecoder)
   shar_r_imm_32({ wA, wB, vX }: TwoRegOneImmArgs) {
-    const wb = Number(wB.value % 2n ** 32n);
-    wA.value = <PVMRegisterRawValue>Z8_inv(BigInt(Z4(wb) >> Number(vX % 32n)));
+    const wb = wB.value % 2n ** 32n;
+    wA.value = <PVMRegisterRawValue>Z8_inv(BigInt(Z4(wb) >> vX % 32n));
   }
 
   @Ix(141, TwoRegOneImmIxDecoder)
@@ -992,8 +992,8 @@ export class Instructions {
 
   @Ix(194, ThreeRegIxDecoder)
   div_s_32({ wA, wB, wD }: ThreeRegArgs) {
-    const z4a = Z4(wA.value % 2n ** 32n);
-    const z4b = Z4(wB.value % 2n ** 32n);
+    const z4a = Number(Z4(wA.value % 2n ** 32n));
+    const z4b = Number(Z4(wB.value % 2n ** 32n));
     let newVal: number | bigint;
     if (z4b === 0) {
       newVal = 2n ** 64n - 1n;
@@ -1020,8 +1020,8 @@ export class Instructions {
 
   @Ix(196, ThreeRegIxDecoder)
   rem_s_32({ wA, wB, wD }: ThreeRegArgs) {
-    const z4a = Z4(wA.value % 2n ** 32n);
-    const z4b = Z4(wB.value % 2n ** 32n);
+    const z4a = Number(Z4(wA.value % 2n ** 32n));
+    const z4b = Number(Z4(wB.value % 2n ** 32n));
     let newVal: bigint;
     if (z4a === -1 * 2 ** 31 && z4b === -1) {
       newVal = 0n;
@@ -1047,7 +1047,7 @@ export class Instructions {
 
   @Ix(199, ThreeRegIxDecoder)
   shar_r_32({ wA, wB, wD }: ThreeRegArgs) {
-    const z4a = Z4(wA.value % 2n ** 32n);
+    const z4a = Number(Z4(wA.value % 2n ** 32n));
     wD.value = <PVMRegisterRawValue>(
       Z8_inv(BigInt(Math.floor(z4a / 2 ** Number(wB.value % 32n))))
     );

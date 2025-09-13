@@ -6,16 +6,18 @@ import assert from "node:assert";
  * @param a - the number to convert
  * $(0.7.1 - A.10)
  */
-export const Z = <T extends bigint>(n: number, a: bigint) => {
+export const Z = (n: number) => {
   assert(n >= 0, "n in Z(n) must be positive");
   if (n == 0) {
-    return 0n as T;
+    return <T extends bigint>() => 0n as T;
   }
   const limit = 2n ** (8n * BigInt(n) - 1n);
-  if (a >= limit) {
-    return (a - limit * 2n) as T;
-  }
-  return a as T;
+  return <T extends bigint>(a: bigint) => {
+    if (a >= limit) {
+      return (a - limit * 2n) as T;
+    }
+    return a as T;
+  };
 };
 
 /**
@@ -29,25 +31,27 @@ export const Z_inv = <T extends bigint>(n: number, a: bigint) => {
   return ((2n ** (8n * BigInt(n)) + a) % 2n ** (8n * BigInt(n))) as T;
 };
 
-export const Z4 = <T extends number>(a: number | bigint) =>
-  Number(Z(4, BigInt(a))) as T;
+export const Z1 = Z(1);
+export const Z2 = Z(2);
+export const Z4 = Z(4);
+export const Z8 = Z(8);
+
 export const Z4_inv = <T extends number>(a: number | bigint) =>
   Number(Z_inv(4, BigInt(a))) as T;
 
-export const Z8 = <T extends bigint>(a: T) => Z(8, BigInt(a)) as T;
 export const Z8_inv = <T extends bigint>(a: bigint) => Z_inv(8, BigInt(a)) as T;
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("Z", () => {
     it("should not touch if less than 2^(8n-1)", () => {
-      expect(Z4(0)).toBe(0);
-      expect(Z4(1)).toBe(1);
-      expect(Z4(2 ** 31 - 1)).toBe(2 ** 31 - 1);
+      expect(Z4(0n)).toBe(0n);
+      expect(Z4(1n)).toBe(1n);
+      expect(Z4(2n ** 31n - 1n)).toBe(2n ** 31n - 1n);
     });
     it("should convert to negative if greater than 2^(8n-1)", () => {
-      expect(Z4(2 ** 31)).toBe(-1 * 2 ** 31);
-      expect(Z4(2 ** 32 - 1)).toBe(-1);
+      expect(Z4(2n ** 31n)).toBe(-1n * 2n ** 31n);
+      expect(Z4(2n ** 32n - 1n)).toBe(-1n);
     });
   });
   describe("Z_inv", () => {
