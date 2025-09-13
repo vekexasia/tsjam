@@ -32,7 +32,10 @@ export class PVMMemory implements IPVMMemory {
         this.#innerMemoryContent.set(page, Buffer.alloc(Zp));
       }
       for (const { at, content } of initialMemory) {
-        this.#setBytes(at, content);
+        (this as PVMMemory as Tagged<PVMMemory, "canWrite">).setBytes(
+          at,
+          content,
+        );
       }
     }
   }
@@ -57,49 +60,6 @@ export class PVMMemory implements IPVMMemory {
       remaining -= Zp;
     }
     return toRet;
-  }
-
-  #setBytes(address: u32, bytes: Uint8Array): void {
-    if (bytes.length === 0) {
-      return;
-    }
-    const { page, offset } = this.#locationFromAddress(address);
-    const memory = this.#innerMemoryContent.get(page)!;
-    const bytesToWrite = Math.min(bytes.length, Zp - offset);
-    memory.set(bytes.subarray(0, bytesToWrite), offset);
-    if (bytesToWrite < bytes.length) {
-      this.#setBytes(
-        toSafeMemoryAddress(BigInt(address) + BigInt(bytesToWrite)),
-        bytes.subarray(bytesToWrite),
-      );
-    }
-  }
-
-  #getBytes(address: u32, length: number): Buffer {
-    if (length === 0) {
-      return Buffer.allocUnsafe(0);
-    }
-    const { page, offset } = this.#locationFromAddress(address);
-    const memory = this.#innerMemoryContent.get(page)!;
-    const bytesToRead = Math.min(length, Zp - offset);
-    // TODO: if we do this we need to make sure that the underlying memory is not changed
-    // if (bytesToRead === length) {
-    //   return memory.subarray(offset, offset + bytesToRead);
-    // }
-    const chunk = Buffer.allocUnsafe(length);
-    memory.copy(chunk, 0, offset, offset + bytesToRead);
-    // log(
-    //   `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
-    //   true,
-    // );
-    if (bytesToRead !== length) {
-      const sub = this.#getBytes(
-        toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),
-        length - bytesToRead,
-      );
-      chunk.set(sub, bytesToRead);
-    }
-    return chunk;
   }
 
   changeAcl(
@@ -130,8 +90,22 @@ export class PVMMemory implements IPVMMemory {
     address: u32,
     bytes: Uint8Array,
   ) {
-    this.#setBytes(address, bytes);
-
+    if (bytes.length === 0) {
+      return;
+    }
+    let remaining = bytes.length;
+    let addressToWrite: u32 = address;
+    let bufOffset = 0;
+    while (remaining > 0) {
+      const { page, offset } = this.#locationFromAddress(addressToWrite);
+      const memory = this.#innerMemoryContent.get(page)!;
+      const bytesToWrite = Math.min(remaining, Zp - offset);
+      memory.set(bytes.subarray(bufOffset, bufOffset + bytesToWrite), offset);
+      // @ts-expect-error - i love typeguards
+      addressToWrite += bytesToWrite;
+      bufOffset += bytesToWrite;
+      remaining -= bytesToWrite;
+    }
     //log(
     //  `setBytes[${address.toString(16)}] = ${Buffer.from(bytes).toString("hex")} - l:${bytes.length}`,
     //  true,
@@ -143,8 +117,30 @@ export class PVMMemory implements IPVMMemory {
     address: u32,
     length: number,
   ): Buffer {
-    const r = this.#getBytes(address, length);
-    return r;
+    if (length === 0) {
+      return Buffer.allocUnsafe(0);
+    }
+    const { page, offset } = this.#locationFromAddress(address);
+    const memory = this.#innerMemoryContent.get(page)!;
+    const bytesToRead = Math.min(length, Zp - offset);
+    // TODO: if we do this we need to make sure that the underlying memory is not changed
+    //if (bytesToRead === length) {
+    //  return memory.subarray(offset, offset + bytesToRead);
+    //}
+    const chunk = Buffer.allocUnsafe(length);
+    memory.copy(chunk, 0, offset, offset + bytesToRead);
+    // log(
+    //   `getBytes[${address.toString(16)}] l:${length} v:${Buffer.from(chunk.slice()).toString("hex")}`,
+    //   true,
+    // );
+    if (bytesToRead !== length) {
+      const sub = this.getBytes(
+        toSafeMemoryAddress(BigInt(address) + BigInt(bytesToRead)),
+        length - bytesToRead,
+      );
+      chunk.set(sub, bytesToRead);
+    }
+    return chunk;
   }
 
   canRead(address: u32, length: number): this is Tagged<PVMMemory, "canRead"> {
@@ -170,11 +166,8 @@ export class PVMMemory implements IPVMMemory {
   firstUnwriteable(address: u32, length: number): u32 | undefined {
     const pages = this.#pagesInRange(address, length);
     for (const page of pages) {
-      if (!this.acl.has(page)) {
-        return <u32>(page * Zp);
-      }
-      const kind = this.acl.get(page);
-      if (kind === PVMMemoryAccessKind.Read) {
+      const acl = this.acl.get(page);
+      if (acl !== PVMMemoryAccessKind.Write) {
         return <u32>(page * Zp);
       }
     }

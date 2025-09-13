@@ -108,20 +108,25 @@ export const tracesList = (kind: string) => {
     .map((file) => file.replace(/\.json$/, ""));
 };
 
+export const buildHeaderLookupHistory = (
+  kind: string,
+  index: number,
+): HeaderLookupHistoryImpl => {
+  if (index === 0) {
+    const hlh = HeaderLookupHistoryImpl.newEmpty();
+    const genesis = tracesTestCase(kind, "00000001").parentBlock;
+    hlh.elements.set(genesis.header.slot, genesis.header.signedHash());
+    return hlh;
+  } else {
+    const hlh = buildHeaderLookupHistory(kind, index - 1);
+    const testCase = tracesTestCase(kind, index.toString().padStart(8, "0"));
+    return hlh.toPosterior(testCase.block.header);
+  }
+};
+
 export const buildTracesTests = (kind: string) => {
   const cases = tracesList(kind);
-  const buildHeaderLookupHistory = (index: number): HeaderLookupHistoryImpl => {
-    if (index === 0) {
-      const hlh = HeaderLookupHistoryImpl.newEmpty();
-      const genesis = tracesTestCase(kind, "00000001").parentBlock;
-      hlh.elements.set(genesis.header.slot, genesis.header.signedHash());
-      return hlh;
-    } else {
-      const hlh = buildHeaderLookupHistory(index - 1);
-      const testCase = tracesTestCase(kind, index.toString().padStart(8, "0"));
-      return hlh.toPosterior(testCase.block.header);
-    }
-  };
+
   for (const which of cases) {
     it(`${which}`, async () => {
       const testCase = tracesTestCase(kind, which);
@@ -130,7 +135,7 @@ export const buildTracesTests = (kind: string) => {
         testCase.preState.merkleMap,
       );
       testCase.parentBlock.posteriorState.headerLookupHistory =
-        buildHeaderLookupHistory(parseInt(which) - 1);
+        buildHeaderLookupHistory(kind, parseInt(which) - 1);
       testCase.parentBlock.posteriorState.headerLookupHistory.elements.set(
         testCase.parentBlock.header.slot,
         testCase.parentBlock.header.signedHash(),
