@@ -81,43 +81,77 @@ export class ParsedProgram {
   }
 
   /**
-   * `Ψ1` | singleStep
-   * it modifies the context according to the single step.
-   * $(0.7.1 - A.6)
+   * Basic invocation
+   * `Ψ` in the graypaper
+   * $(0.7.1 - 4.22 / A.1)
    */
-  singleStep(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl | undefined {
-    const ip = ctx.execution.instructionPointer;
-    const ixCache = this.ixCacheAt(ip);
-    if (typeof ixCache === "undefined" || typeof ixCache.ix === "undefined") {
-      const o = applyMods(ctx.execution, {} as object, [
-        IxMod.gas(TRAP_COST),
-        IxMod.panic(),
-      ]);
-      return o;
-    }
+  run(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl {
+    // const idx = 1;
+    // const isDebugLog = process.env.DEBUG_STEPS === "true";
+    const execCtx = ctx.execution;
+    while (execCtx.gas > 0) {
+      // const curPointer = execCtx.instructionPointer;
+      /**
+       * `Ψ1` | singleStep
+       * it modifies the context according to the single step.
+       * $(0.7.1 - A.6)
+       */
 
-    const skip = ixCache.skip + 1;
-    // lazyload decodedArgs
-    if (typeof ixCache.decodedArgs === "undefined") {
-      try {
-        const byteArgs = this.rawProgram.c.subarray(ip + 1, ip + skip);
+      {
+        const ip = ctx.execution.instructionPointer;
+        const ixCache = this.ixCacheAt(ip);
+        if (
+          typeof ixCache === "undefined" ||
+          typeof ixCache.ix === "undefined"
+        ) {
+          // @ts-expect-error bigint
+          ctx.execution.gas -= TRAP_COST;
+          return PVMExitReasonImpl.panic();
+        }
 
-        ixCache.decodedArgs = <object>ixCache.ix.decode(byteArgs);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        console.warn(`Decoding error for ${ixCache.ix.identifier}`, e.message);
-        const o = applyMods(ctx.execution, {} as object, [
-          IxMod.skip(ip, skip), //NOTE: not sure we should skip
-          IxMod.gas(TRAP_COST + ixCache.ix.gasCost),
-          IxMod.panic(),
-        ]);
-        return o;
+        const skip = ixCache.skip + 1;
+        // lazyload decodedArgs
+        if (typeof ixCache.decodedArgs === "undefined") {
+          try {
+            const byteArgs = this.rawProgram.c.subarray(ip + 1, ip + skip);
+
+            ixCache.decodedArgs = <object>ixCache.ix.decode(byteArgs);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (e: any) {
+            console.warn(
+              `Decoding error for ${ixCache.ix.identifier}`,
+              e.message,
+            );
+            // @ts-expect-error bigint
+            ctx.execution.instructionPointer += skip;
+            // @ts-expect-error bigint
+            ctx.execution.gas += TRAP_COST + ixCache.ix.gasCost;
+            return PVMExitReasonImpl.panic();
+          }
+        }
+
+        const res = <PVMExitReasonImpl | undefined>(
+          ixCache.ix.evaluate(ixCache.decodedArgs, ctx, skip)
+        );
+        if (typeof res !== "undefined") {
+          return res;
+        }
       }
+      // if (isDebugLog) {
+      //   const ip = curPointer;
+      //   const ix = bold_p.ixCacheAt(curPointer);
+      //   log(
+      //     `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
+      //     true,
+      //   );
+      // }
+      // if (typeof exitReason !== "undefined") {
+      //   log("exitReson != empty", isDebugLog);
+      //   log(exitReason.toString(), isDebugLog);
+      //   return exitReason;
+      // }
     }
-
-    return <PVMExitReasonImpl | undefined>(
-      ixCache.ix.evaluate(ixCache.decodedArgs, ctx, skip)
-    );
+    return PVMExitReasonImpl.outOfGas();
   }
 
   /**

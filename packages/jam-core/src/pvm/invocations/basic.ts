@@ -14,27 +14,7 @@ export const basicInvocation = (
   bold_p: ParsedProgram,
   ctx: PVMIxEvaluateFNContextImpl,
 ): PVMExitReasonImpl => {
-  let idx = 1;
-  const isDebugLog = process.env.DEBUG_STEPS === "true";
-  const execCtx = ctx.execution;
-  while (execCtx.gas > 0) {
-    const curPointer = execCtx.instructionPointer;
-    const exitReason = bold_p.singleStep(ctx);
-    if (isDebugLog) {
-      const ip = curPointer;
-      const ix = bold_p.ixCacheAt(curPointer);
-      log(
-        `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
-        true,
-      );
-    }
-    if (typeof exitReason !== "undefined") {
-      log("exitReson != empty", isDebugLog);
-      log(exitReason.toString(), isDebugLog);
-      return exitReason;
-    }
-  }
-  return PVMExitReasonImpl.outOfGas();
+  return bold_p.run(ctx);
 };
 
 const debugContext = (ctx: PVMProgramExecutionContextImpl) => {
