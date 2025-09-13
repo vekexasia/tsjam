@@ -1,6 +1,5 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { E_2, E_4, E_8, encodeWithCodec } from "@tsjam/codec";
 import { Zp } from "@tsjam/constants";
 import { PVMRegisterRawValue, u32 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "../pvm-memory";
@@ -38,6 +37,9 @@ import {
 import { BlockTermination, Ix } from "./ixdb";
 import { smod, X_1, X_2, X_4, X_8 } from "./utils";
 
+const E_2_Buf = Buffer.alloc(2);
+const E_4_Buf = Buffer.alloc(4);
+const E_8_Buf = Buffer.alloc(8);
 /**
  * This class holds the ixs implementations.
  * But in reality the decorators are calling the `regIx` function
@@ -76,17 +78,20 @@ export class Instructions {
 
   @Ix(31, TwoImmIxDecoder)
   store_imm_u16({ vX, vY }: TwoImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(vX, encodeWithCodec(E_2, vY % 2n ** 16n), context);
+    E_2_Buf.writeUint16LE(Number(vY % 2n ** 16n));
+    return storeSafe(vX, E_2_Buf, context);
   }
 
   @Ix(32, TwoImmIxDecoder)
   store_imm_u32({ vX, vY }: TwoImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(vX, encodeWithCodec(E_4, vY % 2n ** 32n), context);
+    E_4_Buf.writeUint32LE(Number(vY % 2n ** 32n));
+    return storeSafe(vX, E_4_Buf, context);
   }
 
   @Ix(33, TwoImmIxDecoder)
   store_imm_u64({ vX, vY }: TwoImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(vX, encodeWithCodec(E_8, vY), context);
+    E_8_Buf.writeBigUint64LE(vY);
+    return storeSafe(vX, E_8_Buf, context);
   }
 
   @Ix(40, OneOffsetIxDecoder, true)
@@ -135,10 +140,11 @@ export class Instructions {
         context.execution.memory.firstUnreadable(memoryAddress, 2)!,
       );
     }
+    const memVal = context.execution.memory
+      .getBytes(memoryAddress, 2)
+      .readUint16LE();
 
-    wA.value = <PVMRegisterRawValue>(
-      E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value
-    );
+    wA.value = <PVMRegisterRawValue>BigInt(memVal);
   }
 
   @Ix(56, OneRegOneImmIxDecoder)
@@ -150,9 +156,10 @@ export class Instructions {
       );
     }
 
-    wA.value = <PVMRegisterRawValue>(
-      E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value
-    );
+    const memVal = context.execution.memory
+      .getBytes(memoryAddress, 4)
+      .readUInt32LE();
+    wA.value = <PVMRegisterRawValue>BigInt(memVal);
   }
 
   @Ix(58, OneRegOneImmIxDecoder)
@@ -193,9 +200,10 @@ export class Instructions {
       );
     }
 
-    wA.value = <PVMRegisterRawValue>(
-      X_2(E_2.decode(context.execution.memory.getBytes(memoryAddress, 2)).value)
-    );
+    const memVal = context.execution.memory
+      .getBytes(memoryAddress, 2)
+      .readUint16LE();
+    wA.value = <PVMRegisterRawValue>X_2(BigInt(memVal));
   }
 
   @Ix(57, OneRegOneImmIxDecoder)
@@ -207,9 +215,10 @@ export class Instructions {
       );
     }
 
-    wA.value = <PVMRegisterRawValue>(
-      X_4(E_4.decode(context.execution.memory.getBytes(memoryAddress, 4)).value)
-    );
+    const memVal = context.execution.memory
+      .getBytes(memoryAddress, 4)
+      .readUInt32LE();
+    wA.value = <PVMRegisterRawValue>X_4(BigInt(memVal));
   }
 
   // ### Store
@@ -225,29 +234,20 @@ export class Instructions {
 
   @Ix(60, OneRegOneImmIxDecoder)
   store_u16({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(
-      toSafeMemoryAddress(vX),
-      encodeWithCodec(E_2, wA.value % 2n ** 16n),
-      context,
-    );
+    E_2_Buf.writeUint16LE(Number(wA.value % 2n ** 16n));
+    return storeSafe(toSafeMemoryAddress(vX), E_2_Buf, context);
   }
 
   @Ix(61, OneRegOneImmIxDecoder)
   store_u32({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(
-      toSafeMemoryAddress(vX),
-      encodeWithCodec(E_4, wA.value % 2n ** 32n),
-      context,
-    );
+    E_4_Buf.writeUint32LE(Number(wA.value % 2n ** 32n));
+    return storeSafe(toSafeMemoryAddress(vX), E_4_Buf, context);
   }
 
   @Ix(62, OneRegOneImmIxDecoder)
   store_u64({ wA, vX }: OneRegOneImmArgs, context: PVMIxEvaluateFNContextImpl) {
-    return storeSafe(
-      toSafeMemoryAddress(vX),
-      encodeWithCodec(E_8, wA.value),
-      context,
-    );
+    E_8_Buf.writeBigUint64LE(wA.value);
+    return storeSafe(toSafeMemoryAddress(vX), E_8_Buf, context);
   }
 
   @Ix(70, OneRegTwoImmIxDecoder)
@@ -269,11 +269,8 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = wA.value + vX;
-    return storeSafe(
-      toSafeMemoryAddress(location),
-      encodeWithCodec(E_2, vY % 2n ** 16n),
-      context,
-    );
+    E_2_Buf.writeUint16LE(Number(vY % 2n ** 16n));
+    return storeSafe(toSafeMemoryAddress(location), E_2_Buf, context);
   }
 
   @Ix(72, OneRegTwoImmIxDecoder)
@@ -282,11 +279,8 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = wA.value + vX;
-    return storeSafe(
-      toSafeMemoryAddress(location),
-      encodeWithCodec(E_4, vY % 2n ** 32n),
-      context,
-    );
+    E_4_Buf.writeUint32LE(Number(vY % 2n ** 32n));
+    return storeSafe(toSafeMemoryAddress(location), E_4_Buf, context);
   }
 
   @Ix(73, OneRegTwoImmIxDecoder)
@@ -295,12 +289,9 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = wA.value + vX;
+    E_8_Buf.writeBigUint64LE(vY);
 
-    return storeSafe(
-      toSafeMemoryAddress(location),
-      encodeWithCodec(E_8, vY),
-      context,
-    );
+    return storeSafe(toSafeMemoryAddress(location), E_8_Buf, context);
   }
 
   @Ix(80, OneRegOneIMMOneOffsetIxDecoder, true)
@@ -634,11 +625,8 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = toSafeMemoryAddress(wB.value + vX);
-    return storeSafe(
-      location,
-      encodeWithCodec(E_2, wA.value & 0xffffn),
-      context,
-    );
+    E_2_Buf.writeUint16LE(Number(wA.value & 0xffffn));
+    return storeSafe(location, E_2_Buf, context);
   }
 
   @Ix(122, TwoRegOneImmIxDecoder)
@@ -647,9 +635,8 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = toSafeMemoryAddress(wB.value + vX);
-    const tmp = Buffer.allocUnsafe(4);
-    E_4.encode(BigInt(wA.value % 2n ** 32n), tmp);
-    return storeSafe(location, tmp, context);
+    E_4_Buf.writeUInt32LE(Number(wA.value % 2n ** 32n));
+    return storeSafe(location, E_4_Buf, context);
   }
 
   @Ix(123, TwoRegOneImmIxDecoder)
@@ -658,7 +645,8 @@ export class Instructions {
     context: PVMIxEvaluateFNContextImpl,
   ) {
     const location = toSafeMemoryAddress(wB.value + vX);
-    return storeSafe(location, encodeWithCodec(E_8, wA.value), context);
+    E_8_Buf.writeBigUint64LE(wA.value);
+    return storeSafe(location, E_8_Buf, context);
   }
 
   // # load unsigned
@@ -690,7 +678,7 @@ export class Instructions {
       );
     }
     const r = context.execution.memory.getBytes(location, 2);
-    wA.value = <PVMRegisterRawValue>E_2.decode(r).value;
+    wA.value = <PVMRegisterRawValue>BigInt(r.readUint16LE());
   }
 
   @Ix(128, TwoRegOneImmIxDecoder)
@@ -705,7 +693,7 @@ export class Instructions {
       );
     }
     const r = context.execution.memory.getBytes(location, 4);
-    wA.value = <PVMRegisterRawValue>E_4.decode(r).value;
+    wA.value = <PVMRegisterRawValue>BigInt(r.readUInt32LE());
   }
 
   @Ix(130, TwoRegOneImmIxDecoder)
@@ -721,9 +709,7 @@ export class Instructions {
     }
     const r = context.execution.memory.getBytes(location, 8);
 
-    //wA.value = <PVMRegisterRawValue>Buffer.from(r).readBigUint64LE(0);
     wA.value = <PVMRegisterRawValue>r.readBigUInt64LE(0);
-    // wA.value = <PVMRegisterRawValue>E_8.decode(r).value;
   }
 
   // # load signed
@@ -755,8 +741,8 @@ export class Instructions {
       );
     }
     const val = context.execution.memory.getBytes(location, 2);
-    const num = E_2.decode(val).value;
-    wA.value = <PVMRegisterRawValue>Z8_inv(Z(2, num));
+    const num = val.readUint16LE();
+    wA.value = <PVMRegisterRawValue>Z8_inv(Z(2, BigInt(num)));
   }
 
   @Ix(129, TwoRegOneImmIxDecoder)
@@ -771,8 +757,8 @@ export class Instructions {
       );
     }
     const val = context.execution.memory.getBytes(location, 4);
-    const num = E_4.decode(val).value;
-    wA.value = <PVMRegisterRawValue>Z8_inv(Z(4, num));
+    const num = val.readUInt32LE();
+    wA.value = <PVMRegisterRawValue>Z8_inv(Z(4, BigInt(num)));
   }
 
   // math
@@ -783,22 +769,22 @@ export class Instructions {
 
   @Ix(132, TwoRegOneImmIxDecoder)
   and_imm({ wA, wB, vX }: TwoRegOneImmArgs) {
-    wA.value = <PVMRegisterRawValue>(wB.value & BigInt(vX));
+    wA.value = <PVMRegisterRawValue>(wB.value & vX);
   }
 
   @Ix(133, TwoRegOneImmIxDecoder)
   xor_imm({ wA, wB, vX }: TwoRegOneImmArgs) {
-    wA.value = <PVMRegisterRawValue>(wB.value ^ BigInt(vX));
+    wA.value = <PVMRegisterRawValue>(wB.value ^ vX);
   }
 
   @Ix(134, TwoRegOneImmIxDecoder)
   or_imm({ wA, wB, vX }: TwoRegOneImmArgs) {
-    wA.value = <PVMRegisterRawValue>(wB.value | BigInt(vX));
+    wA.value = <PVMRegisterRawValue>(wB.value | vX);
   }
 
   @Ix(135, TwoRegOneImmIxDecoder)
   mul_imm_32({ wA, wB, vX }: TwoRegOneImmArgs) {
-    wA.value = <PVMRegisterRawValue>((wB.value * BigInt(vX)) % 2n ** 32n);
+    wA.value = <PVMRegisterRawValue>((wB.value * vX) % 2n ** 32n);
   }
 
   @Ix(136, TwoRegOneImmIxDecoder)
