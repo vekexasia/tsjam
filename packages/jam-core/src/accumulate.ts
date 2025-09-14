@@ -32,6 +32,7 @@ import { ValidatorsImpl } from "./impls/validators-impl";
 import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm/invocations/accumulate";
 import { JamEntropyImpl } from "./impls/jam-entropy-impl";
+import { resetTraceLog } from "./utils";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -274,6 +275,8 @@ export const parallelizedAccumulation = (
   const accumulateS = (s: ServiceIndex) => {
     let accRes = accumulatedServices.get(s);
     if (typeof accRes === "undefined") {
+      process.env.TRACE_FILE = `/tmp/jam-trace-acc-s-${s}.log`;
+      resetTraceLog();
       accRes = singleServiceAccumulation(accState, works, bold_f, s, deps);
       accumulatedServices.set(s, accRes);
     }

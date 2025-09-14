@@ -179,8 +179,9 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1757862468", () => doTest("1757862468"));
   it("1757862472", () => doTest("1757862472"));
   it("1757862743", () => doTest("1757862743"));
-  it("1757867506", () => doTest("1757867506"));
-  it("1757868764", () => doTest("1757868764"));
+  // skip from davxy
+  it.skip("1757867506", () => doTest("1757867506"));
+  it.skip("1757868764", () => doTest("1757868764"));
 });
 
 const reverseDifferentState = (

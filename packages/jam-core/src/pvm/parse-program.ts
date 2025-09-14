@@ -1,14 +1,13 @@
+import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { log } from "@/utils";
 import { PVMProgram, PVMProgramCode, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
-import { applyMods } from "./functions/utils";
 import "./instructions/instructions";
 import { Ixdb, PVMIx } from "./instructions/ixdb";
-import { IxMod, TRAP_COST } from "./instructions/utils";
-import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
-import { log } from "@/utils";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { TRAP_COST } from "./instructions/utils";
 
 type InstructionPointer = u32;
 type IxPointerCache = {

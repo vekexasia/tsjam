@@ -165,6 +165,7 @@ export const programInitialization = (
     heap.start = <u32>rwSectionEnd;
     heap.pointer = heap.start;
     heap.end = <u32>(rwSectionEnd + Zp);
+    mem.push({ at: heap.start, content: Buffer.alloc(Zp) });
     createAcl({
       from: heap.start,
       to: heap.end,
