@@ -60,9 +60,11 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
 
   static union(a: LastAccOutsImpl, b: LastAccOutsImpl): LastAccOutsImpl {
     // TODO: no checks are performed on duplicated elements despite using Set
-    return new LastAccOutsImpl([
-      ...new Set([...a.elements, ...b.elements]).values(),
-    ]);
+    return new LastAccOutsImpl(
+      [...new Set([...a.elements, ...b.elements]).values()].sort(
+        (a, b) => a.serviceIndex - b.serviceIndex,
+      ),
+    );
   }
 
   static newEmpty(): LastAccOutsImpl {
@@ -75,9 +77,7 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
    */
   merkleRoot() {
     return wellBalancedBinaryMerkleRoot(
-      [...this.elements]
-        .sort((a, b) => a.serviceIndex - b.serviceIndex)
-        .map((entry) => entry.toBinary()),
+      [...this.elements].map((entry) => entry.toBinary()),
       Hashing.keccak256,
     );
   }

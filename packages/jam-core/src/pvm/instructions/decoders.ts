@@ -20,7 +20,7 @@ export const OneImmIxDecoder = (bytes: Uint8Array) => {
   const lx = Math.min(4, bytes.length);
   const vX = Number(readVarIntFromBuffer(bytes, lx as u8));
   assert(vX <= 255n, "value is too large");
-  return { vX };
+  return { vX: <u8>vX };
 };
 
 export type OneImmArgs = HydratedArgs<ReturnType<typeof OneImmIxDecoder>>;

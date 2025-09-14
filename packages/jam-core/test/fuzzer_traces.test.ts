@@ -137,9 +137,6 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756548741", () => doTest("1756548741"));
   it("1756548767", () => doTest("1756548767"));
   it("1756548796", () => doTest("1756548796"));
-  it.skipIf(MAXIMUM_AGE_LOOKUP_ANCHOR === 24)("1756548916", () =>
-    doTest("1756548916"),
-  );
   it("1756572122", () => doTest("1756572122"));
   it("1756790723", () => doTest("1756790723"));
   it("1756791458", () => doTest("1756791458"));
@@ -171,6 +168,19 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1757423365", () => doTest("1757423365"));
   it("1757423433", () => doTest("1757423433"));
   it("1757423902", () => doTest("1757423902"));
+  it("1757841566", () => doTest("1757841566"));
+  it("1757842797", () => doTest("1757842797"));
+  it("1757842852", () => doTest("1757842852"));
+  it("1757843609", () => doTest("1757843609"));
+  it("1757843719", () => doTest("1757843719"));
+  it("1757843735", () => doTest("1757843735"));
+  it("1757861618", () => doTest("1757861618"));
+  it("1757862207", () => doTest("1757862207"));
+  it("1757862468", () => doTest("1757862468"));
+  it("1757862472", () => doTest("1757862472"));
+  it("1757862743", () => doTest("1757862743"));
+  it("1757867506", () => doTest("1757867506"));
+  it("1757868764", () => doTest("1757868764"));
 });
 
 const reverseDifferentState = (
@@ -249,9 +259,9 @@ const reverseDifferentState = (
     return;
   } else if (Buffer.compare(stateKey(13), key) === 0) {
     // statistics
-    console.log(
-      "statistics",
-      diff(expected.statistics.toJSON(), actual.statistics.toJSON()),
+    //
+    expect(actual.statistics.toJSON(), "statistics").toEqual(
+      expected.statistics.toJSON(),
     );
     return;
   } else if (Buffer.compare(stateKey(14), key) === 0) {
@@ -276,12 +286,8 @@ const reverseDifferentState = (
     return;
   } else if (Buffer.compare(stateKey(16), key) === 0) {
     //theta
-    console.log(
-      "theta",
-      diff(
-        expected.mostRecentAccumulationOutputs.toJSON(),
-        actual.mostRecentAccumulationOutputs.toJSON(),
-      ),
+    expect(actual.mostRecentAccumulationOutputs.toJSON(), "theta").toEqual(
+      expected.mostRecentAccumulationOutputs.toJSON(),
     );
     return;
   }

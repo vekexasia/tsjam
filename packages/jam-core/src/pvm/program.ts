@@ -128,7 +128,7 @@ export const programInitialization = (
     kind: PVMMemoryAccessKind.Write | PVMMemoryAccessKind.Read;
   }) => {
     // log(
-    //   `ACL from ${conf.from.toString(16)} to ${conf.to.toString(16)} as ${conf.kind}`,
+    //   `ACL from ${conf.from.toString(16)}|${conf.from} to ${conf.to.toString(16)}|${conf.to}as ${conf.kind}`,
     //   true,
     // );
     for (let i = conf.from; i < conf.to; i += Zp) {

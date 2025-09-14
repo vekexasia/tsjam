@@ -64,7 +64,7 @@ export class PVMResultContextImpl implements PVMResultContext {
       yield: this.yield,
       provisions: this.provisions.map((p) => ({
         serviceId: p.serviceId,
-        blob: p.blob.slice(), // Clone the Uint8Array
+        blob: Buffer.concat([p.blob]),
       })),
     });
   }
