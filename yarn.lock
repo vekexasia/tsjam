@@ -1570,10 +1570,10 @@ __metadata:
     "@tsjam/constants": "npm:*"
     "@tsjam/crypto": "npm:*"
     "@tsjam/erasurecoding": "npm:*"
+    "@tsjam/pvm-wasm": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
     "@types/json-bigint": "npm:^1.0.4"
-    "@vekexasia/bigint-uint8array": "npm:^1.1.1"
     bigint-buffer: "npm:^1.1.5"
     json-bigint: "npm:^1.0.0"
     neverthrow: "npm:^8.2.0"
@@ -1659,6 +1659,19 @@ __metadata:
     "@tsjam/types": "npm:*"
     jest-diff: "npm:^30.1.2"
     rollup-plugin-terser: "npm:^7.0.2"
+  languageName: unknown
+  linkType: soft
+
+"@tsjam/pvm-wasm@npm:*, @tsjam/pvm-wasm@workspace:packages/jam-pvm-wasm":
+  version: 0.0.0-use.local
+  resolution: "@tsjam/pvm-wasm@workspace:packages/jam-pvm-wasm"
+  dependencies:
+    "@types/json-bigint": "npm:^1.0.4"
+    as-bigint: "npm:^0.5.3"
+    as-console: "npm:^7.0.0"
+    assemblyscript: "npm:^0.28.8"
+    json-bigint: "npm:^1.0.0"
+    ts-macros: "npm:^2.6.2"
   languageName: unknown
   linkType: soft
 
@@ -3278,6 +3291,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"as-bigint@npm:^0.5.3":
+  version: 0.5.3
+  resolution: "as-bigint@npm:0.5.3"
+  checksum: 10c0/bf21aee397ec72309bac347d396944965d786965116c89b060ecca5b3ff631234babda6ebd85bdcc4d298ccf9459970a1a566523f5cf7f12767bb309160d818b
+  languageName: node
+  linkType: hard
+
+"as-console@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "as-console@npm:7.0.0"
+  dependencies:
+    as-rainbow: "npm:^0.1.0"
+    table-as: "npm:^1.0.1"
+  checksum: 10c0/a997c8c78539c29156e025ebd5784cc8779c52368f8a0751dcc222ce1ce173f74d29d60c0083238c02c77fd45e5e5553e2435db00f0baa0770625536ed741eb3
+  languageName: node
+  linkType: hard
+
+"as-rainbow@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "as-rainbow@npm:0.1.0"
+  checksum: 10c0/e4e8f8b15de0eaaaa8f22ee7dd52914f02f144b33d70b03bf74c13687f570b5274db3c2b41077294c50a3d36baa6424cdac908cd093206db47115939a17dae62
+  languageName: node
+  linkType: hard
+
+"assemblyscript@npm:^0.28.8":
+  version: 0.28.8
+  resolution: "assemblyscript@npm:0.28.8"
+  dependencies:
+    binaryen: "npm:123.0.0-nightly.20250530"
+    long: "npm:^5.2.4"
+  bin:
+    asc: bin/asc.js
+    asinit: bin/asinit.js
+  checksum: 10c0/a11e0d0f785c0656d49e907bd57e6d5b52bfd7a6b69e435f23ab9b4b5cd79a888229ac40a2a220f3634b990785c9543a25690b4e22158ea95d2c8423e5d53f2b
+  languageName: node
+  linkType: hard
+
 "assertion-error@npm:^2.0.1":
   version: 2.0.1
   resolution: "assertion-error@npm:2.0.1"
@@ -3462,6 +3512,23 @@ __metadata:
   version: 2.3.0
   resolution: "binary-extensions@npm:2.3.0"
   checksum: 10c0/75a59cafc10fb12a11d510e77110c6c7ae3f4ca22463d52487709ca7f18f69d886aa387557cc9864fbdb10153d0bdb4caacabf11541f55e89ed6e18d12ece2b5
+  languageName: node
+  linkType: hard
+
+"binaryen@npm:123.0.0-nightly.20250530":
+  version: 123.0.0-nightly.20250530
+  resolution: "binaryen@npm:123.0.0-nightly.20250530"
+  bin:
+    wasm-as: bin/wasm-as
+    wasm-ctor-eval: bin/wasm-ctor-eval
+    wasm-dis: bin/wasm-dis
+    wasm-merge: bin/wasm-merge
+    wasm-metadce: bin/wasm-metadce
+    wasm-opt: bin/wasm-opt
+    wasm-reduce: bin/wasm-reduce
+    wasm-shell: bin/wasm-shell
+    wasm2js: bin/wasm2js
+  checksum: 10c0/5bd72c1d4c9740e360aec4a9e898dffe38ad6da34ae6eb4d1b97705540a1e78991de1106b5c604ea2c8abe4b4b79f6df4a5c8673c0e70203c7c14369e43fe356
   languageName: node
   linkType: hard
 
@@ -7905,6 +7972,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"long@npm:^5.2.4":
+  version: 5.3.2
+  resolution: "long@npm:5.3.2"
+  checksum: 10c0/7130fe1cbce2dca06734b35b70d380ca3f70271c7f8852c922a7c62c86c4e35f0c39290565eca7133c625908d40e126ac57c02b1b1a4636b9457d77e1e60b981
+  languageName: node
+  linkType: hard
+
 "loupe@npm:^3.1.0":
   version: 3.1.0
   resolution: "loupe@npm:3.1.0"
@@ -10970,6 +11044,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"table-as@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "table-as@npm:1.0.1"
+  checksum: 10c0/ee661e9562f6d596993a07d4f25cd779679fe2d0698e5880bf04961f3dd8421e15eb62499cb21331de61901c496fe3c2ff74b5181efa57b9a571c86377ef4aa9
+  languageName: node
+  linkType: hard
+
 "tapable@npm:^2.1.1":
   version: 2.2.3
   resolution: "tapable@npm:2.2.3"
@@ -11290,6 +11371,19 @@ __metadata:
     typescript: "*"
     webpack: ^5.0.0
   checksum: 10c0/f0982404b43628c335d3b3a60ac3f1738385da7b97c3f04cb5ad2ebad791597be39b25c8a4e158a66173f9bd9f5aa72e285b046b0573e4beed8ecd032d418e4d
+  languageName: node
+  linkType: hard
+
+"ts-macros@npm:^2.6.2":
+  version: 2.6.2
+  resolution: "ts-macros@npm:2.6.2"
+  dependencies:
+    yargs-parser: "npm:^21.1.1"
+  peerDependencies:
+    typescript: 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x
+  bin:
+    ts-macros: dist/cli/index.js
+  checksum: 10c0/984438019cfa002de58fbe2370d8c407e223c877bf585eea53c107a5cdb38e458876b8484514eafdf94ac9f3eca89c7bbe9566e62a084f979552d929683a8d7a
   languageName: node
   linkType: hard
 

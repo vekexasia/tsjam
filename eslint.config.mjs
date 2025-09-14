@@ -7,7 +7,6 @@ export default [
   },
   prettierConfig,
   ...vueTsEsLintConfig(),
-
   // Custom rules
   {
     rules: {
@@ -19,6 +18,14 @@ export default [
           varsIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    files: ["**/jam-pvm-wasm/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 ];

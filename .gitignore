@@ -24,3 +24,5 @@ build/tsjam-fuzzer-target/cli.mjs
 build/tsjam-fuzzer-target/cli.mjs
 build/tsjam-fuzzer-target/yarn.lock
 build/tsjam-fuzzer-target/cli.mjs
+packages/jam-pvm-wasm/build
+packages/jam-pvm-wasm/assembly

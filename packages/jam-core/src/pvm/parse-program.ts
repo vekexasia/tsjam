@@ -3,11 +3,14 @@ import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { log } from "@/utils";
-import { PVMProgram, PVMProgramCode, u32, u8 } from "@tsjam/types";
+import { Gas, PVMProgram, PVMProgramCode, u32, u8 } from "@tsjam/types";
 import assert from "node:assert";
 import "./instructions/instructions";
 import { Ixdb, PVMIx } from "./instructions/ixdb";
 import { TRAP_COST } from "./instructions/utils";
+import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
+import { PVMRegistersImpl } from "@/impls/pvm/pvm-registers-impl";
+import { toTagged } from "@tsjam/utils";
 
 type InstructionPointer = u32;
 type IxPointerCache = {
@@ -126,7 +129,7 @@ export class ParsedProgram {
             // @ts-expect-error bigint
             ctx.execution.instructionPointer += skip;
             // @ts-expect-error bigint
-            ctx.execution.gas += TRAP_COST + ixCache.ix.gasCost;
+            ctx.execution.gas -= TRAP_COST + ixCache.ix.gasCost;
             return PVMExitReasonImpl.panic();
           }
         }
@@ -220,6 +223,20 @@ if (import.meta.vitest) {
 
       expect(parsed.ixCacheAt(0 as u32)).toBeDefined();
       expect(parsed.ixCacheAt(1 as u32)).not.toBeDefined();
+      parsed.run(
+        new PVMIxEvaluateFNContextImpl({
+          program: parsed,
+          execution: new PVMProgramExecutionContextImpl({
+            gas: <Gas>100000n,
+            instructionPointer: 0 as u32,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            memory: undefined as any,
+            registers: new PVMRegistersImpl(
+              toTagged(Array.from({ length: 13 }, () => new PVMRegisterImpl())),
+            ),
+          }),
+        }),
+      );
     });
     it("should fail if no ix valid at index 0", () => {
       const program: PVMProgram = {

@@ -12,6 +12,7 @@ export default defineConfig({
       "./packages/jam-core",
       "./packages/jam-fuzzer",
       "./packages/jam-fuzzer-target",
+      "./packages/jam-pvm-wasm",
     ],
 
     poolOptions: buildPoolOptions(),

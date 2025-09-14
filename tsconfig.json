@@ -40,6 +40,7 @@
       "@/test/*": ["./test/*"],
       "@/*": ["./src/*"],
       "@tsjam/codec": ["../jam-codec/dist/types/index.d.ts"],
+      "@tsjam/pvm-wasm": ["../jam-pvm-wasm/build/release.d.ts"],
       "@tsjam/core": ["../jam-core/dist/types/index.d.ts"],
       "@tsjam/constants": ["../jam-constants/dist/types/index.d.ts"],
       "@tsjam/crypto": ["../jam-crypto/dist/types/index.d.ts"],

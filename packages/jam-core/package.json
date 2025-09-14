@@ -29,9 +29,9 @@
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/erasurecoding": "*",
+    "@tsjam/pvm-wasm": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",
-    "@vekexasia/bigint-uint8array": "^1.1.1",
     "bigint-buffer": "^1.1.5",
     "neverthrow": "^8.2.0",
     "type-fest": "^4.41.0"

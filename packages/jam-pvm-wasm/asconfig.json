@@ -1,0 +1,31 @@
+{
+  "targets": {
+    "debug": {
+      "outFile": "build/debug.wasm",
+      "textFile": "build/debug.wat",
+      "sourceMap": true,
+      "debug": true,
+      "exportRuntime": true
+    },
+    "release": {
+      "outFile": "build/release.wasm",
+      "textFile": "build/release.wat",
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 0,
+      "converge": false,
+      "exportRuntime": true,
+      "noAssert": false
+    }
+  },
+  "options": {
+    "bindings": "esm",
+    "enable": [
+      "threads",
+      "simd"
+    ],
+    "sharedMemory": true,
+    "initialMemory": 1,
+    "maximumMemory": 1000
+  }
+}

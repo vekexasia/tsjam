@@ -1,4 +1,11 @@
 import {
+  PVMExitReason as WasmPVMExitReason,
+  pvm_init,
+  pvm_read_fault_address,
+  pvm_read_host_call,
+  pvm_run,
+} from "@tsjam/pvm-wasm";
+import {
   IrregularPVMExitReason,
   PVMExitReason,
   RegularPVMExitReason,
@@ -91,5 +98,23 @@ export class PVMExitReasonImpl implements PVMExitReason {
       reason: IrregularPVMExitReason.PageFault,
       address: address,
     });
+  }
+
+  static fromWasmExitCode(
+    exitCode: WasmPVMExitReason,
+    pvm: ReturnType<typeof pvm_init>,
+  ): PVMExitReasonImpl {
+    switch (exitCode) {
+      case WasmPVMExitReason.Halt:
+        return PVMExitReasonImpl.halt();
+      case WasmPVMExitReason.Panic:
+        return PVMExitReasonImpl.panic();
+      case WasmPVMExitReason.OutOfGas:
+        return PVMExitReasonImpl.outOfGas();
+      case WasmPVMExitReason.HostCall:
+        return PVMExitReasonImpl.hostCall(<u8>pvm_read_host_call(pvm));
+      case WasmPVMExitReason.PageFault:
+        return PVMExitReasonImpl.pageFault(<u32>pvm_read_fault_address(pvm));
+    }
   }
 }

@@ -1,0 +1,44 @@
+{
+  "name": "@tsjam/pvm-wasm",
+  "version": "0.7.0",
+  "description": "pvm wasm",
+  "scripts": {
+    "dev": "$npm_execpath run build -w",
+    "lint": "npx eslint --ext .ts assembly",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && vitest run",
+    "build": "npx ts-macros transform out && rm -rf assembly && mv out/src assembly && cp src/tsconfig.json assembly && rm -rf out && yarn lint assembly --fix && yarn asbuild && yarn asbuild:release && echo done",
+    "asbuild:debug": "asc assembly/index.ts --target debug",
+    "asbuild:release": "asc assembly/index.ts --target release ",
+    "asbuild": "yarn asbuild:debug && yarn asbuild:release",
+    "start": "npx serve ."
+  },
+  "exports": {
+    ".": {
+      "import": "./build/debug.js",
+      "types": "./build/debug.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "dependencies": {
+    "as-bigint": "^0.5.3",
+    "as-console": "^7.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/json-bigint": "^1.0.4",
+    "assemblyscript": "^0.28.8",
+    "json-bigint": "^1.0.0",
+    "ts-macros": "^2.6.2"
+  },
+  "jam:protocolVersion": "0.7.0",
+  "type": "module"
+}

@@ -1,7 +1,7 @@
 import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
 import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
 import { Zp } from "@tsjam/constants";
-import { PVMRegisterRawValue, u32 } from "@tsjam/types";
+import { PVMRegisterRawValue, u32, u8 } from "@tsjam/types";
 import { toSafeMemoryAddress } from "../pvm-memory";
 import { branch } from "../utils/branch";
 import { djump } from "../utils/djump";
@@ -62,7 +62,7 @@ export class Instructions {
 
   @Ix(10, OneImmIxDecoder)
   ecalli({ vX }: OneImmArgs) {
-    return PVMExitReasonImpl.hostCall(vX);
+    return PVMExitReasonImpl.hostCall(<u8>vX);
   }
 
   @Ix(20, OneRegOneExtImmArgsIxDecoder)
@@ -986,7 +986,7 @@ export class Instructions {
     if (wB.value % 2n ** 32n === 0n) {
       wD.value = <PVMRegisterRawValue>(2n ** 64n - 1n);
     } else {
-      wD.value = <PVMRegisterRawValue>(wA.value / wB.value);
+      wD.value = <PVMRegisterRawValue>((wA.value % 2n**32n)/ (wB.value%2n**32n));
     }
   }
 

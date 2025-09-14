@@ -1,27 +1,38 @@
+import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
+import {
+  PVMExitReasonImpl,
+  PVMProgramExecutionContextImpl,
+  PVMRegisterImpl,
+  PVMRegistersImpl,
+} from "@/index";
 import "@/pvm/instructions/instructions.js";
-import { describe, expect, it } from "vitest";
-import * as fs from "node:fs";
-import { toTagged } from "@tsjam/utils";
+import { ParsedProgram } from "@/pvm/parse-program";
+import { PVMMemory } from "@/pvm/pvm-memory";
+import {
+  __collect,
+  MemoryAccess,
+  pvm_init,
+  pvm_memory,
+  pvm_deinit,
+  pvm_memory_read,
+  pvm_read_pc,
+  pvm_read_reg,
+  pvm_run,
+  memory as wasmMemory,
+} from "@tsjam/pvm-wasm";
 import {
   Gas,
   Page,
   PVMMemoryAccessKind,
   PVMProgramCode,
   PVMRegisterRawValue,
-  Tagged,
   u32,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import JSONBig from "json-bigint";
-import { basicInvocation } from "@/pvm/invocations/basic";
-import { PVMMemory } from "@/pvm/pvm-memory";
-import {
-  PVMExitReasonImpl,
-  PVMIxEvaluateFNContextImpl,
-  PVMProgramExecutionContextImpl,
-  PVMRegisterImpl,
-  PVMRegistersImpl,
-} from "@/index";
-import { ParsedProgram } from "@/pvm/parse-program";
+import * as fs from "node:fs";
+import { describe, expect, it } from "vitest";
+
 const JSONBigNative = JSONBig({ useNativeBigInt: true });
 
 describe("pvm", () => {
@@ -67,20 +78,71 @@ describe("pvm", () => {
             <PVMRegisterRawValue>r,
           )),
       );
-    const res = ParsedProgram.deblob(
-      <PVMProgramCode>Buffer.from(<number[]>json.program),
-    );
+    const code = <PVMProgramCode>Buffer.from(<number[]>json.program);
+    const res = ParsedProgram.deblob(code);
     let exitReason: PVMExitReasonImpl;
     if (res instanceof PVMExitReasonImpl) {
       exitReason = res;
     } else {
-      exitReason = basicInvocation(
-        res,
-        new PVMIxEvaluateFNContextImpl({
-          program: res,
-          execution: execContext,
+      const r = PVMProgramCodec.decode(code).value;
+      const mem = pvm_memory(
+        [...pvmACL.keys()],
+        [...pvmACL.values()].map((m) => {
+          switch (m) {
+            case PVMMemoryAccessKind.Read:
+              return MemoryAccess.Read;
+            case PVMMemoryAccessKind.Write:
+              return MemoryAccess.Write;
+            default:
+              return MemoryAccess.Null;
+          }
         }),
+        [...execContext.memory.innerMemoryContent.values()],
+        execContext.memory.heap.start,
+        execContext.memory.heap.pointer,
+        execContext.memory.heap.end,
       );
+      console.log(r);
+      const pvm = pvm_init(
+        execContext.registers.elements.map((r) => r.value),
+        mem,
+        execContext.gas,
+        execContext.instructionPointer,
+        r.c,
+        r.j,
+        r.k,
+      );
+      const wasmExitReason = pvm_run(pvm);
+      exitReason = PVMExitReasonImpl.fromWasmExitCode(wasmExitReason, pvm);
+      if (exitReason.isPanic()) {
+        expect("panic").toEqual(json["expected-status"]);
+      } else if (exitReason.isHalt()) {
+        expect("halt").toEqual(json["expected-status"]);
+      } else if (exitReason.isOutOfGas()) {
+        expect("out-of-gas").toEqual(json["expected-status"]);
+      } else if (exitReason.isPageFault()) {
+        expect("page-fault").toEqual(json["expected-status"]);
+        expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
+      }
+      expect(pvm_read_pc(pvm), "instruction pointer").toEqual(
+        json["expected-pc"],
+      );
+      const regs = pvm_read_reg(pvm);
+
+      expect(regs).toEqual(
+        json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
+      );
+      // memory checks
+      for (const { address, contents } of json["expected-memory"]) {
+        const ptr = pvm_memory_read(pvm, address, contents.length);
+        const a = Buffer.from(wasmMemory.buffer, ptr, contents.length);
+        expect(a).toEqual(Buffer.from(contents));
+      }
+
+      console.log(wasmMemory.buffer.byteLength);
+      pvm_deinit(pvm);
+      __collect();
+      console.log(wasmMemory.buffer.byteLength);
     }
     if (exitReason.isPanic()) {
       expect("panic").toEqual(json["expected-status"]);
@@ -93,20 +155,6 @@ describe("pvm", () => {
       expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
-    expect(execContext.instructionPointer, "instruction pointer").toEqual(
-      json["expected-pc"],
-    );
-    expect(execContext.registers.elements.map((a) => a.value)).toEqual(
-      json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
-    );
-    for (const { address, contents } of json["expected-memory"]) {
-      expect(
-        (<Tagged<PVMMemory, "canRead">>execContext.memory).getBytes(
-          address,
-          contents.length,
-        ),
-      ).toEqual(Buffer.from(contents));
-    }
     // expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
   };
 
