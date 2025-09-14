@@ -1297,10 +1297,11 @@ const storeSafe = (
   bytes: Buffer,
   context: PVMIxEvaluateFNContextImpl,
 ) => {
-  if (!context.execution.memory.canWrite(location, bytes.length)) {
+  const memory = context.execution.memory;
+  if (!memory.canWrite(location, bytes.length)) {
     return PVMExitReasonImpl.pageFault(
-      context.execution.memory.firstUnwriteable(location, bytes.length)!,
+      memory.firstUnwriteable(location, bytes.length)!,
     );
   }
-  context.execution.memory.setBytes(location, bytes);
+  memory.setBytes(location, bytes);
 };
