@@ -18,9 +18,9 @@ export type NoArgIxArgs = ReturnType<typeof NoArgIxDecoder>;
 // $(0.7.1 - A.21)
 export const OneImmIxDecoder = (bytes: Uint8Array) => {
   const lx = Math.min(4, bytes.length);
-  const vX = readVarIntFromBuffer(bytes, lx as u8);
+  const vX = Number(readVarIntFromBuffer(bytes, lx as u8));
   assert(vX <= 255n, "value is too large");
-  return { vX: <u8>Number(readVarIntFromBuffer(bytes, lx as u8)) };
+  return { vX };
 };
 
 export type OneImmArgs = HydratedArgs<ReturnType<typeof OneImmIxDecoder>>;
