@@ -7,6 +7,8 @@ import "./instructions/instructions";
 import { Ixdb, PVMIx } from "./instructions/ixdb";
 import { IxMod, TRAP_COST } from "./instructions/utils";
 import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
+import { log } from "@/utils";
+import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 
 type InstructionPointer = u32;
 type IxPointerCache = {
@@ -86,8 +88,8 @@ export class ParsedProgram {
    * $(0.7.1 - 4.22 / A.1)
    */
   run(ctx: PVMIxEvaluateFNContextImpl): PVMExitReasonImpl {
-    // const idx = 1;
-    // const isDebugLog = process.env.DEBUG_STEPS === "true";
+    let idx = 1;
+    const isDebugLog = process.env.DEBUG_STEPS === "true";
     const execCtx = ctx.execution;
     while (execCtx.gas > 0) {
       // const curPointer = execCtx.instructionPointer;
@@ -133,18 +135,16 @@ export class ParsedProgram {
         const res = <PVMExitReasonImpl | undefined>(
           ixCache.ix.evaluate(ixCache.decodedArgs, ctx, skip)
         );
+        if (isDebugLog) {
+          log(
+            `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ixCache?.ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
+            true,
+          );
+        }
         if (typeof res !== "undefined") {
           return res;
         }
       }
-      // if (isDebugLog) {
-      //   const ip = curPointer;
-      //   const ix = bold_p.ixCacheAt(curPointer);
-      //   log(
-      //     `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ix?.ix?.identifier.padEnd(20, " ")} ${debugContext(ctx.execution)}`,
-      //     true,
-      //   );
-      // }
       // if (typeof exitReason !== "undefined") {
       //   log("exitReson != empty", isDebugLog);
       //   log(exitReason.toString(), isDebugLog);
@@ -175,6 +175,10 @@ export class ParsedProgram {
     return ParsedProgram.parse(program);
   }
 }
+
+const debugContext = (ctx: PVMProgramExecutionContextImpl) => {
+  return `regs:[${ctx.registers.elements.join(" ")}] gas:${ctx.gas}`;
+};
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
