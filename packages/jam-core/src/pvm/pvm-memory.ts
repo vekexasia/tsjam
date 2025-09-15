@@ -47,7 +47,7 @@ export class PVMMemory implements IPVMMemory {
     };
   }
 
-  #pagesInRange(address: u32, length: number) {
+  #pagesInRange(address: u32, length: number): Page[] {
     if (length === 0) {
       return [];
     }
@@ -144,7 +144,7 @@ export class PVMMemory implements IPVMMemory {
   }
 
   canRead(address: u32, length: number): this is Tagged<PVMMemory, "canRead"> {
-    return this.firstUnreadable(address, length) === undefined;
+    return typeof this.firstUnreadable(address, length) === "undefined";
   }
 
   firstUnreadable(address: u32, length: number): u32 | undefined {
@@ -153,6 +153,13 @@ export class PVMMemory implements IPVMMemory {
       if (!this.acl.has(page)) {
         return <u32>(page * Zp);
       }
+    }
+    // apparently rw readings cant spawn rw section and heap
+    if (
+      pages[0] * Zp < this.heap.start &&
+      pages[pages.length - 1] * Zp >= this.heap.start
+    ) {
+      return this.heap.start;
     }
   }
 
@@ -171,6 +178,14 @@ export class PVMMemory implements IPVMMemory {
         return <u32>(page * Zp);
       }
     }
+    // apparently rw readings CAN
+    //
+    //if (
+    //  pages[0] * Zp < this.heap.start &&
+    //  pages[pages.length - 1] * Zp >= this.heap.start
+    //) {
+    //  return this.heap.start;
+    //}
   }
 
   // TODO: rename to sbrk properly
