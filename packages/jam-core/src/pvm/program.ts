@@ -164,13 +164,13 @@ export const programInitialization = (
 
     heap.start = <u32>rwSectionEnd;
     heap.pointer = heap.start;
-    heap.end = <u32>(rwSectionEnd + Zp);
-    mem.push({ at: heap.start, content: Buffer.alloc(Zp) });
-    createAcl({
-      from: heap.start,
-      to: heap.end,
-      kind: PVMMemoryAccessKind.Write,
-    });
+    heap.end = heap.start;
+    // mem.push({ at: heap.start, content: Buffer.alloc(Zp) });
+    // createAcl({
+    //   from: heap.start,
+    //   to: heap.end,
+    //   kind: PVMMemoryAccessKind.Write,
+    // });
   }
 
   // fifth case

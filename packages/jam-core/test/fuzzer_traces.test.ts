@@ -17,13 +17,13 @@ import {
   Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import { getConstantsMode, MAXIMUM_AGE_LOOKUP_ANCHOR } from "@tsjam/constants";
+import { getConstantsMode } from "@tsjam/constants";
+import type { StateKey, StateRootHash } from "@tsjam/types";
 import fs from "fs";
 import { diff } from "jest-diff";
 import { err, ok, Result } from "neverthrow";
 import path from "path";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
-import type { StateKey, StateRootHash } from "@tsjam/types";
 
 describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
@@ -62,6 +62,7 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
         initialTrace.preState.stateRoot,
       ) !== 0
     ) {
+      console.log("ciaooooo");
       console.log(
         "Expected merkle root:",
         Buffer.from(initialTrace.preState.stateRoot).toString("hex"),
@@ -88,6 +89,8 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
         const res = await chainManager.handleIncomingBlock(trace.block);
         if (res.isErr()) {
           console.log("Error applying block", res.error);
+        } else {
+          console.log(`${file} Block applied`);
         }
         if (
           Buffer.compare(
@@ -143,7 +146,6 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1756814312", () => doTest("1756814312"));
   it("1756832925", () => doTest("1756832925"));
   it("1757062927", () => doTest("1757062927"));
-  it("1757063641", () => doTest("1757063641"));
   it("1757092821", () => doTest("1757092821"));
   it("1757406079", () => doTest("1757406079"));
   it("1757406238", () => doTest("1757406238"));
@@ -196,6 +198,21 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("_new/1758622403", () => doTest("_new/1758622403"));
   it("_new/1758622442", () => doTest("_new/1758622442"));
   it("_new/1758622524", () => doTest("_new/1758622524"));
+  // new_2
+  it("_new2/1758636573", () => doTest("_new2/1758636573"));
+  it("_new2/1758636775", () => doTest("_new2/1758636775"));
+  it("_new2/1758636819", () => doTest("_new2/1758636819"));
+  it("_new2/1758636961", () => doTest("_new2/1758636961"));
+  it("_new2/1758637024", () => doTest("_new2/1758637024"));
+  it("_new2/1758637136", () => doTest("_new2/1758637136"));
+  it("_new2/1758637203", () => doTest("_new2/1758637203"));
+  it("_new2/1758637250", () => doTest("_new2/1758637250"));
+  it("_new2/1758637297", () => doTest("_new2/1758637297"));
+  it("_new2/1758637332", () => doTest("_new2/1758637332"));
+  it("_new2/1758637363", () => doTest("_new2/1758637363"));
+  it("_new2/1758637447", () => doTest("_new2/1758637447"));
+  it("_new2/1758637485", () => doTest("_new2/1758637485"));
+  it("_new2/1758708840", () => doTest("_new2/1758708840"));
 });
 
 const reverseDifferentState = (

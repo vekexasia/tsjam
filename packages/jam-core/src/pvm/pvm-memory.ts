@@ -154,13 +154,13 @@ export class PVMMemory implements IPVMMemory {
         return <u32>(page * Zp);
       }
     }
-    // apparently rw readings cant spawn rw section and heap
-    if (
-      pages[0] * Zp < this.heap.start &&
-      pages[pages.length - 1] * Zp >= this.heap.start
-    ) {
-      return this.heap.start;
-    }
+    // // apparently rw readings cant spawn rw section and heap
+    // if (
+    //   pages[0] * Zp < this.heap.start &&
+    //   pages[pages.length - 1] * Zp >= this.heap.start
+    // ) {
+    //   return this.heap.start;
+    // }
   }
 
   canWrite(
