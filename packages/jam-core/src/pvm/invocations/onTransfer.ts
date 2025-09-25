@@ -3,16 +3,23 @@ import { DeltaImpl } from "@/impls/delta-impl";
 import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
-import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { TauImpl } from "@/impls/slot-impl";
 import {
-  asCodec,
+  BufferJSONCodec,
   createCodec,
   E_int,
-  E_sub_int,
   encodeWithCodec,
 } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
-import { Balance, Gas, Posterior, ServiceIndex, u32, u8 } from "@tsjam/types";
+import {
+  Balance,
+  CoreIndex,
+  Gas,
+  Posterior,
+  ServiceIndex,
+  u32,
+  u8,
+} from "@tsjam/types";
 import assert from "node:assert";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
@@ -22,12 +29,12 @@ import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
 
 const argumentInvocationTransferCodec = createCodec<{
-  tau: SlotImpl;
+  tau: u32;
   serviceIndex: ServiceIndex;
   transfersLength: number;
 }>([
-  ["tau", asCodec(SlotImpl)],
-  ["serviceIndex", E_sub_int<ServiceIndex>(4)],
+  ["tau", E_int<u32>()],
+  ["serviceIndex", E_int<ServiceIndex>()],
   ["transfersLength", E_int()],
 ]);
 /**
@@ -63,7 +70,7 @@ export const transferInvocation = (
     10 as u32,
     transfers.totalGasUsed(),
     encodeWithCodec(argumentInvocationTransferCodec, {
-      tau: t,
+      tau: t.value,
       serviceIndex: s,
       transfersLength: transfers.length(),
     }),
@@ -148,12 +155,22 @@ const F_fn: (deps: {
             bold_s,
           }),
         );
-        data.out = out.bold_s;
+        data.out.merkleStorage = out.bold_s.merkleStorage;
         return m;
       }
       case "info": {
         const res = hostFunctions.info(data.ctx, { s, bold_d });
         return applyMods(data.ctx, data.out, res);
+      }
+      case "log": {
+        return applyMods(
+          data.ctx,
+          data.out,
+          hostFunctions.log(data.ctx, {
+            core: <CoreIndex>0,
+            serviceIndex: s,
+          }),
+        );
       }
       default:
         return applyMods(data.ctx, data.out, [

@@ -102,11 +102,11 @@ import assert from "assert";
 import { ConditionalExcept } from "type-fest";
 import { IxMod } from "../instructions/utils";
 import { basicInvocation } from "../invocations/basic";
+import { ParsedProgram } from "../parse-program";
 import { PVMMemory } from "../pvm-memory";
 import { check_fn } from "../utils/check-fn";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { ParsedProgram } from "../parse-program";
 
 export class HostFunctions {
   @HostFn(0)
@@ -483,10 +483,10 @@ export class HostFunctions {
       vz.fitsInU32() &&
       context.memory.canRead(vo.u32(), vz.u32())
     ) {
-      // log(
-      //   `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
-      //   process.env.DEBUG_STEPS === "true",
-      // );
+      //log(
+      //  `HostFunction::write set key ${Uint8ArrayJSONCodec.toJSON(bold_k)} for service ${args.s} to ${Uint8ArrayJSONCodec.toJSON(context.memory.getBytes(vo.u32(), vz.u32()))} - stateKey=${Uint8ArrayJSONCodec.toJSON(computeStorageKey(args.s, bold_k))}`,
+      //  process.env.DEBUG_STEPS === "true",
+      //);
       bold_a.storage.set(
         bold_k,
         Buffer.concat([context.memory.getBytes(vo.u32(), vz.u32())]),
@@ -1301,10 +1301,12 @@ export class HostFunctions {
     if (l.value < bold_d.get(d.u32())!.minMemoGas) {
       return [IxMod.w7(HostCallResult.LOW)];
     }
-    if (a.value < x.bold_s().gasThreshold()) {
+
+    // NOTE: this is b (look at 0.6.6) seems an error in later versions of the graypaper
+    const b = <Balance>(x.bold_s().balance - a.value);
+    if (b < x.bold_s().gasThreshold()) {
       return [IxMod.w7(HostCallResult.CASH)];
     }
-    const b = <Balance>(x.bold_s().balance - a.value);
 
     const t: DeferredTransferImpl = new DeferredTransferImpl({
       source: x.id,
@@ -1638,7 +1640,7 @@ export class HostFunctions {
 
     formattedMessage += ` ${Buffer.from(message).toString("utf8")}`;
 
-    log(formattedMessage, process.env.DEBUG_TRACES === "true");
+    log(formattedMessage, true);
     return [];
   }
 }
