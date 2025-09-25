@@ -20,7 +20,11 @@ for trace_path in "$TRACES_DIR"/*; do
   # skip trace 1756548916 
 
   trace_name="$(basename "$trace_path")"
-  if [[ "$trace_name" == "1756548916" ]]; then
+  if [[ "$trace_name" == "_new2" ]]; then
+    echo "Skipping trace $trace_name"
+    continue
+  fi
+  if [[ "$trace_name" == "_new" ]]; then
     echo "Skipping trace $trace_name"
     continue
   fi
