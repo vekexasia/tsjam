@@ -275,8 +275,6 @@ export const parallelizedAccumulation = (
   const accumulateS = (s: ServiceIndex) => {
     let accRes = accumulatedServices.get(s);
     if (typeof accRes === "undefined") {
-      process.env.TRACE_FILE = `/tmp/jam-trace-acc-s-${s}.log`;
-      resetTraceLog();
       accRes = singleServiceAccumulation(accState, works, bold_f, s, deps);
       accumulatedServices.set(s, accRes);
     }
@@ -335,9 +333,10 @@ export const parallelizedAccumulation = (
   }
 
   let v_prime = structuredClone(accState.delegator); // safe as of 0.7.1
-  if (accState.delegator !== eStar.delegator) {
-    v_prime = accumulateS(accState.delegator).postState.delegator;
-  }
+  debugger;
+  //if (accState.delegator !== eStar.delegator) {
+  v_prime = accumulateS(eStar.delegator).postState.delegator;
+  // }
 
   const i_prime = accumulateS(accState.delegator).postState.stagingSet;
 
@@ -385,6 +384,8 @@ export const singleServiceAccumulation = (
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
+  process.env.TRACE_FILE = `/tmp/jam-trace-acc-s-${service}.log`;
+  resetTraceLog();
   let g = (gasPerService.get(service) || 0n) as Gas;
   reports.forEach((wr) =>
     wr.digests
