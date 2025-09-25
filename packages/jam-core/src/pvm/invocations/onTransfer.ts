@@ -4,12 +4,7 @@ import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
 import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { TauImpl } from "@/impls/slot-impl";
-import {
-  BufferJSONCodec,
-  createCodec,
-  E_int,
-  encodeWithCodec,
-} from "@tsjam/codec";
+import { createCodec, E_int, encodeWithCodec } from "@tsjam/codec";
 import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
 import {
   Balance,
