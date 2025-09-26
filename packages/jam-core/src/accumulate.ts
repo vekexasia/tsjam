@@ -21,6 +21,7 @@ import { AccumulationStatisticsImpl } from "./impls/accumulation-statistics-impl
 import { AuthorizerQueueImpl } from "./impls/authorizer-queue-impl";
 import { DeferredTransfersImpl } from "./impls/deferred-transfers-impl";
 import { DeltaImpl } from "./impls/delta-impl";
+import { JamEntropyImpl } from "./impls/jam-entropy-impl";
 import { LastAccOutsImpl } from "./impls/last-acc-outs-impl";
 import { NewWorkReportsImpl } from "./impls/new-work-reports-impl";
 import { PrivilegedServicesImpl } from "./impls/privileged-services-impl";
@@ -31,8 +32,6 @@ import { SlotImpl, TauImpl } from "./impls/slot-impl";
 import { ValidatorsImpl } from "./impls/validators-impl";
 import { WorkReportImpl } from "./impls/work-report-impl";
 import { accumulateInvocation } from "./pvm/invocations/accumulate";
-import { JamEntropyImpl } from "./impls/jam-entropy-impl";
-import { resetTraceLog } from "./utils";
 
 /**
  * Decides which reports to accumulate and accumulates them
@@ -333,8 +332,7 @@ export const parallelizedAccumulation = (
   }
 
   let v_prime = structuredClone(accState.delegator); // safe as of 0.7.1
-  debugger;
-  //if (accState.delegator !== eStar.delegator) {
+  // if (accState.delegator !== eStar.delegator) {
   v_prime = accumulateS(eStar.delegator).postState.delegator;
   // }
 
@@ -384,8 +382,7 @@ export const singleServiceAccumulation = (
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
-  process.env.TRACE_FILE = `/tmp/jam-trace-acc-s-${service}.log`;
-  resetTraceLog();
+  console.log(`Accumulating service ${service}`);
   let g = (gasPerService.get(service) || 0n) as Gas;
   reports.forEach((wr) =>
     wr.digests
