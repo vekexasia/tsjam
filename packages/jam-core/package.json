@@ -29,6 +29,8 @@
     "@tsjam/constants": "*",
     "@tsjam/crypto": "*",
     "@tsjam/erasurecoding": "*",
+    "@tsjam/pvm-base": "*",
+    "@tsjam/pvm-js": "*",
     "@tsjam/pvm-wasm": "*",
     "@tsjam/types": "*",
     "@tsjam/utils": "*",

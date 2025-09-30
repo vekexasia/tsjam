@@ -6,9 +6,15 @@ import {
   u32,
   WorkError,
 } from "@tsjam/types";
-import { programInitialization } from "../program";
 import { HostCallExecutor, hostCallInvocation, HostCallOut } from "./host-call";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
+import { pvmImpl } from "../proxy";
+import {
+  BaseMemory,
+  deblobProgram,
+  programInitialization,
+  PVMExitReasonImpl,
+  PVMRegistersImpl,
+} from "@tsjam/pvm-base";
 
 /**
  * `ΨM` in the paper
@@ -39,13 +45,39 @@ export const argumentInvocation = <X>(
     return { gasUsed: <Gas>0n, res: WorkOutputImpl.panic(), out: x };
   }
   const { programCode, memory, registers } = res;
-  const context = new PVMProgramExecutionContextImpl({
+  const context = {
     instructionPointer,
     gas,
     registers,
-    memory,
+    memory: pvmImpl.buildMemory(memory),
+  };
+  //
+  // NOTE:this is not part of A.35 but an optimization
+  // to avoid deblobbing multiple times in basicInvocation
+  const r = deblobProgram(programCode);
+  if (r instanceof PVMExitReasonImpl) {
+    return R_fn(
+      gas,
+      {
+        exitReason: r,
+        out: x,
+      },
+      context,
+    );
+  }
+  const pvm = pvmImpl.buildPVM({
+    mem: context.memory,
+    pc: context.instructionPointer,
+    program: r,
+    regs: registers,
+    gas,
   });
-  const hRes = hostCallInvocation(programCode, context, f, x);
+
+  const hRes = hostCallInvocation(pvm, f, x);
+  context.memory = pvm.memory;
+  context.gas = pvm.gas;
+  context.instructionPointer = pvm.pc;
+  context.registers = pvm.registers;
 
   return R_fn(gas, hRes, context);
 };
@@ -61,7 +93,12 @@ type ArgumentInvocationOut<X> = {
 const R_fn = <X>(
   gas: Gas,
   hostCall: HostCallOut<X>,
-  context: PVMProgramExecutionContextImpl,
+  context: {
+    instructionPointer: u32;
+    gas: Gas;
+    registers: PVMRegistersImpl;
+    memory: BaseMemory;
+  },
 ): ArgumentInvocationOut<X> => {
   const u_prime = context.gas;
   const gas_prime: Gas = <Gas>(gas - (u_prime > 0n ? u_prime : 0n));
@@ -79,11 +116,11 @@ const R_fn = <X>(
       w7.fitsInU32() &&
       context.memory.canRead(w7.u32(), Number(context.registers.w8()))
     ) {
+      const rb = Buffer.allocUnsafe(Number(context.registers.w8()));
+      context.memory.readInto(w7.u32(), rb);
       return {
         gasUsed: gas_prime,
-        res: new WorkOutputImpl<WorkError.OutOfGas>(
-          context.memory.getBytes(w7.u32(), Number(context.registers.w8())),
-        ),
+        res: new WorkOutputImpl<WorkError.OutOfGas>(rb),
         out: hostCall.out,
       };
     } else {

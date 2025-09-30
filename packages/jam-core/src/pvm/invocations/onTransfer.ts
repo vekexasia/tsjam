@@ -1,7 +1,6 @@
 import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { TauImpl } from "@/impls/slot-impl";
 import { createCodec, E_int, encodeWithCodec } from "@tsjam/codec";
@@ -19,9 +18,10 @@ import assert from "node:assert";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
-import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
+import { IxMod } from "@tsjam/pvm-js";
+import { PVM } from "@tsjam/pvm-base";
 
 const argumentInvocationTransferCodec = createCodec<{
   tau: u32;
@@ -93,26 +93,22 @@ const F_fn: (deps: {
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
     bold_t: DeferredTransfersImpl;
   }) =>
-  (data: {
-    hostCallOpcode: u8;
-    ctx: PVMProgramExecutionContextImpl;
-    out: ServiceAccountImpl;
-  }) => {
+  (data: { hostCallOpcode: u8; pvm: PVM; out: ServiceAccountImpl }) => {
     const { s, bold_s, bold_d } = deps;
     const fnIdentifier = FnsDb.byCode.get(data.hostCallOpcode)!;
     switch (fnIdentifier) {
       case "gas": {
         return applyMods(
-          data.ctx,
+          data.pvm,
           data.out,
-          hostFunctions.gas(data.ctx, undefined),
+          hostFunctions.gas(data.pvm, undefined),
         );
       }
       case "fetch": {
         return applyMods(
-          data.ctx,
+          data.pvm,
           data.out,
-          hostFunctions.fetch(data.ctx, {
+          hostFunctions.fetch(data.pvm, {
             n: deps.p_eta_0,
             bold_t: deps.bold_t,
           }),
@@ -120,9 +116,9 @@ const F_fn: (deps: {
       }
       case "lookup": {
         return applyMods(
-          data.ctx,
+          data.pvm,
           data.out,
-          hostFunctions.lookup(data.ctx, {
+          hostFunctions.lookup(data.pvm, {
             bold_d,
             s,
             bold_s,
@@ -131,9 +127,9 @@ const F_fn: (deps: {
       }
       case "read": {
         return applyMods(
-          data.ctx,
+          data.pvm,
           data.out,
-          hostFunctions.read(data.ctx, {
+          hostFunctions.read(data.pvm, {
             bold_d,
             s,
             bold_s,
@@ -143,9 +139,9 @@ const F_fn: (deps: {
       case "write": {
         const out = { bold_s: data.out };
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(
-          data.ctx,
+          data.pvm,
           out,
-          hostFunctions.write(data.ctx, {
+          hostFunctions.write(data.pvm, {
             s,
             bold_s,
           }),
@@ -154,21 +150,21 @@ const F_fn: (deps: {
         return m;
       }
       case "info": {
-        const res = hostFunctions.info(data.ctx, { s, bold_d });
-        return applyMods(data.ctx, data.out, res);
+        const res = hostFunctions.info(data.pvm, { s, bold_d });
+        return applyMods(data.pvm, data.out, res);
       }
       case "log": {
         return applyMods(
-          data.ctx,
+          data.pvm,
           data.out,
-          hostFunctions.log(data.ctx, {
+          hostFunctions.log(data.pvm, {
             core: <CoreIndex>0,
             serviceIndex: s,
           }),
         );
       }
       default:
-        return applyMods(data.ctx, data.out, [
+        return applyMods(data.pvm, data.out, [
           IxMod.gas(10n),
           IxMod.w7(HostCallResult.WHAT),
         ]);

@@ -382,7 +382,7 @@ export const singleServiceAccumulation = (
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
-  console.log(`Accumulating service ${service}`);
+  //console.log(`Accumulating service ${service}`);
   let g = (gasPerService.get(service) || 0n) as Gas;
   reports.forEach((wr) =>
     wr.digests

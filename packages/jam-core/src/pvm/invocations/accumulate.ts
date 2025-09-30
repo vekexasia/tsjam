@@ -4,7 +4,6 @@ import { DeferredTransfersImpl } from "@/impls/deferred-transfers-impl";
 import { JamEntropyImpl } from "@/impls/jam-entropy-impl";
 import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { TauImpl } from "@/impls/slot-impl";
@@ -27,10 +26,10 @@ import { toTagged } from "@tsjam/utils";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
-import { IxMod } from "../instructions/utils";
-import { check_fn } from "../utils/check-fn";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
+import { check_fn, PVM } from "@tsjam/pvm-base";
+import { IxMod } from "@tsjam/pvm-js";
 
 const AccumulateArgsCodec = createCodec<{
   t: u32;
@@ -156,9 +155,9 @@ const F_fn: (
     switch (fnIdentifier) {
       case "read": {
         const exitReason = applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.read(input.ctx, {
+          hostFunctions.read(input.pvm, {
             bold_s,
             s: input.out.x.id,
             bold_d: e_bold_d,
@@ -170,9 +169,9 @@ const F_fn: (
       }
       case "fetch": {
         const m = applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.fetch(input.ctx, {
+          hostFunctions.fetch(input.pvm, {
             n: p_eta_0,
             // We know that this is out of 0.7.0 spec as
             // gp at 0.7.0 sets bold_o to operand and input does not exist.
@@ -188,9 +187,9 @@ const F_fn: (
       case "write": {
         const out = { bold_s };
         const m = applyMods<{ bold_s: ServiceAccountImpl }>(
-          input.ctx,
+          input.pvm,
           out,
-          hostFunctions.write(input.ctx, {
+          hostFunctions.write(input.pvm, {
             bold_s,
             s: input.out.x.id,
           }),
@@ -203,9 +202,9 @@ const F_fn: (
       }
       case "lookup": {
         const m = applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.lookup(input.ctx, {
+          hostFunctions.lookup(input.pvm, {
             bold_s,
             s: input.out.x.id,
             bold_d: e_bold_d,
@@ -216,18 +215,18 @@ const F_fn: (
       }
       case "gas": {
         const m = applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.gas(input.ctx, undefined),
+          hostFunctions.gas(input.pvm, undefined),
         );
         G_fn(input, bold_s);
         return m;
       }
       case "info": {
         const m = applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.info(input.ctx, {
+          hostFunctions.info(input.pvm, {
             bold_d: e_bold_d,
             s: input.out.x.id,
           }),
@@ -237,93 +236,93 @@ const F_fn: (
       }
       case "bless":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.bless(input.ctx, input.out.x),
+          hostFunctions.bless(input.pvm, input.out.x),
         );
 
       case "assign":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.assign(input.ctx, input.out.x),
+          hostFunctions.assign(input.pvm, input.out.x),
         );
 
       case "designate":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.designate(input.ctx, input.out.x),
+          hostFunctions.designate(input.pvm, input.out.x),
         );
       case "checkpoint":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.checkpoint(input.ctx, input.out.x),
+          hostFunctions.checkpoint(input.pvm, input.out.x),
         );
       case "new":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.new(input.ctx, { x: input.out.x, tau }),
+          hostFunctions.new(input.pvm, { x: input.out.x, tau }),
         );
       case "upgrade":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.upgrade(input.ctx, input.out.x),
+          hostFunctions.upgrade(input.pvm, input.out.x),
         );
       case "transfer":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.transfer(input.ctx, input.out.x),
+          hostFunctions.transfer(input.pvm, input.out.x),
         );
       case "eject":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.eject(input.ctx, { x: input.out.x, tau }),
+          hostFunctions.eject(input.pvm, { x: input.out.x, tau }),
         );
       case "query":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.query(input.ctx, input.out.x),
+          hostFunctions.query(input.pvm, input.out.x),
         );
       case "solicit":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.solicit(input.ctx, { x: input.out.x, tau }),
+          hostFunctions.solicit(input.pvm, { x: input.out.x, tau }),
         );
       case "forget":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.forget(input.ctx, { x: input.out.x, tau }),
+          hostFunctions.forget(input.pvm, { x: input.out.x, tau }),
         );
       case "yield":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.yield(input.ctx, input.out.x),
+          hostFunctions.yield(input.pvm, input.out.x),
         );
       case "provide":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.provide(input.ctx, { x: input.out.x, s: serviceIndex }),
+          hostFunctions.provide(input.pvm, { x: input.out.x, s: serviceIndex }),
         );
       case "log":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.log(input.ctx, { core, serviceIndex }),
+          hostFunctions.log(input.pvm, { core, serviceIndex }),
         );
     }
 
-    return applyMods(input.ctx, input.out, [
+    return applyMods(input.pvm, input.out, [
       IxMod.gas(10n),
       IxMod.w7(HostCallResult.WHAT),
     ]);
@@ -334,7 +333,7 @@ const F_fn: (
  */
 const G_fn = (
   data: {
-    ctx: PVMProgramExecutionContextImpl;
+    pvm: PVM;
     out: { x: PVMResultContextImpl; y: PVMResultContextImpl };
   },
   serviceAccount: ServiceAccountImpl,

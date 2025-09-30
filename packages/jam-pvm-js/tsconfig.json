@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "dist",
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+, "../jam-pvm-base/src/pvm-registers.ts", "../jam-pvm-base/src/pvm-register.ts", "../jam-pvm-base/src/pvm-exit-reason.ts", "../jam-pvm-base/src/program.ts" ],
+  "exclude": [
+    "dist/**/*"
+  ]
+}

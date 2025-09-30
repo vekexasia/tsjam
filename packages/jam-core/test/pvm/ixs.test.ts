@@ -1,31 +1,18 @@
-import { PVMProgramCodec } from "@/codecs/pvm-program-codec";
+import { pvmImpl } from "@/pvm/proxy";
 import {
-  PVMExitReasonImpl,
-  PVMProgramExecutionContextImpl,
+  BaseMemory,
+  deblobProgram,
+  PVMMemDump,
   PVMRegisterImpl,
   PVMRegistersImpl,
-} from "@/index";
-import "@/pvm/instructions/instructions.js";
-import { ParsedProgram } from "@/pvm/parse-program";
-import { PVMMemory } from "@/pvm/pvm-memory";
-import {
-  __collect,
-  MemoryAccess,
-  pvm_init,
-  pvm_memory,
-  pvm_deinit,
-  pvm_memory_read,
-  pvm_read_pc,
-  pvm_read_reg,
-  pvm_run,
-  memory as wasmMemory,
-} from "@tsjam/pvm-wasm";
+} from "@tsjam/pvm-base";
 import {
   Gas,
-  Page,
   PVMMemoryAccessKind,
+  PVMProgram,
   PVMProgramCode,
   PVMRegisterRawValue,
+  Tagged,
   u32,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
@@ -40,110 +27,58 @@ describe("pvm", () => {
     const json = JSONBigNative.parse(
       fs.readFileSync(`${__dirname}/fixtures/${filename}.json`, "utf-8"),
     );
-    const pvmACL = new Map<
-      Page,
-      PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write
-    >();
+    const memDump: PVMMemDump = {
+      pages: new Map(),
+      heap: { start: <u32>0, end: <u32>0, pointer: <u32>0 },
+    };
 
     for (const { address, length, "is-writable": isWritable } of json[
       "initial-page-map"
     ]) {
       for (let i = 0; i < length / 4096; i++) {
-        pvmACL.set(
-          Math.floor(address / 4096),
-          isWritable ? PVMMemoryAccessKind.Write : PVMMemoryAccessKind.Read,
-        );
+        memDump.pages.set(Math.floor(address / 4096), {
+          acl: isWritable
+            ? PVMMemoryAccessKind.Write
+            : PVMMemoryAccessKind.Read,
+          data: Buffer.alloc(4096),
+        });
       }
     }
-    const execContext = new PVMProgramExecutionContextImpl({
-      instructionPointer: toTagged(json["initial-pc"]),
-      gas: toTagged(BigInt(json["initial-gas"]) as Gas),
-      memory: new PVMMemory(
-        json["initial-memory"].map(
-          (v: { address: number; contents: number[] }) => ({
-            at: v.address,
-            content: Buffer.from(v.contents),
-          }),
-        ),
-        pvmACL,
-        { start: <u32>0, end: <u32>0, pointer: <u32>0 },
-      ),
-      registers: new PVMRegistersImpl(),
-    });
+
+    for (const { address, contents } of json["initial-memory"]) {
+      const page = Math.floor(address / 4096);
+      const initPage = page * 4096;
+      const offset = address - initPage;
+      memDump.pages.get(page)!.data.set(Buffer.from(contents), offset);
+    }
+
+    const pc: u32 = json["initial-pc"];
+    const gas: Gas = <Gas>BigInt(json["initial-gas"]);
+    const regs = new PVMRegistersImpl(
+      toTagged(Array.from({ length: 13 }, () => new PVMRegisterImpl())),
+    );
+    const code = <PVMProgramCode>Buffer.from(<number[]>json.program);
+
     json["initial-regs"]
       .map((reg: number) => BigInt(reg))
-      .forEach(
-        (r: bigint, index: number) =>
-          (execContext.registers.elements[index] = new PVMRegisterImpl(
-            <PVMRegisterRawValue>r,
-          )),
-      );
-    const code = <PVMProgramCode>Buffer.from(<number[]>json.program);
-    const res = ParsedProgram.deblob(code);
-    let exitReason: PVMExitReasonImpl;
-    if (res instanceof PVMExitReasonImpl) {
-      exitReason = res;
-    } else {
-      const r = PVMProgramCodec.decode(code).value;
-      const mem = pvm_memory(
-        [...pvmACL.keys()],
-        [...pvmACL.values()].map((m) => {
-          switch (m) {
-            case PVMMemoryAccessKind.Read:
-              return MemoryAccess.Read;
-            case PVMMemoryAccessKind.Write:
-              return MemoryAccess.Write;
-            default:
-              return MemoryAccess.Null;
-          }
-        }),
-        [...execContext.memory.innerMemoryContent.values()],
-        execContext.memory.heap.start,
-        execContext.memory.heap.pointer,
-        execContext.memory.heap.end,
-      );
-      console.log(r);
-      const pvm = pvm_init(
-        execContext.registers.elements.map((r) => r.value),
-        mem,
-        execContext.gas,
-        execContext.instructionPointer,
-        r.c,
-        r.j,
-        r.k,
-      );
-      const wasmExitReason = pvm_run(pvm);
-      exitReason = PVMExitReasonImpl.fromWasmExitCode(wasmExitReason, pvm);
-      if (exitReason.isPanic()) {
-        expect("panic").toEqual(json["expected-status"]);
-      } else if (exitReason.isHalt()) {
-        expect("halt").toEqual(json["expected-status"]);
-      } else if (exitReason.isOutOfGas()) {
-        expect("out-of-gas").toEqual(json["expected-status"]);
-      } else if (exitReason.isPageFault()) {
-        expect("page-fault").toEqual(json["expected-status"]);
-        expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
-      }
-      expect(pvm_read_pc(pvm), "instruction pointer").toEqual(
-        json["expected-pc"],
-      );
-      const regs = pvm_read_reg(pvm);
+      .forEach((r: bigint, index: number) => {
+        regs.elements[index].value = <PVMRegisterRawValue>r;
+      });
 
-      expect(regs).toEqual(
-        json["expected-regs"].map((reg: bigint | number) => BigInt(reg)),
-      );
-      // memory checks
-      for (const { address, contents } of json["expected-memory"]) {
-        const ptr = pvm_memory_read(pvm, address, contents.length);
-        const a = Buffer.from(wasmMemory.buffer, ptr, contents.length);
-        expect(a).toEqual(Buffer.from(contents));
-      }
+    const program = <PVMProgram>deblobProgram(code);
 
-      console.log(wasmMemory.buffer.byteLength);
-      pvm_deinit(pvm);
-      __collect();
-      console.log(wasmMemory.buffer.byteLength);
-    }
+    const mem = pvmImpl.buildMemory(memDump);
+
+    const pvm = pvmImpl.buildPVM({
+      mem,
+      gas,
+      pc,
+      regs,
+      program,
+    });
+
+    // pvm.set_debug(true);
+    const exitReason = pvm.run();
     if (exitReason.isPanic()) {
       expect("panic").toEqual(json["expected-status"]);
     } else if (exitReason.isHalt()) {
@@ -155,7 +90,20 @@ describe("pvm", () => {
       expect(exitReason.address).toEqual(json["expected-page-fault-address"]);
     }
 
-    // expect(r.context.gas).toEqual(toTagged(BigInt(json["expected-gas"])));
+    expect(regs.elements.map((r) => r.value)).toEqual(
+      json["expected-regs"].map(BigInt),
+    );
+
+    for (const { address, contents } of json["expected-memory"]) {
+      const buf = Buffer.alloc(contents.length);
+      (mem as Tagged<BaseMemory, "canRead">).readInto(address, buf);
+      expect(buf).toEqual(Buffer.from(contents));
+    }
+
+    expect(pvm.gas).to.closeTo(
+      <number>(<unknown>toTagged(BigInt(json["expected-gas"]))),
+      1,
+    );
   };
 
   /* NOTE: regenerate with

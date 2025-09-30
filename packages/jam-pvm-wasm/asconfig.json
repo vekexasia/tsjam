@@ -1,31 +1,30 @@
 {
   "targets": {
     "debug": {
-      "outFile": "build/debug.wasm",
-      "textFile": "build/debug.wat",
+      "outFile": "dist/asm/index.wasm",
+      "textFile": "dist/asm/index.wat",
       "sourceMap": true,
-      "debug": true,
-      "exportRuntime": true
+      "debug": true
     },
     "release": {
-      "outFile": "build/release.wasm",
-      "textFile": "build/release.wat",
+      "outFile": "dist/asm/index.wasm",
+      "textFile": "dist/asm/index.wat",
       "sourceMap": false,
       "optimizeLevel": 3,
       "shrinkLevel": 0,
       "converge": false,
-      "exportRuntime": true,
       "noAssert": false
     }
   },
   "options": {
-    "bindings": "esm",
+    "bindings": "raw",
     "enable": [
       "threads",
       "simd"
     ],
     "sharedMemory": true,
     "initialMemory": 1,
-    "maximumMemory": 1000
+    "maximumMemory": 400,
+    "exportRuntime": true
   }
 }

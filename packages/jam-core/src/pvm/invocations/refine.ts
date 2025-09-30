@@ -25,9 +25,9 @@ import { toTagged } from "@tsjam/utils";
 import { FnsDb } from "../functions/fnsdb";
 import { hostFunctions, RefineContext } from "../functions/functions";
 import { applyMods } from "../functions/utils";
-import { IxMod } from "../instructions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
+import { IxMod } from "@tsjam/pvm-js";
 
 const refine_a_Codec = createCodec<{
   //  c: CoreIndex; // `c`
@@ -167,16 +167,16 @@ const F_fn: (
     switch (fnIdentifier) {
       case "gas":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.gas(input.ctx, undefined),
+          hostFunctions.gas(input.pvm, undefined),
         );
 
       case "fetch":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.fetch(input.ctx, {
+          hostFunctions.fetch(input.pvm, {
             p: workPackage,
             n: <Hash>Buffer.alloc(32),
             bold_r: authorizerOutput,
@@ -190,9 +190,9 @@ const F_fn: (
         );
       case "historical_lookup":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.historical_lookup(input.ctx, {
+          hostFunctions.historical_lookup(input.pvm, {
             s: service,
             bold_d: delta,
             tau: tau,
@@ -200,57 +200,57 @@ const F_fn: (
         );
       case "export":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.export(input.ctx, {
+          hostFunctions.export(input.pvm, {
             refineCtx: input.out,
             segmentOffset: exportSegmentOffset,
           }),
         );
       case "machine":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.machine(input.ctx, input.out),
+          hostFunctions.machine(input.pvm, input.out),
         );
       case "peek":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.peek(input.ctx, input.out),
+          hostFunctions.peek(input.pvm, input.out),
         );
       case "poke":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.poke(input.ctx, input.out),
+          hostFunctions.poke(input.pvm, input.out),
         );
       case "pages":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.pages(input.ctx, input.out),
+          hostFunctions.pages(input.pvm, input.out),
         );
       case "invoke":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.invoke(input.ctx, input.out),
+          hostFunctions.invoke(input.pvm, input.out),
         );
       case "expunge":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.expunge(input.ctx, input.out),
+          hostFunctions.expunge(input.pvm, input.out),
         );
       case "log":
         return applyMods(
-          input.ctx,
+          input.pvm,
           input.out,
-          hostFunctions.log(input.ctx, { core: core, serviceIndex: service }),
+          hostFunctions.log(input.pvm, { core: core, serviceIndex: service }),
         );
       default:
-        return applyMods(input.ctx, input.out, [
+        return applyMods(input.pvm, input.out, [
           IxMod.gas(10n),
           IxMod.w7(HostCallResult.WHAT),
         ]);

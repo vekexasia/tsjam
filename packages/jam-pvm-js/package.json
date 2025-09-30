@@ -1,0 +1,41 @@
+{
+  "name": "@tsjam/pvm-js",
+  "version": "0.7.0",
+  "description": "PVM js impl",
+  "scripts": {
+    "build": "npx rollup --config ../../build/rollup.config.mjs",
+    "dev": "$npm_execpath run build -w",
+    "lint": "npx eslint --ext .ts src test",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && vitest run"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/node.esm.mjs",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">= 22.0.0"
+  },
+  "author": {
+    "url": "https://www.andreabaccega.com/",
+    "email": "vekexasia@gmail.com",
+    "name": "Andrea Baccega"
+  },
+  "dependencies": {
+    "@tsjam/codec": "*",
+    "@tsjam/pvm-base": "*",
+    "@tsjam/types": "*",
+    "@tsjam/utils": "*",
+    "bigint-buffer": "^1.1.5",
+    "neverthrow": "^8.2.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/json-bigint": "^1.0.4",
+    "json-bigint": "^1.0.0"
+  },
+  "jam:protocolVersion": "0.7.0"
+}

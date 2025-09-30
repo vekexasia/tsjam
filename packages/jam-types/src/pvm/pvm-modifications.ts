@@ -6,7 +6,7 @@ export type PVMSingleModGas = PVMSingleMod<"gas", Gas>;
 export type PVMSingleModPointer = PVMSingleMod<"ip", u32>;
 export type PVMSingleModMemory = PVMSingleMod<
   "memory",
-  { from: u32; data: Uint8Array }
+  { from: u32; data: Buffer }
 >;
 export type PVMSingleModObject<T> = PVMSingleMod<"object", T>;
 export type PVMSingleModRegister<T extends number> = PVMSingleMod<

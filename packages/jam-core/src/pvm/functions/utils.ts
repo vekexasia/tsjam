@@ -1,7 +1,11 @@
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { PVMRegisterImpl } from "@/impls/pvm/pvm-register-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
+import {
+  PVMExitReasonImpl,
+  PVMRegisterImpl,
+  BaseMemory,
+  PVM,
+} from "@tsjam/pvm-base";
+import { IxMod } from "@tsjam/pvm-js";
 import {
   Gas,
   PVMSingleMod,
@@ -12,8 +16,6 @@ import {
   PVMSingleModRegister,
   Tagged,
 } from "@tsjam/types";
-import { IxMod } from "../instructions/utils";
-import { PVMMemory } from "../pvm-memory";
 
 export type W0 = PVMSingleModRegister<0>;
 export type W1 = PVMSingleModRegister<1>;
@@ -31,7 +33,7 @@ export type YMod = PVMSingleModObject<{ y: PVMResultContextImpl }>;
  * it's idempotent
  */
 export const applyMods = <T extends object>(
-  ctx: PVMProgramExecutionContextImpl,
+  pvm: PVM,
   out: T,
   mods: Array<
     | PVMSingleModRegister<number>
@@ -48,15 +50,15 @@ export const applyMods = <T extends object>(
   //   ...ctx,
   //   registers: cloneCodecable(ctx.registers),
   // });
-  const originalPointer = ctx.instructionPointer;
-  const newCtx = ctx;
+  const originalPointer = pvm.pc;
+  const newCtx = pvm;
   let exitReason: PVMExitReasonImpl | undefined;
   // we cycle through all mods and stop at the end or if
   // exitReason is set (whichever comes first)
   for (let i = 0; i < mods.length && typeof exitReason === "undefined"; i++) {
     const mod = mods[i];
     if (mod.type === "ip") {
-      newCtx.instructionPointer = mod.data;
+      newCtx.pc = mod.data;
     } else if (mod.type === "gas") {
       newCtx.gas = (newCtx.gas - mod.data) as Gas;
     } else if (mod.type === "exit") {
@@ -80,7 +82,7 @@ export const applyMods = <T extends object>(
         //  }] = <${BufferJSONCodec().toJSON(<any>mod.data.data)}>`,
         //  true,
         //);
-        (<Tagged<PVMMemory, "canWrite">>newCtx.memory).setBytes(
+        (<Tagged<BaseMemory, "canWrite">>newCtx.memory).writeAt(
           mod.data.from,
           mod.data.data,
         );

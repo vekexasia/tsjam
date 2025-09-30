@@ -1,11 +1,7 @@
-import { PVMExitReasonImpl } from "@/impls/pvm/pvm-exit-reason-impl";
-import { PVMIxEvaluateFNContextImpl } from "@/impls/pvm/pvm-ix-evaluate-fn-context-impl";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
 import "@/pvm/functions/functions";
-import { PVMProgramCode, u8 } from "@tsjam/types";
+import { PVM, PVMExitReasonImpl } from "@tsjam/pvm-base";
+import { u8 } from "@tsjam/types";
 import assert from "assert";
-import { basicInvocation } from "./basic";
-import { ParsedProgram } from "../parse-program";
 
 /**
  * Host call invocation
@@ -13,38 +9,23 @@ import { ParsedProgram } from "../parse-program";
  * $(0.7.1 - A.35)
  */
 export const hostCallInvocation = <X>(
-  program: PVMProgramCode,
-  ctx: PVMProgramExecutionContextImpl, // ı, ξ, ω, μ
+  pvm: PVM,
   f: HostCallExecutor<X>,
   x: X,
 ): HostCallOut<X> => {
-  // NOTE:this is not part of A.35 but an optimization
-  // to avoid deblobbing multiple times in basicInvocation
-  const r = ParsedProgram.deblob(program);
-  if (r instanceof PVMExitReasonImpl) {
-    return {
-      exitReason: r,
-      out: x,
-    };
-  }
-
-  const ixCtx = new PVMIxEvaluateFNContextImpl({
-    execution: ctx,
-    program: r,
-  });
   while (true) {
-    const outExit = basicInvocation(r, ixCtx);
+    const outExit = pvm.run();
     if (outExit.isHostCall()) {
       // i'
-      const p_i = ixCtx.execution.instructionPointer;
+      const p_i = pvm.pc;
       const hostCallRes = f({
         hostCallOpcode: outExit.opCode,
-        ctx: ctx,
+        pvm: pvm,
         out: x,
       });
       // all flows of A.35 when its host call wants instruction pointer
       // to be the one after the basic invocation
-      ctx.instructionPointer = p_i;
+      pvm.pc = p_i;
 
       if (typeof hostCallRes !== "undefined") {
         // log("not defined res", process.env.DEBUG_TRACES == "true");
@@ -84,6 +65,6 @@ export type HostCallOut<X> = {
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;
-  ctx: PVMProgramExecutionContextImpl;
+  pvm: PVM;
   out: X;
 }) => PVMExitReasonImpl | undefined;

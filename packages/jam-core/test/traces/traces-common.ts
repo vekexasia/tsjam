@@ -11,6 +11,7 @@ import {
 } from "@/index";
 import {
   BaseJamCodecable,
+  BufferJSONCodec,
   codec,
   JamCodecable,
   LengthDiscrimantedIdentityCodec,
@@ -181,14 +182,7 @@ export const buildTracesTests = (kind: string) => {
           testCase.postState.merkleMap.has(k),
           "key missing in post state",
         ).toBe(true);
-        expect(
-          LengthDiscrimantedIdentityCodec.toJSON(v),
-          `key = ${LengthDiscrimantedIdentityCodec.toJSON(k)}`,
-        ).toEqual(
-          LengthDiscrimantedIdentityCodec.toJSON(
-            testCase.postState.merkleMap.get(k)!,
-          ),
-        );
+        expect(v).deep.eq(testCase.postState.merkleMap.get(k));
       }
       expect(merkleMap.size).eq(testCase.postState.merkleMap.size);
       expect(xBytesCodec(32).toJSON(posteriorState.merkleRoot())).eq(

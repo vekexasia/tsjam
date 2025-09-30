@@ -60,11 +60,6 @@ export * from "./impls/work-report-impl";
 export * from "./impls/pvm/accumulation-input-impl";
 export * from "./impls/pvm/pvm-accumulation-op-impl";
 export * from "./impls/pvm/pvm-accumulation-state-impl";
-export * from "./impls/pvm/pvm-exit-reason-impl";
-export * from "./impls/pvm/pvm-ix-evaluate-fn-context-impl";
-export * from "./impls/pvm/pvm-program-execution-context-impl";
-export * from "./impls/pvm/pvm-register-impl";
-export * from "./impls/pvm/pvm-registers-impl";
 export * from "./impls/pvm/pvm-result-context-impl";
 
 // --- Extrinsicsimpls/ and nested groups

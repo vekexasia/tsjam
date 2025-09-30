@@ -173,9 +173,7 @@ export class ServiceAccountImpl
       this.decodedMetaAndCode = { code: undefined, metadata: undefined };
     } else {
       // TODO: handle decoding errors
-      this.decodedMetaAndCode = serviceMetadataCodec.decode(
-        this.preimages.get(this.codeHash)!,
-      ).value;
+      this.decodedMetaAndCode = serviceMetadataCodec.decode(codePreimage).value;
     }
   }
 
@@ -216,7 +214,7 @@ export class ServiceAccountImpl
   historicalLookup(
     tau: Tagged<SlotImpl, "-D">, // $(0.7.1 - 9.5) states that TAU is no older than D
     hash: Hash,
-  ): Uint8Array | undefined {
+  ): Buffer | undefined {
     const ap = this.preimages.get(hash);
     if (
       typeof ap !== "undefined" &&

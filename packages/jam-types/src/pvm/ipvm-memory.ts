@@ -3,20 +3,15 @@ import { u32 } from "@/generic-types";
 export type Page = number;
 
 export enum PVMMemoryAccessKind {
-  Read = "read",
-  Write = "write",
-  Null = "null",
+  Read,
+  Write,
+  Null,
 }
 /**
  * Interface middleware for the RAM of the PVM
  * implementors should take care of the memory access
  */
 export interface IPVMMemory {
-  /**
-   * Creates a copy of the instance
-   */
-  clone(): this;
-
   /**
    * @throws in case there is an issue accessing the memory
    * @param address - offset to write the value to
@@ -57,9 +52,4 @@ export interface IPVMMemory {
    * $(0.7.1 - 4.24) - acl is defined there
    */
   changeAcl(page: Page, newKind: PVMMemoryAccessKind): this;
-
-  /**
-   * Returns the first address that is writeable in the heap
-   */
-  firstWriteableInHeap(size: u32): u32 | undefined;
 }

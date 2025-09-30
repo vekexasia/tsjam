@@ -1,7 +1,6 @@
 import { HashCodec } from "@/codecs/misc-codecs";
 import { hostFunctions } from "@/pvm/functions/functions";
 import { applyMods } from "@/pvm/functions/utils";
-import { IxMod } from "@/pvm/instructions/utils";
 import { argumentInvocation } from "@/pvm/invocations/argument";
 import { HostCallExecutor } from "@/pvm/invocations/host-call";
 import {
@@ -38,7 +37,6 @@ import type {
   PVMProgramCode,
   PVMRegisterRawValue,
   PVMResultContext,
-  RegisterIdentifier,
   ServiceIndex,
   u32,
   Validated,
@@ -222,34 +220,29 @@ const F_Fn =
   (input) => {
     if (input.hostCallOpcode === 0 /** ΩG */) {
       return applyMods(
-        input.ctx,
+        input.pvm,
         input.out as never,
-        hostFunctions.gas(input.ctx, undefined),
+        hostFunctions.gas(input.pvm, undefined),
       );
     } else if (input.hostCallOpcode === 1 /** fetc */) {
       return applyMods(
-        input.ctx,
+        input.pvm,
         input.out as never,
-        hostFunctions.fetch(input.ctx, {
+        hostFunctions.fetch(input.pvm, {
           p: bold_p,
         }),
       );
     } else if (input.hostCallOpcode === 100 /** log */) {
       return applyMods(
-        input.ctx,
+        input.pvm,
         input.out as never,
-        hostFunctions.log(input.ctx, {
+        hostFunctions.log(input.pvm, {
           core: coreIndex,
         }),
       );
     }
-    return applyMods(input.ctx, input.out as never, [
-      IxMod.gas(10n),
-      IxMod.reg(
-        <RegisterIdentifier>7,
-        <PVMRegisterRawValue>HostCallResult.WHAT,
-      ),
-    ]);
+    input.pvm.gas = <Gas>(input.pvm.gas - 10n);
+    input.pvm.registers.w7().value = <PVMRegisterRawValue>HostCallResult.WHAT;
   };
 
 if (import.meta.vitest) {

@@ -14,7 +14,7 @@ export interface PVMProgram {
   /**
    * instruction data
    */
-  c: Uint8Array;
+  c: Buffer;
   /**
    * instruction mask
    * A bit array of length c.length a bit set to `1` at index `i` meanc that `c[i]` is an opcode instruction

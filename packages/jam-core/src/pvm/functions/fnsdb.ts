@@ -1,36 +1,28 @@
+import { log } from "@/utils";
+import { PVM } from "@tsjam/pvm-base";
+import { IxMod } from "@tsjam/pvm-js";
 import {
   Gas,
   PVMExitReason,
   PVMExitReasonMod,
-  PVMFn,
-  PVMProgramExecutionContext,
-  PVMProgramExecutionContextBase,
   PVMSingleModGas,
   u8,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import { IxMod } from "../instructions/utils";
-import { PVMProgramExecutionContextImpl } from "@/impls/pvm/pvm-program-execution-context-impl";
-import { log } from "@/utils";
 
+type PVMFn<Args, Out> = (pvm: PVM, args: Args) => Out;
 export const FnsDb = {
   byCode: new Map<u8, string>(),
-  byIdentifier: new Map<
-    string,
-    PVMFn<never, unknown, PVMProgramExecutionContextImpl>
-  >(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  byIdentifier: new Map<string, PVMFn<any, any>>(),
 };
 /**
  * A generic PVM instruction that can take any number of arguments
  * A single instruction needs to implement this interface
  */
-export interface DetailedPVMFn<
-  Args,
-  Out,
-  CTX extends PVMProgramExecutionContextBase = PVMProgramExecutionContext,
-> {
-  execute(context: CTX, args: Args): Out;
-  gasCost: Gas | ((ctx: CTX, args: Args) => Gas);
+export interface DetailedPVMFn<Args, Out> {
+  execute(pvm: PVM, args: Args): Out;
+  gasCost: Gas | ((pvm: PVM, args: Args) => Gas);
   opCode: number;
   identifier: string;
 }
@@ -40,12 +32,11 @@ export interface DetailedPVMFn<
  * @param conf - the configuration object
  */
 export const regFn = <Args, Out>(conf: {
-  fn: DetailedPVMFn<Args, Out[], PVMProgramExecutionContextImpl>;
+  fn: DetailedPVMFn<Args, Out[]>;
 }): PVMFn<
   Args,
   | Array<Out | PVMSingleModGas>
-  | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>],
-  PVMProgramExecutionContextImpl
+  | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>]
 > => {
   if (FnsDb.byCode.has(toTagged(conf.fn.opCode))) {
     throw new Error(`duplicate opCode ${conf.fn.opCode} ${conf.fn.identifier}`);
@@ -56,19 +47,18 @@ export const regFn = <Args, Out>(conf: {
   const newfn: PVMFn<
     Args,
     | Array<Out | PVMSingleModGas>
-    | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>],
-    PVMProgramExecutionContextImpl
-  > = (ctx: PVMProgramExecutionContextImpl, args) => {
+    | [PVMSingleModGas, PVMExitReasonMod<PVMExitReason>]
+  > = (pvm: PVM, args) => {
     // $(0.7.1 - B.17 / B.19 / B.21)
     const gas =
       typeof conf.fn.gasCost === "function"
-        ? conf.fn.gasCost(ctx, args)
+        ? conf.fn.gasCost(pvm, args)
         : conf.fn.gasCost;
-    if (gas > ctx.gas) {
+    if (gas > pvm.gas) {
       // $(0.7.1 - B.18 / B.20 / B.22) | first bracket
       return [IxMod.gas(gas), IxMod.outOfGas()];
     }
-    return [IxMod.gas(gas), ...conf.fn.execute(ctx, args)];
+    return [IxMod.gas(gas), ...conf.fn.execute(pvm, args)];
   };
 
   FnsDb.byCode.set(conf.fn.opCode as u8, conf.fn.identifier);
@@ -78,16 +68,12 @@ export const regFn = <Args, Out>(conf: {
 
 export const HostFn = <Args, Out>(
   opCode: number,
-  gasCost: Gas | ((ctx: PVMProgramExecutionContextImpl, args: Args) => Gas) = <
-    Gas
-  >10n,
+  gasCost: Gas | ((pvm: PVM, args: Args) => Gas) = <Gas>10n,
 ) => {
   return (
     _target: unknown,
     propertyKey: string,
-    descriptor: TypedPropertyDescriptor<
-      (ctx: PVMProgramExecutionContextImpl, args: Args) => Out[]
-    >,
+    descriptor: TypedPropertyDescriptor<(pvm: PVM, args: Args) => Out[]>,
   ) => {
     const fn = regFn<Args, Out>({
       fn: {
@@ -97,14 +83,11 @@ export const HostFn = <Args, Out>(
         gasCost,
       },
     });
-    descriptor.value = function (
-      ctx: PVMProgramExecutionContextImpl,
-      args: Args,
-    ) {
+    descriptor.value = function (pvm: PVM, args: Args) {
       log(`HostCall[${propertyKey}]`, process.env.DEBUG_STEPS == "true");
       // eslint-disable-next-line
-      const res = <any>fn.call(this, ctx, args);
-      log(res, process.env.DEBUG_STEPS == "true");
+      const res = <any>fn.call(this, pvm, args);
+      // log(res, process.env.DEBUG_STEPS == "true");
       return res;
     };
     return descriptor;

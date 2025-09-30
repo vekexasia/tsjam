@@ -1,0 +1,20 @@
+{
+  "extends": "assemblyscript/std/assembly.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "asm",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "declaration": true,
+    "paths": {
+      "@tsjam/types": ["../jam-types/dist/types/index.d.ts"],
+      "@asm/" : ["./dist/asm/index.d.ts"],
+    }
+  },
+  "include": [
+    "asm/index.ts", 
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}

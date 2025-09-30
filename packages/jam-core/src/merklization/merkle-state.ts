@@ -1,6 +1,6 @@
 import { IdentityMap } from "@/data-structures/identity-map";
 import type { JamStateImpl } from "@/impls/jam-state-impl";
-import { bit, E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { bit, BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import type {
   ByteArrayOfLength,
@@ -128,8 +128,9 @@ export class MerkleState {
 
     for (const [serviceIndex, serviceAccount] of state.serviceAccounts
       .elements) {
+      const sk = stateKey(255, serviceIndex);
       toRet.set(
-        stateKey(255, serviceIndex),
+        sk,
         encodeWithCodec(serviceAccountDataCodec, {
           ...serviceAccount,
           itemInStorage: serviceAccount.itemInStorage(),
@@ -139,7 +140,8 @@ export class MerkleState {
 
       for (const [h, p] of serviceAccount.preimages) {
         const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
-        toRet.set(stateKey(serviceIndex, Buffer.concat([pref, h])), p);
+        const k = stateKey(serviceIndex, Buffer.concat([pref, h]));
+        toRet.set(k, p);
       }
 
       for (const [stateKey, v] of serviceAccount.merkleStorage.entries()) {

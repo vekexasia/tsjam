@@ -8,16 +8,16 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build && vitest run",
-    "build": "npx ts-macros transform out && rm -rf assembly && mv out/src assembly && cp src/tsconfig.json assembly && rm -rf out && yarn lint assembly --fix && yarn asbuild && yarn asbuild:release && echo done",
+    "build": "npx ts-macros transform out --tsconfig tsconfig.asm.json && rm -rf assembly && mv out/asm assembly && rm -rf out && yarn lint assembly --fix && cp asm/tsconfig.json assembly/ && yarn asbuild && echo done",
     "asbuild:debug": "asc assembly/index.ts --target debug",
-    "asbuild:release": "asc assembly/index.ts --target release ",
-    "asbuild": "yarn asbuild:debug && yarn asbuild:release",
+    "asbuild:release": "asc assembly/index.ts --target release",
+    "asbuild": "echo ciao && yarn asbuild:release",
     "start": "npx serve ."
   },
   "exports": {
     ".": {
-      "import": "./build/debug.js",
-      "types": "./build/debug.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "engines": {
@@ -29,6 +29,8 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
+    "@tsjam/types": "*",
+    "@tsjam/pvm-base": "*",
     "as-bigint": "^0.5.3",
     "as-console": "^7.0.0"
   },

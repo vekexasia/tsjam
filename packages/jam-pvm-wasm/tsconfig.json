@@ -4,11 +4,19 @@
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",
+    "declaration": true,
+    "lib": ["es2020", "dom"],
+    "paths": {
+      "@tsjam/types": ["../jam-types/dist/types/index.d.ts"],
+      "@tsjam/constants": ["../jam-constants/dist/types/index.d.ts"],
+      "@asm" : ["../jam-pvm-wasm/dist/asm/index.d.ts"],
+    }
   },
   "include": [
-    "src/**/*", 
+    "src/index.ts", 
+    "src/pvm-memory.ts", 
   ],
   "exclude": [
-    "dist/**/*"
+    "node_modules",
   ]
 }
