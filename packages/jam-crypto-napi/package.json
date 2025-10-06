@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/crypto-napi",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
@@ -26,5 +26,5 @@
     "universal": "napi universal",
     "version": "napi version"
   },
-  "jam:protocolVersion": "0.7.0"
+  "jam:protocolVersion": "0.7.1"
 }

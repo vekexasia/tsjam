@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/constants",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "JAM constants",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
@@ -25,5 +25,5 @@
     "name": "Andrea Baccega"
   },
   "license": "MIT",
-  "jam:protocolVersion": "0.7.0"
+  "jam:protocolVersion": "0.7.1"
 }
