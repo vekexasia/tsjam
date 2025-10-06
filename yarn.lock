@@ -1669,7 +1669,6 @@ __metadata:
   resolution: "@tsjam/pvm-base@workspace:packages/jam-pvm-base"
   dependencies:
     "@tsjam/codec": "npm:*"
-    "@tsjam/pvm-wasm": "npm:*"
     "@tsjam/types": "npm:*"
     "@tsjam/utils": "npm:*"
     "@types/json-bigint": "npm:^1.0.4"
@@ -1698,6 +1697,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tsjam/pvm-wasm@workspace:packages/jam-pvm-wasm"
   dependencies:
+    "@tsjam/pvm-base": "npm:*"
     "@tsjam/types": "npm:*"
     "@types/json-bigint": "npm:^1.0.4"
     as-bigint: "npm:^0.5.3"

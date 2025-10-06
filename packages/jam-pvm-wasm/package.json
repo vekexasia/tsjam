@@ -29,8 +29,8 @@
     "name": "Andrea Baccega"
   },
   "dependencies": {
-    "@tsjam/types": "*",
     "@tsjam/pvm-base": "*",
+    "@tsjam/types": "*",
     "as-bigint": "^0.5.3",
     "as-console": "^7.0.0"
   },
