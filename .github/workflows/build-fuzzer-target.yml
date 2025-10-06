@@ -89,23 +89,29 @@ jobs:
 
       - name: Run tests and stop target
         shell: bash
+        continue-on-error: true
         run: |
-          set -euo pipefail
+          #set -euo pipefail
 
           TEST_CMD="./build/test-target.sh"
           pwd;
           echo "Socket is: $SOCKET_PATH"
           
+          set +e
           TEST_STATUS=1
           if [[ -n "$TEST_CMD" ]]; then
-            TEST_OUTPUT=$("$TEST_CMD" -s "$SOCKET_PATH" 2>&1)
+            echo "init before"
+            TEST_OUTPUT=$($TEST_CMD -s "$SOCKET_PATH" 2>&1)
             TEST_STATUS=$?
+            echo "before"
             if [[ $TEST_STATUS -ne 0 ]]; then
+              echo "error"
               TEST_OUTPUT="${TEST_OUTPUT}\n\nExit status: $TEST_STATUS"
             fi
             # Set multiline env vars for later use (preserves newlines)
             echo "TEST_OUTPUT<<EOF" >> $GITHUB_ENV
             echo "$TEST_OUTPUT" >> $GITHUB_ENV
+            echo $TEST_OUTPUT
             echo "EOF" >> $GITHUB_ENV
             echo "TEST_STATUS=$TEST_STATUS" >> $GITHUB_ENV
           else
@@ -114,6 +120,8 @@ jobs:
             echo "EOF" >> $GITHUB_ENV
             echo "TEST_STATUS=0" >> $GITHUB_ENV
           fi
+
+          set -e
 
           # Stop background process regardless of test result
           if [[ -f .fuzzer_pid ]]; then
@@ -161,7 +169,7 @@ jobs:
           ${TEST_OUTPUT}
           \`\`\`
 
-          Commit: ${commitSha}"
+          Commit: $(echo $GITHUB_SHA | cut -c1-8)"
           # Set multiline env var for release body (preserves formatting/newlines)
           echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
           echo "$BODY" >> $GITHUB_ENV

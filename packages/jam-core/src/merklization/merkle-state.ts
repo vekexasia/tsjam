@@ -1,6 +1,6 @@
 import { IdentityMap } from "@/data-structures/identity-map";
 import type { JamStateImpl } from "@/impls/jam-state-impl";
-import { bit, BufferJSONCodec, E_4_int, encodeWithCodec } from "@tsjam/codec";
+import { bit, E_4_int, encodeWithCodec } from "@tsjam/codec";
 import { Hashing } from "@tsjam/crypto";
 import type {
   ByteArrayOfLength,
