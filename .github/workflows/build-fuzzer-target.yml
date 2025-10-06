@@ -95,13 +95,25 @@ jobs:
           TEST_CMD="./build/test-target.sh"
           pwd;
           echo "Socket is: $SOCKET_PATH"
-          set +e
+          
           TEST_STATUS=1
           if [[ -n "$TEST_CMD" ]]; then
-            $TEST_CMD -s $SOCKET_PATH
+            TEST_OUTPUT=$("$TEST_CMD" -s "$SOCKET_PATH" 2>&1)
             TEST_STATUS=$?
+            if [[ $TEST_STATUS -ne 0 ]]; then
+              TEST_OUTPUT="${TEST_OUTPUT}\n\nExit status: $TEST_STATUS"
+            fi
+            # Set multiline env vars for later use (preserves newlines)
+            echo "TEST_OUTPUT<<EOF" >> $GITHUB_ENV
+            echo "$TEST_OUTPUT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "TEST_STATUS=$TEST_STATUS" >> $GITHUB_ENV
+          else
+            echo "TEST_OUTPUT<<EOF" >> $GITHUB_ENV
+            echo "No test command to run" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "TEST_STATUS=0" >> $GITHUB_ENV
           fi
-          set -e
 
           # Stop background process regardless of test result
           if [[ -f .fuzzer_pid ]]; then
@@ -136,7 +148,24 @@ jobs:
           jamVersion=$(node -p "require('./packages/jam-fuzzer-target/package.json')['jam:protocolVersion']")
           echo "jamVersion=$jamVersion" >> $GITHUB_ENV
           echo "commitSha=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_ENV
+          # Build release body with indicator and test output
+          if [[ "${TEST_STATUS:-0}" = "0" ]]; then
+            INDICATOR="✅ Tests Passed"
+          else
+            INDICATOR="❌ Tests Failed"
+          fi
+          BODY="${INDICATOR}
 
+          ## Test Output
+          \`\`\`
+          ${TEST_OUTPUT}
+          \`\`\`
+
+          Commit: ${commitSha}"
+          # Set multiline env var for release body (preserves formatting/newlines)
+          echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
+          echo "$BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Create draft release in vekexasia/tsjam
         if: github.event_name != 'pull_request'
         uses: ncipollo/release-action@v1
@@ -146,7 +175,7 @@ jobs:
           repo: tsjam
           tag: "${{ env.jamVersion }}"
           name: "${{ env.jamVersion }} - ${{env.commitSha}}"
-          body: ${{ env.commitSha }}
+          body: ${{ env.RELEASE_BODY }}
           draft: false
           allowUpdates: true
           artifacts: ./${{ env.ARTIFACT_NAME }}
