@@ -18,10 +18,14 @@ export class AccumulationInputInpl implements AccumulationInput {
     Object.assign(this, config);
   }
 
-  isTransfer() {
+  isTransfer(): this is AccumulationInputInpl & {
+    transfer: DeferredTransferImpl;
+  } {
     return this.transfer !== undefined;
   }
-  isOperand() {
+  isOperand(): this is AccumulationInputInpl & {
+    operand: PVMAccumulationOpImpl;
+  } {
     return this.operand !== undefined;
   }
 

@@ -15,18 +15,17 @@ import {
   ServiceIndex,
   ServicesStatistics,
   SingleServiceStatistics,
+  Tagged,
   u16,
   u32,
-  Tagged,
   Validated,
 } from "@tsjam/types";
 import { toPosterior } from "@tsjam/utils";
 import type { ConditionalExcept } from "type-fest";
+import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import { SingleServiceStatisticsImpl } from "./single-service-statistics-impl";
 import type { WorkReportImpl } from "./work-report-impl";
-import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
-import { TransferStatistics } from "./deferred-transfers-impl";
 
 @JamCodecable()
 export class ServicesStatisticsImpl
@@ -59,7 +58,7 @@ export class ServicesStatisticsImpl
   }
 
   /**
-   * $(0.7.0 - 13.12)
+   * $(0.7.1 - 13.12)
    */
   toPosterior(deps: {
     ep: Validated<PreimagesExtrinsicImpl>;
@@ -67,11 +66,6 @@ export class ServicesStatisticsImpl
      * `bold S` - from $(0.7.1 - 12.26)
      */
     accumulationStatistics: AccumulationStatisticsImpl;
-
-    /**
-     * `bold_X`
-     */
-    transferStatistics: TransferStatistics;
 
     guaranteedReports: Tagged<WorkReportImpl[], "bold I">;
   }): Posterior<ServicesStatisticsImpl> {
@@ -93,7 +87,6 @@ export class ServicesStatisticsImpl
       ...s_p,
       ...s_r,
       ...deps.accumulationStatistics.services(),
-      ...deps.transferStatistics.keys(),
     ]);
 
     for (const service of bold_s) {
@@ -121,9 +114,6 @@ export class ServicesStatisticsImpl
             deps.accumulationStatistics.get(service)?.count ?? <u32>0,
           accumulateGasUsed:
             deps.accumulationStatistics.get(service)?.gasUsed ?? <Gas>0n,
-          transfersCount: deps.transferStatistics.get(service)?.count ?? <u32>0,
-          transfersGasUsed:
-            deps.transferStatistics.get(service)?.gasUsed ?? <Gas>0n,
         }),
       );
     }

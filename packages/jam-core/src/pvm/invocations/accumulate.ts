@@ -9,9 +9,14 @@ import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { TauImpl } from "@/impls/slot-impl";
 import { WorkOutputImpl } from "@/impls/work-output-impl";
 import { createCodec, E_4_int, E_int, encodeWithCodec } from "@tsjam/codec";
-import { HostCallResult, SERVICECODE_MAX_SIZE } from "@tsjam/constants";
+import {
+  HostCallResult,
+  MINIMUM_PUBLIC_SERVICE_INDEX,
+  SERVICECODE_MAX_SIZE,
+} from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
+  Balance,
   CoreIndex,
   Gas,
   Hash,
@@ -44,8 +49,7 @@ const AccumulateArgsCodec = createCodec<{
 /**
  * Accumulate State Transition Function
  * ΨA in the graypaper
- * $(0.7.0 - B.9)
- * accumulation is defined in section 12
+ * $(0.7.1 - B.9)
  */
 export const accumulateInvocation = (
   pvmAccState: PVMAccumulationStateImpl, // bold_e
@@ -65,8 +69,18 @@ export const accumulateInvocation = (
 
   // first case
   if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
+    const newPostState = pvmAccState; // no need to clone
+    const acc = newPostState.accounts.get(s)!;
+    // we update to all incoming transfer amounts
+    // bold_s and bold_x calculations
+    acc.balance = <Balance>(acc.balance +
+      accumulateOps
+        .filter((a) => a.isTransfer())
+        .map((x) => x.transfer.amount)
+        .reduce((a, b) => a + b, 0n));
+
     return new AccumulationOutImpl({
-      postState: pvmAccState,
+      postState: newPostState,
       deferredTransfers: new DeferredTransfersImpl([]),
       yield: undefined,
       gasUsed: toTagged(0n),
@@ -113,8 +127,8 @@ const I_fn = (
       ),
     ),
   ).value %
-    (2 ** 32 - 2 ** 9)) +
-    2 ** 8);
+    (2 ** 32 - MINIMUM_PUBLIC_SERVICE_INDEX - 2 ** 8)) +
+    MINIMUM_PUBLIC_SERVICE_INDEX);
 
   const i = check_fn(
     newServiceIndex,

@@ -124,6 +124,7 @@ export const dummyState = (): JamStateImpl => {
       delegator: <ServiceIndex>0,
       assigners: toTagged(new Array<ServiceIndex>(CORES).fill(<ServiceIndex>0)),
       alwaysAccers: new Map(),
+      registrar: <ServiceIndex>0,
     }),
     disputes: dummyDisputesState(),
     statistics: JamStatisticsImpl.newEmpty(),

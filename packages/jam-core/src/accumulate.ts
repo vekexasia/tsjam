@@ -71,7 +71,7 @@ export const accumulateReports = (
       [...deps.privServices.alwaysAccers.values()].reduce((a, b) => a + b, 0n),
   ].reduce((a, b) => (a < b ? b : a)) as Gas;
 
-  // $(0.7.1 - 12.24) | e
+  // $(0.7.1 - 12.23) | e
   const preState = new PVMAccumulationStateImpl({
     accounts: deps.serviceAccounts,
     stagingSet: deps.iota,
@@ -79,19 +79,19 @@ export const accumulateReports = (
     manager: deps.privServices.manager,
     assigners: deps.privServices.assigners,
     delegator: deps.privServices.delegator,
-    // registrar: deps.privServices.registrar,
+    registrar: deps.privServices.registrar,
     alwaysAccers: deps.privServices.alwaysAccers,
   });
 
-  // $(0.7.0 - 12.24)
+  // $(0.7.1 - 12.24)
   const {
     nAccumulatedWork, // `n`
     postAccState, // `e'`
-    transfers,
     lastAccOutputs, // θ′
     gasUsed, // `bold u`
   } = outerAccumulation(
     g,
+    DeferredTransfersImpl.newEmpty(),
     r_star,
     preState, // e
     deps.privServices.alwaysAccers,
@@ -125,7 +125,7 @@ export const accumulateReports = (
   return {
     p_accumulationHistory,
     p_accumulationQueue,
-    deferredTransfers: transfers,
+    //    deferredTransfers: transfers,
     p_mostRecentAccumulationOutputs: toPosterior(lastAccOutputs),
     p_privServices: toPosterior(
       new PrivilegedServicesImpl({
@@ -133,7 +133,7 @@ export const accumulateReports = (
         delegator: postAccState.delegator,
         assigners: postAccState.assigners,
         alwaysAccers: postAccState.alwaysAccers,
-        // registrar: postAccState.registrar,
+        registrar: postAccState.registrar,
       }),
     ),
     d_delta: toDagger(postAccState.accounts),
@@ -147,12 +147,14 @@ export const accumulateReports = (
  * `∆+`
  * @param gasLimit - `g`
  * @param works - `bold_r`
+ * @param transfers - `bold_t`
  * @param accState - `bold_e` initial partial accumulation state
  * @param freeAccServices - `bold_f`
- * @see $(0.7.0 - 12.16)
+ * @see $(0.7.1 - 12.18)
  */
 export const outerAccumulation = (
   gasLimit: Gas,
+  transfers: DeferredTransfersImpl,
   works: WorkReportImpl[],
   accState: PVMAccumulationStateImpl,
   freeAccServices: Map<ServiceIndex, Gas>,
@@ -163,7 +165,6 @@ export const outerAccumulation = (
 ): {
   nAccumulatedWork: number;
   postAccState: PVMAccumulationStateImpl;
-  transfers: DeferredTransfersImpl;
   lastAccOutputs: LastAccOutsImpl;
   gasUsed: GasUsed;
 } => {
@@ -178,12 +179,12 @@ export const outerAccumulation = (
       break;
     }
   }
+  const n = i + transfers.length() + freeAccServices.size;
 
-  if (i == 0) {
+  if (n == 0) {
     return {
       nAccumulatedWork: 0,
       postAccState: accState,
-      transfers: DeferredTransfersImpl.newEmpty(),
       lastAccOutputs: new LastAccOutsImpl([]),
       gasUsed: <GasUsed>{ elements: [] },
     };
@@ -197,6 +198,7 @@ export const outerAccumulation = (
     gasUsed: u_star,
   } = parallelizedAccumulation(
     accState,
+    transfers,
     works.slice(0, i),
     freeAccServices,
     deps,
@@ -206,13 +208,13 @@ export const outerAccumulation = (
     .reduce((s, e) => <Gas>(s + e), <Gas>0n);
 
   const {
+    nAccumulatedWork: j,
     postAccState: finalAccState /* e' */,
     lastAccOutputs: b,
-    transfers: bold_t,
     gasUsed: u,
-    nAccumulatedWork: j,
   } = outerAccumulation(
-    (gasLimit - consumedGas) as Gas,
+    (gasLimit + transfers.totalGas() - consumedGas) as Gas,
+    t_star,
     works.slice(i),
     newAccState,
     new Map(),
@@ -220,10 +222,6 @@ export const outerAccumulation = (
   );
   return {
     nAccumulatedWork: i + j,
-    transfers: new DeferredTransfersImpl([
-      ...t_star.elements,
-      ...bold_t.elements,
-    ]),
     postAccState: finalAccState,
     lastAccOutputs: LastAccOutsImpl.union(b_star, b),
     gasUsed: <GasUsed>{ elements: u_star.elements.concat(u.elements) },
@@ -234,15 +232,17 @@ export const outerAccumulation = (
  * `∆*` fn
  * @param accState - `bold_e` initial partial accumulation state
  * @param transfers - `bold_t`
- * @param works - `bold_w`
+ * @param reports - `bold_w`
+ * @param alwaysAccumulate - `bold_f`
  *
- * $(0.7.0 - 12.17)
+ * $(0.7.1 - 12.19)
  * $(0.7.1 - 12.20) is calculated in place
  */
 export const parallelizedAccumulation = (
   accState: PVMAccumulationStateImpl,
-  works: WorkReportImpl[],
-  bold_f: Map<ServiceIndex, Gas>,
+  transfers: DeferredTransfersImpl,
+  reports: WorkReportImpl[],
+  alwaysAccumulate: Map<ServiceIndex, Gas>,
   deps: {
     p_tau: Validated<Posterior<TauImpl>>;
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
@@ -261,20 +261,29 @@ export const parallelizedAccumulation = (
 } => {
   const bold_s = [
     ...new Set([
-      ...works.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
-      ...bold_f.keys(),
+      ...reports.map((wr) => wr.digests.map((r) => r.serviceIndex)).flat(),
+      ...alwaysAccumulate.keys(),
+      ...transfers.elements.map((t) => t.destination),
     ]).values(),
   ];
 
   const bold_u = <GasUsed>{ elements: [] };
   const accumulatedServices: Map<ServiceIndex, AccumulationOutImpl> = new Map();
-  const bold_t: DeferredTransfersImpl = new DeferredTransfersImpl([]);
+  const p_bold_t: DeferredTransfersImpl = new DeferredTransfersImpl([]);
   const bold_b = new LastAccOutsImpl([]);
 
+  // ∆(s)
   const accumulateS = (s: ServiceIndex) => {
     let accRes = accumulatedServices.get(s);
     if (typeof accRes === "undefined") {
-      accRes = singleServiceAccumulation(accState, works, bold_f, s, deps);
+      accRes = singleServiceAccumulation(
+        accState,
+        transfers,
+        reports,
+        alwaysAccumulate,
+        s,
+        deps,
+      );
       accumulatedServices.set(s, accRes);
     }
 
@@ -290,74 +299,82 @@ export const parallelizedAccumulation = (
     }
 
     // we concat directly here
-    bold_t.elements.push(...acc.deferredTransfers.elements);
+    p_bold_t.elements.push(...acc.deferredTransfers.elements);
   });
 
   const delta: DeltaImpl = accState.accounts.clone();
 
   // should contain "removed" services
-  const m: Set<ServiceIndex> = new Set();
+  const bold_m: Set<ServiceIndex> = new Set();
   // should contain "added/updated" services
-  const n = new DeltaImpl();
+  const bold_n = new DeltaImpl();
   for (let i = 0; i < bold_s.length; i++) {
     const s = bold_s[i];
     const acc = accumulatedServices.get(s)!;
     for (const k of acc.postState.accounts.services()) {
       // if k is a new service and it's not the current one
       if (!delta.has(k) || k === s) {
-        n.set(k, acc.postState.accounts.get(k)!);
+        bold_n.set(k, acc.postState.accounts.get(k)!);
       }
     }
     for (const k of delta.services()) {
       if (!acc.postState.accounts.has(k)) {
-        m.add(k);
+        bold_m.add(k);
       }
     }
   }
 
-  const tmpDelta = DeltaImpl.union(delta, n);
-  for (const k of m) {
+  const tmpDelta = DeltaImpl.union(delta, bold_n);
+  for (const k of bold_m) {
     tmpDelta.delete(k);
   }
-  const delta_prime = tmpDelta.preimageIntegration(
+  const p_delta = tmpDelta.preimageIntegration(
     [...accumulatedServices.values()].map((a) => a.provisions).flat(),
     deps.p_tau,
   );
 
   const eStar = accumulateS(accState.manager).postState;
 
-  const a_prime = structuredClone(accState.assigners); // safe as of 0.7.1
+  const p_a = structuredClone(accState.assigners); // safe as of 0.7.1
   for (let c = <CoreIndex>0; c < CORES; c++) {
-    a_prime[c] = accumulateS(eStar.assigners[c]).postState.assigners[c];
+    if (accState.assigners[c] === eStar.assigners[c]) {
+      p_a[c] = accumulateS(accState.assigners[c]).postState.assigners[c];
+    }
   }
 
-  let v_prime = structuredClone(accState.delegator); // safe as of 0.7.1
-  // if (accState.delegator !== eStar.delegator) {
-  v_prime = accumulateS(eStar.delegator).postState.delegator;
-  // }
+  let p_v = structuredClone(accState.delegator); // safe as of 0.7.1
+  if (accState.delegator === eStar.delegator) {
+    p_v = accumulateS(accState.delegator).postState.delegator;
+  }
 
-  const i_prime = accumulateS(accState.delegator).postState.stagingSet;
+  let p_r = structuredClone(accState.registrar); // safe as of 0.7.1)
+  if (accState.registrar === eStar.registrar) {
+    p_r = accumulateS(accState.registrar).postState.registrar;
+  }
 
-  const q_prime = new AuthorizerQueueImpl({ elements: toTagged([]) });
+  const p_i = accumulateS(accState.delegator).postState.stagingSet;
+
+  const p_q = new AuthorizerQueueImpl({ elements: toTagged([]) });
   for (let c = 0; c < CORES; c++) {
-    q_prime.elements[c] = accumulateS(
+    p_q.elements[c] = accumulateS(
       accState.assigners[c],
     ).postState.authQueue.elements[c];
   }
 
   const newState = new PVMAccumulationStateImpl({
-    accounts: delta_prime,
-    stagingSet: i_prime,
-    authQueue: q_prime,
-    manager: eStar.manager,
-    assigners: a_prime,
-    delegator: v_prime,
-    alwaysAccers: eStar.alwaysAccers,
+    accounts: p_delta,
+    stagingSet: p_i,
+    authQueue: p_q,
+    manager: eStar.manager, // m'
+    assigners: p_a,
+    delegator: p_v,
+    registrar: p_r,
+    alwaysAccers: eStar.alwaysAccers, // z'
   });
 
   return {
     postAccState: newState,
-    transfers: bold_t,
+    transfers: p_bold_t,
     accOut: bold_b,
     gasUsed: bold_u,
   };
@@ -366,6 +383,7 @@ export const parallelizedAccumulation = (
 /**
  * `∆1` fn
  * @param preState - `bold_e`
+ * @param transfers - `bold_t`
  * @param reports - `bold_r`
  * @param gasPerService - `bold_f`
  * @param service - `s`
@@ -374,6 +392,7 @@ export const parallelizedAccumulation = (
  */
 export const singleServiceAccumulation = (
   preState: PVMAccumulationStateImpl,
+  transfers: DeferredTransfersImpl,
   reports: WorkReportImpl[],
   gasPerService: Map<ServiceIndex, u64>,
   service: ServiceIndex,
@@ -384,20 +403,22 @@ export const singleServiceAccumulation = (
 ): AccumulationOutImpl => {
   //console.log(`Accumulating service ${service}`);
   let g = (gasPerService.get(service) || 0n) as Gas;
-  reports.forEach((wr) =>
-    wr.digests
+  const i_T = transfers.byDestination(service);
+  g = <Gas>(g + i_T.totalGas());
+  reports.forEach((r) =>
+    r.digests
       .filter((r) => r.serviceIndex === service)
       .forEach((r) => (g = <Gas>(g + r.gasLimit))),
   );
 
-  const bold_i: AccumulationInputInpl[] = [];
+  const i_U: AccumulationInputInpl[] = [];
   let core = <CoreIndex>0;
 
   for (const r of reports) {
     for (const d of r.digests) {
       if (d.serviceIndex === service) {
         core = r.core;
-        bold_i.push(
+        i_U.push(
           new AccumulationInputInpl({
             operand: new PVMAccumulationOpImpl({
               result: d.result,
@@ -414,10 +435,21 @@ export const singleServiceAccumulation = (
     }
   }
 
-  const toRet = accumulateInvocation(preState, deps.p_tau, service, g, bold_i, {
-    core,
-    p_tau: deps.p_tau,
-    p_eta_0: deps.p_eta_0,
-  });
+  const concatenatedIs = new Array<AccumulationInputInpl>();
+  i_T.elements.forEach((t) => new AccumulationInputInpl({ transfer: t }));
+  concatenatedIs.push(...i_U);
+
+  const toRet = accumulateInvocation(
+    preState,
+    deps.p_tau,
+    service,
+    g,
+    concatenatedIs,
+    {
+      core,
+      p_tau: deps.p_tau,
+      p_eta_0: deps.p_eta_0,
+    },
+  );
   return toRet;
 };

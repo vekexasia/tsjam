@@ -133,7 +133,6 @@ export class HostFunctions {
       overline_i?: ExportSegment[][];
       overline_x?: Buffer[][];
       bold_o?: PVMAccumulationOpImpl[];
-      bold_t?: DeferredTransfersImpl;
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = pvm.registers.slice(7);
@@ -314,19 +313,6 @@ export class HostFunctions {
           w11.value < args.bold_o.length
         ) {
           v = encodeWithCodec(PVMAccumulationOpImpl, args.bold_o[Number(w11)]);
-        }
-        break;
-      }
-      case 16n: {
-        v = args.bold_t?.toBinary();
-        break;
-      }
-      case 17n: {
-        if (
-          typeof args.bold_t !== "undefined" &&
-          w11.value < args.bold_t.length()
-        ) {
-          v = args.bold_t.elements[Number(w11)].toBinary();
         }
         break;
       }
@@ -981,7 +967,7 @@ export class HostFunctions {
     pvm: PVM,
     x: PVMResultContextImpl,
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
-    const [m, a, v, o, n] = pvm.registers.slice(7);
+    const [m, a, v, r, o, n] = pvm.registers.slice(7);
     if (!a.fitsInU32() || !pvm.memory.canRead(a.u32(), 4 * CORES)) {
       return [IxMod.panic()];
     }
@@ -1006,11 +992,11 @@ export class HostFunctions {
       bold_z.set(key, value);
     }
 
-    if (x.id !== x.state.manager) {
-      return [IxMod.w7(HostCallResult.HUH)];
-    }
+    // if (x.id !== x.state.manager) {
+    //   return [IxMod.w7(HostCallResult.HUH)];
+    // }
 
-    if (!m.fitsInU32() || !v.fitsInU32()) {
+    if (!m.fitsInU32() || !v.fitsInU32() || !r.fitsInU32()) {
       return [IxMod.w7(HostCallResult.WHO)];
     }
 
@@ -1028,6 +1014,7 @@ export class HostFunctions {
         manager: m.u32(),
         assigners: bold_a,
         delegator: v.u32(),
+        registrar: r.u32(),
         alwaysAccers: bold_z,
       }),
     });
@@ -1063,6 +1050,9 @@ export class HostFunctions {
     if (x.id !== x.state.assigners[Number(c.value)]) {
       return [IxMod.w7(HostCallResult.HUH)];
     }
+    if (!a.fitsInU32()) {
+      return [IxMod.w7(HostCallResult.WHO)];
+    }
 
     const data = Buffer.allocUnsafe(AUTHQUEUE_MAX_SIZE * 32);
     pvm.memory.readInto(o.u32(), data);
@@ -1085,11 +1075,12 @@ export class HostFunctions {
         stagingSet: x.state.stagingSet,
         manager: x.state.manager,
         delegator: x.state.delegator,
+        registrar: x.state.registrar,
         alwaysAccers: x.state.alwaysAccers,
       }),
     });
     newX.state.authQueue.elements[Number(c.value)] = bold_q;
-    newX.state.assigners[Number(c.value)] = <ServiceIndex>Number(a.value);
+    newX.state.assigners[Number(c.value)] = <ServiceIndex>a.u32();
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
 
@@ -1131,6 +1122,7 @@ export class HostFunctions {
         assigners: x.state.assigners,
         manager: x.state.manager,
         delegator: x.state.delegator,
+        registrar: x.state.registrar,
         alwaysAccers: x.state.alwaysAccers,
       }),
       transfers: x.transfers,
@@ -1163,7 +1155,7 @@ export class HostFunctions {
     pvm: PVM,
     args: { x: PVMResultContextImpl; tau: TauImpl },
   ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
-    const [o, l, g, m, f] = pvm.registers.slice(7);
+    const [o, l, g, m, f, i] = pvm.registers.slice(7);
 
     if (!o.fitsInU32() || !pvm.memory.canRead(o.u32(), 32) || !l.fitsInU32()) {
       return [IxMod.panic()];
@@ -1192,7 +1184,7 @@ export class HostFunctions {
     //log(`i*: ${i_star}`, process.env.DEBUG_STEPS === "true");
 
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
-    const a = new ServiceAccountImpl(
+    const bold_a = new ServiceAccountImpl(
       {
         codeHash,
         balance: <Balance>0n, // set later to a_t
@@ -1206,21 +1198,31 @@ export class HostFunctions {
       },
       storage,
     );
-    a.requests.set(codeHash, l.u32(), [] as unknown as UpToSeq<TauImpl, 3>);
-    a.balance = <Balance>(<u64>a.gasThreshold());
+    bold_a.requests.set(
+      codeHash,
+      l.u32(),
+      [] as unknown as UpToSeq<TauImpl, 3>,
+    );
+    bold_a.balance = <Balance>(<u64>bold_a.gasThreshold());
 
     const x_bold_s = args.x.bold_s();
 
     const bold_s = x_bold_s.clone();
-    bold_s.balance = <Balance>(x_bold_s.balance - a.gasThreshold());
+    bold_s.balance = <Balance>(x_bold_s.balance - bold_a.gasThreshold());
 
     if (bold_s.balance < x_bold_s.gasThreshold()) {
       return [IxMod.w7(HostCallResult.CASH)];
     }
-
+    if (
+      args.x.id === args.x.state.registrar &&
+      i.value < MINIMUM_PUBLIC_SERVICE_INDEX &&
+      args.x.state.accounts.has(<ServiceIndex>Number(i.value))
+    ) {
+      return [IxMod.w7(HostCallResult.FULL)];
+    }
     const newX = new PVMResultContextImpl({
       id: args.x.id,
-      nextFreeID: args.x.nextFreeID, // set later to i*
+      nextFreeID: args.x.nextFreeID,
       provisions: args.x.provisions,
       yield: args.x.yield,
       state: new PVMAccumulationStateImpl({
@@ -1230,13 +1232,26 @@ export class HostFunctions {
         assigners: args.x.state.assigners,
         manager: args.x.state.manager,
         delegator: args.x.state.delegator,
+        registrar: args.x.state.registrar,
         alwaysAccers: args.x.state.alwaysAccers,
       }),
       transfers: args.x.transfers,
     });
 
+    if (
+      args.x.id == args.x.state.registrar &&
+      i.fitsInU32() &&
+      i.value < MINIMUM_PUBLIC_SERVICE_INDEX
+    ) {
+      newX.state.accounts.set(i.u32(), bold_a);
+      newX.state.accounts.set(args.x.id, bold_s);
+
+      return [IxMod.w7(i.u32())];
+    }
+
+    // otherwise i*
     newX.nextFreeID = i_star;
-    newX.state.accounts.set(args.x.nextFreeID, a);
+    newX.state.accounts.set(args.x.nextFreeID, bold_a);
     newX.state.accounts.set(args.x.id, bold_s);
     return [
       IxMod.w7(args.x.nextFreeID),

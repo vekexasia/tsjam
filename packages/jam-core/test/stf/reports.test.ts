@@ -258,7 +258,6 @@ const buildTest = (filename: string) => {
 
   const servicesStats = sampleState.statistics.services.toPosterior({
     guaranteedReports: res.value.workReports(),
-    transferStatistics: new Map(),
     ep: <Validated<PreimagesExtrinsicImpl>>PreimagesExtrinsicImpl.newEmpty(),
     accumulationStatistics: new AccumulationStatisticsImpl({
       elements: new Map(),

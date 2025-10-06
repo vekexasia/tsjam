@@ -132,6 +132,7 @@ export class MerkleState {
       toRet.set(
         sk,
         encodeWithCodec(serviceAccountDataCodec, {
+          zeroPrefix: 0,
           ...serviceAccount,
           itemInStorage: serviceAccount.itemInStorage(),
           totalOctets: serviceAccount.totalOctets(),

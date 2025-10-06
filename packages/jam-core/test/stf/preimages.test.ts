@@ -209,7 +209,6 @@ const buildTest = (filename: string) => {
   const p_stats = testCase.preState.statistics.toPosterior({
     ep: r.value,
     accumulationStatistics: new AccumulationStatisticsImpl(),
-    transferStatistics: new Map(),
     guaranteedReports: toTagged([]),
   });
   expect(p_stats !== testCase.postState.statistics).toBeTruthy();

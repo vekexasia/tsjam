@@ -295,7 +295,6 @@ export class JamStateImpl implements JamState {
       p_accumulationHistory,
       p_accumulationQueue,
       p_mostRecentAccumulationOutputs,
-      deferredTransfers,
       p_privServices,
       d_delta,
       p_iota,
@@ -313,15 +312,9 @@ export class JamStateImpl implements JamState {
       p_eta_0: toPosterior(p_entropy._0),
     });
     const d_beta = this.beta.toDagger(newBlock.header.parentStateRoot);
-    const invokedTransfers = deferredTransfers.invokedTransfers({
-      d_delta,
-      p_tau,
-      p_eta_0: p_entropy._0,
-    });
 
     const dd_delta = d_delta.toDoubleDagger({
       p_tau,
-      invokedTransfers,
       accumulationStatistics,
     });
 
@@ -394,7 +387,6 @@ export class JamStateImpl implements JamState {
       p_kappa,
       p_lambda,
       accumulationStatistics,
-      transferStatistics: deferredTransfers.statistics(invokedTransfers),
     });
 
     const p_authPool = this.authPool.toPosterior({
@@ -485,17 +477,20 @@ export class JamStateImpl implements JamState {
       merkleMap.get(stateKey(16))!,
     ).value;
 
-    const serviceKeys = [...merkleMap.keys()].filter((k) => {
-      return (
-        k[0] === 255 &&
-        k[2] === 0 &&
-        k[4] === 0 &&
-        k[6] === 0 &&
-        k[8] === 0 &&
-        k[9] === 0 &&
-        32 + 5 * 8 + 4 * 4 === merkleMap.get(k)!.length
-      );
-    });
+    const serviceKeys = [...merkleMap.entries()]
+      .filter(([k, v]) => {
+        return (
+          k[0] === 255 &&
+          k[2] === 0 &&
+          k[4] === 0 &&
+          k[6] === 0 &&
+          k[8] === 0 &&
+          k[9] === 0 &&
+          v[0] === 0 &&
+          32 + 1 + 5 * 8 + 4 * 4 === v.length
+        );
+      })
+      .map(([k]) => k);
 
     const serviceAccounts = new DeltaImpl();
     for (const serviceDataKey of serviceKeys) {

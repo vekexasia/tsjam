@@ -199,7 +199,6 @@ const buildTest = (testname: string) => {
 
   const posteriorStatistics = testCase.preState.statistics.toPosterior({
     accumulationStatistics: res.accumulationStatistics,
-    transferStatistics: new Map(),
     ep: toTagged(PreimagesExtrinsicImpl.newEmpty()),
     guaranteedReports: GuaranteesExtrinsicImpl.newEmpty().workReports(),
   });
@@ -219,11 +218,6 @@ const buildTest = (testname: string) => {
 
   const dd_delta = res.d_delta.toDoubleDagger({
     accumulationStatistics: res.accumulationStatistics,
-    invokedTransfers: res.deferredTransfers.invokedTransfers({
-      d_delta: res.d_delta,
-      p_tau: testCase.input.p_tau,
-      p_eta_0: testCase.preState.p_eta_0,
-    }),
     p_tau: testCase.input.p_tau,
   });
   for (const [sid, sa] of testCase.postState.accounts) {

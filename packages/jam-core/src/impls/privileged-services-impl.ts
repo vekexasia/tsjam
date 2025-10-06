@@ -35,6 +35,7 @@ export class PrivilegedServicesImpl
    */
   @eSubIntCodec(4, "bless")
   manager!: ServiceIndex;
+
   /**
    * `A`
    * services which can alter φ one for each CORE
@@ -42,12 +43,19 @@ export class PrivilegedServicesImpl
   @jsonCodec(ArrayOfJSONCodec(NumberJSONCodec()), "assign")
   @binaryCodec(createSequenceCodec(CORES, E_sub_int(4)))
   assigners!: SeqOfLength<ServiceIndex, typeof CORES>;
+
   /**
    * `V`
    * service which can alter ι
    */
   @eSubIntCodec(4, "designate")
   delegator!: ServiceIndex;
+
+  /**
+   * `R`
+   */
+  @eSubIntCodec(4, "designate")
+  registrar!: ServiceIndex;
 
   /**
    * map of services which are automatically accumulated in each block
@@ -82,6 +90,7 @@ export class PrivilegedServicesImpl
         Array.from({ length: CORES }, () => <ServiceIndex>0)
       ),
       delegator: <ServiceIndex>0,
+      registrar: <ServiceIndex>0,
       alwaysAccers: new Map(),
     });
   }

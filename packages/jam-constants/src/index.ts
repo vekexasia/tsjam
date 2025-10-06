@@ -258,7 +258,9 @@ export let TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
 // $(0.7.1 - 4.25)
 export const Zp = 2 ** 12;
 
-// `S`
+/**
+ * `S`
+ */
 export const MINIMUM_PUBLIC_SERVICE_INDEX = 2 ** 16;
 
 // `R` in jam-np

@@ -5,6 +5,8 @@ import type { ConditionalExcept } from "type-fest";
 import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
 import { CoreStatisticsImpl } from "./core-statistics-impl";
 import type { DisputesStateImpl } from "./disputes-state-impl";
+import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
+import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
 import type { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import type { JamEntropyImpl } from "./jam-entropy-impl";
 import type { JamHeaderImpl } from "./jam-header-impl";
@@ -13,9 +15,6 @@ import type { RHOImpl } from "./rho-impl";
 import { ServicesStatisticsImpl } from "./services-statistics-impl";
 import type { TauImpl } from "./slot-impl";
 import { ValidatorStatisticsImpl } from "./validator-statistics-impl";
-import { AssurancesExtrinsicImpl } from "./extrinsics/assurances";
-import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
-import { TransferStatistics } from "./deferred-transfers-impl";
 
 /**
  * $(0.7.1 - 13.1)
@@ -61,7 +60,6 @@ export class JamStatisticsImpl
     p_kappa: Posterior<JamStateImpl["kappa"]>;
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     accumulationStatistics: AccumulationStatisticsImpl;
-    transferStatistics: TransferStatistics;
   }): Posterior<JamStatisticsImpl> {
     const bold_I = deps.extrinsics.reportGuarantees.workReports();
     const bold_R = deps.ea.newlyAvailableReports(deps.d_rho);
@@ -87,7 +85,6 @@ export class JamStatisticsImpl
 
     toRet.services = this.services.toPosterior({
       ep: deps.ep,
-      transferStatistics: deps.transferStatistics,
       guaranteedReports: bold_I,
       accumulationStatistics: deps.accumulationStatistics,
     });
