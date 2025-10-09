@@ -7,11 +7,9 @@ import {
   CoreIndex,
   Gas,
   GasUsed,
-  Hash,
   Posterior,
   ServiceIndex,
   Tagged,
-  u32,
   u64,
   Validated,
 } from "@tsjam/types";

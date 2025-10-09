@@ -91,9 +91,12 @@ export class DeltaImpl implements Delta {
   ): DoubleDagger<DeltaImpl> {
     const dd_delta = this.clone();
     for (const serviceIndex of deps.accumulationStatistics.services()) {
-      const a = dd_delta.get(serviceIndex)!;
-      a.lastAcc = deps.p_tau;
-      dd_delta.set(serviceIndex, a);
+      const a = dd_delta.get(serviceIndex);
+      // NOTE: an account coudl have been accumulated somehow but ejected so that it no longer exits
+      if (typeof a !== "undefined") {
+        a.lastAcc = deps.p_tau;
+        dd_delta.set(serviceIndex, a);
+      }
     }
     return toDoubleDagger(toDagger(dd_delta));
   }
