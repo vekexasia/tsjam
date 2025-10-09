@@ -308,11 +308,21 @@ const F_fn: (
           hostFunctions.solicit(input.pvm, { x: input.out.x, tau }),
         );
       case "forget":
-        return applyMods(
+        const h = <Hash>(
+          Buffer.from(
+            "4c49f8915a735d7416c5b380d83abb9fb07f0c7e716b97f18adebe35f9b21fd4",
+            "hex",
+          )
+        );
+        debugger;
+        const out = applyMods(
           input.pvm,
           input.out,
           hostFunctions.forget(input.pvm, { x: input.out.x, tau }),
         );
+
+        debugger;
+        return out;
       case "yield":
         return applyMods(
           input.pvm,

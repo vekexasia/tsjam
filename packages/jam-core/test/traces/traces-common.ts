@@ -17,7 +17,13 @@ import {
   LengthDiscrimantedIdentityCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import type { MerkleTreeRoot, StateKey } from "@tsjam/types";
+import type {
+  Hash,
+  MerkleTreeRoot,
+  ServiceIndex,
+  StateKey,
+} from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
 import fs from "fs";
 import { expect, it } from "vitest";
 
@@ -68,13 +74,7 @@ const decodeBin = (kind: string, which: string): TracesTestCase => {
   );
   return TracesTestCase.decode(data).value;
 };
-const decodeTrace = (kind: string, which: string): TracesTestCase => {
-  const data = fs.readFileSync(
-    `${__dirname}/../../../../jamtestvectors/traces/${kind}/${which}.json`,
-    "utf8",
-  );
-  return TracesTestCase.fromJSON(JSON.parse(data));
-};
+
 export const tracesTestCase = (kind: string, which: string) => {
   const trace = decodeBin(kind, which);
 
@@ -184,18 +184,6 @@ export const buildTracesTests = (kind: string) => {
         ).toBe(true);
         expect(v).deep.eq(testCase.postState.merkleMap.get(k));
       }
-      console.log(
-        merkleMap
-          .get(
-            <StateKey>(
-              Buffer.from(
-                "005900cc00ae009a2550f00d2172d0548d34971ae9805116bb55cb0b4aba52",
-                "hex",
-              )
-            ),
-          )
-          ?.toString("hex"),
-      );
       for (const [k] of testCase.postState.merkleMap.entries()) {
         expect(
           merkleMap.has(k),

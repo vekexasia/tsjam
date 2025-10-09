@@ -229,7 +229,9 @@ export class ServiceAccountImpl
   }
 
   clone() {
-    return new ServiceAccountImpl(this, this.merkleStorage.clone());
+    const toRet = new ServiceAccountImpl(this, this.merkleStorage.clone());
+    toRet.preimages = this.preimages.clone();
+    return toRet;
   }
 
   equals(other: ServiceAccountImpl): boolean {
