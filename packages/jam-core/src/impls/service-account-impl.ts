@@ -48,24 +48,15 @@ export const serviceMetadataCodec = createCodec<{
 /**
  * `A`
  * $(0.7.1 - 9.3)
+ * NOTE: codec is not following C(255, x) as there are some virtual items and current version of codec
+ * does not support virtual/computed items.
  */
-@JamCodecable()
 export class ServiceAccountImpl
   extends BaseJamCodecable
   implements ServiceAccount
 {
-  @codec(
-    IdentityMapCodec(xBytesCodec(32), LengthDiscrimantedIdentityCodec, {
-      key: "key",
-      value: "blob",
-    }),
-  )
-  preimages: IdentityMap<Hash, 32, Buffer> = new IdentityMap();
-
-  requests: IServiceAccountRequests;
-
-  @eSubBigIntCodec(8)
-  gratis!: Balance;
+  @eSubIntCodec(1)
+  version: 0 = 0 as const;
 
   @codec(xBytesCodec(32))
   codeHash!: CodeHash;
@@ -78,6 +69,19 @@ export class ServiceAccountImpl
 
   @eSubBigIntCodec(8)
   minMemoGas!: Gas;
+
+  @codec(
+    IdentityMapCodec(xBytesCodec(32), LengthDiscrimantedIdentityCodec, {
+      key: "key",
+      value: "blob",
+    }),
+  )
+  preimages: IdentityMap<Hash, 32, Buffer> = new IdentityMap();
+
+  requests: IServiceAccountRequests;
+
+  @eSubBigIntCodec(8)
+  gratis!: Balance;
 
   @codec(SlotImpl)
   created!: SlotImpl;

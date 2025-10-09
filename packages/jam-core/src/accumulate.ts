@@ -7,9 +7,11 @@ import {
   CoreIndex,
   Gas,
   GasUsed,
+  Hash,
   Posterior,
   ServiceIndex,
   Tagged,
+  u32,
   u64,
   Validated,
 } from "@tsjam/types";
@@ -64,7 +66,7 @@ export const accumulateReports = (
     p_tau: deps.p_tau,
   });
 
-  // $(0.7.0 - 12.23) | g
+  // $(0.7.1 - 12.24) | g
   const g: Gas = [
     TOTAL_GAS_ACCUMULATION_ALL_CORES, //GT
     TOTAL_GAS_ACCUMULATION_LOGIC * BigInt(CORES) + // GA*C
@@ -303,7 +305,6 @@ export const parallelizedAccumulation = (
   });
 
   const delta: DeltaImpl = accState.accounts.clone();
-
   // should contain "removed" services
   const bold_m: Set<ServiceIndex> = new Set();
   // should contain "added/updated" services
@@ -436,7 +437,9 @@ export const singleServiceAccumulation = (
   }
 
   const concatenatedIs = new Array<AccumulationInputInpl>();
-  i_T.elements.forEach((t) => new AccumulationInputInpl({ transfer: t }));
+  i_T.elements.forEach((t) =>
+    i_U.push(new AccumulationInputInpl({ transfer: t })),
+  );
   concatenatedIs.push(...i_U);
 
   const toRet = accumulateInvocation(

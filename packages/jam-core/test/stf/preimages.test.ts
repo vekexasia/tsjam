@@ -1,11 +1,12 @@
 import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
+import { IdentityMapCodec } from "@/data-structures/identity-map";
 import { AccumulationStatisticsImpl } from "@/impls/accumulation-statistics-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import { PreimagesExtrinsicImpl } from "@/impls/extrinsics/preimages";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
 import { ServicesStatisticsImpl } from "@/impls/services-statistics-impl";
 import { SlotImpl, TauImpl } from "@/impls/slot-impl";
+import { MerkleServiceAccountStorageImpl } from "@/index";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -36,7 +37,6 @@ import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { TestOutputCodec } from "../codec-utils";
 import { dummyState } from "../dummy-utils";
-import { MerkleServiceAccountStorageImpl } from "@/index";
 
 @JamCodecable()
 class LookupMetaMapKey extends BaseJamCodecable {

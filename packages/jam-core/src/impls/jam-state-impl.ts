@@ -524,6 +524,7 @@ export class JamStateImpl implements JamState {
 
       const serviceAccount = new ServiceAccountImpl(
         {
+          version: 0,
           codeHash: serviceData.codeHash,
           balance: serviceData.balance,
           minAccGas: serviceData.minAccGas,

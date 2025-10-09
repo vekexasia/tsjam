@@ -56,7 +56,7 @@ export const accumulateInvocation = (
   t: TauImpl, // t
   s: ServiceIndex, // s
   gas: Gas, // g
-  accumulateOps: AccumulationInputInpl[], // bold_i
+  accumulateOps: AccumulationInputInpl[], // bold_o
   deps: {
     core: CoreIndex;
     p_tau: Validated<Posterior<TauImpl>>;
@@ -70,14 +70,16 @@ export const accumulateInvocation = (
   // first case
   if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
     const newPostState = pvmAccState; // no need to clone
-    const acc = newPostState.accounts.get(s)!;
-    // we update to all incoming transfer amounts
-    // bold_s and bold_x calculations
-    acc.balance = <Balance>(acc.balance +
-      accumulateOps
-        .filter((a) => a.isTransfer())
-        .map((x) => x.transfer.amount)
-        .reduce((a, b) => a + b, 0n));
+    const acc = newPostState.accounts.get(s);
+    if (typeof acc !== "undefined") {
+      // we update to all incoming transfer amounts
+      // bold_s and bold_x calculations
+      acc.balance = <Balance>(acc.balance +
+        accumulateOps
+          .filter((a) => a.isTransfer())
+          .map((x) => x.transfer.amount)
+          .reduce((a, b) => a + b, 0n));
+    }
 
     return new AccumulationOutImpl({
       postState: newPostState,
@@ -187,12 +189,7 @@ const F_fn: (
           input.out,
           hostFunctions.fetch(input.pvm, {
             n: p_eta_0,
-            // We know that this is out of 0.7.0 spec as
-            // gp at 0.7.0 sets bold_o to operand and input does not exist.
-            // but this is easy enough in the number of requested changes
-            bold_o: accumulateOps
-              .filter((a) => a.isOperand())
-              .map((a) => a.operand!),
+            bold_o: accumulateOps,
           }),
         );
         G_fn(input, bold_s);

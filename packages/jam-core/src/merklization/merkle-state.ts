@@ -5,6 +5,7 @@ import { Hashing } from "@tsjam/crypto";
 import type {
   ByteArrayOfLength,
   Hash,
+  ServiceIndex,
   StateKey,
   StateRootHash,
   u32,
@@ -132,7 +133,6 @@ export class MerkleState {
       toRet.set(
         sk,
         encodeWithCodec(serviceAccountDataCodec, {
-          zeroPrefix: 0,
           ...serviceAccount,
           itemInStorage: serviceAccount.itemInStorage(),
           totalOctets: serviceAccount.totalOctets(),
@@ -140,8 +140,7 @@ export class MerkleState {
       );
 
       for (const [h, p] of serviceAccount.preimages) {
-        const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
-        const k = stateKey(serviceIndex, Buffer.concat([pref, h]));
+        const k = MerkleState.preimageKey(serviceIndex, h);
         toRet.set(k, p);
       }
 
@@ -151,6 +150,12 @@ export class MerkleState {
     }
 
     return new MerkleState(toRet);
+  }
+
+  static preimageKey(serviceIndex: ServiceIndex, h: Hash): StateKey {
+    const pref = encodeWithCodec(E_4_int, <u32>(2 ** 32 - 2));
+    const k = stateKey(serviceIndex, Buffer.concat([pref, h]));
+    return k;
   }
 }
 

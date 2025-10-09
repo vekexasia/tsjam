@@ -2,11 +2,12 @@ import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
 import {
+  computeRequestKey,
   computeStorageKey,
   MerkleServiceAccountStorageImpl,
 } from "@/impls/merkle-account-data-storage-impl";
 import { PrivilegedServicesImpl } from "@/impls/privileged-services-impl";
-import { PVMAccumulationOpImpl } from "@/impls/pvm/pvm-accumulation-op-impl";
+import { AccumulationInputInpl } from "@/impls/pvm/accumulation-input-impl";
 import { PVMAccumulationStateImpl } from "@/impls/pvm/pvm-accumulation-state-impl";
 import { PVMResultContextImpl } from "@/impls/pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "@/impls/service-account-impl";
@@ -18,6 +19,7 @@ import { type WorkPackageImpl } from "@/impls/work-package-impl";
 import { log } from "@/utils";
 import {
   asCodec,
+  BufferJSONCodec,
   cloneCodecable,
   createArrayLengthDiscriminator,
   createCodec,
@@ -112,6 +114,8 @@ import { ConditionalExcept } from "type-fest";
 import { pvmImpl } from "../proxy";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
+import { HashCodec } from "@/codecs/misc-codecs";
+import { MerkleState } from "@/merklization/merkle-state";
 
 export class HostFunctions {
   @HostFn(0)
@@ -131,7 +135,7 @@ export class HostFunctions {
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
       overline_x?: Buffer[][];
-      bold_o?: PVMAccumulationOpImpl[];
+      bold_o?: AccumulationInputInpl[];
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = pvm.registers.slice(7);
@@ -300,7 +304,7 @@ export class HostFunctions {
       case 14n: {
         if (typeof args.bold_o !== "undefined") {
           v = encodeWithCodec(
-            createArrayLengthDiscriminator(PVMAccumulationOpImpl),
+            createArrayLengthDiscriminator(AccumulationInputInpl),
             args.bold_o,
           );
         }
@@ -311,7 +315,7 @@ export class HostFunctions {
           typeof args.bold_o !== "undefined" &&
           w11.value < args.bold_o.length
         ) {
-          v = encodeWithCodec(PVMAccumulationOpImpl, args.bold_o[Number(w11)]);
+          v = encodeWithCodec(AccumulationInputInpl, args.bold_o[Number(w11)]);
         }
         break;
       }
@@ -327,6 +331,10 @@ export class HostFunctions {
       return [IxMod.panic()];
     }
 
+    log(
+      `Writing at ${o.u32()}|0x${o.u32().toString(16)} ${v.subarray(f, f + l).toString("hex")}`,
+      process.env.DEBUG_STEPS === "true",
+    );
     return [
       IxMod.w7(BigInt(v.length)),
       IxMod.memory(o.u32(), v.subarray(f, f + l)),
@@ -516,6 +524,7 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.NONE)];
     }
     const v = encodeWithCodec(serviceAccountCodec, {
+      version: 0,
       codeHash: bold_a.codeHash,
       balance: bold_a.balance,
       gasThreshold: bold_a.gasThreshold(),
@@ -1185,6 +1194,7 @@ export class HostFunctions {
     const storage = new MerkleServiceAccountStorageImpl(args.x.nextFreeID);
     const bold_a = new ServiceAccountImpl(
       {
+        version: 0,
         codeHash,
         balance: <Balance>0n, // set later to a_t
         minAccGas: g.value as u64 as Gas,
@@ -1381,6 +1391,8 @@ export class HostFunctions {
     const dlhl = bold_d.requests.get(h, l);
 
     if (bold_d.itemInStorage() !== 2 || typeof dlhl === "undefined") {
+      console.log("huh");
+      debugger;
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
@@ -1420,6 +1432,10 @@ export class HostFunctions {
 
     const bold_a = x_bold_s.requests.get(h, Number(z) as u32);
     if (typeof bold_a === "undefined") {
+      log(
+        `Query[${h.toString("hex")}, ${z}] not there`,
+        process.env.DEBUG_STEPS === "true",
+      );
       return [IxMod.w7(HostCallResult.NONE), IxMod.w8(0)];
     }
     const [_x, y, _z] = bold_a.map((x) => BigInt(x.value));
@@ -1456,15 +1472,31 @@ export class HostFunctions {
 
     const _z = <u32>Number(z);
     if (typeof bold_a.requests.get(h, _z) === "undefined") {
+      log(
+        `Solicit[${h.toString("hex")}, ${_z}] - not found > adding - newStateKey: ${computeRequestKey(newX.id, h, _z).toString("hex")}`,
+        process.env.DEBUG_STEPS === "true",
+      );
       bold_a.requests.set(h, _z, toTagged([]));
     } else if (bold_a.requests.get(h, _z)?.length === 2) {
+      log(
+        `Solicit[${h.toString("hex")}, ${_z}] - l:2 > adding ${args.tau}`,
+        process.env.DEBUG_STEPS === "true",
+      );
       const value = bold_a.requests.get(h, _z)!;
       bold_a.requests.set(h, _z, toTagged([...value, args.tau]));
     } else {
+      log(
+        `Solicit[${h.toString("hex")}, ${_z}] - HUH`,
+        process.env.DEBUG_STEPS === "true",
+      );
       return [IxMod.w7(HostCallResult.HUH)];
     }
 
     if (bold_a.balance < bold_a.gasThreshold()) {
+      log(
+        `Solicit[${h.toString("hex")}, ${_z}] - FULL`,
+        process.env.DEBUG_STEPS === "true",
+      );
       return [IxMod.w7(HostCallResult.FULL)];
     }
 
@@ -1503,34 +1535,39 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     } else {
       const [x, y, w] = xslhz;
-      // log(
-      //   `Preimage Request h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
-      //   process.env.DEBUG_STEPS === "true",
-      // );
+
+      log(
+        `Preimage Request id=${newX.id} h=${HashCodec.toJSON(h)} | z=${Number(z)} - stateKey=${BufferJSONCodec().toJSON(computeRequestKey(newX.id, h, z.u32()))}`,
+        process.env.DEBUG_STEPS === "true",
+      );
+      log(
+        `Preimage key=${MerkleState.preimageKey(newX.id, h).toString("hex")}`,
+        process.env.DEBUG_STEPS === "true",
+      );
       if (
         xslhz.length === 0 ||
         (xslhz.length === 2 && y.value < args.tau.value - PREIMAGE_EXPIRATION)
       ) {
-        // log(
-        //   `l=0 or l=2 but expired... Deleting preimage`,
-        //   process.env.DEBUG_TRACES === "true",
-        // );
+        log(
+          `l=0 or l=2 but expired... Deleting preimage`,
+          process.env.DEBUG_STEPS === "true",
+        );
         x_bold_s.requests.delete(h, z.u32());
         x_bold_s.preimages.delete(h);
       } else if (xslhz.length === 1) {
-        // log(
-        //   `l=1... adding tau=${args.tau.value}`,
-        //   process.env.DEBUG_TRACES === "true",
-        // );
+        log(
+          `l=1... adding tau=${args.tau.value}`,
+          process.env.DEBUG_STEPS === "true",
+        );
         x_bold_s.requests.set(h, z.u32(), toTagged([x, args.tau]));
       } else if (
         xslhz.length === 3 &&
         y.value < args.tau.value - PREIMAGE_EXPIRATION
       ) {
-        //log(
-        //  `l=3 but expired... removing oldest tau`,
-        //  process.env.DEBUG_TRACES === "true",
-        //);
+        log(
+          `l=3 but expired... removing oldest tau`,
+          process.env.DEBUG_STEPS === "true",
+        );
         x_bold_s.requests.set(h, z.u32(), toTagged([w, args.tau]));
       } else {
         return [IxMod.w7(HostCallResult.HUH)];

@@ -180,10 +180,29 @@ export const buildTracesTests = (kind: string) => {
       for (const [k, v] of merkleMap.entries()) {
         expect(
           testCase.postState.merkleMap.has(k),
-          "key missing in post state",
+          "key missing in test post state",
         ).toBe(true);
         expect(v).deep.eq(testCase.postState.merkleMap.get(k));
       }
+      console.log(
+        merkleMap
+          .get(
+            <StateKey>(
+              Buffer.from(
+                "005900cc00ae009a2550f00d2172d0548d34971ae9805116bb55cb0b4aba52",
+                "hex",
+              )
+            ),
+          )
+          ?.toString("hex"),
+      );
+      for (const [k] of testCase.postState.merkleMap.entries()) {
+        expect(
+          merkleMap.has(k),
+          `key ${k.toString("hex")} missing in our postState`,
+        ).toBe(true);
+      }
+
       expect(merkleMap.size).eq(testCase.postState.merkleMap.size);
       expect(xBytesCodec(32).toJSON(posteriorState.merkleRoot())).eq(
         xBytesCodec(32).toJSON(testCase.postState.stateRoot),

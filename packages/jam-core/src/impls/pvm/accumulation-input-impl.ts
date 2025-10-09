@@ -52,6 +52,6 @@ export class AccumulationInputInpl implements AccumulationInput {
 const _codec = eitherOneOfCodec<
   ConditionalExcept<AccumulationInputInpl, Function>
 >([
-  ["transfer", asCodec(DeferredTransferImpl)],
   ["operand", asCodec(PVMAccumulationOpImpl)],
+  ["transfer", asCodec(DeferredTransferImpl)],
 ]);

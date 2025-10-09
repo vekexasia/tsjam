@@ -84,7 +84,7 @@ export const HostFn = <Args, Out>(
       },
     });
     descriptor.value = function (pvm: PVM, args: Args) {
-      log(`HostCall[${propertyKey}]`, process.env.DEBUG_STEPS == "true");
+      log(`\nHostCall[${propertyKey}]`, process.env.DEBUG_STEPS == "true");
       // eslint-disable-next-line
       const res = <any>fn.call(this, pvm, args);
       // log(res, process.env.DEBUG_STEPS == "true");

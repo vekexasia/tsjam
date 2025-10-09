@@ -54,7 +54,7 @@ export class PrivilegedServicesImpl
   /**
    * `R`
    */
-  @eSubIntCodec(4, "designate")
+  @eSubIntCodec(4, "register")
   registrar!: ServiceIndex;
 
   /**

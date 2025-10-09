@@ -23,6 +23,8 @@ import type {
 
 @JamCodecable()
 export class TestServiceInfo extends BaseJamCodecable {
+  @eSubIntCodec(1)
+  version: 0 = 0 as const;
   @codec(HashCodec, "code_hash")
   codeHash!: CodeHash; // a_c
 
@@ -56,6 +58,7 @@ export class TestServiceInfo extends BaseJamCodecable {
   toServiceAccount(serviceIndex: ServiceIndex) {
     const account = new ServiceAccountImpl(
       {
+        version: 0,
         balance: this.balance,
         codeHash: this.codeHash,
         minAccGas: this.minItemGas,

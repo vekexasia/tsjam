@@ -1,4 +1,5 @@
 import "@/pvm/functions/functions";
+import { log } from "@/utils";
 import { PVM, PVMExitReasonImpl } from "@tsjam/pvm-base";
 import { u8 } from "@tsjam/types";
 import assert from "assert";

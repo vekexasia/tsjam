@@ -28,6 +28,7 @@ describe("state serialization/deserialization", () => {
     beforeEach(() => {
       acc = new ServiceAccountImpl(
         {
+          version: 0,
           balance: <Balance>11n,
           codeHash: <CodeHash>(<Hash>Hashing.blake2b(Buffer.from([12]))),
           minAccGas: <Gas>13n,
@@ -45,6 +46,7 @@ describe("state serialization/deserialization", () => {
 
       acc2 = new ServiceAccountImpl(
         {
+          version: 0,
           balance: <Balance>21n,
           codeHash: <CodeHash>(<Hash>Hashing.blake2b(Buffer.from([12]))),
           minAccGas: <Gas>23n,

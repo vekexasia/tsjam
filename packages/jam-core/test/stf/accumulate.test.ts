@@ -20,11 +20,13 @@ import {
   WorkReportImpl,
 } from "@/index";
 import {
+  ArrayOfJSONCodec,
   BaseJamCodecable,
   binaryCodec,
   BufferJSONCodec,
   buildGenericKeyValueCodec,
   codec,
+  createArrayLengthDiscriminator,
   E_4_int,
   JamCodecable,
   jsonCodec,
@@ -35,7 +37,13 @@ import {
   xBytesCodec,
 } from "@tsjam/codec";
 import { getConstantsMode } from "@tsjam/constants";
-import type { Hash, Posterior, ServiceIndex, Validated } from "@tsjam/types";
+import type {
+  Hash,
+  Posterior,
+  ServiceIndex,
+  UpToSeq,
+  Validated,
+} from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
@@ -83,13 +91,33 @@ class TestAccount extends BaseJamCodecable {
       key: "hash",
       value: "blob",
     }),
+    "preimages_blob",
   )
   preimages!: IdentityMap<Hash, 32, Buffer>;
+
+  @jsonCodec(
+    MapJSONCodec(
+      { key: "hash", value: "status" },
+      BufferJSONCodec(),
+      ArrayOfJSONCodec(SlotImpl),
+      (a, b) => Buffer.compare(a, b),
+    ),
+    "preimages_status",
+  )
+  @binaryCodec(
+    buildGenericKeyValueCodec(
+      xBytesCodec(32),
+      createArrayLengthDiscriminator(SlotImpl),
+      (a, b) => Buffer.compare(a, b),
+    ),
+  )
+  requests!: IdentityMap<Hash, 32, UpToSeq<SlotImpl, 3>>;
 
   toServiceAccount(serviceIndex: ServiceIndex) {
     const service = this.service.toServiceAccount(serviceIndex);
     const sa = new ServiceAccountImpl(
       {
+        version: 0,
         codeHash: service.codeHash,
         balance: service.balance,
         minAccGas: service.minAccGas,
@@ -108,6 +136,10 @@ class TestAccount extends BaseJamCodecable {
     }
 
     sa.preimages = this.preimages;
+
+    for (const [key, slots] of this.requests) {
+      sa.requests.set(key, toTagged(slots.length), slots);
+    }
 
     return sa;
   }
@@ -196,6 +228,24 @@ const buildTest = (testname: string) => {
     tau: testCase.preState.tau,
     serviceAccounts: delta,
   });
+  const dd_delta = res.d_delta.toDoubleDagger({
+    accumulationStatistics: res.accumulationStatistics,
+    p_tau: testCase.input.p_tau,
+  });
+  for (const [sid, sa] of testCase.postState.accounts) {
+    expect(dd_delta.has(sid)).toBe(true);
+
+    const expectedSA = sa.toServiceAccount(sid)!;
+    const ourSA = dd_delta.get(sid)!;
+    expect(
+      expectedSA.equals(ourSA),
+      "expected account different than out",
+    ).toBe(true);
+  }
+
+  expect(res.p_privServices.toJSON()).deep.eq(
+    testCase.postState.privileges.toJSON(),
+  );
 
   const posteriorStatistics = testCase.preState.statistics.toPosterior({
     accumulationStatistics: res.accumulationStatistics,
@@ -215,77 +265,63 @@ const buildTest = (testname: string) => {
 
   //const accMerkleRoot = res.p_mostRecentAccumulationOutputs.merkleRoot();
   //console.log(`accumulated root: ${xBytesCodec(32).toJSON(accMerkleRoot)}`);
-
-  const dd_delta = res.d_delta.toDoubleDagger({
-    accumulationStatistics: res.accumulationStatistics,
-    p_tau: testCase.input.p_tau,
-  });
-  for (const [sid, sa] of testCase.postState.accounts) {
-    expect(dd_delta.has(sid)).toBe(true);
-
-    const expectedSA = sa.toServiceAccount(sid)!;
-    const ourSA = dd_delta.get(sid)!;
-    expect(
-      expectedSA.equals(ourSA),
-      "expected account different than out",
-    ).toBe(true);
-  }
-
-  expect(res.p_privServices.toJSON()).deep.eq(
-    testCase.postState.privileges.toJSON(),
-  );
 };
 
-describe.skipIf(packageJSON["jam:protocolVersion"] === "0.7.1")(
-  "accumulate",
-  () => {
-    // NOTE: regenerate with
-    // for i in $(ls *.bin); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", () => buildTest("'$X'", set));'; done
-    it("accumulate_ready_queued_reports-1", () =>
-      buildTest("accumulate_ready_queued_reports-1"));
-    it("enqueue_and_unlock_chain-1", () =>
-      buildTest("enqueue_and_unlock_chain-1"));
-    it("enqueue_and_unlock_chain-2", () =>
-      buildTest("enqueue_and_unlock_chain-2"));
-    it("enqueue_and_unlock_chain-3", () =>
-      buildTest("enqueue_and_unlock_chain-3"));
-    it("enqueue_and_unlock_chain-4", () =>
-      buildTest("enqueue_and_unlock_chain-4"));
-    it("enqueue_and_unlock_chain_wraps-1", () =>
-      buildTest("enqueue_and_unlock_chain_wraps-1"));
-    it("enqueue_and_unlock_chain_wraps-2", () =>
-      buildTest("enqueue_and_unlock_chain_wraps-2"));
-    it("enqueue_and_unlock_chain_wraps-3", () =>
-      buildTest("enqueue_and_unlock_chain_wraps-3"));
-    it("enqueue_and_unlock_chain_wraps-4", () =>
-      buildTest("enqueue_and_unlock_chain_wraps-4"));
-    it("enqueue_and_unlock_chain_wraps-5", () =>
-      buildTest("enqueue_and_unlock_chain_wraps-5"));
-    it("enqueue_and_unlock_simple-1", () =>
-      buildTest("enqueue_and_unlock_simple-1"));
-    it("enqueue_and_unlock_simple-2", () =>
-      buildTest("enqueue_and_unlock_simple-2"));
-    it("enqueue_and_unlock_with_sr_lookup-1", () =>
-      buildTest("enqueue_and_unlock_with_sr_lookup-1"));
-    it("enqueue_and_unlock_with_sr_lookup-2", () =>
-      buildTest("enqueue_and_unlock_with_sr_lookup-2"));
-    it("enqueue_self_referential-1", () =>
-      buildTest("enqueue_self_referential-1"));
-    it("enqueue_self_referential-2", () =>
-      buildTest("enqueue_self_referential-2"));
-    it("enqueue_self_referential-3", () =>
-      buildTest("enqueue_self_referential-3"));
-    it("enqueue_self_referential-4", () =>
-      buildTest("enqueue_self_referential-4"));
-    it("no_available_reports-1", () => buildTest("no_available_reports-1"));
-    it("process_one_immediate_report-1", () =>
-      buildTest("process_one_immediate_report-1"));
-    it("queues_are_shifted-1", () => buildTest("queues_are_shifted-1"));
-    it("queues_are_shifted-2", () => buildTest("queues_are_shifted-2"));
-    it("ready_queue_editing-1", () => buildTest("ready_queue_editing-1"));
-    it("ready_queue_editing-2", () => buildTest("ready_queue_editing-2"));
-    it("ready_queue_editing-3", () => buildTest("ready_queue_editing-3"));
-    it("same_code_different_services-1", () =>
-      buildTest("same_code_different_services-1"));
-  },
-);
+describe("accumulate", () => {
+  // NOTE: regenerate with
+  // for i in $(ls *.bin); do X=$(echo $i | cut -d "." -f1); echo 'it("'$X'", () => buildTest("'$X'"));'; done
+  it("accumulate_ready_queued_reports-1", () =>
+    buildTest("accumulate_ready_queued_reports-1"));
+  it("enqueue_and_unlock_chain-1", () =>
+    buildTest("enqueue_and_unlock_chain-1"));
+  it("enqueue_and_unlock_chain-2", () =>
+    buildTest("enqueue_and_unlock_chain-2"));
+  it("enqueue_and_unlock_chain-3", () =>
+    buildTest("enqueue_and_unlock_chain-3"));
+  it("enqueue_and_unlock_chain-4", () =>
+    buildTest("enqueue_and_unlock_chain-4"));
+  it("enqueue_and_unlock_chain_wraps-1", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-1"));
+  it("enqueue_and_unlock_chain_wraps-2", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-2"));
+  it("enqueue_and_unlock_chain_wraps-3", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-3"));
+  it("enqueue_and_unlock_chain_wraps-4", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-4"));
+  it("enqueue_and_unlock_chain_wraps-5", () =>
+    buildTest("enqueue_and_unlock_chain_wraps-5"));
+  it("enqueue_and_unlock_simple-1", () =>
+    buildTest("enqueue_and_unlock_simple-1"));
+  it("enqueue_and_unlock_simple-2", () =>
+    buildTest("enqueue_and_unlock_simple-2"));
+  it("enqueue_and_unlock_with_sr_lookup-1", () =>
+    buildTest("enqueue_and_unlock_with_sr_lookup-1"));
+  it("enqueue_and_unlock_with_sr_lookup-2", () =>
+    buildTest("enqueue_and_unlock_with_sr_lookup-2"));
+  it("enqueue_self_referential-1", () =>
+    buildTest("enqueue_self_referential-1"));
+  it("enqueue_self_referential-2", () =>
+    buildTest("enqueue_self_referential-2"));
+  it("enqueue_self_referential-3", () =>
+    buildTest("enqueue_self_referential-3"));
+  it("enqueue_self_referential-4", () =>
+    buildTest("enqueue_self_referential-4"));
+  it("no_available_reports-1", () => buildTest("no_available_reports-1"));
+  it("process_one_immediate_report-1", () =>
+    buildTest("process_one_immediate_report-1"));
+  it("queues_are_shifted-1", () => buildTest("queues_are_shifted-1"));
+  it("queues_are_shifted-2", () => buildTest("queues_are_shifted-2"));
+  it("ready_queue_editing-1", () => buildTest("ready_queue_editing-1"));
+  it("ready_queue_editing-2", () => buildTest("ready_queue_editing-2"));
+  it("ready_queue_editing-3", () => buildTest("ready_queue_editing-3"));
+  it("same_code_different_services-1", () =>
+    buildTest("same_code_different_services-1"));
+  it("transfer_for_ejected_service-1", () =>
+    buildTest("transfer_for_ejected_service-1"));
+  it("work_for_ejected_service-1", () =>
+    buildTest("work_for_ejected_service-1"));
+  it("work_for_ejected_service-2", () =>
+    buildTest("work_for_ejected_service-2"));
+  it("work_for_ejected_service-3", () =>
+    buildTest("work_for_ejected_service-3"));
+});

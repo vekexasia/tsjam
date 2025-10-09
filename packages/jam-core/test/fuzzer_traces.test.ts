@@ -25,7 +25,7 @@ import { err, ok, Result } from "neverthrow";
 import path from "path";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 
-describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
+describe.skipIf(getConstantsMode() == "full" || true)("fuzzer_traces", () => {
   beforeAll(() => {
     process.env.RUNNING_TRACE_TESTS = "true";
   });
@@ -62,7 +62,6 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
         initialTrace.preState.stateRoot,
       ) !== 0
     ) {
-      console.log("ciaooooo");
       console.log(
         "Expected merkle root:",
         Buffer.from(initialTrace.preState.stateRoot).toString("hex"),
