@@ -7,7 +7,6 @@ import {
   eSubIntCodec,
   IdentityCodec,
   JamCodec,
-  JamCodecable,
   LengthDiscrimantedIdentityCodec,
   xBytesCodec,
 } from "@tsjam/codec";
@@ -34,8 +33,8 @@ import type {
 import { toTagged } from "@tsjam/utils";
 import assert from "node:assert";
 import { ConditionalExcept } from "type-fest";
-import { SlotImpl } from "./slot-impl";
 import { MerkleServiceAccountStorageImpl } from "./merkle-account-data-storage-impl";
+import { SlotImpl } from "./slot-impl";
 
 export const serviceMetadataCodec = createCodec<{
   metadata: Uint8Array;

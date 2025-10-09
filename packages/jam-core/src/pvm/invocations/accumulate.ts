@@ -15,6 +15,8 @@ import {
   SERVICECODE_MAX_SIZE,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
+import { check_fn, PVM } from "@tsjam/pvm-base";
+import { IxMod } from "@tsjam/pvm-js";
 import {
   Balance,
   CoreIndex,
@@ -33,8 +35,6 @@ import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
-import { check_fn, PVM } from "@tsjam/pvm-base";
-import { IxMod } from "@tsjam/pvm-js";
 
 const AccumulateArgsCodec = createCodec<{
   t: u32;
@@ -308,21 +308,11 @@ const F_fn: (
           hostFunctions.solicit(input.pvm, { x: input.out.x, tau }),
         );
       case "forget":
-        const h = <Hash>(
-          Buffer.from(
-            "4c49f8915a735d7416c5b380d83abb9fb07f0c7e716b97f18adebe35f9b21fd4",
-            "hex",
-          )
-        );
-        debugger;
-        const out = applyMods(
+        return applyMods(
           input.pvm,
           input.out,
           hostFunctions.forget(input.pvm, { x: input.out.x, tau }),
         );
-
-        debugger;
-        return out;
       case "yield":
         return applyMods(
           input.pvm,
