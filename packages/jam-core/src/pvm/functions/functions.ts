@@ -1391,8 +1391,6 @@ export class HostFunctions {
     const dlhl = bold_d.requests.get(h, l);
 
     if (bold_d.itemInStorage() !== 2 || typeof dlhl === "undefined") {
-      console.log("huh");
-      debugger;
       return [IxMod.w7(HostCallResult.HUH)];
     }
 

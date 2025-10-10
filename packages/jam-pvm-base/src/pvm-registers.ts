@@ -72,4 +72,7 @@ export class PVMRegistersImpl extends BaseJamCodecable implements PVMRegisters {
   w12() {
     return this.elements[12];
   }
+  toString(): string {
+    return `${this.elements.join(" ")}`;
+  }
 }

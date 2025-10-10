@@ -133,8 +133,7 @@ export class PVMJS implements PVMBase<PVMJSMemory> {
         );
         if (isDebugLog) {
           console.log(
-            `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ixCache?.ix?.identifier.padEnd(20, " ")} regs:[${this.registers.elements.join(" ")}] gas:${this.gas}`,
-            true,
+            `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ixCache?.ix?.identifier.padEnd(20, " ")} regs:[${this.registers.toString()}] gas:${this.gas}`,
           );
         }
         if (typeof res !== "undefined") {
