@@ -220,6 +220,7 @@ export const outerAccumulation = (
     new Map(),
     deps,
   );
+
   return {
     nAccumulatedWork: i + j,
     postAccState: finalAccState,
@@ -335,19 +336,19 @@ export const parallelizedAccumulation = (
 
   const eStar = accumulateS(accState.manager).postState;
 
-  const p_a = structuredClone(accState.assigners); // safe as of 0.7.1
+  const p_a = structuredClone(eStar.assigners); // safe as of 0.7.1
   for (let c = <CoreIndex>0; c < CORES; c++) {
     if (accState.assigners[c] === eStar.assigners[c]) {
       p_a[c] = accumulateS(accState.assigners[c]).postState.assigners[c];
     }
   }
 
-  let p_v = structuredClone(accState.delegator); // safe as of 0.7.1
+  let p_v = structuredClone(eStar.delegator); // safe as of 0.7.1
   if (accState.delegator === eStar.delegator) {
     p_v = accumulateS(accState.delegator).postState.delegator;
   }
 
-  let p_r = structuredClone(accState.registrar); // safe as of 0.7.1)
+  let p_r = structuredClone(eStar.registrar); // safe as of 0.7.1)
   if (accState.registrar === eStar.registrar) {
     p_r = accumulateS(accState.registrar).postState.registrar;
   }

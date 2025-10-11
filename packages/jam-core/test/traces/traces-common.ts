@@ -11,19 +11,12 @@ import {
 } from "@/index";
 import {
   BaseJamCodecable,
-  BufferJSONCodec,
   codec,
   JamCodecable,
   LengthDiscrimantedIdentityCodec,
   xBytesCodec,
 } from "@tsjam/codec";
-import type {
-  Hash,
-  MerkleTreeRoot,
-  ServiceIndex,
-  StateKey,
-} from "@tsjam/types";
-import { toTagged } from "@tsjam/utils";
+import type { MerkleTreeRoot, StateKey } from "@tsjam/types";
 import fs from "fs";
 import { expect, it } from "vitest";
 
@@ -91,11 +84,19 @@ export const tracesTestCase = (kind: string, which: string) => {
       extrinsics: JamBlockExtrinsicsImpl.newEmpty(),
     });
   } else {
-    const prevTrace = decodeBin(
-      kind,
-      (parseInt(which) - 1).toString().padStart(8, "0"),
-    );
-    trace.parentBlock = prevTrace.block;
+    for (let i = parseInt(which) - 1; i >= 0; i--) {
+      const parentId = i.toString().padStart(8, "0");
+      const prevTrace = decodeBin(kind, parentId);
+      if (
+        Buffer.compare(
+          prevTrace.preState.toBinary(),
+          prevTrace.postState.toBinary(),
+        ) !== 0
+      ) {
+        trace.parentBlock = prevTrace.block;
+        break;
+      }
+    }
   }
   return trace;
 };
@@ -120,8 +121,17 @@ export const buildHeaderLookupHistory = (
     return hlh;
   } else {
     const hlh = buildHeaderLookupHistory(kind, index - 1);
-    const testCase = tracesTestCase(kind, index.toString().padStart(8, "0"));
-    return hlh.toPosterior(testCase.block.header);
+    const testCase = decodeBin(kind, index.toString().padStart(8, "0"));
+    if (
+      Buffer.compare(
+        testCase.preState.toBinary(),
+        testCase.postState.toBinary(),
+      ) !== 0
+    ) {
+      return hlh.toPosterior(testCase.block.header);
+    } else {
+      return hlh;
+    }
   }
 };
 
@@ -155,11 +165,12 @@ export const buildTracesTests = (kind: string) => {
       const [err, appliedBlock] = (
         await chainManager.handleIncomingBlock(testCase.block)
       ).safeRet();
+      let posteriorState: JamStateImpl = chainManager.bestBlock.posteriorState;
       if (typeof err !== "undefined") {
-        throw err;
+        console.log("Error applying block:", err);
+      } else {
+        posteriorState = appliedBlock.posteriorState;
       }
-
-      const posteriorState = appliedBlock.posteriorState;
       const merkleMap = posteriorState.merkle.map;
       const staMM = JamStateImpl.fromMerkleMap(merkleMap);
 
@@ -182,7 +193,9 @@ export const buildTracesTests = (kind: string) => {
           testCase.postState.merkleMap.has(k),
           "key missing in test post state",
         ).toBe(true);
-        expect(v).deep.eq(testCase.postState.merkleMap.get(k));
+        expect(v, `for key ${k.toString("hex")}`).deep.eq(
+          testCase.postState.merkleMap.get(k),
+        );
       }
       for (const [k] of testCase.postState.merkleMap.entries()) {
         expect(
