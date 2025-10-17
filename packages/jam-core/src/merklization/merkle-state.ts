@@ -15,14 +15,19 @@ import { stateKey } from "./utils";
 
 // utility types
 export type MerkleStateMap = IdentityMap<StateKey, 31, Buffer>;
-export type MerkleBranchNode = MerkleStateTrieNode & {
+export type NonEmptyTrieNode = MerkleStateTrieNode & {
+  identifier: ByteArrayOfLength<64>;
+};
+export type MerkleBranchNode = NonEmptyTrieNode & {
   identifier: ByteArrayOfLength<64>;
   left: MerkleStateTrieNode;
   right: MerkleStateTrieNode;
+  leaves: MerkleStateTrieNode[];
 };
-export type MerkleLeafNode = MerkleStateTrieNode & {
+export type MerkleLeafNode = NonEmptyTrieNode & {
   identifier: ByteArrayOfLength<64>;
   value: Uint8Array;
+  key: StateKey;
 };
 
 /**
@@ -165,7 +170,9 @@ export class MerkleStateTrieNode {
   public readonly hash: Hash;
   public left?: MerkleStateTrieNode;
   public right?: MerkleStateTrieNode;
+  public key?: StateKey;
   public value?: Uint8Array;
+  public leaves?: MerkleLeafNode[];
 
   constructor(hash: Hash) {
     this.hash = hash;
@@ -175,6 +182,43 @@ export class MerkleStateTrieNode {
     return (
       typeof this.left !== "undefined" && typeof this.right !== "undefined"
     );
+  }
+
+  isEmptyLeaf(): this is MerkleLeafNode {
+    return typeof this.identifier !== "undefined";
+  }
+
+  /**
+   * Traverses the trie for the given bit encoded key.
+   * Returns the nodes on the path.
+   * used in jam-np
+   */
+  traverseTo(
+    origKey: ByteArrayOfLength<64>,
+    traversingKey: bit[] = bits(origKey),
+  ): NonEmptyTrieNode[] {
+    if (traversingKey.length === 0) {
+      return [this as NonEmptyTrieNode];
+    }
+    if (typeof this.identifier === "undefined") {
+      // empty node.
+      return [];
+    }
+    if (Buffer.compare(this.identifier, origKey) === 0) {
+      return [this as NonEmptyTrieNode];
+    }
+    if (!this.isBranch()) {
+      return [this as NonEmptyTrieNode];
+    }
+    if (traversingKey[0] === 0) {
+      return [this as NonEmptyTrieNode].concat(
+        this.left.traverseTo(origKey, traversingKey.slice(1)),
+      );
+    } else {
+      return [this as NonEmptyTrieNode].concat(
+        this.right.traverseTo(origKey, traversingKey.slice(1)),
+      );
+    }
   }
 
   /**
@@ -193,10 +237,22 @@ export class MerkleStateTrieNode {
     toRet.identifier = identifier;
     toRet.left = left;
     toRet.right = right;
+    toRet.leaves = [];
+    if (left.isBranch()) {
+      toRet.leaves.push(...left.leaves);
+    } else if (!left.isEmptyLeaf()) {
+      toRet.leaves.push(left as MerkleLeafNode);
+    }
+    if (right.isBranch()) {
+      toRet.leaves.push(...right.leaves);
+    } else if (!right.isEmptyLeaf()) {
+      toRet.leaves.push(right as MerkleLeafNode);
+    }
+
     return toRet;
   }
 
-  static leaf(key: StateKey, value: Uint8Array) {
+  static leaf(key: StateKey, value: Uint8Array): MerkleLeafNode {
     let identifier: ByteArrayOfLength<64>;
     if (value.length <= 32) {
       identifier = Buffer.concat([
@@ -219,7 +275,8 @@ export class MerkleStateTrieNode {
     const toRet = new MerkleStateTrieNode(hash);
     toRet.identifier = identifier;
     toRet.value = value;
-    return toRet;
+    toRet.key = key;
+    return toRet as MerkleLeafNode;
   }
 }
 
@@ -265,6 +322,75 @@ if (import.meta.vitest) {
         const res = MerkleState.buildTrie(m);
         expect(Buffer.from(res.hash).toString("hex")).eq(t.output);
       }
+    });
+    it("traverse", () => {
+      const m = new Map<bit[], [StateKey, Uint8Array]>();
+      function build(n: number) {
+        const stateKey = Buffer.from([n]) as StateKey;
+        return {
+          bits: bits(stateKey),
+          v: [stateKey, stateKey],
+          leaf: MerkleStateTrieNode.leaf(stateKey, stateKey),
+        } as { bits: bit[]; v: [StateKey, Uint8Array]; leaf: MerkleLeafNode };
+      }
+      const _000 = build(0b00000000);
+
+      m.set(_000.bits, _000.v);
+      const _001 = build(0b00100000);
+      m.set(_001.bits, _001.v);
+
+      const _100 = build(0b10000000);
+      m.set(_100.bits, _100.v);
+
+      const res = MerkleState.buildTrie(m);
+
+      // 000
+      expect(
+        res
+          .traverseTo(_000.leaf.identifier, _000.bits)
+          .map((a) => a.identifier)
+          .pop()
+          ?.toString("hex"),
+      ).toStrictEqual(_000.leaf.identifier?.toString("hex"));
+
+      // 001
+      expect(
+        res
+          .traverseTo(_001.leaf.identifier, _001.bits)
+          .map((a) => a.identifier)
+          .pop()
+          ?.toString("hex"),
+      ).toStrictEqual(_001.leaf.identifier.toString("hex"));
+
+      // 100
+      expect(
+        res
+          .traverseTo(_100.leaf.identifier, _100.bits)
+          .map((a) => a.identifier)
+          .pop()
+          ?.toString("hex"),
+      ).toStrictEqual(_100.leaf.identifier.toString("hex"));
+
+      // 010 not found
+      // [root, left(branch(000, 001)]
+      const _010 = build(0b01000000);
+      const t = res.traverseTo(_010.leaf.identifier, _010.bits);
+      expect(t.length).toBe(2);
+      expect(t[0].identifier).toStrictEqual(res.identifier);
+      expect(t[1].isBranch()).toBe(true);
+      expect(t[1].left?.isBranch()).toStrictEqual(true);
+      expect(t[1].left?.left?.identifier).toStrictEqual(_000.leaf.identifier);
+      expect(t[1].left?.right?.identifier).toStrictEqual(_001.leaf.identifier);
+      expect(t[1].right?.identifier).toStrictEqual(EMPTYNODE.identifier);
+
+      // 110 not found
+      // should be [root, right(100)]
+      const _110 = build(0b11000000);
+      const t2 = res.traverseTo(_110.leaf.identifier, _110.bits);
+      expect(t2.length).toBe(2);
+      expect(t2[0].identifier).toStrictEqual(res.identifier);
+      expect(t2[1].identifier).toStrictEqual(res.right?.identifier);
+      expect(t2[1].identifier).toStrictEqual(_100.leaf.identifier);
     });
   });
 }

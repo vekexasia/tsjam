@@ -1,4 +1,5 @@
 import { IdentityMap } from "@/data-structures/identity-map";
+import { MerkleState } from "@/merklization/merkle-state";
 import { HeaderHash } from "@tsjam/types";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
@@ -132,6 +133,13 @@ export class ChainManager {
     // TODO: when GrandPa this will be different
     this.#bestBlock = res.value;
     return ok(this.#bestBlock);
+  }
+
+  async getStateFor(
+    _headerHash: HeaderHash,
+  ): Promise<Result<MerkleState, string>> {
+    // TODO: ideally query db
+    return err("Not implemented");
   }
 }
 

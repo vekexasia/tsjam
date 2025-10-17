@@ -6,7 +6,8 @@
     "@tsjam/codec": "*",
     "@tsjam/constants": "*",
     "@tsjam/core": "*",
-    "@tsjam/types": "*"
+    "@tsjam/types": "*",
+    "neverthrow-safe-ret": "^1.0.1"
   },
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
