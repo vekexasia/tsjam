@@ -7,6 +7,7 @@
     "@tsjam/constants": "*",
     "@tsjam/core": "*",
     "@tsjam/types": "*",
+    "neverthrow": "^8.2.0",
     "neverthrow-safe-ret": "^1.0.1"
   },
   "scripts": {

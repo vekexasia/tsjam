@@ -12,8 +12,10 @@ import {
   SINGLE_ELEMENT_CLASS,
   xBytesCodec,
 } from "@tsjam/codec";
-import { JamBlockImpl } from "@tsjam/core";
+import { AppliedBlock, ChainManager, JamBlockImpl } from "@tsjam/core";
 import type { HeaderHash, u32 } from "@tsjam/types";
+import { err, ok, Result } from "neverthrow";
+import { JamNpErrorCodes } from "../error-codes";
 
 /**
  * CE 128
@@ -44,12 +46,39 @@ export class BlockRequest extends BaseJamCodecable {
   @binaryCodec(E_4_int)
   maxBlocks!: u32;
 
-  async createReply() {
+  async produceReply(
+    manager: ChainManager,
+  ): Promise<Result<BlockRequestResponse, JamNpErrorCodes>> {
     // we missing DB
-    throw new Error("Not implemented");
     const resp = new BlockRequestResponse();
     resp.blocks = [];
-    return resp;
+    const b = await manager.blocksDB.fromHeaderHash(this.headerHash);
+    if (!b || b.header.slot > manager.finalizedBlock.header.slot) {
+      return err(JamNpErrorCodes.RESET_CONNECTION);
+    }
+    if (this.direction === "descending") {
+      resp.blocks.push(b);
+    }
+
+    let curBlock = b;
+    for (let i = 1; i < this.maxBlocks; i++) {
+      let tmpBlock: AppliedBlock | undefined;
+      if (this.direction === "ascending") {
+        tmpBlock = await manager.blocksDB.sonOf(curBlock);
+      } else {
+        tmpBlock = await manager.blocksDB.fromHeaderHash(
+          curBlock.header.parent,
+        );
+      }
+      if (typeof tmpBlock !== "undefined") {
+        curBlock = tmpBlock;
+        resp.blocks.push(curBlock);
+      } else {
+        // no more blocks
+        break;
+      }
+    }
+    return ok(resp);
   }
 }
 

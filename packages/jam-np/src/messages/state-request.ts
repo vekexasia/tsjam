@@ -77,7 +77,7 @@ export class StateRequest extends BaseJamCodecable {
           leaf.value,
         ]),
       );
-      remainingSize += encodedKeyValues[encodedKeyValues.length - 1].length;
+      remainingSize -= encodedKeyValues[encodedKeyValues.length - 1].length;
     }
 
     if (remainingSize < 0 && encodedKeyValues.length > 1) {
