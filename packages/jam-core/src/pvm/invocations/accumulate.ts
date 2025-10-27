@@ -63,24 +63,24 @@ export const accumulateInvocation = (
     p_eta_0: Posterior<JamEntropyImpl["_0"]>;
   },
 ): AccumulationOutImpl => {
-  const iRes = I_fn(pvmAccState, s, deps.p_eta_0, deps.p_tau);
-  const yRes = iRes.clone();
-  const bold_c = pvmAccState.accounts.get(s)?.code();
+  // bold_s
+  const newPostState = pvmAccState; // no need to clone
+  const acc = newPostState.accounts.get(s);
+  if (typeof acc !== "undefined") {
+    // we update to all incoming transfer amounts
+    // bold_s and bold_x calculations
+    acc.balance = <Balance>(acc.balance +
+      accumulateOps
+        .filter((a) => a.isTransfer())
+        .map((x) => x.transfer.amount)
+        .reduce((a, b) => a + b, 0n));
+  }
 
+  const bold_c = acc?.code();
+  const iRes = I_fn(newPostState, s, deps.p_eta_0, deps.p_tau);
+  const yRes = iRes.clone();
   // first case
   if (typeof bold_c === "undefined" || bold_c.length > SERVICECODE_MAX_SIZE) {
-    const newPostState = pvmAccState; // no need to clone
-    const acc = newPostState.accounts.get(s);
-    if (typeof acc !== "undefined") {
-      // we update to all incoming transfer amounts
-      // bold_s and bold_x calculations
-      acc.balance = <Balance>(acc.balance +
-        accumulateOps
-          .filter((a) => a.isTransfer())
-          .map((x) => x.transfer.amount)
-          .reduce((a, b) => a + b, 0n));
-    }
-
     return new AccumulationOutImpl({
       postState: newPostState,
       deferredTransfers: new DeferredTransfersImpl([]),

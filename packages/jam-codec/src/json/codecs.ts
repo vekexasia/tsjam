@@ -9,7 +9,13 @@ export const BigIntJSONCodec = <T extends bigint>(): JSONCodec<T, number> => {
       return <T>BigInt(json);
     },
     toJSON(value) {
-      return Number(value); // TODO: this might fail due to loss in precision
+      if (
+        value > BigInt(Number.MAX_SAFE_INTEGER) ||
+        value < BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        console.log(`Warning: BigInt ${value} toJSON loses precision`);
+      }
+      return Number(value);
     },
   };
 };

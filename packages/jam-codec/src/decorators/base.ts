@@ -74,11 +74,11 @@ export abstract class BaseJamCodecable {
   }
 
   toBinary(): Buffer {
-    throw new Error("stub");
+    throw new Error(`stub! ${Object.getPrototypeOf(this).name}`);
   }
 
   toJSON(): object {
-    throw new Error("stub!");
+    throw new Error(`stub! ${Object.getPrototypeOf(this).name}`);
   }
 }
 

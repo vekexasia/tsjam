@@ -25,14 +25,14 @@ import { err, ok, Result } from "neverthrow";
 import path from "path";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 
-describe.skipIf(getConstantsMode() == "full" || true)("fuzzer_traces", () => {
+describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   beforeAll(() => {
     process.env.RUNNING_TRACE_TESTS = "true";
   });
   afterAll(() => {
     process.env.RUNNING_TRACE_TESTS = "false";
   });
-  const dir = `${__dirname}/../../../jam-conformance/fuzz-reports/0.7.0/traces/`;
+  const dir = `${__dirname}/../../../jam-conformance/fuzz-reports/0.7.1/traces/`;
   const doTest = async (what: string) => {
     const traceDir = `${dir}${what}/`;
     const files = fs
@@ -132,86 +132,15 @@ describe.skipIf(getConstantsMode() == "full" || true)("fuzzer_traces", () => {
     }
   };
   // for i in $(ls jam-conformance/fuzz-reports/0.7.0/traces/); do echo "it(\"$i\", () => doTest(\"$i\"));"; done
-  it("1756548459", () => doTest("1756548459"));
-  it("1756548583", () => doTest("1756548583"));
-  it("1756548667", () => doTest("1756548667"));
-  it("1756548706", () => doTest("1756548706"));
-  it("1756548741", () => doTest("1756548741"));
-  it("1756548767", () => doTest("1756548767"));
-  it("1756548796", () => doTest("1756548796"));
-  it("1756572122", () => doTest("1756572122"));
-  it("1756790723", () => doTest("1756790723"));
-  it("1756791458", () => doTest("1756791458"));
-  it("1756814312", () => doTest("1756814312"));
-  it("1756832925", () => doTest("1756832925"));
-  it("1757062927", () => doTest("1757062927"));
-  it("1757092821", () => doTest("1757092821"));
-  it("1757406079", () => doTest("1757406079"));
-  it("1757406238", () => doTest("1757406238"));
-  it("1757406356", () => doTest("1757406356"));
-  it("1757406441", () => doTest("1757406441"));
-  it("1757406516", () => doTest("1757406516"));
-  it("1757406558", () => doTest("1757406558"));
-  it("1757406598", () => doTest("1757406598"));
-  it("1757421101", () => doTest("1757421101"));
-  it("1757421743", () => doTest("1757421743"));
-  it("1757421824", () => doTest("1757421824"));
-  it("1757421952", () => doTest("1757421952"));
-  it("1757422106", () => doTest("1757422106"));
-  it("1757422178", () => doTest("1757422178"));
-  it("1757422206", () => doTest("1757422206"));
-  it("1757422550", () => doTest("1757422550"));
-  it("1757422647", () => doTest("1757422647"));
-  it("1757422771", () => doTest("1757422771"));
-  it("1757423102", () => doTest("1757423102"));
-  it("1757423195", () => doTest("1757423195"));
-  it("1757423271", () => doTest("1757423271"));
-  it("1757423365", () => doTest("1757423365"));
-  it("1757423433", () => doTest("1757423433"));
-  it("1757423902", () => doTest("1757423902"));
-  it("1757841566", () => doTest("1757841566"));
-  it("1757842797", () => doTest("1757842797"));
-  it("1757842852", () => doTest("1757842852"));
-  it("1757843609", () => doTest("1757843609"));
-  it("1757843719", () => doTest("1757843719"));
-  it("1757843735", () => doTest("1757843735"));
-  it("1757861618", () => doTest("1757861618"));
-  it("1757862207", () => doTest("1757862207"));
-  it("1757862468", () => doTest("1757862468"));
-  it("1757862472", () => doTest("1757862472"));
-  it("1757862743", () => doTest("1757862743"));
-  // new
-  it("_new/1758621171", () => doTest("_new/1758621171"));
-  it("_new/1758621172", () => doTest("_new/1758621172"));
-  it("_new/1758621173", () => doTest("_new/1758621173"));
-  it("_new/1758621412", () => doTest("_new/1758621412"));
-  it("_new/1758621498", () => doTest("_new/1758621498"));
-  it("_new/1758621547", () => doTest("_new/1758621547"));
-  it("_new/1758621879", () => doTest("_new/1758621879"));
-  it("_new/1758621952", () => doTest("_new/1758621952"));
-  it("_new/1758622000", () => doTest("_new/1758622000"));
-  it("_new/1758622051", () => doTest("_new/1758622051"));
-  it("_new/1758622104", () => doTest("_new/1758622104"));
-  it("_new/1758622160", () => doTest("_new/1758622160"));
-  it("_new/1758622313", () => doTest("_new/1758622313"));
-  it("_new/1758622403", () => doTest("_new/1758622403"));
-  it("_new/1758622442", () => doTest("_new/1758622442"));
-  it("_new/1758622524", () => doTest("_new/1758622524"));
-  // new_2
-  it("_new2/1758636573", () => doTest("_new2/1758636573"));
-  it("_new2/1758636775", () => doTest("_new2/1758636775"));
-  it("_new2/1758636819", () => doTest("_new2/1758636819"));
-  it("_new2/1758636961", () => doTest("_new2/1758636961"));
-  it("_new2/1758637024", () => doTest("_new2/1758637024"));
-  it("_new2/1758637136", () => doTest("_new2/1758637136"));
-  it("_new2/1758637203", () => doTest("_new2/1758637203"));
-  it("_new2/1758637250", () => doTest("_new2/1758637250"));
-  it("_new2/1758637297", () => doTest("_new2/1758637297"));
-  it("_new2/1758637332", () => doTest("_new2/1758637332"));
-  it("_new2/1758637363", () => doTest("_new2/1758637363"));
-  it("_new2/1758637447", () => doTest("_new2/1758637447"));
-  it("_new2/1758637485", () => doTest("_new2/1758637485"));
-  it("_new2/1758708840", () => doTest("_new2/1758708840"));
+  it("1761552708", () => doTest("1761552708"));
+  it("1761552851", () => doTest("1761552851"));
+  it("1761553047", () => doTest("1761553047"));
+  it("1761553072", () => doTest("1761553072"));
+  it("1761553157", () => doTest("1761553157"));
+  it("1761553506", () => doTest("1761553506"));
+  it("1761553554", () => doTest("1761553554"));
+  it("1761554906", () => doTest("1761554906"));
+  it("1761554995", () => doTest("1761554995"));
 });
 
 const reverseDifferentState = (
@@ -329,16 +258,9 @@ const reverseDifferentState = (
       // its about this service
       //
       //
-      console.log(
-        `serviceAccount ${serviceIndex}`,
-        diff(
-          serviceAccount.toJSON(),
-          actual.serviceAccounts.get(serviceIndex)?.toJSON() ?? {},
-          {
-            contextLines: 1,
-            expand: false,
-          },
-        ),
+      console.log(actual.serviceAccounts.get(serviceIndex)?.balance);
+      expect(actual.serviceAccounts.get(serviceIndex)?.toJSON()).toEqual(
+        serviceAccount.toJSON(),
       );
       return;
     }

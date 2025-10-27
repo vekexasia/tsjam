@@ -7,6 +7,7 @@ import {
   eSubIntCodec,
   IdentityCodec,
   JamCodec,
+  JamCodecable,
   LengthDiscrimantedIdentityCodec,
   xBytesCodec,
 } from "@tsjam/codec";
@@ -50,6 +51,7 @@ export const serviceMetadataCodec = createCodec<{
  * NOTE: codec is not following C(255, x) as there are some virtual items and current version of codec
  * does not support virtual/computed items.
  */
+@JamCodecable()
 export class ServiceAccountImpl
   extends BaseJamCodecable
   implements ServiceAccount
