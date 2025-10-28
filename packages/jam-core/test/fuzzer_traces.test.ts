@@ -258,7 +258,8 @@ const reverseDifferentState = (
       // its about this service
       //
       //
-      console.log(actual.serviceAccounts.get(serviceIndex)?.balance);
+      //
+      console.log(serviceIndex);
       expect(actual.serviceAccounts.get(serviceIndex)?.toJSON()).toEqual(
         serviceAccount.toJSON(),
       );
