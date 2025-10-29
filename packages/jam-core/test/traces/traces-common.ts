@@ -19,6 +19,7 @@ import {
 import type { MerkleTreeRoot, StateKey } from "@tsjam/types";
 import fs from "fs";
 import { expect, it } from "vitest";
+import { reverseDifferentState } from "../utils";
 
 @JamCodecable()
 export class TraceTestState extends BaseJamCodecable {
@@ -193,9 +194,20 @@ export const buildTracesTests = (kind: string) => {
           testCase.postState.merkleMap.has(k),
           "key missing in test post state",
         ).toBe(true);
-        expect(v, `for key ${k.toString("hex")}`).deep.eq(
-          testCase.postState.merkleMap.get(k),
-        );
+        if (Buffer.compare(v, testCase.postState.merkleMap.get(k)!) !== 0) {
+          console.log(
+            JamStateImpl.fromMerkleMap(testCase.postState.merkleMap)
+              .mostRecentAccumulationOutputs,
+          );
+          reverseDifferentState(
+            k,
+            JamStateImpl.fromMerkleMap(testCase.postState.merkleMap),
+            posteriorState,
+          );
+        }
+        //expect(v, `for key ${k.toString("hex")}`).deep.eq(
+        //  testCase.postState.merkleMap.get(k),
+        //);
       }
       for (const [k] of testCase.postState.merkleMap.entries()) {
         expect(

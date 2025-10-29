@@ -93,10 +93,7 @@ export class DeltaImpl implements Delta {
     for (const serviceIndex of deps.accumulationStatistics.services()) {
       const a = dd_delta.get(serviceIndex);
       // NOTE: an account coudl have been accumulated somehow but ejected so that it no longer exits
-      if (
-        typeof a !== "undefined" &&
-        (deps.accumulationStatistics.get(serviceIndex)?.count ?? 0) > 0
-      ) {
+      if (typeof a !== "undefined") {
         a.lastAcc = deps.p_tau;
         dd_delta.set(serviceIndex, a);
       } else {

@@ -59,12 +59,21 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
   }
 
   static union(a: LastAccOutsImpl, b: LastAccOutsImpl): LastAccOutsImpl {
-    // TODO: no checks are performed on duplicated elements despite using Set
-    return new LastAccOutsImpl(
-      [...new Set([...a.elements, ...b.elements]).values()].sort(
-        (a, b) => a.serviceIndex - b.serviceIndex,
-      ),
-    );
+    const els = [...a.elements];
+    b.elements.forEach((elB) => {
+      if (
+        !els.find(
+          (elA) =>
+            elA.serviceIndex === elB.serviceIndex &&
+            Buffer.compare(elA.accumulationResult, elB.accumulationResult) ===
+              0,
+        )
+      ) {
+        els.push(elB);
+      }
+    });
+    els.sort((a, b) => a.serviceIndex - b.serviceIndex);
+    return new LastAccOutsImpl(els);
   }
 
   static newEmpty(): LastAccOutsImpl {
