@@ -1,8 +1,7 @@
 import { JamStateImpl, stateKey } from "@/index";
 import { Uint8ArrayJSONCodec } from "@tsjam/codec";
 import { Hash, StateKey } from "@tsjam/types";
-import { expect } from "chai";
-
+import { expect } from "vitest";
 import { diff } from "jest-diff";
 
 export const randomHash = <T extends Hash>(): T => {
