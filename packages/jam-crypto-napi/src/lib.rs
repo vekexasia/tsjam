@@ -224,3 +224,56 @@ pub fn ietf_vrf_output_hash(signature: &[u8]) -> Buffer {
   let output = signature.output;
   output.hash()[..32].try_into().unwrap()
 }
+
+
+// ZEBRA ed25519
+#[napi]
+pub fn ed25519_sign(data: &[u8], signing_key: &[u8]) -> Buffer {
+  if signing_key.len() != 32 {
+    panic!("Secret key must be 32 bytes long");
+  }
+  let signing_key: ed25519_zebra::SigningKey = if let Ok(s) = signing_key.try_into() {
+    s
+  } else { 
+    panic!("Invalid secret key");
+  };
+  let a: Vec<u8> = signing_key.sign(data).to_bytes().try_into().unwrap();
+  return a.try_into().unwrap();
+}
+
+#[napi]
+pub fn ed25519_verify(msg: &[u8], v_key: &[u8], signature: &[u8]) -> bool {
+  let signature: ed25519_zebra::Signature = if let Ok(s) = signature.try_into() {
+    s
+  } else {
+    return false;
+  };
+
+  ed25519_zebra::VerificationKey::try_from(v_key)
+    .and_then(|vk| vk.verify(&signature, msg))
+    .is_ok()
+}
+
+#[napi]
+pub fn ed25519_keypair(seed: &[u8]) -> Buffer {
+  if seed.len() != 32 {
+    panic!("Seed must be 32 bytes long - but was {}", seed.len());
+  }
+  let signing_key: ed25519_zebra::SigningKey = if let Ok(s) = seed.try_into() {
+    s
+  } else {
+    panic!("Invalid seed");
+  };
+
+  let verify_key: ed25519_zebra::VerificationKey = signing_key.verification_key();
+  let mut to_ret: [u8; 64] = [0u8; 64];
+
+  let sk_bytes: [u8; 32] = signing_key.to_bytes();
+  let vk_u8: [u8; 32] = verify_key.try_into().unwrap();
+  // put into to_ret
+  //
+  to_ret[..32].copy_from_slice(&sk_bytes);
+  to_ret[32..].copy_from_slice(&vk_u8);
+  return Vec::try_from(to_ret).unwrap().into();
+
+}

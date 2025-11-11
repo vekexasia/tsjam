@@ -23,3 +23,6 @@ export declare function ietfVrfSign(secret: Uint8Array, vrfInputData: Uint8Array
 */
 export declare function ietfVrfVerify(publicKey: Uint8Array, vrfInputData: Uint8Array, auxData: Uint8Array, signature: Uint8Array): boolean
 export declare function ietfVrfOutputHash(signature: Uint8Array): Buffer
+export declare function ed25519Sign(data: Uint8Array, signingKey: Uint8Array): Buffer
+export declare function ed25519Verify(msg: Uint8Array, vKey: Uint8Array, signature: Uint8Array): boolean
+export declare function ed25519Keypair(seed: Uint8Array): Buffer

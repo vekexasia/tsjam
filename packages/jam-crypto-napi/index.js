@@ -310,7 +310,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { publicKey, secretKey, ringVrfOutputHash, ringVrfVerify, ringRoot, ietfVrfOutputHashFromSecret, ietfVrfSign, ietfVrfVerify, ietfVrfOutputHash } = nativeBinding
+const { publicKey, secretKey, ringVrfOutputHash, ringVrfVerify, ringRoot, ietfVrfOutputHashFromSecret, ietfVrfSign, ietfVrfVerify, ietfVrfOutputHash, ed25519Sign, ed25519Verify, ed25519Keypair } = nativeBinding
 
 module.exports.publicKey = publicKey
 module.exports.secretKey = secretKey
@@ -321,3 +321,6 @@ module.exports.ietfVrfOutputHashFromSecret = ietfVrfOutputHashFromSecret
 module.exports.ietfVrfSign = ietfVrfSign
 module.exports.ietfVrfVerify = ietfVrfVerify
 module.exports.ietfVrfOutputHash = ietfVrfOutputHash
+module.exports.ed25519Sign = ed25519Sign
+module.exports.ed25519Verify = ed25519Verify
+module.exports.ed25519Keypair = ed25519Keypair
