@@ -35,6 +35,7 @@ export const argumentInvocation = <X>(
   args: Buffer, // a
   f: HostCallExecutor<X>,
   x: X,
+  pvmLogger: (line: string) => void,
 ): {
   gasUsed: Gas;
   res: WorkOutputImpl<WorkError.Panic | WorkError.OutOfGas>;
@@ -71,6 +72,7 @@ export const argumentInvocation = <X>(
     program: r,
     regs: registers,
     gas,
+    logger: pvmLogger,
   });
 
   //pvm.set_debug(process.env.DEBUG_STEPS === "true");

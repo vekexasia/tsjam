@@ -32,6 +32,7 @@ export class PVMJS implements PVMBase<PVMJSMemory> {
     public gas: Gas,
     public pc: u32,
     public prog: PVMProgram,
+    private logger: (line: string) => void,
   ) {
     let lastBlockTerminator = true;
     let lastIx = 0 as u32;
@@ -132,7 +133,10 @@ export class PVMJS implements PVMBase<PVMJSMemory> {
           ixCache.ix.evaluate(ixCache.decodedArgs, this, skip)
         );
         if (isDebugLog) {
-          console.log(
+          // console.log(
+          //   `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ixCache?.ix?.identifier.padEnd(20, " ")} regs:[${this.registers.toString()}] gas:${this.gas}`,
+          // );
+          this.logger(
             `${(idx++).toString().padEnd(4, " ")} [@${ip.toString().padEnd(6, " ")}] - ${ixCache?.ix?.identifier.padEnd(20, " ")} regs:[${this.registers.toString()}] gas:${this.gas}`,
           );
         }
@@ -164,7 +168,14 @@ export const pvmImplementation: PVMImplementation<PVMJS, PVMJSMemory> = {
   },
   buildPVM(conf) {
     assert(conf.program.k[0] === 1 && Ixdb.byCode.has(<u8>conf.program.c[0]));
-    return new PVMJS(conf.mem, conf.regs, conf.gas, conf.pc, conf.program);
+    return new PVMJS(
+      conf.mem,
+      conf.regs,
+      conf.gas,
+      conf.pc,
+      conf.program,
+      conf.logger,
+    );
   },
 };
 

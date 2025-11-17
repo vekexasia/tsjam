@@ -75,6 +75,7 @@ describe("pvm", () => {
       pc,
       regs,
       program,
+      logger: (_line: string) => {},
     });
 
     // pvm.set_debug(true);

@@ -874,6 +874,7 @@ export class HostFunctions {
         gas,
         pc,
         program: <PVMProgram>p,
+        logger: () => {},
       });
       // basic invocation
       exitReason = newPVM.run();

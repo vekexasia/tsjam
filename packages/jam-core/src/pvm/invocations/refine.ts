@@ -121,6 +121,7 @@ export const refineInvocation = (
       bold_m: new Map(),
       segments: [],
     },
+    () => {}, // logger
   );
   const argRes = argOut.res;
   if (argRes.isPanic() || argRes.isOutOfGas()) {

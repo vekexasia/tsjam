@@ -35,6 +35,7 @@ import { hostFunctions } from "../functions/functions";
 import { applyMods } from "../functions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
+import { log } from "@/utils";
 
 const AccumulateArgsCodec = createCodec<{
   t: u32;
@@ -101,6 +102,9 @@ export const accumulateInvocation = (
     }),
     F_fn(t, deps.core, accumulateOps, deps.p_eta_0, s),
     { x: iRes, y: yRes },
+    (line: string) => {
+      log(`[s:${s},c:${deps.core}]${line}`, true);
+    },
   );
 
   return C_fn(mres.gasUsed, mres.res, mres.out);

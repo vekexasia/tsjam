@@ -167,6 +167,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
       encodeWithCodec(E_2_int, c),
       F_Fn(this, c),
       undefined as unknown as PVMResultContext, // something is missing from the paper
+      () => {},
     );
 
     return {

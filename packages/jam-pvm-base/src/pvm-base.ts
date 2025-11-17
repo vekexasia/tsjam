@@ -93,5 +93,6 @@ export interface PVMImplementation<P extends PVM, M extends BaseMemory> {
     gas: Gas;
     pc: u32;
     program: PVMProgram;
+    logger: (line: string) => void;
   }): P;
 }

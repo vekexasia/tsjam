@@ -437,7 +437,7 @@ export const singleServiceAccumulation = (
 
   const concatenatedIs = new Array<AccumulationInputInpl>();
   i_T.elements.forEach((t) =>
-    i_U.push(new AccumulationInputInpl({ transfer: t })),
+    concatenatedIs.push(new AccumulationInputInpl({ transfer: t })),
   );
   concatenatedIs.push(...i_U);
 
