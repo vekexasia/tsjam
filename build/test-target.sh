@@ -5,7 +5,7 @@
 
 set -u
 
-TRACES_DIR="./jam-conformance/fuzz-reports/0.7.0/traces"
+TRACES_DIR="./jam-conformance/fuzz-reports/0.7.1/traces"
 
 if [[ ! -d "$TRACES_DIR" ]]; then
   echo "Traces directory not found: $TRACES_DIR" >&2
@@ -34,7 +34,7 @@ for trace_path in "$TRACES_DIR"/*; do
 
   if ! TRACE_PATH="$(pwd)/$trace_path" JAM_CONSTANTS=tiny \
     node packages/jam-fuzzer/dist/node.esm.mjs; then
-    echo "Failed: $trace_name" >&2
+    echo -e "\033[0;31mFailed:\033[0m $trace_name" >&2
     fail=1
   fi
 done
