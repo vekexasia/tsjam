@@ -36,11 +36,11 @@ export class SingleCoreStatisticsImpl
   importCount!: u16;
 
   /**
-   * `e`
-   * Number of segments exported into DA made by core for reported work.
+   * `x`
+   * Total number of extrinsic used by core for reported work.
    */
-  @eIntCodec("exports")
-  exportCount!: u16;
+  @eIntCodec("extrinsic_count")
+  extrinsicCount!: u16;
 
   /**
    * `z`
@@ -50,11 +50,11 @@ export class SingleCoreStatisticsImpl
   extrinsicSize!: u32;
 
   /**
-   * `x`
-   * Total number of extrinsic used by core for reported work.
+   * `e`
+   * Number of segments exported into DA made by core for reported work.
    */
-  @eIntCodec("extrinsic_count")
-  extrinsicCount!: u16;
+  @eIntCodec("exports")
+  exportCount!: u16;
 
   /**
    * `l`

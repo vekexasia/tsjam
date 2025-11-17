@@ -226,6 +226,7 @@ describe.skipIf(getConstantsMode() == "full")("fuzzer_traces", () => {
   it("1763372279", () => doTest("1763372279"));
   it("1763372314", () => doTest("1763372314"));
   it("1763372355", () => doTest("1763372355"));
+  it("1763399245", () => doTest("1763399245"));
 });
 
 @JamCodecable()
