@@ -291,7 +291,6 @@ export const parallelizedAccumulation = (
     return accRes;
   };
 
-  debugger;
   bold_s.forEach((s) => {
     const acc = accumulateS(s);
     bold_u.elements.push({ serviceIndex: s, gasUsed: acc.gasUsed });
