@@ -67,7 +67,11 @@ export class DisputeVerdictJudgementImpl
     target: Hash;
     validatorSet: KappaImpl | LambdaImpl;
   }): boolean {
-    const validatorPubKey = deps.validatorSet.at(this.index).ed25519;
+    const [e, validator] = deps.validatorSet.at(this.index).safeRet();
+    if (typeof e !== "undefined") {
+      return false;
+    }
+    const validatorPubKey = validator.ed25519;
     let prefix: Buffer;
     if (this.vote) {
       prefix = JAM_VALID;

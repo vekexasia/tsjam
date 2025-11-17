@@ -85,8 +85,14 @@ export class JamSignedHeaderImpl
   /**
    * $(0.7.1 - 5.9)
    */
-  blockAuthor(p_kappa: Posterior<KappaImpl>) {
-    return p_kappa.at(this.authorIndex)!.banderSnatch;
+  blockAuthor(
+    p_kappa: Posterior<KappaImpl>,
+  ): Result<BandersnatchKey, "invalid_author"> {
+    const [e, validator] = p_kappa.at(this.authorIndex).safeRet();
+    if (e) {
+      return err("invalid_author");
+    }
+    return ok(validator.banderSnatch);
   }
 
   /**
@@ -99,7 +105,10 @@ export class JamSignedHeaderImpl
     p_entropy_3: Posterior<JamEntropyImpl["_3"]>;
     p_gamma_s: Posterior<GammaSImpl>;
   }) {
-    const ha = this.blockAuthor(deps.p_kappa);
+    const [errAuthor, ha] = this.blockAuthor(deps.p_kappa).safeRet();
+    if (errAuthor) {
+      return false;
+    }
     const verified = Bandersnatch.verifySignature(
       this.seal,
       ha,
@@ -136,7 +145,11 @@ export class JamSignedHeaderImpl
    * $(0.7.1 - 6.17 / 6.18)
    */
   private verifyEntropy(p_kappa: Posterior<KappaImpl>) {
-    const ha = this.blockAuthor(p_kappa);
+    const [err, ha] = this.blockAuthor(p_kappa).safeRet();
+    if (err) {
+      return false;
+    }
+
     const context = Buffer.alloc(JAM_ENTROPY.length + 32);
 
     JAM_ENTROPY.copy(context);

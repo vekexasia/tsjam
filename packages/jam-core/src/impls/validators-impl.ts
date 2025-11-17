@@ -14,7 +14,7 @@ import type {
   Validators,
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
-import assert from "assert";
+import { err, ok, Result } from "neverthrow";
 import type { ConditionalExcept } from "type-fest";
 import type { DisputesStateImpl } from "./disputes-state-impl";
 import { ValidatorDataImpl } from "./validator-data-impl";
@@ -33,9 +33,11 @@ export class ValidatorsImpl extends BaseJamCodecable implements Validators {
     }
   }
 
-  at(index: ValidatorIndex): ValidatorDataImpl {
-    assert(index >= 0 && index < NUMBER_OF_VALIDATORS, "Index out of bounds");
-    return this.elements[index];
+  at(index: ValidatorIndex): Result<ValidatorDataImpl, "invalid_index"> {
+    if (index < 0 || index >= NUMBER_OF_VALIDATORS) {
+      return err("invalid_index");
+    }
+    return ok(this.elements[index]);
   }
 
   /**

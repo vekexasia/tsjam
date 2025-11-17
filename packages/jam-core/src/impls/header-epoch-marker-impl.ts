@@ -79,10 +79,11 @@ export class HeaderEpochMarkerImpl
 
       toRet.validators = toTagged([]);
       for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
+        const v = deps.p_gamma_p.at(i)._unsafeUnwrap();
         toRet.validators.push(
           new EpochMarkerValidatorImpl({
-            bandersnatch: deps.p_gamma_p.at(i).banderSnatch,
-            ed25519: deps.p_gamma_p.at(i).ed25519,
+            bandersnatch: v.banderSnatch,
+            ed25519: v.ed25519,
           }),
         );
       }
@@ -119,15 +120,16 @@ export class HeaderEpochMarkerImpl
         return false;
       }
       for (let i = <ValidatorIndex>0; i < NUMBER_OF_VALIDATORS; i++) {
+        const [e, v] = deps.p_gamma_p.at(i).safeRet();
+        if (typeof e !== "undefined") {
+          return false;
+        }
         if (
           Buffer.compare(
             epochMarker!.validators[i].bandersnatch,
-            deps.p_gamma_p.at(i).banderSnatch,
+            v.banderSnatch,
           ) !== 0 ||
-          Buffer.compare(
-            epochMarker!.validators[i].ed25519,
-            deps.p_gamma_p.at(i).ed25519,
-          ) !== 0
+          Buffer.compare(epochMarker!.validators[i].ed25519, v.ed25519) !== 0
         ) {
           return false;
         }

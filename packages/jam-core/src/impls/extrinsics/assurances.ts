@@ -76,11 +76,12 @@ export class AssuranceExtrinsicImpl
     const toHash = Buffer.concat([deps.headerParent, bitSeq]);
     const message = Buffer.concat([JAM_AVAILABLE, Hashing.blake2b(toHash)]);
 
-    return Ed25519.verifySignature(
-      this.signature,
-      deps.kappa.at(this.validatorIndex).ed25519,
-      message,
-    );
+    const [errV, validator] = deps.kappa.at(this.validatorIndex).safeRet();
+    if (typeof errV !== "undefined") {
+      return false;
+    }
+
+    return Ed25519.verifySignature(this.signature, validator.ed25519, message);
   }
 
   isValid(deps: {

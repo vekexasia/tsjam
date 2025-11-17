@@ -37,6 +37,7 @@ export class HeaderOffenderMarkerImpl
     disputesExtrinsic: Validated<DisputeExtrinsicImpl>,
   ): this is Validated<HeaderOffenderMarkerImpl> {
     const target = HeaderOffenderMarkerImpl.build(disputesExtrinsic);
+    debugger;
     if (this.elements.length !== target.elements.length) {
       return false;
     }
