@@ -55,7 +55,15 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
     this.elements.push(
       new SingleAccOutImpl({ serviceIndex, accumulationResult }),
     );
-    this.elements.sort((a, b) => a.serviceIndex - b.serviceIndex);
+    this.elements.sort(LastAccOutsImpl.comparator);
+  }
+
+  static comparator(a: SingleAccOutImpl, b: SingleAccOutImpl): number {
+    const diff = a.serviceIndex - b.serviceIndex;
+    if (diff !== 0) {
+      return diff;
+    }
+    return Buffer.compare(a.accumulationResult, b.accumulationResult);
   }
 
   static union(a: LastAccOutsImpl, b: LastAccOutsImpl): LastAccOutsImpl {
@@ -72,7 +80,7 @@ export class LastAccOutsImpl extends BaseJamCodecable implements LastAccOuts {
         els.push(elB);
       }
     });
-    els.sort((a, b) => a.serviceIndex - b.serviceIndex);
+    els.sort(LastAccOutsImpl.comparator);
     return new LastAccOutsImpl(els);
   }
 
