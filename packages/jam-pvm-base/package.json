@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/pvm-base",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "PVM base classes",
   "scripts": {
     "build": "npx rollup --config ../../build/rollup.config.mjs",
@@ -36,5 +36,5 @@
     "@types/json-bigint": "^1.0.4",
     "json-bigint": "^1.0.0"
   },
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.2"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/pvm-wasm",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "pvm wasm",
   "scripts": {
     "dev": "$npm_execpath run build -w",
@@ -41,6 +41,6 @@
     "json-bigint": "^1.0.0",
     "ts-macros": "^2.6.2"
   },
-  "jam:protocolVersion": "0.7.1",
+  "jam:protocolVersion": "0.7.2",
   "type": "module"
 }

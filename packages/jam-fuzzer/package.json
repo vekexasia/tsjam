@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/fuzzer",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Fuzzer for conformance Test generation for JAM",
   "dependencies": {
     "@tsjam/codec": "*",
@@ -38,7 +38,7 @@
     "name": "Andrea Baccega"
   },
   "license": "MIT",
-  "jam:protocolVersion": "0.7.1",
+  "jam:protocolVersion": "0.7.2",
   "devDependencies": {
     "@types/deep-diff": "^1.0.5",
     "deep-diff": "^1.0.2"

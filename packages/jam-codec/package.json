@@ -1,6 +1,6 @@
 {
   "name": "@tsjam/codec",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A library to convert back and forth according appendix C of graypaper. Also called SCALE",
   "scripts": {
     "build:old": "rm -rf dist; npx rollup --config ../../build/rollup.config.mjs",
@@ -34,5 +34,5 @@
     "@tsjam/utils": "*"
   },
   "license": "MIT",
-  "jam:protocolVersion": "0.7.1"
+  "jam:protocolVersion": "0.7.2"
 }
