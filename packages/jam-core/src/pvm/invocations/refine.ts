@@ -187,7 +187,7 @@ const F_fn: (
             overline_x: workPackage.workItems.map((wi) =>
               wi.exportedDataSegments.map((wx) => wx.originalBlob()),
             ),
-            bold_o: undefined,
+            bold_i: undefined,
           }),
         );
       case "historical_lookup":

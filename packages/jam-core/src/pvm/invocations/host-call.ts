@@ -61,7 +61,7 @@ export type HostCallOut<X> = {
 /**
  * `Ω(X)` in the paper
  * it can modify ctx and out (not pure function)
- * $(0.7.1 - A.36)
+ * $(0.7.2 - A.36)
  */
 export type HostCallExecutor<X> = (input: {
   hostCallOpcode: u8;

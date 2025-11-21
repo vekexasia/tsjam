@@ -54,10 +54,7 @@ export class PVMResultContextImpl implements PVMResultContext {
       nextFreeID: this.nextFreeID,
       transfers: cloneCodecable(this.transfers),
       yield: this.yield,
-      provisions: this.provisions.map((p) => ({
-        serviceId: p.requester,
-        blob: Buffer.concat([p.blob]),
-      })),
+      provisions: this.provisions.map(cloneCodecable),
     });
   }
 }

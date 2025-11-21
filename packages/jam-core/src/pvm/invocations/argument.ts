@@ -75,7 +75,7 @@ export const argumentInvocation = <X>(
     logger: pvmLogger,
   });
 
-  //pvm.set_debug(process.env.DEBUG_STEPS === "true");
+  pvm.set_debug(process.env.DEBUG_STEPS === "true");
   const hRes = hostCallInvocation(pvm, f, x);
   context.memory = pvm.memory;
   context.gas = pvm.gas;

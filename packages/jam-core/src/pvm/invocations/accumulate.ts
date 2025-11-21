@@ -16,7 +16,6 @@ import {
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import { check_fn, PVM, PVMExitReasonImpl } from "@tsjam/pvm-base";
-import { IxMod } from "@tsjam/pvm-js";
 import {
   Balance,
   CoreIndex,
@@ -194,7 +193,7 @@ const F_fn: (
           input.out,
           hostFunctions.fetch(input.pvm, {
             n: p_eta_0,
-            bold_o: accumulateOps,
+            bold_i: accumulateOps,
           }),
         );
         G_fn(input, bold_s);

@@ -27,7 +27,6 @@ import {
   E_sub,
   E_sub_int,
   encodeWithCodec,
-  LengthDiscrimantedIdentityCodec,
   Uint8ArrayJSONCodec,
   xBytesCodec,
 } from "@tsjam/codec";
@@ -117,6 +116,7 @@ import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
 import { HashCodec } from "@/codecs/misc-codecs";
 import { MerkleState } from "@/merklization/merkle-state";
+import { PreimageElement } from "@/impls/extrinsics/preimages";
 
 export class HostFunctions {
   @HostFn(0)
@@ -1649,10 +1649,12 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
     const newX = args.x.clone();
-    newX.provisions.push({
-      requester: s_star,
-      blob: bold_i,
-    });
+    newX.provisions.push(
+      PreimageElement.fromJSON({
+        requester: s_star,
+        blob: bold_i,
+      }),
+    );
 
     return [
       IxMod.w7(HostCallResult.OK),

@@ -170,7 +170,7 @@ export const AUTHQUEUE_MAX_SIZE = 80;
 /**
  * `WB`
  */
-export const MAX_SIZE_ENCODED_PACKAGE = 13_794_305;
+export const MAX_SIZE_ENCODED_PACKAGE = 113_791_360;
 
 /**
  * `WC` in the paper
