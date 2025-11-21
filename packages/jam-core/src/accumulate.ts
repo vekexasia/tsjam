@@ -83,11 +83,11 @@ export const accumulateReports = (
     alwaysAccers: deps.privServices.alwaysAccers,
   });
 
-  // $(0.7.1 - 12.24)
+  // $(0.7.2 - 12.25)
   const {
     nAccumulatedWork, // `n`
     postAccState, // `e'`
-    lastAccOutputs, // θ′
+    lastAccOutputs, // θ′ $(0.7.2 - 12.26)
     gasUsed, // `bold u`
   } = outerAccumulation(
     g,
@@ -387,7 +387,7 @@ export const parallelizedAccumulation = (
  * @param reports - `bold_r`
  * @param gasPerService - `bold_f`
  * @param service - `s`
- * @see $(0.7.0 - 12.21)
+ * @see $(0.7.0 - 12.23)
  *
  */
 export const singleServiceAccumulation = (

@@ -97,6 +97,7 @@ import {
   PVMMemoryAccessKind,
   PVMProgram,
   PVMProgramCode,
+  PVMSingleModGas,
   PVMSingleModMemory,
   PVMSingleModObject,
   RegularPVMExitReason,
@@ -135,7 +136,7 @@ export class HostFunctions {
       i?: number; // workPackage.work item index
       overline_i?: ExportSegment[][];
       overline_x?: Buffer[][];
-      bold_o?: AccumulationInputInpl[];
+      bold_i?: AccumulationInputInpl[];
     },
   ): Array<W7 | PVMExitReasonMod<PVMExitReasonImpl> | PVMSingleModMemory> {
     const [w7, w8, w9, w10, w11, w12] = pvm.registers.slice(7);
@@ -243,10 +244,7 @@ export class HostFunctions {
       }
       case 8n: {
         if (typeof args.p !== "undefined") {
-          v = Buffer.concat([
-            args.p.authCodeHash,
-            encodeWithCodec(LengthDiscrimantedIdentityCodec, args.p.authConfig),
-          ]);
+          v = args.p.authConfig;
         }
         break;
       }
@@ -302,20 +300,20 @@ export class HostFunctions {
         break;
       }
       case 14n: {
-        if (typeof args.bold_o !== "undefined") {
+        if (typeof args.bold_i !== "undefined") {
           v = encodeWithCodec(
             createArrayLengthDiscriminator(AccumulationInputInpl),
-            args.bold_o,
+            args.bold_i,
           );
         }
         break;
       }
       case 15n: {
         if (
-          typeof args.bold_o !== "undefined" &&
-          w11.value < args.bold_o.length
+          typeof args.bold_i !== "undefined" &&
+          w11.value < args.bold_i.length
         ) {
-          v = encodeWithCodec(AccumulationInputInpl, args.bold_o[Number(w11)]);
+          v = encodeWithCodec(AccumulationInputInpl, args.bold_i[Number(w11)]);
         }
         break;
       }
@@ -1309,11 +1307,11 @@ export class HostFunctions {
    * transfer host call
    * NOTE: gas is dynamic
    */
-  @HostFn(20, (pvm) => <Gas>(pvm.registers.w9().value + 10n))
+  @HostFn(20)
   transfer(
     pvm: PVM,
     x: PVMResultContextImpl,
-  ): Array<W7 | XMod | PVMExitReasonMod<PVMExitReasonImpl>> {
+  ): Array<W7 | XMod | PVMSingleModGas | PVMExitReasonMod<PVMExitReasonImpl>> {
     const [d, a, l, o] = pvm.registers.slice(7);
 
     const bold_d = x.state.accounts.clone();
@@ -1352,7 +1350,11 @@ export class HostFunctions {
     newX.transfers.elements.push(t);
     newX.state.accounts.get(x.id)!.balance = b;
 
-    return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
+    return [
+      IxMod.w7(HostCallResult.OK),
+      IxMod.gas(l.value),
+      IxMod.obj({ x: newX }),
+    ];
   }
 
   /**
@@ -1640,7 +1642,7 @@ export class HostFunctions {
 
     if (
       args.x.provisions.find(
-        (x) => x.serviceId === s_star && Buffer.compare(x.blob, bold_i) === 0,
+        (x) => x.requester === s_star && Buffer.compare(x.blob, bold_i) === 0,
       )
     ) {
       // already there
@@ -1648,7 +1650,7 @@ export class HostFunctions {
     }
     const newX = args.x.clone();
     newX.provisions.push({
-      serviceId: s_star,
+      requester: s_star,
       blob: bold_i,
     });
 

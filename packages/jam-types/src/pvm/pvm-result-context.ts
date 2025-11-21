@@ -39,7 +39,7 @@ export interface PVMResultContext {
     /**
      * `s`
      */
-    serviceId: ServiceIndex;
+    requester: ServiceIndex;
     /**
      * `bold_i`
      */

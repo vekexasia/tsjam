@@ -6,7 +6,7 @@ import assert from "assert";
 /**
  * Host call invocation
  * `ΨH` in the graypaper
- * $(0.7.1 - A.35)
+ * $(0.7.2 - A.35)
  */
 export const hostCallInvocation = <X>(
   pvm: PVM,

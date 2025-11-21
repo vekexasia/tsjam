@@ -93,9 +93,8 @@ export class PVMJS implements PVMBase<PVMJSMemory> {
       /**
        * `Ψ1` | singleStep
        * it modifies the context according to the single step.
-       * $(0.7.1 - A.6)
+       * $(0.7.2 - A.6)
        */
-
       {
         const ip = this.pc;
         const ixCache = this.ixCacheAt(ip);

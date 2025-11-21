@@ -17,6 +17,7 @@ import {
   Gas,
   Hash,
   PVMProgramCode,
+  PVMRegisterRawValue,
   ServiceIndex,
   u32,
   WorkError,
@@ -27,7 +28,7 @@ import { hostFunctions, RefineContext } from "../functions/functions";
 import { applyMods } from "../functions/utils";
 import { argumentInvocation } from "./argument";
 import { HostCallExecutor } from "./host-call";
-import { IxMod } from "@tsjam/pvm-js";
+import { PVMExitReasonImpl } from "@tsjam/pvm-base";
 
 const refine_a_Codec = createCodec<{
   //  c: CoreIndex; // `c`
@@ -139,7 +140,7 @@ export const refineInvocation = (
 };
 
 /**
- * $(0.7.1 - B.6)
+ * $(0.7.2 - B.6)
  */
 const F_fn: (
   core: CoreIndex,
@@ -245,15 +246,14 @@ const F_fn: (
           hostFunctions.expunge(input.pvm, input.out),
         );
       case "log":
-        return applyMods(
-          input.pvm,
-          input.out,
-          hostFunctions.log(input.pvm, { core: core, serviceIndex: service }),
-        );
+        hostFunctions.log(input.pvm, { core: core, serviceIndex: service });
       default:
-        return applyMods(input.pvm, input.out, [
-          IxMod.gas(10n),
-          IxMod.w7(HostCallResult.WHAT),
-        ]);
+        input.pvm.gas = <Gas>(input.pvm.gas - 10n);
+        input.pvm.registers.w7().value = <PVMRegisterRawValue>(
+          HostCallResult.WHAT
+        );
+        if (input.pvm.gas < 0n) {
+          return PVMExitReasonImpl.outOfGas();
+        }
     }
   };

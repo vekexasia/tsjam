@@ -70,6 +70,7 @@ export interface PVMBase<T extends PVMMemory<any>> {
 
   /**
    * should run the pvm until it exits either for failure or hostcall
+   * in GP this is equivalent to the BASIC invocation loop
    */
   run(): PVMExitReasonImpl;
 

@@ -1193,8 +1193,8 @@ export class Instructions {
 }
 
 /**
- * $(0.7.1 - A.9)
- * $(0.7.1 - A.8) | is handled by caller
+ * $(0.7.2 - A.8)
+ * $(0.7.2 - A.7) | is handled by caller
  */
 const handleMemoryFault = (location: u32): PVMExitReasonImpl => {
   if (location < 2 ** 16) {

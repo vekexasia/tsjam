@@ -15,7 +15,7 @@ import {
   SERVICECODE_MAX_SIZE,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import { check_fn, PVM } from "@tsjam/pvm-base";
+import { check_fn, PVM, PVMExitReasonImpl } from "@tsjam/pvm-base";
 import { IxMod } from "@tsjam/pvm-js";
 import {
   Balance,
@@ -24,6 +24,7 @@ import {
   Hash,
   JamEntropy,
   Posterior,
+  PVMRegisterRawValue,
   ServiceIndex,
   u32,
   Validated,
@@ -152,7 +153,7 @@ const I_fn = (
 };
 
 /**
- * $(0.7.1 - B.11)
+ * $(0.7.2 - B.11)
  */
 const F_fn: (
   tau: TauImpl,
@@ -330,17 +331,13 @@ const F_fn: (
           hostFunctions.provide(input.pvm, { x: input.out.x, s: serviceIndex }),
         );
       case "log":
-        return applyMods(
-          input.pvm,
-          input.out,
-          hostFunctions.log(input.pvm, { core, serviceIndex }),
-        );
+        hostFunctions.log(input.pvm, { core, serviceIndex });
     }
-
-    return applyMods(input.pvm, input.out, [
-      IxMod.gas(10n),
-      IxMod.w7(HostCallResult.WHAT),
-    ]);
+    input.pvm.gas = <Gas>(input.pvm.gas - 10n);
+    input.pvm.registers.w7().value = <PVMRegisterRawValue>HostCallResult.WHAT;
+    if (input.pvm.gas < 0n) {
+      return PVMExitReasonImpl.outOfGas();
+    }
   };
 
 /**

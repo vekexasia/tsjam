@@ -49,6 +49,7 @@ import type { DeltaImpl } from "./delta-impl";
 import { WorkContextImpl } from "./work-context-impl";
 import { WorkItemImpl } from "./work-item-impl";
 import { WorkOutputImpl } from "./work-output-impl";
+import { PVMExitReasonImpl } from "@tsjam/pvm-base";
 
 /**
  * Identified by `P` set
@@ -215,7 +216,7 @@ export class WorkPackageImpl extends BaseJamCodecable implements WorkPackage {
   }
 }
 
-// $(0.7.1 - B.2)
+// $(0.7.2 - B.2)
 const F_Fn =
   (bold_p: WorkPackageImpl, coreIndex: CoreIndex): HostCallExecutor<unknown> =>
   (input) => {
@@ -234,16 +235,13 @@ const F_Fn =
         }),
       );
     } else if (input.hostCallOpcode === 100 /** log */) {
-      return applyMods(
-        input.pvm,
-        input.out as never,
-        hostFunctions.log(input.pvm, {
-          core: coreIndex,
-        }),
-      );
+      hostFunctions.log(input.pvm, { core: coreIndex });
     }
     input.pvm.gas = <Gas>(input.pvm.gas - 10n);
     input.pvm.registers.w7().value = <PVMRegisterRawValue>HostCallResult.WHAT;
+    if (input.pvm.gas < 0n) {
+      return PVMExitReasonImpl.outOfGas();
+    }
   };
 
 if (import.meta.vitest) {

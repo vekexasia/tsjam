@@ -11,7 +11,10 @@ import {
 } from "@tsjam/types";
 import { toDagger, toDoubleDagger, toPosterior, toTagged } from "@tsjam/utils";
 import type { AccumulationStatisticsImpl } from "./accumulation-statistics-impl";
-import type { PreimagesExtrinsicImpl } from "./extrinsics/preimages";
+import type {
+  PreimageElement,
+  PreimagesExtrinsicImpl,
+} from "./extrinsics/preimages";
 import { PVMResultContextImpl } from "./pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "./service-account-impl";
 import type { TauImpl } from "./slot-impl";
@@ -54,19 +57,25 @@ export class DeltaImpl implements Delta {
   }
 
   /**
-   * $(0.7.1 - 12.21) - \fnprovide
-   * also `P()` fn
+   * $(0.7.2 - 12.21) - \fnprovide
+   * callsd `I()`
+   * also in place `P()` fn $(0.7.2 - 12.22)
    * @returns a new DeltaImpl with the preimages integrated
    */
   preimageIntegration(
-    provisions: PVMResultContextImpl["provisions"],
+    provisions: Array<PreimageElement>,
     p_tau: Validated<Posterior<TauImpl>>,
   ) {
     const newD = this.clone();
-    for (const { serviceId, blob } of provisions) {
+    for (const { requester: serviceId, blob } of provisions) {
       const phash = Hashing.blake2b(blob);
       const plength: Tagged<u32, "length"> = toTagged(<u32>blob.length);
-      if (this.get(serviceId)?.requests.get(phash, plength)?.length === 0) {
+      if (
+        this.get(serviceId)?.isPreimageSolicitedButNotYetProvided(
+          phash,
+          plength,
+        ) === true
+      ) {
         newD
           .get(serviceId)!
           .requests.set(phash, plength, toTagged(<TauImpl[]>[p_tau]));
@@ -104,7 +113,7 @@ export class DeltaImpl implements Delta {
   }
 
   /**
-   * $(0.7.1 - 12.36)
+   * $(0.7.2 - 12.38)
    */
   toPosterior(
     this: DoubleDagger<DeltaImpl>,
@@ -113,24 +122,7 @@ export class DeltaImpl implements Delta {
       p_tau: Validated<Posterior<TauImpl>>;
     },
   ): Posterior<DeltaImpl> {
-    const p = deps.ep.elements.filter((ep) =>
-      this.get(ep.requester)!.isPreimageSolicitedButNotYetProvided(
-        Hashing.blake2b(ep.blob),
-        ep.blob.length,
-      ),
-    );
-
-    const result = this.clone();
-    for (const { requester, blob } of p) {
-      const x = result.get(requester)!;
-      x.preimages = x.preimages.clone();
-
-      const hash = Hashing.blake2b(blob);
-      x.preimages.set(hash, blob);
-
-      x.requests.set(hash, toTagged(<u32>blob.length), toTagged([deps.p_tau]));
-    }
-    return toPosterior(result);
+    return toPosterior(this.preimageIntegration(deps.ep.elements, deps.p_tau));
   }
 
   static union(a: DeltaImpl, b: DeltaImpl): DeltaImpl {

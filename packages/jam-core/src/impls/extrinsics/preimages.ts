@@ -20,9 +20,15 @@ import type { DeltaImpl } from "../delta-impl";
 
 @JamCodecable()
 export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
+  /**
+   * `s`
+   */
   @eSubIntCodec(4)
   requester!: ServiceIndex;
 
+  /**
+   * **bold_i**
+   */
   @codec(LengthDiscrimantedIdentityCodec)
   blob!: Buffer;
 }
@@ -66,7 +72,7 @@ export class PreimagesExtrinsicImpl
         }
       }
     }
-    // $(0.7.1 - 12.35) data must be solicited by a service but not yet provided
+    // $(0.7.2 - 12.37) data must be solicited by a service but not yet provided
     for (const { requester, blob } of this.elements) {
       const reqAcc = deps.serviceAccounts.get(requester);
       if (typeof reqAcc === "undefined") {

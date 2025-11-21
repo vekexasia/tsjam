@@ -200,11 +200,12 @@ export class ServiceAccountImpl
   }
 
   /**
-   * $(0.7.1 - 12.41) | Y()
+   * $(0.7.2 - 12.22) | Y()
+   * instead of accepting *bold_i* we pass the hash and its length directly
    */
   isPreimageSolicitedButNotYetProvided(hash: Hash, length: number): boolean {
     return (
-      !this.preimages.has(hash) &&
+      //    !this.preimages.has(hash) &&
       this.requests.get(hash, toTagged(length))?.length === 0
     );
   }

@@ -64,7 +64,7 @@ export const L_fn = (
 
 /**
  * `C` function
- * $(0.7.1 - E.7)
+ * $(0.7.2 - E.7)
  * hashes all data and pads the array to the next power of 2
  * @param elements - preimage elements
  * @param hashFn - the hashing function

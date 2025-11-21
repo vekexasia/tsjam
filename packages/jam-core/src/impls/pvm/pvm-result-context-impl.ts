@@ -3,6 +3,7 @@ import type { PVMAccumulationStateImpl } from "./pvm-accumulation-state-impl";
 import { ConditionalExcept } from "type-fest";
 import type { DeferredTransfersImpl } from "../deferred-transfers-impl";
 import { cloneCodecable } from "@tsjam/codec";
+import { PreimageElement } from "../extrinsics/preimages";
 
 /**
  * `L` in the graypaper
@@ -33,16 +34,7 @@ export class PVMResultContextImpl implements PVMResultContext {
   /**
    * `p`
    */
-  provisions!: Array<{
-    /**
-     * `s`
-     */
-    serviceId: ServiceIndex;
-    /**
-     * `bold_i`
-     */
-    blob: Buffer;
-  }>;
+  provisions!: Array<PreimageElement>;
 
   constructor(config: ConditionalExcept<PVMResultContextImpl, Function>) {
     Object.assign(this, config);
@@ -63,7 +55,7 @@ export class PVMResultContextImpl implements PVMResultContext {
       transfers: cloneCodecable(this.transfers),
       yield: this.yield,
       provisions: this.provisions.map((p) => ({
-        serviceId: p.serviceId,
+        serviceId: p.requester,
         blob: Buffer.concat([p.blob]),
       })),
     });
