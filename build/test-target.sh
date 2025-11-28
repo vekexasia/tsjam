@@ -5,7 +5,7 @@
 
 set -u
 
-TRACES_DIR="./jam-conformance/fuzz-reports/0.7.1/traces"
+TRACES_DIR="./jam-conformance/fuzz-reports/0.7.2/traces"
 
 if [[ ! -d "$TRACES_DIR" ]]; then
   echo "Traces directory not found: $TRACES_DIR" >&2
