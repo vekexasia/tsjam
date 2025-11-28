@@ -50,6 +50,7 @@ import { SafroleStateImpl } from "./safrole-state-impl";
 import { ServiceAccountImpl } from "./service-account-impl";
 import { SlotImpl, type TauError, type TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
+import { WRError } from "..";
 
 export class JamStateImpl implements JamState {
   /**
@@ -599,5 +600,6 @@ export type ApplyBlockErrors =
   | ETError
   | EPError
   | EGError
+  | WRError
   | TauError
   | HeaderValidationError;

@@ -2,19 +2,10 @@ import { IdentityMap } from "@/data-structures/identity-map";
 import { HeaderHash } from "@tsjam/types";
 import assert from "assert";
 import { err, ok, Result } from "neverthrow";
-import { DisputesToPosteriorError } from "./disputes-state-impl";
-import { EAValidationError } from "./extrinsics/assurances";
-import { DisputesCulpritError } from "./extrinsics/disputes/culprits";
-import { DisputesFaultError } from "./extrinsics/disputes/faults";
-import { DisputesVerdictError } from "./extrinsics/disputes/verdicts";
-import { EGError } from "./extrinsics/guarantees";
-import { EPError } from "./extrinsics/preimages";
-import { ETError } from "./extrinsics/tickets";
-import { GammaAError } from "./gamma-a-impl";
+import { ApplyBlockErrors } from "..";
 import { AppliedBlock, JamBlockImpl } from "./jam-block-impl";
 import { JamBlocksDB } from "./jam-blocks-db";
 import { HeaderValidationError } from "./jam-signed-header-impl";
-import { TauError } from "./slot-impl";
 
 /**
  * Eventually Grandpa
@@ -65,18 +56,7 @@ export class ChainManager {
   ): Promise<
     Result<
       AppliedBlock,
-      | DisputesToPosteriorError
-      | DisputesVerdictError
-      | DisputesCulpritError
-      | DisputesFaultError
-      | GammaAError
-      | EAValidationError
-      | ETError
-      | EPError
-      | EGError
-      | TauError
-      | HeaderValidationError
-      | ChainManagerErrorCodes
+      ApplyBlockErrors | HeaderValidationError | ChainManagerErrorCodes
     >
   > {
     let parentBlock = this.unfinalizedBlocks.get(block.header.parent);

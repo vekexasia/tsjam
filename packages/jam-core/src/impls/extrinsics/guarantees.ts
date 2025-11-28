@@ -55,7 +55,7 @@ import type { JamStateImpl } from "../jam-state-impl";
 import type { RecentHistoryImpl } from "../recent-history-impl";
 import type { RHOImpl } from "../rho-impl";
 import { SlotImpl, type TauImpl } from "../slot-impl";
-import { WorkReportImpl } from "../work-report-impl";
+import { WorkReportImpl, WRError } from "../work-report-impl";
 
 @JamCodecable()
 export class SingleWorkReportGuaranteeSignatureImpl
@@ -172,15 +172,7 @@ export class SingleWorkReportGuaranteeImpl
     M_STAR: Tagged<GuarantorsAssignmentImpl, "M*">;
     M: Tagged<GuarantorsAssignmentImpl, "M">;
     p_tau: Posterior<Tau>;
-  }): Result<Validated<SingleWorkReportGuaranteeImpl>, EGError> {
-    // $(0.7.1 - 11.3) | Check the number of dependencies in the workreports
-    if (
-      this.report.srLookup.size + this.report.context.prerequisites.length >
-      MAX_WORK_PREREQUISITES
-    ) {
-      return err(EGError.TOO_MANY_PREREQUISITES);
-    }
-
+  }): Result<Validated<SingleWorkReportGuaranteeImpl>, EGError | WRError> {
     // $(0.7.1 - 11.8) | check work report total size
     if (this.totalSize() > MAX_WORKREPORT_OUTPUT_SIZE) {
       return err(EGError.WORKREPORT_SIZE_EXCEEDED);
@@ -227,6 +219,10 @@ export class SingleWorkReportGuaranteeImpl
       if (typeof sig_err !== "undefined") {
         return err(sig_err);
       }
+    }
+    const [rErr] = this.report.checkValidity().safeRet();
+    if (rErr) {
+      return err(rErr);
     }
 
     return ok(toTagged(this));
@@ -321,7 +317,7 @@ export class GuaranteesExtrinsicImpl
     p_lambda: Posterior<JamStateImpl["lambda"]>;
     p_tau: Validated<Posterior<TauImpl>>;
     p_offenders: Posterior<DisputesStateImpl["offenders"]>;
-  }): Result<Validated<GuaranteesExtrinsicImpl>, EGError> {
+  }): Result<Validated<GuaranteesExtrinsicImpl>, EGError | WRError> {
     if (this.elements.length === 0) {
       return ok(toTagged(this)); // optimization
     }
@@ -551,7 +547,6 @@ export enum EGError {
   GAS_EXCEEDED_ACCUMULATION_LIMITS = "Gas exceeded maximum accumulation limit GA",
   WORKREPORT_SIZE_EXCEEDED = "Workreport max size exceeded",
   MISSING_AUTH = "MISSING_AUTH",
-  TOO_MANY_PREREQUISITES = "Too many work prerequisites in report",
   ANCHOR_NOT_IN_RECENTHISTORY = "ANCHOR_NOT_IN_RECENTHISTORY",
   EXTRINSIC_LENGTH_MUST_BE_LESS_THAN_CORES = "Extrinsic length must be less than CORES",
   CORE_INDEX_MUST_BE_UNIQUE_AND_ORDERED = "core index must be unique and ordered",

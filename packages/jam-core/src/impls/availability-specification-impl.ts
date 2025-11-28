@@ -29,6 +29,7 @@ import type {
   WorkPackageHash,
 } from "@tsjam/types";
 import { zeroPad, toTagged } from "@tsjam/utils";
+import { Result } from "neverthrow";
 import type { ConditionalExcept } from "type-fest";
 
 /**

@@ -1,3 +1,6 @@
+import { HashCodec } from "@/codecs/misc-codecs";
+import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
+import { IdentitySet } from "@/data-structures/identity-set";
 import {
   ArrayOfJSONCodec,
   BaseJamCodecable,
@@ -12,7 +15,12 @@ import {
   LengthDiscrimantedIdentityCodec,
   NumberJSONCodec,
 } from "@tsjam/codec";
-import { CORES, MAXIMUM_WORK_ITEMS } from "@tsjam/constants";
+import {
+  CORES,
+  MAX_WORK_PREREQUISITES,
+  MAXIMUM_WORK_ITEMS,
+} from "@tsjam/constants";
+import { Hashing } from "@tsjam/crypto";
 import type {
   Blake2bHash,
   BoundedSeq,
@@ -21,19 +29,18 @@ import type {
   Hash,
   SeqOfLength,
   Tagged,
+  Validated,
   WorkPackageHash,
   WorkReport,
 } from "@tsjam/types";
+import { toTagged } from "@tsjam/utils";
+import { err, ok, Result } from "neverthrow";
+import { ConditionalExcept } from "type-fest";
 import { AvailabilitySpecificationImpl } from "./availability-specification-impl";
+import type { NewWorkReportsImpl } from "./new-work-reports-impl";
+import type { RHOImpl } from "./rho-impl";
 import { WorkContextImpl } from "./work-context-impl";
 import { WorkDigestImpl } from "./work-digest-impl";
-import type { RHOImpl } from "./rho-impl";
-import { Hashing } from "@tsjam/crypto";
-import type { NewWorkReportsImpl } from "./new-work-reports-impl";
-import { ConditionalExcept } from "type-fest";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { IdentityMap, IdentityMapCodec } from "@/data-structures/identity-map";
-import { IdentitySet } from "@/data-structures/identity-set";
 
 /**
  * Identified by `R` set
@@ -106,6 +113,24 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
     }
   }
 
+  checkValidity(): Result<Validated<WorkReportImpl>, WRError> {
+    if (this.digests.length < 1 || this.digests.length > MAXIMUM_WORK_ITEMS) {
+      return err(WRError.DIGEST_COUNT_INVALID);
+    }
+
+    if (this.core < 0 || this.core >= CORES) {
+      return err(WRError.CORE_INDEX_INVALID);
+    }
+    // $(0.7.1 - 11.3) | Check the number of dependencies in the workreports
+    if (
+      this.srLookup.size + this.context.prerequisites.length >
+      MAX_WORK_PREREQUISITES
+    ) {
+      return err(WRError.TOO_MANY_PREREQUISITES);
+    }
+    return ok(toTagged(this));
+  }
+
   hash() {
     return Hashing.blake2b(this.toBinary());
   }
@@ -144,6 +169,12 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
     }
     return toRet;
   }
+}
+
+export enum WRError {
+  DIGEST_COUNT_INVALID = "DIGEST_COUNT_INVALID",
+  CORE_INDEX_INVALID = "CORE_INDEX_INVALID",
+  TOO_MANY_PREREQUISITES = "TOO_MANY_PREREQUISITES",
 }
 
 /**

@@ -22,6 +22,7 @@ import {
   AssurancesExtrinsicImpl,
   HeaderLookupHistoryImpl,
   PreimagesExtrinsicImpl,
+  WRError,
 } from "@/index";
 import {
   BaseJamCodecable,
@@ -461,7 +462,7 @@ describe("workreports", () => {
 
   it("too_many_dependencies-1", () => {
     expect(() => buildTest("too_many_dependencies-1")).toThrow(
-      EGError.TOO_MANY_PREREQUISITES,
+      WRError.TOO_MANY_PREREQUISITES,
     );
   });
 
@@ -472,6 +473,12 @@ describe("workreports", () => {
   it("wrong_assignment-1", () => {
     expect(() => buildTest("wrong_assignment-1")).toThrow(
       EGError.CORE_INDEX_MISMATCH,
+    );
+  });
+
+  it("report_with_no_results-1", () => {
+    expect(() => buildTest("report_with_no_results-1")).toThrow(
+      WRError.DIGEST_COUNT_INVALID,
     );
   });
 });
