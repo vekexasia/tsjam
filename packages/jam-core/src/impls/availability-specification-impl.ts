@@ -18,7 +18,7 @@ import {
   MAXIMUM_AGE_LOOKUP_ANCHOR,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
-import { transpose, erasureCoding } from "@tsjam/erasurecoding";
+import { erasureCoding, transpose } from "@tsjam/erasurecoding";
 import type {
   AvailabilitySpecification,
   ExportSegment,
@@ -28,8 +28,7 @@ import type {
   u32,
   WorkPackageHash,
 } from "@tsjam/types";
-import { zeroPad, toTagged } from "@tsjam/utils";
-import { Result } from "neverthrow";
+import { toTagged, zeroPad } from "@tsjam/utils";
 import type { ConditionalExcept } from "type-fest";
 
 /**

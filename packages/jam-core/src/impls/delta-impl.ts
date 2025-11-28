@@ -15,7 +15,6 @@ import type {
   PreimageElement,
   PreimagesExtrinsicImpl,
 } from "./extrinsics/preimages";
-import { PVMResultContextImpl } from "./pvm/pvm-result-context-impl";
 import { ServiceAccountImpl } from "./service-account-impl";
 import type { TauImpl } from "./slot-impl";
 
