@@ -226,7 +226,13 @@ const F_Fn =
         input.out as never,
         hostFunctions.gas(input.pvm, undefined),
       );
-    } else if (input.hostCallOpcode === 1 /** fetc */) {
+    } else if (input.hostCallOpcode === 1 /** grow_heap */) {
+      return applyMods(
+        input.pvm,
+        input.out as never,
+        hostFunctions.grow_heap(input.pvm, undefined),
+      );
+    } else if (input.hostCallOpcode === 2 /** fetch */) {
       return applyMods(
         input.pvm,
         input.out as never,

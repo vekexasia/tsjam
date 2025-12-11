@@ -173,6 +173,34 @@ const F_fn: (
     const bold_s = input.out.x.bold_s();
     const e_bold_d = input.out.x.state.accounts;
     switch (fnIdentifier) {
+      case "gas": {
+        const m = applyMods(
+          input.pvm,
+          input.out,
+          hostFunctions.gas(input.pvm, undefined),
+        );
+        G_fn(input, bold_s);
+        return m;
+      }
+      case "grow_heap": {
+        return applyMods(
+          input.pvm,
+          input.out,
+          hostFunctions.grow_heap(input.pvm, undefined),
+        );
+      }
+      case "fetch": {
+        const m = applyMods(
+          input.pvm,
+          input.out,
+          hostFunctions.fetch(input.pvm, {
+            n: p_eta_0,
+            bold_i: accumulateOps,
+          }),
+        );
+        G_fn(input, bold_s);
+        return m;
+      }
       case "read": {
         const exitReason = applyMods(
           input.pvm,
@@ -186,18 +214,6 @@ const F_fn: (
         // apply mods in G
         G_fn(input, bold_s);
         return exitReason;
-      }
-      case "fetch": {
-        const m = applyMods(
-          input.pvm,
-          input.out,
-          hostFunctions.fetch(input.pvm, {
-            n: p_eta_0,
-            bold_i: accumulateOps,
-          }),
-        );
-        G_fn(input, bold_s);
-        return m;
       }
       case "write": {
         const out = { bold_s };
@@ -224,15 +240,6 @@ const F_fn: (
             s: input.out.x.id,
             bold_d: e_bold_d,
           }),
-        );
-        G_fn(input, bold_s);
-        return m;
-      }
-      case "gas": {
-        const m = applyMods(
-          input.pvm,
-          input.out,
-          hostFunctions.gas(input.pvm, undefined),
         );
         G_fn(input, bold_s);
         return m;

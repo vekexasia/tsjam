@@ -1,6 +1,8 @@
+import { HashCodec } from "@/codecs/misc-codecs";
 import { IdentityMap } from "@/data-structures/identity-map";
 import { DeferredTransferImpl } from "@/impls/deferred-transfer-impl";
 import { DeltaImpl } from "@/impls/delta-impl";
+import { PreimageElement } from "@/impls/extrinsics/preimages";
 import {
   computeRequestKey,
   computeStorageKey,
@@ -16,6 +18,7 @@ import { ValidatorsImpl } from "@/impls/validators-impl";
 import { WorkContextImpl } from "@/impls/work-context-impl";
 import { WorkItemImpl } from "@/impls/work-item-impl";
 import { type WorkPackageImpl } from "@/impls/work-package-impl";
+import { MerkleState } from "@/merklization/merkle-state";
 import { log } from "@/utils";
 import {
   asCodec,
@@ -68,17 +71,22 @@ import {
   TRANSFER_MEMO_SIZE,
   VALIDATOR_CORE_ROTATION,
   WORK_TIMEOUT,
+  Zi,
   Zp,
+  Zz,
 } from "@tsjam/constants";
 import { Hashing } from "@tsjam/crypto";
 import {
   BaseMemory,
   check_fn,
   deblobProgram,
+  P_Fn,
+  Page,
   type PVM,
   PVMExitReasonImpl,
   PVMProgramCodec,
   PVMRegistersImpl,
+  Z_Fn,
 } from "@tsjam/pvm-base";
 import { IxMod } from "@tsjam/pvm-js";
 import {
@@ -114,9 +122,6 @@ import { ConditionalExcept } from "type-fest";
 import { pvmImpl } from "../proxy";
 import { HostFn } from "./fnsdb";
 import { W7, W8, XMod, YMod } from "./utils";
-import { HashCodec } from "@/codecs/misc-codecs";
-import { MerkleState } from "@/merklization/merkle-state";
-import { PreimageElement } from "@/impls/extrinsics/preimages";
 
 export class HostFunctions {
   @HostFn(0)
@@ -126,13 +131,32 @@ export class HostFunctions {
     return [IxMod.w7(p_gas)];
   }
 
-  @HostFn(1)
-  grow_heap(
-    pvm: PVM,
-    args: { p: WorkPackageImpl },
-  ): Array<W7 | PVMSingleModMemory> {}
+  @HostFn(1, <Gas>0n)
+  grow_heap(pvm: PVM, _: undefined): Array<W7 | PVMSingleModGas> {
+    if (pvm.gas < 100n) {
+      return [];
+    }
+    const w7 = pvm.registers.w7();
+    const a = (2 * Zz + Z_Fn(pvm.memory.rwSize)) / Zp;
+    const b = (2 ** 32 - 3 * Zz - Zi - P_Fn(pvm.memory.stackSize)) / Zp;
+    const c = pvm.memory.heap.pointer / Zp - a;
+    let p = w7.value - BigInt(a) - BigInt(c);
+    if (p < 0n) {
+      p = 0n;
+    }
+    const g = 100n + p * 10n;
+    if (w7.value <= b && pvm.gas >= g) {
+      for (let page: Page = a; page < a + Number(w7.value); page++) {
+        pvm.memory.upsertACL(page, PVMMemoryAccessKind.Write);
+      }
+      // FIXME: pointer
+      // pvm.memory.heap.pointer = Number((a + Number(w7.value)) * Zp);
+      return [IxMod.gas(g), IxMod.w7(w7.value > a + c ? w7.value : a + c)];
+    }
+    return [IxMod.gas(100n), IxMod.w7(a + c)];
+  }
 
-  @HostFn(1)
+  @HostFn(2)
   fetch(
     pvm: PVM,
     args: {
@@ -349,7 +373,7 @@ export class HostFunctions {
    * Basically regturns a slice of preimage blob in either passed
    * bold_s or bold_d[w7]
    */
-  @HostFn(2)
+  @HostFn(3)
   lookup(
     pvm: PVM,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
@@ -404,7 +428,7 @@ export class HostFunctions {
    *
    * start and length are determined by w11 and w12
    */
-  @HostFn(3)
+  @HostFn(4)
   read(
     pvm: PVM,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex; bold_d: DeltaImpl },
@@ -454,7 +478,7 @@ export class HostFunctions {
    * with either a deleted key in storage [w7;w8] or set coming from memory [w9;w10]
    *
    */
-  @HostFn(4)
+  @HostFn(5)
   write(
     context: PVM,
     args: { bold_s: ServiceAccountImpl; s: ServiceIndex },
@@ -512,7 +536,7 @@ export class HostFunctions {
     return [IxMod.w7(l), IxMod.obj({ bold_s: bold_a })];
   }
 
-  @HostFn(5)
+  @HostFn(6)
   info(
     pvm: PVM,
     args: { s: ServiceIndex; bold_d: DeltaImpl },
@@ -563,7 +587,7 @@ export class HostFunctions {
    * for tau and Hash in memory at h
    * stores it in memory at o
    */
-  @HostFn(6)
+  @HostFn(7)
   historical_lookup(
     pvm: PVM,
     args: { s: ServiceIndex; bold_d: DeltaImpl; tau: TauImpl },
@@ -606,7 +630,7 @@ export class HostFunctions {
    * `ΩE` in the graypaper
    * export segment host call
    */
-  @HostFn(7)
+  @HostFn(8)
   export(
     pvm: PVM,
     args: {
@@ -648,7 +672,7 @@ export class HostFunctions {
     ];
   }
 
-  @HostFn(8)
+  @HostFn(9)
   machine(
     pvm: PVM,
     refineCtx: RefineContext,
@@ -683,6 +707,9 @@ export class HostFunctions {
     const bold_u = {
       pages: new Map(),
       heap: { start: <u32>0, end: <u32>0, pointer: <u32>0 },
+      // TODO: we sure?
+      rwSize: <u32>0,
+      stackSize: <u32>0,
     };
     const newContext: RefineContext = {
       bold_m: new Map(refineCtx.bold_m),
@@ -702,7 +729,7 @@ export class HostFunctions {
   /**
    * peek data from refinecontext to memory
    */
-  @HostFn(9)
+  @HostFn(10)
   peek(
     pvm: PVM,
     refineCtx: RefineContext,
@@ -735,7 +762,7 @@ export class HostFunctions {
    * places stuff from ram to refineContext memory
    * basically the inverse of peek
    */
-  @HostFn(10)
+  @HostFn(11)
   poke(
     pvm: PVM,
     refineCtx: RefineContext,
@@ -789,7 +816,7 @@ export class HostFunctions {
    * - if w10 is 1 or 3 then make the pages readable
    * - if w10 is 2 or 4 then make the pages writable
    */
-  @HostFn(11)
+  @HostFn(12)
   pages(
     pvm: PVM,
     refineCtx: RefineContext,
@@ -951,7 +978,7 @@ export class HostFunctions {
   /**
    * Remove a machine from refineContext.bold_m
    */
-  @HostFn(13)
+  @HostFn(14)
   expunge(
     pvm: PVM,
     refineCtx: RefineContext,
@@ -975,7 +1002,7 @@ export class HostFunctions {
    * `ΩB`
    * bless service host call
    */
-  @HostFn(14)
+  @HostFn(15)
   bless(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1044,7 +1071,7 @@ export class HostFunctions {
    * `ΩA`
    * assign core host call
    */
-  @HostFn(15)
+  @HostFn(16)
   assign(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1101,7 +1128,7 @@ export class HostFunctions {
    * `ΩD`
    * designate validators host call
    */
-  @HostFn(16)
+  @HostFn(17)
   designate(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1148,7 +1175,7 @@ export class HostFunctions {
    * `ΩC`
    * checkpoint host call
    */
-  @HostFn(17)
+  @HostFn(18)
   checkpoint(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1163,7 +1190,7 @@ export class HostFunctions {
    * `ΩN`
    * new-service host call
    */
-  @HostFn(18)
+  @HostFn(19)
   new(
     pvm: PVM,
     args: { x: PVMResultContextImpl; tau: TauImpl },
@@ -1279,7 +1306,7 @@ export class HostFunctions {
    * `ΩU`
    * upgrade-service host call
    */
-  @HostFn(19)
+  @HostFn(20)
   upgrade(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1313,7 +1340,7 @@ export class HostFunctions {
    * transfer host call
    * NOTE: gas is dynamic
    */
-  @HostFn(20)
+  @HostFn(21)
   transfer(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1366,7 +1393,7 @@ export class HostFunctions {
   /**
    * `Ωj`
    */
-  @HostFn(21)
+  @HostFn(22)
   eject(
     pvm: PVM,
     args: { x: PVMResultContextImpl; tau: Tau },
@@ -1422,7 +1449,7 @@ export class HostFunctions {
    * `ΩQ`
    * query-service host call
    */
-  @HostFn(22)
+  @HostFn(23)
   query(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1462,7 +1489,7 @@ export class HostFunctions {
    * `ΩS`
    * solicit-preimage host call
    */
-  @HostFn(23)
+  @HostFn(24)
   solicit(
     pvm: PVM,
     args: { x: PVMResultContextImpl; tau: TauImpl },
@@ -1515,7 +1542,7 @@ export class HostFunctions {
    * forget preimage host call
    *
    */
-  @HostFn(24)
+  @HostFn(25)
   forget(
     pvm: PVM,
     args: { x: PVMResultContextImpl; tau: TauImpl },
@@ -1595,7 +1622,7 @@ export class HostFunctions {
   /**
    * `ΩΩ`
    */
-  @HostFn(25)
+  @HostFn(26)
   yield(
     pvm: PVM,
     x: PVMResultContextImpl,
@@ -1611,7 +1638,7 @@ export class HostFunctions {
     return [IxMod.w7(HostCallResult.OK), IxMod.obj({ x: newX })];
   }
 
-  @HostFn(26)
+  @HostFn(27)
   provide(
     pvm: PVM,
     args: { x: PVMResultContextImpl; s: ServiceIndex },

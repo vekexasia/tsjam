@@ -1,13 +1,20 @@
 import { Zp } from "@tsjam/constants";
 import { u32, Page, PVMMemoryAccessKind, Tagged } from "@tsjam/types";
 import assert from "assert";
-import { PVMMemory, PVMMemDump } from "./pvm-base";
+import { PVMMemory, PVMMemDump, PVMHeap } from "./pvm-base";
 
-export type PVMHeap = { start: u32; end: u32; pointer: u32 };
 export class PVMBaseMemory implements PVMMemory<PVMBaseMemory> {
   public memoryContent: Map<Page, Buffer>;
   public acl: Map<Page, PVMMemoryAccessKind.Write | PVMMemoryAccessKind.Read>;
   public heap: PVMHeap;
+  /**
+   * `s` - in standard program initialization
+   */
+  public stackSize!: number;
+  /**
+   * `|bold_o|` - in standard program initialization
+   */
+  public rwSize!: number;
   constructor(dump: PVMMemDump) {
     this.memoryContent = new Map();
     this.acl = new Map();
@@ -150,28 +157,6 @@ export class PVMBaseMemory implements PVMMemory<PVMBaseMemory> {
         return <u32>(page * Zp);
       }
     }
-  }
-
-  sbrk(size: u32): u32 {
-    if (this.heap.pointer + size >= this.heap.end) {
-      const cnt = Math.ceil(size / Zp);
-      for (let i = 0; i < cnt; i++) {
-        // allocate one page
-        //  log("allocating new page in heap", true);
-        this.acl.set(this.heap.end / Zp + i, PVMMemoryAccessKind.Write);
-        this.memoryContent.set(this.heap.end / Zp + i, Buffer.alloc(Zp));
-      }
-      //const prevEnd = this.heap.end;
-      this.heap.end = <u32>(this.heap.end + Math.ceil(size / Zp) * Zp);
-      //log(
-      //  `New heap end: 0x${this.heap.end.toString(16)} - ${this.heap.end} - from 0x${prevEnd.toString(16)} - ${prevEnd}`,
-      //  true,
-      //);
-    }
-
-    const oldPointer = this.heap.pointer;
-    this.heap.pointer = <u32>(oldPointer + size);
-    return oldPointer;
   }
 }
 

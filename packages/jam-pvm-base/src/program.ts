@@ -1,5 +1,5 @@
 import { createCodec, E_4_int, E_sub_int } from "@tsjam/codec";
-import { Zp } from "@tsjam/constants";
+import { Zi, Zp, Zz } from "@tsjam/constants";
 import {
   PVMMemoryAccessKind,
   PVMProgramCode,
@@ -11,10 +11,7 @@ import { toTagged } from "@tsjam/utils";
 import { PVMMemDump } from "./pvm-base";
 import { PVMRegisterImpl } from "./pvm-register";
 import { PVMRegistersImpl } from "./pvm-registers";
-
-// constants defined in $(0.7.1 - A.39)
-const Zz = 2 ** 16;
-const Zi = 2 ** 24;
+import { Z_Fn, P_Fn } from "./utils";
 
 const owzsCodec = createCodec<{
   roDataLength: u24; // |o|
@@ -202,17 +199,9 @@ export const programInitialization = (
     memory: {
       pages: mem,
       heap,
+      stackSize, // s
+      rwSize: rwDataLength, // |o|
     },
     registers,
   };
-};
-
-// $(0.7.1 - A.40)
-const P_Fn = (x: number | bigint) => {
-  return Zp * Math.ceil(Number(x) / Zp);
-};
-
-// $(0.7.1 - A.40)
-const Z_Fn = (x: number | bigint) => {
-  return Zz * Math.ceil(Number(x) / Zz);
 };

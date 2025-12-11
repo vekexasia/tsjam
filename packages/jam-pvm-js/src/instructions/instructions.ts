@@ -58,6 +58,11 @@ export class Instructions {
     pvm.pc = <u32>(pvm.pc + 1);
   }
 
+  @Ix(2, NoArgIxDecoder, true)
+  unlikely(_: NoArgIxArgs) {
+    // TODO:
+  }
+
   @Ix(10, OneImmIxDecoder)
   ecalli({ vX }: OneImmArgs) {
     return PVMExitReasonImpl.hostCall(<u8>vX);
@@ -377,19 +382,6 @@ export class Instructions {
   }
 
   @Ix(101, TwoRegIxDecoder)
-  sbrk({ wD, wA }: TwoRegArgs, pvm: PVMJS) {
-    const requestedSize = <u32>Number(wA.value);
-    const pointer = pvm.memory.heap.pointer;
-    if (requestedSize === 0) {
-      wD.value = <PVMRegisterRawValue>BigInt(pointer);
-      return;
-    }
-
-    const location = pvm.memory.sbrk(<u32>Number(wA))!;
-    wD.value = <PVMRegisterRawValue>BigInt(location);
-  }
-
-  @Ix(102, TwoRegIxDecoder)
   count_set_bits_64({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     let sum = 0n;
@@ -401,7 +393,7 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>sum;
   }
 
-  @Ix(103, TwoRegIxDecoder)
+  @Ix(102, TwoRegIxDecoder)
   count_set_bits_32({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     let sum = 0n;
@@ -413,7 +405,7 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>sum;
   }
 
-  @Ix(104, TwoRegIxDecoder)
+  @Ix(103, TwoRegIxDecoder)
   leading_zero_bits_64({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     const val: bigint = wa.value;
@@ -427,7 +419,7 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>count;
   }
 
-  @Ix(105, TwoRegIxDecoder)
+  @Ix(104, TwoRegIxDecoder)
   leading_zero_bits_32({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     const val: bigint = wa.value % 2n ** 32n;
@@ -441,7 +433,7 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>count;
   }
 
-  @Ix(106, TwoRegIxDecoder)
+  @Ix(105, TwoRegIxDecoder)
   trailing_zero_bits_64({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     const val: bigint = wa.value;
@@ -455,7 +447,7 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>count;
   }
 
-  @Ix(107, TwoRegIxDecoder)
+  @Ix(106, TwoRegIxDecoder)
   trailing_zero_bits_32({ wD, wA }: TwoRegArgs) {
     const wa = wA;
     const val: bigint = wa.value % 2n ** 32n;
@@ -469,22 +461,22 @@ export class Instructions {
     wD.value = <PVMRegisterRawValue>count;
   }
 
-  @Ix(108, TwoRegIxDecoder)
+  @Ix(107, TwoRegIxDecoder)
   sign_extend_8({ wD, wA }: TwoRegArgs) {
     wD.value = Z8_inv(Z1(wA.value % 2n ** 8n));
   }
 
-  @Ix(109, TwoRegIxDecoder)
+  @Ix(108, TwoRegIxDecoder)
   sign_extend_16({ wD, wA }: TwoRegArgs) {
     wD.value = Z8_inv(Z2(wA.value % 2n ** 16n));
   }
 
-  @Ix(110, TwoRegIxDecoder)
+  @Ix(109, TwoRegIxDecoder)
   zero_extend_16({ wD, wA }: TwoRegArgs) {
     wD.value = <PVMRegisterRawValue>(wA.value % 2n ** 16n);
   }
 
-  @Ix(111, TwoRegIxDecoder)
+  @Ix(110, TwoRegIxDecoder)
   reverse_bytes({ wD, wA }: TwoRegArgs) {
     let newVal = 0n;
     const wa = wA;

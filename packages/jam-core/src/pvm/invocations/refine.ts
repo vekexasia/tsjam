@@ -174,6 +174,13 @@ const F_fn: (
           hostFunctions.gas(input.pvm, undefined),
         );
 
+      case "grow_heap":
+        return applyMods(
+          input.pvm,
+          input.out,
+          hostFunctions.grow_heap(input.pvm, undefined),
+        );
+
       case "fetch":
         return applyMods(
           input.pvm,

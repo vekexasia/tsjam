@@ -15,10 +15,29 @@ export type PVMMemDump = {
     { acl: PVMMemoryAccessKind.Read | PVMMemoryAccessKind.Write; data: Buffer }
   >;
   heap: { start: u32; end: u32; pointer: u32 };
+  /**
+   * `s` - in standard program initialization
+   */
+  stackSize: number;
+  /**
+   * `|bold_o|` - in standard program initialization
+   */
+  rwSize: number;
 };
 
+export type PVMHeap = { start: u32; end: u32; pointer: u32 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PVMMemory<T extends PVMMemory<any>> {
+  heap: PVMHeap;
+  /**
+   * `s` - in standard program initialization
+   */
+  stackSize: number;
+  /**
+   * `|bold_o|` - in standard program initialization
+   */
+  rwSize: number;
+
   firstUnreadable(address: u32, length: number): u32 | undefined;
 
   /**

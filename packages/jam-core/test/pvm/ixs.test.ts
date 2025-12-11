@@ -30,6 +30,8 @@ describe("pvm", () => {
     const memDump: PVMMemDump = {
       pages: new Map(),
       heap: { start: <u32>0, end: <u32>0, pointer: <u32>0 },
+      rwSize: 0,
+      stackSize: 0,
     };
 
     for (const { address, length, "is-writable": isWritable } of json[
