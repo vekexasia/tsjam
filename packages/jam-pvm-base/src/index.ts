@@ -7,3 +7,4 @@ export * from "./pvm-program-codec";
 export * from "./pvm-register";
 export * from "./pvm-registers";
 export * from "./pvm-exit-reason";
+export * from "./utils";

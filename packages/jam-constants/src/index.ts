@@ -258,6 +258,9 @@ export let TOTAL_GAS_ACCUMULATION_ALL_CORES = 3_500_000_000n;
 // $(0.7.1 - 4.25)
 export const Zp = 2 ** 12;
 
+// constants defined in $(0.7.1 - A.39)
+export const Zz = 2 ** 16;
+export const Zi = 2 ** 24;
 /**
  * `S`
  */

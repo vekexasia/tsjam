@@ -127,6 +127,12 @@ export class HostFunctions {
   }
 
   @HostFn(1)
+  grow_heap(
+    pvm: PVM,
+    args: { p: WorkPackageImpl },
+  ): Array<W7 | PVMSingleModMemory> {}
+
+  @HostFn(1)
   fetch(
     pvm: PVM,
     args: {
