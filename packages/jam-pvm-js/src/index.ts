@@ -159,6 +159,10 @@ export class PVMJS implements PVMBase<PVMJSMemory> {
   set_debug(value: boolean): void {
     this.debug = value;
   }
+
+  ix_at(address: u32): u8 {
+    return <u8>this.prog.c[address];
+  }
 }
 
 export const pvmImplementation: PVMImplementation<PVMJS, PVMJSMemory> = {

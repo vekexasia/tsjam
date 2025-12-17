@@ -4,6 +4,7 @@ import {
   PVMProgram,
   Tagged,
   u32,
+  u8,
 } from "@tsjam/types";
 import { PVMExitReasonImpl } from "./pvm-exit-reason";
 import { PVMRegistersImpl } from "./pvm-registers";
@@ -34,7 +35,7 @@ export interface PVMMemory<T extends PVMMemory<any>> {
    */
   stackSize: number;
   /**
-   * `|bold_o|` - in standard program initialization
+   * `|bold_o|` - in ktandard program initialization
    */
   rwSize: number;
 
@@ -99,6 +100,8 @@ export interface PVMBase<T extends PVMMemory<any>> {
   deinit(): void;
 
   set_debug(value: boolean): void;
+
+  ix_at(address: u32): u8;
 }
 
 export type BaseMemory = PVMMemory<BaseMemory>;
