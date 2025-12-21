@@ -1,6 +1,5 @@
 #![deny(clippy::all)]
 
-mod ar;
 use ark_vrf::reexports::{
   ark_ec::AffineRepr,
   ark_serialize::{self, CanonicalDeserialize, CanonicalSerialize},
