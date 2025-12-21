@@ -168,9 +168,9 @@ export const AUTHPOOL_SIZE = 8;
 export const AUTHQUEUE_MAX_SIZE = 80;
 
 /**
- * `WB`
+ * `WB` - $(0.7.2 - 14.7)
  */
-export const MAX_SIZE_ENCODED_PACKAGE = 113_791_360;
+export const MAX_SIZE_ENCODED_PACKAGE = 13_791_360;
 
 /**
  * `WC` in the paper
