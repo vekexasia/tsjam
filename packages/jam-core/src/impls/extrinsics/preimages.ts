@@ -31,6 +31,14 @@ export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
    */
   @codec(LengthDiscrimantedIdentityCodec)
   blob!: Buffer;
+
+  constructor(deps?: Pick<PreimageElement, "requester" | "blob">) {
+    super();
+    if (typeof deps !== "undefined") {
+      this.requester = deps.requester;
+      this.blob = deps.blob;
+    }
+  }
 }
 
 /**

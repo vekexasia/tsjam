@@ -96,12 +96,7 @@ export const Bandersnatch = {
    * $(0.7.1 - G.3)
    */
   ringRoot<T extends BandersnatchRingRoot>(input: BandersnatchKey[]): T {
-    const inputBuf = Buffer.alloc(input.length * 32);
-    input.forEach((key, idx) => {
-      key.copy(inputBuf, idx * 32);
-    });
-
-    return ringRoot(inputBuf) as Uint8Array as T;
+    return ringRoot(Buffer.concat(input)) as Uint8Array as T;
   },
 
   publicKey(secretSeed: ByteArrayOfLength<32>): BandersnatchKey {
@@ -109,6 +104,6 @@ export const Bandersnatch = {
   },
 
   privKey(seed: ByteArrayOfLength<32>): BandersnatchKey {
-    return secretKey(seed) as BandersnatchKey;
+    return secretKey(seed) as Uint8Array as BandersnatchKey;
   },
 };

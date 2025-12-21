@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
 napi = { version = "2.16.9", default-features = false, features = ["napi4"] }
 napi-derive = "2.16.9"
-ark-vrf = { version = "0.1.0", features = ["bandersnatch", "ring"] }
+ark-vrf = { version = "0.1.1", features = ["bandersnatch", "ring"] }
 hex = "0.4.3"
 ed25519-zebra = { package = "ed25519-zebra", version = "4" }
 

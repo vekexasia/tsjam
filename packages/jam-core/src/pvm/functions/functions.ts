@@ -1649,8 +1649,9 @@ export class HostFunctions {
       return [IxMod.w7(HostCallResult.HUH)];
     }
     const newX = args.x.clone();
+
     newX.provisions.push(
-      PreimageElement.fromJSON({
+      new PreimageElement({
         requester: s_star,
         blob: bold_i,
       }),

@@ -101,12 +101,14 @@ pub fn ring_vrf_verify(
 pub fn ring_root(input: &[u8]) -> Buffer {
   let mut ring: Vec<Public> = Vec::new();
   let ring_ctx = ring_proof_params(input.len() / 32);
-  let padding_point = RingProofParams::padding_point();
+
+  let mut output: Vec<u8> = Vec::new();
+
   // have u8 checked to be 32 in length and have each chunk inserted into the ring
   input
     .chunks_exact(32)
     .try_for_each(|c| {
-      let pk = Public::deserialize_compressed(c).unwrap_or(Public::from(padding_point));
+      let pk = Public::deserialize_compressed(c).unwrap_or(Public::from(RingProofParams::padding_point()));
       ring.push(pk);
       Ok::<(), ()>(())
     })
@@ -114,7 +116,6 @@ pub fn ring_root(input: &[u8]) -> Buffer {
 
   let pts: Vec<_> = ring.iter().map(|pk| pk.0).collect();
   let verifier_key = ring_ctx.verifier_key(&pts);
-  let mut output: Vec<u8> = Vec::new();
   let commitment = verifier_key.commitment();
   commitment.serialize_compressed(&mut output).unwrap();
 
@@ -123,7 +124,8 @@ pub fn ring_root(input: &[u8]) -> Buffer {
 
 fn ring_proof_params(ring_size: usize) -> RingProofParams {
   use bandersnatch::PcsParams;
-  let pcs_params = PcsParams::deserialize_uncompressed_unchecked(&ar::ZCASHSRS211[..]).unwrap();
+  let zcash = include_bytes!("../data/zcash-srs-2-11-uncompressed.bin");
+  let pcs_params = PcsParams::deserialize_uncompressed_unchecked(&mut &zcash[..]).unwrap();
 
   RingProofParams::from_pcs_params(ring_size, pcs_params).unwrap()
 }
