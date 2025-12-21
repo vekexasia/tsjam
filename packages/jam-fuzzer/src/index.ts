@@ -315,12 +315,12 @@ const checkState = async (
     console.log("State roots differ");
     console.log("expected", BufferJSONCodec().toJSON(state.new.stateRoot));
     console.log("received", BufferJSONCodec().toJSON(responseStateRoot));
-    if (Buffer.compare(state.prev.stateRoot, responseStateRoot) === 0) {
-      console.log("But previous state root matches");
-      console.log("Block was not applied from target");
-    } else {
-      await compareState(state.new.merkleMap, lastHeaderHash);
-    }
+    // if (Buffer.compare(state.prev.stateRoot, responseStateRoot) === 0) {
+    //   console.log("But previous state root matches");
+    //   console.log("Block was not applied from target");
+    // } else {
+    //   await compareState(state.new.merkleMap, lastHeaderHash);
+    // }
     return false;
   }
   return true;
