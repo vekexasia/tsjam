@@ -58,7 +58,7 @@ pub fn secret_key(seed: &[u8]) -> Buffer {
 
 #[napi]
 pub fn ring_vrf_output_hash(signature: &[u8]) -> Buffer {
-  let signature = RingVrfSignature::deserialize_compressed(signature).unwrap();
+  let signature = RingVrfSignature::deserialize_compressed_unchecked(signature).unwrap();
   let output = signature.output;
   //
   output.hash()[..32].try_into().unwrap()
@@ -75,7 +75,7 @@ pub fn ring_vrf_verify(
   ring_size: u32,
 ) -> bool {
   use ark_vrf::ring::Verifier as _;
-  let signature = if let Ok(s) = RingVrfSignature::deserialize_compressed(signature) {
+  let signature = if let Ok(s) = RingVrfSignature::deserialize_compressed_unchecked(signature) {
     s
   } else {
     return false;
@@ -83,7 +83,7 @@ pub fn ring_vrf_verify(
   let input = vrf_input_point(vrf_input_data);
   let output = signature.output;
   let params = ring_proof_params(ring_size.try_into().unwrap());
-  let commitment = if let Ok(c) = RingCommitment::deserialize_compressed(commitment.as_ref()) {
+  let commitment = if let Ok(c) = RingCommitment::deserialize_compressed_unchecked(commitment.as_ref()) {
     c
   } else {
     return false;
@@ -107,7 +107,7 @@ pub fn ring_root(input: &[u8]) -> Buffer {
   input
     .chunks_exact(32)
     .try_for_each(|c| {
-      let pk = Public::deserialize_compressed(c).unwrap_or(Public::from(RingProofParams::padding_point()));
+      let pk = Public::deserialize_compressed_unchecked(c).unwrap_or(Public::from(RingProofParams::padding_point()));
       ring.push(pk);
       Ok::<(), ()>(())
     })
@@ -134,7 +134,7 @@ fn ring_proof_params(ring_size: usize) -> RingProofParams {
  */
 #[napi]
 pub fn ietf_vrf_output_hash_from_secret(secret: &[u8], vrf_input_data: &[u8]) -> Buffer {
-  let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
+  let secret = if let Ok(s) = Secret::deserialize_compressed_unchecked(secret) {
     s
   } else {
     return Vec::new().into();
@@ -153,7 +153,7 @@ pub fn ietf_vrf_output_hash_from_secret(secret: &[u8], vrf_input_data: &[u8]) ->
 #[napi]
 pub fn ietf_vrf_sign(secret: &[u8], vrf_input_data: &[u8], aux_data: &[u8]) -> Buffer {
   use ark_vrf::ietf::Prover as _;
-  let secret = if let Ok(s) = Secret::deserialize_compressed(secret) {
+  let secret = if let Ok(s) = Secret::deserialize_compressed_unchecked(secret) {
     s
   } else {
     return Vec::new().into();
@@ -188,13 +188,13 @@ pub fn ietf_vrf_verify(
     return false;
   }
 
-  let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed(signature) {
+  let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed_unchecked(signature) {
     s
   } else {
     return false;
   };
 
-  let public_key = if let Ok(p) = Public::deserialize_compressed(public_key) {
+  let public_key = if let Ok(p) = Public::deserialize_compressed_unchecked(public_key) {
     p
   } else {
     return false;
@@ -216,7 +216,7 @@ pub fn ietf_vrf_verify(
 
 #[napi]
 pub fn ietf_vrf_output_hash(signature: &[u8]) -> Buffer {
-  let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed(signature) {
+  let signature = if let Ok(s) = IetfVrfSignature::deserialize_compressed_unchecked(signature) {
     s
   } else {
     return Vec::new().into();
