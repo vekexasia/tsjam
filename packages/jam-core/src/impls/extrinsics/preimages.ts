@@ -16,6 +16,7 @@ import type {
 } from "@tsjam/types";
 import { toTagged } from "@tsjam/utils";
 import { err, ok, Result } from "neverthrow";
+import { type ConditionalExcept } from "type-fest";
 import type { DeltaImpl } from "../delta-impl";
 
 @JamCodecable()
@@ -32,12 +33,9 @@ export class PreimageElement extends BaseJamCodecable implements EP_Tuple {
   @codec(LengthDiscrimantedIdentityCodec)
   blob!: Buffer;
 
-  constructor(deps?: Pick<PreimageElement, "requester" | "blob">) {
+  constructor(config: ConditionalExcept<PreimageElement, Function>) {
     super();
-    if (typeof deps !== "undefined") {
-      this.requester = deps.requester;
-      this.blob = deps.blob;
-    }
+    Object.assign(this, config);
   }
 }
 
