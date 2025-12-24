@@ -31,7 +31,9 @@ export const buildPoolOptions = (): PoolOptions => {
       },
     };
   } else {
-    return {};
+    return {
+      forks: {},
+    };
   }
 };
 
