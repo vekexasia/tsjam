@@ -31,6 +31,8 @@ export const resetTraceLog = () => {
     fs.unlinkSync(process.env.TRACE_FILE!);
   }
 };
+const isCI =
+  typeof process.env.JAM_CI === "string" && process.env.JAM_CI === "true";
 export const log = (_str: string | object, debug: boolean) => {
   if (!debug) {
     return;
@@ -68,5 +70,7 @@ export const log = (_str: string | object, debug: boolean) => {
   if (goFS) {
     fs.appendFileSync(process.env.TRACE_FILE!, str + "\n");
   }
-  console.log(str);
+  if (!isCI) {
+    console.log(str);
+  }
 };
