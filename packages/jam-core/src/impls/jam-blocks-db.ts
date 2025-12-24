@@ -12,6 +12,9 @@ export class JamBlocksDB {
 
   async save(block: AppliedBlock) {
     this.#fakeDB.set(block.header.signedHash(), block);
+    if (this.#fakeDB.has(block.header.parent)) {
+      this.purge(block.header.parent);
+    }
   }
 
   async purge(headerHash: HeaderHash) {

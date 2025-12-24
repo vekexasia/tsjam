@@ -106,6 +106,7 @@ export class ChainManager {
         .forEach((b) => this.unfinalizedBlocks.delete(b.header.signedHash()));
     }
 
+    this.unfinalizedBlocks.delete(newFinalized.header.signedHash());
     this.unfinalizedBlocks.set(res.value.header.signedHash(), res.value);
     await this.#finalizedBlocksDB.save(newFinalized);
 
