@@ -11,7 +11,7 @@ if (!fs.existsSync(input)) {
   process.exit(1);
 }
 
-const outName = `jam-fuzzer-target`;
+const outName = `jam-fuzzer-target-node`;
 const outPath = path.join(root, outName);
 
 // Provide default cache dirs if not set (works well locally)

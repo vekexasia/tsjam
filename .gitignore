@@ -19,7 +19,7 @@ test-runner-profile*
 packages/jam-fuzzer-target/jam-fuzzer-target*
 build/tsjam-fuzzer-target/.yarn
 tsjam-fuzzer-target.tgz
-build/tsjam-fuzzer-target/jam-fuzzer-target
+build/tsjam-fuzzer-target/jam-fuzzer-target-node
 build/tsjam-fuzzer-target/cli.mjs
 build/tsjam-fuzzer-target/cli.mjs
 build/tsjam-fuzzer-target/yarn.lock
