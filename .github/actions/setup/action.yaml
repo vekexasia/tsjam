@@ -9,9 +9,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Corepack enable
-      shell: bash
-      run: corepack enable
 
     - name: Set up node
       id: setup-node
@@ -19,6 +16,10 @@ runs:
       with:
         node-version-file: .nvmrc
         cache-dependency-path: '**/yarn.lock'
+
+    - name: Corepack enable
+      shell: bash
+      run: corepack enable
 
     - id: outputs
       shell: bash
