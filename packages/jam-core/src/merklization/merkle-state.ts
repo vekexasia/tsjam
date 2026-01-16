@@ -260,6 +260,7 @@ if (import.meta.vitest) {
           const keyBits = bits(keyBuf);
           //const keyHash: Hash = bytesToBigInt(keyBuf);
           const value = Buffer.from(t.input[key], "hex");
+          // eslint-disable-next-line no-object-comparison/collection-object-key
           m.set(keyBits, [keyBuf, value]);
         }
         const res = MerkleState.buildTrie(m);

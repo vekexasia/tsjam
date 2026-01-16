@@ -1,8 +1,8 @@
 import { SafeKey, SafeKeyable } from "@/data-structures/safe-key";
 import {
-  JamCodecable,
   BaseJamCodecable,
   eSubIntCodec,
+  JamCodecable,
   SINGLE_ELEMENT_CLASS,
 } from "@tsjam/codec";
 import { BLOCK_TIME, EPOCH_LENGTH, JAM_COMMON_ERA } from "@tsjam/constants";
@@ -87,6 +87,10 @@ export class SlotImpl extends BaseJamCodecable implements Slot, SafeKeyable {
       return err(TauError.POSTERIOR_TAU_IN_FUTURE);
     }
     return ok(toTagged(this));
+  }
+
+  [Symbol.toPrimitive](): u32 {
+    return this.value;
   }
 
   static posteriorTau(): Validated<Posterior<TauImpl>> {

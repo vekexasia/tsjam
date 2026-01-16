@@ -1,5 +1,6 @@
 import vueTsEsLintConfig from "@vue/eslint-config-typescript";
 import prettierConfig from "@vue/eslint-config-prettier";
+import noObjectComparison from "eslint-plugin-no-object-comparison";
 
 export default [
   {
@@ -7,6 +8,14 @@ export default [
   },
   prettierConfig,
   ...vueTsEsLintConfig(),
+  noObjectComparison.configs.recommended,
+{
+      languageOptions: {
+        parserOptions: {
+          projectService: true,
+        },
+      },
+    },
   // Custom rules
   {
     rules: {

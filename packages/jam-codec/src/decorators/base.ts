@@ -61,6 +61,7 @@ export abstract class BaseJamCodecable {
     x: X,
   ): JamCodec<InstanceType<T>[X]> & JSONCodec<InstanceType<T>[X]> {
     const el = (<any>this.prototype)[CODEC_METADATA]?.find(
+      // eslint-disable-next-line no-object-comparison/loose-type
       (a: any) => a.propertyKey === x,
     );
     assert(el, `Codec for property ${String(x)} not found in ${this.name}`);

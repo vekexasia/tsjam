@@ -14,6 +14,7 @@
   },
   "include": [
     "src/index.ts", 
+    "src/instantiate.ts", 
     "src/pvm-memory.ts", 
   ],
   "exclude": [

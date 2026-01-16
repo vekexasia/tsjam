@@ -1,3 +1,4 @@
+/* eslint-disable no-object-comparison/collection-reference-lookup */
 import { JamCodec } from "@/codec.js";
 import {
   LengthDiscSubCodec,

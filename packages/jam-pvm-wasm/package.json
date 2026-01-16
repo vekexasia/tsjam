@@ -8,7 +8,7 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build && vitest run",
-    "build": "npx ts-macros transform out --tsconfig tsconfig.asm.json && rm -rf assembly && mv out/asm assembly && rm -rf out && yarn lint assembly --fix && cp asm/tsconfig.json assembly/ && yarn asbuild && echo done",
+    "build": "npx ts-macros transform out --tsconfig tsconfig.asm.json && rm -rf assembly && mv out/asm assembly && rm -rf out && cp asm/tsconfig.json assembly/ && yarn asbuild && echo done",
     "asbuild:debug": "asc assembly/index.ts --target debug",
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "echo ciao && yarn asbuild:release",

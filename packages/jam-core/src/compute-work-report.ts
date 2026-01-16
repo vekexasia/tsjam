@@ -231,7 +231,7 @@ const I_fn = (
  */
 const L_fn = (
   hash: WorkItem["importSegments"][0]["root"],
-  bold_l: Map<WorkPackageHash, Hash>,
+  bold_l: IdentityMap<WorkPackageHash, 32, Hash>,
 ): Hash => {
   //bold_l = segment root dictionary
   if (isExportingWorkPackageHash(hash)) {
@@ -249,7 +249,7 @@ const L_fn = (
  */
 const S_fn = (
   workItem: WorkItem,
-  segmentRootLookup: Map<WorkPackageHash, Hash>,
+  segmentRootLookup: IdentityMap<WorkPackageHash, 32, Hash>,
 ): ExportSegment[] => {
   return workItem.importSegments.map(
     ({ root, index }) =>
@@ -263,7 +263,7 @@ const S_fn = (
  */
 const inner_J_fn = (
   workItem: WorkItem,
-  segmentRootLookup: Map<WorkPackageHash, Hash>,
+  segmentRootLookup: IdentityMap<WorkPackageHash, 32, Hash>,
 ): Hash[] => {
   return workItem.importSegments
     .map(({ root, index }) => {

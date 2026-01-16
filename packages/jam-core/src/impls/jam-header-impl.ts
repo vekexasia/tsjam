@@ -20,7 +20,6 @@ import type {
 import { HeaderEpochMarkerImpl } from "./header-epoch-marker-impl";
 import { HeaderOffenderMarkerImpl } from "./header-offender-marker-impl";
 import { HeaderTicketMarkerImpl } from "./header-ticket-marker-impl";
-import { JamBlockExtrinsicsImpl } from "./jam-block-extrinsics-impl";
 import { SlotImpl, type TauImpl } from "./slot-impl";
 
 /**
@@ -94,9 +93,5 @@ export class JamHeaderImpl extends BaseJamCodecable implements JamHeader {
 
   unsignedHash(): HeaderHash {
     return Hashing.blake2b(encodeWithCodec(JamHeaderImpl, this));
-  }
-
-  verifyExtrinsicHash(extrinsics: JamBlockExtrinsicsImpl) {
-    return this.extrinsicHash === extrinsics.extrinsicHash();
   }
 }

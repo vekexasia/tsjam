@@ -469,7 +469,7 @@ export class GuaranteesExtrinsicImpl
 
     const kxp = deps.beta.recentHistory.allPackageHashes();
 
-    const _x = new Set(
+    const _x = new IdentitySet(
       deps.accumulationHistory.elements.map((a) => [...a.values()]).flat(),
     );
     // $(0.7.1 - 11.38)
@@ -484,7 +484,7 @@ export class GuaranteesExtrinsicImpl
     kxp.forEach((reportedHash) => pSet.add(reportedHash));
 
     for (const r of bold_I) {
-      const _p = new Set([...r.srLookup.keys()]);
+      const _p = new IdentitySet([...r.srLookup.keys()]);
       r.context.prerequisites.forEach((rcp) => _p.add(rcp));
       for (const p of _p.values()) {
         if (!pSet.has(p)) {

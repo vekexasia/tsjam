@@ -202,6 +202,7 @@ export class MerkleServiceAccountStorageImpl extends BaseJamCodecable {
 
   equals(other: MerkleServiceAccountStorageImpl) {
     return (
+      // eslint-disable-next-line no-object-comparison/object-equality
       this === other ||
       [...this._storage.entries()].every(([k, v]) => {
         return (

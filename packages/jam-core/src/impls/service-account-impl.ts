@@ -238,6 +238,7 @@ export class ServiceAccountImpl
 
   equals(other: ServiceAccountImpl): boolean {
     return (
+      // eslint-disable-next-line no-object-comparison/object-equality
       this === other ||
       (this.balance === other.balance &&
         Buffer.compare(this.codeHash, other.codeHash) === 0 &&

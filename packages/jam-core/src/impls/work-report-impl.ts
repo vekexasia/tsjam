@@ -157,7 +157,7 @@ export class WorkReportImpl extends BaseJamCodecable implements WorkReport {
   ): AuditRequiredWorkReports {
     const toRet = [] as unknown[] as AuditRequiredWorkReports;
 
-    const wSet = new Set(bold_w.elements.map((wr) => wr.hash()));
+    const wSet = new IdentitySet(bold_w.elements.map((wr) => wr.hash()));
 
     for (let c = <CoreIndex>0; c < CORES; c++) {
       const rc = rho.elementAt(c);

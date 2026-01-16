@@ -12,6 +12,7 @@ import type { ConditionalExcept } from "type-fest";
 import type { JamStateImpl } from "./jam-state-impl";
 import type { TauImpl } from "./slot-impl";
 import { TicketImpl } from "./ticket-impl";
+import { IdentitySet } from "@/data-structures/identity-set";
 
 export enum GammaAError {
   TICKET_NOT_IN_POSTERIOR_GAMMA_A = "Ticket not in posterior gamma_a",
@@ -57,7 +58,7 @@ export class GammaAImpl extends BaseJamCodecable implements GammaA {
     });
 
     // $(0.7.1 - 6.35) | check `n` subset of p_gamma_a after slice
-    const p_gamma_a_ids = new Set(toRet.elements.map((x) => x.id));
+    const p_gamma_a_ids = new IdentitySet(toRet.elements.map((x) => x.id));
     for (const x of deps.newTickets) {
       if (!p_gamma_a_ids.has(x.id)) {
         // invalid ticket has been submitted.

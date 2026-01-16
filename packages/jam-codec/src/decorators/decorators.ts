@@ -25,6 +25,7 @@ export function jsonCodec<T, K extends string | symbol>(
       target[CODEC_METADATA] = [];
     }
     const item = (<any>target[CODEC_METADATA]).find(
+      // eslint-disable-next-line no-object-comparison/loose-type
       (x: any) => x.propertyKey === propertyKey,
     );
     if (typeof item === "undefined") {

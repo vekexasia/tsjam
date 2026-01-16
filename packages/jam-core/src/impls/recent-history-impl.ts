@@ -38,9 +38,6 @@ export class RecentHistoryImpl
     >elements;
   }
 
-  findHeader(headerHash: HeaderHash) {
-    return this.elements.find((el) => el.headerHash === headerHash);
-  }
   /**
    * $(0.7.1 - 4.6 / 7.5)
    * it needs the current merkle root ( or parent stateroot of incoming block)

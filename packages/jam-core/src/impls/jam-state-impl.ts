@@ -50,7 +50,7 @@ import { SafroleStateImpl } from "./safrole-state-impl";
 import { ServiceAccountImpl } from "./service-account-impl";
 import { SlotImpl, type TauError, type TauImpl } from "./slot-impl";
 import { ValidatorsImpl } from "./validators-impl";
-import { WRError } from "..";
+import { IdentitySet, WRError } from "..";
 
 export class JamStateImpl implements JamState {
   /**
@@ -507,7 +507,7 @@ export class JamStateImpl implements JamState {
 
       const serviceIndex = E_sub_int<ServiceIndex>(4).decode(serviceKey).value;
       // filter out service data keys that are related to this service
-      const serviceRelatedKeys = new Set(
+      const serviceRelatedKeys = new IdentitySet(
         [...merkleMap.keys()].filter((k) => {
           return (
             k[0] === serviceKey[0] &&
