@@ -100,7 +100,7 @@ if (import.meta.vitest) {
   describe("Message", () => {
     it("should encode and decode PeerInfo", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000000_target_peer_info.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000000_target_peer_info.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -118,7 +118,7 @@ if (import.meta.vitest) {
     });
     it("should encode and decode Error", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000006_target_error.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000006_target_error.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -131,7 +131,7 @@ if (import.meta.vitest) {
     });
     it("should encode and decode Initialize", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000001_fuzzer_initialize.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000001_fuzzer_initialize.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -140,7 +140,7 @@ if (import.meta.vitest) {
       expect(message.state?.toJSON()).deep.eq(
         JSON.parse(
           fs.readFileSync(
-            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000001_fuzzer_initialize.json`,
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000001_fuzzer_initialize.json`,
             "utf8",
           ),
         ).State,
@@ -149,7 +149,7 @@ if (import.meta.vitest) {
 
     it("should encode and decode StateRoot", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000001_target_state_root.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000001_target_state_root.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -158,7 +158,7 @@ if (import.meta.vitest) {
       expect(message.state?.toJSON()).deep.eq(
         JSON.parse(
           fs.readFileSync(
-            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000001_target_state_root.json`,
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000001_target_state_root.json`,
             "utf8",
           ),
         ).State,
@@ -167,7 +167,7 @@ if (import.meta.vitest) {
 
     it("should encode and decode ImportBlock", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000002_fuzzer_import_block.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000002_fuzzer_import_block.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -176,7 +176,7 @@ if (import.meta.vitest) {
       expect(message.state?.toJSON()).deep.eq(
         JSON.parse(
           fs.readFileSync(
-            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000002_fuzzer_import_block.json`,
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000002_fuzzer_import_block.json`,
             "utf8",
           ),
         ).State,
@@ -185,7 +185,7 @@ if (import.meta.vitest) {
 
     it("should encode and decode GetState", () => {
       const bin = fs.readFileSync(
-        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000030_fuzzer_get_state.bin`,
+        `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000030_fuzzer_get_state.bin`,
       );
       const { value: message } = oneOfMessageCodec.decode(bin);
 
@@ -194,7 +194,7 @@ if (import.meta.vitest) {
       expect(message.state?.toJSON()).deep.eq(
         JSON.parse(
           fs.readFileSync(
-            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/v1/faulty/00000030_fuzzer_get_state.json`,
+            `${__dirname}/../../../../jam-conformance/fuzz-proto/examples/0.7.0/faulty/00000030_fuzzer_get_state.json`,
             "utf8",
           ),
         ).State,
