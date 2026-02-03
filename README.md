@@ -1,21 +1,38 @@
-# notes
+![CI](https://img.shields.io/github/actions/workflow/status/vekexasia/tsjam/on_push.yaml)
+ ![Apache 2.0](https://img.shields.io/github/license/vekexasia/tsjam)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+# TSJam a TypeScript implementation of JAM
 
-- https://hackmd.io/@polkadot/jamsnp
+This repository contains a Typescript implementation of the JAM protocol.
+
+# Structure
+
+This is a MonoRepo using Turbo, inside the `packages` folder you could find the following:
+
+ - `jam-types`: just types defining extrinsics, block, header and various set types
+ - `jam-codec`: contains all the codec functions that are expressed in Appendix C
+ - `jam-crypto-napi`: contains native bindings to cryptography elements used in jam such as bandersnatch and ed25519
+ - `jam-crypto`: a consumer of `jam-crypto-napi` that also imports other cryptography libraries used in Jam such as Blake2b.
+ - `jam-constants`: constants
+ - `jam-erasurecoding`
+ - `jam-np`: network protocol
+ - `jam-pvm-base`: base types/interfaces for the pvm
+ - `jam-pvm-js`: TS/JS impl of the PVM 
+ - `jam-pvm-wasm`: (exploration) AssemblyScript impl of the PVM (cur status: untested and probably not working)
+ - `jam-utils`: some basic utils used by most of the other packages
+ - `jam-core`: the main logic implementation
+ - `jam-fuzzer-target`: target of the fuzzer
+
+Other than the packages themselves, there are other folders mainly tracking submodules such as the conformance and testvectors used when checking the correctness of the implementation.
+
+# Building
+
+The `build` folder contain some utilities to avoid code duplication and create the deliverable that is being currently packaged using `nexe`. The most up-to-date code to build this project is inside the CI pipeline code within the `.github` folder.
+
+# LICENSE
+
+This project is under the Apache 2.0 license. See the [LICENSE](./LICENSE) for tdetails.
+
+# CONTRIBUTIONS
 
 
-0.7.1 diff vs 0.7.0 (from 0.7.1 stand point):
-# - 9.9 / 9.10 / 9.11 | page 17 | registrar
-# - 12.13 - 12.14 - 12.15 | page 23 | introduced new AccumulationInput
-# - 12.16  | page 23 | introduced `r` registrar 
-# - 12.18 | transfers in outer acc | NOTE: fix on 0.7.1 branch first case is wrong
-# - 12.19 
-# - 12.24 
-# - 13.7 | service stats
-# - 13.12 | transfer statistics posterior
-# - 14.12 | core is sent to refine but not in 0.7.0
-# - B.9 | some changes
-# - B.10 | page 47 | check fn uses constant
-# - B.14 | page 48 | check fn no constant
-# - fetch host call | page 50 in 0.7.0 49 in 071
-# - some host calls
-# - D.2 | page 59 | service account zero prefix
