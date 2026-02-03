@@ -1,5 +1,5 @@
-![CI](https://img.shields.io/github/actions/workflow/status/vekexasia/tsjam/on_push.yaml)
- ![Apache 2.0](https://img.shields.io/github/license/vekexasia/tsjam)
+![CI](https://img.shields.io/github/actions/workflow/status/vekexasia/tsjam/on_push.yaml?style=for-the-badge)
+ ![Apache 2.0](https://img.shields.io/github/license/vekexasia/tsjam?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 # TSJam a TypeScript implementation of JAM
 
