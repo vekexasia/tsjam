@@ -33,6 +33,8 @@ The `build` folder contain some utilities to avoid code duplication and create t
 
 This project is under the Apache 2.0 license. See the [LICENSE](./LICENSE) for tdetails.
 
-# CONTRIBUTIONS
+# Addresses
 
+Polkadot: 15QJw5Wijjr4L4He51wwmsyLT3dpMsqHEoAKZAWTZvqapdt4
+Kusama: DEq1QVjwKFFZZ42PdYRN46CkpA8zVA8tDyJhZfTwcuEwo9H
 
